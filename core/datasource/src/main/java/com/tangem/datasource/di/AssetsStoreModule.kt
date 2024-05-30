@@ -1,8 +1,8 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.local.datastore.RuntimeDataStore
-import com.tangem.datasource.local.token.DefaultAssetsStore
-import com.tangem.datasource.local.token.AssetsStore
+import com.tangem.datasource.local.token.DefaultExpressAssetsStore
+import com.tangem.datasource.local.token.ExpressAssetsStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,7 +15,7 @@ internal object AssetsStoreModule {
 
     @Provides
     @Singleton
-    fun provideAssetsStore(): AssetsStore {
-        return DefaultAssetsStore(dataStore = RuntimeDataStore())
+    fun provideAssetsStore(): ExpressAssetsStore {
+        return DefaultExpressAssetsStore(dataStore = RuntimeDataStore())
     }
 }

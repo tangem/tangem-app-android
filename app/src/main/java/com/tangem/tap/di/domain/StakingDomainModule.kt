@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.settings.*
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
+import com.tangem.domain.staking.GetStakingTokensUseCase
 import com.tangem.domain.staking.repositories.StakingRepository
 import dagger.Module
 import dagger.Provides
@@ -16,6 +17,14 @@ internal object StakingDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideGetStakingAvailabilityUseCase(stakingRepository: StakingRepository): GetStakingAvailabilityUseCase {
+        return GetStakingAvailabilityUseCase(
+            stakingRepository = stakingRepository,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideGetStakingEntryInfoUseCase(stakingRepository: StakingRepository): GetStakingEntryInfoUseCase {
         return GetStakingEntryInfoUseCase(
             stakingRepository = stakingRepository,
@@ -24,8 +33,8 @@ internal object StakingDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideGetStakingAvailabilityUseCase(stakingRepository: StakingRepository): GetStakingAvailabilityUseCase {
-        return GetStakingAvailabilityUseCase(
+    fun provideGetStakingTokensUseCase(stakingRepository: StakingRepository): GetStakingTokensUseCase {
+        return GetStakingTokensUseCase(
             stakingRepository = stakingRepository,
         )
     }

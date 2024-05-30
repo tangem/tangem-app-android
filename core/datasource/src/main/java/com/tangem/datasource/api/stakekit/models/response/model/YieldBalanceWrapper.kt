@@ -61,6 +61,8 @@ data class YieldBalanceWrapper(
 
             @Json(name = "unlocking")
             UNLOCKING,
+
+            UNKNOWN,
         }
 
         @JsonClass(generateAdapter = true)

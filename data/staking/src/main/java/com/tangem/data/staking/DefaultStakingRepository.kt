@@ -33,6 +33,10 @@ internal class DefaultStakingRepository(
         )
     }
 
+    override suspend fun getEnabledTokens() {
+        stakeKitApi.getTokens().getOrThrow()
+    }
+
     companion object {
         private const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
         private const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
