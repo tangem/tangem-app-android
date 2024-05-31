@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.stakekit
+package com.tangem.datasource.api.common.adapter
 
 import com.squareup.moshi.*
 import com.squareup.moshi.adapters.EnumJsonAdapter
