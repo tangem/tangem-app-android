@@ -1,7 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import androidx.fragment.app.FragmentManager
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -9,7 +8,6 @@ import java.lang.ref.WeakReference
 
 internal class StateRouter(
     private val fragmentManager: WeakReference<FragmentManager>,
-    private val analyticsEventsHandler: AnalyticsEventHandler,
 ) {
     private var mutableCurrentState: MutableStateFlow<StakingUiCurrentScreen> = MutableStateFlow(getInitState())
 
