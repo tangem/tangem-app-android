@@ -4,7 +4,7 @@ import android.app.Application
 import arrow.core.flatten
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.events.WalletConnect
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcMethods
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
 import com.tangem.tap.domain.walletconnect2.domain.WcRequest
@@ -19,11 +19,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import timber.log.Timber
 
-internal class DefaultWalletConnectRepository(
+internal class DefaultLegacyWalletConnectRepository(
     private val application: Application,
     private val wcRequestDeserializer: WcJrpcRequestsDeserializer,
     private val analyticsHandler: AnalyticsEventHandler,
-) : WalletConnectRepository {
+) : LegacyWalletConnectRepository {
 
     private var sessionProposal: Wallet.Model.SessionProposal? = null
     private var userNamespaces: Map<NetworkNamespace, List<Account>>? = null
@@ -94,7 +94,7 @@ internal class DefaultWalletConnectRepository(
             ) {
                 // Triggered when wallet receives the session proposal sent by a Dapp
                 Timber.d("sessionProposal: $sessionProposal")
-                this@DefaultWalletConnectRepository.sessionProposal = sessionProposal
+                this@DefaultLegacyWalletConnectRepository.sessionProposal = sessionProposal
 
                 if (sessionProposal.name in unsupportedDApps) {
                     Timber.w("Unsupported DApp")
@@ -110,7 +110,7 @@ internal class DefaultWalletConnectRepository(
 
                 val missingNetworks = findMissingNetworks(
                     namespaces = sessionProposal.requiredNamespaces,
-                    userNamespaces = this@DefaultWalletConnectRepository.userNamespaces ?: emptyMap(),
+                    userNamespaces = this@DefaultLegacyWalletConnectRepository.userNamespaces ?: emptyMap(),
                 )
 
                 if (missingNetworks.isNotEmpty()) {
@@ -127,7 +127,7 @@ internal class DefaultWalletConnectRepository(
 
                 val optionalWithoutMissingNetworks = removeMissingNetworks(
                     namespaces = sessionProposal.optionalNamespaces,
-                    userNamespaces = this@DefaultWalletConnectRepository.userNamespaces ?: emptyMap(),
+                    userNamespaces = this@DefaultLegacyWalletConnectRepository.userNamespaces ?: emptyMap(),
                 )
 
                 scope.launch {
