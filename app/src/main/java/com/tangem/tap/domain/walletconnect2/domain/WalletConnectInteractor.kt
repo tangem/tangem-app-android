@@ -25,7 +25,7 @@ import timber.log.Timber
 @Suppress("LargeClass", "LongParameterList")
 class WalletConnectInteractor(
     private val handler: WalletConnectEventsHandler,
-    private val walletConnectRepository: WalletConnectRepository,
+    private val walletConnectRepository: LegacyWalletConnectRepository,
     private val sessionsRepository: WalletConnectSessionsRepository,
     private val sdkHelper: WalletConnectSdkHelper,
     private val dispatchers: CoroutineDispatcherProvider,

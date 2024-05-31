@@ -13,7 +13,7 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
 import com.tangem.tap.domain.walletconnect2.domain.models.Account
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
@@ -31,7 +31,7 @@ import timber.log.Timber
 class WalletConnectMiddleware {
     private val walletConnectInteractor: WalletConnectInteractor
         get() = store.inject(DaggerGraphState::walletConnectInteractor)
-    private val walletConnectRepository: WalletConnectRepository
+    private val walletConnectRepository: LegacyWalletConnectRepository
         get() = store.inject(DaggerGraphState::walletConnectRepository)
 
     val walletConnectMiddleware: Middleware<AppState> = { dispatch, state ->
