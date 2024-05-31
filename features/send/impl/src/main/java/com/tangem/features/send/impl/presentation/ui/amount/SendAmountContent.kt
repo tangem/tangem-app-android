@@ -44,11 +44,11 @@ internal fun SendAmountContent(
 }
 
 // region Preview
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun AmountFieldPreview(
-    @PreviewParameter(AmountFieldPreviewProvider::class) amountState: SendStates.AmountState,
+private fun SendAmountContentPreview(
+    @PreviewParameter(SendAmountContentPreviewProvider::class) amountState: SendStates.AmountState,
 ) {
     TangemThemePreview {
         SendAmountContent(
@@ -59,7 +59,7 @@ private fun AmountFieldPreview(
     }
 }
 
-private class AmountFieldPreviewProvider : PreviewParameterProvider<SendStates.AmountState> {
+private class SendAmountContentPreviewProvider : PreviewParameterProvider<SendStates.AmountState> {
     override val values: Sequence<SendStates.AmountState>
         get() = sequenceOf(
             AmountStatePreviewData.amountState,
