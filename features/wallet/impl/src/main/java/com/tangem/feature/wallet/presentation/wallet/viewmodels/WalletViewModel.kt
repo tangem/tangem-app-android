@@ -9,7 +9,6 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.IsWalletsScrollPreviewEnabled
 import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
-import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -61,7 +60,6 @@ internal class WalletViewModel @Inject constructor(
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletDeepLinksHandler: WalletDeepLinksHandler,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
-    private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
     analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
@@ -76,21 +74,12 @@ internal class WalletViewModel @Inject constructor(
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
 
         suggestToEnableBiometrics()
-        fetchStakingTokens()
 
         maybeMigrateNames()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
         subscribeToScreenBackgroundState()
-    }
-
-    private fun fetchStakingTokens() {
-        viewModelScope.launch {
-            fetchStakingTokensUseCase()
-                .onLeft { Timber.e("Unable to fetch the staking tokens list") }
-                .onRight { Timber.d("Staking token list was fetched successfully") }
-        }
     }
 
     private fun maybeMigrateNames() {

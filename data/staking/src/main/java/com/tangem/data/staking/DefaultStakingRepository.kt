@@ -9,11 +9,14 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingFeatureToggles: StakingFeatureToggles,
     private val stakingTokenStore: StakingTokensStore,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : StakingRepository {
 
     private val tokenWithYieldConverter = StakingTokenConverter()
@@ -39,9 +42,11 @@ internal class DefaultStakingRepository(
     }
 
     override suspend fun fetchEnabledTokens() {
-        val stakingTokensWithYields = stakeKitApi.getTokens().getOrThrow()
+        withContext(dispatchers.io) {
+            val stakingTokensWithYields = stakeKitApi.getTokens().getOrThrow()
 
-        stakingTokenStore.store(stakingTokensWithYields.map { tokenWithYieldConverter.convert(it) })
+            stakingTokenStore.store(stakingTokensWithYields.map { tokenWithYieldConverter.convert(it) })
+        }
     }
 
     companion object {
