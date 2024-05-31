@@ -42,8 +42,10 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
@@ -130,6 +132,14 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                         key = MarketPriceBlockState::class.java,
                         contentType = MarketPriceBlockState::class.java,
                         content = { MarketPriceBlock(modifier = itemModifier, state = state.marketPriceBlockState) },
+                    )
+                }
+
+                if (state.isStakingAvailable) {
+                    item(
+                        key = StakingBlockState::class.java,
+                        contentType = StakingBlockState::class.java,
+                        content = { TokenStakingBlock(modifier = itemModifier, state = state.stakingBlockState) },
                     )
                 }
 
