@@ -27,6 +27,9 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
+import com.tangem.domain.staking.GetStakingAvailabilityUseCase
+import com.tangem.domain.staking.GetStakingEntryInfoUseCase
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
@@ -97,6 +100,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val shouldShowSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
+    private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
+    private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val quotesRepository: QuotesRepository,
@@ -107,8 +112,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val hapticManager: HapticManager,
     private val clipboardManager: ClipboardManager,
+    tokenDetailsFeatureToggles: TokenDetailsFeatureToggles,
     getUserWalletUseCase: GetUserWalletUseCase,
-    featureToggles: TokenDetailsFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
@@ -137,10 +142,13 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        stakingAvailabilityProvider = Provider {
+            getStakingAvailabilityUseCase.invoke(cryptoCurrency.network.id.value)
+        },
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
-        featureToggles = featureToggles,
+        featureToggles = tokenDetailsFeatureToggles,
     )
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -207,6 +215,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         subscribeOnCurrencyStatusUpdates()
         subscribeOnExchangeTransactionsUpdates()
         updateTxHistory(refresh = false, showItemsLoading = true)
+        updateStakingInfo()
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {
@@ -354,6 +363,16 @@ internal class TokenDetailsViewModel @Inject constructor(
                 ).map { it.cachedIn(viewModelScope) }
 
                 uiState = stateFactory.getLoadedTxHistoryState(maybeTxHistory)
+            }
+        }
+    }
+
+    private fun updateStakingInfo() {
+        viewModelScope.launch(dispatchers.io) {
+            val stakingAvailability = getStakingAvailabilityUseCase(cryptoCurrency.network.id.value)
+            if (stakingAvailability is StakingAvailability.Available) {
+                val stakingInfo = getStakingEntryInfoUseCase(stakingAvailability.integrationId)
+                uiState = stateFactory.getStateWithStaking(stakingInfo)
             }
         }
     }
