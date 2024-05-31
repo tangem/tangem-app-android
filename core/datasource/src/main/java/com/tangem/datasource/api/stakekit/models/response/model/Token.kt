@@ -12,11 +12,11 @@ data class Token(
     @Json(name = "address") val address: String?,
     @Json(name = "coinGeckoId") val coinGeckoId: String?,
     @Json(name = "logoURI") val logoURI: String?,
-    @Json(name = "isPoints") val isPoints: Boolean,
+    @Json(name = "isPoints") val isPoints: Boolean?,
 ) {
     enum class NetworkType {
-        @Json(name = "avalanche")
-        AVALANCHE,
+        @Json(name = "avalanche-c")
+        AVALANCHE_C,
 
         @Json(name = "avalanche-atomic")
         AVALANCHE_ATOMIC,
