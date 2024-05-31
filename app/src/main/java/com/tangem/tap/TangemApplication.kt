@@ -72,7 +72,7 @@ import dagger.hilt.EntryPoints
 import kotlinx.coroutines.runBlocking
 import org.rekotlin.Store
 import timber.log.Timber
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository as WalletConnect2Repository
+import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
 
 lateinit var store: Store<AppState>
 
