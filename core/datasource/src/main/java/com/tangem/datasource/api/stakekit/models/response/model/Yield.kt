@@ -2,6 +2,7 @@ package com.tangem.datasource.api.stakekit.models.response.model
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
 data class Yield(
@@ -16,7 +17,7 @@ data class Yield(
     @Json(name = "status")
     val status: Status,
     @Json(name = "apy")
-    val apy: Double,
+    val apy: BigDecimal,
     @Json(name = "rewardRate")
     val rewardRate: Double,
     @Json(name = "rewardType")
@@ -114,7 +115,7 @@ data class Yield(
         @Json(name = "defaultValidator")
         val defaultValidator: String?,
         @Json(name = "minimumStake")
-        val minimumStake: Int,
+        val minimumStake: Int?,
         @Json(name = "supportsMultipleValidators")
         val supportsMultipleValidators: Boolean,
         @Json(name = "revshare")

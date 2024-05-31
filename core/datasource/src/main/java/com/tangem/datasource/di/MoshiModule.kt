@@ -4,10 +4,10 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.datasource.api.common.BigDecimalAdapter
-import com.tangem.datasource.api.common.DateTimeAdapter
-import com.tangem.datasource.api.common.LocalDateAdapter
-import com.tangem.datasource.api.stakekit.UnknownEnumMoshiAdapter
+import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
+import com.tangem.datasource.api.common.adapter.DateTimeAdapter
+import com.tangem.datasource.api.common.adapter.LocalDateAdapter
+import com.tangem.datasource.api.common.adapter.UnknownEnumMoshiAdapter
 import com.tangem.datasource.api.stakekit.models.response.model.Token
 import com.tangem.datasource.config.models.ProviderModel
 import dagger.Module
