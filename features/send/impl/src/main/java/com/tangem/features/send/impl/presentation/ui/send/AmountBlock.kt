@@ -56,10 +56,7 @@ internal fun AmountBlock(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(backgroundColor)
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
-            .padding(
-                vertical = TangemTheme.dimens.spacing14,
-                horizontal = TangemTheme.dimens.spacing16,
-            ),
+            .padding(TangemTheme.dimens.spacing16),
     ) {
         TokenIcon(state = amountState.tokenIconState)
         ResizableText(
@@ -79,10 +76,7 @@ internal fun AmountBlock(
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    top = TangemTheme.dimens.spacing8,
-                    bottom = TangemTheme.dimens.spacing2,
-                ),
+                .padding(top = TangemTheme.dimens.spacing8),
         )
     }
 }
