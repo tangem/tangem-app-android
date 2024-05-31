@@ -125,7 +125,9 @@ private fun MainContent(
         Icon(
             iconResId = iconResId,
             tint = iconTint,
-            modifier = Modifier.align(alignment = Alignment.CenterVertically),
+            modifier = Modifier
+                .size(size = TangemTheme.dimens.size20)
+                .align(alignment = Alignment.CenterVertically),
         )
 
         SpacerW(width = TangemTheme.dimens.spacing10)
