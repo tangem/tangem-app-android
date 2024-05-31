@@ -25,6 +25,7 @@ import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
@@ -260,7 +261,7 @@ private fun AnimateRecentAppearance(isVisible: Boolean, content: @Composable () 
 private fun SendRecipientContent_Preview(
     @PreviewParameter(SendRecipientContentPreviewProvider::class) recipientState: SendStates.RecipientState,
 ) {
-    TangemTheme(isDark = false) {
+    TangemThemePreview {
         SendRecipientContent(
             uiState = recipientState,
             clickIntents = SendClickIntentsStub,
