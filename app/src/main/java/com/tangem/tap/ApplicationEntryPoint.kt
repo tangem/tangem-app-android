@@ -36,7 +36,7 @@ import com.tangem.tap.proxy.AppStateHolder
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository as WalletConnect2Repository
+import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
