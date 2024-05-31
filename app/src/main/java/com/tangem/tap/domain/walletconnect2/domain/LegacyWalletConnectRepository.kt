@@ -3,7 +3,7 @@ package com.tangem.tap.domain.walletconnect2.domain
 import com.tangem.tap.domain.walletconnect2.domain.models.*
 import kotlinx.coroutines.flow.Flow
 
-interface WalletConnectRepository {
+interface LegacyWalletConnectRepository {
 
     val events: Flow<WalletConnectEvents>
 
