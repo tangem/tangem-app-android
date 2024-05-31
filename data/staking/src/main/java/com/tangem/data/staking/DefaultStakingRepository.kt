@@ -1,12 +1,13 @@
 package com.tangem.data.staking
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.data.staking.converters.StakingTokenConverter
+import com.tangem.data.staking.converters.YieldConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
-import com.tangem.datasource.local.token.StakingTokensStore
+import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -15,11 +16,11 @@ import kotlinx.coroutines.withContext
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingFeatureToggles: StakingFeatureToggles,
-    private val stakingTokenStore: StakingTokensStore,
+    private val stakingYieldsStore: StakingYieldsStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : StakingRepository {
 
-    private val tokenWithYieldConverter = StakingTokenConverter()
+    private val yieldConverter = YieldConverter()
 
     override fun getStakingAvailability(blockchainId: String): StakingAvailability {
         if (!stakingFeatureToggles.isStakingEnabled) {
@@ -41,12 +42,17 @@ internal class DefaultStakingRepository(
         )
     }
 
-    override suspend fun fetchEnabledTokens() {
+    override suspend fun fetchEnabledYields() {
         withContext(dispatchers.io) {
-            val stakingTokensWithYields = stakeKitApi.getTokens().getOrThrow()
+            val stakingTokensWithYields = stakeKitApi.getMultipleYields().getOrThrow()
 
-            stakingTokenStore.store(stakingTokensWithYields.map { tokenWithYieldConverter.convert(it) })
+            stakingYieldsStore.store(stakingTokensWithYields.data)
         }
+    }
+
+    override suspend fun getEnabledYields(): List<Yield>? {
+        val yields = stakingYieldsStore.getSyncOrNull() ?: return null
+        return yields.map { yieldConverter.convert(it) }
     }
 
     companion object {

@@ -2,6 +2,7 @@ package com.tangem.domain.staking.repositories
 
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.Yield
 
 interface StakingRepository {
 
@@ -9,5 +10,7 @@ interface StakingRepository {
 
     suspend fun getEntryInfo(integrationId: String): StakingEntryInfo
 
-    suspend fun fetchEnabledTokens()
+    suspend fun fetchEnabledYields()
+
+    suspend fun getEnabledYields() : List<Yield>?
 }
