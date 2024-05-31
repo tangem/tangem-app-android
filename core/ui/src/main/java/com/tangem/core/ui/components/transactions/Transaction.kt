@@ -33,8 +33,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import java.util.UUID
 
 /**
@@ -319,12 +319,12 @@ private fun LockedContent(modifier: Modifier = Modifier) {
     )
 }
 
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, widthDp = 368)
+@Preview(showBackground = true, widthDp = 368, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview_TransactionItem(@PreviewParameter(TransactionItemStateProvider::class) state: TransactionState) {
     TangemThemePreview {
-        Transaction(state = state, isBalanceHidden = false)
+        Transaction(state = state, isBalanceHidden = false, modifier = Modifier.padding(TangemTheme.dimens.spacing20))
     }
 }
 
