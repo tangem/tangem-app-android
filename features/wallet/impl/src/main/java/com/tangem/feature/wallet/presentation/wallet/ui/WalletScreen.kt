@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.animateFloatAsState
@@ -25,7 +26,11 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.components.Keyboard
@@ -43,8 +48,10 @@ import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags
 import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
@@ -131,7 +138,7 @@ private fun WalletContent(
             mutableStateOf(value = lazyTxHistoryItems)
         }
 
-        val betweenItemsPadding = TangemTheme.dimens.spacing14
+        val betweenItemsPadding = TangemTheme.dimens.spacing12
         val horizontalPadding = TangemTheme.dimens.spacing16
         val itemModifier = movableItemModifier
             .padding(top = betweenItemsPadding)
@@ -142,7 +149,6 @@ private fun WalletContent(
                 .fillMaxSize()
                 .testTag(TestTags.WALLET_SCREEN),
             contentPadding = PaddingValues(
-                top = TangemTheme.dimens.spacing8,
                 bottom = TangemTheme.dimens.spacing92,
             ),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -581,3 +587,26 @@ internal fun LazyListScope.organizeTokens(state: WalletState, itemModifier: Modi
         }
     }
 }
+
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun WalletScreen_Preview(@PreviewParameter(WalletScreenPreviewProvider::class) data: WalletScreenState) {
+    TangemThemePreview {
+        WalletScreen(
+            state = data,
+            bottomSheetHeaderHeightProvider = { 0.dp },
+            bottomSheetContent = {},
+        )
+    }
+}
+
+private class WalletScreenPreviewProvider : PreviewParameterProvider<WalletScreenState> {
+    override val values: Sequence<WalletScreenState>
+        get() = sequenceOf(
+            walletScreenState,
+            walletScreenState.copy(selectedWalletIndex = 1),
+        )
+}
+// endregion
