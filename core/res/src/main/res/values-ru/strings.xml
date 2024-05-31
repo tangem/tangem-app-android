@@ -580,6 +580,8 @@
   <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
   <string name="token_details_hide_alert_title">Скрыть %s</string>
   <string name="token_details_hide_token">Скрыть токен</string>
+  <string name="token_details_staking_block_subtitle">Стейкинг позволяет вам зарабатывать %1$s и получать вознаграждения каждые %2$s дней</string>
+  <string name="token_details_staking_block_title">Зарабатывайте до %s вознаграждений за стейкинг ежегодно</string>
   <string name="token_details_token_type_subtitle">%1$s токен в сети %%image%% %2$s</string>
   <string name="token_details_token_type_subtitle_no_standard">Токен в сети %%image%% %1$s</string>
   <string name="token_details_unable_hide_alert_message">Токен %1$s (%2$s) является основной валютой в сети %3$s и не может быть скрыт до тех пор, пока у вас в списке есть другие токены этой сети</string>
