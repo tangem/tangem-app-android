@@ -60,6 +60,7 @@ internal class SendStateFactory(
         SendFeeStateConverter(
             appCurrencyProvider = appCurrencyProvider,
             feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
     private val confirmStateConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -165,7 +166,8 @@ internal class SendStateFactory(
         val reducedBy = sendState.reduceAmountBy.takeIf {
             notifications.none {
                 it is SendNotification.Error.ExistentialDeposit ||
-                    it is SendNotification.Error.TransactionLimitError
+                    it is SendNotification.Error.TransactionLimitError ||
+                    it is SendNotification.Warning.HighFeeError
             }
         }
         return state.copy(

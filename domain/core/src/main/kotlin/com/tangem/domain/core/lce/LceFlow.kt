@@ -2,6 +2,7 @@ package com.tangem.domain.core.lce
 
 import arrow.core.raise.Raise
 import com.tangem.domain.core.utils.lceContent
+import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
@@ -30,9 +31,8 @@ typealias LceFlow<E, C> = Flow<Lce<E, C>>
 class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
     private val raise: LceRaise<E>,
     private val scope: ProducerScope<Lce<E, C>>,
-    private val ifLoading: LceRaise<E>.(C) -> Lce<E, C>,
-) : Raise<Lce<E, Nothing>> by raise,
-    CoroutineScope by scope {
+    private val ifLoading: suspend LceFlowScope<E, C>.(C?) -> Unit,
+) : Raise<E>, CoroutineScope by scope {
 
     /**
      * Raises an [Lce] instance within the [ProducerScope].
@@ -40,13 +40,13 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
      *
      * @param r The [Lce] instance to raise.
      */
-    override fun raise(r: Lce<E, Nothing>): Nothing {
+    override fun raise(r: E): Nothing {
         scope.launch(NonCancellable) {
-            scope.send(r)
+            scope.send(r.lceError())
             scope.close()
         }
 
-        raise.raise(r)
+        raise.raise(r.lceError())
     }
 
     /**
@@ -59,11 +59,16 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
      */
     suspend fun send(content: C, isStillLoading: Boolean = false) {
         val value = if (isStillLoading) {
-            ifLoading(raise, content)
+            ifLoading(content)
+            return
         } else {
             content.lceContent()
         }
 
+        scope.send(value)
+    }
+
+    suspend fun send(value: Lce<E, C>) {
         scope.send(value)
     }
 }
@@ -73,14 +78,14 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
  *
  * Flow starts with a [Lce.Loading] state.
  *
- * @param ifLoading The function to call if the [block] raises a [Lce.Loading] state.
+ * @param ifLoading The function to call if received a loading content.
  * By default, it creates a new [Lce.Loading] state with the value returned by the [block].
  * @param block The block to execute within a [LceFlowScope] context.
  * @return A [LceFlow] representing the result of the [block].
  */
 @OptIn(ExperimentalTypeInference::class)
 fun <E : Any, C : Any> lceFlow(
-    ifLoading: LceRaise<E>.(C) -> Lce<E, C> = { lceLoading(partialContent = it) },
+    ifLoading: suspend LceFlowScope<E, C>.(C?) -> Unit = { send(lceLoading(partialContent = it)) },
     @BuilderInference block: suspend LceFlowScope<E, C>.() -> Unit,
 ): LceFlow<E, C> {
     return channelFlow {

@@ -37,6 +37,7 @@ internal class SendAmountFieldMaxAmountConverter(
         val fiatValue = decimalFiatValue?.parseBigDecimal(fiatDecimals, roundingMode = RoundingMode.HALF_UP).orEmpty()
         return state.copyWrapped(
             isEditState = isEditState,
+            sendState = state.sendState?.copy(reduceAmountBy = null),
             amountState = amountState.copy(
                 isPrimaryButtonEnabled = true,
                 amountTextField = amountTextField.copy(
