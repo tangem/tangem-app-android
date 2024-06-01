@@ -29,6 +29,7 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
 
+    implementation(projects.libs.blockchainSdk)
     implementation(deps.tangem.blockchain) {
         exclude(module = "joda-time")
     }

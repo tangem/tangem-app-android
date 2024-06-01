@@ -2,6 +2,7 @@ package com.tangem.domain.tokens
 
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
@@ -280,10 +281,10 @@ class GetCryptoCurrencyActionsUseCase(
     }
 
     private suspend fun isStakingAvailable(cryptoCurrency: CryptoCurrency): Boolean {
-        val yields = stakingRepository.getEnabledYields() ?: return false
-
-        return yields
-            .map { it.token }
-            .any { it.coinGeckoId == cryptoCurrency.id.rawCurrencyId && it.symbol == cryptoCurrency.symbol }
+        val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: return false
+        return stakingRepository.getStakingAvailabilityForActions(
+            currencyId = rawCurrencyId,
+            symbol = cryptoCurrency.symbol,
+        ) is StakingAvailability.Available
     }
 }

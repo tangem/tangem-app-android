@@ -1,6 +1,7 @@
 package com.tangem.data.staking
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.data.staking.converters.YieldConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
@@ -22,14 +23,34 @@ internal class DefaultStakingRepository(
 
     private val yieldConverter = YieldConverter()
 
-    override fun getStakingAvailability(blockchainId: String): StakingAvailability {
+    override suspend fun getStakingAvailabilityForActions(currencyId: String, symbol: String): StakingAvailability {
         if (!stakingFeatureToggles.isStakingEnabled) {
             return StakingAvailability.Unavailable
         }
 
-        return integrationIdMap[Blockchain.fromId(blockchainId)]?.let {
-            StakingAvailability.Available(it)
-        } ?: StakingAvailability.Unavailable
+        val yields = getEnabledYields() ?: return StakingAvailability.Unavailable
+
+        val prefetchedYield = findPrefetchedYield(yields, currencyId, symbol)
+        val isSupported = isStakingSupported(currencyId)
+
+        return when {
+            prefetchedYield != null && isSupported -> {
+                StakingAvailability.Available(prefetchedYield.id)
+            }
+            prefetchedYield == null && isSupported -> {
+                StakingAvailability.TemporaryDisabled
+            }
+            else -> StakingAvailability.Unavailable
+        }
+    }
+
+    private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {
+        return yields
+            .find { it.token.coinGeckoId == currencyId && it.token.symbol == symbol }
+    }
+
+    override fun isStakingSupported(currencyId: String): Boolean {
+        return integrationIdMap.contains(currencyId)
     }
 
     override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo {
@@ -54,36 +75,24 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun getEnabledYields(): List<Yield>? {
+    private suspend fun getEnabledYields(): List<Yield>? {
         val yields = stakingYieldsStore.getSyncOrNull() ?: return null
         return yields.map { yieldConverter.convert(it) }
     }
 
     companion object {
-        private const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
-        private const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
-        private const val POLKADOT_INTEGRATION_ID = "polkadot-dot-validator-staking"
-        private const val ETHEREUM_INTEGRATION_ID = "ethereum-matic-native-staking"
-        private const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
-        private const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
-        private const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
-        private const val BINANCE_INTEGRATION_ID = "binance-bnb-native-staking"
-        private const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
-        private const val NEAR_INTEGRATION_ID = "near-near-native-staking"
-        private const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
-
-        private val integrationIdMap = mapOf(
-            Blockchain.Solana to SOLANA_INTEGRATION_ID,
-            Blockchain.Cosmos to COSMOS_INTEGRATION_ID,
-            Blockchain.Polkadot to POLKADOT_INTEGRATION_ID,
-            Blockchain.Polygon to ETHEREUM_INTEGRATION_ID,
-            Blockchain.Avalanche to AVALANCHE_INTEGRATION_ID,
-            Blockchain.Tron to TRON_INTEGRATION_ID,
-            Blockchain.Cronos to CRONOS_INTEGRATION_ID,
-            Blockchain.Binance to BINANCE_INTEGRATION_ID,
-            Blockchain.Kava to KAVA_INTEGRATION_ID,
-            Blockchain.Near to NEAR_INTEGRATION_ID,
-            Blockchain.Tezos to TEZOS_INTEGRATION_ID,
+        private val integrationIdMap = setOf(
+            Blockchain.Solana.toCoinId(),
+            Blockchain.Cosmos.toCoinId(),
+            Blockchain.Polkadot.toCoinId(),
+            Blockchain.Polygon.toCoinId(),
+            Blockchain.Avalanche.toCoinId(),
+            Blockchain.Tron.toCoinId(),
+            Blockchain.Cronos.toCoinId(),
+            Blockchain.Binance.toCoinId(),
+            Blockchain.Kava.toCoinId(),
+            Blockchain.Near.toCoinId(),
+            Blockchain.Tezos.toCoinId(),
         )
     }
 }
