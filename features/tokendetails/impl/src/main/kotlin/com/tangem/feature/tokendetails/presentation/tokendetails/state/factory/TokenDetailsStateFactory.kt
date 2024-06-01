@@ -369,6 +369,12 @@ internal class TokenDetailsStateFactory(
 
     private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason): TextReference {
         return when (unavailabilityReason) {
+            is ScenarioUnavailabilityReason.StakingUnavailable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_staking_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
             is ScenarioUnavailabilityReason.PendingTransaction -> {
                 when (unavailabilityReason.withdrawalScenario) {
                     ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(

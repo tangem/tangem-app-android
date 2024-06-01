@@ -10,6 +10,7 @@ class FetchStakingTokensUseCase(
     private val stakingRepository: StakingRepository,
 ) {
     suspend operator fun invoke(): Either<Throwable, Unit> {
+        // TODO staking
         return Either.catch { stakingRepository.fetchEnabledYields() }
     }
 }

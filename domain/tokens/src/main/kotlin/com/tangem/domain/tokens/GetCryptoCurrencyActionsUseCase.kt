@@ -124,7 +124,15 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // staking
-        // if ()
+        if (isStakingAvailable(cryptoCurrency)) {
+            activeList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.None))
+        } else {
+            disabledList.add(
+                TokenActionsState.ActionState.Stake(
+                    unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(cryptoCurrency.name),
+                ),
+            )
+        }
 
         // send
         val sendUnavailabilityReason = getSendUnavailabilityReason(
@@ -239,6 +247,7 @@ class GetCryptoCurrencyActionsUseCase(
             }
             actionsList.add(TokenActionsState.ActionState.Receive(scenario))
         }
+        actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable))
         actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
         return actionsList
     }
@@ -270,7 +279,11 @@ class GetCryptoCurrencyActionsUseCase(
         return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
     }
 
-    private suspend fun isStakingAvailable(cryptoCurrency: CryptoCurrency) {
-        val yields = stakingRepository.fetchEnabledYields()
+    private suspend fun isStakingAvailable(cryptoCurrency: CryptoCurrency): Boolean {
+        val yields = stakingRepository.getEnabledYields() ?: return false
+
+        return yields
+            .map { it.token }
+            .any { it.coinGeckoId == cryptoCurrency.id.rawCurrencyId && it.symbol == cryptoCurrency.symbol }
     }
 }

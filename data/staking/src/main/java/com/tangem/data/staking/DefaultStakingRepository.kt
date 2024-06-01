@@ -43,6 +43,10 @@ internal class DefaultStakingRepository(
     }
 
     override suspend fun fetchEnabledYields() {
+        if (!stakingFeatureToggles.isStakingEnabled) {
+            return
+        }
+
         withContext(dispatchers.io) {
             val stakingTokensWithYields = stakeKitApi.getMultipleYields().getOrThrow()
 

@@ -42,6 +42,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 interface WalletCurrencyActionsClickIntents {
@@ -55,6 +56,8 @@ interface WalletCurrencyActionsClickIntents {
     fun onSwapClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
 
     fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
@@ -345,6 +348,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         showErrorIfDemoModeOrElse(action = ::openExplorer)
     }
 
+    override fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        // TODO add staking
+        Timber.e("Not implemented yet")
+    }
+
     private fun openExplorer() {
         val userWalletId = stateHolder.getSelectedWalletId()
 
@@ -447,6 +455,12 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason): TextReference {
         return when (unavailabilityReason) {
+            is ScenarioUnavailabilityReason.StakingUnavailable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_staking_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
             is ScenarioUnavailabilityReason.PendingTransaction -> {
                 when (unavailabilityReason.withdrawalScenario) {
                     ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(

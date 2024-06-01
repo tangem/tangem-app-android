@@ -12,5 +12,5 @@ interface StakingRepository {
 
     suspend fun fetchEnabledYields()
 
-    suspend fun getEnabledYields() : List<Yield>?
+    suspend fun getEnabledYields(): List<Yield>?
 }

@@ -23,7 +23,8 @@ fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
         TokenDTO.NetworkTypeDTO::class.java to TokenDTO.NetworkTypeDTO.UNKNOWN,
         StakingActionTypeDTO::class.java to StakingActionTypeDTO.UNKNOWN,
         YieldDTO.RewardTypeDTO::class.java to YieldDTO.RewardTypeDTO.UNKNOWN,
-        YieldBalanceWrapperDTO.BalanceDTO.BalanceType::class.java to YieldBalanceWrapperDTO.BalanceDTO.BalanceType.UNKNOWN,
+        YieldBalanceWrapperDTO.BalanceDTO.BalanceType::class.java to
+            YieldBalanceWrapperDTO.BalanceDTO.BalanceType.UNKNOWN,
     )
 
     return apply {

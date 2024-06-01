@@ -524,6 +524,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         }
     }
 
+    override fun onStakeClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        Timber.e("Not implemented yet")
+    }
+
     override fun onGenerateExtendedKey() {
         viewModelScope.launch(dispatchers.main) {
             val extendedKey = getExtendedPublicKeyForCurrencyUseCase(

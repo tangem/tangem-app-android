@@ -2,7 +2,6 @@ package com.tangem.data.staking.converters
 
 import com.tangem.datasource.api.stakekit.models.response.model.AddressArgumentDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
-import com.tangem.datasource.api.stakekit.models.response.model.TokenWithYieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.domain.staking.model.*
 import com.tangem.utils.converter.Converter
@@ -21,7 +20,7 @@ class YieldConverter : Converter<YieldDTO, Yield> {
             rewardType = convertRewardType(value.rewardType),
             metadata = convertMetadata(value.metadata),
             validators = value.validators.map { convertValidator(it) },
-            isAvailable = value.isAvailable
+            isAvailable = value.isAvailable,
         )
     }
 
@@ -34,10 +33,11 @@ class YieldConverter : Converter<YieldDTO, Yield> {
             address = tokenDTO.address,
             coinGeckoId = tokenDTO.coinGeckoId,
             logoURI = tokenDTO.logoURI,
-            isPoints = tokenDTO.isPoints
+            isPoints = tokenDTO.isPoints,
         )
     }
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun convertNetworkType(networkTypeDTO: TokenDTO.NetworkTypeDTO): Token.NetworkType {
         return when (networkTypeDTO) {
             TokenDTO.NetworkTypeDTO.AVALANCHE_C -> Token.NetworkType.AVALANCHE_C
@@ -110,25 +110,24 @@ class YieldConverter : Converter<YieldDTO, Yield> {
         }
     }
 
-
     private fun convertArgs(argsDTO: YieldDTO.ArgsDTO): Yield.Args {
         return Yield.Args(
             enter = convertEnter(argsDTO.enter),
-            exit = argsDTO.exit?.let { convertEnter(it) }
+            exit = argsDTO.exit?.let { convertEnter(it) },
         )
     }
 
     private fun convertEnter(enterDTO: YieldDTO.ArgsDTO.Enter): Yield.Args.Enter {
         return Yield.Args.Enter(
             addresses = convertAddresses(enterDTO.addresses),
-            args = enterDTO.args.mapValues { convertAddressArgument(it.value) }
+            args = enterDTO.args.mapValues { convertAddressArgument(it.value) },
         )
     }
 
     private fun convertAddresses(addressesDTO: YieldDTO.ArgsDTO.Enter.Addresses): Yield.Args.Enter.Addresses {
         return Yield.Args.Enter.Addresses(
             address = convertAddressArgument(addressesDTO.address),
-            additionalAddresses = addressesDTO.additionalAddresses?.mapValues { convertAddressArgument(it.value) }
+            additionalAddresses = addressesDTO.additionalAddresses?.mapValues { convertAddressArgument(it.value) },
         )
     }
 
@@ -137,14 +136,14 @@ class YieldConverter : Converter<YieldDTO, Yield> {
             required = addressArgumentDTO.required,
             network = addressArgumentDTO.network,
             minimum = addressArgumentDTO.minimum,
-            maximum = addressArgumentDTO.maximum
+            maximum = addressArgumentDTO.maximum,
         )
     }
 
     private fun convertStatus(statusDTO: YieldDTO.StatusDTO): Yield.Status {
         return Yield.Status(
             enter = statusDTO.enter,
-            exit = statusDTO.exit
+            exit = statusDTO.exit,
         )
     }
 
@@ -166,19 +165,19 @@ class YieldConverter : Converter<YieldDTO, Yield> {
             minimumStake = metadataDTO.minimumStake,
             supportsMultipleValidators = metadataDTO.supportsMultipleValidators,
             revshare = convertEnabled(metadataDTO.revshare),
-            fee = convertEnabled(metadataDTO.fee)
+            fee = convertEnabled(metadataDTO.fee),
         )
     }
 
     private fun convertPeriod(periodDTO: YieldDTO.MetadataDTO.PeriodDTO): Yield.Metadata.Period {
         return Yield.Metadata.Period(
-            days = periodDTO.days
+            days = periodDTO.days,
         )
     }
 
     private fun convertEnabled(enabledDTO: YieldDTO.MetadataDTO.EnabledDTO): Yield.Metadata.Enabled {
         return Yield.Metadata.Enabled(
-            enabled = enabledDTO.enabled
+            enabled = enabledDTO.enabled,
         )
     }
 
@@ -193,7 +192,7 @@ class YieldConverter : Converter<YieldDTO, Yield> {
             commission = validatorDTO.commission,
             stakedBalance = validatorDTO.stakedBalance,
             votingPower = validatorDTO.votingPower,
-            preferred = validatorDTO.preferred
+            preferred = validatorDTO.preferred,
         )
     }
 
