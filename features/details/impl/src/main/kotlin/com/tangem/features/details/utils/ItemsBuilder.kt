@@ -53,7 +53,7 @@ internal class ItemsBuilder(
         items = persistentListOf(
             DetailsItemUM.Basic.Item(
                 id = "buy_tangem_wallet",
-                title = stringReference("Buy Tangem Wallet"), // TODO: Move to resources in AND-7165
+                title = resourceReference(R.string.details_buy_wallet),
                 iconRes = R.drawable.ic_tangem_24,
                 onClick = { router.push(DetailsRoute.Url(BUY_TANGEM_URL)) },
             ),
@@ -86,7 +86,7 @@ internal class ItemsBuilder(
         items = persistentListOf(
             DetailsItemUM.Basic.Item(
                 id = "send_feedback",
-                title = stringReference("Send feedback"), // TODO: Move to resources in AND-7165
+                title = resourceReference(R.string.details_send_feedback),
                 iconRes = R.drawable.ic_comment_24,
                 onClick = { router.push(DetailsRoute.Feedback) },
             ),
