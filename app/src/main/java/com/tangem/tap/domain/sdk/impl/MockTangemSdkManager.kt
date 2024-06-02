@@ -4,16 +4,20 @@ import android.content.res.Resources
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.tangem.Message
-import com.tangem.common.*
+import com.tangem.common.CompletionResult
+import com.tangem.common.KeyPair
+import com.tangem.common.SuccessResponse
 import com.tangem.common.authentication.keystore.DummyKeystoreManager
-import com.tangem.common.core.*
+import com.tangem.common.core.CardSessionRunnable
+import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.InMemoryStorage
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
-import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.sdk.mocks.MockProvider
@@ -81,6 +85,10 @@ class MockTangemSdkManager(
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<CardDTO> {
         return MockProvider.getCardDto()
+    }
+
+    override suspend fun resetBackupCard(userWalletId: UserWalletId): CompletionResult<Unit> {
+        return CompletionResult.Success(Unit)
     }
 
     override suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
