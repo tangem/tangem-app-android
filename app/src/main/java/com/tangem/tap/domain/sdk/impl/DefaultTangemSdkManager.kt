@@ -16,25 +16,23 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
+import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
-import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.derivationsFinder
 import com.tangem.tap.domain.sdk.TangemSdkManager
-import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
-import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
-import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
-import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.tasks.product.*
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
@@ -170,6 +168,13 @@ class DefaultTangemSdkManager(
             initialMessage = Message(resources.getString(R.string.card_settings_reset_card_to_factory)),
         )
             .map { CardDTO(it) }
+    }
+
+    override suspend fun resetBackupCard(userWalletId: UserWalletId): CompletionResult<Unit> {
+        return runTaskAsyncReturnOnMain(
+            runnable = ResetBackupCardTask(userWalletId),
+            initialMessage = Message(resources.getString(R.string.card_settings_reset_card_to_factory)),
+        )
     }
 
     override suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
