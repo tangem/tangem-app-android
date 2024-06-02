@@ -3,16 +3,20 @@ package com.tangem.tap.domain.sdk
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.tangem.Message
-import com.tangem.common.*
+import com.tangem.common.CompletionResult
+import com.tangem.common.KeyPair
+import com.tangem.common.SuccessResponse
 import com.tangem.common.authentication.keystore.KeystoreManager
-import com.tangem.common.core.*
+import com.tangem.common.core.CardSessionRunnable
+import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
-import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 
@@ -63,6 +67,8 @@ interface TangemSdkManager {
         cardId: String,
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<CardDTO>
+
+    suspend fun resetBackupCard(userWalletId: UserWalletId): CompletionResult<Unit>
 
     suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit>
 
