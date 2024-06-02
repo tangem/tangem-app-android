@@ -10,7 +10,7 @@ import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.features.details.redux.CardSettingsState
-import com.tangem.tap.features.details.redux.DetailsAction
+import com.tangem.tap.features.details.redux.DetailsAction.ResetToFactory
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.details.ui.resetcard.featuretoggles.ResetCardFeatureToggles
 import com.tangem.tap.features.details.ui.utils.toResetCardDescriptionText
@@ -18,6 +18,7 @@ import com.tangem.tap.store
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.tangem.tap.features.details.redux.CardSettingsState.Dialog as CardSettingsDialog
 
 @HiltViewModel
 internal class ResetCardViewModel @Inject constructor(
@@ -47,28 +48,48 @@ internal class ResetCardViewModel @Inject constructor(
             warningsToShow = warningsToShow,
             acceptCondition1Checked = state?.condition1Checked ?: false,
             acceptCondition2Checked = state?.condition2Checked ?: false,
-            onAcceptCondition1ToggleClick = { store.dispatch(DetailsAction.ResetToFactory.AcceptCondition1(it)) },
-            onAcceptCondition2ToggleClick = { store.dispatch(DetailsAction.ResetToFactory.AcceptCondition2(it)) },
-            onResetButtonClick = { showLastWarningDialog() },
-            lastWarningDialog = ResetCardScreenState.ResetCardScreenContent.LastWarningDialog(
-                isShown = state?.isLastWarningDialogShown ?: false,
-                onResetButtonClick = ::onLastWarningDialogResetClicked,
-                onDismiss = ::onLastWarningDialogDismiss,
-            ),
+            onAcceptCondition1ToggleClick = { store.dispatch(ResetToFactory.AcceptCondition1(it)) },
+            onAcceptCondition2ToggleClick = { store.dispatch(ResetToFactory.AcceptCondition2(it)) },
+            onResetButtonClick = { showDialog(CardSettingsDialog.StartResetDialog) },
+            dialog = state?.dialog?.let(::createDialog),
         )
     }
 
-    private fun showLastWarningDialog() {
-        store.dispatch(DetailsAction.ResetToFactory.LastWarningDialogVisibility(isShown = true))
+    private fun createDialog(dialog: CardSettingsDialog): ResetCardScreenState.ResetCardScreenContent.Dialog {
+        return when (dialog) {
+            CardSettingsDialog.StartResetDialog -> {
+                ResetCardScreenState.ResetCardScreenContent.Dialog.StartReset(
+                    onConfirmClick = ::onStartResetClick,
+                    onDismiss = ::dismissDialog,
+                )
+            }
+            CardSettingsDialog.ContinueResetDialog -> {
+                ResetCardScreenState.ResetCardScreenContent.Dialog.ContinueReset(
+                    onConfirmClick = ::onContinueResetClick,
+                    onDismiss = ::onContinueResetDialogDismiss,
+                )
+            }
+            CardSettingsDialog.InterruptedResetDialog -> {
+                ResetCardScreenState.ResetCardScreenContent.Dialog.InterruptedReset(
+                    onConfirmClick = ::onContinueResetClick,
+                    onDismiss = ::dismissAndFinishFullReset,
+                )
+            }
+            CardSettingsDialog.CompletedResetDialog -> {
+                ResetCardScreenState.ResetCardScreenContent.Dialog.CompletedReset(
+                    onConfirmClick = ::dismissAndFinishFullReset,
+                )
+            }
+        }
     }
 
-    private fun onLastWarningDialogResetClicked() {
-        store.dispatch(DetailsAction.ResetToFactory.LastWarningDialogVisibility(isShown = false))
+    private fun onStartResetClick() {
+        dismissDialog()
 
         if (resetCardFeatureToggles.isFullResetEnabled) {
             makeFullReset()
         } else {
-            store.dispatch(DetailsAction.ResetToFactory.Proceed)
+            store.dispatch(ResetToFactory.Proceed)
         }
     }
 
@@ -85,13 +106,35 @@ internal class ResetCardViewModel @Inject constructor(
         }
     }
 
+    private fun onContinueResetClick() {
+        dismissDialog()
+
+        // TODO: [REDACTED_TASK_KEY]
+    }
+
+    private fun onContinueResetDialogDismiss() {
+        dismissDialog()
+
+        showDialog(CardSettingsDialog.InterruptedResetDialog)
+    }
+
     private suspend fun resetCurrentCard(userWallet: UserWallet) = either {
         resetCardUseCase(userWallet.scanResponse.card).bind()
         deleteSavedAccessCodesUseCase(userWallet.cardId).bind()
         deleteWalletUseCase(userWallet.walletId).bind()
     }
 
-    private fun onLastWarningDialogDismiss() {
-        store.dispatch(DetailsAction.ResetToFactory.LastWarningDialogVisibility(isShown = false))
+    private fun dismissAndFinishFullReset() {
+        dismissDialog()
+
+        // TODO: [REDACTED_TASK_KEY]
+    }
+
+    private fun showDialog(dialog: CardSettingsDialog) {
+        store.dispatch(ResetToFactory.ShowDialog(dialog))
+    }
+
+    private fun dismissDialog() {
+        store.dispatch(ResetToFactory.DismissDialog)
     }
 }
