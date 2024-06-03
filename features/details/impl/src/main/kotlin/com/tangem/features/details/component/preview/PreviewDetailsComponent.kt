@@ -1,5 +1,6 @@
 package com.tangem.features.details.component.preview
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.features.details.component.DetailsComponent
@@ -12,15 +13,18 @@ import kotlinx.coroutines.runBlocking
 
 internal class PreviewDetailsComponent : DetailsComponent {
 
+    override val snackbarHostState: SnackbarHostState = SnackbarHostState()
+
     private val previewBlocks = runBlocking {
         ItemsBuilder(
             walletConnectComponent = PreviewWalletConnectComponent(),
             userWalletListComponent = PreviewUserWalletListComponent(),
+            router = PreviewRouter(),
         ).buldAll()
     }
 
     private val previewFooter = DetailsFooterUM(
-        socials = SocialsBuilder(urlOpener = { /* no-op */ }).buildAll(),
+        socials = SocialsBuilder(PreviewRouter()).buildAll(),
         appVersion = "1.0.0-preview",
     )
 
@@ -33,6 +37,10 @@ internal class PreviewDetailsComponent : DetailsComponent {
     @Composable
     @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
     override fun View(modifier: Modifier) {
-        DetailsScreen(state = previewState, modifier = modifier)
+        DetailsScreen(
+            modifier = modifier,
+            state = previewState,
+            snackbarHostState = snackbarHostState,
+        )
     }
 }
