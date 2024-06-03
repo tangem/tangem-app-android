@@ -130,7 +130,12 @@ internal object WalletScreenPreviewData {
 
     private val buyButton = WalletManageButton.Buy(enabled = false, dimContent = true, onClick = {})
     private val sendButton = WalletManageButton.Send(enabled = false, dimContent = true, onClick = {})
-    private val receiveButton = WalletManageButton.Receive(enabled = false, dimContent = true, onClick = {})
+    private val receiveButton = WalletManageButton.Receive(
+        enabled = false,
+        dimContent = true,
+        onClick = {},
+        onLongClick = null,
+    )
 
     private val singleWalletLockedState = WalletState.SingleCurrency.Locked(
         walletCardState = noteLockedCard,
