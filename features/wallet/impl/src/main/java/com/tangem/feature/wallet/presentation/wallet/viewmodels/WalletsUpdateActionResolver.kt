@@ -25,7 +25,8 @@ internal class WalletsUpdateActionResolver @Inject constructor(
 
     fun resolve(wallets: List<UserWallet>, currentState: WalletScreenState): Action {
         val selectedWallet = getSelectedWalletSyncUseCase().getOrElse {
-            error("Unable to find selected wallet: $it")
+            /* Selected user wallet can be null after reset if remaining user wallets is locked */
+            return Action.Unknown
         }
 
         val action = if (isFirstInitialization(currentState)) {
