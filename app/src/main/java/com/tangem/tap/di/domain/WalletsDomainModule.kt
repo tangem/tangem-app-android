@@ -130,12 +130,10 @@ internal object WalletsDomainModule {
     fun providesValidateWalletAddressUseCase(
         walletAddressServiceRepository: WalletAddressServiceRepository,
         walletManagersFacade: WalletManagersFacade,
-        dispatchers: CoroutineDispatcherProvider,
     ): ValidateWalletAddressUseCase {
         return ValidateWalletAddressUseCase(
             walletAddressServiceRepository = walletAddressServiceRepository,
             walletManagersFacade = walletManagersFacade,
-            dispatchers = dispatchers,
         )
     }
 
