@@ -61,6 +61,9 @@ internal class SetCryptoCurrencyActionsTransformer(
                             onClick = {
                                 clickIntents.onReceiveClick(cryptoCurrencyStatus = cryptoCurrencyStatus)
                             },
+                            onLongClick = {
+                                clickIntents.onCopyAddressLongClick(cryptoCurrencyStatus = cryptoCurrencyStatus)
+                            },
                         )
                     }
                     is TokenActionsState.ActionState.Sell -> {
