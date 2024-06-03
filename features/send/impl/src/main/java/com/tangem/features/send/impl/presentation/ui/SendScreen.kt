@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -12,15 +13,21 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
+import com.tangem.features.send.impl.presentation.state.previewdata.ConfirmStatePreviewData
+import com.tangem.features.send.impl.presentation.state.previewdata.SendStatesPreviewData
 import com.tangem.features.send.impl.presentation.ui.amount.SendAmountContent
 import com.tangem.features.send.impl.presentation.ui.fee.SendSpeedAndFeeContent
 import com.tangem.features.send.impl.presentation.ui.recipient.SendRecipientContent
@@ -183,3 +190,48 @@ private fun SendScreenContent(uiState: SendUiState, currentState: SendUiCurrentS
         }
     }
 }
+
+// region Preview
+@Preview(showBackground = true, widthDp = 360, heightDp = 736)
+@Preview(showBackground = true, widthDp = 360, heightDp = 736, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SendScreen_Preview(@PreviewParameter(SendScreenPreviewProvider::class) data: SendScreenPreview) {
+    TangemThemePreview {
+        SendScreen(
+            uiState = data.uiState,
+            currentState = data.currentState,
+        )
+    }
+}
+
+private class SendScreenPreviewProvider : PreviewParameterProvider<SendScreenPreview> {
+    override val values: Sequence<SendScreenPreview>
+        get() = sequenceOf(
+            SendScreenPreview(
+                uiState = SendStatesPreviewData.uiState,
+                currentState = SendUiCurrentScreen(type = SendUiStateType.Recipient, isFromConfirmation = false),
+            ),
+            SendScreenPreview(
+                uiState = SendStatesPreviewData.uiState,
+                currentState = SendUiCurrentScreen(type = SendUiStateType.Amount, isFromConfirmation = false),
+            ),
+            SendScreenPreview(
+                uiState = SendStatesPreviewData.uiState,
+                currentState = SendUiCurrentScreen(type = SendUiStateType.Send, isFromConfirmation = false),
+            ),
+            SendScreenPreview(
+                uiState = SendStatesPreviewData.uiState,
+                currentState = SendUiCurrentScreen(type = SendUiStateType.EditFee, isFromConfirmation = true),
+            ),
+            SendScreenPreview(
+                uiState = SendStatesPreviewData.uiState.copy(sendState = ConfirmStatePreviewData.sendDoneState),
+                currentState = SendUiCurrentScreen(type = SendUiStateType.Send, isFromConfirmation = false),
+            ),
+        )
+}
+
+private data class SendScreenPreview(
+    val uiState: SendUiState,
+    val currentState: SendUiCurrentScreen,
+)
+// endregion
