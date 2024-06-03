@@ -87,7 +87,7 @@ class MockTangemSdkManager(
         return MockProvider.getCardDto()
     }
 
-    override suspend fun resetBackupCard(userWalletId: UserWalletId): CompletionResult<Unit> {
+    override suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Unit> {
         return CompletionResult.Success(Unit)
     }
 

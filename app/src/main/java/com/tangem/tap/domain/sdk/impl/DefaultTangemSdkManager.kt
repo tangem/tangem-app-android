@@ -170,10 +170,15 @@ class DefaultTangemSdkManager(
             .map { CardDTO(it) }
     }
 
-    override suspend fun resetBackupCard(userWalletId: UserWalletId): CompletionResult<Unit> {
+    override suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Unit> {
         return runTaskAsyncReturnOnMain(
             runnable = ResetBackupCardTask(userWalletId),
-            initialMessage = Message(resources.getString(R.string.card_settings_reset_card_to_factory)),
+            initialMessage = Message(
+                resources.getString(
+                    R.string.initial_message_reset_backup_card_header,
+                    cardNumber.toString(),
+                ),
+            ),
         )
     }
 
