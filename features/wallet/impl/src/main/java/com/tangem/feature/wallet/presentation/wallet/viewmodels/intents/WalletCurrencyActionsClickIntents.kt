@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
@@ -11,6 +12,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
@@ -56,6 +58,8 @@ interface WalletCurrencyActionsClickIntents {
 
     fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
+    fun onCopyAddressLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus): TextReference?
+
     fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
@@ -83,6 +87,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val reduxStateHolder: ReduxStateHolder,
+    private val hapticManager: HapticManager,
+    private val clipboardManager: ClipboardManager,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -173,6 +179,18 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             ),
             userWalletId,
         )
+    }
+
+    override fun onCopyAddressLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus): TextReference? {
+        val networkAddress = cryptoCurrencyStatus.value.networkAddress ?: return null
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        val addresses = networkAddress.availableAddresses.mapToAddressModels(cryptoCurrency).toImmutableList()
+        val defaultAddress = addresses.firstOrNull()?.value ?: return null
+
+        hapticManager.vibrateMeduim()
+        clipboardManager.setText(text = defaultAddress)
+        analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+        return resourceReference(R.string.wallet_notification_address_copied)
     }
 
     private fun createReceiveBottomSheetContent(
