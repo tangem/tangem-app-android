@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.left
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -34,10 +35,11 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.transaction.error.ValidateAddressError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.domain.wallets.usecase.ValidateWalletAddressUseCase
-import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
+import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
+import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
@@ -93,6 +95,7 @@ internal class SendViewModel @Inject constructor(
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
+    private val isUtxoConsolidationAvailableUseCase: IsUtxoConsolidationAvailableUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     validateTransactionUseCase: ValidateTransactionUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
@@ -135,6 +138,7 @@ internal class SendViewModel @Inject constructor(
         stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        isUtxoConsolidationAvailableProvider = Provider { isUtxoConsolidationAvailable },
         validateWalletMemoUseCase = validateWalletMemoUseCase,
     )
 
@@ -198,6 +202,7 @@ internal class SendViewModel @Inject constructor(
     private var userWallet: UserWallet by Delegates.notNull()
     private var userWallets: List<AvailableWallet> = emptyList()
     private var isAmountSubtractAvailable: Boolean = false
+    private var isUtxoConsolidationAvailable: Boolean = false
     private var isTapHelpPreviewEnabled: Boolean = false
     private var coinCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
@@ -248,6 +253,7 @@ internal class SendViewModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
                     checkIfSubtractAvailable()
+                    checkIfUtxoConsolidationAvailable()
 
                     val isSingleWalletWithToken = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
                     val isMultiCurrency = wallet.isMultiCurrency
@@ -424,9 +430,6 @@ internal class SendViewModel @Inject constructor(
     }
 
     private suspend fun List<UserWallet>.toAvailableWallets(): List<AvailableWallet> {
-        val currentAddress: String = kotlin.runCatching {
-            cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-        }.getOrNull().orEmpty()
         return filterNot { it.isLocked }
             .mapNotNull { wallet ->
                 val addresses = if (!wallet.isMultiCurrency) {
@@ -440,16 +443,14 @@ internal class SendViewModel @Inject constructor(
                 } else {
                     getNetworkAddressesUseCase.invokeSync(wallet.walletId, cryptoCurrency.network)
                 }
-                addresses
-                    ?.filter { it.address != currentAddress && it.cryptoCurrency is CryptoCurrency.Coin }
-                    ?.map { (cryptoCurrency, address) ->
-                        AvailableWallet(
-                            name = wallet.name,
-                            address = address,
-                            cryptoCurrency = cryptoCurrency,
-                            userWalletId = wallet.walletId,
-                        )
-                    }
+                addresses?.map { (cryptoCurrency, address) ->
+                    AvailableWallet(
+                        name = wallet.name,
+                        address = address,
+                        cryptoCurrency = cryptoCurrency,
+                        userWalletId = wallet.walletId,
+                    )
+                }
             }.flatten()
     }
 
@@ -624,8 +625,15 @@ internal class SendViewModel @Inject constructor(
                 uiState = recipientStateFactory.getOnRecipientAddressValidationStarted()
                 val isValidAddress = validateAddress(value)
                 uiState = recipientStateFactory.getOnRecipientAddressValidState(value, isValidAddress)
-                type?.let { analyticsEventHandler.send(SendAnalyticEvents.AddressEntered(it, isValidAddress)) }
-                autoNextFromRecipient(type, isValidAddress)
+                type?.let {
+                    analyticsEventHandler.send(
+                        SendAnalyticEvents.AddressEntered(
+                            it,
+                            isValidAddress.isRight(),
+                        ),
+                    )
+                }
+                autoNextFromRecipient(type, isValidAddress.isRight())
             }
         }.saveIn(addressValidationJobHolder)
     }
@@ -636,23 +644,22 @@ internal class SendViewModel @Inject constructor(
                 uiState = recipientStateFactory.getOnRecipientMemoValueChange(value, isValuePasted)
                 uiState = recipientStateFactory.getOnRecipientAddressValidationStarted()
                 val recipientState = uiState.getRecipientState(stateRouter.isEditState)
-                val isValidAddress = validateAddress(recipientState?.addressTextField?.value.orEmpty())
-                uiState = recipientStateFactory.getOnRecipientMemoValidState(value, isValidAddress)
+                val maybeValidAddress = validateAddress(recipientState?.addressTextField?.value.orEmpty())
+                uiState = recipientStateFactory.getOnRecipientMemoValidState(value, maybeValidAddress.isRight())
             }
         }.saveIn(memoValidationJobHolder)
     }
 
-    private suspend fun validateAddress(value: String): Boolean = runCatching {
-        val isValidAddress = validateWalletAddressUseCase(
+    private suspend fun validateAddress(value: String): Either<ValidateAddressError, Unit> = runCatching {
+        val maybeValidAddress = validateWalletAddressUseCase(
             userWalletId = userWalletId,
             network = cryptoCurrency.network,
             address = value,
-        ).getOrElse { false }
-        val isAddressInWallet = cryptoCurrencyStatus.value.networkAddress?.availableAddresses
-            ?.any { it.value == value } ?: true
-        onEnteredValidAddress(isValidAddress, isAddressInWallet)
-        return isValidAddress
-    }.getOrElse { false }
+            currencyAddress = cryptoCurrencyStatus.value.networkAddress?.availableAddresses,
+        )
+        onEnteredValidAddress(maybeValidAddress.isLeft())
+        maybeValidAddress
+    }.getOrElse { ValidateAddressError.DataError(it).left() }
 
     private suspend fun checkIfXrpAddressValue(value: String): Boolean {
         return BlockchainUtils.decodeRippleXAddress(value, cryptoCurrency.network.id.value)?.let { decodedAddress ->
@@ -665,11 +672,8 @@ internal class SendViewModel @Inject constructor(
         } ?: false
     }
 
-    private fun onEnteredValidAddress(isValidAddress: Boolean, isAddressInWallet: Boolean) {
-        uiState = recipientStateFactory.getHiddenRecentListState(
-            isAddressInWallet = isAddressInWallet,
-            isValidAddress = isValidAddress,
-        )
+    private fun onEnteredValidAddress(isNotValid: Boolean) {
+        uiState = recipientStateFactory.getHiddenRecentListState(isNotValid = isNotValid)
     }
 
     private fun autoNextFromRecipient(type: EnterAddressSource?, isValidAddress: Boolean) {
@@ -736,6 +740,13 @@ internal class SendViewModel @Inject constructor(
         isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(userWalletId, cryptoCurrency).fold(
             ifRight = { it },
             ifLeft = { false },
+        )
+    }
+
+    private suspend fun checkIfUtxoConsolidationAvailable() {
+        isUtxoConsolidationAvailable = isUtxoConsolidationAvailableUseCase.invokeSync(
+            userWalletId = userWalletId,
+            network = cryptoCurrency.network,
         )
     }
 
