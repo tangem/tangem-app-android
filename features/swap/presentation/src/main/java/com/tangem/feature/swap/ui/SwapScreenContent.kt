@@ -514,8 +514,8 @@ private val state = SwapStateHolder(
     ),
 )
 
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun SwapScreenContentPreview() {
     TangemThemePreview {
