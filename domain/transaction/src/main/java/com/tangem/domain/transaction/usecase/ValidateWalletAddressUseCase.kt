@@ -9,8 +9,6 @@ import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.error.ValidateAddressError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.withContext
 
 /**
  * Use case for validating wallet address.
@@ -18,7 +16,6 @@ import kotlinx.coroutines.withContext
 class ValidateWalletAddressUseCase(
     private val walletAddressServiceRepository: WalletAddressServiceRepository,
     private val walletManagersFacade: WalletManagersFacade,
-    private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
     suspend operator fun invoke(
@@ -26,7 +23,7 @@ class ValidateWalletAddressUseCase(
         network: Network,
         address: String,
         currencyAddress: Set<NetworkAddress.Address>?,
-    ): Either<ValidateAddressError, Unit> = withContext(dispatchers.io) {
+    ): Either<ValidateAddressError, Unit> {
         val isUtxoConsolidationAvailable =
             walletManagersFacade.checkUtxoConsolidationAvailability(userWalletId, network)
         val isCurrentAddress = currencyAddress?.any { it.value == address } ?: true
@@ -34,7 +31,7 @@ class ValidateWalletAddressUseCase(
         val isForbidSelfSend = isCurrentAddress && !isUtxoConsolidationAvailable
         val isValidAddress = walletAddressServiceRepository.validateAddress(userWalletId, network, address)
 
-        when {
+        return when {
             !isValidAddress -> ValidateAddressError.InvalidAddress.left()
             isForbidSelfSend -> ValidateAddressError.AddressInWallet.left()
             else -> Unit.right()
