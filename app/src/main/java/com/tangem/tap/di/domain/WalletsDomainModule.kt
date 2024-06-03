@@ -3,7 +3,10 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.repository.WalletAddressServiceRepository
+import com.tangem.domain.transaction.WalletAddressServiceRepository
+import com.tangem.domain.transaction.usecase.ParseSharedAddressUseCase
+import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
+import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
@@ -126,11 +129,11 @@ internal object WalletsDomainModule {
     @Singleton
     fun providesValidateWalletAddressUseCase(
         walletAddressServiceRepository: WalletAddressServiceRepository,
-        dispatchers: CoroutineDispatcherProvider,
+        walletManagersFacade: WalletManagersFacade,
     ): ValidateWalletAddressUseCase {
         return ValidateWalletAddressUseCase(
             walletAddressServiceRepository = walletAddressServiceRepository,
-            dispatchers = dispatchers,
+            walletManagersFacade = walletManagersFacade,
         )
     }
 
