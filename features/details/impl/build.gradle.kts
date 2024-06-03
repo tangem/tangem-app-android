@@ -15,14 +15,18 @@ dependencies {
 
     /* Project - API */
     implementation(projects.features.details.api)
+    implementation(projects.features.tester.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.featuretoggles)
+    implementation(projects.core.navigation)
+    implementation(projects.core.analytics.models)
 
     /* Project - Domain */
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.legacy)
 
     /* AndroidX */
     implementation(deps.androidx.fragment.ktx)
