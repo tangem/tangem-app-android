@@ -51,11 +51,11 @@
   <string name="card_settings_completed_reset_alert_title">Reset complete</string>
   <string name="card_settings_continue_reset_alert_message">Do you want to reset the next card in this wallet?</string>
   <string name="card_settings_continue_reset_alert_title">Card reset</string>
+  <string name="card_settings_interrupted_reset_alert_message">We recommend completing the reset process for all cards in this wallet</string>
+  <string name="card_settings_interrupted_reset_alert_title">You haven\'t reset all your cards</string>
   <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
   <string name="card_settings_security_mode">Security Mode</string>
   <string name="card_settings_title">Card settings</string>
-  <string name="card_settings_interrupted_reset_alert_message">We recommend completing the reset process for all cards in this wallet</string>
-  <string name="card_settings_interrupted_reset_alert_title">You haven\'t reset all your cards</string>
   <string name="cardano_coin_will_be_send_with_token_description">In addition to network fee, the Cardano network charges %1$s ADA when transacting with the %2$s token</string>
   <string name="cardano_coin_will_be_send_with_token_title">Cardano transaction requirements</string>
   <string name="cardano_insufficient_balance_to_send_token_description">To make a %1$s transaction, you must deposit some ADA to cover the network fee and minimum ADA value (5 ADA recommended)</string>
@@ -256,6 +256,7 @@
   <string name="initial_message_change_access_code_body">To change the access code tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_create_wallet_body">To create the wallet tap the card as shown above and do not remove until the end of the operation</string>
+  <string name="initial_message_reset_backup_card_header">Tap the card #%s of the wallet</string>
   <string name="initial_message_scan_header">Tap to scan</string>
   <string name="initial_message_sign_header">Tap to sign</string>
   <string name="initial_message_tap_header">Tap the card</string>
