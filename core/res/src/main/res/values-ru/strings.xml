@@ -52,11 +52,11 @@
   <string name="card_settings_completed_reset_alert_title">Сброс завершён</string>
   <string name="card_settings_continue_reset_alert_message">Хотите сбросить следующую карту от этого кошелька?</string>
   <string name="card_settings_continue_reset_alert_title">Сброс карты</string>
+  <string name="card_settings_interrupted_reset_alert_message">Рекомендуем завершить процесс сброса всех карт кошелька</string>
+  <string name="card_settings_interrupted_reset_alert_title">Вы сбросили не все карты</string>
   <string name="card_settings_reset_card_to_factory">Заводские настройки</string>
   <string name="card_settings_security_mode">Тип безопасности</string>
   <string name="card_settings_title">Настройки карты</string>
-  <string name="card_settings_interrupted_reset_alert_message">Рекомендуем завершить процесс сброса всех карт кошелька</string>
-  <string name="card_settings_interrupted_reset_alert_title">Вы сбросили не все карты</string>
   <string name="cardano_coin_will_be_send_with_token_description">Помимо сетевой комиссий, сеть Cardano взимает %1$s ADA при транзакции с токеном %2$s</string>
   <string name="cardano_coin_will_be_send_with_token_title">Требования к транзакции Cardano</string>
   <string name="cardano_insufficient_balance_to_send_token_description">Чтобы совершить транзакцию %1$s, внесите некоторую сумму ADA для покрытия сетевой комиссии и минимального значения ADA (рекомендуется 5 ADA)</string>
@@ -257,6 +257,7 @@
   <string name="initial_message_change_access_code_body">Чтобы изменить код доступа, приложите карту как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_change_passcode_body">Чтобы изменить пароль, приложите карту как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_create_wallet_body">Чтобы создать кошелек, приложите карту как показано выше и не убирайте до окончания операции</string>
+  <string name="initial_message_reset_backup_card_header">Приложите карту #%s для сброса</string>
   <string name="initial_message_scan_header">Приложите, чтобы отсканировать</string>
   <string name="initial_message_sign_header">Приложите, чтобы подписать</string>
   <string name="initial_message_tap_header">Приложите карту</string>
