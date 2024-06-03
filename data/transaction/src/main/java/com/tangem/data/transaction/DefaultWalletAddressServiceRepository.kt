@@ -1,35 +1,39 @@
-package com.tangem.data.wallets
+package com.tangem.data.transaction
 
 import android.net.Uri
 import androidx.core.text.isDigitsOnly
 import com.tangem.blockchain.blockchains.near.NearWalletManager
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.ParsedQrCode
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.models.errors.ParsedQrCodeErrors
-import com.tangem.domain.wallets.repository.WalletAddressServiceRepository
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import java.math.BigInteger
 
 class DefaultWalletAddressServiceRepository(
     private val walletManagersFacade: WalletManagersFacade,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletAddressServiceRepository {
 
-    override suspend fun validateAddress(userWalletId: UserWalletId, network: Network, address: String): Boolean {
-        val blockchain = Blockchain.fromId(network.id.value)
+    override suspend fun validateAddress(userWalletId: UserWalletId, network: Network, address: String): Boolean =
+        withContext(dispatchers.io) {
+            val blockchain = Blockchain.fromId(network.id.value)
 
-        return if (blockchain.isNear()) {
-            val walletManager = walletManagersFacade.getOrCreateWalletManager(
-                userWalletId = userWalletId,
-                blockchain = blockchain,
-                derivationPath = network.derivationPath.value,
-            ) ?: return false
-            (walletManager as? NearWalletManager)?.validateAddress(address) ?: false
-        } else {
-            blockchain.validateAddress(address)
+            if (blockchain.isNear()) {
+                val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                    userWalletId = userWalletId,
+                    blockchain = blockchain,
+                    derivationPath = network.derivationPath.value,
+                ) ?: return@withContext false
+                (walletManager as? NearWalletManager)?.validateAddress(address) ?: false
+            } else {
+                blockchain.validateAddress(address)
+            }
         }
-    }
 
     override fun validateMemo(network: Network, memo: String): Boolean {
         if (memo.isEmpty()) return true
