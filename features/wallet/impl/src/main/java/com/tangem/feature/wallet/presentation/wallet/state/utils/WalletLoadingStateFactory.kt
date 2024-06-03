@@ -88,7 +88,7 @@ internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIn
 
     private fun createDimmedButtons(): PersistentList<WalletManageButton> {
         return persistentListOf(
-            WalletManageButton.Receive(enabled = true, dimContent = true, onClick = {}),
+            WalletManageButton.Receive(enabled = true, dimContent = true, onClick = {}, onLongClick = null),
             WalletManageButton.Send(enabled = true, dimContent = true, onClick = {}),
             WalletManageButton.Buy(enabled = true, dimContent = true, onClick = {}),
             WalletManageButton.Sell(enabled = true, dimContent = true, onClick = {}),
