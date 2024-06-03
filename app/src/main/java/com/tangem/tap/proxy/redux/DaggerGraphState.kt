@@ -34,7 +34,7 @@ import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
@@ -46,7 +46,7 @@ data class DaggerGraphState(
     val customTokenFeatureToggles: CustomTokenFeatureToggles? = null,
     val scanCardUseCase: ScanCardUseCase? = null,
     val walletRouter: WalletRouter? = null,
-    val walletConnectRepository: WalletConnectRepository? = null,
+    val walletConnectRepository: LegacyWalletConnectRepository? = null,
     val walletConnectSessionsRepository: WalletConnectSessionsRepository? = null,
     val walletConnectInteractor: WalletConnectInteractor? = null,
     val tokenDetailsRouter: TokenDetailsRouter? = null,
