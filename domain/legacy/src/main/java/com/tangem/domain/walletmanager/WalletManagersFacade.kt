@@ -253,6 +253,11 @@ interface WalletManagersFacade {
         signer: CommonSigner,
     ): SimpleResult
 
-    /** Indicates UTXO consolidation availability */
+    /**
+     * Indicates UTXO consolidation availability
+     *
+     * @param userWalletId selected user wallet
+     * @param network availability for network
+     */
     suspend fun checkUtxoConsolidationAvailability(userWalletId: UserWalletId, network: Network): Boolean
 }
