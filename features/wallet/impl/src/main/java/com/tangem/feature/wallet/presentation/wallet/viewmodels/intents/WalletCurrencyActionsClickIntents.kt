@@ -349,7 +349,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        // TODO add staking
+        // TODO staking
         Timber.e("Not implemented yet")
     }
 
