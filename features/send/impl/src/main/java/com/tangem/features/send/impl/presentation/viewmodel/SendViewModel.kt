@@ -70,11 +70,10 @@ import kotlin.properties.Delegates
 internal class SendViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
+    private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
@@ -263,9 +262,7 @@ internal class SendViewModel @Inject constructor(
                     )
                 },
                 ifLeft = {
-                    uiState = eventStateFactory.getGenericErrorState(
-                        onConsume = { uiState = eventStateFactory.onConsumeEventState() },
-                    )
+                    showErrorAlert()
                     return@launch
                 },
             )
@@ -283,45 +280,33 @@ internal class SendViewModel @Inject constructor(
             .saveIn(balanceHidingJobHolder)
     }
 
-    // TODO [REDACTED_JIRA]
-    private fun getCurrenciesStatusUpdates(isSingleWalletWithToken: Boolean, isMultiCurrency: Boolean) {
-        if (cryptoCurrency is CryptoCurrency.Coin) {
-            getCurrencyStatusUpdates(
-                isSingleWalletWithToken = isSingleWalletWithToken,
-                isMultiCurrency = isMultiCurrency,
-            ).onEach { currencyStatus ->
-                currencyStatus.onRight {
-                    onDataLoaded(
-                        currencyStatus = it,
-                        coinCurrencyStatus = it,
-                        feeCurrencyStatus = getFeeCurrencyStatusSync(it, isMultiCurrency),
-                    )
-                }
-            }
-                .flowOn(dispatchers.main)
-                .launchIn(viewModelScope)
-                .saveIn(balanceJobHolder)
+    private suspend fun getCurrenciesStatusUpdates(isSingleWalletWithToken: Boolean, isMultiCurrency: Boolean) {
+        val maybeCurrencyStatus = getCurrencyStatus(
+            isSingleWalletWithToken = isSingleWalletWithToken,
+            isMultiCurrency = isMultiCurrency,
+        )
+        val maybeCoinStatus = if (cryptoCurrency is CryptoCurrency.Coin) {
+            maybeCurrencyStatus
         } else {
-            combine(
-                flow = getCoinCurrencyStatusUpdates(isSingleWalletWithToken),
-                flow2 = getCurrencyStatusUpdates(
-                    isSingleWalletWithToken = isSingleWalletWithToken,
-                    isMultiCurrency = isMultiCurrency,
-                ),
-            ) { maybeCoinStatus, maybeCurrencyStatus ->
-                if (maybeCoinStatus.isRight() && maybeCurrencyStatus.isRight()) {
-                    val currencyStatus = maybeCurrencyStatus.getOrElse { error("Currency status is unreachable") }
-                    val coinStatus = maybeCoinStatus.getOrElse { error("Coin status is unreachable") }
-                    onDataLoaded(
-                        currencyStatus = currencyStatus,
-                        coinCurrencyStatus = coinStatus,
-                        feeCurrencyStatus = getFeeCurrencyStatusSync(currencyStatus, isMultiCurrency),
-                    )
-                }
+            getCoinCurrencyStatusUpdates(isSingleWalletWithToken)
+        }
+
+        if (maybeCoinStatus.isRight() && maybeCurrencyStatus.isRight()) {
+            val currencyStatus = maybeCurrencyStatus.getOrElse {
+                showErrorAlert()
+                return Timber.e("Currency status is unreachable")
             }
-                .flowOn(dispatchers.main)
-                .launchIn(viewModelScope)
-                .saveIn(balanceJobHolder)
+            val coinStatus = maybeCoinStatus.getOrElse {
+                showErrorAlert()
+                return Timber.e("Coin status is unreachable")
+            }
+            onDataLoaded(
+                currencyStatus = currencyStatus,
+                coinCurrencyStatus = coinStatus,
+                feeCurrencyStatus = getFeeCurrencyStatusSync(currencyStatus, isMultiCurrency),
+            )
+        } else {
+            showErrorAlert()
         }
     }
 
@@ -331,25 +316,26 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private fun getCoinCurrencyStatusUpdates(isSingleWalletWithToken: Boolean) = getNetworkCoinStatusUseCase(
-        userWalletId = userWalletId,
-        networkId = cryptoCurrency.network.id,
-        derivationPath = cryptoCurrency.network.derivationPath,
-        isSingleWalletWithTokens = isSingleWalletWithToken,
-    ).conflate().distinctUntilChanged()
+    private suspend fun getCoinCurrencyStatusUpdates(isSingleWalletWithToken: Boolean) = getNetworkCoinStatusUseCase
+        .invokeSync(
+            userWalletId = userWalletId,
+            networkId = cryptoCurrency.network.id,
+            derivationPath = cryptoCurrency.network.derivationPath,
+            isSingleWalletWithTokens = isSingleWalletWithToken,
+        )
 
-    private fun getCurrencyStatusUpdates(
+    private suspend fun getCurrencyStatus(
         isSingleWalletWithToken: Boolean,
         isMultiCurrency: Boolean,
-    ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
+    ): Either<CurrencyStatusError, CryptoCurrencyStatus> {
         return if (isMultiCurrency) {
-            getCurrencyStatusUpdatesUseCase(
+            getCryptoCurrencyStatusSyncUseCase(
                 userWalletId = userWalletId,
-                currencyId = cryptoCurrency.id,
+                cryptoCurrencyId = cryptoCurrency.id,
                 isSingleWalletWithTokens = isSingleWalletWithToken,
-            ).conflate().distinctUntilChanged()
+            )
         } else {
-            getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = userWalletId)
+            getCryptoCurrencyStatusSyncUseCase(userWalletId = userWalletId)
         }
     }
 
@@ -985,6 +971,12 @@ internal class SendViewModel @Inject constructor(
             neverShowTapHelpUseCase()
         }
         uiState = stateFactory.getHiddenTapHelpState()
+    }
+
+    private fun showErrorAlert() {
+        uiState = eventStateFactory.getGenericErrorState(
+            onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+        )
     }
 // endregion
 
