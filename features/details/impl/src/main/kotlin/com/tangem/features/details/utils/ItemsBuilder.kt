@@ -1,5 +1,7 @@
 package com.tangem.features.details.utils
 
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.details.component.UserWalletListComponent
@@ -7,6 +9,7 @@ import com.tangem.features.details.component.WalletConnectComponent
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.BuildConfig
 import com.tangem.features.details.impl.R
+import com.tangem.features.details.routing.DetailsRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -14,6 +17,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal class ItemsBuilder(
     private val walletConnectComponent: WalletConnectComponent,
     private val userWalletListComponent: UserWalletListComponent,
+    private val router: Router,
 ) {
 
     suspend fun buldAll(): ImmutableList<DetailsItemUM> = buildList {
@@ -37,7 +41,7 @@ internal class ItemsBuilder(
         }
     }
 
-    fun buildUserWalletListBlock(): DetailsItemUM = DetailsItemUM.Component(
+    private fun buildUserWalletListBlock(): DetailsItemUM = DetailsItemUM.Component(
         id = "user_wallet_list",
         content = {
             userWalletListComponent.View(modifier = it)
@@ -51,7 +55,7 @@ internal class ItemsBuilder(
                 id = "buy_tangem_wallet",
                 title = stringReference("Buy Tangem Wallet"), // TODO: Move to resources in [REDACTED_TASK_KEY]
                 iconRes = R.drawable.ic_tangem_24,
-                onClick = { /* [REDACTED_TODO_COMMENT] */ },
+                onClick = { router.push(DetailsRoute.Url(BUY_TANGEM_URL)) },
             ),
         ),
     )
@@ -63,7 +67,7 @@ internal class ItemsBuilder(
                 id = "app_settings",
                 title = resourceReference(R.string.app_settings_title),
                 iconRes = R.drawable.ic_settings_24,
-                onClick = { /* [REDACTED_TODO_COMMENT] */ },
+                onClick = { router.push(DetailsRoute.Screen(AppScreen.AppSettings)) },
             ).let(::add)
 
             if (BuildConfig.TESTER_MENU_ENABLED) {
@@ -71,7 +75,7 @@ internal class ItemsBuilder(
                     id = "tester_menu",
                     title = stringReference(value = "Tester menu"),
                     iconRes = R.drawable.ic_alert_24,
-                    onClick = { /* [REDACTED_TODO_COMMENT] */ },
+                    onClick = { router.push(DetailsRoute.TesterMenu) },
                 ).let(::add)
             }
         }.toImmutableList(),
@@ -84,14 +88,18 @@ internal class ItemsBuilder(
                 id = "send_feedback",
                 title = stringReference("Send feedback"), // TODO: Move to resources in [REDACTED_TASK_KEY]
                 iconRes = R.drawable.ic_comment_24,
-                onClick = { /* [REDACTED_TODO_COMMENT] */ },
+                onClick = { router.push(DetailsRoute.Feedback) },
             ),
             DetailsItemUM.Basic.Item(
                 id = "disclaimer",
                 title = resourceReference(R.string.disclaimer_title),
                 iconRes = R.drawable.ic_text_24,
-                onClick = { /* [REDACTED_TODO_COMMENT] */ },
+                onClick = { router.push(DetailsRoute.Screen(AppScreen.Disclaimer)) },
             ),
         ),
     )
+
+    private companion object {
+        const val BUY_TANGEM_URL = "https://buy.tangem.com/"
+    }
 }
