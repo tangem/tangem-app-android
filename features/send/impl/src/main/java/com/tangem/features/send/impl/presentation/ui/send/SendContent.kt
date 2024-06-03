@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui.send
 
+import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -20,10 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.previewdata.ConfirmStatePreviewData
+import com.tangem.features.send.impl.presentation.state.previewdata.SendStatesPreviewData
 import com.tangem.features.send.impl.presentation.ui.common.notifications
 import kotlinx.coroutines.delay
 
@@ -134,3 +141,24 @@ private fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modif
         }
     }
 }
+
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SendContent_Preview(@PreviewParameter(SendContentPreviewProvider::class) uiState: SendUiState) {
+    TangemThemePreview {
+        SendContent(
+            uiState = uiState,
+        )
+    }
+}
+
+private class SendContentPreviewProvider : PreviewParameterProvider<SendUiState> {
+    override val values: Sequence<SendUiState>
+        get() = sequenceOf(
+            SendStatesPreviewData.uiState,
+            SendStatesPreviewData.uiState.copy(sendState = ConfirmStatePreviewData.sendDoneState),
+        )
+}
+// endregion
