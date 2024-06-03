@@ -1,10 +1,10 @@
 package com.tangem.domain.walletmanager.utils
 
-import com.tangem.blockchain.common.txhistory.TransactionHistoryItem
+import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
-import com.tangem.blockchain.common.txhistory.TransactionHistoryItem as SdkTransactionHistoryItem
+import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem as SdkTransactionHistoryItem
 
 internal class SdkTransactionHistoryItemConverter(
     smartContractMethods: Map<String, SmartContractMethod>,
