@@ -453,6 +453,7 @@ internal class SendViewModel @Inject constructor(
         val txHistoryList = getFixedTxHistoryItemsUseCase.getSync(
             userWalletId = userWalletId,
             currency = cryptoCurrency,
+            pageSize = RECENT_TX_SIZE,
         ).getOrElse { emptyList() }
         uiState = stateFactory.onLoadedHistoryList(txHistory = txHistoryList)
     }
@@ -968,6 +969,7 @@ internal class SendViewModel @Inject constructor(
     private companion object {
         const val CHECK_FEE_UPDATE_DELAY = 60_000L
         const val BALANCE_UPDATE_DELAY = 11_000L
+        const val RECENT_TX_SIZE = 100
 
         const val RU_LOCALE = "ru"
         const val EN_LOCALE = "en"
