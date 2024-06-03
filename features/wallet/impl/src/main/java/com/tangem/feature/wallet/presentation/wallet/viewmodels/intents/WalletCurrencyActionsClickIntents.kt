@@ -263,6 +263,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                     formatArgs = WrappedList(
                         listOf(
                             cryptoCurrencyStatus.currency.name,
+                            cryptoCurrencyStatus.currency.symbol,
                             cryptoCurrencyStatus.currency.network.name,
                         ),
                     ),

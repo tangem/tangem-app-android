@@ -177,6 +177,7 @@ internal class TokenDetailsStateFactory(
                 isShow = true,
                 onDismissRequest = clickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.HasLinkedTokensConfig(
+                    currencyName = currency.name,
                     currencySymbol = currency.symbol,
                     networkName = currency.network.name,
                     onConfirmClick = clickIntents::onDismissDialog,
