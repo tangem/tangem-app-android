@@ -246,7 +246,7 @@ private fun PersonalCodeCard(code: String) {
             .fillMaxWidth()
             .padding(vertical = TangemTheme.dimens.spacing12),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
         Text(
             text = stringResource(id = R.string.referral_promo_code_title),
