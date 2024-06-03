@@ -43,7 +43,11 @@ internal object TransactionDataModule {
     @Singleton
     fun providesWalletAddressServiceRepository(
         walletManagersFacade: WalletManagersFacade,
+        coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): WalletAddressServiceRepository {
-        return DefaultWalletAddressServiceRepository(walletManagersFacade)
+        return DefaultWalletAddressServiceRepository(
+            walletManagersFacade = walletManagersFacade,
+            dispatchers = coroutineDispatcherProvider,
+        )
     }
 }
