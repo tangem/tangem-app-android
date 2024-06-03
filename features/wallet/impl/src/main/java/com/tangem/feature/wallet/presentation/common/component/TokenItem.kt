@@ -128,7 +128,7 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
 
         val layoutWidth = constraints.maxWidth
         val horizontalPadding = with(density) { dimens.size12.roundToPx() }
-        val verticalPadding = with(density) { dimens.size16.roundToPx() }
+        val verticalPadding = with(density) { dimens.size15.roundToPx() }
         val layoutWidthWithoutPaddings = layoutWidth - 2 * horizontalPadding
 
         val titleMinWidth = (layoutWidth * TITLE_MIN_WIDTH_COEFFICIENT).toInt()
@@ -214,8 +214,7 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
         val layoutHeight = calculateLayoutHeight(
             state = state,
             minLayoutHeight = with(density) { dimens.size68.roundToPx() },
-            layoutPadding = horizontalPadding,
-            betweenRowsPadding = with(density) { dimens.size2.roundToPx() },
+            layoutPadding = verticalPadding,
             title = title,
             fiatAmount = fiatAmount,
             cryptoAmount = cryptoAmount,
@@ -360,7 +359,6 @@ private fun calculateLayoutHeight(
     state: TokenItemState,
     minLayoutHeight: Int,
     layoutPadding: Int,
-    betweenRowsPadding: Int,
     title: Placeable,
     fiatAmount: Placeable?,
     cryptoAmount: Placeable?,
@@ -374,9 +372,8 @@ private fun calculateLayoutHeight(
         is TokenItemState.Loading,
         is TokenItemState.Locked,
         -> {
-            firstColumnHeight = 2 * layoutPadding + title.height + betweenRowsPadding + (cryptoAmount?.height ?: 0)
-            secondColumnHeight = 2 * layoutPadding + (fiatAmount?.height ?: 0) + betweenRowsPadding +
-                (priceChange?.height ?: 0)
+            firstColumnHeight = 2 * layoutPadding + title.height + (cryptoAmount?.height ?: 0)
+            secondColumnHeight = 2 * layoutPadding + (fiatAmount?.height ?: 0) + (priceChange?.height ?: 0)
         }
         is TokenItemState.Draggable,
         is TokenItemState.NoAddress,
