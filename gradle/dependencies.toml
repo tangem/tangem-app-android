@@ -89,7 +89,7 @@ markdown = "0.7.2"
 # region Tangem
 tangemBlockchainSdk = "develop-654"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-359"
+tangemCardSdk = "develop-360"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
@@ -197,7 +197,7 @@ test-junit-android = { module = "androidx.test.ext:junit", version.ref = "junitA
 test-truth = { module = "com.google.truth:truth", version.ref = "truth" }
 test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 test-kaspresso = { module = "com.kaspersky.android-components:kaspresso", version.ref = "kaspresso" }
-test-kaspresso-compose = { module = "com.kaspersky.android-components:kaspresso-compose-support", version.ref = "kaspresso-compose"}
+test-kaspresso-compose = { module = "com.kaspersky.android-components:kaspresso-compose-support", version.ref = "kaspresso-compose" }
 test-compose-junit = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose-junit" }
 test-hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 test-hilt = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
