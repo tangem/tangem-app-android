@@ -1,6 +1,6 @@
 package com.tangem.domain.walletmanager.utils
 
-import com.tangem.blockchain.common.txhistory.TransactionHistoryItem
+import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
