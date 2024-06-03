@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.recipient
 
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -39,7 +40,8 @@ internal class SendRecipientHistoryListConverter(
         } else {
             item.sourceType is TxHistoryItem.SourceType.Single
         }
-        isTransfer && isSingleAddress && isNotContract
+        val notZero = !item.amount.isZero()
+        isTransfer && isSingleAddress && isNotContract && item.isOutgoing && notZero
     }
         .take(RECENT_LIST_SIZE)
         .mapIndexed { index, tx ->
