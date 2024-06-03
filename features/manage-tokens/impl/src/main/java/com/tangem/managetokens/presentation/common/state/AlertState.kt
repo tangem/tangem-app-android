@@ -43,10 +43,10 @@ internal sealed class AlertState {
         )
     }
 
-    class CannotHideNetworkWithTokens(tokenName: String, networkName: String) : AlertState() {
+    class CannotHideNetworkWithTokens(tokenName: String, currencySymbol: String, networkName: String) : AlertState() {
         override val message: TextReference = resourceReference(
             id = R.string.token_details_unable_hide_alert_message,
-            formatArgs = wrappedList(tokenName, networkName),
+            formatArgs = wrappedList(tokenName, currencySymbol, networkName),
         )
     }
 
