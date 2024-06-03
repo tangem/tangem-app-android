@@ -107,7 +107,7 @@ private fun SegmentSeedBlock(state: SegmentSeedState, modifier: Modifier = Modif
                 it.count,
             ),
             modifier = Modifier
-                .padding(vertical = TangemTheme.dimens.spacing16)
+                .padding(vertical = TangemTheme.dimens.spacing10)
                 .fillMaxWidth(),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.primary1,
@@ -165,8 +165,8 @@ private inline fun <T> VerticalGrid(
     }
 }
 
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun YourSeedPhraseScreenPreview_Light() {
     TangemThemePreview {
