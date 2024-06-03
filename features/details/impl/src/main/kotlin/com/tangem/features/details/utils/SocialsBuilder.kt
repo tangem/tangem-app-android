@@ -1,13 +1,15 @@
 package com.tangem.features.details.utils
 
 import androidx.compose.ui.text.intl.Locale
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.impl.R
+import com.tangem.features.details.routing.DetailsRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 internal class SocialsBuilder(
-    private val urlOpener: (url: String) -> Unit,
+    private val router: Router,
 ) {
 
     fun buildAll(): ImmutableList<DetailsFooterUM.Social> = Social.all.map { social ->
@@ -21,11 +23,13 @@ internal class SocialsBuilder(
     private fun openUrl(social: Social) {
         val locale = Locale.current.region
 
-        if (locale == RUSSIA_LOCALE && social.urlRu != null) {
-            urlOpener(social.urlRu)
+        val url = if (locale == RUSSIA_LOCALE && social.urlRu != null) {
+            social.urlRu
         } else {
-            urlOpener(social.url)
+            social.url
         }
+
+        router.push(DetailsRoute.Url(url))
     }
 
     private enum class Social(
