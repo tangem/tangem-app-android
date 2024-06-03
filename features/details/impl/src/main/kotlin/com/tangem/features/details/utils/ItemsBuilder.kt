@@ -1,5 +1,6 @@
 package com.tangem.features.details.utils
 
+import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.extensions.resourceReference
@@ -13,22 +14,25 @@ import com.tangem.features.details.routing.DetailsRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import javax.inject.Inject
 
-internal class ItemsBuilder(
-    private val walletConnectComponent: WalletConnectComponent,
-    private val userWalletListComponent: UserWalletListComponent,
+@ComponentScoped
+internal class ItemsBuilder @Inject constructor(
     private val router: Router,
 ) {
 
-    suspend fun buldAll(): ImmutableList<DetailsItemUM> = buildList {
-        buildWalletConnectBlock()?.let(::add)
-        buildUserWalletListBlock().let(::add)
+    suspend fun buldAll(
+        walletConnectComponent: WalletConnectComponent,
+        userWalletListComponent: UserWalletListComponent,
+    ): ImmutableList<DetailsItemUM> = buildList {
+        buildWalletConnectBlock(walletConnectComponent)?.let(::add)
+        buildUserWalletListBlock(userWalletListComponent).let(::add)
         buildShopBlock().let(::add)
         buildSettingsBlock().let(::add)
         buildSupportBlock().let(::add)
     }.toImmutableList()
 
-    private suspend fun buildWalletConnectBlock(): DetailsItemUM? {
+    private suspend fun buildWalletConnectBlock(walletConnectComponent: WalletConnectComponent): DetailsItemUM? {
         return if (walletConnectComponent.checkIsAvailable()) {
             DetailsItemUM.Component(
                 id = "wallet_connect",
@@ -41,12 +45,14 @@ internal class ItemsBuilder(
         }
     }
 
-    private fun buildUserWalletListBlock(): DetailsItemUM = DetailsItemUM.Component(
-        id = "user_wallet_list",
-        content = {
-            userWalletListComponent.View(modifier = it)
-        },
-    )
+    private fun buildUserWalletListBlock(userWalletListComponent: UserWalletListComponent): DetailsItemUM {
+        return DetailsItemUM.Component(
+            id = "user_wallet_list",
+            content = {
+                userWalletListComponent.View(modifier = it)
+            },
+        )
+    }
 
     private fun buildShopBlock(): DetailsItemUM = DetailsItemUM.Basic(
         id = "shop",

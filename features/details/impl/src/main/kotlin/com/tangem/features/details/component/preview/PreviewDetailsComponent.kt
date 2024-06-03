@@ -17,10 +17,11 @@ internal class PreviewDetailsComponent : DetailsComponent {
 
     private val previewBlocks = runBlocking {
         ItemsBuilder(
+            router = PreviewRouter(),
+        ).buldAll(
             walletConnectComponent = PreviewWalletConnectComponent(),
             userWalletListComponent = PreviewUserWalletListComponent(),
-            router = PreviewRouter(),
-        ).buldAll()
+        )
     }
 
     private val previewFooter = DetailsFooterUM(
