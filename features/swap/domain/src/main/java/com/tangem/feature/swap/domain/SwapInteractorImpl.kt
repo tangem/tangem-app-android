@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.minimalAmount
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
@@ -46,7 +47,6 @@ import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.toFiatString
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
@@ -905,10 +905,10 @@ internal class SwapInteractorImpl @Inject constructor(
     private suspend fun createEmptyAmountState(): SwapState {
         val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
         return SwapState.EmptyAmountState(
-            zeroAmountEquivalent = BigDecimal.ZERO.toFiatString(
-                rateValue = BigDecimal.ONE,
-                fiatCurrencyName = appCurrency.symbol,
-                formatWithSpaces = true,
+            zeroAmountEquivalent = BigDecimalFormatter.formatFiatAmount(
+                fiatAmount = BigDecimal.ZERO,
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
             ),
         )
     }
@@ -1155,7 +1155,11 @@ internal class SwapInteractorImpl @Inject constructor(
         val rates = getQuotes(feeCurrencyId)
         return rates[feeCurrencyId]?.fiatRate?.let { rate ->
             fees.map { fee ->
-                fee.toFiatString(rate, appCurrency.symbol, true)
+                BigDecimalFormatter.formatFiatAmount(
+                    fiatAmount = rate.multiply(fee),
+                    fiatCurrencyCode = appCurrency.code,
+                    fiatCurrencySymbol = appCurrency.symbol,
+                )
             }
         }.orEmpty()
     }
