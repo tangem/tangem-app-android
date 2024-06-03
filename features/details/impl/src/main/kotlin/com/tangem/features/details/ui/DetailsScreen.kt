@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.details.component.preview.PreviewDetailsComponent
@@ -31,7 +32,7 @@ private const val COLLAPSED_APP_BAR_THRESHOLD = 0.4f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DetailsScreen(state: DetailsUM, modifier: Modifier = Modifier) {
+internal fun DetailsScreen(state: DetailsUM, snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {
     val backgroundColor = TangemTheme.colors.background.secondary
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -44,6 +45,12 @@ internal fun DetailsScreen(state: DetailsUM, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = backgroundColor,
+        snackbarHost = {
+            TangemSnackbarHost(
+                modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
+                hostState = snackbarHostState,
+            )
+        },
         topBar = { TopBar(state, scrollBehavior) },
     ) { paddingValues ->
         Content(
