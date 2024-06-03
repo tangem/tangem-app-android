@@ -68,7 +68,7 @@ interface TangemSdkManager {
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<CardDTO>
 
-    suspend fun resetBackupCard(userWalletId: UserWalletId): CompletionResult<Unit>
+    suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Unit>
 
     suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit>
 
