@@ -47,7 +47,6 @@ internal class StakingFragment : ComposeFragment() {
             innerStakingRouter,
             StateRouter(
                 fragmentManager = WeakReference(parentFragmentManager),
-                analyticsEventsHandler = analyticsEventsHandler,
             ),
         )
     }
