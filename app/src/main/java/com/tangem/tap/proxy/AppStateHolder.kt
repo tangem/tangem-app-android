@@ -10,7 +10,9 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
+import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import org.rekotlin.Action
@@ -53,5 +55,9 @@ class AppStateHolder @Inject constructor() : ReduxNavController, ReduxStateHolde
 
     override suspend fun onUserWalletSelected(userWallet: UserWallet) {
         mainStore?.onUserWalletSelected(userWallet)
+    }
+
+    override fun sendFeedbackEmail() {
+        mainStore?.dispatch(GlobalAction.SendEmail(FeedbackEmail()))
     }
 }
