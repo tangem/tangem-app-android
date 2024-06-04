@@ -91,6 +91,8 @@ tangemBlockchainSdk = "develop-654"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "develop-360"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
+tangemVico = "2.0.0-alpha.21-tangem13"
+#tangemVico = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
 # region Tools
@@ -180,6 +182,10 @@ firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx"
 tangem-blockchain = { module = "com.tangem:blockchain", version.ref = "tangemBlockchainSdk" }
 tangem-card-android = { module = "com.tangem.tangem-sdk-kotlin:android", version.ref = "tangemCardSdk" }
 tangem-card-core = { module = "com.tangem.tangem-sdk-kotlin:core", version.ref = "tangemCardSdk" }
+
+tangem-vico-compose = { group = "com.tangem.vico", name = "compose", version.ref = "tangemVico" }
+tangem-vico-compose-m3 = { group = "com.tangem.vico", name = "compose-m3", version.ref = "tangemVico" }
+tangem-vico-core = { group = "com.tangem.vico", name = "core", version.ref = "tangemVico" }
 # endregion Tangem
 
 # region Detekt
