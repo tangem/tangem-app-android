@@ -51,9 +51,13 @@ internal class SwapDataModule {
 
     @Provides
     @Singleton
-    fun provideSwapTransactionRepository(appPreferencesStore: AppPreferencesStore): SwapTransactionRepository {
+    fun provideSwapTransactionRepository(
+        appPreferencesStore: AppPreferencesStore,
+        dispatcherProvider: CoroutineDispatcherProvider,
+    ): SwapTransactionRepository {
         return DefaultSwapTransactionRepository(
             appPreferencesStore = appPreferencesStore,
+            dispatchers = dispatcherProvider,
         )
     }
 
