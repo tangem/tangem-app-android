@@ -6,6 +6,7 @@ on:
       - 'release'
       - 'develop'
       - 'master'
+      - 'hotfix/**'
     types:
       - opened
       - reopened
@@ -20,46 +21,46 @@ concurrency:
 jobs:
   test:
     name: Test
-    runs-on: [self-hosted, old]
+    runs-on: [ self-hosted, old ]
     if: github.event.pull_request.draft == false
     steps:
 
-    - name: 'Cleanup build folder'
-      run: |
-        ls -la ./
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        ls -la ./
+      - name: 'Cleanup build folder'
+        run: |
+          ls -la ./
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          ls -la ./
 
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        submodules: true
-        token: ${{ secrets.GH_MOBILE_PAT }}
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.GH_MOBILE_PAT }}
 
-    - uses: actions/setup-java@v1
-      with:
-        java-version: '17'
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '17'
 
-    - name: Bundle install
-      run: |
-        bundle config path vendor/bundle
-        bundle install --jobs 4 --retry 3
+      - name: Bundle install
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
 
-    - name: Tests
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
-      run: bundle exec fastlane test
+      - name: Tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+        run: bundle exec fastlane test
 
-    - name: Build notification
-      if: failure()
-      uses: adamkdean/simple-slack-notify@master
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_DVELOPMENT_ANDROID }}
-      with:
-        channel: '#development-android'
-        text: 'Tangem app tests #${{ github.run_number }} failed'
-        color: 'danger'
-        fields: |
-          [{ "title": "Action URL", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}"}]
+      - name: Build notification
+        if: failure()
+        uses: adamkdean/simple-slack-notify@master
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_DVELOPMENT_ANDROID }}
+        with:
+          channel: '#development-android'
+          text: 'Tangem app tests #${{ github.run_number }} failed'
+          color: 'danger'
+          fields: |
+            [{ "title": "Action URL", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}"}]

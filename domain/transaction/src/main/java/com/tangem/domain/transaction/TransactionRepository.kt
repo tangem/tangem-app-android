@@ -3,6 +3,7 @@ package com.tangem.domain.transaction
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.CommonSigner
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.domain.tokens.model.Network
@@ -19,6 +20,7 @@ interface TransactionRepository {
         userWalletId: UserWalletId,
         network: Network,
         isSwap: Boolean,
+        txExtras: TransactionExtras?,
         hash: String?,
     ): TransactionData?
 
@@ -31,6 +33,7 @@ interface TransactionRepository {
         userWalletId: UserWalletId,
         network: Network,
         isSwap: Boolean = false,
+        txExtras: TransactionExtras?,
         hash: String? = null,
     ): Result<Unit>
 

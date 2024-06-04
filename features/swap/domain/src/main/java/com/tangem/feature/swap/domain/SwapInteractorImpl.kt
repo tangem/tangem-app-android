@@ -2,13 +2,12 @@ package com.tangem.feature.swap.domain
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.minimalAmount
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -479,6 +478,7 @@ internal class SwapInteractorImpl @Inject constructor(
             amount = amount.value.convertToAmount(fromToken),
             fee = null,
             memo = null,
+            txExtras = null,
             destination = getTokenAddress(fromToken),
             userWalletId = userWalletId,
             network = fromToken.network,
@@ -625,6 +625,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
         val amount = SwapAmount(amountDecimal, currencyToSend.decimals)
         val derivationPath = currencyToSend.network.derivationPath.value
+        val dataToSign = (swapData.transaction as ExpressTransactionModel.DEX).txData
         val txData = createTransactionUseCase(
             amount = amount.value.convertToAmount(currencyToSend),
             fee = getFeeForTransaction(
@@ -635,7 +636,8 @@ internal class SwapInteractorImpl @Inject constructor(
             destination = swapData.transaction.txTo,
             userWalletId = userWalletId,
             network = currencyToSend.network,
-            hash = (swapData.transaction as ExpressTransactionModel.DEX).txData,
+            txExtras = createDexTxExtras(fee.gasLimit, dataToSign),
+            hash = dataToSign,
             isSwap = true,
         ).getOrElse {
             Timber.e(it)
@@ -675,6 +677,15 @@ internal class SwapInteractorImpl @Inject constructor(
                     else -> SwapTransactionState.UnknownError
                 }
             },
+        )
+    }
+
+    private fun createDexTxExtras(gasLimit: Int, data: String): TransactionExtras {
+        // for now we support only Ethereum like DEX
+        // need to be extended if we support other blockchains in DEX
+        return EthereumTransactionExtras(
+            gasLimit = gasLimit.toBigInteger(),
+            data = data.removePrefix(HEX_PREFIX).hexToBytes(),
         )
     }
 
