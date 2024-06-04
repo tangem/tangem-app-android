@@ -15,30 +15,12 @@ internal data class StakingUiState(
     val initialInfoState: StakingStates.InitialInfoState,
     val amountState: StakingStates.AmountState,
     val validatorState: StakingStates.ValidatorState,
-    val editAmountState: StakingStates.AmountState,
-    val editFeeState: StakingStates.FeeState,
-    val editValidatorState: StakingStates.ValidatorState,
     val confirmStakingState: StakingStates.ConfirmStakingState,
     val isBalanceHidden: Boolean,
     val isSubtracted: Boolean,
     val event: StateEvent<StakingEvent>,
 ) {
 
-    fun getAmountState(isEditState: Boolean): StakingStates.AmountState {
-        return if (isEditState) {
-            editAmountState
-        } else {
-            amountState
-        }
-    }
-
-    fun getValidatorState(isEditState: Boolean): StakingStates.ValidatorState {
-        return if (isEditState) {
-            editValidatorState
-        } else {
-            validatorState
-        }
-    }
 
     fun copyWrapped(
         initialInfoState: StakingStates.InitialInfoState = this.initialInfoState,
