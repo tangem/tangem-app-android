@@ -27,20 +27,21 @@ internal class DefaultStakingRepository(
         if (!stakingFeatureToggles.isStakingEnabled) {
             return StakingAvailability.Unavailable
         }
+        return withContext(dispatchers.io) {
+            val yields = getEnabledYields() ?: return@withContext StakingAvailability.Unavailable
 
-        val yields = getEnabledYields() ?: return StakingAvailability.Unavailable
+            val prefetchedYield = findPrefetchedYield(yields, currencyId, symbol)
+            val isSupported = isStakingSupported(currencyId)
 
-        val prefetchedYield = findPrefetchedYield(yields, currencyId, symbol)
-        val isSupported = isStakingSupported(currencyId)
-
-        return when {
-            prefetchedYield != null && isSupported -> {
-                StakingAvailability.Available(prefetchedYield.id)
+            when {
+                prefetchedYield != null && isSupported -> {
+                    StakingAvailability.Available(prefetchedYield.id)
+                }
+                prefetchedYield == null && isSupported -> {
+                    StakingAvailability.TemporaryDisabled
+                }
+                else -> StakingAvailability.Unavailable
             }
-            prefetchedYield == null && isSupported -> {
-                StakingAvailability.TemporaryDisabled
-            }
-            else -> StakingAvailability.Unavailable
         }
     }
 
@@ -54,13 +55,15 @@ internal class DefaultStakingRepository(
     }
 
     override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo {
-        val yield = stakeKitApi.getSingleYield(integrationId).getOrThrow()
+        return withContext(dispatchers.io) {
+            val yield = stakeKitApi.getSingleYield(integrationId).getOrThrow()
 
-        return StakingEntryInfo(
-            interestRate = yield.apy,
-            periodInDays = yield.metadata.cooldownPeriod.days,
-            tokenSymbol = yield.token.symbol,
-        )
+            StakingEntryInfo(
+                interestRate = yield.apy,
+                periodInDays = yield.metadata.cooldownPeriod.days,
+                tokenSymbol = yield.token.symbol,
+            )
+        }
     }
 
     override suspend fun fetchEnabledYields() {
