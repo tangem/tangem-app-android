@@ -32,6 +32,7 @@ class ValidateTransactionUseCase(
             userWalletId = userWalletId,
             network = network,
             isSwap = isSwap,
+            txExtras = null,
             hash = hash,
         )
             .fold(onSuccess = { Unit.right() }, onFailure = { it.left() })
