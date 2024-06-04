@@ -1,7 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 
@@ -36,19 +35,15 @@ internal data class StakingUiState(
 
 internal sealed class StakingStates {
 
-    abstract val type: StakingUiStateType
-
     abstract val isPrimaryButtonEnabled: Boolean
 
     /** Initial info state */
     sealed class InitialInfoState : StakingStates() {
         data class Data(
-            override val type: StakingUiStateType = StakingUiStateType.InitialInfo,
             override val isPrimaryButtonEnabled: Boolean,
         ) : InitialInfoState()
 
         data class Empty(
-            override val type: StakingUiStateType = StakingUiStateType.InitialInfo,
             override val isPrimaryButtonEnabled: Boolean = false,
         ) : InitialInfoState()
     }
@@ -56,12 +51,10 @@ internal sealed class StakingStates {
     /** Amount state */
     sealed class AmountState : StakingStates() {
         data class Data(
-            override val type: StakingUiStateType = StakingUiStateType.Amount,
             override val isPrimaryButtonEnabled: Boolean,
         ) : AmountState()
 
         data class Empty(
-            override val type: StakingUiStateType = StakingUiStateType.Amount,
             override val isPrimaryButtonEnabled: Boolean = false,
         ) : AmountState()
     }
@@ -69,12 +62,10 @@ internal sealed class StakingStates {
     /** Validator state */
     sealed class ValidatorState : StakingStates() {
         data class Data(
-            override val type: StakingUiStateType = StakingUiStateType.ValidatorAndFee,
             override val isPrimaryButtonEnabled: Boolean,
         ) : ValidatorState()
 
         data class Empty(
-            override val type: StakingUiStateType = StakingUiStateType.ValidatorAndFee,
             override val isPrimaryButtonEnabled: Boolean = false,
         ) : ValidatorState()
     }
@@ -82,12 +73,10 @@ internal sealed class StakingStates {
     /** Fee state */
     sealed class FeeState : StakingStates() {
         data class Data(
-            override val type: StakingUiStateType = StakingUiStateType.EditFee,
             override val isPrimaryButtonEnabled: Boolean,
         ) : FeeState()
 
         data class Empty(
-            override val type: StakingUiStateType = StakingUiStateType.EditFee,
             override val isPrimaryButtonEnabled: Boolean = false,
         ) : FeeState()
     }
@@ -95,12 +84,10 @@ internal sealed class StakingStates {
     /** Confirm state */
     sealed class ConfirmStakingState : StakingStates() {
         data class Data(
-            override val type: StakingUiStateType = StakingUiStateType.Confirm,
             override val isPrimaryButtonEnabled: Boolean,
         ) : ConfirmStakingState()
 
         data class Empty(
-            override val type: StakingUiStateType = StakingUiStateType.EditFee,
             override val isPrimaryButtonEnabled: Boolean = false,
         ) : ConfirmStakingState()
     }
