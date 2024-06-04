@@ -9,13 +9,10 @@ import java.lang.ref.WeakReference
 internal class StateRouter(
     private val fragmentManager: WeakReference<FragmentManager>,
 ) {
-    private var mutableCurrentState: MutableStateFlow<StakingUiCurrentScreen> = MutableStateFlow(getInitState())
+    private var mutableCurrentState: MutableStateFlow<StakingUiStateType> = MutableStateFlow(getInitState())
 
-    val currentState: StateFlow<StakingUiCurrentScreen>
+    val currentState: StateFlow<StakingUiStateType>
         get() = mutableCurrentState
-
-    val isEditState: Boolean
-        get() = currentState.value.isFromConfirmation
 
     fun clear() {
         mutableCurrentState.update { getInitState() }
@@ -26,7 +23,7 @@ internal class StateRouter(
     }
 
     fun onBackClick(isSuccess: Boolean = false) {
-        val type = currentState.value.type
+        val type = currentState.value
         when {
             isSuccess -> popBackStack()
             else -> when (type) {
@@ -41,7 +38,7 @@ internal class StateRouter(
     }
 
     fun onNextClick() {
-        when (currentState.value.type) {
+        when (currentState.value) {
             StakingUiStateType.InitialInfo -> showAmount()
             StakingUiStateType.Amount,
             StakingUiStateType.ValidatorAndFee,
@@ -56,44 +53,27 @@ internal class StateRouter(
     }
 
     fun onPrevClick() {
-        when (currentState.value.type) {
+        when (currentState.value) {
             StakingUiStateType.Amount -> showInitial()
             else -> popBackStack()
         }
     }
 
     private fun showInitial() {
-        mutableCurrentState.update {
-            StakingUiCurrentScreen(StakingUiStateType.InitialInfo, isFromConfirmation = true)
-        }
+        mutableCurrentState.update { StakingUiStateType.InitialInfo }
     }
 
-    fun showAmount(isFromConfirmation: Boolean = false) {
-        mutableCurrentState.update {
-            if (isFromConfirmation) {
-                StakingUiCurrentScreen(StakingUiStateType.EditAmount, true)
-            } else {
-                StakingUiCurrentScreen(StakingUiStateType.Amount, false)
-            }
-        }
+    fun showAmount() {
+        mutableCurrentState.update { StakingUiStateType.Amount }
     }
 
-    fun showValidator(isFromConfirmation: Boolean = false) {
-        mutableCurrentState.update {
-            if (isFromConfirmation) {
-                StakingUiCurrentScreen(StakingUiStateType.EditValidator, true)
-            } else {
-                StakingUiCurrentScreen(StakingUiStateType.ValidatorAndFee, false)
-            }
-        }
+    fun showValidator() {
+        mutableCurrentState.update { StakingUiStateType.ValidatorAndFee }
     }
 
     fun showConfirm() {
-        mutableCurrentState.update { StakingUiCurrentScreen(StakingUiStateType.Confirm, isFromConfirmation = false) }
+        mutableCurrentState.update { StakingUiStateType.Confirm }
     }
 
-    private fun getInitState() = StakingUiCurrentScreen(
-        type = StakingUiStateType.InitialInfo,
-        isFromConfirmation = false,
-    )
+    private fun getInitState() = StakingUiStateType.InitialInfo
 }

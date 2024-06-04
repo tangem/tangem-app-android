@@ -12,15 +12,14 @@ import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickInten
 internal data class StakingUiState(
     val clickIntents: StakingClickIntents,
     val cryptoCurrencyName: String,
+    val currentScreen: StakingUiStateType,
     val initialInfoState: StakingStates.InitialInfoState,
     val amountState: StakingStates.AmountState,
     val validatorState: StakingStates.ValidatorState,
     val confirmStakingState: StakingStates.ConfirmStakingState,
     val isBalanceHidden: Boolean,
-    val isSubtracted: Boolean,
     val event: StateEvent<StakingEvent>,
 ) {
-
 
     fun copyWrapped(
         initialInfoState: StakingStates.InitialInfoState = this.initialInfoState,
@@ -89,7 +88,6 @@ internal sealed class StakingStates {
         ) : ValidatorState()
     }
 
-
     /** Fee state */
     @Stable
     sealed class FeeState : StakingStates() {
@@ -122,11 +120,6 @@ internal sealed class StakingStates {
         ) : ConfirmStakingState()
     }
 }
-
-data class StakingUiCurrentScreen(
-    val type: StakingUiStateType,
-    val isFromConfirmation: Boolean, // TODO staking
-)
 
 enum class StakingUiStateType {
     None,
