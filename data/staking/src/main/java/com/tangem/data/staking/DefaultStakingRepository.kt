@@ -7,10 +7,13 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingFeatureToggles: StakingFeatureToggles,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : StakingRepository {
 
     override fun getStakingAvailability(blockchainId: String): StakingAvailability {
@@ -24,13 +27,15 @@ internal class DefaultStakingRepository(
     }
 
     override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo {
-        val yield = stakeKitApi.getSingleYield(integrationId).getOrThrow()
+        return withContext(dispatchers.io) {
+            val yield = stakeKitApi.getSingleYield(integrationId).getOrThrow()
 
-        return StakingEntryInfo(
-            interestRate = yield.apy,
-            periodInDays = yield.metadata.cooldownPeriod.days,
-            tokenSymbol = yield.token.symbol,
-        )
+            StakingEntryInfo(
+                interestRate = yield.apy,
+                periodInDays = yield.metadata.cooldownPeriod.days,
+                tokenSymbol = yield.token.symbol,
+            )
+        }
     }
 
     companion object {
