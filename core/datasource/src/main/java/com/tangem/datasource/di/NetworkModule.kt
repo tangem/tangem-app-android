@@ -39,7 +39,7 @@ class NetworkModule {
         appVersionProvider: AppVersionProvider,
     ): TangemExpressApi {
         val url = if (BuildConfig.ENVIRONMENT == "dev") {
-            DEV_EXPRESS_BASE_URL
+            STAGE_EXPRESS_BASE_URL
         } else {
             PROD_EXPRESS_BASE_URL
         }
@@ -162,6 +162,7 @@ class NetworkModule {
     private companion object {
         const val STAKEKIT_BASE_URL = "https://api.stakek.it/v1/"
         const val PROD_EXPRESS_BASE_URL = "https://express.tangem.com/v1/"
+        const val STAGE_EXPRESS_BASE_URL = "[REDACTED_ENV_URL]"
         const val DEV_EXPRESS_BASE_URL = "[REDACTED_ENV_URL]"
 
         const val DEV_V1_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
