@@ -39,6 +39,7 @@ dependencyResolutionManagement {
                 includeModule("com.tangem", "blockchain")
                 includeModule("com.tangem", "wallet-core-proto")
                 includeModule("com.tangem", "wallet-core")
+                includeModule("com.tangem", "vico")
             }
         }
         maven {
@@ -80,6 +81,17 @@ dependencyResolutionManagement {
                 includeModule("com.tangem", "wallet-core")
             }
         }
+        maven {
+            // setting any repository from tangem project allows maven search all packages in the project
+            url = uri("https://maven.pkg.github.com/tangem/vico")
+            credentials {
+                username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+            content {
+                includeGroupAndSubgroups("com.tangem.vico")
+            }
+        }
         jcenter { // unable to replace with mavenCentral() due to rekotlin
             content {
                 includeModule("org.rekotlin", "rekotlin")
@@ -100,6 +112,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
 include(":common")
+include(":common:ui-charts")
 
 // region Core modules
 include(":core:analytics")
