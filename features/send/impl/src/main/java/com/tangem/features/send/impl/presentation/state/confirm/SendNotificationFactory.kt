@@ -41,7 +41,7 @@ import java.math.BigDecimal
 @Suppress("LongParameterList", "LargeClass")
 internal class SendNotificationFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-    private val coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
     private val currencyChecksRepository: CurrencyChecksRepository,
@@ -307,6 +307,7 @@ internal class SendNotificationFactory(
 
     private fun checkDustLimits(feeAmount: BigDecimal, receivedAmount: BigDecimal, dustValue: BigDecimal): Boolean {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val feeCurrencyStatus = feeCryptoCurrencyStatusProvider() ?: return false
 
         val change = when (cryptoCurrencyStatus.currency) {
             is CryptoCurrency.Coin -> {
@@ -314,7 +315,7 @@ internal class SendNotificationFactory(
                 balance - (feeAmount + receivedAmount)
             }
             is CryptoCurrency.Token -> {
-                val balance = coinCryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
+                val balance = feeCurrencyStatus.value.amount ?: BigDecimal.ZERO
                 balance - feeAmount
             }
         }
@@ -351,16 +352,14 @@ internal class SendNotificationFactory(
         val feeValue = fee?.amount?.value ?: BigDecimal.ZERO
         val userWalletId = userWalletProvider().walletId
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val feeCurrencyStatus = feeCryptoCurrencyStatusProvider() ?: return
 
         val warning = getBalanceNotEnoughForFeeWarningUseCase(
             fee = feeValue,
             userWalletId = userWalletId,
             tokenStatus = cryptoCurrencyStatus,
-            coinStatus = coinCryptoCurrencyStatusProvider(),
-        ).fold(
-            ifLeft = { null },
-            ifRight = { it },
-        ) ?: return
+            coinStatus = feeCurrencyStatus,
+        ).getOrNull() ?: return
 
         val mergeFeeNetworkName = cryptoCurrencyStatus.shouldMergeFeeNetworkName()
         when (warning) {
