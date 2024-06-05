@@ -39,7 +39,7 @@ internal class DetailsFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        component.View(modifier = modifier)
+        component.Content(modifier = modifier)
 
         EventMessageEffect(
             messageHandler = messageHandler,

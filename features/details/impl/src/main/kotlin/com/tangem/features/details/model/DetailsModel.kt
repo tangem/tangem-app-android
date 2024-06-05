@@ -1,10 +1,11 @@
 package com.tangem.features.details.model
 
+import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.features.details.component.UserWalletListComponent
-import com.tangem.features.details.component.WalletConnectComponent
+import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.entity.DetailsUM
@@ -14,8 +15,12 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.version.AppVersionProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @ComponentScoped
@@ -23,15 +28,16 @@ internal class DetailsModel @Inject constructor(
     private val socialsBuilder: SocialsBuilder,
     private val itemsBuilder: ItemsBuilder,
     private val appVersionProvider: AppVersionProvider,
+    private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
-    private val items: MutableSharedFlow<ImmutableList<DetailsItemUM>> = MutableSharedFlow(replay = 1)
+    private val items: MutableStateFlow<ImmutableList<DetailsItemUM>> = MutableStateFlow(value = persistentListOf())
 
     val state: MutableStateFlow<DetailsUM> = MutableStateFlow(
         value = DetailsUM(
-            items = persistentListOf(),
+            items = items.value,
             footer = DetailsFooterUM(
                 socials = socialsBuilder.buildAll(),
                 appVersion = getAppVersion(),
@@ -46,11 +52,14 @@ internal class DetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    fun provideChildren(
-        walletConnectComponent: WalletConnectComponent,
-        userWalletListComponent: UserWalletListComponent,
-    ) = modelScope.launch {
-        items.emit(itemsBuilder.buldAll(walletConnectComponent, userWalletListComponent))
+    fun provideUserWalletId(userWalletId: UserWalletId) = modelScope.launch {
+        val isWalletConnectAvailable = checkIsWalletConnectAvailableUseCase(userWalletId).getOrElse {
+            Timber.w("Unable to check WalletConnect availability: $it")
+
+            false
+        }
+
+        items.value = itemsBuilder.buldAll(isWalletConnectAvailable)
     }
 
     private suspend fun updateState(items: ImmutableList<DetailsItemUM>) {

@@ -18,10 +18,7 @@ internal class PreviewDetailsComponent : DetailsComponent {
     private val previewBlocks = runBlocking {
         ItemsBuilder(
             router = PreviewRouter(),
-        ).buldAll(
-            walletConnectComponent = PreviewWalletConnectComponent(),
-            userWalletListComponent = PreviewUserWalletListComponent(),
-        )
+        ).buldAll(isWalletConnectAvailable = true)
     }
 
     private val previewFooter = DetailsFooterUM(
@@ -37,11 +34,12 @@ internal class PreviewDetailsComponent : DetailsComponent {
 
     @Composable
     @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
-    override fun View(modifier: Modifier) {
+    override fun Content(modifier: Modifier) {
         DetailsScreen(
             modifier = modifier,
             state = previewState,
             snackbarHostState = snackbarHostState,
+            userWalletListBlockContent = PreviewUserWalletListComponent(),
         )
     }
 }

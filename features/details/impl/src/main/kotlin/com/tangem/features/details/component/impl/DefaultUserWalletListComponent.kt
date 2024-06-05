@@ -20,7 +20,7 @@ internal class DefaultUserWalletListComponent @AssistedInject constructor(
     private val model: UserWalletListModel = getOrCreateModel()
 
     @Composable
-    override fun View(modifier: Modifier) {
+    override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
 
         UserWalletListBlock(
