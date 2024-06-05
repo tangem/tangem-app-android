@@ -124,7 +124,7 @@ class NetworkModule {
             appVersionProvider = appVersionProvider,
             baseUrl = PROD_V1_TANGEM_TECH_BASE_URL,
             timeoutSeconds = TANGEM_TECH_SERVICE_TIMEOUT_SECONDS,
-            requestHeaders = listOf(AppVersionPlatformHeaders(appVersionProvider))
+            requestHeaders = listOf(AppVersionPlatformHeaders(appVersionProvider)),
         )
     }
 
@@ -145,7 +145,7 @@ class NetworkModule {
                 }
             }
             .addHeaders(
-                *requestHeaders.toTypedArray()
+                *requestHeaders.toTypedArray(),
                 // TODO("refactor header init") get auth data after biometric auth to avoid race condition
                 // AuthenticationHeader(authProvider),
             )

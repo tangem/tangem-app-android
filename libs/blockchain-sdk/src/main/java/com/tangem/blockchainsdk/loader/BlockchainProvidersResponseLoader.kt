@@ -75,7 +75,6 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
                 it.value
                     .filterUnsupportedProviders()
                     .filterInvalidProviders()
-
             }
             .filterValues { it.isNotEmpty() }
 
@@ -101,7 +100,12 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
         }
     }
 
-    private fun isValidUrl(url: String): Boolean = Patterns.WEB_URL.matcher(url).matches()
+    private fun isValidUrl(url: String): Boolean {
+        val forbiddenScheme = forbiddenSchemes.firstOrNull { url.startsWith(prefix = it) }
+        val inputUrl = if (forbiddenScheme != null) url.substringAfter(forbiddenScheme) else url
+
+        return Patterns.WEB_URL.matcher(inputUrl).matches()
+    }
 
     private fun recordException(missingBlockchains: Set<String>) {
         val exception = IllegalStateException(
@@ -116,5 +120,7 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
 
     private companion object {
         const val PROVIDER_TYPES_FILE_NAME = "tangem-app-config/providers_order"
+
+        val forbiddenSchemes = listOf("wss://")
     }
 }
