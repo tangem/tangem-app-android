@@ -5,9 +5,9 @@ import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
 import com.tangem.datasource.api.stakekit.models.request.RevenueOption
 import com.tangem.datasource.api.stakekit.models.request.YieldType
 import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
-import com.tangem.datasource.api.stakekit.models.response.model.TokenWithYield
-import com.tangem.datasource.api.stakekit.models.response.model.Yield
-import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapper
+import com.tangem.datasource.api.stakekit.models.response.model.TokenWithYieldDTO
+import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
+import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -30,19 +30,19 @@ interface StakeKitApi {
     suspend fun getSingleYield(
         @Path("integrationId") integrationId: String,
         @Query("ledgerWalletAPICompatible") ledgerWalletAPICompatible: Boolean = false,
-    ): ApiResponse<Yield>
+    ): ApiResponse<YieldDTO>
 
     @GET("yields/balances")
     suspend fun getMultipleYieldBalances(
         @Body body: List<YieldBalanceRequestBody>,
-    ): ApiResponse<List<YieldBalanceWrapper>>
+    ): ApiResponse<List<YieldBalanceWrapperDTO>>
 
     @GET("yields/{integrationId}/balances")
     suspend fun getSingleYieldBalance(
         @Path("integrationId") integrationId: String,
         @Body body: YieldBalanceRequestBody,
-    ): ApiResponse<YieldBalanceWrapper>
+    ): ApiResponse<YieldBalanceWrapperDTO>
 
     @GET("tokens")
-    suspend fun getTokens(): ApiResponse<List<TokenWithYield>>
+    suspend fun getTokens(): ApiResponse<List<TokenWithYieldDTO>>
 }
