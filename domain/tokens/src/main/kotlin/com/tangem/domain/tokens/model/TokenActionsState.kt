@@ -20,6 +20,8 @@ data class TokenActionsState(
 
         data class Receive(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
+        data class Stake(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
+
         data class Swap(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
         data class Send(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()

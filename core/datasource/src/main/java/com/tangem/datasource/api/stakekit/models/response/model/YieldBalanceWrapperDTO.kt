@@ -6,15 +6,15 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
-data class YieldBalanceWrapper(
+data class YieldBalanceWrapperDTO(
     @Json(name = "balances")
-    val balances: List<Balance>,
+    val balances: List<BalanceDTO>,
     @Json(name = "integrationId")
     val integrationId: String?,
 ) {
 
     @JsonClass(generateAdapter = true)
-    data class Balance(
+    data class BalanceDTO(
         @Json(name = "groupId")
         val groupId: String,
         @Json(name = "type")
@@ -28,7 +28,7 @@ data class YieldBalanceWrapper(
         @Json(name = "pendingActions")
         val pendingActions: List<PendingAction>,
         @Json(name = "token")
-        val token: Token,
+        val tokenDTO: TokenDTO,
         @Json(name = "validatorAddress")
         val validatorAddress: String?,
         @Json(name = "validatorAddresses")
@@ -68,7 +68,7 @@ data class YieldBalanceWrapper(
         @JsonClass(generateAdapter = true)
         data class PendingAction(
             @Json(name = "type")
-            val type: StakingActionType,
+            val type: StakingActionTypeDTO,
             @Json(name = "passthrough")
             val passthrough: String,
             @Json(name = "args")
