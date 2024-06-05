@@ -2,9 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
-import com.tangem.common.Strings
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.utils.Strings
 
 /** Wallet card state */
 @Immutable
