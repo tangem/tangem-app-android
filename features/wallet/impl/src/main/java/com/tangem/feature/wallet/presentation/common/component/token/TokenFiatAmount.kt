@@ -7,9 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.text.style.TextOverflow
-import com.tangem.common.Strings
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.utils.Strings
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.FiatAmountState as TokenFiatAmountState
 
 @Composable
