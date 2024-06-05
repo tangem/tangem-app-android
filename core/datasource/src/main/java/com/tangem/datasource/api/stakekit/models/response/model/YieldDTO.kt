@@ -5,33 +5,33 @@ import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
-data class Yield(
+data class YieldDTO(
     @Json(name = "id")
     val id: String,
     @Json(name = "token")
-    val token: Token,
+    val token: TokenDTO,
     @Json(name = "tokens")
-    val tokens: List<Token>,
+    val tokens: List<TokenDTO>,
     @Json(name = "args")
-    val args: Args,
+    val args: ArgsDTO,
     @Json(name = "status")
-    val status: Status,
+    val status: StatusDTO,
     @Json(name = "apy")
     val apy: BigDecimal,
     @Json(name = "rewardRate")
     val rewardRate: Double,
     @Json(name = "rewardType")
-    val rewardType: RewardType,
+    val rewardType: RewardTypeDTO,
     @Json(name = "metadata")
-    val metadata: Metadata,
+    val metadata: MetadataDTO,
     @Json(name = "validators")
-    val validators: List<Validator>,
+    val validators: List<ValidatorDTO>,
     @Json(name = "isAvailable")
     val isAvailable: Boolean,
 ) {
 
     @JsonClass(generateAdapter = true)
-    data class Status(
+    data class StatusDTO(
         @Json(name = "enter")
         val enter: Boolean,
         @Json(name = "exit")
@@ -39,7 +39,7 @@ data class Yield(
     )
 
     @JsonClass(generateAdapter = true)
-    data class Args(
+    data class ArgsDTO(
         @Json(name = "enter")
         val enter: Enter,
         @Json(name = "exit")
@@ -50,20 +50,20 @@ data class Yield(
             @Json(name = "addresses")
             val addresses: Addresses,
             @Json(name = "args")
-            val args: Map<String, AddressArgument>,
+            val args: Map<String, AddressArgumentDTO>,
         ) {
             @JsonClass(generateAdapter = true)
             data class Addresses(
                 @Json(name = "address")
-                val address: AddressArgument,
+                val address: AddressArgumentDTO,
                 @Json(name = "additionalAddresses")
-                val additionalAddresses: Map<String, AddressArgument>? = null,
+                val additionalAddresses: Map<String, AddressArgumentDTO>? = null,
             )
         }
     }
 
     @JsonClass(generateAdapter = true)
-    data class Validator(
+    data class ValidatorDTO(
         @Json(name = "address")
         val address: String,
         @Json(name = "status")
@@ -87,7 +87,7 @@ data class Yield(
     )
 
     @JsonClass(generateAdapter = true)
-    data class Metadata(
+    data class MetadataDTO(
         @Json(name = "name")
         val name: String,
         @Json(name = "logoURI")
@@ -97,19 +97,19 @@ data class Yield(
         @Json(name = "documentation")
         val documentation: String?,
         @Json(name = "gasFeeToken")
-        val gasFeeToken: Token,
+        val gasFeeTokenDTO: TokenDTO,
         @Json(name = "token")
-        val token: Token,
+        val tokenDTO: TokenDTO,
         @Json(name = "tokens")
-        val tokens: List<Token>,
+        val tokensDTO: List<TokenDTO>,
         @Json(name = "type")
         val type: String,
         @Json(name = "rewardSchedule")
         val rewardSchedule: String,
         @Json(name = "cooldownPeriod")
-        val cooldownPeriod: Period,
+        val cooldownPeriod: PeriodDTO,
         @Json(name = "warmupPeriod")
-        val warmupPeriod: Period,
+        val warmupPeriod: PeriodDTO,
         @Json(name = "rewardClaiming")
         val rewardClaiming: String,
         @Json(name = "defaultValidator")
@@ -119,25 +119,25 @@ data class Yield(
         @Json(name = "supportsMultipleValidators")
         val supportsMultipleValidators: Boolean,
         @Json(name = "revshare")
-        val revshare: Enabled,
+        val revshare: EnabledDTO,
         @Json(name = "fee")
-        val fee: Enabled,
+        val fee: EnabledDTO,
     ) {
 
         @JsonClass(generateAdapter = true)
-        data class Period(
+        data class PeriodDTO(
             @Json(name = "days")
             val days: Int,
         )
 
         @JsonClass(generateAdapter = true)
-        data class Enabled(
+        data class EnabledDTO(
             @Json(name = "enabled")
             val enabled: Boolean,
         )
     }
 
-    enum class RewardType {
+    enum class RewardTypeDTO {
         @Json(name = "apy")
         APY, // compound rate
         @Json(name = "apr")
