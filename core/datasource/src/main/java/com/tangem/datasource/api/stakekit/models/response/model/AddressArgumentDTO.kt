@@ -4,7 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class AddressArgument(
+data class AddressArgumentDTO(
     @Json(name = "required")
     val required: Boolean,
     @Json(name = "network")
