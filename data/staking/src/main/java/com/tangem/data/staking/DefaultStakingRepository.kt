@@ -10,6 +10,7 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -23,15 +24,20 @@ internal class DefaultStakingRepository(
 
     private val yieldConverter = YieldConverter()
 
-    override suspend fun getStakingAvailabilityForActions(currencyId: String, symbol: String): StakingAvailability {
+    override suspend fun getStakingAvailabilityForActions(
+        cryptoCurrencyId: CryptoCurrency.ID,
+        symbol: String,
+    ): StakingAvailability {
+        val rawCurrencyId = cryptoCurrencyId.rawCurrencyId ?: return StakingAvailability.Unavailable
+
         if (!stakingFeatureToggles.isStakingEnabled) {
             return StakingAvailability.Unavailable
         }
         return withContext(dispatchers.io) {
             val yields = getEnabledYields() ?: return@withContext StakingAvailability.Unavailable
 
-            val prefetchedYield = findPrefetchedYield(yields, currencyId, symbol)
-            val isSupported = isStakingSupported(currencyId)
+            val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, symbol)
+            val isSupported = isStakingSupported(rawCurrencyId)
 
             when {
                 prefetchedYield != null && isSupported -> {
@@ -51,7 +57,7 @@ internal class DefaultStakingRepository(
     }
 
     override fun isStakingSupported(currencyId: String): Boolean {
-        return integrationIdMap.contains(currencyId)
+        return integrationIds.contains(currencyId)
     }
 
     override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo {
@@ -84,7 +90,7 @@ internal class DefaultStakingRepository(
     }
 
     companion object {
-        private val integrationIdMap = setOf(
+        private val integrationIds = setOf(
             Blockchain.Solana.toCoinId(),
             Blockchain.Cosmos.toCoinId(),
             Blockchain.Polkadot.toCoinId(),

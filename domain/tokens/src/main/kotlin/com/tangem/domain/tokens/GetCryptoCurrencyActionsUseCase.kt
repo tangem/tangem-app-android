@@ -281,9 +281,8 @@ class GetCryptoCurrencyActionsUseCase(
     }
 
     private suspend fun isStakingAvailable(cryptoCurrency: CryptoCurrency): Boolean {
-        val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: return false
         return stakingRepository.getStakingAvailabilityForActions(
-            currencyId = rawCurrencyId,
+            cryptoCurrencyId = cryptoCurrency.id,
             symbol = cryptoCurrency.symbol,
         ) is StakingAvailability.Available
     }
