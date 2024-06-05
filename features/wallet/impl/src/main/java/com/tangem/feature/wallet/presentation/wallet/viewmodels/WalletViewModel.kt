@@ -55,12 +55,12 @@ internal class WalletViewModel @Inject constructor(
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletDeepLinksHandler: WalletDeepLinksHandler,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
+    analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
@@ -302,21 +302,27 @@ internal class WalletViewModel @Inject constructor(
         )
 
         /*
-         * If card is reset to factory settings, then Compose need some time to draw the WalletScreen.
-         * Otherwise, scroll isn't happened
+         * Should not show scroll animation if WalletScreen isn't in the background.
+         * Example, reset card
          */
-        withContext(dispatchers.io) { delay(timeMillis = 1000) }
+        if (screenLifecycleProvider.isBackgroundState.value) {
+            updateStateByDeleteWalletTransformer(action)
+        } else {
+            withContext(dispatchers.io) { delay(timeMillis = 1000) }
 
-        scrollToWallet(
-            index = action.selectedWalletIndex,
-            onConsume = {
-                stateHolder.update(
-                    DeleteWalletTransformer(
-                        selectedWalletIndex = action.selectedWalletIndex,
-                        deletedWalletId = action.deletedWalletId,
-                    ),
-                )
-            },
+            scrollToWallet(
+                index = action.selectedWalletIndex,
+                onConsume = { updateStateByDeleteWalletTransformer(action) },
+            )
+        }
+    }
+
+    private fun updateStateByDeleteWalletTransformer(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
+        stateHolder.update(
+            DeleteWalletTransformer(
+                selectedWalletIndex = action.selectedWalletIndex,
+                deletedWalletId = action.deletedWalletId,
+            ),
         )
     }
 

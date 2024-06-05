@@ -11,15 +11,15 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 internal object TransactionDomainModule {
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetFeeUseCase(walletManagersFacade: WalletManagersFacade): GetFeeUseCase {
         return GetFeeUseCase(
             walletManagersFacade = walletManagersFacade,
@@ -28,7 +28,7 @@ internal object TransactionDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideSendTransactionUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
         transactionRepository: TransactionRepository,
@@ -43,7 +43,7 @@ internal object TransactionDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideAssociateAssetUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
         walletManagersFacade: WalletManagersFacade,
@@ -59,20 +59,28 @@ internal object TransactionDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideCreateTransactionUseCase(transactionRepository: TransactionRepository): CreateTransactionUseCase {
         return CreateTransactionUseCase(transactionRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideIsFeeApproximateUseCase(feeRepository: FeeRepository): IsFeeApproximateUseCase {
         return IsFeeApproximateUseCase(feeRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideValidateTransactionUseCase(transactionRepository: TransactionRepository): ValidateTransactionUseCase {
         return ValidateTransactionUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsUtxoConsolidationAvailableUseCase(
+        walletManagersFacade: WalletManagersFacade,
+    ): IsUtxoConsolidationAvailableUseCase {
+        return IsUtxoConsolidationAvailableUseCase(walletManagersFacade)
     }
 }

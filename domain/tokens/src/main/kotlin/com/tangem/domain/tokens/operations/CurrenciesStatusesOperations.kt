@@ -77,12 +77,18 @@ internal class CurrenciesStatusesOperations(
         }
     }
 
-    suspend fun getCurrencyStatusSync(cryptoCurrencyId: CryptoCurrency.ID): Either<Error, CryptoCurrencyStatus> {
+    suspend fun getCurrencyStatusSync(
+        cryptoCurrencyId: CryptoCurrency.ID,
+        isSingleWalletWithTokens: Boolean = false,
+    ): Either<Error, CryptoCurrencyStatus> {
         return either {
             catch(
                 block = {
-                    val currency =
+                    val currency = if (isSingleWalletWithTokens) {
+                        currenciesRepository.getSingleCurrencyWalletWithCardCurrency(userWalletId, cryptoCurrencyId)
+                    } else {
                         currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, cryptoCurrencyId)
+                    }
                     val quotes = quotesRepository.getQuoteSync(cryptoCurrencyId).right()
                     val networkStatuses =
                         networksRepository.getNetworkStatusesSync(
@@ -107,6 +113,14 @@ internal class CurrenciesStatusesOperations(
             block = { getNetworkCoin(networkId, derivationPath) },
             recover = { return it.left() },
         )
+
+        return getCurrencyStatusSync(currency.id)
+    }
+
+    suspend fun getNetworkCoinForSingleWalletWithTokenSync(
+        networkId: Network.ID,
+    ): Either<Error, CryptoCurrencyStatus> = either {
+        val currency = getNetworkCoinForSingleWalletWithToken(networkId)
 
         return getCurrencyStatusSync(currency.id)
     }

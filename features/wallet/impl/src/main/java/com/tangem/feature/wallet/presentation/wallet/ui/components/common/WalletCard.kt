@@ -197,7 +197,7 @@ private fun CardContainer(
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens.spacing14),
+                .padding(horizontal = TangemTheme.dimens.spacing12),
         ) {
             content(itemSize)
         }

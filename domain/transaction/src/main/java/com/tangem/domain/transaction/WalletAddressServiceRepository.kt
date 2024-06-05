@@ -1,4 +1,4 @@
-package com.tangem.domain.wallets.repository
+package com.tangem.domain.transaction
 
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.ParsedQrCode

@@ -16,6 +16,7 @@ import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
+import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
@@ -44,6 +45,7 @@ internal class MainViewModel @Inject constructor(
     private val sendFeatureToggles: SendFeatureToggles,
     private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
 
@@ -69,6 +71,7 @@ internal class MainViewModel @Inject constructor(
         observeFlips()
         displayBalancesHidingStatusToast()
         displayHiddenBalancesModalNotification()
+        fetchStakingTokens()
 
         viewModelScope.launch(dispatchers.main) {
             deleteDeprecatedLogsUseCase()
@@ -112,6 +115,14 @@ internal class MainViewModel @Inject constructor(
     private fun updateAppCurrencies() {
         viewModelScope.launch(dispatchers.main) {
             fetchAppCurrenciesUseCase.invoke()
+        }
+    }
+
+    private fun fetchStakingTokens() {
+        viewModelScope.launch(dispatchers.main) {
+            fetchStakingTokensUseCase()
+                .onLeft { Timber.e(it, "Unable to fetch the staking tokens list") }
+                .onRight { Timber.d("Staking token list was fetched successfully") }
         }
     }
 
