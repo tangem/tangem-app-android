@@ -89,6 +89,19 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
         ),
     )
 
+    data class Stake(
+        override val enabled: Boolean,
+        override val dimContent: Boolean,
+        override val onClick: () -> Unit,
+    ) : WalletManageButton(
+        config = ActionButtonConfig(
+            text = TextReference.Res(id = R.string.common_stake),
+            iconResId = R.drawable.ic_arrow_down_24, // TODO staking
+            onClick = onClick,
+            dimContent = dimContent,
+        ),
+    )
+
     /**
      * Sell
      *

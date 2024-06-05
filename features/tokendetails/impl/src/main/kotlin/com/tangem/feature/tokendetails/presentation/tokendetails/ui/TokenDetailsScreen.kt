@@ -134,7 +134,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                     )
                 }
 
-                if (state.isStakingAvailable) {
+                if (state.isStakingBlockShown) {
                     item(
                         key = StakingBlockState::class.java,
                         contentType = StakingBlockState::class.java,
