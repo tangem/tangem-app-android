@@ -260,7 +260,7 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
-        isStakingAvailable = false,
+        isStakingBlockShown = false,
         event = consumedEvent(),
     )
 
@@ -296,7 +296,7 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = true,
-        isStakingAvailable = true,
+        isStakingBlockShown = true,
         event = consumedEvent(),
     )
 
