@@ -1,10 +1,12 @@
 package com.tangem.blockchainsdk.loader
 
+import androidx.core.util.PatternsCompat
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechServiceApi
 import com.tangem.datasource.asset.loader.AssetLoader
+import com.tangem.datasource.config.models.ProviderModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import timber.log.Timber
@@ -68,7 +70,15 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
          *
          * local + remote // { a = 1, e = 4, f = 5, b = 2, c = 3 }
          */
-        val result = local + remote.filterValues { it.isNotEmpty() }
+        val remoteWithoutInvalidProviders = remote
+            .mapValues {
+                it.value
+                    .filterUnsupportedProviders()
+                    .filterInvalidProviders()
+            }
+            .filterValues { it.isNotEmpty() }
+
+        val result = local + remoteWithoutInvalidProviders
 
         if (result != remote) {
             val missingBlockchains = result.keys - remote.keys
@@ -78,6 +88,23 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
         }
 
         return result
+    }
+
+    private fun List<ProviderModel>.filterUnsupportedProviders() = filter { it !is ProviderModel.UnsupportedType }
+
+    private fun List<ProviderModel>.filterInvalidProviders() = mapNotNull { provider ->
+        if (provider is ProviderModel.Public) {
+            if (isValidUrl(provider.url)) provider else null
+        } else {
+            provider
+        }
+    }
+
+    private fun isValidUrl(url: String): Boolean {
+        val forbiddenScheme = forbiddenSchemes.firstOrNull { url.startsWith(prefix = it) }
+        val inputUrl = if (forbiddenScheme != null) url.substringAfter(forbiddenScheme) else url
+
+        return PatternsCompat.WEB_URL.matcher(inputUrl).matches()
     }
 
     private fun recordException(missingBlockchains: Set<String>) {
@@ -93,5 +120,7 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
 
     private companion object {
         const val PROVIDER_TYPES_FILE_NAME = "tangem-app-config/providers_order"
+
+        val forbiddenSchemes = listOf("wss://")
     }
 }
