@@ -218,6 +218,67 @@ internal class BlockchainProvidersResponseLoaderTest {
         Truth.assertThat(actual).isEqualTo(remoteProviders)
     }
 
+    @Test
+    fun test_load_if_remote_config_contains_unsupported_types() = runTest {
+        val ethProvider = "ethereum" to listOf(ProviderModel.UnsupportedType, ProviderModel.Private(name = "nownodes"))
+        val remoteProvidersWithEth = remoteProviders + ethProvider
+
+        everyGettingLocalConfig(json = localProvidersJson) returns localProviders
+        everyGettingRemoteConfig() returns remoteProvidersWithEth
+        everyCrashlyticsRecording() just Runs
+
+        val actual = loader.load()
+
+        coVerifyOrder {
+            assetReader.read(LOCAL_CONFIG_FILE_NAME)
+            moshi.adapter<BlockchainProvidersResponse>()
+            jsonAdapter.fromJson(localProvidersJson)
+            authProvider.getCardPublicKey()
+            authProvider.getCardId()
+            tangemTechServiceApi.getBlockchainProviders(
+                cardPublicKey = DEFAULT_CARD_PUBLIC_KEY,
+                cardId = DEFAULT_CARD_ID,
+            )
+            firebaseCrashlytics.recordException(any())
+        }
+
+        val expected = remoteProviders + ("ethereum" to listOf(ProviderModel.Private(name = "nownodes")))
+
+        Truth.assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun test_load_if_remote_config_contains_invalid_public_providers() = runTest {
+        val localEthProvider = "ethereum" to listOf(ProviderModel.Private(name = "nownodes"))
+        val localProvidersWithEth = localProviders + localEthProvider
+
+        val remoteEthProvider = "ethereum" to listOf(ProviderModel.UnsupportedType, ProviderModel.Public("adbw2138"))
+        val remoteProvidersWithEth = remoteProviders + remoteEthProvider
+
+        everyGettingLocalConfig(json = localProvidersJson) returns localProvidersWithEth
+        everyGettingRemoteConfig() returns remoteProvidersWithEth
+        everyCrashlyticsRecording() just Runs
+
+        val actual = loader.load()
+
+        coVerifyOrder {
+            assetReader.read(LOCAL_CONFIG_FILE_NAME)
+            moshi.adapter<BlockchainProvidersResponse>()
+            jsonAdapter.fromJson(localProvidersJson)
+            authProvider.getCardPublicKey()
+            authProvider.getCardId()
+            tangemTechServiceApi.getBlockchainProviders(
+                cardPublicKey = DEFAULT_CARD_PUBLIC_KEY,
+                cardId = DEFAULT_CARD_ID,
+            )
+            firebaseCrashlytics.recordException(any())
+        }
+
+        val expected = remoteProviders + localEthProvider
+
+        Truth.assertThat(actual).isEqualTo(expected)
+    }
+
     private fun everyGettingLocalConfig(
         json: String,
     ): MockKStubScope<BlockchainProvidersResponse?, BlockchainProvidersResponse?> {
