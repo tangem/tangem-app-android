@@ -1,8 +1,8 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.local.datastore.RuntimeDataStore
-import com.tangem.datasource.local.token.DefaultAssetsStore
-import com.tangem.datasource.local.token.AssetsStore
+import com.tangem.datasource.local.token.DefaultStakingTokensStore
+import com.tangem.datasource.local.token.StakingTokensStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,11 +11,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object AssetsStoreModule {
+internal object StakingTokensStoreModule {
 
     @Provides
     @Singleton
-    fun provideAssetsStore(): AssetsStore {
-        return DefaultAssetsStore(dataStore = RuntimeDataStore())
+    fun provideStakingTokensStore(): StakingTokensStore {
+        return DefaultStakingTokensStore(dataStore = RuntimeDataStore())
     }
 }
