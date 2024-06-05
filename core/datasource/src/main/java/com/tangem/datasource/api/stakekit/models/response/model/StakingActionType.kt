@@ -47,4 +47,6 @@ enum class StakingActionType {
 
     @Json(name = "MIGRATE")
     MIGRATE,
+
+    UNKNOWN,
 }
