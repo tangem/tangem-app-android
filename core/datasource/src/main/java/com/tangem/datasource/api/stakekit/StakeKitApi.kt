@@ -18,12 +18,12 @@ interface StakeKitApi {
 
     @GET("yields/enabled")
     suspend fun getMultipleYields(
-        @Query("ledgerWalletAPICompatible") ledgerWalletAPICompatible: Boolean,
-        @Query("type") type: YieldType,
-        @Query("revenueOption") revenueOption: RevenueOption,
-        @Query("page") page: Int,
-        @Query("network") network: String,
-        @Query("limit") limit: Int,
+        @Query("ledgerWalletAPICompatible") ledgerWalletAPICompatible: Boolean? = null,
+        @Query("type") type: YieldType? = null,
+        @Query("revenueOption") revenueOption: RevenueOption? = null,
+        @Query("page") page: Int? = null,
+        @Query("network") network: String? = null,
+        @Query("limit") limit: Int? = null,
     ): ApiResponse<EnabledYieldsResponse>
 
     @GET("yields/{integrationId}")
