@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -115,30 +116,21 @@ private fun SecondaryButton(config: WalletBottomSheetConfig.ButtonConfig, modifi
     }
 }
 
-@Preview
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun WalletBottomSheetContent_Light(
+private fun WalletBottomSheetContent_Preview(
     @PreviewParameter(WalletBottomSheetConfigProvider::class)
     config: WalletBottomSheetConfig,
 ) {
-    TangemThemePreview(isDark = false) {
+    TangemThemePreview {
         // Use preview of content because ModalBottomSheet isn't supported in Preview mode
         BottomSheetContent(config = config)
     }
 }
 
-@Preview
-@Composable
-private fun WalletBottomSheetContent_Dark(
-    @PreviewParameter(WalletBottomSheetConfigProvider::class)
-    config: WalletBottomSheetConfig,
-) {
-    TangemThemePreview(isDark = false) {
-        // Use preview of content because ModalBottomSheet isn't supported in Preview mode
-        BottomSheetContent(config = config)
-    }
-}
-
-private class WalletBottomSheetConfigProvider : CollectionPreviewParameterProvider<TangemBottomSheetConfig>(
-    collection = listOf(WalletPreviewData.bottomSheet),
+private class WalletBottomSheetConfigProvider : CollectionPreviewParameterProvider<WalletBottomSheetConfig>(
+    collection = listOf(WalletPreviewData.bottomSheet.content as WalletBottomSheetConfig),
 )
+// endregion

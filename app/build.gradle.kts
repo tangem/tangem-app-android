@@ -14,6 +14,11 @@ android {
     testOptions {
         animationsDisabled = true
     }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 configurations.all {
@@ -68,6 +73,7 @@ dependencies {
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.staking)
+    implementation(projects.domain.walletConnect)
 
     implementation(projects.common)
     implementation(projects.core.analytics)
@@ -101,6 +107,7 @@ dependencies {
     implementation(projects.data.feedback)
     implementation(projects.data.qrScanning)
     implementation(projects.data.staking)
+    implementation(projects.data.walletConnect)
 
     /** Features */
     implementation(projects.features.onboarding)

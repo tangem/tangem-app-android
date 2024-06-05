@@ -191,6 +191,7 @@ include(":domain:feedback")
 include(":domain:qr-scanning")
 include(":domain:qr-scanning:models")
 include(":domain:staking")
+include(":domain:wallet-connect")
 // endregion Domain modules
 
 // region Data modules
@@ -211,4 +212,5 @@ include(":data:onboarding")
 include(":data:feedback")
 include(":data:qr-scanning")
 include(":data:staking")
+include(":data:wallet-connect")
 // endregion Data modules

@@ -13,9 +13,9 @@ import com.tangem.blockchain.common.pagination.Page
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.common.trustlines.AssetRequirementsManager
-import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.asset.loader.AssetLoader
@@ -37,6 +37,8 @@ import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
@@ -60,6 +62,8 @@ class DefaultWalletManagersFacade(
     private val cryptoCurrencyTypeConverter by lazy { CryptoCurrencyTypeConverter() }
     private val requirementsConditionConverter by lazy { SdkRequirementsConditionConverter() }
     private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
+
+    private val initMutex = Mutex()
 
     override suspend fun update(
         userWalletId: UserWalletId,
@@ -329,24 +333,25 @@ class DefaultWalletManagersFacade(
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager? {
-        val userWallet = getUserWallet(userWalletId)
-        var walletManager = walletManagersStore.getSyncOrNull(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = derivationPath,
-        )
-
-        if (walletManager == null) {
-            walletManager = walletManagerFactory.createWalletManager(
-                scanResponse = userWallet.scanResponse,
+        initMutex.withLock {
+            val userWallet = getUserWallet(userWalletId)
+            var walletManager = walletManagersStore.getSyncOrNull(
+                userWalletId = userWalletId,
                 blockchain = blockchain,
-                derivationPath = derivationPath?.let { DerivationPath(rawPath = it) },
-            ) ?: return null
+                derivationPath = derivationPath,
+            )
+            if (walletManager == null) {
+                walletManager = walletManagerFactory.createWalletManager(
+                    scanResponse = userWallet.scanResponse,
+                    blockchain = blockchain,
+                    derivationPath = derivationPath?.let { DerivationPath(rawPath = it) },
+                )
+                walletManager ?: return null
 
-            walletManagersStore.store(userWalletId, walletManager)
+                walletManagersStore.store(userWalletId, walletManager)
+            }
+            return walletManager
         }
-
-        return walletManager
     }
 
     @Deprecated("Will be removed in future")
@@ -604,6 +609,17 @@ class DefaultWalletManagersFacade(
             )
         }
         return walletManager.fulfillRequirements(currencyType, signer)
+    }
+
+    override suspend fun checkUtxoConsolidationAvailability(userWalletId: UserWalletId, network: Network): Boolean {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: return false
+
+        return (walletManager as? UtxoBlockchainManager)?.allowConsolidation == true
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {

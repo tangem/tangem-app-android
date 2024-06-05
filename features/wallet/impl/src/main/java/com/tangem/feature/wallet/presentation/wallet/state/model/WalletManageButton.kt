@@ -24,6 +24,9 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
     /** Lambda be invoked when manage button is clicked */
     abstract val onClick: () -> Unit
 
+    /** Lambda be invoked when manage button is long clicked */
+    open val onLongClick: (() -> TextReference?)? = null
+
     /**
      * Buy
      *
@@ -69,17 +72,20 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
      * Receive
      *
      * @property onClick lambda be invoked when Receive button is clicked
+     * @property onLongClick lambda be invoked when Receive button is long clicked
      */
     data class Receive(
         override val enabled: Boolean,
         override val dimContent: Boolean,
         override val onClick: () -> Unit,
+        override val onLongClick: (() -> TextReference?)?,
     ) : WalletManageButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_receive),
             iconResId = R.drawable.ic_arrow_down_24,
-            onClick = onClick,
             dimContent = dimContent,
+            onClick = onClick,
+            onLongClick = onLongClick,
         ),
     )
 

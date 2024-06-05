@@ -88,4 +88,5 @@ dependencies {
     implementation(projects.features.send.api)
     implementation(projects.features.tester.api)
     implementation(projects.features.manageTokens.api)
+    implementation(projects.features.details.api)
 }

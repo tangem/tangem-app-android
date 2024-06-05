@@ -22,6 +22,7 @@ class GetCryptoCurrencyStatusSyncUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
+        isSingleWalletWithTokens: Boolean = false,
     ): Either<CurrencyStatusError, CryptoCurrencyStatus> {
         val operations = CurrenciesStatusesOperations(
             userWalletId = userWalletId,
@@ -30,7 +31,7 @@ class GetCryptoCurrencyStatusSyncUseCase(
             networksRepository = networksRepository,
         )
 
-        return operations.getCurrencyStatusSync(cryptoCurrencyId)
+        return operations.getCurrencyStatusSync(cryptoCurrencyId, isSingleWalletWithTokens)
             .mapLeft { error -> error.mapToCurrencyError() }
     }
 

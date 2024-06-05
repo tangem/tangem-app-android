@@ -54,6 +54,10 @@ internal class MockCurrenciesRepository(
 
     override suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
 
+    override fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): LceFlow<Throwable, List<CryptoCurrency>> {
+        return emptyFlow()
+    }
+
     override suspend fun getMultiCurrencyWalletCurrenciesSync(
         userWalletId: UserWalletId,
         refresh: Boolean,
