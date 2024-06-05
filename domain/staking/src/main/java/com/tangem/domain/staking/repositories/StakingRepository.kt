@@ -8,4 +8,6 @@ interface StakingRepository {
     fun getStakingAvailability(blockchainId: String): StakingAvailability
 
     suspend fun getEntryInfo(integrationId: String): StakingEntryInfo
+
+    suspend fun fetchEnabledTokens()
 }
