@@ -3,7 +3,7 @@ package com.tangem.datasource.local.token
 import com.tangem.datasource.api.express.models.response.Asset
 import com.tangem.domain.wallets.models.UserWalletId
 
-interface AssetsStore {
+interface ExpressAssetsStore {
 
     suspend fun getSyncOrNull(userWalletId: UserWalletId): List<Asset>?
 
