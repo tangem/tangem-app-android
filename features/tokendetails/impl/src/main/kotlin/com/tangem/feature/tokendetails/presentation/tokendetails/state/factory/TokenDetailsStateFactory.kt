@@ -44,7 +44,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
     symbol: String,
@@ -55,7 +54,6 @@ internal class TokenDetailsStateFactory(
         TokenDetailsSkeletonStateConverter(
             clickIntents = clickIntents,
             featureToggles = featureToggles,
-            stakingAvailabilityProvider = stakingAvailabilityProvider,
         )
     }
 
@@ -208,6 +206,12 @@ internal class TokenDetailsStateFactory(
                     onConfirmClick = clickIntents::onDismissDialog,
                 ),
             ),
+        )
+    }
+
+    fun getStateWithUpdatedStakingAvailability(stakingAvailability: StakingAvailability): TokenDetailsState {
+        return currentStateProvider().copy(
+            isStakingBlockShown = stakingAvailability != StakingAvailability.Unavailable,
         )
     }
 
@@ -369,6 +373,12 @@ internal class TokenDetailsStateFactory(
 
     private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason): TextReference {
         return when (unavailabilityReason) {
+            is ScenarioUnavailabilityReason.StakingUnavailable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_staking_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
             is ScenarioUnavailabilityReason.PendingTransaction -> {
                 when (unavailabilityReason.withdrawalScenario) {
                     ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
