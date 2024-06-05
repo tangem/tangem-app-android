@@ -142,9 +142,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        stakingAvailabilityProvider = Provider {
-            getStakingAvailabilityUseCase.invoke(cryptoCurrency.network.id.value)
-        },
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
@@ -369,7 +366,11 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateStakingInfo() {
         viewModelScope.launch(dispatchers.io) {
-            val stakingAvailability = getStakingAvailabilityUseCase(cryptoCurrency.network.id.value)
+            val stakingAvailability = getStakingAvailabilityUseCase(
+                cryptoCurrencyId = cryptoCurrency.id,
+                symbol = cryptoCurrency.symbol,
+            )
+            uiState = stateFactory.getStateWithUpdatedStakingAvailability(stakingAvailability)
             if (stakingAvailability is StakingAvailability.Available) {
                 val stakingInfo = getStakingEntryInfoUseCase(stakingAvailability.integrationId)
                 uiState = stateFactory.getStateWithStaking(stakingInfo)
@@ -522,6 +523,10 @@ internal class TokenDetailsViewModel @Inject constructor(
                 },
             )
         }
+    }
+
+    override fun onStakeClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        Timber.e("Not implemented yet")
     }
 
     override fun onGenerateExtendedKey() {

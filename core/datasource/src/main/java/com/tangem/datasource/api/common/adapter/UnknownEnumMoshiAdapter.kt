@@ -2,10 +2,10 @@ package com.tangem.datasource.api.common.adapter
 
 import com.squareup.moshi.*
 import com.squareup.moshi.adapters.EnumJsonAdapter
-import com.tangem.datasource.api.stakekit.models.response.model.StakingActionType
-import com.tangem.datasource.api.stakekit.models.response.model.Token
-import com.tangem.datasource.api.stakekit.models.response.model.Yield
-import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapper
+import com.tangem.datasource.api.stakekit.models.response.model.StakingActionTypeDTO
+import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
+import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
+import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 
 /**
  * Object to create a adapter for enum types with support for unknown enum values.
@@ -20,10 +20,11 @@ object UnknownEnumMoshiAdapter {
 
 fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
     val map = mapOf(
-        Token.NetworkType::class.java to Token.NetworkType.UNKNOWN,
-        StakingActionType::class.java to StakingActionType.UNKNOWN,
-        Yield.RewardType::class.java to Yield.RewardType.UNKNOWN,
-        YieldBalanceWrapper.Balance.BalanceType::class.java to YieldBalanceWrapper.Balance.BalanceType.UNKNOWN,
+        TokenDTO.NetworkTypeDTO::class.java to TokenDTO.NetworkTypeDTO.UNKNOWN,
+        StakingActionTypeDTO::class.java to StakingActionTypeDTO.UNKNOWN,
+        YieldDTO.RewardTypeDTO::class.java to YieldDTO.RewardTypeDTO.UNKNOWN,
+        YieldBalanceWrapperDTO.BalanceDTO.BalanceType::class.java to
+            YieldBalanceWrapperDTO.BalanceDTO.BalanceType.UNKNOWN,
     )
 
     return apply {
