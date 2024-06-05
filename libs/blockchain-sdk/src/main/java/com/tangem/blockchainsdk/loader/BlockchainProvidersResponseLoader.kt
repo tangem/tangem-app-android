@@ -1,6 +1,6 @@
 package com.tangem.blockchainsdk.loader
 
-import android.util.Patterns
+import androidx.core.util.PatternsCompat
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
 import com.tangem.datasource.api.common.AuthProvider
@@ -104,7 +104,7 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
         val forbiddenScheme = forbiddenSchemes.firstOrNull { url.startsWith(prefix = it) }
         val inputUrl = if (forbiddenScheme != null) url.substringAfter(forbiddenScheme) else url
 
-        return Patterns.WEB_URL.matcher(inputUrl).matches()
+        return PatternsCompat.WEB_URL.matcher(inputUrl).matches()
     }
 
     private fun recordException(missingBlockchains: Set<String>) {
