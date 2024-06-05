@@ -23,7 +23,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
-import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -38,6 +37,7 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
+import com.tangem.utils.Strings.STARS
 
 @Suppress("LongMethod")
 @Composable
