@@ -29,9 +29,6 @@ internal class StateRouter(
             else -> when (type) {
                 StakingUiStateType.Amount -> showInitial()
                 StakingUiStateType.ValidatorAndFee -> showAmount()
-                StakingUiStateType.EditAmount -> showConfirm()
-                StakingUiStateType.EditValidator -> showConfirm()
-                StakingUiStateType.EditFee -> showConfirm()
                 else -> popBackStack()
             }
         }
@@ -42,13 +39,9 @@ internal class StateRouter(
             StakingUiStateType.InitialInfo -> showAmount()
             StakingUiStateType.Amount,
             StakingUiStateType.ValidatorAndFee,
-            StakingUiStateType.EditAmount,
-            StakingUiStateType.EditValidator,
-            StakingUiStateType.EditFee,
             -> showConfirm()
             StakingUiStateType.Confirm -> onBackClick()
 
-            else -> popBackStack()
         }
     }
 

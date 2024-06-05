@@ -94,12 +94,8 @@ internal sealed class StakingStates {
 }
 
 enum class StakingUiStateType {
-    None,
     InitialInfo,
     Amount,
     ValidatorAndFee,
     Confirm,
-    EditAmount,
-    EditValidator,
-    EditFee,
 }
