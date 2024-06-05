@@ -35,5 +35,6 @@ sealed class RequestHeader(vararg pairs: Pair<String, () -> String>) {
 
     class StakeKit(stakeKitAuthProvider: StakeKitAuthProvider) : RequestHeader(
         "X-API-KEY" to { stakeKitAuthProvider.getApiKey() },
+        "accept" to { "application/json" },
     )
 }
