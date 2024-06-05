@@ -15,7 +15,7 @@ internal sealed class StakingAlertState {
 
     data class GenericError(
         override val title: TextReference? = TODO(),
-        override val onConfirmClick: (() -> Unit),
+        override val onConfirmClick: () -> Unit,
     ) : StakingAlertState() {
         override val message: TextReference = resourceReference(R.string.common_unknown_error)
         override val confirmButtonText: TextReference =
