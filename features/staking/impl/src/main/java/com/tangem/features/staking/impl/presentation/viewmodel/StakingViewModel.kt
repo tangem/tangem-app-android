@@ -1,9 +1,12 @@
 package com.tangem.features.staking.impl.presentation.viewmodel
 
 import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.StakingStateFactory
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
@@ -19,15 +22,23 @@ import kotlin.properties.Delegates
 @HiltViewModel
 internal class StakingViewModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
-
-    private var balanceHidingJobHolder = JobHolder()
 
     val uiState: StateFlow<StakingUiState> get() = mutableUiState
     val value: StakingUiState get() = uiState.value
 
+    var stateRouter: StateRouter by Delegates.notNull()
+        private set
+
+    private val cryptoCurrency: CryptoCurrency = savedStateHandle[StakingRouter.CRYPTO_CURRENCY_KEY]
+        ?: error("This screen can't open without `CryptoCurrency`")
+
+    private var balanceHidingJobHolder = JobHolder()
+
     private val stateFactory = StakingStateFactory(
         clickIntents = this,
+        cryptoCurrency = cryptoCurrency,
         currentStateProvider = Provider { uiState.value },
     )
 
@@ -36,11 +47,14 @@ internal class StakingViewModel @Inject constructor(
     )
 
     private var innerRouter: InnerStakingRouter by Delegates.notNull()
-    var stateRouter: StateRouter by Delegates.notNull()
-        private set
 
     init {
         subscribeOnBalanceHiding()
+    }
+
+    override fun onCleared() {
+        balanceHidingJobHolder.cancel()
+        super.onCleared()
     }
 
     fun setRouter(router: InnerStakingRouter, stateRouter: StateRouter) {
