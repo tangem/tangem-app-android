@@ -10,7 +10,7 @@ data class AddressArgument(
     @Json(name = "network")
     val network: String? = null,
     @Json(name = "minimum")
-    val minimum: Int? = null,
+    val minimum: Double? = null,
     @Json(name = "maximum")
-    val maximum: Int? = null,
+    val maximum: Double? = null,
 )
