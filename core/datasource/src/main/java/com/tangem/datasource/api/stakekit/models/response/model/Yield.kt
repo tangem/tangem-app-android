@@ -139,8 +139,10 @@ data class Yield(
 
     enum class RewardType {
         @Json(name = "apy")
-        APY, // auto
+        APY, // compound rate
         @Json(name = "apr")
-        APR, // manual
+        APR, // simple rate,
+
+        UNKNOWN,
     }
 }
