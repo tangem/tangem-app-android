@@ -4,13 +4,13 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class AddressArgument(
+data class AddressArgumentDTO(
     @Json(name = "required")
     val required: Boolean,
     @Json(name = "network")
     val network: String? = null,
     @Json(name = "minimum")
-    val minimum: Int? = null,
+    val minimum: Double? = null,
     @Json(name = "maximum")
-    val maximum: Int? = null,
+    val maximum: Double? = null,
 )
