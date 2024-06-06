@@ -14,6 +14,11 @@ android {
     testOptions {
         animationsDisabled = true
     }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 configurations.all {
