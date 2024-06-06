@@ -16,7 +16,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
-import com.tangem.common.ui.amountScreen.models.AmountField
+import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.core.ui.components.fields.AmountTextField
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.extensions.TextReference
@@ -27,14 +27,14 @@ import com.tangem.core.ui.utils.rememberDecimalFormat
 import kotlinx.coroutines.delay
 
 @Composable
-internal fun AmountField(sendField: AmountField, appCurrencyCode: String) {
+internal fun AmountField(amountField: AmountFieldModel, appCurrencyCode: String) {
     val decimalFormat = rememberDecimalFormat()
-    val isFiatValue = sendField.isFiatValue
+    val isFiatValue = amountField.isFiatValue
     val currencyCode = if (isFiatValue) appCurrencyCode else null
     val (primaryAmount, primaryValue) = if (isFiatValue) {
-        sendField.fiatAmount to sendField.fiatValue
+        amountField.fiatAmount to amountField.fiatValue
     } else {
-        sendField.cryptoAmount to sendField.value
+        amountField.cryptoAmount to amountField.value
     }
     val requester = remember { FocusRequester() }
 
@@ -47,16 +47,16 @@ internal fun AmountField(sendField: AmountField, appCurrencyCode: String) {
             currencyCode = currencyCode,
             decimalFormat = decimalFormat,
         ),
-        onValueChange = sendField.onValueChange,
-        keyboardOptions = sendField.keyboardOptions,
-        keyboardActions = sendField.keyboardActions,
+        onValueChange = amountField.onValueChange,
+        keyboardOptions = amountField.keyboardOptions,
+        keyboardActions = amountField.keyboardActions,
         textStyle = TangemTheme.typography.h2.copy(
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
         ),
         isAutoResize = true,
-        isValuePasted = sendField.isValuePasted,
-        onValuePastedTriggerDismiss = sendField.onValuePastedTriggerDismiss,
+        isValuePasted = amountField.isValuePasted,
+        onValuePastedTriggerDismiss = amountField.onValuePastedTriggerDismiss,
         modifier = Modifier
             .focusRequester(requester)
             .padding(
@@ -72,12 +72,12 @@ internal fun AmountField(sendField: AmountField, appCurrencyCode: String) {
         requester.requestFocus()
     }
 
-    AmountSecondary(sendField, appCurrencyCode)
+    AmountSecondary(amountField, appCurrencyCode)
 }
 
 @Composable
-private fun AmountSecondary(sendField: AmountField, appCurrencyCode: String) {
-    val secondaryAmount = if (sendField.isFiatValue) sendField.cryptoAmount else sendField.fiatAmount
+private fun AmountSecondary(amountField: AmountFieldModel, appCurrencyCode: String) {
+    val secondaryAmount = if (amountField.isFiatValue) amountField.cryptoAmount else amountField.fiatAmount
     Box(
         modifier = Modifier
             .padding(
@@ -86,7 +86,7 @@ private fun AmountSecondary(sendField: AmountField, appCurrencyCode: String) {
                 end = TangemTheme.dimens.spacing12,
             ),
     ) {
-        val text = if (sendField.isFiatValue) {
+        val text = if (amountField.isFiatValue) {
             BigDecimalFormatter.formatCryptoAmount(
                 cryptoAmount = secondaryAmount.value,
                 cryptoCurrency = secondaryAmount.currencySymbol,
@@ -109,8 +109,8 @@ private fun AmountSecondary(sendField: AmountField, appCurrencyCode: String) {
                 .padding(bottom = TangemTheme.dimens.spacing32),
         )
         AmountFieldError(
-            isError = sendField.isError,
-            error = sendField.error,
+            isError = amountField.isError,
+            error = amountField.error,
             modifier = Modifier
                 .align(BottomCenter)
                 .padding(bottom = TangemTheme.dimens.spacing12),
