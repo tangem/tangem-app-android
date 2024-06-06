@@ -53,7 +53,7 @@ internal fun LazyListScope.buttons(
                     initialSelectedItem = segmentedButtonConfig.getOrNull(selectedButton),
                     isEnabled = isSegmentedButtonsEnabled,
                 ) {
-                    SendAmountCurrencyButton(
+                    AmountCurrencyButton(
                         button = it,
                         isSegmentedButtonsEnabled = isSegmentedButtonsEnabled,
                     )
@@ -84,7 +84,7 @@ internal fun LazyListScope.buttons(
 }
 
 @Composable
-private fun SendAmountCurrencyButton(button: AmountSegmentedButtonsConfig, isSegmentedButtonsEnabled: Boolean) {
+private fun AmountCurrencyButton(button: AmountSegmentedButtonsConfig, isSegmentedButtonsEnabled: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxSize()
