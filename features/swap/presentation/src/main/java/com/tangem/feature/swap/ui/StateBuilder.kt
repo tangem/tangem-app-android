@@ -472,9 +472,7 @@ internal class StateBuilder(
                 warnings.add(
                     SwapWarning.GeneralWarning(
                         createNetworkFeeCoverageNotificationConfig(
-                            quoteModel.fromTokenInfo.tokenAmount.getFormattedCryptoAmount(
-                                quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency,
-                            ),
+                            fee.feeCryptoFormatted,
                             fee.feeFiatFormatted,
                         ),
                     ),
@@ -572,7 +570,7 @@ internal class StateBuilder(
         warnings.add(getWarningForError(dataError, fromToken.cryptoCurrencyStatus.currency))
         if (includeFeeInAmount is IncludeFeeInAmount.Included && uiStateHolder.fee is FeeItemState.Content) {
             val feeCoverageNotification = createNetworkFeeCoverageNotificationConfig(
-                fromToken.tokenAmount.getFormattedCryptoAmount(fromToken.cryptoCurrencyStatus.currency),
+                uiStateHolder.fee.amountCrypto,
                 uiStateHolder.fee.amountFiatFormatted,
             )
             warnings.add(SwapWarning.GeneralWarning(feeCoverageNotification))

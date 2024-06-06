@@ -6,6 +6,8 @@ on:
       - 'release'
       - 'develop'
       - 'master'
+      - 'hotfix/**'
+      - '*_pre_release'
     types:
       - opened
       - reopened
