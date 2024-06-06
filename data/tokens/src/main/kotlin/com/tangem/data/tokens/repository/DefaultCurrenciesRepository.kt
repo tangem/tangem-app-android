@@ -15,7 +15,7 @@ import com.tangem.datasource.api.express.models.request.AssetsRequestBody
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.local.token.AssetsStore
+import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -46,7 +46,7 @@ internal class DefaultCurrenciesRepository(
     private val userTokensStore: UserTokensStore,
     private val userWalletsStore: UserWalletsStore,
     private val walletManagersFacade: WalletManagersFacade,
-    private val assetsStore: AssetsStore,
+    private val expressAssetsStore: ExpressAssetsStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CurrenciesRepository {
@@ -493,7 +493,7 @@ internal class DefaultCurrenciesRepository(
                     ),
                 )
 
-                assetsStore.store(userWalletId, response.getOrThrow())
+                expressAssetsStore.store(userWalletId, response.getOrThrow())
             }
         } catch (e: Throwable) {
             Timber.e(e, "Unable to fetch assets for: ${userWalletId.stringValue}")

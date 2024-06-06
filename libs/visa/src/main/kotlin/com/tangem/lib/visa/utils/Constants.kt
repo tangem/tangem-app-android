@@ -1,10 +1,10 @@
 package com.tangem.lib.visa.utils
 
-internal object VisaConfig {
+internal object Constants {
 
-    const val BASE_RPC_URL = "https://polygon-mumbai.g.alchemy.com/v2/_1qqjXgBC_IikaXChnna8KTcV2eMMIQG/"
-    const val BRIDGE_PROCESSOR_CONTRACT_ADDRESS = "0xe32ecbbc1ec17fa9c160569cd613ad568ca50279"
-    const val PAYMENT_ACCOUNT_REGISTRY_ADDRESS = "0x3f4ae01073d1a9d5a92315fe118e57d1cdec7c44"
+    const val MAINNET_RPC_URL = "https://polygon-rpc.com/"
+    const val TESTNET_RPC_URL = "https://rpc-amoy.polygon.technology/"
+
     const val CHAIN_ID = 80_001L
     const val DECIMALS = 9
     const val GAS_LIMIT = 500_000_000L
