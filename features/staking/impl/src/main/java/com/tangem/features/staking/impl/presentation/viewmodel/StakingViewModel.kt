@@ -47,18 +47,11 @@ internal class StakingViewModel @Inject constructor(
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
 
-    private var balanceHidingJobHolder = JobHolder()
-
     private var innerRouter: InnerStakingRouter by Delegates.notNull()
 
     init {
         subscribeOnBalanceHiding()
         subscribeOnCurrencyStatusUpdates()
-    }
-
-    override fun onCleared() {
-        balanceHidingJobHolder.cancel()
-        super.onCleared()
     }
 
     fun setRouter(router: InnerStakingRouter, stakingStateRouter: StakingStateRouter) {
