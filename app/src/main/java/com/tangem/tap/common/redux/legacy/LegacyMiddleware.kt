@@ -12,7 +12,6 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
-import java.math.BigDecimal
 
 internal object LegacyMiddleware {
     val legacyMiddleware: Middleware<AppState> = { _, _ ->
@@ -41,8 +40,8 @@ internal object LegacyMiddleware {
                                     )?.let { walletManager ->
                                         store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
                                             walletManager = walletManager,
-                                            amountToSend = action.amount.convertToAmount(action.cryptoCurrency),
-                                            feeAmount = action.fee.convertToAmount(action.cryptoCurrency),
+                                            amountToSend = action.amount?.convertToAmount(action.cryptoCurrency),
+                                            feeAmount = action.fee?.convertToAmount(action.cryptoCurrency),
                                             destinationAddress = action.destinationAddress,
                                         )
                                     }
