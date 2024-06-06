@@ -3,8 +3,8 @@ package com.tangem.domain.demo
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.extensions.Result
-import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
 import kotlin.random.Random
 
@@ -25,14 +25,17 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
         return getFee(amount, walletManager.wallet.address)
     }
 
-    override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
+    override suspend fun send(
+        transactionData: TransactionData,
+        signer: TransactionSigner,
+    ): Result<TransactionSendResult> {
         val signerResponse = signer.sign(
             hash = getDataToSign(),
             publicKey = walletManager.wallet.publicKey,
         )
         return when (signerResponse) {
-            is CompletionResult.Success -> SimpleResult.Failure(Exception(ID).toBlockchainSdkError())
-            is CompletionResult.Failure -> SimpleResult.fromTangemSdkError(signerResponse.error)
+            is CompletionResult.Success -> Result.Failure(Exception(ID).toBlockchainSdkError())
+            is CompletionResult.Failure -> Result.fromTangemSdkError(signerResponse.error)
         }
     }
 
