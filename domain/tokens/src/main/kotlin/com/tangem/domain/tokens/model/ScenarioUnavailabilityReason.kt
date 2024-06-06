@@ -3,6 +3,9 @@ package com.tangem.domain.tokens.model
 sealed class ScenarioUnavailabilityReason {
     data object None : ScenarioUnavailabilityReason()
 
+    // staking-specific
+    data class StakingUnavailable(val cryptoCurrencyName: String) : ScenarioUnavailabilityReason()
+
     // send&sell-specific
     data class PendingTransaction(
         val withdrawalScenario: WithdrawalScenario,
