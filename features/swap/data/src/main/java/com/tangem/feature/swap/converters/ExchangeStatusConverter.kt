@@ -10,7 +10,7 @@ internal class ExchangeStatusConverter : Converter<ExchangeStatusResponse, Excha
         return ExchangeStatusModel(
             providerId = value.providerId,
             status = ExchangeStatus.values().firstOrNull {
-                it.name.lowercase() == value.externalStatus.name.lowercase()
+                it.name.lowercase() == value.status.name.lowercase()
             },
             txId = value.externalTxId,
             txExternalUrl = value.externalTxUrl,
