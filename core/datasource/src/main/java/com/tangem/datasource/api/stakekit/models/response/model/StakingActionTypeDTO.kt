@@ -2,7 +2,7 @@ package com.tangem.datasource.api.stakekit.models.response.model
 
 import com.squareup.moshi.Json
 
-enum class StakingActionType {
+enum class StakingActionTypeDTO {
     @Json(name = "STAKE")
     STAKE,
 
@@ -47,4 +47,6 @@ enum class StakingActionType {
 
     @Json(name = "MIGRATE")
     MIGRATE,
+
+    UNKNOWN,
 }
