@@ -4,9 +4,9 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class Token(
+data class TokenDTO(
     @Json(name = "name") val name: String,
-    @Json(name = "network") val network: NetworkType,
+    @Json(name = "network") val network: NetworkTypeDTO,
     @Json(name = "symbol") val symbol: String,
     @Json(name = "decimals") val decimals: Int,
     @Json(name = "address") val address: String?,
@@ -14,7 +14,7 @@ data class Token(
     @Json(name = "logoURI") val logoURI: String?,
     @Json(name = "isPoints") val isPoints: Boolean?,
 ) {
-    enum class NetworkType {
+    enum class NetworkTypeDTO {
         @Json(name = "avalanche-c")
         AVALANCHE_C,
 
