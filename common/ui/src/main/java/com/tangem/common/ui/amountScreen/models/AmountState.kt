@@ -27,6 +27,6 @@ data class AmountState(
     val segmentedButtonConfig: PersistentList<AmountSegmentedButtonsConfig>,
     val selectedButton: Int,
     val isSegmentedButtonsEnabled: Boolean,
-    val amountTextField: AmountField,
+    val amountTextField: AmountFieldModel,
     val appCurrencyCode: String,
 )
