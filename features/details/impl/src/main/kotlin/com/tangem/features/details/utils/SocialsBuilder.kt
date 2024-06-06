@@ -1,14 +1,17 @@
 package com.tangem.features.details.utils
 
 import androidx.compose.ui.text.intl.Locale
+import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.impl.R
 import com.tangem.features.details.routing.DetailsRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import javax.inject.Inject
 
-internal class SocialsBuilder(
+@ComponentScoped
+internal class SocialsBuilder @Inject constructor(
     private val router: Router,
 ) {
 
