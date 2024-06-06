@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.ComposableContentProvider
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.res.TangemTheme
@@ -32,7 +33,12 @@ private const val COLLAPSED_APP_BAR_THRESHOLD = 0.4f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DetailsScreen(state: DetailsUM, snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {
+internal fun DetailsScreen(
+    state: DetailsUM,
+    snackbarHostState: SnackbarHostState,
+    userWalletListBlockContent: ComposableContentProvider,
+    modifier: Modifier = Modifier,
+) {
     val backgroundColor = TangemTheme.colors.background.secondary
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -56,6 +62,7 @@ internal fun DetailsScreen(state: DetailsUM, snackbarHostState: SnackbarHostStat
         Content(
             modifier = Modifier.padding(paddingValues),
             state = state,
+            userWalletListBlockContent = userWalletListBlockContent,
         )
     }
 }
@@ -109,7 +116,11 @@ private fun TopBar(state: DetailsUM, scrollBehavior: TopAppBarScrollBehavior, mo
 }
 
 @Composable
-private fun Content(state: DetailsUM, modifier: Modifier = Modifier) {
+private fun Content(
+    state: DetailsUM,
+    userWalletListBlockContent: ComposableContentProvider,
+    modifier: Modifier = Modifier,
+) {
     LazyColumn(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
@@ -125,6 +136,7 @@ private fun Content(state: DetailsUM, modifier: Modifier = Modifier) {
             Block(
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
                 model = block,
+                userWalletListBlockContent = userWalletListBlockContent,
             )
         }
 
@@ -138,7 +150,11 @@ private fun Content(state: DetailsUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Block(model: DetailsItemUM, modifier: Modifier = Modifier) {
+private fun Block(
+    model: DetailsItemUM,
+    userWalletListBlockContent: ComposableContentProvider,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -149,21 +165,27 @@ private fun Block(model: DetailsItemUM, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top,
     ) {
+        val itemModifier = Modifier.fillMaxWidth()
+
         when (model) {
             is DetailsItemUM.Basic -> {
                 model.items.forEach { item ->
                     key(item.id) {
                         BlockItem(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = itemModifier,
                             model = item,
                         )
                     }
                 }
             }
-            is DetailsItemUM.Component -> {
-                model.content(
-                    modifier = Modifier.fillMaxWidth(),
+            is DetailsItemUM.WalletConnect -> {
+                WalletConnectBlock(
+                    modifier = itemModifier,
+                    onClick = model.onClick,
                 )
+            }
+            is DetailsItemUM.UserWalletList -> {
+                userWalletListBlockContent.Content(modifier = itemModifier)
             }
         }
     }
@@ -222,7 +244,7 @@ private fun Footer(model: DetailsFooterUM, modifier: Modifier = Modifier) {
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun Preview_DetailsScreen() {
     TangemThemePreview {
-        PreviewDetailsComponent().View(modifier = Modifier.fillMaxSize())
+        PreviewDetailsComponent().Content(modifier = Modifier.fillMaxSize())
     }
 }
 // endregion Preview
