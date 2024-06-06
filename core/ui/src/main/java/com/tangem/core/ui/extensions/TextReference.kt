@@ -11,6 +11,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import org.intellij.markdown.MarkdownElementTypes
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 /**
  * Utility class for creating text as [String] or [StringRes].
@@ -195,6 +197,16 @@ operator fun TextReference.plus(ref: TextReference): TextReference {
         is TextReference.Str,
         -> TextReference.Combined(refs = wrappedList(this, ref))
     }
+}
+
+@Suppress("NOTHING_TO_INLINE")
+@OptIn(ExperimentalContracts::class)
+inline fun TextReference?.isNullOrEmpty(): Boolean {
+    contract {
+        returns(false) implies (this@isNullOrEmpty != null)
+    }
+
+    return this == null || this == TextReference.EMPTY
 }
 
 @Composable
