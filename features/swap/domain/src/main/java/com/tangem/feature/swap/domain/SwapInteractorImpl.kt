@@ -565,8 +565,8 @@ internal class SwapInteractorImpl @Inject constructor(
                 onSwapDex(
                     networkId = currencyToSend.currency.network.backendId,
                     swapData = requireNotNull(swapData),
-                    currencyToSend = currencyToSend.currency,
-                    currencyToGet = currencyToGet.currency,
+                    currencyToSendStatus = currencyToSend,
+                    currencyToGetStatus = currencyToGet,
                     amountToSwap = amountToSwap,
                     fee = fee,
                     userWalletId = requireNotNull(getSelectedWallet()).walletId,
@@ -616,26 +616,26 @@ internal class SwapInteractorImpl @Inject constructor(
     private suspend fun onSwapDex(
         networkId: String,
         swapData: SwapDataModel,
-        currencyToSend: CryptoCurrency,
-        currencyToGet: CryptoCurrency,
+        currencyToSendStatus: CryptoCurrencyStatus,
+        currencyToGetStatus: CryptoCurrencyStatus,
         amountToSwap: String,
         fee: TxFee,
         userWalletId: UserWalletId,
     ): SwapTransactionState {
         val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
-        val amount = SwapAmount(amountDecimal, currencyToSend.decimals)
-        val derivationPath = currencyToSend.network.derivationPath.value
+        val amount = SwapAmount(amountDecimal, currencyToSendStatus.currency.decimals)
+        val derivationPath = currencyToSendStatus.currency.network.derivationPath.value
         val dataToSign = (swapData.transaction as ExpressTransactionModel.DEX).txData
         val txData = createTransactionUseCase(
-            amount = amount.value.convertToAmount(currencyToSend),
+            amount = amount.value.convertToAmount(currencyToSendStatus.currency),
             fee = getFeeForTransaction(
                 fee = fee,
-                blockchain = Blockchain.fromId(currencyToSend.network.id.value),
+                blockchain = Blockchain.fromId(currencyToSendStatus.currency.network.id.value),
             ),
             memo = null,
             destination = swapData.transaction.txTo,
             userWalletId = userWalletId,
-            network = currencyToSend.network,
+            network = currencyToSendStatus.currency.network,
             txExtras = createDexTxExtras(fee.gasLimit, dataToSign),
             hash = dataToSign,
             isSwap = true,
@@ -647,20 +647,28 @@ internal class SwapInteractorImpl @Inject constructor(
         val result = sendTransactionUseCase(
             txData = txData,
             userWallet = requireNotNull(getSelectedWallet()),
-            network = currencyToSend.network,
+            network = currencyToSendStatus.currency.network,
         )
         return result.fold(
-            ifRight = {
-                storeLastCryptoCurrencyId(currencyToGet)
+            ifRight = { txHash ->
+                repository.exchangeSent(
+                    txId = swapData.transaction.txId,
+                    fromNetwork = currencyToSendStatus.currency.network.backendId,
+                    fromAddress = currencyToSendStatus.value.networkAddress?.defaultAddress?.value.orEmpty(),
+                    payInAddress = txData.destinationAddress,
+                    txHash = txHash,
+                    payInExtraId = swapData.transaction.txExtraId,
+                )
+                storeLastCryptoCurrencyId(currencyToGetStatus.currency)
                 SwapTransactionState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
-                        currencyToSend.symbol,
+                        currencyToSendStatus.currency.symbol,
                     ),
                     fromAmountValue = amount.value,
                     toAmount = amountFormatter.formatSwapAmountToUI(
                         swapData.toTokenAmount,
-                        currencyToGet.symbol,
+                        currencyToGetStatus.currency.symbol,
                     ),
                     toAmountValue = swapData.toTokenAmount.value,
                     txHash = userWalletManager.getLastTransactionHash(networkId, derivationPath).orEmpty(),
@@ -746,8 +754,6 @@ internal class SwapInteractorImpl @Inject constructor(
             network = currencyToSend.currency.network,
         )
 
-        val txCexModel = exchangeData.transaction as? ExpressTransactionModel.CEX
-
         val derivationPath = currencyToSend.currency.network.derivationPath.value
         return result.fold(
             ifLeft = {
@@ -760,9 +766,17 @@ internal class SwapInteractorImpl @Inject constructor(
                     else -> SwapTransactionState.UnknownError
                 }
             },
-            ifRight = {
+            ifRight = { txHash ->
+                repository.exchangeSent(
+                    txId = exchangeDataCex.txId,
+                    fromNetwork = currencyToSend.currency.network.backendId,
+                    fromAddress = currencyToSend.value.networkAddress?.defaultAddress?.value.orEmpty(),
+                    payInAddress = txData.destinationAddress,
+                    txHash = txHash,
+                    payInExtraId = exchangeDataCex.txExtraId,
+                )
                 val timestamp = System.currentTimeMillis()
-                val txExternalUrl = txCexModel?.externalTxUrl
+                val txExternalUrl = exchangeDataCex.externalTxUrl
                 storeSwapTransaction(
                     currencyToSend = currencyToSend,
                     currencyToGet = currencyToGet,
@@ -770,8 +784,8 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapProvider = swapProvider,
                     swapDataModel = exchangeData,
                     timestamp = timestamp,
-                    txExternalUrl = txExternalUrl.orEmpty(),
-                    txExternalId = txCexModel?.externalTxId.orEmpty(),
+                    txExternalUrl = txExternalUrl,
+                    txExternalId = exchangeDataCex.externalTxId,
                 )
                 storeLastCryptoCurrencyId(currencyToGet.currency)
                 SwapTransactionState.TxSent(

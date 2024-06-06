@@ -6,7 +6,8 @@ import arrow.core.right
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSigner
-import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchain.common.transaction.TransactionSendResult
+import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.ui.extensions.resourceReference
@@ -35,7 +36,7 @@ class SendTransactionUseCase(
         txData: TransactionData,
         userWallet: UserWallet,
         network: Network,
-    ): Either<SendTransactionError?, Boolean> {
+    ): Either<SendTransactionError?, String> {
         val signer = cardSdkConfigRepository.getCommonSigner(cardId = null)
 
         val linkedTerminal = cardSdkConfigRepository.isLinkedTerminal()
@@ -51,12 +52,16 @@ class SendTransactionUseCase(
                     signer = signer,
                 )
             } else {
-                transactionRepository.sendTransaction(
+                val sendResult = transactionRepository.sendTransaction(
                     txData = txData,
                     signer = signer,
                     userWalletId = userWallet.walletId,
                     network = network,
-                ).right()
+                )
+                when (sendResult) {
+                    is Result.Failure -> handleError(sendResult).left()
+                    is Result.Success -> sendResult.data.right()
+                }
             }
         } catch (ex: Exception) {
             cardSdkConfigRepository.setLinkedTerminal(linkedTerminal)
@@ -65,12 +70,7 @@ class SendTransactionUseCase(
 
         cardSdkConfigRepository.setLinkedTerminal(linkedTerminal)
         return sendResult.fold(
-            ifRight = { result ->
-                when (result) {
-                    is SimpleResult.Success -> true.right()
-                    is SimpleResult.Failure -> handleError(result).left()
-                }
-            },
+            ifRight = { result -> result.hash.right() },
             ifLeft = { it.left() },
         )
     }
@@ -80,7 +80,7 @@ class SendTransactionUseCase(
         network: Network,
         transactionData: TransactionData,
         signer: TransactionSigner,
-    ): Either<SendTransactionError, SimpleResult> {
+    ): Either<SendTransactionError, TransactionSendResult> {
         val demoTransactionSender = DemoTransactionSender(
             walletManagersFacade
                 .getOrCreateWalletManager(userWallet.walletId, network)
@@ -89,14 +89,14 @@ class SendTransactionUseCase(
 
         val result = demoTransactionSender.send(transactionData = transactionData, signer = signer)
 
-        return if (result is SimpleResult.Failure && result.error.customMessage.contains(DemoTransactionSender.ID)) {
+        return if (result is Result.Failure && result.error.customMessage.contains(DemoTransactionSender.ID)) {
             SendTransactionError.DemoCardError.left()
         } else {
-            result.right()
+            TransactionSendResult("hash").right()
         }
     }
 
-    private fun handleError(result: SimpleResult.Failure): SendTransactionError {
+    private fun handleError(result: Result.Failure): SendTransactionError {
         if (ResultChecker.isNetworkError(result)) {
             return SendTransactionError.NetworkError(
                 code = result.error.message,
