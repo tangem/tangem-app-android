@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import java.lang.ref.WeakReference
 
-internal class StateRouter(
+internal class StakingStateRouter(
     private val fragmentManager: WeakReference<FragmentManager>,
 ) {
     private var mutableCurrentState: MutableStateFlow<StakingUiStateType> = MutableStateFlow(getInitState())
@@ -41,7 +41,6 @@ internal class StateRouter(
             StakingUiStateType.ValidatorAndFee,
             -> showConfirm()
             StakingUiStateType.Confirm -> onBackClick()
-
         }
     }
 

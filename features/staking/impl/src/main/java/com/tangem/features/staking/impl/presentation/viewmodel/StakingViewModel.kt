@@ -11,12 +11,12 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
-import com.tangem.features.staking.impl.presentation.state.StakingStateFactory
+import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
-import com.tangem.features.staking.impl.presentation.state.StateRouter
-import com.tangem.utils.Provider
+import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
+import com.tangem.features.staking.impl.presentation.state.transformers.HideBalanceStateTransformer
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -25,15 +25,17 @@ import kotlin.properties.Delegates
 
 @HiltViewModel
 internal class StakingViewModel @Inject constructor(
+    private val stateController: StakingStateController,
+    private val dispatchers: CoroutineDispatcherProvider,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
 
-    val uiState: StateFlow<StakingUiState> get() = mutableUiState
+    val uiState: StateFlow<StakingUiState> = stateController.uiState
     val value: StakingUiState get() = uiState.value
 
-    var stateRouter: StateRouter by Delegates.notNull()
+    var stakingStateRouter: StakingStateRouter by Delegates.notNull()
         private set
 
     private val cryptoCurrency: CryptoCurrency = savedStateHandle[StakingRouter.CRYPTO_CURRENCY_KEY]
@@ -47,16 +49,6 @@ internal class StakingViewModel @Inject constructor(
 
     private var balanceHidingJobHolder = JobHolder()
 
-    private val stateFactory = StakingStateFactory(
-        clickIntents = this,
-        cryptoCurrency = cryptoCurrency,
-        currentStateProvider = Provider { uiState.value },
-    )
-
-    private val mutableUiState: MutableStateFlow<StakingUiState> = MutableStateFlow(
-        value = stateFactory.getInitialState(),
-    )
-
     private var innerRouter: InnerStakingRouter by Delegates.notNull()
 
     init {
@@ -69,9 +61,9 @@ internal class StakingViewModel @Inject constructor(
         super.onCleared()
     }
 
-    fun setRouter(router: InnerStakingRouter, stateRouter: StateRouter) {
+    fun setRouter(router: InnerStakingRouter, stakingStateRouter: StakingStateRouter) {
         innerRouter = router
-        this.stateRouter = stateRouter
+        this.stakingStateRouter = stakingStateRouter
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -92,9 +84,9 @@ internal class StakingViewModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .onEach {
-                mutableUiState.update { stateFactory.getOnHideBalanceState(isBalanceHidden = it.isBalanceHidden) }
+                stateController.update(transformer = HideBalanceStateTransformer(it.isBalanceHidden))
             }
+            .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
-            .saveIn(balanceHidingJobHolder)
     }
 }

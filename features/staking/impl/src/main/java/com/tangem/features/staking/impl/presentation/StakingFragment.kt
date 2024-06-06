@@ -12,7 +12,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
-import com.tangem.features.staking.impl.presentation.state.StateRouter
+import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.lang.ref.WeakReference
@@ -45,7 +45,7 @@ internal class StakingFragment : ComposeFragment() {
 
         viewModel.setRouter(
             innerStakingRouter,
-            StateRouter(
+            StakingStateRouter(
                 fragmentManager = WeakReference(parentFragmentManager),
             ),
         )
@@ -57,7 +57,7 @@ internal class StakingFragment : ComposeFragment() {
         SystemBarsEffect {
             setSystemBarsColor(systemBarsColor)
         }
-        val currentState = viewModel.stateRouter.currentState.collectAsStateWithLifecycle()
+        val currentState = viewModel.stakingStateRouter.currentState.collectAsStateWithLifecycle()
         // StakingScreen(viewModel.uiState, currentState.value)
     }
 
