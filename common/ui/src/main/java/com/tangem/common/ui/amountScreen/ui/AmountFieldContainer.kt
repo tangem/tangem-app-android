@@ -61,7 +61,7 @@ internal fun LazyListScope.amountField(
                     .padding(top = TangemTheme.dimens.spacing32),
             )
             AmountField(
-                sendField = amountState.amountTextField,
+                amountField = amountState.amountTextField,
                 appCurrencyCode = amountState.appCurrencyCode,
             )
         }

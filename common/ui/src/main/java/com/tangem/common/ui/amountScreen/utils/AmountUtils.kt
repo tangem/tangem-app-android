@@ -1,7 +1,7 @@
 package com.tangem.common.ui.amountScreen.utils
 
 import androidx.compose.ui.text.input.ImeAction
-import com.tangem.common.ui.amountScreen.models.AmountField
+import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -38,7 +38,7 @@ internal fun String.getFiatValue(
 
 internal fun String.checkExceedBalance(
     cryptoCurrencyStatus: CryptoCurrencyStatus,
-    amountTextField: AmountField,
+    amountTextField: AmountFieldModel,
 ): Boolean {
     val currencyCryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
     val currencyFiatAmount = cryptoCurrencyStatus.value.fiatAmount ?: BigDecimal.ZERO
