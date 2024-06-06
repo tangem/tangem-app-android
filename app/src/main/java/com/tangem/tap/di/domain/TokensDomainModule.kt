@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -190,6 +191,7 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyActionsUseCase {
         return GetCryptoCurrencyActionsUseCase(
@@ -199,6 +201,7 @@ internal object TokensDomainModule {
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
             dispatchers = dispatchers,
         )
     }
