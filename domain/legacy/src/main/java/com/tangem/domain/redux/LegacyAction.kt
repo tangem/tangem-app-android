@@ -30,9 +30,9 @@ sealed interface LegacyAction : Action {
     data class SendEmailTransactionFailed(
         val cryptoCurrency: CryptoCurrency,
         val userWalletId: UserWalletId,
-        val amount: BigDecimal,
-        val fee: BigDecimal,
-        val destinationAddress: String,
+        val amount: BigDecimal?,
+        val fee: BigDecimal?,
+        val destinationAddress: String?,
         val errorMessage: String,
     ) : LegacyAction
 }
