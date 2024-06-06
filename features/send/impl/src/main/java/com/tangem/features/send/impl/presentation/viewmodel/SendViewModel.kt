@@ -30,16 +30,14 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.ValidateAddressError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.transaction.error.ValidateAddressError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
-import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
@@ -71,7 +69,6 @@ internal class SendViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
-    private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
@@ -172,7 +169,7 @@ internal class SendViewModel @Inject constructor(
 
     private val sendNotificationFactory = SendNotificationFactory(
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-        coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
+        feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         currentStateProvider = Provider { uiState },
         userWalletProvider = Provider { userWallet },
         stateRouterProvider = Provider { stateRouter },
@@ -203,7 +200,6 @@ internal class SendViewModel @Inject constructor(
     private var isAmountSubtractAvailable: Boolean = false
     private var isUtxoConsolidationAvailable: Boolean = false
     private var isTapHelpPreviewEnabled: Boolean = false
-    private var coinCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
 
@@ -281,33 +277,18 @@ internal class SendViewModel @Inject constructor(
     }
 
     private suspend fun getCurrenciesStatusUpdates(isSingleWalletWithToken: Boolean, isMultiCurrency: Boolean) {
-        val maybeCurrencyStatus = getCurrencyStatus(
+        getCurrencyStatus(
             isSingleWalletWithToken = isSingleWalletWithToken,
             isMultiCurrency = isMultiCurrency,
+        ).fold(
+            ifRight = { cryptoCurrencyStatus ->
+                onDataLoaded(
+                    currencyStatus = cryptoCurrencyStatus,
+                    feeCurrencyStatus = getFeeCurrencyStatusSync(cryptoCurrencyStatus, isMultiCurrency),
+                )
+            },
+            ifLeft = { showErrorAlert() },
         )
-        val maybeCoinStatus = if (cryptoCurrency is CryptoCurrency.Coin) {
-            maybeCurrencyStatus
-        } else {
-            getCoinCurrencyStatusUpdates(isSingleWalletWithToken)
-        }
-
-        if (maybeCoinStatus.isRight() && maybeCurrencyStatus.isRight()) {
-            val currencyStatus = maybeCurrencyStatus.getOrElse {
-                showErrorAlert()
-                return Timber.e("Currency status is unreachable")
-            }
-            val coinStatus = maybeCoinStatus.getOrElse {
-                showErrorAlert()
-                return Timber.e("Coin status is unreachable")
-            }
-            onDataLoaded(
-                currencyStatus = currencyStatus,
-                coinCurrencyStatus = coinStatus,
-                feeCurrencyStatus = getFeeCurrencyStatusSync(currencyStatus, isMultiCurrency),
-            )
-        } else {
-            showErrorAlert()
-        }
     }
 
     private fun getTapHelpPreviewAvailability() {
@@ -315,14 +296,6 @@ internal class SendViewModel @Inject constructor(
             isTapHelpPreviewEnabled = isSendTapHelpEnabledUseCase().getOrElse { false }
         }
     }
-
-    private suspend fun getCoinCurrencyStatusUpdates(isSingleWalletWithToken: Boolean) = getNetworkCoinStatusUseCase
-        .invokeSync(
-            userWalletId = userWalletId,
-            networkId = cryptoCurrency.network.id,
-            derivationPath = cryptoCurrency.network.derivationPath,
-            isSingleWalletWithTokens = isSingleWalletWithToken,
-        )
 
     private suspend fun getCurrencyStatus(
         isSingleWalletWithToken: Boolean,
@@ -365,13 +338,8 @@ internal class SendViewModel @Inject constructor(
             )
     }
 
-    private fun onDataLoaded(
-        currencyStatus: CryptoCurrencyStatus,
-        coinCurrencyStatus: CryptoCurrencyStatus,
-        feeCurrencyStatus: CryptoCurrencyStatus?,
-    ) {
+    private fun onDataLoaded(currencyStatus: CryptoCurrencyStatus, feeCurrencyStatus: CryptoCurrencyStatus?) {
         cryptoCurrencyStatus = currencyStatus
-        coinCryptoCurrencyStatus = coinCurrencyStatus
         feeCryptoCurrencyStatus = feeCurrencyStatus
         subscribeOnQRScannerResult()
         when {
