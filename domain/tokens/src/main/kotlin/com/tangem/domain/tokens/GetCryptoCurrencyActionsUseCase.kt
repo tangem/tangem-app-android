@@ -2,6 +2,8 @@ package com.tangem.domain.tokens
 
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -28,6 +30,7 @@ class GetCryptoCurrencyActionsUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
+    private val stakingRepository: StakingRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -119,6 +122,17 @@ class GetCryptoCurrencyActionsUseCase(
                 ScenarioUnavailabilityReason.None
             }
             activeList.add(TokenActionsState.ActionState.Receive(scenario))
+        }
+
+        // staking
+        if (isStakingAvailable(cryptoCurrency)) {
+            activeList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.None))
+        } else {
+            disabledList.add(
+                TokenActionsState.ActionState.Stake(
+                    unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(cryptoCurrency.name),
+                ),
+            )
         }
 
         // send
@@ -234,6 +248,7 @@ class GetCryptoCurrencyActionsUseCase(
             }
             actionsList.add(TokenActionsState.ActionState.Receive(scenario))
         }
+        actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable))
         actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
         return actionsList
     }
@@ -263,5 +278,12 @@ class GetCryptoCurrencyActionsUseCase(
 
     private fun isAddressAvailable(networkAddress: NetworkAddress?): Boolean {
         return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
+    }
+
+    private suspend fun isStakingAvailable(cryptoCurrency: CryptoCurrency): Boolean {
+        return stakingRepository.getStakingAvailabilityForActions(
+            cryptoCurrencyId = cryptoCurrency.id,
+            symbol = cryptoCurrency.symbol,
+        ) is StakingAvailability.Available
     }
 }
