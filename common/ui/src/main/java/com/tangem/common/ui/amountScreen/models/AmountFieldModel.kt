@@ -22,7 +22,7 @@ import com.tangem.domain.tokens.model.Amount
  * @param isError indicates is value invalid
  * @param error error text
  */
-data class AmountField(
+data class AmountFieldModel(
     val value: String,
     val onValueChange: (String) -> Unit,
     val keyboardOptions: KeyboardOptions,
