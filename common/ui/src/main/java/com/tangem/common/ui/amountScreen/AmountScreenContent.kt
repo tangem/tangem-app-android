@@ -19,7 +19,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * Amount screen with field
- * * @param amountState amount state
+ * @param amountState amount state
  * @param isBalanceHiding flag hidden balances
  * @param clickIntents amount screen clicks
  */
