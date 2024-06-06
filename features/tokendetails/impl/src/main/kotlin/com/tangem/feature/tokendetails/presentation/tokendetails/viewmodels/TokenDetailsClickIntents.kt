@@ -12,6 +12,8 @@ interface TokenDetailsClickIntents {
 
     fun onReceiveClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
+    fun onStakeClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
     fun onSendClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
     fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason)
