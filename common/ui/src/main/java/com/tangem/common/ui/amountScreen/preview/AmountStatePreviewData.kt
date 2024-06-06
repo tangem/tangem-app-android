@@ -2,7 +2,7 @@ package com.tangem.common.ui.amountScreen.preview
 
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import com.tangem.common.ui.amountScreen.models.AmountField
+import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
@@ -32,7 +32,7 @@ object AmountStatePreviewData {
             ),
         ),
         appCurrencyCode = "usd",
-        amountTextField = AmountField(
+        amountTextField = AmountFieldModel(
             value = "",
             onValueChange = {},
             keyboardOptions = KeyboardOptions.Default,
