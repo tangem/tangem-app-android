@@ -4,8 +4,8 @@
 [versions]
 # region Classpath
 androidGradlePlugin = "8.2.2"
-firebaseCrashlytics = "2.9.4"
-googleServices = "4.3.10"
+firebaseCrashlytics = "3.0.1"
+googleServices = "4.4.1"
 kotlin = "1.9.22"
 # endregion Classpath
 
@@ -44,7 +44,7 @@ coil = "2.1.0"
 compose-shimmer = "1.0.3"
 coroutine = "1.7.2"
 desugarJdkLibs = "1.1.5"
-firebase = "26.0.0"
+firebase = "33.1.0"
 googleMaterialComponent = "1.6.1"
 googlePlayCore = "1.10.3"
 googlePlayCoreKtx = "1.8.1"
@@ -130,7 +130,6 @@ room = { id = "androidx.room", version.ref = "room" }
 gradle-android = { module = "com.android.tools.build:gradle", version.ref = "androidGradlePlugin" }
 gradle-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 gradle-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
-gradle-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebaseCrashlytics" }
 # end region Classpath
 
 # region AndroidX
