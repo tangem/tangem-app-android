@@ -1,7 +1,9 @@
 package com.tangem.features.details.ui
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -104,12 +106,24 @@ private fun AddWalletButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
-            Icon(
+            AnimatedContent(
                 modifier = Modifier.size(TangemTheme.dimens.size24),
-                painter = painterResource(id = R.drawable.ic_plus_24),
-                tint = TangemTheme.colors.icon.accent,
-                contentDescription = null,
-            )
+                targetState = isInProgress,
+            ) { isInProgress ->
+                if (isInProgress) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(TangemTheme.dimens.size24),
+                        color = TangemTheme.colors.icon.accent,
+                    )
+                } else {
+                    Icon(
+                        modifier = Modifier.size(TangemTheme.dimens.size24),
+                        painter = painterResource(id = R.drawable.ic_plus_24),
+                        tint = TangemTheme.colors.icon.accent,
+                        contentDescription = null,
+                    )
+                }
+            }
 
             Text(
                 text = text.resolveReference(),
