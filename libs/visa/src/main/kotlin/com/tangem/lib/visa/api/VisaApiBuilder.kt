@@ -5,8 +5,8 @@ import com.ihsanbal.logging.Level
 import com.ihsanbal.logging.LoggingInterceptor
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
-import com.tangem.lib.visa.utils.VisaConfig
-import com.tangem.lib.visa.utils.VisaConfig.NETWORK_LOGS_TAG
+import com.tangem.lib.visa.utils.Constants
+import com.tangem.lib.visa.utils.Constants.NETWORK_LOGS_TAG
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -17,7 +17,8 @@ class VisaApiBuilder(
     private val useDevApi: Boolean,
     private val isNetworkLoggingEnabled: Boolean,
     private val moshi: Moshi,
-    private val networkTimeoutSeconds: Long = VisaConfig.NETWORK_TIMEOUT_SECONDS,
+    private val headers: Map<String, String>,
+    private val networkTimeoutSeconds: Long = Constants.NETWORK_TIMEOUT_SECONDS,
 ) {
 
     fun build(): VisaApi {
@@ -35,13 +36,23 @@ class VisaApiBuilder(
             if (isNetworkLoggingEnabled) {
                 addInterceptor(createNetworkLoggingInterceptor())
             }
+
+            if (headers.isNotEmpty()) {
+                addInterceptor { chain ->
+                    val request = chain.request().newBuilder().apply {
+                        headers.forEach { (key, value) -> addHeader(key, value) }
+                    }.build()
+
+                    chain.proceed(request)
+                }
+            }
         }
 
         return builder.build()
     }
 
     private fun createRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        val baseUrl = if (useDevApi) VisaConfig.VISA_API_DEV_URL else VisaConfig.VISA_API_PROD_URL
+        val baseUrl = if (useDevApi) Constants.VISA_API_DEV_URL else Constants.VISA_API_PROD_URL
 
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
