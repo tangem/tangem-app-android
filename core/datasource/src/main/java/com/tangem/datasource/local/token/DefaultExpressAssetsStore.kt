@@ -4,9 +4,9 @@ import com.tangem.datasource.api.express.models.response.Asset
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.domain.wallets.models.UserWalletId
 
-internal class DefaultAssetsStore(
+internal class DefaultExpressAssetsStore(
     private val dataStore: StringKeyDataStore<List<Asset>>,
-) : AssetsStore {
+) : ExpressAssetsStore {
 
     override suspend fun getSyncOrNull(userWalletId: UserWalletId): List<Asset>? {
         return dataStore.getSyncOrNull(userWalletId.stringValue)
