@@ -70,5 +70,16 @@ interface SwapRepository {
         refundExtraId: String? = null, // for cex only
     ): Either<DataError, SwapDataModel>
 
+    // TODO: Add target error handling, remove either ([REDACTED_JIRA])
+    @Suppress("LongParameterList")
+    suspend fun exchangeSent(
+        txId: String,
+        fromNetwork: String,
+        fromAddress: String,
+        payInAddress: String,
+        txHash: String,
+        payInExtraId: String?,
+    ): Either<DataError, Unit>
+
     fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
 }
