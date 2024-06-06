@@ -1,18 +1,13 @@
 package com.tangem.features.details.component
 
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.ui.ComposableContentProvider
 import com.tangem.domain.wallets.models.UserWalletId
 
-interface DetailsComponent {
+interface DetailsComponent : ComposableContentProvider {
 
     val snackbarHostState: SnackbarHostState
-
-    @Composable
-    @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
-    fun View(modifier: Modifier)
 
     interface Factory {
 
