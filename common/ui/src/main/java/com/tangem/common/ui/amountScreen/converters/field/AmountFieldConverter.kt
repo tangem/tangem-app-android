@@ -6,7 +6,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
-import com.tangem.common.ui.amountScreen.models.AmountField
+import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -30,9 +30,9 @@ class AmountFieldConverter(
     private val clickIntents: AmountScreenClickIntents,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-) : Converter<String, AmountField> {
+) : Converter<String, AmountFieldModel> {
 
-    override fun convert(value: String): AmountField {
+    override fun convert(value: String): AmountFieldModel {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val cryptoDecimal = value.toBigDecimalOrNull() ?: BigDecimal.ZERO
         val cryptoAmount = cryptoDecimal.convertToAmount(cryptoCurrencyStatus.currency)
@@ -47,7 +47,7 @@ class AmountFieldConverter(
             }
         }
         val isDoneActionEnabled = !cryptoDecimal.isNullOrZero()
-        return AmountField(
+        return AmountFieldModel(
             value = value,
             fiatValue = fiatValue,
             onValueChange = clickIntents::onAmountValueChange,
