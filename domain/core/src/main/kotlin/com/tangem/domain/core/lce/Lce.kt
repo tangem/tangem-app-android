@@ -93,4 +93,15 @@ sealed class Lce<out E : Any, out C : Any> {
         ifContent = ::identity,
         ifError = { null },
     )
+
+    /**
+     * Returns the error of this [Lce] if it's a [Lce.Error], `null` otherwise.
+     *
+     * @return The error of this [Lce] or `null`.
+     */
+    fun errorOrNull(): E? = fold(
+        ifLoading = { null },
+        ifContent = { null },
+        ifError = ::identity,
+    )
 }

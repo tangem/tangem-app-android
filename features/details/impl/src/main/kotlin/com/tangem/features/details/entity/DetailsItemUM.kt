@@ -1,9 +1,7 @@
 package com.tangem.features.details.entity
 
 import androidx.annotation.DrawableRes
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.Modifier
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -26,16 +24,11 @@ internal sealed class DetailsItemUM {
         )
     }
 
-    data class Component(
-        override val id: String,
-        val content: Content,
-    ) : DetailsItemUM() {
+    data class WalletConnect(val onClick: () -> Unit) : DetailsItemUM() {
+        override val id: String = "wallet_connect"
+    }
 
-        fun interface Content {
-
-            @Composable
-            @Suppress("TopLevelComposableFunctions", "ComposableFunctionName")
-            operator fun invoke(modifier: Modifier)
-        }
+    data object UserWalletList : DetailsItemUM() {
+        override val id: String = "user_wallet_list"
     }
 }

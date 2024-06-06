@@ -1,11 +1,10 @@
 package com.tangem.features.details.utils
 
+import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.features.details.component.UserWalletListComponent
-import com.tangem.features.details.component.WalletConnectComponent
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.BuildConfig
 import com.tangem.features.details.impl.R
@@ -13,47 +12,39 @@ import com.tangem.features.details.routing.DetailsRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import javax.inject.Inject
 
-internal class ItemsBuilder(
-    private val walletConnectComponent: WalletConnectComponent,
-    private val userWalletListComponent: UserWalletListComponent,
+@ComponentScoped
+internal class ItemsBuilder @Inject constructor(
     private val router: Router,
 ) {
 
-    suspend fun buldAll(): ImmutableList<DetailsItemUM> = buildList {
-        buildWalletConnectBlock()?.let(::add)
+    suspend fun buldAll(isWalletConnectAvailable: Boolean): ImmutableList<DetailsItemUM> = buildList {
+        buildWalletConnectBlock(isWalletConnectAvailable)?.let(::add)
         buildUserWalletListBlock().let(::add)
         buildShopBlock().let(::add)
         buildSettingsBlock().let(::add)
         buildSupportBlock().let(::add)
     }.toImmutableList()
 
-    private suspend fun buildWalletConnectBlock(): DetailsItemUM? {
-        return if (walletConnectComponent.checkIsAvailable()) {
-            DetailsItemUM.Component(
-                id = "wallet_connect",
-                content = {
-                    walletConnectComponent.View(modifier = it)
-                },
+    private suspend fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean): DetailsItemUM? {
+        return if (isWalletConnectAvailable) {
+            DetailsItemUM.WalletConnect(
+                onClick = { router.push(DetailsRoute.Screen(AppScreen.WalletConnectSessions)) },
             )
         } else {
             null
         }
     }
 
-    private fun buildUserWalletListBlock(): DetailsItemUM = DetailsItemUM.Component(
-        id = "user_wallet_list",
-        content = {
-            userWalletListComponent.View(modifier = it)
-        },
-    )
+    private fun buildUserWalletListBlock(): DetailsItemUM = DetailsItemUM.UserWalletList
 
     private fun buildShopBlock(): DetailsItemUM = DetailsItemUM.Basic(
         id = "shop",
         items = persistentListOf(
             DetailsItemUM.Basic.Item(
                 id = "buy_tangem_wallet",
-                title = stringReference("Buy Tangem Wallet"), // TODO: Move to resources in [REDACTED_TASK_KEY]
+                title = resourceReference(R.string.details_buy_wallet),
                 iconRes = R.drawable.ic_tangem_24,
                 onClick = { router.push(DetailsRoute.Url(BUY_TANGEM_URL)) },
             ),
@@ -86,7 +77,7 @@ internal class ItemsBuilder(
         items = persistentListOf(
             DetailsItemUM.Basic.Item(
                 id = "send_feedback",
-                title = stringReference("Send feedback"), // TODO: Move to resources in [REDACTED_TASK_KEY]
+                title = resourceReference(R.string.details_send_feedback),
                 iconRes = R.drawable.ic_comment_24,
                 onClick = { router.push(DetailsRoute.Feedback) },
             ),
