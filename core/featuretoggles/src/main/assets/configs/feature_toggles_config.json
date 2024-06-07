@@ -17,7 +17,7 @@
     },
     {
         "name": "LOCAL_USER_LOGS_ENABLED",
-        "version": "5.11.0"
+        "version": "5.12.0"
     },
     {
         "name": "GENERATE_XPUB_ENABLED",
@@ -25,6 +25,6 @@
     },
     {
         "name": "WC_SOLANA_TX_SIGN_ENABLED",
-        "version": "5.11.0"
+        "version": "undefined"
     }
 ]
