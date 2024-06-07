@@ -543,8 +543,15 @@ internal class StateBuilder(
         val preparedSwapConfigState = quoteModel.preparedSwapConfigState
         // check has has outgoing transaction
         if (preparedSwapConfigState.hasOutgoingTransaction) return false
+
         // check has MinAmountWarning warning
-        if (quoteModel.warnings.filterIsInstance<Warning.MinAmountWarning>().isNotEmpty()) return false
+        val hasCriticalWarning = quoteModel.warnings.any {
+            it is Warning.MinAmountWarning || it is Warning.Cardano.InsufficientBalanceToTransferCoin ||
+                it is Warning.Cardano.InsufficientBalanceToTransferToken
+        }
+
+        if (hasCriticalWarning) return false
+
         return when (preparedSwapConfigState.includeFeeInAmount) {
             IncludeFeeInAmount.BalanceNotEnough -> false
             IncludeFeeInAmount.Excluded ->
@@ -1460,7 +1467,7 @@ internal class StateBuilder(
             NotificationConfig(
                 title = resourceReference(id = R.string.cardano_max_amount_has_token_title),
                 subtitle = resourceReference(id = R.string.cardano_max_amount_has_token_description),
-                iconResId = R.drawable.img_attention_20,
+                iconResId = R.drawable.ic_alert_circle_24,
             ),
         )
     }
@@ -1473,7 +1480,7 @@ internal class StateBuilder(
                     id = R.string.cardano_insufficient_balance_to_send_token_description,
                     formatArgs = wrappedList(tokenName),
                 ),
-                iconResId = R.drawable.img_attention_20,
+                iconResId = R.drawable.ic_alert_circle_24,
             ),
         )
     }
