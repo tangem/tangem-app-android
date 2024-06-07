@@ -541,7 +541,31 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onFailedTxEmailClick(errorMessage: String) {
-        reduxStateHolder.dispatch(LegacyAction.SendEmailTransactionFailed(errorMessage))
+        val recipient = uiState.recipientState?.addressTextField?.value
+        val feeValue = uiState.feeState?.fee?.amount?.value
+        val amountValue = uiState.amountState?.amountTextField?.cryptoAmount?.value
+
+        val receivingAmount = if (amountValue != null && feeValue != null) {
+            checkAndCalculateSubtractedAmount(
+                isAmountSubtractAvailable = isAmountSubtractAvailable,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                amountValue = amountValue,
+                feeValue = feeValue,
+                reduceAmountBy = uiState.sendState?.reduceAmountBy ?: BigDecimal.ZERO,
+            )
+        } else {
+            null
+        }
+        reduxStateHolder.dispatch(
+            LegacyAction.SendEmailTransactionFailed(
+                cryptoCurrency = cryptoCurrency,
+                userWalletId = userWalletId,
+                amount = receivingAmount,
+                fee = feeValue,
+                destinationAddress = recipient,
+                errorMessage = errorMessage,
+            ),
+        )
     }
 
     override fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency) =
