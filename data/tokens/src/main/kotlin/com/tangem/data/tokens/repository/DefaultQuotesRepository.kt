@@ -68,11 +68,10 @@ internal class DefaultQuotesRepository(
         }
     }
 
-    override suspend fun getQuoteSync(currencyId: CryptoCurrency.ID): Quote {
+    override suspend fun getQuoteSync(currencyId: CryptoCurrency.ID): Quote? {
         return withContext(dispatchers.io) {
             val quote = quotesStore.getSync(setOf(currencyId)).firstOrNull()
-            requireNotNull(quote) { "Unable to get quote for $currencyId" }
-            quotesConverter.convert(quote)
+            quote?.let { quotesConverter.convert(it) }
         }
     }
 
