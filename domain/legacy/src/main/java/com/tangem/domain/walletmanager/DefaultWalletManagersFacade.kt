@@ -36,20 +36,23 @@ import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
 
-@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
+@Suppress("LargeClass", "TooManyFunctions")
 // FIXME: Move to its own module and make internal
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
 class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
     private val assetLoader: AssetLoader,
+    private val dispatchers: CoroutineDispatcherProvider,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -467,7 +470,7 @@ class DefaultWalletManagersFacade(
         amount: Amount,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<TransactionFee>? {
+    ): Result<TransactionFee>? = withContext(dispatchers.io) {
         val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -477,7 +480,7 @@ class DefaultWalletManagersFacade(
 
         val destination = estimationFeeAddressFactory.makeAddress(blockchain)
 
-        return (walletManager as? TransactionSender)?.estimateFee(
+        (walletManager as? TransactionSender)?.estimateFee(
             amount = amount,
             destination = destination,
         )
