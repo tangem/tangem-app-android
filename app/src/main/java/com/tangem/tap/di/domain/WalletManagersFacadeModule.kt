@@ -6,6 +6,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.walletmanager.DefaultWalletManagersFacade
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,11 +24,13 @@ internal object WalletManagersFacadeModule {
         userWalletsStore: UserWalletsStore,
         assetLoader: AssetLoader,
         blockchainSDKFactory: BlockchainSDKFactory,
+        dispatchers: CoroutineDispatcherProvider,
     ): WalletManagersFacade {
         return DefaultWalletManagersFacade(
             walletManagersStore = walletManagersStore,
             userWalletsStore = userWalletsStore,
             assetLoader = assetLoader,
+            dispatchers = dispatchers,
             blockchainSDKFactory = blockchainSDKFactory,
         )
     }
