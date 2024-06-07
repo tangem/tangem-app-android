@@ -345,4 +345,5 @@ private val excludedBlockchains = listOf(
     Blockchain.MantleTestnet,
     Blockchain.Koinos,
     Blockchain.KoinosTestnet,
+    Blockchain.Bittensor,
 )
