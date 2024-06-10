@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.DEFAULT_ANIMATION_DURATION
 
 /**
@@ -100,7 +101,7 @@ fun CrossIcon(onClick: (String) -> Unit, modifier: Modifier = Modifier) {
 @Composable
 private fun PasteButtonPreview() {
     var isVisible by remember { mutableStateOf(true) }
-    TangemTheme {
+    TangemThemePreview {
         PasteButton(
             isPasteButtonVisible = isVisible,
             onClick = { isVisible = !isVisible },
