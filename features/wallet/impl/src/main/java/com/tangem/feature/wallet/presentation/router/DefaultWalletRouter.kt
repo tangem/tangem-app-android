@@ -28,6 +28,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScree
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
+import com.tangem.features.details.DetailsEntryPoint
 import com.tangem.features.managetokens.navigation.ExpandableState
 import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
@@ -116,8 +117,15 @@ internal class DefaultWalletRouter(
         navController.navigate(WalletRoute.OrganizeTokens.createRoute(userWalletId))
     }
 
-    override fun openDetailsScreen() {
-        reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.Details))
+    override fun openDetailsScreen(selectedWalletId: UserWalletId) {
+        reduxNavController.navigate(
+            action = NavigationAction.NavigateTo(
+                screen = AppScreen.Details,
+                bundle = bundleOf(
+                    DetailsEntryPoint.USER_WALLET_ID_KEY to selectedWalletId.stringValue,
+                ),
+            ),
+        )
     }
 
     override fun openOnboardingScreen() {
