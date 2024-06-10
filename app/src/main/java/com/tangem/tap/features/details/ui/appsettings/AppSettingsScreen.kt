@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.appsettings
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
@@ -70,21 +72,12 @@ private fun AppSettings(state: AppSettingsScreenState.Content) {
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun AppSettingsScreenPreview_Light(
+private fun AppSettingsScreenPreview(
     @PreviewParameter(AppSettingsScreenStateProvider::class) state: AppSettingsScreenState,
 ) {
-    TangemTheme {
-        AppSettingsScreen(state = state, onBackClick = {})
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun AppSettingsScreenPreview_Dark(
-    @PreviewParameter(AppSettingsScreenStateProvider::class) state: AppSettingsScreenState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         AppSettingsScreen(state = state, onBackClick = {})
     }
 }

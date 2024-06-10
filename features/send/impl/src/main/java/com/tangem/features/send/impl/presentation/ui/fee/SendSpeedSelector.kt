@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui.fee
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
@@ -107,21 +109,12 @@ private fun FooterText(onReadMoreClick: () -> Unit) {
 
 // region Preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun SendSpeedSelectorPreview_Light(
+private fun SendSpeedSelectorPreview(
     @PreviewParameter(SendSpeedSelectorPreviewProvider::class) feeState: SendStates.FeeState,
 ) {
-    TangemTheme {
-        SendSpeedSelector(state = feeState, clickIntents = SendClickIntentsStub)
-    }
-}
-
-@Preview
-@Composable
-private fun SendSpeedSelectorPreview_Dark(
-    @PreviewParameter(SendSpeedSelectorPreviewProvider::class) feeState: SendStates.FeeState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         SendSpeedSelector(state = feeState, clickIntents = SendClickIntentsStub)
     }
 }
