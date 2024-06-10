@@ -1,7 +1,7 @@
 package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.*
-import com.tangem.domain.common.extensions.amountToCreateAccount
+import com.tangem.blockchainsdk.utils.amountToCreateAccount
 import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
@@ -114,7 +114,9 @@ internal class UpdateWalletManagerResultFactory {
             is AmountType.Coin -> CryptoCurrencyAmount.Coin(
                 value = getCurrencyAmountValue(amount) ?: return null,
             )
-            is AmountType.Reserve -> null
+            is AmountType.FeeResource,
+            AmountType.Reserve,
+            -> null
         }
     }
 
@@ -135,7 +137,9 @@ internal class UpdateWalletManagerResultFactory {
                     txHistoryItem = txHistoryItem,
                 )
             }
-            is AmountType.Reserve -> null
+            is AmountType.FeeResource,
+            AmountType.Reserve,
+            -> null
         }
     }
 
