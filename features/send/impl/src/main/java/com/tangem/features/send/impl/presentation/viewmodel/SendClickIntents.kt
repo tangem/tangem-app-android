@@ -39,7 +39,7 @@ internal interface SendClickIntents {
     // region Recipient
     fun onRecipientAddressValueChange(value: String, type: EnterAddressSource? = null)
 
-    fun onRecipientMemoValueChange(value: String)
+    fun onRecipientMemoValueChange(value: String, isValuePasted: Boolean = false)
     // endregion
 
     // region Fee

@@ -5,6 +5,7 @@ import java.math.BigDecimal
 sealed class FeePaidCurrency {
     data object Coin : FeePaidCurrency()
     data object SameCurrency : FeePaidCurrency()
+    data class FeeResource(val currency: String) : FeePaidCurrency()
     data class Token(
         val tokenId: CryptoCurrency.ID,
         val name: String,
