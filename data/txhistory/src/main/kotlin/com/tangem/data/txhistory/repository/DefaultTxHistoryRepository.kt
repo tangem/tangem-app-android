@@ -20,7 +20,9 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 class DefaultTxHistoryRepository(
@@ -28,6 +30,7 @@ class DefaultTxHistoryRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val userWalletsStore: UserWalletsStore,
     private val txHistoryItemsStore: TxHistoryItemsStore,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : TxHistoryRepository {
     private val sdkPageConverter by lazy { SdkPageConverter() }
 
@@ -85,7 +88,7 @@ class DefaultTxHistoryRepository(
             network = network,
         )
         val lastTxHash = walletManager?.wallet?.recentTransactions?.last()?.hash.orEmpty()
-        return when (val txExploreState = blockchain?.getExploreTxUrl(lastTxHash)) {
+        return when (val txExploreState = blockchain.getExploreTxUrl(lastTxHash)) {
             is TxExploreState.Url -> txExploreState.url
             else -> ""
         }
@@ -96,8 +99,8 @@ class DefaultTxHistoryRepository(
         currency: CryptoCurrency,
         pageSize: Int,
         refresh: Boolean,
-    ): List<TxHistoryItem> {
-        return try {
+    ): List<TxHistoryItem> = withContext(dispatchers.io) {
+        try {
             cacheRegistry.invokeOnExpire(
                 key = getTxHistoryPageKey(currency, userWalletId, Page.Initial),
                 skipCache = refresh,
