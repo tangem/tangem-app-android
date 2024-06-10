@@ -30,16 +30,14 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.ValidateAddressError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.transaction.error.ValidateAddressError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
-import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
@@ -246,7 +244,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             getUserWalletUseCase(userWalletId).fold(
                 ifRight = { wallet ->
                     userWallet = wallet
@@ -310,7 +308,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun getTapHelpPreviewAvailability() {
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             isTapHelpPreviewEnabled = isSendTapHelpEnabledUseCase().getOrElse { false }
         }
     }
@@ -392,18 +390,17 @@ internal class SendViewModel @Inject constructor(
 
     private fun getWalletsAndRecent() {
         getUserWallets()
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             getTxHistory()
         }
     }
 
     private fun getUserWallets() {
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             runCatching {
                 waitForDelay(delay = RECENT_LOAD_DELAY) {
                     getWalletsUseCase.invokeSync()
                         .toAvailableWallets()
-                        .orEmpty()
                 }
             }.onSuccess { result ->
                 userWallets = result
@@ -559,7 +556,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun cancelFeeRequest() {
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             feeJobHolder.cancel()
         }
     }
@@ -694,7 +691,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun loadFee() {
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             val isShowStatus = uiState.feeState?.fee == null
             if (isShowStatus) {
                 uiState = feeStateFactory.onFeeOnLoadingState()
@@ -839,7 +836,7 @@ internal class SendViewModel @Inject constructor(
             reduceAmountBy = uiState.sendState?.reduceAmountBy ?: BigDecimal.ZERO,
         )
 
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             createTransactionUseCase(
                 amount = receivingAmount.convertToAmount(cryptoCurrency),
                 fee = fee,
@@ -895,7 +892,7 @@ internal class SendViewModel @Inject constructor(
 
         val receivingUserWallet = userWallets.firstOrNull { it.address == destinationAddress } ?: return
 
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch {
             addCryptoCurrenciesUseCase(
                 userWalletId = receivingUserWallet.userWalletId,
                 cryptoCurrency = cryptoCurrency,
@@ -932,7 +929,7 @@ internal class SendViewModel @Inject constructor(
         val noErrorNotifications = sendState.notifications.none { it is SendNotification.Error }
 
         if (!isSuccess && noErrorNotifications) {
-            viewModelScope.launch(dispatchers.main) {
+            viewModelScope.launch {
                 val feeUpdatedState = callFeeUseCase()?.fold(
                     ifRight = {
                         uiState = stateFactory.getSendingStateUpdate(isSending = false)
@@ -966,7 +963,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun setNeverToShowTapHelp() {
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             neverShowTapHelpUseCase()
         }
         uiState = stateFactory.getHiddenTapHelpState()
