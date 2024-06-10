@@ -26,6 +26,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TangemTextFieldsDefault
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * App bar with close icon and search functionality
@@ -228,7 +229,7 @@ private fun ExpandedSearchView(
 @Preview
 @Composable
 private fun CollapsedSearchViewPreview() {
-    TangemTheme {
+    TangemThemePreview {
         ExpandableSearchView(
             title = "Choose Token",
             onBackClick = {},
@@ -245,7 +246,7 @@ private fun CollapsedSearchViewPreview() {
 @Preview
 @Composable
 private fun ExpandedSearchViewPreview() {
-    TangemTheme {
+    TangemThemePreview {
         ExpandableSearchView(
             title = "Choose Token",
             onBackClick = {},
