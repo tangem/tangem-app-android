@@ -67,7 +67,7 @@ internal class DefaultTransactionRepository(
         isSwap: Boolean,
         txExtras: TransactionExtras?,
         hash: String?,
-    ): Result<Unit> {
+    ): Result<Unit> = withContext(coroutineDispatcherProvider.io) {
         val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = walletManagersStore.getSyncOrNull(
             userWalletId = userWalletId,
@@ -77,7 +77,7 @@ internal class DefaultTransactionRepository(
 
         val validator = walletManager as? TransactionValidator
 
-        return if (validator != null) {
+        if (validator != null) {
             val transaction = walletManager.createTransactionInternal(
                 amount = amount,
                 fee = fee ?: Fee.Common(amount = amount),
