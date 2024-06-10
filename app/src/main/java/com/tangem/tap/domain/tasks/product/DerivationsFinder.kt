@@ -3,13 +3,13 @@ package com.tangem.tap.domain.tasks.product
 import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.userwallets.UserWalletIdBuilder
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

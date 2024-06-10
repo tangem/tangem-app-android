@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.managetokens.impl.R
 import com.tangem.managetokens.presentation.managetokens.state.SearchBarState
@@ -107,20 +109,13 @@ private fun searchbarTextFieldColors(): TextFieldColors {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TokensSearchBar_Light(
+private fun Preview_TokensSearchBar(
     @PreviewParameter(SearchBarkConfigProvider::class)
     state: SearchBarState,
 ) {
-    TangemTheme(isDark = false) {
-        TokensSearchBar(state)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_TokensSearchBar_Dark(@PreviewParameter(SearchBarkConfigProvider::class) state: SearchBarState) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         TokensSearchBar(state)
     }
 }
