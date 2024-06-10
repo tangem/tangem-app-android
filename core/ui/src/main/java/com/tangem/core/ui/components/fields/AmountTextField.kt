@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.*
 import java.math.BigDecimal
 import java.text.DecimalFormat
@@ -179,7 +180,7 @@ private fun AmountTextFieldPreview(
     @PreviewParameter(AmountTextFieldPreviewProvider::class) amount: AmountTextFieldPreviewData,
 ) {
     var text by remember { mutableStateOf(amount.value.orEmpty()) }
-    TangemTheme {
+    TangemThemePreview {
         AmountTextField(
             value = text,
             decimals = amount.decimals,

@@ -16,6 +16,9 @@ import kotlinx.parcelize.Parcelize
  * @property derivationPath The path used to derive keys for this network.
  * @property isTestnet Indicates whether the network is a test network or a main network.
  * @property standardType The type of blockchain standard the network adheres to.
+ * @property hasFiatFeeRate Indicates whether there is a fee in the network
+ * that cannot be represented in a fiat currency.
+ * (For those blockchains that have FeeResource instead of a standard type of fee)
  */
 @Parcelize
 data class Network(
@@ -26,6 +29,7 @@ data class Network(
     val derivationPath: DerivationPath,
     val isTestnet: Boolean,
     val standardType: StandardType,
+    val hasFiatFeeRate: Boolean,
 ) : Parcelable {
 
     init {
