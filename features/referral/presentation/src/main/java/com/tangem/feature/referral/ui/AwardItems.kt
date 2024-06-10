@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 @Suppress("LongParameterList")
 @Composable
@@ -56,8 +57,8 @@ internal fun AwardText(
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-private fun Preview_AwardItem_Light() {
-    TangemTheme {
+private fun Preview_AwardItem() {
+    TangemThemePreview {
         AwardText(
             startText = "startText",
             startTextColor = TangemTheme.colors.text.tertiary,
