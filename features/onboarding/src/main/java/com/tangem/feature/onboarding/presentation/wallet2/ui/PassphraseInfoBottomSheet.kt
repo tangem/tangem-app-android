@@ -18,6 +18,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.onboarding.R
 import com.tangem.feature.onboarding.presentation.wallet2.model.ShowPassphraseInfoBottomSheetContent
 
@@ -83,7 +84,7 @@ fun PassphraseInfoBottomSheetContent(content: ShowPassphraseInfoBottomSheetConte
 @Preview
 @Composable
 private fun PassphraseInfoBottomSheetContentPreview() {
-    TangemTheme {
+    TangemThemePreview {
         PassphraseInfoBottomSheetContent(ShowPassphraseInfoBottomSheetContent { })
     }
 }
