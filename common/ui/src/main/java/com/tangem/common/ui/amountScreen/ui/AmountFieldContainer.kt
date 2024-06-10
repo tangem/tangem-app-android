@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.ui.amount
+package com.tangem.common.ui.amountScreen.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
@@ -12,16 +12,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.utils.Strings.STARS
 
 private const val AMOUNT_FIELD_KEY = "amountFieldKey"
 
 internal fun LazyListScope.amountField(
-    amountState: SendStates.AmountState,
+    amountState: AmountState,
     isBalanceHiding: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -61,7 +61,7 @@ internal fun LazyListScope.amountField(
                     .padding(top = TangemTheme.dimens.spacing32),
             )
             AmountField(
-                sendField = amountState.amountTextField,
+                amountField = amountState.amountTextField,
                 appCurrencyCode = amountState.appCurrencyCode,
             )
         }
