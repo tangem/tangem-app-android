@@ -444,7 +444,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                     screen = AppScreen.Staking,
                     bundle = bundleOf(
                         StakingRouter.USER_WALLET_ID_KEY to userWalletId.stringValue,
-                        StakingRouter.CRYPTO_CURRENCY_KEY to cryptoCurrency,
+                        StakingRouter.CRYPTO_CURRENCY_ID_KEY to cryptoCurrency.id,
                         StakingRouter.YIELD_KEY to yield,
                     ),
                 ),

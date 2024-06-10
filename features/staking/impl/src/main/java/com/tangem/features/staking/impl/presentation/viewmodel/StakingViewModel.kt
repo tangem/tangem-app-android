@@ -40,9 +40,8 @@ internal class StakingViewModel @Inject constructor(
     var stakingStateRouter: StakingStateRouter by Delegates.notNull()
         private set
 
-    // replace to id
-    private val cryptoCurrency: CryptoCurrency = savedStateHandle[StakingRouter.CRYPTO_CURRENCY_KEY]
-        ?: error("This screen can't be opened without `CryptoCurrency`")
+    private val cryptoCurrencyId: CryptoCurrency.ID = savedStateHandle[StakingRouter.CRYPTO_CURRENCY_ID_KEY]
+        ?: error("This screen can't be opened without `CryptoCurrency.ID`")
 
     private val userWalletId: UserWalletId = savedStateHandle.get<String>(StakingRouter.USER_WALLET_ID_KEY)
         ?.let { stringValue -> UserWalletId(stringValue) }
@@ -71,7 +70,7 @@ internal class StakingViewModel @Inject constructor(
 
     private fun subscribeOnCurrencyStatusUpdates() {
         viewModelScope.launch {
-            getCryptoCurrencyStatusSyncUseCase(userWalletId, cryptoCurrency.id).fold(
+            getCryptoCurrencyStatusSyncUseCase(userWalletId, cryptoCurrencyId).fold(
                 ifRight = {
                     cryptoCurrencyStatus = it
                     stateController.update(

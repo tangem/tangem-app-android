@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.R
@@ -23,12 +24,7 @@ import kotlinx.coroutines.flow.withIndex
 
 @Composable
 internal fun StakingScreen(uiState: StakingUiState) {
-    val onBackClick = uiState.clickIntents::onBackClick.takeIf {
-        // uiState.sendState?.isSending != true
-        // TODO staking
-        true
-    } ?: {}
-    BackHandler(onBack = onBackClick)
+    BackHandler(onBack = uiState.clickIntents::onBackClick)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -50,13 +46,15 @@ internal fun StakingScreen(uiState: StakingUiState) {
 @Composable
 private fun SendAppBar(uiState: StakingUiState) {
     val titleRes = when (uiState.currentScreen) {
-        StakingUiStateType.InitialInfo -> "Amount"
-        StakingUiStateType.Amount -> "Stake Solana"
-        StakingUiStateType.ValidatorAndFee -> "Stake Solana"
+        StakingUiStateType.InitialInfo -> stringResource(id = R.string.common_stake)
+        StakingUiStateType.Amount -> stringResource(id = R.string.send_amount_label)
+        StakingUiStateType.ValidatorAndFee -> stringResource(id = R.string.common_stake)
         StakingUiStateType.Confirm -> ""
     }
     val backIcon = when (uiState.currentScreen) {
-        StakingUiStateType.Amount, StakingUiStateType.ValidatorAndFee, StakingUiStateType.Confirm -> {
+        StakingUiStateType.Amount,
+        StakingUiStateType.ValidatorAndFee,
+        StakingUiStateType.Confirm -> {
             R.drawable.ic_close_24
         }
         StakingUiStateType.InitialInfo -> {
