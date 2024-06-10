@@ -16,7 +16,8 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.common.compose.resources.C
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TestTags
 import com.tangem.wallet.R
 
 @Composable
@@ -33,7 +34,7 @@ internal fun HomeButtons(
         ScanCardButton(
             modifier = Modifier
                 .weight(weight = 1f)
-                .testTag(C.Tag.STORIES_SCREEN_SCAN_BUTTON),
+                .testTag(TestTags.STORIES_SCREEN_SCAN_BUTTON),
             showProgress = btnScanStateInProgress,
             onClick = onScanButtonClick,
         )
@@ -41,7 +42,7 @@ internal fun HomeButtons(
         OrderCardButton(
             modifier = Modifier
                 .weight(weight = 1f)
-                .testTag(C.Tag.STORIES_SCREEN_ORDER_BUTTON),
+                .testTag(TestTags.STORIES_SCREEN_ORDER_BUTTON),
             onClick = onShopButtonClick,
         )
     }
@@ -73,7 +74,7 @@ private fun OrderCardButton(onClick: () -> Unit, modifier: Modifier = Modifier) 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
 private fun HomeButtonsPreview(@PreviewParameter(HomeButtonsParameterProvider::class) state: HomeButtonsState) {
-    TangemTheme {
+    TangemThemePreview {
         Box(
             modifier = Modifier.background(Color.Black),
         ) {
