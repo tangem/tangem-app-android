@@ -2,7 +2,7 @@ package com.tangem.domain.tokens.operations
 
 import arrow.core.NonEmptyList
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.TotalFiatBalance
 import java.math.BigDecimal
 
 internal class TokenListFiatBalanceOperations(
@@ -10,14 +10,14 @@ internal class TokenListFiatBalanceOperations(
     private val isAnyTokenLoading: Boolean,
 ) {
 
-    fun calculateFiatBalance(): TokenList.FiatBalance {
-        var fiatBalance: TokenList.FiatBalance = TokenList.FiatBalance.Loading
+    fun calculateFiatBalance(): TotalFiatBalance {
+        var fiatBalance: TotalFiatBalance = TotalFiatBalance.Loading
         if (isAnyTokenLoading) return fiatBalance
 
         for (token in currencies) {
             when (val status = token.value) {
                 is CryptoCurrencyStatus.Loading -> {
-                    fiatBalance = TokenList.FiatBalance.Loading
+                    fiatBalance = TotalFiatBalance.Loading
                     break
                 }
                 is CryptoCurrencyStatus.MissedDerivation,
@@ -25,7 +25,7 @@ internal class TokenListFiatBalanceOperations(
                 is CryptoCurrencyStatus.NoAmount,
                 is CryptoCurrencyStatus.NoQuote,
                 -> {
-                    fiatBalance = TokenList.FiatBalance.Failed
+                    fiatBalance = TotalFiatBalance.Failed
                     break
                 }
                 is CryptoCurrencyStatus.NoAccount -> {
@@ -43,9 +43,9 @@ internal class TokenListFiatBalanceOperations(
         return fiatBalance
     }
 
-    private fun recalculateNoAccountBalance(currentBalance: TokenList.FiatBalance): TokenList.FiatBalance {
-        return (currentBalance as? TokenList.FiatBalance.Loaded)?.copy(isAllAmountsSummarized = false)
-            ?: TokenList.FiatBalance.Loaded(
+    private fun recalculateNoAccountBalance(currentBalance: TotalFiatBalance): TotalFiatBalance {
+        return (currentBalance as? TotalFiatBalance.Loaded)?.copy(isAllAmountsSummarized = false)
+            ?: TotalFiatBalance.Loaded(
                 amount = BigDecimal.ZERO,
                 isAllAmountsSummarized = false,
             )
@@ -53,12 +53,12 @@ internal class TokenListFiatBalanceOperations(
 
     private fun recalculateBalance(
         status: CryptoCurrencyStatus.Loaded,
-        currentBalance: TokenList.FiatBalance,
-    ): TokenList.FiatBalance {
+        currentBalance: TotalFiatBalance,
+    ): TotalFiatBalance {
         return with(currentBalance) {
-            (this as? TokenList.FiatBalance.Loaded)?.copy(
+            (this as? TotalFiatBalance.Loaded)?.copy(
                 amount = this.amount + status.fiatAmount,
-            ) ?: TokenList.FiatBalance.Loaded(
+            ) ?: TotalFiatBalance.Loaded(
                 amount = status.fiatAmount,
                 isAllAmountsSummarized = true,
             )
@@ -67,15 +67,15 @@ internal class TokenListFiatBalanceOperations(
 
     private fun recalculateBalance(
         status: CryptoCurrencyStatus.Custom,
-        currentBalance: TokenList.FiatBalance,
-    ): TokenList.FiatBalance {
+        currentBalance: TotalFiatBalance,
+    ): TotalFiatBalance {
         return with(currentBalance) {
             val isTokenAmountCanBeSummarized = status.fiatAmount != null
 
-            (this as? TokenList.FiatBalance.Loaded)?.copy(
+            (this as? TotalFiatBalance.Loaded)?.copy(
                 amount = this.amount + (status.fiatAmount ?: BigDecimal.ZERO),
                 isAllAmountsSummarized = isTokenAmountCanBeSummarized,
-            ) ?: TokenList.FiatBalance.Loaded(
+            ) ?: TotalFiatBalance.Loaded(
                 amount = status.fiatAmount ?: BigDecimal.ZERO,
                 isAllAmountsSummarized = isTokenAmountCanBeSummarized,
             )
