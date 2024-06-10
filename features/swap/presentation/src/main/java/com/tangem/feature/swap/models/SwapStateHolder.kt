@@ -20,7 +20,6 @@ data class SwapStateHolder(
     val alert: SwapWarning.GenericWarning? = null,
     val changeCardsButtonState: ChangeCardsButtonState = ChangeCardsButtonState.ENABLED,
     val providerState: ProviderState,
-    val reduceAmountIgnore: Boolean, // ignore warning about reducing XTZ amount by 0.01
 
     val fee: FeeItemState = FeeItemState.Empty,
     val permissionState: SwapPermissionState = SwapPermissionState.Empty,
@@ -111,6 +110,7 @@ sealed interface SwapWarning {
         val type: GenericWarningType = GenericWarningType.OTHER,
         val onClick: () -> Unit,
     ) : SwapWarning
+
     data class GeneralError(val notificationConfig: NotificationConfig) : SwapWarning
     data class UnableToCoverFeeWarning(val notificationConfig: NotificationConfig) : SwapWarning
     data class GeneralWarning(val notificationConfig: NotificationConfig) : SwapWarning
@@ -118,6 +118,16 @@ sealed interface SwapWarning {
     data class TransactionInProgressWarning(val title: TextReference, val description: TextReference) : SwapWarning
     data class NeedReserveToCreateAccount(val notificationConfig: NotificationConfig) : SwapWarning
     data class ReduceAmount(val notificationConfig: NotificationConfig) : SwapWarning
+
+    sealed interface Cardano : SwapWarning {
+        val notificationConfig: NotificationConfig
+
+        data class MinAdaValueCharged(override val notificationConfig: NotificationConfig) : Cardano
+
+        data class InsufficientBalanceToTransferCoin(override val notificationConfig: NotificationConfig) : Cardano
+
+        data class InsufficientBalanceToTransferToken(override val notificationConfig: NotificationConfig) : Cardano
+    }
 }
 
 enum class GenericWarningType {
