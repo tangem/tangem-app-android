@@ -11,9 +11,10 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.TransactionRepository
+import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.*
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -40,6 +41,7 @@ class SwapDomainModule {
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
         @SwapScope sendTransactionUseCase: SendTransactionUseCase,
+        @SwapScope createTransactionUseCase: CreateTransactionUseCase,
         quotesRepository: QuotesRepository,
         swapTransactionRepository: SwapTransactionRepository,
         appCurrencyRepository: AppCurrencyRepository,
@@ -48,6 +50,7 @@ class SwapDomainModule {
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
         initialToCurrencyResolver: InitialToCurrencyResolver,
         currenciesRepository: CurrenciesRepository,
+        transactionRepository: TransactionRepository,
     ): SwapInteractor {
         return SwapInteractorImpl(
             transactionManager = transactionManager,
@@ -57,6 +60,7 @@ class SwapDomainModule {
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             getMultiCryptoCurrencyStatusUseCase = getCryptoCurrencyStatusUseCase,
             sendTransactionUseCase = sendTransactionUseCase,
+            createTransactionUseCase = createTransactionUseCase,
             quotesRepository = quotesRepository,
             walletManagersFacade = walletManagersFacade,
             dispatcher = coroutineDispatcherProvider,
@@ -65,6 +69,8 @@ class SwapDomainModule {
             currencyChecksRepository = currencyChecksRepository,
             currenciesRepository = currenciesRepository,
             initialToCurrencyResolver = initialToCurrencyResolver,
+            demoConfig = DemoConfig(),
+            transactionRepository = transactionRepository,
         )
     }
 
@@ -79,8 +85,8 @@ class SwapDomainModule {
     @SwapScope
     @Provides
     @Singleton
-    fun providesGetSelectedWalletUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletSyncUseCase {
-        return GetSelectedWalletSyncUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesGetSelectedWalletUseCase(userWalletsListManager: UserWalletsListManager): GetSelectedWalletSyncUseCase {
+        return GetSelectedWalletSyncUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
@@ -106,13 +112,11 @@ class SwapDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
-        dispatchers: CoroutineDispatcherProvider,
     ): GetCardTokensListUseCase {
         return GetCardTokensListUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
-            dispatchers = dispatchers,
         )
     }
 
@@ -120,6 +124,15 @@ class SwapDomainModule {
     @Provides
     fun provideDemoCardUseCase(): IsDemoCardUseCase {
         return IsDemoCardUseCase(config = DemoConfig())
+    }
+
+    @SwapScope
+    @Provides
+    @Singleton
+    fun provideCreateTransactionUseCase(transactionRepository: TransactionRepository): CreateTransactionUseCase {
+        return CreateTransactionUseCase(
+            transactionRepository = transactionRepository,
+        )
     }
 
     @SwapScope

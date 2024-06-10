@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.addcustomtoken.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +25,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.managetokens.impl.R
 import com.tangem.managetokens.presentation.common.state.AlertState
 import com.tangem.managetokens.presentation.common.state.ChooseWalletState
@@ -287,17 +289,10 @@ private fun TokenTextFieldTitle(state: TextFieldState?, title: String) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ChooseDerivationScreen_Light() {
-    TangemTheme(isDark = false) {
-        AddCustomTokenScreen(state = AddCustomTokenPreviewData.state)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_ChooseDerivationScreen_Dark() {
-    TangemTheme(isDark = true) {
+private fun Preview_ChooseDerivationScreen() {
+    TangemThemePreview {
         AddCustomTokenScreen(state = AddCustomTokenPreviewData.state)
     }
 }
