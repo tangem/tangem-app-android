@@ -1,6 +1,8 @@
 package com.tangem.tap.features.details.ui.resetcard
 
+import androidx.annotation.StringRes
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
+import com.tangem.wallet.R
 
 internal sealed class ResetCardScreenState {
 
@@ -15,16 +17,51 @@ internal sealed class ResetCardScreenState {
         val onAcceptCondition1ToggleClick: (Boolean) -> Unit,
         val onAcceptCondition2ToggleClick: (Boolean) -> Unit,
         val onResetButtonClick: () -> Unit,
-        val lastWarningDialog: LastWarningDialog,
+        val dialog: Dialog? = null,
     ) : ResetCardScreenState() {
         val resetButtonEnabled: Boolean
             get() = accepted
 
-        data class LastWarningDialog(
-            val isShown: Boolean,
-            val onResetButtonClick: () -> Unit,
-            val onDismiss: () -> Unit,
-        )
+        sealed class Dialog(
+            @StringRes val titleResId: Int,
+            @StringRes val messageResId: Int,
+        ) {
+
+            abstract val onConfirmClick: () -> Unit
+            abstract val onDismiss: () -> Unit
+
+            data class StartReset(
+                override val onConfirmClick: () -> Unit,
+                override val onDismiss: () -> Unit,
+            ) : Dialog(
+                titleResId = R.string.common_attention,
+                messageResId = R.string.card_settings_action_sheet_title,
+            )
+
+            data class ContinueReset(
+                override val onConfirmClick: () -> Unit,
+                override val onDismiss: () -> Unit,
+            ) : Dialog(
+                titleResId = R.string.card_settings_continue_reset_alert_title,
+                messageResId = R.string.card_settings_continue_reset_alert_message,
+            )
+
+            data class InterruptedReset(
+                override val onConfirmClick: () -> Unit,
+                override val onDismiss: () -> Unit,
+            ) : Dialog(
+                titleResId = R.string.card_settings_interrupted_reset_alert_title,
+                messageResId = R.string.card_settings_interrupted_reset_alert_message,
+            )
+
+            data class CompletedReset(override val onConfirmClick: () -> Unit) : Dialog(
+                titleResId = R.string.card_settings_completed_reset_alert_title,
+                messageResId = R.string.card_settings_completed_reset_alert_message,
+            ) {
+
+                override val onDismiss: () -> Unit = {}
+            }
+        }
     }
 
     internal enum class WarningsToReset {
