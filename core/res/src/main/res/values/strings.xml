@@ -113,7 +113,7 @@
   <string name="common_origin_card">Primary Card</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Paste</string>
-  <string name="common_percent_range" formatted="false">%1s%-%2s%</string>
+  <string name="common_percent_range" formatted="false">%1$s-%2$s</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
   <string name="common_reject">Reject</string>
