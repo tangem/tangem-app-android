@@ -77,17 +77,17 @@ internal class WalletClickIntents @Inject constructor(
         }
     }
 
-    fun onRefreshSwipe() {
+    fun onRefreshSwipe(showRefreshState: Boolean) {
         when (stateHolder.getSelectedWallet()) {
             is WalletState.MultiCurrency.Content -> {
                 analyticsEventHandler.send(PortfolioEvent.Refreshed)
-                refreshMultiCurrencyContent()
+                refreshMultiCurrencyContent(showRefreshState)
             }
             is WalletState.SingleCurrency.Content,
             is WalletState.Visa.Content,
             -> {
                 analyticsEventHandler.send(PortfolioEvent.Refreshed)
-                refreshSingleCurrencyContent()
+                refreshSingleCurrencyContent(showRefreshState)
             }
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
@@ -97,14 +97,14 @@ internal class WalletClickIntents @Inject constructor(
     }
 
     fun onReloadClick() {
-        refreshSingleCurrencyContent()
+        refreshSingleCurrencyContent(showRefreshState = true)
     }
 
-    private fun refreshMultiCurrencyContent() {
+    private fun refreshMultiCurrencyContent(showRefreshState: Boolean) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
         stateHolder.update(
-            SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = true),
+            SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = showRefreshState),
         )
 
         viewModelScope.launch(dispatchers.main) {
@@ -126,11 +126,11 @@ internal class WalletClickIntents @Inject constructor(
 
     // FIXME: refreshSingleCurrencyContent mustn't update the TxHistory and Buttons. It only must fetch primary
     //  currency. Now it not works because GetPrimaryCurrency's subscriber uses .distinctUntilChanged()
-    private fun refreshSingleCurrencyContent() {
+    private fun refreshSingleCurrencyContent(showRefreshState: Boolean) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
         stateHolder.update(
-            SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = true),
+            SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = showRefreshState),
         )
 
         viewModelScope.launch(dispatchers.main) {
