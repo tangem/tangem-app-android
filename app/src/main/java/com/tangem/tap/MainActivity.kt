@@ -49,6 +49,7 @@ import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.send.api.navigation.SendRouter
+import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -158,6 +159,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var emailSender: EmailSender
 
+    @Inject
+    lateinit var stakingRouter: StakingRouter
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -242,6 +246,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 sendRouter = sendRouter,
                 qrScanningRouter = qrScanningRouter,
                 emailSender = emailSender,
+                stakingRouter = stakingRouter,
             ),
         )
     }
