@@ -1,5 +1,6 @@
 package com.tangem.tap.features.main.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
@@ -17,6 +18,7 @@ import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.main.model.ActionConfig
 import com.tangem.tap.features.main.model.ModalNotification
@@ -82,27 +84,12 @@ internal fun ModalNotificationContent(notification: ModalNotification, modifier:
 
 // region Preview
 @Preview(widthDp = 360, heightDp = 404)
+@Preview(widthDp = 360, heightDp = 404, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ModalNotificationContentPreview_Light(
+private fun ModalNotificationContentPreview(
     @PreviewParameter(GlobalNotificationProvider::class) param: ModalNotification,
 ) {
-    TangemTheme(isDark = false) {
-        ModalNotificationContent(
-            notification = param,
-            modifier = Modifier.background(
-                color = TangemTheme.colors.background.primary,
-                shape = TangemTheme.shapes.bottomSheet,
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, heightDp = 404)
-@Composable
-private fun ModalNotificationContentPreview_Dark(
-    @PreviewParameter(GlobalNotificationProvider::class) param: ModalNotification,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         ModalNotificationContent(
             notification = param,
             modifier = Modifier.background(
