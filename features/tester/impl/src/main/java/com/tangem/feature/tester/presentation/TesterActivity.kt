@@ -6,10 +6,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeActivity
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
 import com.tangem.feature.tester.presentation.actions.TesterActionsViewModel
 import com.tangem.feature.tester.presentation.featuretoggles.ui.FeatureTogglesScreen
@@ -18,6 +18,7 @@ import com.tangem.feature.tester.presentation.menu.state.TesterMenuContentState
 import com.tangem.feature.tester.presentation.menu.ui.TesterMenuScreen
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.navigation.TesterScreen
+import com.tangem.features.tester.api.AppRestarter
 import com.tangem.features.tester.api.TesterRouter
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -27,11 +28,14 @@ import javax.inject.Inject
 internal class TesterActivity : ComposeActivity() {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
+    override lateinit var uiDependencies: UiDependencies
 
     /** Router for inner feature navigation */
     @Inject
     lateinit var testerRouter: TesterRouter
+
+    @Inject
+    lateinit var appRestarter: AppRestarter
 
     private val innerTesterRouter: InnerTesterRouter
         get() = requireNotNull(testerRouter as? InnerTesterRouter) {
@@ -66,7 +70,7 @@ internal class TesterActivity : ComposeActivity() {
 
             composable(route = TesterScreen.FEATURE_TOGGLES.name) {
                 val viewModel = hiltViewModel<FeatureTogglesViewModel>().apply {
-                    setupNavigation(innerTesterRouter)
+                    setupInteractions(innerTesterRouter, appRestarter)
                 }
 
                 FeatureTogglesScreen(state = viewModel.uiState)
