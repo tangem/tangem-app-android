@@ -128,6 +128,10 @@ include(":core:deep-links:global")
 include(":core:decompose")
 // endregion Core modules
 
+// region Common modules
+include(":common:ui")
+// endregion
+
 // region Libs modules
 include(":libs:auth")
 include(":libs:blockchain-sdk")
