@@ -47,6 +47,15 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
 
+
+    /** Domain */
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
+
     /** Common */
     implementation(projects.common)
 
