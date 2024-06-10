@@ -37,12 +37,13 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             )
             is TokenDetailsNotification.NetworksUnreachable,
             is TokenDetailsNotification.ExistentialDeposit,
-            is TokenDetailsNotification.HasPendingTransactions,
             is TokenDetailsNotification.NetworksNoAccount,
             is TokenDetailsNotification.TopUpWithoutReserve,
             is TokenDetailsNotification.RentInfo,
             is TokenDetailsNotification.SwapPromo,
             is TokenDetailsNotification.NetworkShutdown,
+            is TokenDetailsNotification.HederaAssociateWarning,
+            is TokenDetailsNotification.KoinosMana,
             -> null
         }
     }
