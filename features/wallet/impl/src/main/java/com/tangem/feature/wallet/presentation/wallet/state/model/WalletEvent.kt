@@ -10,11 +10,9 @@ internal sealed class WalletEvent {
 
     data class ShowError(val text: TextReference) : WalletEvent()
 
-    data class ShowToast(val text: TextReference) : WalletEvent()
-
     data class ShowAlert(val state: WalletAlertState) : WalletEvent()
 
-    data class CopyAddress(val address: String, val toast: TextReference) : WalletEvent()
+    data class CopyAddress(val address: String) : WalletEvent()
 
     data class RateApp(val onDismissClick: () -> Unit) : WalletEvent()
 

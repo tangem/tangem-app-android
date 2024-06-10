@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.appbar
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -15,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.models.AdditionalButton
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -71,9 +73,10 @@ fun AppBarWithAdditionalButtons(
 }
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
+@Preview(widthDp = 360, heightDp = 56, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_AppBarWithAdditionalButtons_InLightTheme() {
-    TangemTheme(isDark = false) {
+private fun Preview_AppBarWithAdditionalButtons() {
+    TangemThemePreview {
         AppBarWithAdditionalButtons(
             text = "Tangem",
             startButton = AdditionalButton(
@@ -89,27 +92,10 @@ private fun Preview_AppBarWithAdditionalButtons_InLightTheme() {
 }
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
+@Preview(widthDp = 360, heightDp = 56, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_AppBarWithAdditionalButtons_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        AppBarWithAdditionalButtons(
-            text = "Tangem",
-            startButton = AdditionalButton(
-                iconRes = R.drawable.ic_scan_24,
-                onIconClicked = {},
-            ),
-            endButton = AdditionalButton(
-                iconRes = R.drawable.ic_more_vertical_24,
-                onIconClicked = {},
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, heightDp = 56, showBackground = true)
-@Composable
-private fun Preview_AppBarWithOnlyStartButtons_InLightTheme() {
-    TangemTheme(isDark = false) {
+private fun Preview_AppBarWithOnlyStartButtons() {
+    TangemThemePreview {
         AppBarWithAdditionalButtons(
             text = "Tangem",
             startButton = AdditionalButton(
@@ -121,37 +107,10 @@ private fun Preview_AppBarWithOnlyStartButtons_InLightTheme() {
 }
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
+@Preview(widthDp = 360, heightDp = 56, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_AppBarWithOnlyStartButtons_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        AppBarWithAdditionalButtons(
-            text = "Tangem",
-            startButton = AdditionalButton(
-                iconRes = R.drawable.ic_scan_24,
-                onIconClicked = {},
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, heightDp = 56, showBackground = true)
-@Composable
-private fun Preview_AppBarWithOnlyEndButtons_InLightTheme() {
-    TangemTheme(isDark = false) {
-        AppBarWithAdditionalButtons(
-            text = "Tangem",
-            endButton = AdditionalButton(
-                iconRes = R.drawable.ic_more_vertical_24,
-                onIconClicked = {},
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, heightDp = 56, showBackground = true)
-@Composable
-private fun Preview_AppBarWithOnlyEndButtons_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_AppBarWithOnlyEndButtons() {
+    TangemThemePreview {
         AppBarWithAdditionalButtons(
             text = "Tangem",
             endButton = AdditionalButton(

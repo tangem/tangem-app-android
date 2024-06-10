@@ -2,12 +2,13 @@ package com.tangem.feature.referral.data
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.StartReferralBody
 import com.tangem.datasource.demo.DemoModeDatasource
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
@@ -15,7 +16,6 @@ import com.tangem.feature.referral.converters.ReferralConverter
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.TokenData
-import com.tangem.lib.auth.AuthProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
