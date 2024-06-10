@@ -35,4 +35,5 @@ enum class AppScreen(val isDialogFragment: Boolean = false) {
     SaveWallet(isDialogFragment = true),
     AppCurrencySelector,
     ModalNotification(isDialogFragment = true),
+    Staking,
 }
