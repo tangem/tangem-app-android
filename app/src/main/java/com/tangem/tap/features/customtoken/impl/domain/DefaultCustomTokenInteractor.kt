@@ -1,9 +1,9 @@
 package com.tangem.tap.features.customtoken.impl.domain
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.card.DerivePublicKeysUseCase
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.models.scan.ScanResponse
