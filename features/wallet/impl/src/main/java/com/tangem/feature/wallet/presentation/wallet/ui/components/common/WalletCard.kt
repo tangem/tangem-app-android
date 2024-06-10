@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
-import com.tangem.common.Strings
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
@@ -54,6 +53,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
+import com.tangem.utils.Strings
 
 private const val HALF_OF_ITEM_WIDTH = 0.5
 

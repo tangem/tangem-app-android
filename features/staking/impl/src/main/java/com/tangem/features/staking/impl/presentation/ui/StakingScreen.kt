@@ -54,7 +54,8 @@ private fun SendAppBar(uiState: StakingUiState) {
     val backIcon = when (uiState.currentScreen) {
         StakingUiStateType.Amount,
         StakingUiStateType.ValidatorAndFee,
-        StakingUiStateType.Confirm -> {
+        StakingUiStateType.Confirm,
+        -> {
             R.drawable.ic_close_24
         }
         StakingUiStateType.InitialInfo -> {

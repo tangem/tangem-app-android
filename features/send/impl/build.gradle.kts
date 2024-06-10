@@ -51,7 +51,7 @@ dependencies {
     implementation(projects.core.datasource)
 
     /** Common */
-    implementation(projects.common)
+    implementation(projects.common.ui)
 
     /** Libs */
     implementation(projects.libs.crypto)

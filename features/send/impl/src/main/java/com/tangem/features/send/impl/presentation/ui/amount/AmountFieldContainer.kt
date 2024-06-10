@@ -12,11 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
-import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
+import com.tangem.utils.Strings.STARS
 
 private const val AMOUNT_FIELD_KEY = "amountFieldKey"
 

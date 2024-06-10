@@ -11,7 +11,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.res.TangemTheme
@@ -21,6 +20,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPre
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.utils.Strings.STARS
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable

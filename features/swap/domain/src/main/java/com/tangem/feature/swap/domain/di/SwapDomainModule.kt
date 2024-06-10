@@ -12,7 +12,9 @@ import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
+import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -46,11 +48,10 @@ class SwapDomainModule {
         swapTransactionRepository: SwapTransactionRepository,
         appCurrencyRepository: AppCurrencyRepository,
         currencyChecksRepository: CurrencyChecksRepository,
-        walletManagersFacade: WalletManagersFacade,
-        coroutineDispatcherProvider: CoroutineDispatcherProvider,
         initialToCurrencyResolver: InitialToCurrencyResolver,
         currenciesRepository: CurrenciesRepository,
-        transactionRepository: TransactionRepository,
+        validateTransactionUseCase: ValidateTransactionUseCase,
+        estimateFeeUseCase: EstimateFeeUseCase,
     ): SwapInteractor {
         return SwapInteractorImpl(
             transactionManager = transactionManager,
@@ -62,15 +63,14 @@ class SwapDomainModule {
             sendTransactionUseCase = sendTransactionUseCase,
             createTransactionUseCase = createTransactionUseCase,
             quotesRepository = quotesRepository,
-            walletManagersFacade = walletManagersFacade,
-            dispatcher = coroutineDispatcherProvider,
             swapTransactionRepository = swapTransactionRepository,
             appCurrencyRepository = appCurrencyRepository,
             currencyChecksRepository = currencyChecksRepository,
             currenciesRepository = currenciesRepository,
             initialToCurrencyResolver = initialToCurrencyResolver,
             demoConfig = DemoConfig(),
-            transactionRepository = transactionRepository,
+            validateTransactionUseCase = validateTransactionUseCase,
+            estimateFeeUseCase = estimateFeeUseCase,
         )
     }
 

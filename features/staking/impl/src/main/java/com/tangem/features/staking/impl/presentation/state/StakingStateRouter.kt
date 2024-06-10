@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.presentation.state
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.lang.ref.WeakReference
 
@@ -12,7 +13,7 @@ internal class StakingStateRouter(
     private var mutableCurrentState: MutableStateFlow<StakingUiStateType> = MutableStateFlow(getInitState())
 
     val currentState: StateFlow<StakingUiStateType>
-        get() = mutableCurrentState
+        get() = mutableCurrentState.asStateFlow()
 
     fun clear() {
         mutableCurrentState.update { getInitState() }
