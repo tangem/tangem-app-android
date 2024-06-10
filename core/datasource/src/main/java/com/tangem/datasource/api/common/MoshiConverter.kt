@@ -4,6 +4,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.common.json.TangemSdkAdapter
+import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 /**
