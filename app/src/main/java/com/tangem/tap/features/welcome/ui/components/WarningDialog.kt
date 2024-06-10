@@ -1,5 +1,6 @@
 package com.tangem.tap.features.welcome.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -7,7 +8,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButton
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.welcome.ui.model.WarningModel
 import com.tangem.wallet.R
 
@@ -72,17 +73,10 @@ private fun BiometricsLockoutDialogSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun BiometricsLockoutDialogPreview_Light() {
-    TangemTheme {
-        BiometricsLockoutDialogSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun BiometricsLockoutDialogPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun BiometricsLockoutDialogPreview() {
+    TangemThemePreview {
         BiometricsLockoutDialogSample()
     }
 }
@@ -100,17 +94,10 @@ private fun BiometricsLockoutDialog_Permanent_Sample(modifier: Modifier = Modifi
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun BiometricsLockoutDialog_Permanent_Preview_Light() {
-    TangemTheme {
-        BiometricsLockoutDialog_Permanent_Sample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun BiometricsLockoutDialog_Permanent_Preview_Dark() {
-    TangemTheme(isDark = true) {
+private fun BiometricsLockoutDialog_Permanent_Preview() {
+    TangemThemePreview {
         BiometricsLockoutDialog_Permanent_Sample()
     }
 }
@@ -123,17 +110,10 @@ private fun KeyInvalidatedWarningSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun KeyInvalidatedWarningPreview_Light() {
-    TangemTheme {
-        KeyInvalidatedWarningSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun KeyInvalidatedWarningPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun KeyInvalidatedWarningPreview() {
+    TangemThemePreview {
         KeyInvalidatedWarningSample()
     }
 }
@@ -146,17 +126,10 @@ private fun BiometricDisabledWarningSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun BiometricDisabledWarningPreview_Light() {
-    TangemTheme {
-        BiometricDisabledWarningSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun BiometricDisabledWarningPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun BiometricDisabledWarningPreview() {
+    TangemThemePreview {
         BiometricDisabledWarningSample()
     }
 }

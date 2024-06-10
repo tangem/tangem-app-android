@@ -10,14 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.res.TangemTheme
-
-private const val GRAY_SCALE_SATURATION = 0f
-private const val GRAY_SCALE_ALPHA = 0.4f
-private const val NORMAL_ALPHA = 1f
+import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
+import com.tangem.core.ui.utils.GrayscaleColorFilter
+import com.tangem.core.ui.utils.NORMAL_ALPHA
 
 /**
  * Cryptocurrency icon with network badge
@@ -113,6 +110,3 @@ private fun BoxScope.ContentIconContainer(
 private inline fun BaseContainer(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     Box(modifier = modifier.size(size = TangemTheme.dimens.size40), content = content)
 }
-
-private val GrayscaleColorFilter: ColorFilter
-    get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })

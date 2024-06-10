@@ -1,23 +1,26 @@
 package com.tangem.tap.features.details.ui.resetcard
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.IconToggleButton
-import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
+import com.tangem.tap.features.details.ui.resetcard.ResetCardScreenState.ResetCardScreenContent.Dialog as ResetCardDialog
 
 @Composable
 internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -34,7 +37,14 @@ internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Uni
         onBackClick = onBackClick,
     )
 
-    LastWarningDialog(state = state)
+    when (val dialog = (state as? ResetCardScreenState.ResetCardScreenContent)?.dialog) {
+        is ResetCardDialog.StartReset,
+        is ResetCardDialog.ContinueReset,
+        is ResetCardDialog.InterruptedReset,
+        -> CommonResetDialog(dialog = dialog)
+        is ResetCardDialog.CompletedReset -> CompletedResetDialog(dialog = dialog)
+        null -> Unit
+    }
 }
 
 @Composable
@@ -182,23 +192,35 @@ private fun ResetButton(enabled: Boolean, onResetButtonClick: () -> Unit) {
 }
 
 @Composable
-private fun LastWarningDialog(state: ResetCardScreenState) {
-    if (state is ResetCardScreenState.ResetCardScreenContent && state.lastWarningDialog.isShown) {
-        BasicDialog(
-            title = stringResource(id = R.string.common_attention),
-            message = stringResource(id = R.string.card_settings_action_sheet_title),
-            dismissButton = DialogButton(
-                title = stringResource(id = R.string.card_settings_action_sheet_reset),
-                warning = true,
-                onClick = state.lastWarningDialog.onResetButtonClick,
-            ),
-            confirmButton = DialogButton(
-                title = stringResource(id = R.string.common_cancel),
-                onClick = state.lastWarningDialog.onDismiss,
-            ),
-            onDismissDialog = state.lastWarningDialog.onDismiss,
-        )
-    }
+private fun CommonResetDialog(dialog: ResetCardScreenState.ResetCardScreenContent.Dialog) {
+    BasicDialog(
+        title = stringResource(dialog.titleResId),
+        message = stringResource(dialog.messageResId),
+        dismissButton = DialogButton(
+            title = stringResource(id = R.string.common_cancel),
+            onClick = dialog.onDismiss,
+        ),
+        confirmButton = DialogButton(
+            title = stringResource(id = R.string.card_settings_action_sheet_reset),
+            warning = true,
+            onClick = dialog.onConfirmClick,
+        ),
+        onDismissDialog = dialog.onDismiss,
+    )
+}
+
+@Composable
+private fun CompletedResetDialog(dialog: ResetCardDialog) {
+    BasicDialog(
+        title = stringResource(id = dialog.titleResId),
+        message = stringResource(id = dialog.messageResId),
+        confirmButton = DialogButton(
+            title = stringResource(id = R.string.common_ok),
+            onClick = dialog.onConfirmClick,
+        ),
+        onDismissDialog = {},
+        isDismissable = false,
+    )
 }
 
 // region Preview
@@ -216,11 +238,7 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
                 onAcceptCondition1ToggleClick = {},
                 onAcceptCondition2ToggleClick = {},
                 onResetButtonClick = {},
-                lastWarningDialog = ResetCardScreenState.ResetCardScreenContent.LastWarningDialog(
-                    isShown = false,
-                    onResetButtonClick = {},
-                    onDismiss = {},
-                ),
+                dialog = null,
             ),
             onBackClick = {},
         )
@@ -228,17 +246,10 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ResetCardScreenPreview_Light() {
-    TangemTheme {
-        ResetCardScreenSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun ResetCardScreenPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun ResetCardScreenPreview() {
+    TangemThemePreview {
         ResetCardScreenSample()
     }
 }

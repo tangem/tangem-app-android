@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
@@ -34,6 +35,7 @@ import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.DraggableNetworkGroupItem
@@ -373,21 +375,12 @@ private fun getItemShape(roundingMode: DraggableItem.RoundingMode, radius: Dp): 
 // region Preview
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun OrganizeTokensScreenPreview_Light(
+private fun OrganizeTokensScreenPreview(
     @PreviewParameter(OrganizeTokensStateProvider::class) state: OrganizeTokensState,
 ) {
-    TangemTheme {
-        OrganizeTokensScreen(state)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun OrganizeTokensScreenPreview_Dark(
-    @PreviewParameter(OrganizeTokensStateProvider::class) state: OrganizeTokensState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         OrganizeTokensScreen(state)
     }
 }

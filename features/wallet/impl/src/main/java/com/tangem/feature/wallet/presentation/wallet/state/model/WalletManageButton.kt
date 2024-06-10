@@ -18,36 +18,53 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
     /** Is click enabled */
     abstract val enabled: Boolean
 
+    /** Whether to dim content */
+    abstract val dimContent: Boolean
+
     /** Lambda be invoked when manage button is clicked */
     abstract val onClick: () -> Unit
+
+    /** Lambda be invoked when manage button is long clicked */
+    open val onLongClick: (() -> TextReference?)? = null
 
     /**
      * Buy
      *
      * @property enabled button click availability
+     * @property dimContent determines whether the button content will be dimmed
      * @property onClick lambda be invoked when Buy button is clicked
      */
-    data class Buy(override val enabled: Boolean, override val onClick: () -> Unit) : WalletManageButton(
-        config = ActionButtonConfig(
-            text = TextReference.Res(id = R.string.common_buy),
-            iconResId = R.drawable.ic_plus_24,
-            onClick = onClick,
-            enabled = enabled,
-        ),
-    )
+    data class Buy(
+        override val enabled: Boolean,
+        override val dimContent: Boolean,
+        override val onClick: () -> Unit,
+    ) :
+        WalletManageButton(
+            config = ActionButtonConfig(
+                text = TextReference.Res(id = R.string.common_buy),
+                iconResId = R.drawable.ic_plus_24,
+                onClick = onClick,
+                dimContent = dimContent,
+            ),
+        )
 
     /**
      * Send
      *
      * @property enabled button click availability
+     * @property dimContent determines whether the button content will be dimmed
      * @property onClick lambda be invoked when Send button is clicked
      */
-    data class Send(override val enabled: Boolean, override val onClick: () -> Unit) : WalletManageButton(
+    data class Send(
+        override val enabled: Boolean,
+        override val dimContent: Boolean,
+        override val onClick: () -> Unit,
+    ) : WalletManageButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_send),
             iconResId = R.drawable.ic_arrow_up_24,
             onClick = onClick,
-            enabled = enabled,
+            dimContent = dimContent,
         ),
     )
 
@@ -55,13 +72,20 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
      * Receive
      *
      * @property onClick lambda be invoked when Receive button is clicked
+     * @property onLongClick lambda be invoked when Receive button is long clicked
      */
-    data class Receive(override val enabled: Boolean, override val onClick: () -> Unit) : WalletManageButton(
+    data class Receive(
+        override val enabled: Boolean,
+        override val dimContent: Boolean,
+        override val onClick: () -> Unit,
+        override val onLongClick: (() -> TextReference?)?,
+    ) : WalletManageButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_receive),
             iconResId = R.drawable.ic_arrow_down_24,
+            dimContent = dimContent,
             onClick = onClick,
-            enabled = enabled,
+            onLongClick = onLongClick,
         ),
     )
 
@@ -69,14 +93,19 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
      * Sell
      *
      * @property enabled button click availability
+     * @property dimContent determines whether the button content will be dimmed
      * @property onClick lambda be invoked when Sell button is clicked
      */
-    data class Sell(override val enabled: Boolean, override val onClick: () -> Unit) : WalletManageButton(
+    data class Sell(
+        override val enabled: Boolean,
+        override val dimContent: Boolean,
+        override val onClick: () -> Unit,
+    ) : WalletManageButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_sell),
             iconResId = R.drawable.ic_currency_24,
             onClick = onClick,
-            enabled = enabled,
+            dimContent = dimContent,
         ),
     )
 
@@ -84,14 +113,19 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
      * Swap
      *
      * @property enabled button click availability
+     * @property dimContent determines whether the button content will be dimmed
      * @property onClick lambda be invoked when Swap button is clicked
      */
-    data class Swap(override val enabled: Boolean, override val onClick: () -> Unit) : WalletManageButton(
+    data class Swap(
+        override val enabled: Boolean,
+        override val dimContent: Boolean,
+        override val onClick: () -> Unit,
+    ) : WalletManageButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.swapping_swap_action),
             iconResId = R.drawable.ic_exchange_vertical_24,
             onClick = onClick,
-            enabled = enabled,
+            dimContent = dimContent,
         ),
     )
 }
