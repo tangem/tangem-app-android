@@ -167,5 +167,6 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.SaveWallet -> SaveWalletBottomSheetFragment()
         AppScreen.AppCurrencySelector -> AppCurrencySelectorFragment()
         AppScreen.ModalNotification -> ModalNotificationBottomSheetFragment()
+        AppScreen.Staking -> store.inject(getDependency = DaggerGraphState::stakingRouter).getEntryFragment()
     }
 }

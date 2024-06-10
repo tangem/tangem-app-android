@@ -30,6 +30,7 @@ import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggle
 import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.features.send.api.navigation.SendRouter
+import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -79,4 +80,5 @@ data class DaggerGraphState(
     val assetLoader: AssetLoader? = null,
     val detailsFeatureToggles: DetailsFeatureToggles? = null,
     val detailsEntryPoint: DetailsEntryPoint? = null,
+    val stakingRouter: StakingRouter? = null,
 ) : StateType
