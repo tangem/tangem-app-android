@@ -10,6 +10,7 @@ import retrofit2.http.*
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("TooManyFunctions")
 interface TangemTechApi {
 
     @GET("coins")
@@ -76,12 +77,56 @@ interface TangemTechApi {
     @GET("promotion")
     suspend fun getPromotionInfo(@Query("programName") name: String): ApiResponse<PromotionInfoResponse>
 
+    @GET("settings/{wallet_id}")
+    suspend fun getUserTokensSettings(
+        @Header("card_public_key") cardPublicKey: String,
+        @Header("card_id") cardId: String,
+        @Path("wallet_id") walletId: String,
+    ): ApiResponse<UserTokensSettingsResponse>
+
+    @PUT("settings/{wallet_id}")
+    suspend fun saveUserTokensSettings(
+        @Header("card_public_key") cardPublicKey: String,
+        @Header("card_id") cardId: String,
+        @Path("wallet_id") walletId: String,
+        @Body userTokensSettings: UserTokensSettingsResponse,
+    ): ApiResponse<Unit>
+
     @POST("user-network-account")
     suspend fun createUserNetworkAccount(
         @Header("card_public_key") cardPublicKey: String,
         @Header("card_id") cardId: String,
         @Body body: CreateUserNetworkAccountBody,
     ): ApiResponse<CreateUserNetworkAccountResponse>
+
+    @POST("account")
+    suspend fun createUserTokensAccount(
+        @Header("card_public_key") cardPublicKey: String,
+        @Header("card_id") cardId: String,
+        @Body body: CreateUserTokensAccountBody,
+    ): ApiResponse<UserTokensAccountResponse>
+
+    @PUT("account/{account_id}")
+    suspend fun updateUserTokensAccount(
+        @Header("card_public_key") cardPublicKey: String,
+        @Header("card_id") cardId: String,
+        @Path("account_id") accountId: Int,
+        @Body body: UpdateUserTokensAccountBody,
+    ): ApiResponse<UserTokensAccountResponse>
+
+    @PUT("account/{account_id}/archive")
+    suspend fun archiveUserTokensAccount(
+        @Header("card_public_key") cardPublicKey: String,
+        @Header("card_id") cardId: String,
+        @Path("account_id") accountId: Int,
+    ): ApiResponse<UserTokensAccountResponse>
+
+    @PUT("account/{account_id}/unarchive")
+    suspend fun restoreUserTokensAccount(
+        @Header("card_public_key") cardPublicKey: String,
+        @Header("card_id") cardId: String,
+        @Path("account_id") accountId: Int,
+    ): ApiResponse<UserTokensAccountResponse>
 
     @GET("features")
     suspend fun getFeatures(): ApiResponse<FeaturesResponse>
