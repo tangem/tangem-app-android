@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +23,7 @@ import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.valentinilk.shimmer.shimmer
 import kotlinx.collections.immutable.toImmutableList
@@ -650,34 +652,19 @@ private fun CardsPreview() {
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_Cards_InLightTheme() {
-    TangemTheme(isDark = false) {
-        CardsPreview()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview_InfoCardWithWarning_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_Cards() {
+    TangemThemePreview {
         CardsPreview()
     }
 }
 
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
+@Preview(widthDp = 328, heightDp = 48, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_SimpleInfoCard_InLightTheme() {
-    TangemTheme(isDark = false) {
-        SmallInfoCard(startText = "Balance", endText = "0.4405434 BTC")
-        SmallInfoCardWithDisclaimer(startText = "Balance", endText = "0.4405434 BTC", disclaimer = "test")
-    }
-}
-
-@Preview(widthDp = 328, heightDp = 48, showBackground = true)
-@Composable
-private fun Preview_SimpleInfoCard_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_SimpleInfoCard() {
+    TangemThemePreview {
         SmallInfoCard(startText = "Balance", endText = "0.4405434 BTC")
         SmallInfoCardWithDisclaimer(startText = "Balance", endText = "0.4405434 BTC", disclaimer = "test")
     }
