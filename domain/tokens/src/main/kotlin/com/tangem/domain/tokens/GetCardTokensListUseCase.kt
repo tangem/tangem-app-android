@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens
 
-import arrow.core.Either
 import arrow.core.left
+import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -12,19 +12,19 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transformLatest
 
 class GetCardTokensListUseCase(
-    internal val currenciesRepository: CurrenciesRepository,
-    internal val quotesRepository: QuotesRepository,
-    internal val networksRepository: NetworksRepository,
-    internal val dispatchers: CoroutineDispatcherProvider,
+    private val currenciesRepository: CurrenciesRepository,
+    private val quotesRepository: QuotesRepository,
+    private val networksRepository: NetworksRepository,
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    operator fun invoke(userWalletId: UserWalletId): Flow<Either<TokenListError, TokenList>> {
+    operator fun invoke(userWalletId: UserWalletId): EitherFlow<TokenListError, TokenList> {
         return getTokensStatuses(userWalletId).transformLatest { maybeTokens ->
             maybeTokens.fold(
                 ifLeft = { error ->
@@ -37,9 +37,7 @@ class GetCardTokensListUseCase(
         }
     }
 
-    private fun getTokensStatuses(
-        userWalletId: UserWalletId,
-    ): Flow<Either<TokenListError, List<CryptoCurrencyStatus>>> {
+    private fun getTokensStatuses(userWalletId: UserWalletId): EitherFlow<TokenListError, List<CryptoCurrencyStatus>> {
         val operations = CurrenciesStatusesOperations(
             userWalletId = userWalletId,
             currenciesRepository = currenciesRepository,
@@ -56,7 +54,7 @@ class GetCardTokensListUseCase(
     private fun createTokenList(
         userWalletId: UserWalletId,
         tokens: List<CryptoCurrencyStatus>,
-    ): Flow<Either<TokenListError, TokenList>> {
+    ): EitherFlow<TokenListError, TokenList> {
         val operations = TokenListOperations(
             userWalletId = userWalletId,
             tokens = tokens,

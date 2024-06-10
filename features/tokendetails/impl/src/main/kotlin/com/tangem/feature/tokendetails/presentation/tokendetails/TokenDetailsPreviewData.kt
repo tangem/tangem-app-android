@@ -35,7 +35,7 @@ internal object TokenDetailsPreviewData {
 
     val tokenInfoBlockStateWithLongNameInMainCurrency = TokenInfoBlockState(
         name = "Stellar (XLM) with long name test",
-        iconState = TokenInfoBlockState.IconState.CoinIcon(
+        iconState = IconState.CoinIcon(
             url = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
             fallbackResId = R.drawable.img_stellar_22,
             isGrayscale = false,
@@ -44,7 +44,7 @@ internal object TokenDetailsPreviewData {
     )
     val tokenInfoBlockStateWithLongName = TokenInfoBlockState(
         name = "Tether (USDT) with long name test",
-        iconState = TokenInfoBlockState.IconState.TokenIcon(
+        iconState = IconState.TokenIcon(
             url = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
             fallbackTint = Color.Cyan,
             fallbackBackground = Color.Blue,
@@ -59,7 +59,7 @@ internal object TokenDetailsPreviewData {
 
     val tokenInfoBlockStateWithLongNameNoStandard = TokenInfoBlockState(
         name = "Tether (USDT) with long name test",
-        iconState = TokenInfoBlockState.IconState.TokenIcon(
+        iconState = IconState.TokenIcon(
             url = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
             fallbackTint = Color.Cyan,
             fallbackBackground = Color.Blue,
@@ -74,7 +74,7 @@ internal object TokenDetailsPreviewData {
 
     val tokenInfoBlockState = TokenInfoBlockState(
         name = "Tether USDT",
-        iconState = TokenInfoBlockState.IconState.CustomTokenIcon(
+        iconState = IconState.CustomTokenIcon(
             tint = Color.Green,
             background = Color.Magenta,
             isGrayscale = true,
@@ -86,11 +86,18 @@ internal object TokenDetailsPreviewData {
         ),
     )
 
+    val iconState = IconState.TokenIcon(
+        url = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
+        fallbackTint = Color.Cyan,
+        fallbackBackground = Color.Blue,
+        isGrayscale = false,
+    )
+
     private val actionButtons = persistentListOf(
-        TokenDetailsActionButton.Buy(enabled = true, onClick = {}),
-        TokenDetailsActionButton.Send(enabled = true, onClick = {}),
-        TokenDetailsActionButton.Receive(onClick = {}),
-        TokenDetailsActionButton.Swap(enabled = true, onClick = {}),
+        TokenDetailsActionButton.Buy(dimContent = false, onClick = {}),
+        TokenDetailsActionButton.Send(dimContent = false, onClick = {}),
+        TokenDetailsActionButton.Receive(onClick = {}, onLongClick = null),
+        TokenDetailsActionButton.Swap(dimContent = false, onClick = {}),
     )
 
     val balanceLoading = TokenDetailsBalanceBlockState.Loading(actionButtons = actionButtons)
@@ -102,6 +109,8 @@ internal object TokenDetailsPreviewData {
     val balanceError = TokenDetailsBalanceBlockState.Error(actionButtons = actionButtons)
 
     private val marketPriceLoading = MarketPriceBlockState.Loading(currencySymbol = "USDT")
+
+    private val stakingLoading = StakingBlockState.Loading(iconState = iconState)
 
     private val pullToRefreshConfig = TokenDetailsPullToRefreshConfig(
         isRefreshing = false,
@@ -237,6 +246,7 @@ internal object TokenDetailsPreviewData {
         tokenInfoBlockState = tokenInfoBlockState,
         tokenBalanceBlockState = balanceLoading,
         marketPriceBlockState = marketPriceLoading,
+        stakingBlockState = stakingLoading,
         notifications = persistentListOf(),
         txHistoryState = TxHistoryState.Content(
             contentItems = MutableStateFlow(
@@ -250,6 +260,7 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
+        isStakingAvailable = false,
         event = consumedEvent(),
     )
 
@@ -267,6 +278,12 @@ internal object TokenDetailsPreviewData {
                 type = PriceChangeType.UP,
             ),
         ),
+        stakingBlockState = StakingBlockState.Content(
+            interestRate = "7.38",
+            periodInDays = 4,
+            tokenSymbol = "XLM",
+            iconState = iconState,
+        ),
         notifications = persistentListOf(),
         txHistoryState = TxHistoryState.NotSupported(
             onExploreClick = {},
@@ -279,6 +296,7 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = true,
+        isStakingAvailable = true,
         event = consumedEvent(),
     )
 
