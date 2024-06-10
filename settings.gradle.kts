@@ -35,11 +35,11 @@ dependencyResolutionManagement {
         mavenLocal {
             content {
                 includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin")
+                includeGroupAndSubgroups("com.tangem.vico")
                 includeModule("com.tangem", "blstlib")
                 includeModule("com.tangem", "blockchain")
                 includeModule("com.tangem", "wallet-core-proto")
                 includeModule("com.tangem", "wallet-core")
-                includeModule("com.tangem", "vico")
             }
         }
         maven {

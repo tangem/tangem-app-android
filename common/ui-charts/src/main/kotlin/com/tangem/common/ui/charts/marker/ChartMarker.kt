@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.fullWidth
@@ -24,16 +25,18 @@ import com.patrykandpatrick.vico.compose.common.shader.color
 import com.patrykandpatrick.vico.compose.common.shape.dashed
 import com.patrykandpatrick.vico.core.cartesian.*
 import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
+import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.Dimensions
 import com.patrykandpatrick.vico.core.common.component.TextComponent
-import com.patrykandpatrick.vico.core.common.data.ExtraStore
 import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 import com.patrykandpatrick.vico.core.common.shape.Shape
-import com.tangem.common.ui.charts.preview.getPreviewBigCartData
+import com.tangem.common.ui.charts.preview.MarketChartPreviewDataProvider
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import java.math.BigDecimal
 
 /**
  * @param color The color of the indicator and guideline.
@@ -53,7 +56,11 @@ internal fun rememberTangemChartMarker(color: Color, innerCircleColor: Color): C
     )
     val indicatorRearComponent = rememberShapeComponent(
         shape = Shape.Pill,
-        color = color.copy(alpha = INDICATOR_REAR_COLOR_ALPHA),
+        color = if (color == Color.Transparent) {
+            Color.Transparent
+        } else {
+            color.copy(alpha = INDICATOR_REAR_COLOR_ALPHA)
+        },
     )
     val indicator = rememberLayeredComponent(
         rear = indicatorRearComponent,
@@ -105,10 +112,14 @@ private const val INDICATOR_REAR_COLOR_ALPHA = .24f
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TangemChartMarkerPreview() {
+private fun TangemChartMarkerPreview(
+    @PreviewParameter(MarketChartPreviewDataProvider::class) previewData: Pair<List<BigDecimal>, List<BigDecimal>>,
+) {
     val marker = rememberTangemChartMarker(Color.Red, Color.White)
-    val xListKey = ExtraStore.Key<List<Long>>()
-    val model = getPreviewBigCartData(xListKey)
+    val y = previewData.second.map { it.toFloat() }
+    val x = List(y.size) { it.toFloat() }
+    val model = CartesianChartModel(LineCartesianLayerModel.build { series(x, y) })
+
     val centerAprx = (model.models[0].minX + model.models[0].maxX) / 2f
     val center = model.models[0].getXDeltaGcd().let { centerAprx - centerAprx % it }
 
