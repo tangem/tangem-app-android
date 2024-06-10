@@ -10,6 +10,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 
@@ -54,7 +55,7 @@ internal fun AddCustomTokenToolbar(title: TextReference, onBackButtonClick: () -
 @Preview
 @Composable
 internal fun Preview_AddCustomTokenToolbar() {
-    TangemTheme {
+    TangemThemePreview {
         AddCustomTokenToolbar(title = TextReference.Res(R.string.add_custom_token_title), onBackButtonClick = {})
     }
 }
