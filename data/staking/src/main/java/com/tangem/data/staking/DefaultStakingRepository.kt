@@ -24,6 +24,49 @@ internal class DefaultStakingRepository(
 
     private val yieldConverter = YieldConverter()
 
+    override fun isStakingSupported(currencyId: String): Boolean {
+        return integrationIds.contains(currencyId)
+    }
+
+    override suspend fun fetchEnabledYields() {
+        if (!stakingFeatureToggles.isStakingEnabled) {
+            return
+        }
+
+        withContext(dispatchers.io) {
+            val stakingTokensWithYields = stakeKitApi.getMultipleYields().getOrThrow()
+
+            stakingYieldsStore.store(stakingTokensWithYields.data)
+        }
+    }
+
+    override suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield {
+        return withContext(dispatchers.io) {
+            val yields = getEnabledYields() ?: error("No yields found")
+            val rawCurrencyId = cryptoCurrencyId.rawCurrencyId ?: error("Staking custom tokens is not available")
+
+            val prefetchedYield = findPrefetchedYield(
+                yields = yields,
+                currencyId = rawCurrencyId,
+                symbol = symbol,
+            )
+
+            prefetchedYield ?: error("Staking is unavailable")
+        }
+    }
+
+    override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo {
+        return withContext(dispatchers.io) {
+            val yield = stakeKitApi.getSingleYield(integrationId).getOrThrow()
+
+            StakingEntryInfo(
+                interestRate = yield.apy,
+                periodInDays = yield.metadata.cooldownPeriod.days,
+                tokenSymbol = yield.token.symbol,
+            )
+        }
+    }
+
     override suspend fun getStakingAvailabilityForActions(
         cryptoCurrencyId: CryptoCurrency.ID,
         symbol: String,
@@ -54,34 +97,6 @@ internal class DefaultStakingRepository(
     private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {
         return yields
             .find { it.token.coinGeckoId == currencyId && it.token.symbol == symbol }
-    }
-
-    override fun isStakingSupported(currencyId: String): Boolean {
-        return integrationIds.contains(currencyId)
-    }
-
-    override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo {
-        return withContext(dispatchers.io) {
-            val yield = stakeKitApi.getSingleYield(integrationId).getOrThrow()
-
-            StakingEntryInfo(
-                interestRate = yield.apy,
-                periodInDays = yield.metadata.cooldownPeriod.days,
-                tokenSymbol = yield.token.symbol,
-            )
-        }
-    }
-
-    override suspend fun fetchEnabledYields() {
-        if (!stakingFeatureToggles.isStakingEnabled) {
-            return
-        }
-
-        withContext(dispatchers.io) {
-            val stakingTokensWithYields = stakeKitApi.getMultipleYields().getOrThrow()
-
-            stakingYieldsStore.store(stakingTokensWithYields.data)
-        }
     }
 
     private suspend fun getEnabledYields(): List<Yield>? {

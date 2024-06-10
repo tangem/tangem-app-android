@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -15,6 +16,8 @@ import com.tangem.features.staking.impl.presentation.state.StakingStateControlle
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
 import com.tangem.features.staking.impl.presentation.state.transformers.HideBalanceStateTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.SetInitialDataStateTransformer
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -37,12 +40,16 @@ internal class StakingViewModel @Inject constructor(
     var stakingStateRouter: StakingStateRouter by Delegates.notNull()
         private set
 
+    // replace to id
     private val cryptoCurrency: CryptoCurrency = savedStateHandle[StakingRouter.CRYPTO_CURRENCY_KEY]
-        ?: error("This screen can't open without `CryptoCurrency`")
+        ?: error("This screen can't be opened without `CryptoCurrency`")
 
     private val userWalletId: UserWalletId = savedStateHandle.get<String>(StakingRouter.USER_WALLET_ID_KEY)
         ?.let { stringValue -> UserWalletId(stringValue) }
-        ?: error("This screen can't open without `UserWalletId`")
+        ?: error("This screen can't be opened without `UserWalletId`")
+
+    private val yield: Yield = savedStateHandle[StakingRouter.YIELD_KEY]
+        ?: error("This screen can't be opened without `Yield`")
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
 
@@ -53,9 +60,13 @@ internal class StakingViewModel @Inject constructor(
         subscribeOnCurrencyStatusUpdates()
     }
 
-    fun setRouter(router: InnerStakingRouter, stakingStateRouter: StakingStateRouter) {
+    override fun onBackClick() {
+        stakingStateRouter.onBackClick()
+    }
+
+    fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
         innerRouter = router
-        this.stakingStateRouter = stakingStateRouter
+        this.stakingStateRouter = stateRouter
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -63,6 +74,13 @@ internal class StakingViewModel @Inject constructor(
             getCryptoCurrencyStatusSyncUseCase(userWalletId, cryptoCurrency.id).fold(
                 ifRight = {
                     cryptoCurrencyStatus = it
+                    stateController.update(
+                        transformer = SetInitialDataStateTransformer(
+                            clickIntents = this@StakingViewModel,
+                            yield = yield,
+                            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                        ),
+                    )
                 },
                 ifLeft = {
                     // TODO staking error

@@ -103,6 +103,7 @@ internal class TokenDetailsStateFactory(
     private val stakingStateConverter by lazy {
         TokenStakingStateConverter(
             currentStateProvider = currentStateProvider,
+            clickIntents = clickIntents,
         )
     }
 

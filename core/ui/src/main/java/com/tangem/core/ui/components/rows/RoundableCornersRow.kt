@@ -1,20 +1,25 @@
-package com.tangem.feature.referral.ui
+package com.tangem.core.ui.components.rows
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.R
 
 @Suppress("LongParameterList")
 @Composable
-internal fun AwardText(
+fun RoundableCornersRow(
     startText: String,
     startTextColor: Color,
     startTextStyle: TextStyle,
@@ -22,6 +27,7 @@ internal fun AwardText(
     endTextColor: Color,
     endTextStyle: TextStyle,
     cornersToRound: CornersToRound,
+    iconResId: Int? = null,
 ) {
     Surface(
         shape = cornersToRound.getShape(),
@@ -35,7 +41,7 @@ internal fun AwardText(
                     horizontal = TangemTheme.dimens.spacing16,
                     vertical = TangemTheme.dimens.spacing12,
                 ),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -44,7 +50,17 @@ internal fun AwardText(
                 maxLines = 1,
                 style = startTextStyle,
             )
-
+            if (iconResId != null) {
+                Icon(
+                    modifier = Modifier
+                        .padding(TangemTheme.dimens.spacing4)
+                        .size(TangemTheme.dimens.size16),
+                    painter = painterResource(id = R.drawable.ic_alert_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.text.tertiary,
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = endText,
                 color = endTextColor,
@@ -55,11 +71,32 @@ internal fun AwardText(
     }
 }
 
+enum class CornersToRound {
+
+    ALL_4,
+    TOP_2,
+    BOTTOM_2,
+    ZERO,
+    ;
+
+    @Suppress("TopLevelComposableFunctions")
+    @Composable
+    fun getShape(): RoundedCornerShape {
+        val radius = TangemTheme.dimens.radius12
+        return when (this) {
+            ALL_4 -> RoundedCornerShape(radius)
+            TOP_2 -> RoundedCornerShape(topStart = radius, topEnd = radius)
+            BOTTOM_2 -> RoundedCornerShape(bottomStart = radius, bottomEnd = radius)
+            ZERO -> RoundedCornerShape(0.dp)
+        }
+    }
+}
+
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-private fun Preview_AwardItem() {
+private fun Preview_RoundableCornersRow() {
     TangemThemePreview {
-        AwardText(
+        RoundableCornersRow(
             startText = "startText",
             startTextColor = TangemTheme.colors.text.tertiary,
             startTextStyle = TangemTheme.typography.subtitle2,
