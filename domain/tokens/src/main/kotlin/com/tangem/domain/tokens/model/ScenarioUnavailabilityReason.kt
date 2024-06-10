@@ -27,6 +27,6 @@ sealed class ScenarioUnavailabilityReason {
     data object UnassociatedAsset : ScenarioUnavailabilityReason()
 
     enum class WithdrawalScenario {
-        SELL, SEND
+        SELL, SEND // TODO staking create&process STAKING
     }
 }
