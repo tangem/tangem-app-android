@@ -36,9 +36,11 @@ import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
@@ -50,6 +52,7 @@ class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
     private val assetLoader: AssetLoader,
+    private val dispatchers: CoroutineDispatcherProvider,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -452,12 +455,12 @@ class DefaultWalletManagersFacade(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<TransactionFee>? {
+    ): Result<TransactionFee>? = withContext(dispatchers.io) {
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = network,
         )
-        return (walletManager as? TransactionSender)?.getFee(
+        (walletManager as? TransactionSender)?.getFee(
             amount = amount,
             destination = destination,
         )
