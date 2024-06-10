@@ -4,15 +4,12 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.DefaultCurrencyIcon
-
-private const val GRAY_SCALE_SATURATION = 0f
-private const val GRAY_SCALE_ALPHA = 0.4f
+import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
+import com.tangem.core.ui.utils.GrayscaleColorFilter
 
 /**
  * Simple icon from network
@@ -47,6 +44,3 @@ fun FiatIcon(
         modifier = modifier,
     )
 }
-
-private val GrayscaleColorFilter: ColorFilter
-    get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })

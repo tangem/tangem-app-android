@@ -10,7 +10,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.utils.converter.Converter
 
 internal class SingleWalletMarketPriceConverter(
-    private val status: CryptoCurrencyStatus.Status,
+    private val status: CryptoCurrencyStatus.Value,
     private val appCurrency: AppCurrency,
 ) : Converter<MarketPriceBlockState, MarketPriceBlockState> {
 
@@ -44,23 +44,23 @@ internal class SingleWalletMarketPriceConverter(
         )
     }
 
-    private fun formatPrice(status: CryptoCurrencyStatus.Status, appCurrency: AppCurrency): String {
+    private fun formatPrice(status: CryptoCurrencyStatus.Value, appCurrency: AppCurrency): String {
         val fiatRate = status.fiatRate ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
-        return BigDecimalFormatter.formatFiatAmount(
+        return BigDecimalFormatter.formatFiatAmountUncapped(
             fiatAmount = fiatRate,
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
         )
     }
 
-    private fun formatPriceChange(status: CryptoCurrencyStatus.Status): String {
+    private fun formatPriceChange(status: CryptoCurrencyStatus.Value): String {
         val priceChange = status.priceChange ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
         return BigDecimalFormatter.formatPercent(percent = priceChange, useAbsoluteValue = true)
     }
 
-    private fun getPriceChangeType(status: CryptoCurrencyStatus.Status): PriceChangeType {
+    private fun getPriceChangeType(status: CryptoCurrencyStatus.Value): PriceChangeType {
         return PriceChangeConverter.fromBigDecimal(status.priceChange)
     }
 }

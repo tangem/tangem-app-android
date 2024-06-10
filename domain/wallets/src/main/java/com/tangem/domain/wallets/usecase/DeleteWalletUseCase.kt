@@ -1,37 +1,36 @@
 package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
-import arrow.core.left
 import arrow.core.raise.either
-import arrow.core.right
 import com.tangem.common.doOnFailure
-import com.tangem.common.doOnSuccess
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
-import com.tangem.domain.wallets.legacy.ensureUserWalletListManagerNotNull
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.DeleteWalletError
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
- * Use case for updating user wallet
+ * Use case for deleting user wallet
  *
- * @property walletsStateHolder state holder for getting static initialized 'userWalletsListManager'
+ * @property userWalletsListManager user wallets list manager
  *
 * [REDACTED_AUTHOR]
  */
-class DeleteWalletUseCase(private val walletsStateHolder: WalletsStateHolder) {
+class DeleteWalletUseCase(private val userWalletsListManager: UserWalletsListManager) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<DeleteWalletError, Unit> {
+    /**
+     * Deletes user wallet with provided ID.
+     *
+     * @param userWalletId ID of user wallet to be deleted.
+     *
+     * @return [Either] with [DeleteWalletError] or [Boolean] which indicates that there are still saved wallets.
+     * */
+    suspend operator fun invoke(userWalletId: UserWalletId): Either<DeleteWalletError, Boolean> {
         return either {
-            val userWalletsListManager = ensureUserWalletListManagerNotNull(
-                walletsStateHolder = walletsStateHolder,
-                raise = { DeleteWalletError.DataError },
-            )
-
             userWalletsListManager.delete(userWalletIds = listOf(userWalletId))
-                .doOnSuccess { return Unit.right() }
-                .doOnFailure { return DeleteWalletError.UnableToDelete.left() }
+                .doOnFailure {
+                    raise(DeleteWalletError.UnableToDelete)
+                }
 
-            return Unit.right()
+            userWalletsListManager.hasUserWallets
         }
     }
 }
