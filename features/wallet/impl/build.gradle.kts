@@ -62,6 +62,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.models)
     implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
@@ -86,4 +87,5 @@ dependencies {
     implementation(projects.features.send.api)
     implementation(projects.features.tester.api)
     implementation(projects.features.manageTokens.api)
+    implementation(projects.features.details.api)
 }
