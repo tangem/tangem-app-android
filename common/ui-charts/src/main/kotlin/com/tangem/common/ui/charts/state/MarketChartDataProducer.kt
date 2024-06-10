@@ -1,9 +1,6 @@
 package com.tangem.common.ui.charts.state
 
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
 import com.patrykandpatrick.vico.core.common.data.ExtraStore
@@ -85,8 +82,6 @@ class MarketChartDataProducer private constructor(
     internal val lookState = MutableStateFlow(initialLook)
     internal val entries = MutableStateFlow<List<LineCartesianLayerModel.Entry>>(emptyList())
 
-    internal var dsd: Pair<List<Float>, List<Float>>? by mutableStateOf(null) // TODO: remove
-
     internal val modelProducer = CartesianChartModelProducer.build(dispatcher = dispatcher)
 
     /**
@@ -121,8 +116,6 @@ class MarketChartDataProducer private constructor(
                 val normY = data.y.map { normalize(it, minY) }
                 val normX = data.x.map { normalize(it, minX) }
 
-                dsd = Pair(normX, normY)
-
                 val entriesLocal = normX.mapIndexed { index, fl -> LineCartesianLayerModel.Entry(fl, normY[index]) }
                 entries.value = entriesLocal
 
@@ -151,9 +144,9 @@ class MarketChartDataProducer private constructor(
     }
 
     companion object {
-        private val entriesKey = ExtraStore.Key<List<LineCartesianLayerModel.Entry>>()
-        private val xKey = ExtraStore.Key<List<BigDecimal>>()
-        private val yKey = ExtraStore.Key<List<BigDecimal>>()
+        internal val entriesKey = ExtraStore.Key<List<LineCartesianLayerModel.Entry>>()
+        internal val xKey = ExtraStore.Key<List<BigDecimal>>()
+        internal val yKey = ExtraStore.Key<List<BigDecimal>>()
 
         private val initialData: MarketChartData = MarketChartData.NoData.Empty
         private val initialLook: MarketChartLook = MarketChartLook()
@@ -166,7 +159,7 @@ class MarketChartDataProducer private constructor(
          * @param block The transaction block to be run.
          * @return A MarketChartDataProducer.
          */
-        internal suspend fun buildSuspend(
+        suspend fun buildSuspend(
             dispatcher: CoroutineDispatcher = Dispatchers.Default,
             block: TransactionSuspend.() -> Unit,
         ): MarketChartDataProducer {
@@ -189,7 +182,7 @@ class MarketChartDataProducer private constructor(
          * @param block The transaction block to be run.
          * @return A MarketChartDataProducer.
          */
-        internal fun build(
+        fun build(
             dispatcher: CoroutineDispatcher = Dispatchers.Default,
             block: Transaction.() -> Unit,
         ): MarketChartDataProducer {
