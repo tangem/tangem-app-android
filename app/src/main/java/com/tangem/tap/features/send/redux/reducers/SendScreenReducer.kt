@@ -122,6 +122,7 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
                     sendToken.name.equals(feePaidCurrency.token.name, ignoreCase = true) &&
                     sendToken.symbol.equals(feePaidCurrency.token.symbol, ignoreCase = true)
             }
+            is FeePaidCurrency.FeeResource -> false
         }
     }
 }
