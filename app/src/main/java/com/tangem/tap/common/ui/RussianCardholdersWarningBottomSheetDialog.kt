@@ -5,11 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.redux.AppDialog
+import com.tangem.tap.common.url.urlOpener
 import com.tangem.tap.store
 import com.tangem.wallet.databinding.DialogRussiansCardholdersWarningBinding
 
@@ -44,7 +44,7 @@ class RussianCardholdersWarningBottomSheetDialog(
             dismiss()
         }
         binding?.btnNo?.setOnClickListener {
-            store.dispatch(NavigationAction.OpenUrl(INSTRUCTION_URL))
+            urlOpener.openUrl(INSTRUCTION_URL)
             dismiss()
         }
     }
