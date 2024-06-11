@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.di
 
 import com.tangem.core.navigation.ReduxNavController
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.feature.wallet.presentation.router.DefaultWalletRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import dagger.Module
@@ -16,7 +17,11 @@ internal object WalletRouterModule {
 
     @Provides
     @ActivityScoped
-    fun provideWalletRouter(reduxNavController: ReduxNavController, urlOpener: UrlOpener): WalletRouter {
-        return DefaultWalletRouter(reduxNavController, urlOpener)
+    fun provideWalletRouter(
+        reduxNavController: ReduxNavController,
+        reduxStateHolder: ReduxStateHolder,
+        urlOpener: UrlOpener,
+    ): WalletRouter {
+        return DefaultWalletRouter(reduxNavController, reduxStateHolder, urlOpener)
     }
 }
