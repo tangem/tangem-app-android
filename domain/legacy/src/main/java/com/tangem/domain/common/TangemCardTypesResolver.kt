@@ -40,6 +40,10 @@ internal class TangemCardTypesResolver(
 
     override fun isKaspaWallet(): Boolean = card.batchId == KASPA_WALLET_BATCH_ID
 
+    override fun isKaspa2Wallet(): Boolean = card.batchId == KASPA2_WALLET_BATCH_ID
+
+    override fun isKaspaResellerWallet(): Boolean = card.batchId == KASPA_RESELLER_WALLET_BATCH_ID
+
     override fun isBadWallet(): Boolean = card.batchId == BAD_WALLET_BATCH_ID
 
     override fun isJrWallet(): Boolean = card.batchId == JR_WALLET_BATCH_ID
@@ -53,6 +57,20 @@ internal class TangemCardTypesResolver(
     override fun isVeChainWallet(): Boolean = card.batchId == VECHAIN_WALLET_BATCH_ID
 
     override fun isNewWorldEliteWallet(): Boolean = card.batchId == NEW_WORLD_ELITE_WALLET_BATCH_ID
+
+    override fun isRedPandaWallet(): Boolean = card.batchId == RED_PANDA_WALLET_BATCH_ID
+
+    override fun isCryptoSethWallet(): Boolean = card.batchId == CRYPTO_SETH_WALLET_BATCH_ID
+
+    override fun isKishuInuWallet(): Boolean = card.batchId == KISHU_INU_WALLET_BATCH_ID
+
+    override fun isBabyDogeWallet(): Boolean = card.batchId == BABY_DOGE_WALLET_BATCH_ID
+
+    override fun isCOQWallet(): Boolean = card.batchId == COQ_WALLET_BATCH_ID
+
+    override fun isCoinMetricaWallet(): Boolean = card.batchId == COIN_METRICA_WALLET_BATCH_ID
+
+    override fun isVoltInuWallet(): Boolean = card.batchId == VOLT_INU_WALLET_BATCH_ID
 
     override fun isWhiteWallet(): Boolean {
         return walletData == null && card.firmwareVersion <= FirmwareVersion.HDWalletAvailable
@@ -153,6 +171,8 @@ internal class TangemCardTypesResolver(
         const val DEV_KIT_CARD_BATCH_ID = "CB83"
         const val TRON_WALLET_BATCH_ID = "AF07"
         const val KASPA_WALLET_BATCH_ID = "AF08"
+        const val KASPA2_WALLET_BATCH_ID = "AF25"
+        const val KASPA_RESELLER_WALLET_BATCH_ID = "AF31"
         const val BAD_WALLET_BATCH_ID = "AF09"
         const val JR_WALLET_BATCH_ID = "AF14"
         const val GRIM_WALLET_BATCH_ID = "AF13"
@@ -163,5 +183,12 @@ internal class TangemCardTypesResolver(
         const val BITCOIN_PIZZA_DAY_WALLET_BATCH_ID = "AF33"
         const val VECHAIN_WALLET_BATCH_ID = "AF29"
         const val NEW_WORLD_ELITE_WALLET_BATCH_ID = "AF26"
+        const val RED_PANDA_WALLET_BATCH_ID = "AF34"
+        const val CRYPTO_SETH_WALLET_BATCH_ID = "AF32"
+        const val KISHU_INU_WALLET_BATCH_ID = "AF52"
+        const val BABY_DOGE_WALLET_BATCH_ID = "AF51"
+        const val COQ_WALLET_BATCH_ID = "AF28"
+        const val COIN_METRICA_WALLET_BATCH_ID = "AF27"
+        const val VOLT_INU_WALLET_BATCH_ID = "AF35"
     }
 }
