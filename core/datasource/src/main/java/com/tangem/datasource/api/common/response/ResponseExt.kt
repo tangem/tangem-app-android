@@ -1,8 +1,11 @@
 package com.tangem.datasource.api.common.response
 
+import kotlinx.coroutines.TimeoutCancellationException
 import retrofit2.Response
 import java.net.ConnectException
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import java.util.concurrent.TimeoutException
 import javax.net.ssl.SSLHandshakeException
 
 internal fun <T : Any> Response<T>.toSafeApiResponse(): ApiResponse<T> {
@@ -23,10 +26,14 @@ internal fun <T : Any> Response<T>.toSafeApiResponse(): ApiResponse<T> {
     }
 }
 
-internal fun Throwable.isNetworkException(): Boolean = when (this) {
+internal fun Throwable.toApiError(): ApiResponseError = when (this) {
     is ConnectException,
     is UnknownHostException,
     is SSLHandshakeException,
-    -> true
-    else -> false
+    -> ApiResponseError.NetworkException
+    is TimeoutException,
+    is TimeoutCancellationException,
+    is SocketTimeoutException,
+    -> ApiResponseError.TimeoutException
+    else -> ApiResponseError.UnknownException(cause = this)
 }
