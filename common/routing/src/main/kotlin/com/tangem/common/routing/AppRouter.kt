@@ -15,7 +15,7 @@ interface AppRouter {
     /**
      * The current navigation stack.
      */
-    val backStack: List<AppRoute>
+    val stack: List<AppRoute>
 
     /**
      * Pushes a new route to the navigation stack.
@@ -26,6 +26,14 @@ interface AppRouter {
     fun push(route: AppRoute, onComplete: (isSuccess: Boolean) -> Unit = {})
 
     /**
+     * Replaces ***all*** routes in the navigation stack with the specified [routes].
+     *
+     * @param routes The routes to replace the current stack with.
+     * @param onComplete The callback to be invoked when the operation is complete.
+     */
+    fun replaceAll(vararg routes: AppRoute, onComplete: (isSuccess: Boolean) -> Unit = {})
+
+    /**
      * Pops the top route from the navigation stack.
      *
      * @param onComplete The callback to be invoked when the operation is complete.
@@ -33,7 +41,15 @@ interface AppRouter {
     fun pop(onComplete: (isSuccess: Boolean) -> Unit = {})
 
     /**
-     * Pops routes from the navigation stack until the specified route class is found.
+     * Pops routes from the navigation stack until the specified [route] is found.
+     *
+     * @param route The route to pop to.
+     * @param onComplete The callback to be invoked when the operation is complete.
+     */
+    fun popTo(route: AppRoute, onComplete: (isSuccess: Boolean) -> Unit = {})
+
+    /**
+     * Pops routes from the navigation stack until the ***first*** specified [routeClass] is found.
      *
      * @param routeClass The route class to pop to.
      * @param onComplete The callback to be invoked when the operation is complete.
