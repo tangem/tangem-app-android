@@ -1,7 +1,7 @@
 package com.tangem.tap.common.extensions
 
-import com.tangem.core.navigation.StateDialog
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
