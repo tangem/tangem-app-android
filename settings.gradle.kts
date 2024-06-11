@@ -113,6 +113,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
 include(":common")
 include(":common:ui-charts")
+include(":common:routing")
 
 // region Core modules
 include(":core:analytics")
