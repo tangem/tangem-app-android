@@ -1,6 +1,6 @@
 package com.tangem.data.tokens.repository
 
-import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.common.api.safeApiCallWithTimeout
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.QuotesConverter
 import com.tangem.data.tokens.utils.QuotesUnsupportedCurrenciesIdAdapter
@@ -91,30 +91,30 @@ internal class DefaultQuotesRepository(
             if (expiredCurrenciesIds.isEmpty()) return
 
             quotesFetchedForAppCurrency = appCurrencyId
+
             fetchQuotes(expiredCurrenciesIds, appCurrencyId)
         }
     }
 
     private suspend fun fetchQuotes(rawCurrenciesIds: Set<String>, appCurrencyId: String) {
         val replacementIdsResult = quotesUnsupportedCurrenciesAdapter.replaceUnsupportedCurrencies(rawCurrenciesIds)
-        val response = safeApiCall(
+        val response = safeApiCallWithTimeout(
             call = {
                 val coinIds = replacementIdsResult.idsForRequest.joinToString(separator = ",")
                 tangemTechApi.getQuotes(appCurrencyId, coinIds).bind()
             },
-            onError = {
+            onError = { error ->
                 cacheRegistry.invalidate(rawCurrenciesIds.map(::getQuoteCacheKey))
-                null
+
+                throw error
             },
         )
 
-        if (response != null) {
-            val updatedResponse = quotesUnsupportedCurrenciesAdapter.getResponseWithUnsupportedCurrencies(
-                response,
-                replacementIdsResult.idsFiltered,
-            )
-            quotesStore.store(updatedResponse)
-        }
+        val updatedResponse = quotesUnsupportedCurrenciesAdapter.getResponseWithUnsupportedCurrencies(
+            response,
+            replacementIdsResult.idsFiltered,
+        )
+        quotesStore.store(updatedResponse)
     }
 
     private suspend fun filterExpiredCurrenciesIds(
