@@ -23,8 +23,6 @@ sealed class NavigationAction : Action {
 
     data class OpenDialog(val stateDialog: StateDialog) : NavigationAction()
 
-    data class Share(val data: String) : NavigationAction()
-
     data class ActivityCreated(val activity: WeakReference<AppCompatActivity>) : NavigationAction()
 
     data class ActivityDestroyed(val activity: WeakReference<AppCompatActivity>) : NavigationAction()
