@@ -6,6 +6,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.url.urlOpener
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
@@ -83,7 +84,7 @@ suspend fun dispatchOnMain(vararg actions: Action) {
 }
 
 fun Store<*>.dispatchOpenUrl(url: String) {
-    dispatch(NavigationAction.OpenUrl(url))
+    urlOpener.openUrl(url)
 }
 
 fun Store<*>.dispatchShare(url: String) {
