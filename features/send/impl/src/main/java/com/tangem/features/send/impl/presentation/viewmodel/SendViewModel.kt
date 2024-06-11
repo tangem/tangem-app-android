@@ -442,6 +442,7 @@ internal class SendViewModel @Inject constructor(
             getFixedTxHistoryItemsUseCase.getSync(
                 userWalletId = userWalletId,
                 currency = cryptoCurrency,
+                pageSize = RECENT_TX_SIZE,
             ).getOrElse { emptyList() }
         }
         uiState = recipientStateFactory.onLoadedHistoryList(txHistory = txHistoryList)
@@ -530,7 +531,31 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onFailedTxEmailClick(errorMessage: String) {
-        reduxStateHolder.dispatch(LegacyAction.SendEmailTransactionFailed(errorMessage))
+        val recipient = uiState.recipientState?.addressTextField?.value
+        val feeValue = uiState.feeState?.fee?.amount?.value
+        val amountValue = uiState.amountState?.amountTextField?.cryptoAmount?.value
+
+        val receivingAmount = if (amountValue != null && feeValue != null) {
+            checkAndCalculateSubtractedAmount(
+                isAmountSubtractAvailable = isAmountSubtractAvailable,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                amountValue = amountValue,
+                feeValue = feeValue,
+                reduceAmountBy = uiState.sendState?.reduceAmountBy ?: BigDecimal.ZERO,
+            )
+        } else {
+            null
+        }
+        reduxStateHolder.dispatch(
+            LegacyAction.SendEmailTransactionFailed(
+                cryptoCurrency = cryptoCurrency,
+                userWalletId = userWalletId,
+                amount = receivingAmount,
+                fee = feeValue,
+                destinationAddress = recipient,
+                errorMessage = errorMessage,
+            ),
+        )
     }
 
     override fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency) =
@@ -981,6 +1006,7 @@ internal class SendViewModel @Inject constructor(
         const val CHECK_FEE_UPDATE_DELAY = 60_000L
         const val BALANCE_UPDATE_DELAY = 11_000L
         const val RECENT_LOAD_DELAY = 500L
+        const val RECENT_TX_SIZE = 100
 
         const val RU_LOCALE = "ru"
         const val EN_LOCALE = "en"
