@@ -24,9 +24,9 @@ internal class DefaultRouter(
         navigation.pop(onComplete)
     }
 
-    override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
+    override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         navigation.popWhile(
-            predicate = { it::class != routeClass },
+            predicate = { it != route },
             onComplete = onComplete,
         )
     }
