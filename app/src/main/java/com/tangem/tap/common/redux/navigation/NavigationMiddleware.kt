@@ -7,7 +7,10 @@ import android.provider.Settings
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.activityResultCaller
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.openFragment
+import com.tangem.tap.common.extensions.popBackTo
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.store
 import org.rekotlin.Middleware
@@ -70,9 +73,6 @@ val navigationMiddleware: Middleware<AppState> = { _, state ->
                             }
                         }
                         activityResultCaller.activityResultLauncher?.launch(intent)
-                    }
-                    is NavigationAction.Share -> {
-                        navState?.activity?.get()?.shareText(action.data)
                     }
                     is NavigationAction.ActivityCreated,
                     is NavigationAction.ActivityDestroyed,
