@@ -53,7 +53,7 @@ import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHand
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
-import com.tangem.tap.common.feedback.FeedbackManager
+import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.log.TimberFormatStrategy
@@ -363,7 +363,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
             logger = if (feedbackManagerFeatureToggles.isLocalLogsEnabled) tangemSdkLogger else tangemLogCollector,
         )
 
-        val feedbackManager = FeedbackManager(
+        val feedbackManager = LegacyFeedbackManager(
             infoHolder = additionalFeedbackInfo,
             logCollector = tangemLogCollector,
             chatManager = ChatManager(foregroundActivityObserver),
