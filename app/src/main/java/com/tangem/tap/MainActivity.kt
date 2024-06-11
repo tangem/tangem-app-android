@@ -27,9 +27,13 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.arkivanov.decompose.value.observe
+import com.arkivanov.essenty.lifecycle.asEssentyLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -60,6 +64,7 @@ import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
+import com.tangem.tap.common.extensions.showFragmentAllowingStateLoss
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
@@ -72,6 +77,8 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
+import com.tangem.tap.routing.RoutingComponent
+import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
@@ -162,6 +169,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var stakingRouter: StakingRouter
 
+    @Inject
+    @RootAppComponentContext
+    internal lateinit var rootComponentContext: AppComponentContext
+
+    @Inject
+    internal lateinit var appRouterConfig: AppRouterConfig
+
+    @Inject
+    internal lateinit var routingComponentFactory: RoutingComponent.Factory
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -188,6 +205,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         observeAppThemeModeUpdates()
 
         setContentView(R.layout.activity_main)
+        installRouting()
         initContent()
 
         checkForNotificationPermission()
@@ -196,6 +214,29 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         if (intent != null) {
             deepLinksRegistry.launch(intent)
+        }
+    }
+
+    private fun installRouting() {
+        val routingComponent = routingComponentFactory.create(
+            context = rootComponentContext,
+        )
+
+        appRouterConfig.routerScope = lifecycleScope
+        appRouterConfig.componentRouter = routingComponent.router
+
+        routingComponent.stack.observe(lifecycle.asEssentyLifecycle()) { childStack ->
+            appRouterConfig.baclStack = childStack.backStack.map { it.configuration }
+
+            when (val child = childStack.active.instance) {
+                is RoutingComponent.Child.Initial -> Unit
+                is RoutingComponent.Child.LegacyFragment -> {
+                    supportFragmentManager.showFragmentAllowingStateLoss(child.name, child.fragmentProvider)
+                }
+                is RoutingComponent.Child.LegacyIntent -> {
+                    startActivity(child.intent)
+                }
+            }
         }
     }
 
