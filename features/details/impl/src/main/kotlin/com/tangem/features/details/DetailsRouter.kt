@@ -4,6 +4,8 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
+import com.tangem.core.navigation.feedback.FeedbackManager
+import com.tangem.core.navigation.feedback.FeedbackType
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.features.details.routing.DetailsRoute
 import com.tangem.features.tester.api.TesterRouter
@@ -13,6 +15,7 @@ import javax.inject.Inject
 internal class DetailsRouter @Inject constructor(
     private val reduxNavController: ReduxNavController,
     private val reduxStateHolder: ReduxStateHolder,
+    private val feedbackManager: FeedbackManager,
     private val testerRouter: TesterRouter,
 ) : Router {
 
@@ -23,7 +26,7 @@ internal class DetailsRouter @Inject constructor(
                     reduxNavController.navigate(NavigationAction.NavigateTo(route.screen, bundle = route.params))
                 }
                 is DetailsRoute.Feedback -> {
-                    reduxStateHolder.sendFeedbackEmail()
+                    feedbackManager.sendEmail(FeedbackType.Feedback)
                 }
                 is DetailsRoute.TesterMenu -> {
                     testerRouter.startTesterScreen()
