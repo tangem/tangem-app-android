@@ -21,11 +21,11 @@
     },
     {
         "name": "WC_SOLANA_TX_SIGN_ENABLED",
-        "version": "5.11.0"
+        "version": "undefined"
     },
     {
         "name": "TOKEN_LIST_LCE_ENABLED",
-        "version": "5.11.0"
+        "version": "5.12.0"
     },
     {
         "name": "CARDANO_TOKENS_SUPPORT_ENABLED",
