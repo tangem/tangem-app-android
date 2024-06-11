@@ -53,9 +53,8 @@ internal class MultiWalletTokenListSubscriber(
         updateSortingIfNeeded(maybeTokenList)
     }
 
-    private suspend fun updateSortingIfNeeded(maybeTokenList: Lce<TokenListError, TokenList>) {
-        val tokenList = maybeTokenList.getOrNull() ?: return
-        if (!checkNeedSorting(tokenList)) return
+    private suspend fun updateSortingIfNeeded(maybeTokenList: Lce<*, TokenList>) {
+        val tokenList = getTokenList(maybeTokenList) ?: return
 
         applyTokenListSortingUseCase(
             userWalletId = userWallet.walletId,
@@ -65,9 +64,14 @@ internal class MultiWalletTokenListSubscriber(
         )
     }
 
-    private fun checkNeedSorting(tokenList: TokenList): Boolean {
-        return tokenList.totalFiatBalance !is TotalFiatBalance.Loading &&
-            tokenList.sortedBy == TokenList.SortType.BALANCE
+    private fun getTokenList(lce: Lce<*, TokenList>): TokenList? {
+        val tokenList = lce.getOrNull(isPartialContentAccepted = false)
+            ?: return null
+
+        return tokenList.takeIf {
+            tokenList.totalFiatBalance is TotalFiatBalance.Loaded &&
+                tokenList.sortedBy == TokenList.SortType.BALANCE
+        }
     }
 
     private fun getCurrenciesIds(tokenList: TokenList): List<CryptoCurrency.ID> {
