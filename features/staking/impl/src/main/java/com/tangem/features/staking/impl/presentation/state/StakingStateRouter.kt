@@ -1,22 +1,15 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import androidx.fragment.app.FragmentManager
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.lang.ref.WeakReference
 
 internal class StakingStateRouter(
     private val fragmentManager: WeakReference<FragmentManager>,
+    private val stateController: StakingStateController,
 ) {
-    private var mutableCurrentState: MutableStateFlow<StakingUiStateType> = MutableStateFlow(getInitState())
-
-    val currentState: StateFlow<StakingUiStateType>
-        get() = mutableCurrentState.asStateFlow()
-
     fun clear() {
-        mutableCurrentState.update { getInitState() }
+        stateController.update { it.copy(currentStep = getInitialState()) }
     }
 
     fun popBackStack() {
@@ -24,49 +17,48 @@ internal class StakingStateRouter(
     }
 
     fun onBackClick(isSuccess: Boolean = false) {
-        val type = currentState.value
+        val type = stateController.uiState.value.currentStep
         when {
             isSuccess -> popBackStack()
             else -> when (type) {
-                StakingUiStateType.Amount -> showInitial()
-                StakingUiStateType.ValidatorAndFee -> showAmount()
+                StakingStep.Amount -> showInitial()
+                StakingStep.ValidatorAndFee -> showAmount()
                 else -> popBackStack()
             }
         }
     }
 
     fun onNextClick() {
-        when (currentState.value) {
-            StakingUiStateType.InitialInfo -> showAmount()
-            StakingUiStateType.Amount,
-            StakingUiStateType.ValidatorAndFee,
-            -> showConfirm()
-            StakingUiStateType.Confirm -> onBackClick()
+        when (stateController.uiState.value.currentStep) {
+            StakingStep.InitialInfo -> showAmount()
+            StakingStep.Amount -> showValidator()
+            StakingStep.ValidatorAndFee -> showConfirm()
+            StakingStep.Confirm -> onBackClick()
         }
     }
 
     fun onPrevClick() {
-        when (currentState.value) {
-            StakingUiStateType.Amount -> showInitial()
+        when (stateController.uiState.value.currentStep) {
+            StakingStep.Amount -> showInitial()
             else -> popBackStack()
         }
     }
 
     private fun showInitial() {
-        mutableCurrentState.update { StakingUiStateType.InitialInfo }
+        stateController.update { it.copy(currentStep = StakingStep.InitialInfo) }
     }
 
     fun showAmount() {
-        mutableCurrentState.update { StakingUiStateType.Amount }
+        stateController.update { it.copy(currentStep = StakingStep.Amount) }
     }
 
     fun showValidator() {
-        mutableCurrentState.update { StakingUiStateType.ValidatorAndFee }
+        stateController.update { it.copy(currentStep = StakingStep.ValidatorAndFee) }
     }
 
     fun showConfirm() {
-        mutableCurrentState.update { StakingUiStateType.Confirm }
+        stateController.update { it.copy(currentStep = StakingStep.Confirm) }
     }
 
-    private fun getInitState() = StakingUiStateType.InitialInfo
+    private fun getInitialState() = StakingStep.InitialInfo
 }
