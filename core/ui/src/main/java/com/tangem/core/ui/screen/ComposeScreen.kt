@@ -58,6 +58,7 @@ internal fun ComposeScreen.createComposeView(context: Context): ComposeView {
             TangemTheme(
                 isDark = shouldUseDarkTheme(appThemeMode),
                 hapticManager = uiDependencies.hapticManager,
+                snackbarHostState = uiDependencies.globalSnackbarHostState,
             ) {
                 ScreenContent(modifier = screenModifier)
             }
