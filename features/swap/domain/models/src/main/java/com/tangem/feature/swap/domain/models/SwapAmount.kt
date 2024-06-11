@@ -2,6 +2,7 @@ package com.tangem.feature.swap.domain.models
 
 import com.tangem.utils.toFormattedString
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 data class SwapAmount(
     val value: BigDecimal,
@@ -39,10 +40,5 @@ fun createFromAmountWithOffset(amountWithOffset: String, decimals: Int): SwapAmo
 
 @Throws(IllegalStateException::class)
 fun SwapAmount.toStringWithRightOffset(): String {
-    return value.movePointRight(decimals).toPlainString()
-}
-
-@Throws(IllegalStateException::class)
-fun SwapAmount.toStringWithLeftOffset(): String {
-    return value.movePointLeft(decimals).toPlainString()
+    return value.setScale(decimals, RoundingMode.HALF_DOWN).movePointRight(decimals).toPlainString()
 }
