@@ -176,6 +176,7 @@ compose-reorderable = { module = "org.burnoutcrew.composereorderable:reorderable
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
 # endregion Firebase
 
 # region Tangem
