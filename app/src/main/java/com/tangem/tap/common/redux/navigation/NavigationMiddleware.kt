@@ -3,7 +3,6 @@ package com.tangem.tap.common.redux.navigation
 import android.content.Intent
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.openFragment
 import com.tangem.tap.common.extensions.popBackTo
@@ -50,7 +49,6 @@ val navigationMiddleware: Middleware<AppState> = { _, state ->
                         intent.data = action.url
                         navState?.activity?.get()?.startActivity(intent)
                     }
-                    is NavigationAction.OpenDialog -> store.dispatchDialogShow(action.stateDialog)
                     is NavigationAction.ActivityCreated,
                     is NavigationAction.ActivityDestroyed,
                     -> Unit
