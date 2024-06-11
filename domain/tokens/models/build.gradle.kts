@@ -1,7 +1,7 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
-    id("kotlin-parcelize")
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -10,6 +10,7 @@ android {
 }
 
 dependencies {
+    implementation(deps.kotlin.serialization)
     implementation(projects.domain.txhistory.models)
     implementation(projects.core.analytics.models)
     implementation(deps.tangem.blockchain) {
