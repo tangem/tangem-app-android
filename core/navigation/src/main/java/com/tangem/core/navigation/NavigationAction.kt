@@ -19,8 +19,6 @@ sealed class NavigationAction : Action {
 
     data class OpenDocument(val url: Uri) : NavigationAction()
 
-    data class OpenDialog(val stateDialog: StateDialog) : NavigationAction()
-
     data class ActivityCreated(val activity: WeakReference<AppCompatActivity>) : NavigationAction()
 
     data class ActivityDestroyed(val activity: WeakReference<AppCompatActivity>) : NavigationAction()
