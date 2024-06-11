@@ -20,6 +20,7 @@ import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.*
@@ -30,9 +31,6 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.wallet.R
@@ -273,7 +271,7 @@ class DetailsMiddleware {
 
         private fun enrollBiometrics() {
             Analytics.send(Settings.AppSettings.ButtonEnableBiometricAuthentication)
-            store.dispatchOnMain(NavigationAction.OpenBiometricsSettings)
+            activityResultCaller.openSystemBiometrySettings()
         }
 
         private fun changeAppThemeMode(appThemeMode: AppThemeMode) {
