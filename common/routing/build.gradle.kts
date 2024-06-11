@@ -17,9 +17,10 @@ dependencies {
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.staking.models)
 
     /* Libs - Other */
+    api(deps.kotlin.serialization)
     implementation(deps.androidx.core.ktx)
-    implementation(deps.kotlin.serialization)
     implementation(deps.timber)
 }
