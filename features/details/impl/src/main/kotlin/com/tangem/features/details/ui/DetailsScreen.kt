@@ -18,7 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.ComposableContentProvider
+import com.tangem.core.ui.ComposableContentComponent
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.res.TangemTheme
@@ -36,7 +36,7 @@ private const val COLLAPSED_APP_BAR_THRESHOLD = 0.4f
 internal fun DetailsScreen(
     state: DetailsUM,
     snackbarHostState: SnackbarHostState,
-    userWalletListBlockContent: ComposableContentProvider,
+    userWalletListBlockContent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor = TangemTheme.colors.background.secondary
@@ -118,7 +118,7 @@ private fun TopBar(state: DetailsUM, scrollBehavior: TopAppBarScrollBehavior, mo
 @Composable
 private fun Content(
     state: DetailsUM,
-    userWalletListBlockContent: ComposableContentProvider,
+    userWalletListBlockContent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -152,7 +152,7 @@ private fun Content(
 @Composable
 private fun Block(
     model: DetailsItemUM,
-    userWalletListBlockContent: ComposableContentProvider,
+    userWalletListBlockContent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
     Column(
