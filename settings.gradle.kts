@@ -176,6 +176,9 @@ include(":features:staking:impl")
 
 include(":features:details:api")
 include(":features:details:impl")
+
+include(":features:disclaimer:api")
+include(":features:disclaimer:impl")
 // endregion Feature modules
 
 // region Domain modules
