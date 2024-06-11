@@ -13,6 +13,7 @@ import com.tangem.LogFormat
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
@@ -193,6 +194,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val shareManager
         get() = entryPoint.getShareManager()
+
+    private val appRouter: AppRouter
+        get() = entryPoint.getAppRouter()
     // endregion
 
     override fun onCreate() {
@@ -283,6 +287,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     detailsEntryPoint = detailsEntryPoint,
                     urlOpener = urlOpener,
                     shareManager = shareManager,
+                    appRouter = appRouter,
                 ),
             ),
         )

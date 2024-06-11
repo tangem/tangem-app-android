@@ -28,8 +28,52 @@ import com.tangem.tap.features.tokens.impl.presentation.TokensListFragment
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
+import com.tangem.utils.Provider
 import com.tangem.wallet.R
 import timber.log.Timber
+
+fun FragmentManager.showFragmentAllowingStateLoss(name: String, fragmentProvider: Provider<Fragment>) {
+    Timber.d("Showing $name route")
+
+    val isPoppedBack = popBackStackImmediate(name, 0)
+
+    if (!isPoppedBack) {
+        val fragment = fragmentProvider()
+
+        if (fragment is DialogFragment) {
+            fragment.showDialog(fragmentManager = this, name)
+        } else {
+            fragment.showFragment(fragmentManager = this, name)
+        }
+
+        Timber.d("Route $name is shown")
+    } else {
+        Timber.d("Route $name is found in backstack and shown")
+    }
+}
+
+private fun DialogFragment.showDialog(fragmentManager: FragmentManager, name: String) {
+    val transaction = fragmentManager.beginTransaction()
+
+    try {
+        transaction.addToBackStack(name)
+        show(transaction, name)
+    } catch (e: IllegalStateException) {
+        transaction.add(this, name)
+        transaction.addToBackStack(name)
+
+        transaction.commitAllowingStateLoss()
+    }
+}
+
+private fun Fragment.showFragment(fragmentManager: FragmentManager, name: String) {
+    val transaction = fragmentManager.beginTransaction()
+
+    transaction.replace(R.id.fragment_container, this, name)
+    transaction.addToBackStack(name)
+
+    transaction.commitAllowingStateLoss()
+}
 
 fun FragmentActivity.openFragment(
     screen: AppScreen,
