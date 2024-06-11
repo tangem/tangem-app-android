@@ -10,6 +10,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.features.details.routing.DetailsRoute
 import com.tangem.features.tester.api.TesterRouter
 import javax.inject.Inject
+import kotlin.reflect.KClass
 
 // TODO: Remove after [REDACTED_JIRA]
 internal class DetailsRouter @Inject constructor(
@@ -46,13 +47,15 @@ internal class DetailsRouter @Inject constructor(
         onComplete(true)
     }
 
+    override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
+        TODO("This class will be removed in future")
+    }
+
     override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
-        if (route is DetailsRoute.Screen) {
-            reduxNavController.popBackStack(route.screen)
-            onComplete(true)
-        } else {
-            reduxNavController.getBackStack()
-            onComplete(false)
-        }
+        TODO("This class will be removed in future")
+    }
+
+    override fun clear(onComplete: (isSuccess: Boolean) -> Unit) {
+        TODO("This class will be removed in future")
     }
 }
