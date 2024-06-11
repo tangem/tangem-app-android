@@ -22,6 +22,10 @@ interface CardTypesResolver {
 
     fun isKaspaWallet(): Boolean
 
+    fun isKaspa2Wallet(): Boolean
+
+    fun isKaspaResellerWallet(): Boolean
+
     fun isBadWallet(): Boolean
 
     fun isJrWallet(): Boolean
@@ -35,6 +39,20 @@ interface CardTypesResolver {
     fun isVeChainWallet(): Boolean
 
     fun isNewWorldEliteWallet(): Boolean
+
+    fun isRedPandaWallet(): Boolean
+
+    fun isCryptoSethWallet(): Boolean
+
+    fun isKishuInuWallet(): Boolean
+
+    fun isBabyDogeWallet(): Boolean
+
+    fun isCOQWallet(): Boolean
+
+    fun isCoinMetricaWallet(): Boolean
+
+    fun isVoltInuWallet(): Boolean
 
     fun isWhiteWallet(): Boolean
 
