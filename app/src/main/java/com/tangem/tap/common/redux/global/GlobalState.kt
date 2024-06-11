@@ -1,10 +1,10 @@
 package com.tangem.tap.common.redux.global
 
-import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
