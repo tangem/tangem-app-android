@@ -6,7 +6,9 @@ import com.tangem.core.navigation.ReduxNavController
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
@@ -53,5 +55,9 @@ class AppStateHolder @Inject constructor() : ReduxNavController, ReduxStateHolde
 
     override suspend fun onUserWalletSelected(userWallet: UserWallet) {
         mainStore?.onUserWalletSelected(userWallet)
+    }
+
+    override fun dispatchDialogShow(dialog: StateDialog) {
+        mainStore?.dispatchDialogShow(dialog)
     }
 }
