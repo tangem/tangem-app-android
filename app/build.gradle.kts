@@ -171,6 +171,7 @@ dependencies {
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
+    implementation(deps.firebase.messaging)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain) {
