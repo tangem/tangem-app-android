@@ -6,7 +6,7 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
 import com.tangem.core.navigation.feedback.FeedbackManager
 import com.tangem.core.navigation.feedback.FeedbackType
-import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.features.details.routing.DetailsRoute
 import com.tangem.features.tester.api.TesterRouter
 import javax.inject.Inject
@@ -14,9 +14,9 @@ import javax.inject.Inject
 // TODO: Remove after [REDACTED_JIRA]
 internal class DetailsRouter @Inject constructor(
     private val reduxNavController: ReduxNavController,
-    private val reduxStateHolder: ReduxStateHolder,
     private val feedbackManager: FeedbackManager,
     private val testerRouter: TesterRouter,
+    private val urlOpener: UrlOpener,
 ) : Router {
 
     override fun push(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
@@ -32,7 +32,7 @@ internal class DetailsRouter @Inject constructor(
                     testerRouter.startTesterScreen()
                 }
                 is DetailsRoute.Url -> {
-                    reduxNavController.navigate(NavigationAction.OpenUrl(route.url))
+                    urlOpener.openUrl(route.url)
                 }
             }
             onComplete(true)
