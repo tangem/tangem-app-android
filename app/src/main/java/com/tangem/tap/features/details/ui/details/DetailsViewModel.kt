@@ -22,6 +22,7 @@ import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.url.urlOpener
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
@@ -179,7 +180,7 @@ internal class DetailsViewModel(
 
     private fun handleSocialNetworkClick(link: SocialNetworkLink) {
         Analytics.send(Settings.ButtonSocialNetwork(link.network))
-        store.dispatchOnMain(NavigationAction.OpenUrl(link.url))
+        urlOpener.openUrl(link.url)
     }
 
     private fun getSocialLinks(): ImmutableList<SocialNetworkLink> {
