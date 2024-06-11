@@ -76,6 +76,7 @@ dependencies {
     implementation(projects.domain.walletConnect)
 
     implementation(projects.common)
+    implementation(projects.common.routing)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
