@@ -1,5 +1,6 @@
 package com.tangem.common.ui.charts.state
 
+import androidx.compose.runtime.Stable
 import java.math.BigDecimal
 
 /**
@@ -9,6 +10,7 @@ import java.math.BigDecimal
  * @param value The value to be formatted.
  * @return The formatted label as a CharSequence.
  */
+@Stable
 fun interface AxisLabelFormatter {
 
     fun format(value: BigDecimal): CharSequence

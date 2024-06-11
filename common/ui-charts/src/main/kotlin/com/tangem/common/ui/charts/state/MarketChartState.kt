@@ -54,7 +54,7 @@ fun rememberMarketChartState(
  */
 @Stable
 class MarketChartState internal constructor(
-    internal val dataProducer: MarketChartDataProducer,
+    private val dataProducer: MarketChartDataProducer,
     private val lookState: State<MarketChartLook>,
     private val colorMapper: (MarketChartLook.Type) -> Color,
     private val markerCallback: (x: BigDecimal?, y: BigDecimal?) -> Unit,

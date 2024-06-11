@@ -17,7 +17,7 @@ import java.math.BigDecimal
  * @property look The updated look of the Market Chart.
  * @property state The updated state of the Market Chart.
  */
-open class Transaction(
+class Transaction(
     private val currentState: MarketChartData,
     private val currentLook: MarketChartLook,
 ) {
