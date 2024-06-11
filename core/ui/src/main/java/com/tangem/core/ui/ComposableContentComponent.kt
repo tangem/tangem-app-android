@@ -5,7 +5,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 
 @Stable
-fun interface ComposableContentProvider {
+fun interface ComposableContentComponent {
 
     @Composable
     @Suppress("TopLevelComposableFunctions") // TODO: Remove this check

@@ -3,12 +3,10 @@ package com.tangem.core.ui.res
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.haptic.MockHapticManager
-
-// TODO: use isSystemInDarkTheme() for automatic color detection
-internal const val IS_SYSTEM_IN_DARK_THEME: Boolean = false
 
 @Composable
 fun TangemTheme(
@@ -16,6 +14,7 @@ fun TangemTheme(
     typography: TangemTypography = TangemTheme.typography,
     dimens: TangemDimens = TangemTheme.dimens,
     hapticManager: HapticManager = MockHapticManager,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     content: @Composable () -> Unit,
 ) {
     val themeColors = if (isDark) darkThemeColors() else lightThemeColors()
@@ -33,6 +32,7 @@ fun TangemTheme(
             LocalTangemShapes provides shapes,
             LocalIsInDarkTheme provides isDark,
             LocalHapticManager provides hapticManager,
+            LocalSnackbarHostState provides snackbarHostState,
         ) {
             ProvideTextStyle(
                 value = TangemTheme.typography.body1,
@@ -204,4 +204,8 @@ val LocalIsInDarkTheme = staticCompositionLocalOf { false }
 
 val LocalHapticManager = staticCompositionLocalOf<HapticManager> {
     error("No HapticManager provided")
+}
+
+val LocalSnackbarHostState = staticCompositionLocalOf<SnackbarHostState> {
+    error("No SnackbarHostState provided")
 }
