@@ -1,11 +1,11 @@
 package com.tangem.tap.common.extensions
 
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.StateDialog
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.share.shareManager
 import com.tangem.tap.common.url.urlOpener
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -88,7 +88,7 @@ fun Store<*>.dispatchOpenUrl(url: String) {
 }
 
 fun Store<*>.dispatchShare(url: String) {
-    dispatch(NavigationAction.Share(url))
+    shareManager.shareText(url)
 }
 
 inline fun <reified T> Store<AppState>.inject(getDependency: DaggerGraphState.() -> T?): T {
