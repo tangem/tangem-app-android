@@ -7,7 +7,6 @@ import android.provider.Settings
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.activityResultCaller
-import com.tangem.tap.common.CustomTabsManager
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.store
@@ -45,11 +44,6 @@ val navigationMiddleware: Middleware<AppState> = { _, state ->
                                     navState?.activity?.get()?.popBackTo(screen, action.inclusive)
                                 }
                             }
-                        }
-                    }
-                    is NavigationAction.OpenUrl -> {
-                        navState?.activity?.get()?.let {
-                            CustomTabsManager().openUrl(action.url, it)
                         }
                     }
                     is NavigationAction.OpenDocument -> {
