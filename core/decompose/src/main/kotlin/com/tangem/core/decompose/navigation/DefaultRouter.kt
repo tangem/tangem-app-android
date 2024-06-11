@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.popWhile
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
+import kotlin.reflect.KClass
 
 internal class DefaultRouter(
     private val navigationProvider: AppNavigationProvider,
@@ -23,9 +24,23 @@ internal class DefaultRouter(
         navigation.pop(onComplete)
     }
 
-    override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
+    override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
         navigation.popWhile(
-            predicate = { it != route },
+            predicate = { it::class != routeClass },
+            onComplete = onComplete,
+        )
+    }
+
+    override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
+        navigation.popWhile(
+            predicate = { it::class != routeClass },
+            onComplete = onComplete,
+        )
+    }
+
+    override fun clear(onComplete: (isSuccess: Boolean) -> Unit) {
+        navigation.popWhile(
+            predicate = { true },
             onComplete = onComplete,
         )
     }
