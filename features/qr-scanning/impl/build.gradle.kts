@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.navigation)
+    implementation(projects.common.routing)
 
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.activity.compose)
