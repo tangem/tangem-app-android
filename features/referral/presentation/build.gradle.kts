@@ -18,6 +18,7 @@ dependencies {
     implementation(project(":core:utils"))
     implementation(project(":core:ui"))
     implementation(project(":libs:crypto"))
+    implementation(projects.common.routing)
 
     /** AndroidX */
     implementation(deps.androidx.appCompat)
