@@ -1,5 +1,6 @@
 package com.tangem.tap.common.extensions
 
+import com.tangem.common.routing.AppRouter
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.wallets.models.UserWallet
@@ -87,6 +88,10 @@ fun Store<AppState>.dispatchOpenUrl(url: String) {
 
 fun Store<AppState>.dispatchShare(url: String) {
     inject(DaggerGraphState::shareManager).shareText(url)
+}
+
+fun Store<AppState>.dispatchNavigationAction(action: AppRouter.() -> Unit) {
+    inject(DaggerGraphState::appRouter).action()
 }
 
 inline fun <reified T> Store<AppState>.inject(getDependency: DaggerGraphState.() -> T?): T {
