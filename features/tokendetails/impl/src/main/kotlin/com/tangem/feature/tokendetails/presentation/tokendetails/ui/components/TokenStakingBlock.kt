@@ -121,8 +121,8 @@ private fun StakingContent(stakingBlockState: StakingBlockState.Content, iconSta
         }
         SecondaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = "Stake",
-            onClick = { /* [REDACTED_TODO_COMMENT] */ },
+            text = stringResource(id = R.string.common_stake),
+            onClick = stakingBlockState.onStakeClicked,
         )
     }
 }
@@ -191,6 +191,7 @@ private class StakingBlockStateProvider : CollectionPreviewParameterProvider<Sta
             interestRate = "10",
             periodInDays = 4,
             tokenSymbol = "SOL",
+            onStakeClicked = {},
         ),
         StakingBlockState.Loading(iconState = iconState),
         StakingBlockState.Error(iconState = iconState),
