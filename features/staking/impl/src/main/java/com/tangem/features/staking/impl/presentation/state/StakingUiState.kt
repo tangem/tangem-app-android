@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 
 /**
@@ -41,6 +42,14 @@ internal sealed class StakingStates {
     sealed class InitialInfoState : StakingStates() {
         data class Data(
             override val isPrimaryButtonEnabled: Boolean,
+            val available: String,
+            val onStake: String,
+            val aprRange: TextReference,
+            val unbondingPeriod: String,
+            val minimumRequirement: String,
+            val rewardClaiming: String,
+            val warmupPeriod: String,
+            val rewardSchedule: String,
         ) : InitialInfoState()
 
         data class Empty(
