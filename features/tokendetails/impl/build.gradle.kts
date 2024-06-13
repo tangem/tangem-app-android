@@ -38,12 +38,14 @@ dependencies {
     implementation(deps.tangem.card.core)
     implementation(deps.timber)
     implementation(deps.lifecycle.compose)
+    implementation(deps.kotlin.serialization)
 
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
     /** Core modules */
+    implementation(projects.common.routing)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
