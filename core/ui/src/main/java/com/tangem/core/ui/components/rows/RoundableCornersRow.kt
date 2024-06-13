@@ -1,5 +1,7 @@
 package com.tangem.core.ui.components.rows
 
+import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
@@ -12,6 +14,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -93,17 +97,51 @@ enum class CornersToRound {
 }
 
 @Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_RoundableCornersRow() {
+private fun Preview_RoundableCornersRow(
+    @PreviewParameter(RoundableCornersRowDataProvider::class) previewData: RoundableCornersRowPreviewData,
+) {
     TangemThemePreview {
-        RoundableCornersRow(
-            startText = "startText",
-            startTextColor = TangemTheme.colors.text.tertiary,
-            startTextStyle = TangemTheme.typography.subtitle2,
-            endText = "endText",
-            endTextColor = TangemTheme.colors.text.primary1,
-            endTextStyle = TangemTheme.typography.subtitle2,
-            cornersToRound = CornersToRound.TOP_2,
-        )
+        Box(modifier = Modifier.background(color = TangemTheme.colors.icon.attention)) {
+            RoundableCornersRow(
+                startText = previewData.startText,
+                startTextColor = TangemTheme.colors.text.tertiary,
+                startTextStyle = TangemTheme.typography.subtitle2,
+                endText = previewData.endText,
+                endTextColor = TangemTheme.colors.text.primary1,
+                endTextStyle = TangemTheme.typography.subtitle2,
+                cornersToRound = previewData.cornersToRound,
+                iconResId = previewData.iconResId,
+            )
+        }
     }
+}
+
+private data class RoundableCornersRowPreviewData(
+    val startText: String,
+    val endText: String,
+    val cornersToRound: CornersToRound,
+    val iconResId: Int? = null,
+)
+
+private class RoundableCornersRowDataProvider :
+    PreviewParameterProvider<RoundableCornersRowPreviewData> {
+
+    override val values: Sequence<RoundableCornersRowPreviewData>
+        get() = sequenceOf(
+            getPreviewData(cornersToRound = CornersToRound.ZERO),
+            getPreviewData(cornersToRound = CornersToRound.TOP_2),
+            getPreviewData(cornersToRound = CornersToRound.BOTTOM_2),
+            getPreviewData(cornersToRound = CornersToRound.ZERO, iconResId = R.drawable.ic_alert_24),
+            getPreviewData(cornersToRound = CornersToRound.TOP_2, iconResId = R.drawable.ic_alert_24),
+            getPreviewData(cornersToRound = CornersToRound.BOTTOM_2, iconResId = R.drawable.ic_alert_24),
+        )
+
+    private fun getPreviewData(cornersToRound: CornersToRound, iconResId: Int? = null) = RoundableCornersRowPreviewData(
+        startText = "startText",
+        endText = "endText",
+        cornersToRound = cornersToRound,
+        iconResId = iconResId,
+    )
 }
