@@ -12,12 +12,12 @@ android {
 
 dependencies {
     /** Core modules */
-    implementation(project(":core:analytics"))
+    implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(project(":core:res"))
-    implementation(project(":core:utils"))
-    implementation(project(":core:ui"))
-    implementation(project(":libs:crypto"))
+    implementation(projects.core.res)
+    implementation(projects.core.utils)
+    implementation(projects.core.ui)
+    implementation(projects.libs.crypto)
 
     /** AndroidX */
     implementation(deps.androidx.appCompat)
@@ -30,7 +30,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
 
     /** Domain */
-    implementation(project(":features:referral:domain"))
+    implementation(projects.features.referral.domain)
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
