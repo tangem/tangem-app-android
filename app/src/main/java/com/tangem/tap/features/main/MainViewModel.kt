@@ -3,11 +3,11 @@ package com.tangem.tap.features.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.navigation.ReduxNavController
+
 import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -36,7 +36,7 @@ import javax.inject.Inject
 internal class MainViewModel @Inject constructor(
     private val updateBalanceHidingSettingsUseCase: UpdateBalanceHidingSettingsUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
-    private val reduxNavController: ReduxNavController,
+    private val router: AppRouter,
     private val fetchAppCurrenciesUseCase: FetchAppCurrenciesUseCase,
     private val deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
     private val incrementAppLaunchCounterUseCase: IncrementAppLaunchCounterUseCase,
@@ -152,7 +152,7 @@ internal class MainViewModel @Inject constructor(
                 if (state.value.modalNotification?.isShow != true && !it.isUpdateFromToast) {
                     listenToFlipsUseCase.changeUpdateEnabled(false)
                     stateHolder.updateWithHiddenBalancesNotification()
-                    reduxNavController.navigate(NavigationAction.NavigateTo(AppScreen.ModalNotification))
+                    router.push(AppRoute.ModalNotification)
                 }
             }
             .launchIn(viewModelScope)
