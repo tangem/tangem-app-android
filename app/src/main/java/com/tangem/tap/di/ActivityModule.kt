@@ -6,10 +6,8 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
-import com.tangem.feature.tester.ActivityClassWrapper
-import com.tangem.tap.MainActivity
-import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.network.exchangeServices.DefaultRampManager
 import com.tangem.tap.proxy.AppStateHolder
 import dagger.Module
@@ -66,11 +64,5 @@ internal object ActivityModule {
         polkadotAccountHealthCheckRepository: PolkadotAccountHealthCheckRepository,
     ): GetPolkadotCheckHasImmortalUseCase {
         return GetPolkadotCheckHasImmortalUseCase(polkadotAccountHealthCheckRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideActivityClassWrapper(): ActivityClassWrapper {
-        return ActivityClassWrapper(MainActivity::class.java)
     }
 }
