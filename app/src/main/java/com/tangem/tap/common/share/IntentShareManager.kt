@@ -5,9 +5,7 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.tap.foregroundActivityObserver
 import com.tangem.tap.withForegroundActivity
 
-internal val shareManager = IntentShareManager
-
-internal object IntentShareManager : ShareManager {
+internal class IntentShareManager : ShareManager {
 
     override fun shareText(text: String) {
         foregroundActivityObserver.withForegroundActivity { activity ->
