@@ -15,9 +15,7 @@ import com.tangem.tap.foregroundActivityObserver
 import com.tangem.tap.withForegroundActivity
 import com.tangem.wallet.R
 
-internal val urlOpener = CustomTabsUrlOpener
-
-internal object CustomTabsUrlOpener : UrlOpener {
+internal class CustomTabsUrlOpener : UrlOpener {
 
     override fun openUrl(url: String) {
         foregroundActivityObserver.withForegroundActivity {
