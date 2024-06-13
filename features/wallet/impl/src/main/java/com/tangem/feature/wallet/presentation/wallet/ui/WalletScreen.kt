@@ -154,7 +154,8 @@ private fun WalletContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             item(
-                key = state.wallets.map { it.walletCardState.id },
+                // !!! Type of the key should be saveable via Bundle on Android !!!
+                key = state.wallets.map { it.walletCardState.id.stringValue },
                 contentType = state.wallets.map { it.walletCardState.id },
             ) {
                 WalletsList(
