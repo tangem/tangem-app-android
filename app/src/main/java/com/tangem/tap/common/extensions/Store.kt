@@ -5,8 +5,6 @@ import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.share.shareManager
-import com.tangem.tap.common.url.urlOpener
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
@@ -83,12 +81,12 @@ suspend fun dispatchOnMain(vararg actions: Action) {
     withMainContext { actions.forEach { store.dispatch(it) } }
 }
 
-fun Store<*>.dispatchOpenUrl(url: String) {
-    urlOpener.openUrl(url)
+fun Store<AppState>.dispatchOpenUrl(url: String) {
+    inject(DaggerGraphState::urlOpener).openUrl(url)
 }
 
-fun Store<*>.dispatchShare(url: String) {
-    shareManager.shareText(url)
+fun Store<AppState>.dispatchShare(url: String) {
+    inject(DaggerGraphState::shareManager).shareText(url)
 }
 
 inline fun <reified T> Store<AppState>.inject(getDependency: DaggerGraphState.() -> T?): T {
