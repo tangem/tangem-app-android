@@ -66,6 +66,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTrans
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
+import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
@@ -106,6 +107,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
+    private val stakingFeatureToggles: StakingFeatureToggles,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     private val getYieldUseCase: GetYieldUseCase,
     private val swapRepository: SwapRepository,
@@ -218,7 +220,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         subscribeOnCurrencyStatusUpdates()
         subscribeOnExchangeTransactionsUpdates()
         updateTxHistory(refresh = false, showItemsLoading = true)
-        updateStakingInfo()
+
+        if (stakingFeatureToggles.isStakingEnabled) {
+            updateStakingInfo()
+        }
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {

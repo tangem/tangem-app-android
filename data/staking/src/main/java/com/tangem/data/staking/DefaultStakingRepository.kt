@@ -11,13 +11,11 @@ import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
-    private val stakingFeatureToggles: StakingFeatureToggles,
     private val stakingYieldsStore: StakingYieldsStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : StakingRepository {
@@ -29,10 +27,6 @@ internal class DefaultStakingRepository(
     }
 
     override suspend fun fetchEnabledYields() {
-        if (!stakingFeatureToggles.isStakingEnabled) {
-            return
-        }
-
         withContext(dispatchers.io) {
             val stakingTokensWithYields = stakeKitApi.getMultipleYields().getOrThrow()
 
@@ -73,9 +67,6 @@ internal class DefaultStakingRepository(
     ): StakingAvailability {
         val rawCurrencyId = cryptoCurrencyId.rawCurrencyId ?: return StakingAvailability.Unavailable
 
-        if (!stakingFeatureToggles.isStakingEnabled) {
-            return StakingAvailability.Unavailable
-        }
         return withContext(dispatchers.io) {
             val yields = getEnabledYields() ?: return@withContext StakingAvailability.Unavailable
 

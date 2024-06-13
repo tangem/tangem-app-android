@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.rows
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -96,12 +97,13 @@ enum class CornersToRound {
 }
 
 @Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview_RoundableCornersRow(
     @PreviewParameter(RoundableCornersRowDataProvider::class) previewData: RoundableCornersRowPreviewData,
 ) {
     TangemThemePreview {
-        Box(modifier = Modifier.background(color = TangemTheme.colors.icon.secondary)) {
+        Box(modifier = Modifier.background(color = TangemTheme.colors.icon.attention)) {
             RoundableCornersRow(
                 startText = previewData.startText,
                 startTextColor = TangemTheme.colors.text.tertiary,
@@ -110,10 +112,9 @@ private fun Preview_RoundableCornersRow(
                 endTextColor = TangemTheme.colors.text.primary1,
                 endTextStyle = TangemTheme.typography.subtitle2,
                 cornersToRound = previewData.cornersToRound,
-                iconResId = previewData.iconResId
+                iconResId = previewData.iconResId,
             )
         }
-
     }
 }
 
@@ -141,6 +142,6 @@ private class RoundableCornersRowDataProvider :
         startText = "startText",
         endText = "endText",
         cornersToRound = cornersToRound,
-        iconResId = iconResId
+        iconResId = iconResId,
     )
 }
