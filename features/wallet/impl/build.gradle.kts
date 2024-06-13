@@ -52,6 +52,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.common.routing)
     implementation(projects.core.deepLinks)
     implementation(projects.core.deepLinks.global)
 
