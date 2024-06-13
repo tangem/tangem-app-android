@@ -182,13 +182,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
             }
         }
         AppScreen.Details -> {
-            val featureToggles = store.inject(getDependency = DaggerGraphState::detailsFeatureToggles)
-
-            if (featureToggles.isRedesignEnabled) {
-                store.inject(DaggerGraphState::detailsEntryPoint).entryFragment()
-            } else {
-                DetailsFragment()
-            }
+            DetailsFragment()
         }
         AppScreen.DetailsSecurity -> SecurityModeFragment()
         AppScreen.CardSettings -> CardSettingsFragment()

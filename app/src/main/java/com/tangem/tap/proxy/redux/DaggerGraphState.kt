@@ -27,7 +27,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.feature.qrscanning.QrScanningRouter
-import com.tangem.features.details.DetailsEntryPoint
 import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.managetokens.navigation.ManageTokensUi
@@ -82,7 +81,6 @@ data class DaggerGraphState(
     val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase? = null,
     val assetLoader: AssetLoader? = null,
     val detailsFeatureToggles: DetailsFeatureToggles? = null,
-    val detailsEntryPoint: DetailsEntryPoint? = null,
     val stakingRouter: StakingRouter? = null,
     val urlOpener: UrlOpener? = null,
     val shareManager: ShareManager? = null,
