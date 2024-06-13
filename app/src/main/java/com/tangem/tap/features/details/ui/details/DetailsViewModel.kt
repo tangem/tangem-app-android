@@ -127,7 +127,9 @@ internal class DetailsViewModel(
     }
 
     private fun navigateToTesterMenu() {
-        store.state.daggerGraphState.testerRouter?.startTesterScreen()
+        store.dispatchNavigationAction {
+            push(AppRoute.TesterMenu)
+        }
     }
 
     private fun navigateToToS() {
