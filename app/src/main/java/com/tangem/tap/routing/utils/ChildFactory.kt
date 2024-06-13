@@ -5,6 +5,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
+import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
@@ -16,6 +17,7 @@ import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorFragmen
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRecoveryFragment
+import com.tangem.tap.features.details.ui.details.DetailsFragment
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
@@ -45,6 +47,7 @@ internal class ChildFactory @Inject constructor(
     private val qrScanningRouter: QrScanningRouter,
     private val stakingRouter: StakingRouter,
     private val testerRouter: TesterRouter,
+    private val detailsFeatureToggles: DetailsFeatureToggles,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -80,11 +83,15 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { CardSettingsFragment() })
             }
             is AppRoute.Details -> {
-                route.asComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
-                    params = DetailsComponent.Params(route.userWalletId),
-                    componentFactory = detailsComponentFactory,
-                )
+                if (detailsFeatureToggles.isRedesignEnabled) {
+                    route.asComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = DetailsComponent.Params(route.userWalletId),
+                        componentFactory = detailsComponentFactory,
+                    )
+                } else {
+                    route.asFragmentChild(Provider { DetailsFragment() })
+                }
             }
             is AppRoute.DetailsSecurity -> {
                 route.asFragmentChild(Provider { SecurityModeFragment() })
