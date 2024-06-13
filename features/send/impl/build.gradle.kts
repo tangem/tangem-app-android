@@ -24,6 +24,7 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.timber)
     implementation(deps.reKotlin)
+    implementation(deps.kotlin.serialization)
 
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
@@ -52,6 +53,7 @@ dependencies {
 
     /** Common */
     implementation(projects.common.ui)
+    implementation(projects.common.routing)
 
     /** Libs */
     implementation(projects.libs.crypto)
