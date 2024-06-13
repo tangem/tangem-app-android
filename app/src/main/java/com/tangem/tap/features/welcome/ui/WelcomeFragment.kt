@@ -88,8 +88,4 @@ internal class WelcomeFragment : ComposeFragment() {
             }
         }
     }
-
-    internal companion object {
-        const val INITIAL_INTENT_KEY = "intent"
-    }
 }
