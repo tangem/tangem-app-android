@@ -15,6 +15,7 @@ data class UiActions(
     val onBackClicked: () -> Unit,
     val onMaxAmountSelected: () -> Unit,
     val onReduceAmount: (SwapAmount) -> Unit,
+    val onLeaveExistentialDeposit: (SwapAmount) -> Unit,
     val onReduceAmountIgnoreClick: () -> Unit,
     val openPermissionBottomSheet: () -> Unit,
     val onChangeApproveType: (ApproveType) -> Unit,
