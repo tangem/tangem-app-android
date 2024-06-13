@@ -75,7 +75,7 @@ data class YieldDTO(
         @Json(name = "website")
         val website: String?,
         @Json(name = "apr")
-        val apr: Double?,
+        val apr: BigDecimal?,
         @Json(name = "commission")
         val commission: Double?,
         @Json(name = "stakedBalance")
