@@ -16,5 +16,6 @@ internal sealed interface StakingBlockState {
         val interestRate: String,
         val periodInDays: Int,
         val tokenSymbol: String,
+        val onStakeClicked: () -> Unit,
     ) : StakingBlockState
 }
