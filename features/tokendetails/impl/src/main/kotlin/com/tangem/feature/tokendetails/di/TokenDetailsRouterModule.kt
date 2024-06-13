@@ -1,6 +1,6 @@
 package com.tangem.feature.tokendetails.di
 
-import com.tangem.core.navigation.ReduxNavController
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.feature.tokendetails.presentation.router.DefaultTokenDetailsRouter
@@ -18,10 +18,10 @@ internal object TokenDetailsRouterModule {
     @Provides
     @ActivityScoped
     fun provideTokenDetailsRouter(
-        reduxNavController: ReduxNavController,
+        appRouter: AppRouter,
         urlOpener: UrlOpener,
         shareManager: ShareManager,
     ): TokenDetailsRouter {
-        return DefaultTokenDetailsRouter(reduxNavController, urlOpener, shareManager)
+        return DefaultTokenDetailsRouter(appRouter, urlOpener, shareManager)
     }
 }
