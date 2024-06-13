@@ -13,6 +13,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -104,11 +105,11 @@ internal class SendViewModel @Inject constructor(
 ) : ViewModel(), DefaultLifecycleObserver, SendClickIntents {
 
     private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.Send.USER_WALLET_ID_KEY)
-        ?.let { it.unbundle(UserWalletId.serializer()) }
+        ?.unbundle(UserWalletId.serializer())
         ?: error("This screen can't open without `UserWalletId`")
 
     private val cryptoCurrency: CryptoCurrency = savedStateHandle.get<Bundle>(AppRoute.Send.CRYPTO_CURRENCY_KEY)
-        ?.let { it.unbundle(CryptoCurrency.serializer()) }
+        ?.unbundle(CryptoCurrency.serializer())
         ?: error("This screen can't open without `CryptoCurrency`")
 
     private val transactionId: String? = savedStateHandle[AppRoute.Send.TRANSACTION_ID_KEY]
@@ -493,6 +494,8 @@ internal class SendViewModel @Inject constructor(
         stateRouter.onNextClick()
     }
 
+    override fun onAmountNext() = onNextClick(stateRouter.isEditState)
+
     override fun onPrevClick() {
         cancelFeeRequest()
         stateRouter.onPrevClick()
@@ -709,7 +712,7 @@ internal class SendViewModel @Inject constructor(
 
     private suspend fun callFeeUseCase(): Either<GetFeeError, TransactionFee>? {
         val isFromConfirmation = stateRouter.currentState.value.isFromConfirmation
-        val amountState = uiState.getAmountState(isFromConfirmation) ?: return null
+        val amountState = uiState.getAmountState(isFromConfirmation) as? AmountState.Data ?: return null
         val recipientState = uiState.getRecipientState(isFromConfirmation) ?: return null
         val amount = amountState.amountTextField.cryptoAmount.value ?: return null
 
@@ -800,7 +803,7 @@ internal class SendViewModel @Inject constructor(
         val feeState = uiState.feeState ?: return
         val fee = feeState.fee ?: return
         val memo = uiState.recipientState?.memoTextField?.value
-        val amountValue = uiState.amountState?.amountTextField?.cryptoAmount?.value ?: return
+        val amountValue = (uiState.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value ?: return
         val feeValue = fee.amount.value ?: return
 
         val receivingAmount = checkAndCalculateSubtractedAmount(
