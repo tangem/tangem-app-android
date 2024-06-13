@@ -30,7 +30,7 @@ internal class DetailsRouter @Inject constructor(
                     feedbackManager.sendEmail(FeedbackType.Feedback)
                 }
                 is DetailsRoute.TesterMenu -> {
-                    testerRouter.startTesterScreen()
+                    // testerRouter.startTesterScreen()
                 }
                 is DetailsRoute.Url -> {
                     urlOpener.openUrl(route.url)
