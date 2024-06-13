@@ -181,13 +181,19 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase
         get() = entryPoint.getSaveBlockchainErrorUseCase()
-    // endregion
 
     private val detailsFeatureToggles: DetailsFeatureToggles
         get() = entryPoint.getDetailsFeatureToggles()
 
     private val detailsEntryPoint: DetailsEntryPoint
         get() = entryPoint.getDetailsEntryPoint()
+
+    private val urlOpener
+        get() = entryPoint.getUrlOpener()
+
+    private val shareManager
+        get() = entryPoint.getShareManager()
+    // endregion
 
     override fun onCreate() {
         super.onCreate()
@@ -276,6 +282,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,
                     detailsFeatureToggles = detailsFeatureToggles,
                     detailsEntryPoint = detailsEntryPoint,
+                    urlOpener = urlOpener,
+                    shareManager = shareManager,
                 ),
             ),
         )
