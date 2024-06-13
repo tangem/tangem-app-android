@@ -20,11 +20,11 @@ internal object UtilsModule {
 
     @Provides
     @Singleton
-    fun provideShareManager(): ShareManager = IntentShareManager
+    fun provideShareManager(): ShareManager = IntentShareManager()
 
     @Provides
     @Singleton
-    fun provideUrlOpener(): UrlOpener = CustomTabsUrlOpener
+    fun provideUrlOpener(): UrlOpener = CustomTabsUrlOpener()
 
     @Provides
     @Singleton
