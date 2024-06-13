@@ -36,7 +36,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.deeplink.DeepLinksRegistry
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
@@ -86,7 +85,6 @@ import com.tangem.wallet.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.lang.ref.WeakReference
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
@@ -260,8 +258,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun installActivityDependencies() {
-        store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
-
         cardSdkLifecycleObserver.onCreate(context = this)
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
@@ -375,7 +371,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     override fun onDestroy() {
-        store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
         intentProcessor.removeAll()
         cardSdkLifecycleObserver.onDestroy(this)
         super.onDestroy()
