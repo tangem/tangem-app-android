@@ -283,6 +283,7 @@ internal object TokenDetailsPreviewData {
             periodInDays = 4,
             tokenSymbol = "XLM",
             iconState = iconState,
+            onStakeClicked = {},
         ),
         notifications = persistentListOf(),
         txHistoryState = TxHistoryState.NotSupported(
