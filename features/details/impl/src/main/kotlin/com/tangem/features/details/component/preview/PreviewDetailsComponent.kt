@@ -1,8 +1,10 @@
 package com.tangem.features.details.component.preview
 
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.core.decompose.navigation.DummyRouter
+import com.tangem.core.navigation.feedback.DummyFeedbackManager
+import com.tangem.core.navigation.url.DummyUrlOpener
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsUM
@@ -13,16 +15,16 @@ import kotlinx.coroutines.runBlocking
 
 internal class PreviewDetailsComponent : DetailsComponent {
 
-    override val snackbarHostState: SnackbarHostState = SnackbarHostState()
-
     private val previewBlocks = runBlocking {
         ItemsBuilder(
-            router = PreviewRouter(),
+            router = DummyRouter(),
+            urlOpener = DummyUrlOpener(),
+            feedbackManager = DummyFeedbackManager(),
         ).buldAll(isWalletConnectAvailable = true)
     }
 
     private val previewFooter = DetailsFooterUM(
-        socials = SocialsBuilder(PreviewRouter()).buildAll(),
+        socials = SocialsBuilder(DummyUrlOpener()).buildAll(),
         appVersion = "1.0.0-preview",
     )
 
@@ -38,7 +40,6 @@ internal class PreviewDetailsComponent : DetailsComponent {
         DetailsScreen(
             modifier = modifier,
             state = previewState,
-            snackbarHostState = snackbarHostState,
             userWalletListBlockContent = PreviewUserWalletListComponent(),
         )
     }

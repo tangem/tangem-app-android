@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.ComposableContentComponent
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
+import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.details.component.preview.PreviewDetailsComponent
@@ -35,7 +36,6 @@ private const val COLLAPSED_APP_BAR_THRESHOLD = 0.4f
 @Composable
 internal fun DetailsScreen(
     state: DetailsUM,
-    snackbarHostState: SnackbarHostState,
     userWalletListBlockContent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
@@ -54,7 +54,7 @@ internal fun DetailsScreen(
         snackbarHost = {
             TangemSnackbarHost(
                 modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
-                hostState = snackbarHostState,
+                hostState = LocalSnackbarHostState.current,
             )
         },
         topBar = { TopBar(state, scrollBehavior) },

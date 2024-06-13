@@ -1,14 +1,16 @@
 package com.tangem.features.details.utils
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.feedback.FeedbackManager
+import com.tangem.core.navigation.feedback.FeedbackType
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.BuildConfig
 import com.tangem.features.details.impl.R
-import com.tangem.features.details.routing.DetailsRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -17,6 +19,8 @@ import javax.inject.Inject
 @ComponentScoped
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
+    private val urlOpener: UrlOpener,
+    private val feedbackManager: FeedbackManager,
 ) {
 
     suspend fun buldAll(isWalletConnectAvailable: Boolean): ImmutableList<DetailsItemUM> = buildList {
@@ -30,7 +34,7 @@ internal class ItemsBuilder @Inject constructor(
     private suspend fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean): DetailsItemUM? {
         return if (isWalletConnectAvailable) {
             DetailsItemUM.WalletConnect(
-                onClick = { router.push(DetailsRoute.Screen(AppScreen.WalletConnectSessions)) },
+                onClick = { router.push(AppRoute.WalletConnectSessions) },
             )
         } else {
             null
@@ -46,7 +50,7 @@ internal class ItemsBuilder @Inject constructor(
                 id = "buy_tangem_wallet",
                 title = resourceReference(R.string.details_buy_wallet),
                 iconRes = R.drawable.ic_tangem_24,
-                onClick = { router.push(DetailsRoute.Url(BUY_TANGEM_URL)) },
+                onClick = { urlOpener.openUrl(BUY_TANGEM_URL) },
             ),
         ),
     )
@@ -58,7 +62,7 @@ internal class ItemsBuilder @Inject constructor(
                 id = "app_settings",
                 title = resourceReference(R.string.app_settings_title),
                 iconRes = R.drawable.ic_settings_24,
-                onClick = { router.push(DetailsRoute.Screen(AppScreen.AppSettings)) },
+                onClick = { router.push(AppRoute.AppSettings) },
             ).let(::add)
 
             if (BuildConfig.TESTER_MENU_ENABLED) {
@@ -66,7 +70,7 @@ internal class ItemsBuilder @Inject constructor(
                     id = "tester_menu",
                     title = stringReference(value = "Tester menu"),
                     iconRes = R.drawable.ic_alert_24,
-                    onClick = { router.push(DetailsRoute.TesterMenu) },
+                    onClick = { router.push(AppRoute.TesterMenu) },
                 ).let(::add)
             }
         }.toImmutableList(),
@@ -79,13 +83,13 @@ internal class ItemsBuilder @Inject constructor(
                 id = "send_feedback",
                 title = resourceReference(R.string.details_send_feedback),
                 iconRes = R.drawable.ic_comment_24,
-                onClick = { router.push(DetailsRoute.Feedback) },
+                onClick = { feedbackManager.sendEmail(FeedbackType.Feedback) },
             ),
             DetailsItemUM.Basic.Item(
                 id = "disclaimer",
                 title = resourceReference(R.string.disclaimer_title),
                 iconRes = R.drawable.ic_text_24,
-                onClick = { router.push(DetailsRoute.Screen(AppScreen.Disclaimer)) },
+                onClick = { router.push(AppRoute.Disclaimer) },
             ),
         ),
     )
