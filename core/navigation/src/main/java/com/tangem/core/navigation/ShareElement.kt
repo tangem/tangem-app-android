@@ -1,17 +1,7 @@
 package com.tangem.core.navigation
 
 import android.view.View
-import androidx.transition.TransitionSet
 import java.lang.ref.WeakReference
-
-/**
-[REDACTED_AUTHOR]
- */
-data class FragmentShareTransition(
-    val shareElements: List<ShareElement>,
-    val enterTransitionSet: TransitionSet,
-    val exitTransitionSet: TransitionSet,
-)
 
 /**
  * For ease of use, the name is used as transitionName\name into the FragmentTransaction.addSharedElement
