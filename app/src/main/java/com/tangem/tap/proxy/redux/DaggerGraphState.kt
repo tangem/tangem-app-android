@@ -3,6 +3,8 @@ package com.tangem.tap.proxy.redux
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.navigation.email.EmailSender
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
@@ -34,8 +36,8 @@ import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
@@ -81,4 +83,6 @@ data class DaggerGraphState(
     val detailsFeatureToggles: DetailsFeatureToggles? = null,
     val detailsEntryPoint: DetailsEntryPoint? = null,
     val stakingRouter: StakingRouter? = null,
+    val urlOpener: UrlOpener? = null,
+    val shareManager: ShareManager? = null,
 ) : StateType
