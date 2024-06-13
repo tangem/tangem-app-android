@@ -1,6 +1,5 @@
 package com.tangem.features.details.component.impl
 
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -28,8 +27,6 @@ internal class DefaultDetailsComponent @AssistedInject constructor(
         context = child(key = "user_wallet_list"),
     )
 
-    override val snackbarHostState: SnackbarHostState = SnackbarHostState()
-
     init {
         model.provideUserWalletId(params.selectedUserWalletId)
     }
@@ -41,7 +38,6 @@ internal class DefaultDetailsComponent @AssistedInject constructor(
         DetailsScreen(
             modifier = modifier,
             state = state,
-            snackbarHostState = snackbarHostState,
             userWalletListBlockContent = userWalletListComponent,
         )
     }
