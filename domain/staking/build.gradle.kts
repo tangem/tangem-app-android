@@ -1,7 +1,6 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
-    id("kotlin-parcelize")
     id("configuration")
 }
 
@@ -13,5 +12,8 @@ android {
 dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.serialization)
+
+
     implementation(projects.domain.tokens.models)
 }

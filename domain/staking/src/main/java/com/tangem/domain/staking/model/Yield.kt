@@ -1,10 +1,8 @@
 package com.tangem.domain.staking.model
 
+import java.io.Serializable
 import java.math.BigDecimal
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
 
-@Parcelize
 data class Yield(
     val id: String,
     val token: Token,
@@ -17,32 +15,27 @@ data class Yield(
     val metadata: Metadata,
     val validators: List<Validator>,
     val isAvailable: Boolean,
-) : Parcelable {
-    @Parcelize
+) : Serializable {
     data class Status(
         val enter: Boolean,
         val exit: Boolean?,
-    ) : Parcelable
+    ) : Serializable
 
-    @Parcelize
     data class Args(
         val enter: Enter,
         val exit: Enter?,
-    ) : Parcelable {
-        @Parcelize
+    ) : Serializable {
         data class Enter(
             val addresses: Addresses,
             val args: Map<String, AddressArgument>,
-        ) : Parcelable {
-            @Parcelize
+        ) : Serializable {
             data class Addresses(
                 val address: AddressArgument,
                 val additionalAddresses: Map<String, AddressArgument>? = null,
-            ) : Parcelable
+            ) : Serializable
         }
     }
 
-    @Parcelize
     data class Validator(
         val address: String,
         val status: String,
@@ -54,9 +47,8 @@ data class Yield(
         val stakedBalance: String?,
         val votingPower: Double?,
         val preferred: Boolean,
-    ) : Parcelable
+    ) : Serializable
 
-    @Parcelize
     data class Metadata(
         val name: String,
         val logoUri: String,
@@ -75,16 +67,14 @@ data class Yield(
         val supportsMultipleValidators: Boolean,
         val revshare: Enabled,
         val fee: Enabled,
-    ) : Parcelable {
-        @Parcelize
+    ) : Serializable {
         data class Period(
             val days: Int,
-        ) : Parcelable
+        ) : Serializable
 
-        @Parcelize
         data class Enabled(
             val enabled: Boolean,
-        ) : Parcelable
+        ) : Serializable
     }
 
     enum class RewardType {
@@ -94,7 +84,6 @@ data class Yield(
     }
 }
 
-@Parcelize
 data class Token(
     val name: String,
     val network: NetworkType,
@@ -104,7 +93,7 @@ data class Token(
     val coinGeckoId: String?,
     val logoURI: String?,
     val isPoints: Boolean?,
-) : Parcelable {
+) : Serializable {
     enum class NetworkType {
         AVALANCHE_C,
         AVALANCHE_ATOMIC,
@@ -176,10 +165,9 @@ data class Token(
     }
 }
 
-@Parcelize
 data class AddressArgument(
     val required: Boolean,
     val network: String? = null,
     val minimum: Double? = null,
     val maximum: Double? = null,
-) : Parcelable
+) : Serializable
