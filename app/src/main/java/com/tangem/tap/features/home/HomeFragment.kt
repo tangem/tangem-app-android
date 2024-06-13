@@ -9,14 +9,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.tap.common.analytics.events.IntroductionProcess
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.home.compose.StoriesScreen
 import com.tangem.tap.features.home.redux.HomeAction
@@ -86,7 +87,7 @@ class HomeFragment : ComposeFragment(), StoreSubscriber<HomeState> {
             },
             onSearchTokensClick = {
                 Analytics.send(IntroductionProcess.ButtonTokensList())
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.ManageTokens))
+                store.dispatchNavigationAction { push(AppRoute.ManageTokens) }
                 store.dispatch(TokensAction.SetArgs.ReadAccess)
             },
         )
