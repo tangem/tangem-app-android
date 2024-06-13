@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.core.featuretoggles)
     implementation(projects.core.navigation)
     implementation(projects.core.analytics.models)
+    implementation(projects.common.routing)
 
     /* Project - Domain */
     implementation(projects.domain.models)
