@@ -8,6 +8,7 @@ import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
+import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.tap.features.customtoken.impl.presentation.AddCustomTokenFragment
@@ -43,6 +44,7 @@ internal class ChildFactory @Inject constructor(
     private val walletRouter: WalletRouter,
     private val qrScanningRouter: QrScanningRouter,
     private val stakingRouter: StakingRouter,
+    private val testerRouter: TesterRouter,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -133,7 +135,7 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { WelcomeFragment() })
             }
             is AppRoute.TesterMenu -> {
-                TODO("Will be implemented later")
+                Child.LegacyIntent(testerRouter.getEntryIntent())
             }
             is AppRoute.Staking -> {
                 route.asFragmentChild(Provider { stakingRouter.getEntryFragment() })
