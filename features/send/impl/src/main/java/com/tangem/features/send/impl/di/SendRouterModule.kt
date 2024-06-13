@@ -1,6 +1,6 @@
 package com.tangem.features.send.impl.di
 
-import com.tangem.core.navigation.ReduxNavController
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.DefaultSendRouter
@@ -19,7 +19,7 @@ internal object SendRouterModule {
 
     @Provides
     @ActivityScoped
-    fun provideSendRouter(reduxNavController: ReduxNavController, urlOpener: UrlOpener): SendRouter {
-        return DefaultSendRouter(reduxNavController, urlOpener)
+    fun provideSendRouter(appRouter: AppRouter, urlOpener: UrlOpener): SendRouter {
+        return DefaultSendRouter(appRouter, urlOpener)
     }
 }
