@@ -3,13 +3,14 @@ package com.tangem.tap.features.details.ui.details
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
 import dagger.hilt.android.AndroidEntryPoint
@@ -45,7 +46,7 @@ internal class DetailsFragment : ComposeFragment(), StoreSubscriber<DetailsState
         DetailsScreen(
             modifier = modifier,
             state = detailsViewModel.detailsScreenState.value,
-            onBackClick = { store.dispatch(NavigationAction.PopBackTo()) },
+            onBackClick = { store.dispatchNavigationAction(AppRouter::pop) },
         )
     }
 
