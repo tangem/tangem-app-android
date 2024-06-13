@@ -823,6 +823,10 @@ internal class SwapViewModel @Inject constructor(
         onAmountChanged(newAmount.formatToUIRepresentation())
     }
 
+    private fun onLeaveExistentialDepositClicked(newAmount: SwapAmount) {
+        onAmountChanged(newAmount.formatToUIRepresentation())
+    }
+
     @Suppress("UnusedPrivateMember")
     private fun onAmountSelected(selected: Boolean) {
         if (selected) {
@@ -887,6 +891,7 @@ internal class SwapViewModel @Inject constructor(
             },
             onMaxAmountSelected = ::onMaxAmountClicked,
             onReduceAmount = ::onReduceAmountClicked,
+            onLeaveExistentialDeposit = ::onLeaveExistentialDepositClicked,
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
