@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
+import android.os.Bundle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,6 +9,8 @@ import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
@@ -19,8 +22,8 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -70,7 +73,6 @@ import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -126,12 +128,14 @@ internal class TokenDetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
-    private val userWalletId: UserWalletId = savedStateHandle.get<String>(TokenDetailsRouter.USER_WALLET_ID_KEY)
-        ?.let { stringValue -> UserWalletId(stringValue) }
+    private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.USER_WALLET_ID_KEY)
+        ?.let { it.unbundle(UserWalletId.serializer()) }
         ?: error("This screen can't open without `UserWalletId`")
 
-    private val cryptoCurrency: CryptoCurrency = savedStateHandle[TokenDetailsRouter.CRYPTO_CURRENCY_KEY]
-        ?: error("This screen can't open without `CryptoCurrency`")
+    private val cryptoCurrency: CryptoCurrency =
+        savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
+            ?.let { it.unbundle(CryptoCurrency.serializer()) }
+            ?: error("This screen can't open without `CryptoCurrency`")
 
     private val userWallet: UserWallet
 
