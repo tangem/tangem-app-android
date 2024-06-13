@@ -4,6 +4,8 @@ import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.connection.NetworkConnectionManager
@@ -110,4 +112,8 @@ interface ApplicationEntryPoint {
     fun getDetailsFeatureToggles(): DetailsFeatureToggles
 
     fun getDetailsEntryPoint(): DetailsEntryPoint
+
+    fun getUrlOpener(): UrlOpener
+
+    fun getShareManager(): ShareManager
 }
