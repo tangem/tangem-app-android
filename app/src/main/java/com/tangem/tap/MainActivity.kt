@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
@@ -31,11 +30,12 @@ import com.arkivanov.decompose.value.observe
 import com.arkivanov.essenty.lifecycle.asEssentyLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.deeplink.DeepLinksRegistry
-import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.ui.event.StateEvent
@@ -64,6 +64,7 @@ import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.showFragmentAllowingStateLoss
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.sdk.TangemSdkManager
@@ -74,7 +75,6 @@ import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHan
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
-import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.RoutingComponent
@@ -517,16 +517,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
         if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
-            store.dispatch(
-                NavigationAction.NavigateTo(
-                    screen = AppScreen.Welcome,
-                    bundle = intentWhichStartedActivity?.let {
-                        bundleOf(WelcomeFragment.INITIAL_INTENT_KEY to it)
-                    },
-                ),
-            )
+            store.dispatchNavigationAction {
+                push(AppRoute.Welcome(intentWhichStartedActivity?.let(::SerializableIntent)))
+            }
         } else {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
+            store.dispatchNavigationAction { push(AppRoute.Home) }
             lifecycleScope.launch {
                 intentProcessor.handleIntent(intentWhichStartedActivity, false)
             }
