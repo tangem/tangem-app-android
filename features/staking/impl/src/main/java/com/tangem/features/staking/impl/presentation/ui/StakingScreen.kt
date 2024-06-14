@@ -16,7 +16,7 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
-import com.tangem.features.staking.impl.presentation.state.StakingUiStateType
+import com.tangem.features.staking.impl.presentation.state.StakingStep
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -40,25 +40,28 @@ internal fun StakingScreen(uiState: StakingUiState) {
             uiState = uiState,
             modifier = Modifier.weight(1f),
         )
+        StakingNavigationButtons(
+            uiState = uiState,
+        )
     }
 }
 
 @Composable
 private fun SendAppBar(uiState: StakingUiState) {
-    val titleRes = when (uiState.currentScreen) {
-        StakingUiStateType.InitialInfo -> stringResource(id = R.string.common_stake)
-        StakingUiStateType.Amount -> stringResource(id = R.string.send_amount_label)
-        StakingUiStateType.ValidatorAndFee -> stringResource(id = R.string.common_stake)
-        StakingUiStateType.Confirm -> ""
+    val titleRes = when (uiState.currentStep) {
+        StakingStep.InitialInfo -> stringResource(id = R.string.common_stake)
+        StakingStep.Amount -> stringResource(id = R.string.send_amount_label)
+        StakingStep.ValidatorAndFee -> stringResource(id = R.string.common_stake)
+        StakingStep.Confirm -> ""
     }
-    val backIcon = when (uiState.currentScreen) {
-        StakingUiStateType.Amount,
-        StakingUiStateType.ValidatorAndFee,
-        StakingUiStateType.Confirm,
+    val backIcon = when (uiState.currentStep) {
+        StakingStep.Amount,
+        StakingStep.ValidatorAndFee,
+        StakingStep.Confirm,
         -> {
             R.drawable.ic_close_24
         }
-        StakingUiStateType.InitialInfo -> {
+        StakingStep.InitialInfo -> {
             R.drawable.ic_back_24
         }
     }
@@ -74,7 +77,7 @@ private fun SendAppBar(uiState: StakingUiState) {
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = Modifier) {
-    val currentScreen = uiState.currentScreen
+    val currentScreen = uiState.currentStep
     var currentStateProxy by remember { mutableStateOf(currentScreen) }
     var isTransitionAnimationRunning by remember { mutableStateOf(false) }
 
@@ -115,10 +118,16 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
             isTransitionAnimationRunning = transition.targetState != transition.currentState
 
             when (state) {
-                StakingUiStateType.InitialInfo -> StakingInitialInfoContent(
+                StakingStep.InitialInfo -> StakingInitialInfoContent(
                     state = uiState.initialInfoState,
                 )
-                else -> Unit
+                StakingStep.Amount -> StakingAmountContent(
+                    state = uiState.amountState,
+                )
+                StakingStep.ValidatorAndFee -> StakingValidatorAndFeeContent(
+                    state = uiState.validatorState,
+                )
+                else -> TODO()
             }
         }
     }
