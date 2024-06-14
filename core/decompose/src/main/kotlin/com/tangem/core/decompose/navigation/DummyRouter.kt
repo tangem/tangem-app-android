@@ -8,6 +8,10 @@ class DummyRouter : Router {
         onComplete(true)
     }
 
+    override fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit) {
+        onComplete(true)
+    }
+
     override fun pop(onComplete: (isSuccess: Boolean) -> Unit) {
         onComplete(true)
     }
@@ -17,10 +21,6 @@ class DummyRouter : Router {
     }
 
     override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
-        onComplete(true)
-    }
-
-    override fun clear(onComplete: (isSuccess: Boolean) -> Unit) {
         onComplete(true)
     }
 }
