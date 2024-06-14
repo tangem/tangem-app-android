@@ -3,6 +3,7 @@ package com.tangem.features.details.component.preview
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.core.decompose.navigation.DummyRouter
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsUM
@@ -17,12 +18,12 @@ internal class PreviewDetailsComponent : DetailsComponent {
 
     private val previewBlocks = runBlocking {
         ItemsBuilder(
-            router = PreviewRouter(),
+            router = DummyRouter(),
         ).buldAll(isWalletConnectAvailable = true)
     }
 
     private val previewFooter = DetailsFooterUM(
-        socials = SocialsBuilder(PreviewRouter()).buildAll(),
+        socials = SocialsBuilder(DummyRouter()).buildAll(),
         appVersion = "1.0.0-preview",
     )
 
