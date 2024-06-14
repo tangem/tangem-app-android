@@ -63,6 +63,14 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onBackClick()
     }
 
+    override fun onNextClick() {
+        stakingStateRouter.onNextClick()
+    }
+
+    override fun onPrevClick() {
+        stakingStateRouter.onBackClick()
+    }
+
     fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
         innerRouter = router
         this.stakingStateRouter = stateRouter
