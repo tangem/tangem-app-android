@@ -2,10 +2,10 @@ package com.tangem.features.details.component
 
 import androidx.compose.material3.SnackbarHostState
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.ui.ComposableContentProvider
+import com.tangem.core.ui.ComposableContentComponent
 import com.tangem.domain.wallets.models.UserWalletId
 
-interface DetailsComponent : ComposableContentProvider {
+interface DetailsComponent : ComposableContentComponent {
 
     val snackbarHostState: SnackbarHostState
 
