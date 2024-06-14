@@ -10,7 +10,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
-import com.tangem.features.staking.impl.presentation.state.StakingUiStateType
+import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.Provider
 import java.math.BigDecimal
@@ -24,7 +24,7 @@ internal class SetInitialDataStateTransformer(
     override fun transform(prevState: StakingUiState): StakingUiState {
         return prevState.copy(
             clickIntents = clickIntents,
-            currentScreen = StakingUiStateType.InitialInfo,
+            currentStep = StakingStep.InitialInfo,
             initialInfoState = createInitialInfoState(),
         )
     }
