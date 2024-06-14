@@ -41,7 +41,7 @@ dependencies {
     implementation(deps.compose.shimmer)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.zxing.qrCore)
-    implementation(deps.jodatime)
+    api(deps.jodatime)
     implementation(deps.timber)
     implementation(deps.markdown)
 }
