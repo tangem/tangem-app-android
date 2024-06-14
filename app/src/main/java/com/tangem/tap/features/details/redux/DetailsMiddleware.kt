@@ -140,9 +140,9 @@ class DetailsMiddleware {
                                     val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
                                         .fold(onSuccess = { true }, onFailure = { false })
                                     if (isLocked && userWalletsListManager.hasUserWallets) {
-                                        store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
+                                        store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
                                     } else {
-                                        store.dispatchNavigationAction { popTo<AppRoute.Home>() }
+                                        store.dispatchNavigationAction { replaceAll(AppRoute.Home) }
                                     }
                                 }
                             }

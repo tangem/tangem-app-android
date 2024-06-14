@@ -5,9 +5,7 @@ plugins {
 }
 
 dependencies {
-    api(deps.kotlin.coroutines)
-    api(deps.arrow.core)
-    api(deps.arrow.fx)
+    implementation(projects.domain.core)
 
     implementation(deps.kotlin.serialization)
 }
