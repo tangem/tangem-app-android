@@ -6,6 +6,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
@@ -18,7 +19,6 @@ import com.tangem.feature.tester.presentation.menu.state.TesterMenuContentState
 import com.tangem.feature.tester.presentation.menu.ui.TesterMenuScreen
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.navigation.TesterScreen
-import com.tangem.features.tester.api.AppRestarter
 import com.tangem.features.tester.api.TesterRouter
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -35,7 +35,7 @@ internal class TesterActivity : ComposeActivity() {
     lateinit var testerRouter: TesterRouter
 
     @Inject
-    lateinit var appRestarter: AppRestarter
+    lateinit var appFinisher: AppFinisher
 
     private val innerTesterRouter: InnerTesterRouter
         get() = requireNotNull(testerRouter as? InnerTesterRouter) {
@@ -70,7 +70,7 @@ internal class TesterActivity : ComposeActivity() {
 
             composable(route = TesterScreen.FEATURE_TOGGLES.name) {
                 val viewModel = hiltViewModel<FeatureTogglesViewModel>().apply {
-                    setupInteractions(innerTesterRouter, appRestarter)
+                    setupInteractions(innerTesterRouter, appFinisher)
                 }
 
                 FeatureTogglesScreen(state = viewModel.uiState)

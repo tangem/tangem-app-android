@@ -18,6 +18,7 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.addContext
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.redux.AppState
@@ -179,7 +180,7 @@ internal class DetailsViewModel(
 
     private fun handleSocialNetworkClick(link: SocialNetworkLink) {
         Analytics.send(Settings.ButtonSocialNetwork(link.network))
-        store.dispatchOnMain(NavigationAction.OpenUrl(link.url))
+        store.dispatchOpenUrl(link.url)
     }
 
     private fun getSocialLinks(): ImmutableList<SocialNetworkLink> {

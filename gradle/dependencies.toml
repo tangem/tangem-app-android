@@ -168,6 +168,7 @@ compose-navigation-hilt = { module = "androidx.hilt:hilt-navigation-compose", ve
 compose-accompanist-appCompatTheme = { module = "com.google.accompanist:accompanist-appcompat-theme", version.ref = "compose-accompanist" }
 compose-accompanist-systemUiController = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "compose-accompanist" }
 compose-accompanist-webView = { module = "com.google.accompanist:accompanist-webview", version.ref = "compose-accompanist" }
+compose-accompanist-permission = { module = "com.google.accompanist:accompanist-permissions", version.ref = "compose-accompanist" }
 compose-paging = { module = "androidx.paging:paging-compose", version.ref = "compose-paging" }
 compose-reorderable = { module = "org.burnoutcrew.composereorderable:reorderable", version.ref = "compose-reorderable" }
 # endregion Compose
@@ -176,6 +177,7 @@ compose-reorderable = { module = "org.burnoutcrew.composereorderable:reorderable
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
 # endregion Firebase
 
 # region Tangem

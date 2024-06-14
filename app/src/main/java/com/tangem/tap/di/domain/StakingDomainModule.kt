@@ -4,6 +4,7 @@ import com.tangem.domain.settings.*
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
+import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.repositories.StakingRepository
 import dagger.Module
 import dagger.Provides
@@ -27,6 +28,14 @@ internal object StakingDomainModule {
     @Singleton
     fun provideGetStakingEntryInfoUseCase(stakingRepository: StakingRepository): GetStakingEntryInfoUseCase {
         return GetStakingEntryInfoUseCase(
+            stakingRepository = stakingRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetYieldUseCase(stakingRepository: StakingRepository): GetYieldUseCase {
+        return GetYieldUseCase(
             stakingRepository = stakingRepository,
         )
     }
