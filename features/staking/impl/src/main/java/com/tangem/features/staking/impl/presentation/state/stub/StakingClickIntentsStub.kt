@@ -5,4 +5,8 @@ import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickInten
 object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onBackClick() {}
+
+    override fun onNextClick() {}
+
+    override fun onPrevClick() {}
 }
