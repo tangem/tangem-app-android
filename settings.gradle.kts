@@ -35,11 +35,11 @@ dependencyResolutionManagement {
         mavenLocal {
             content {
                 includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin")
+                includeGroupAndSubgroups("com.tangem.vico")
                 includeModule("com.tangem", "blstlib")
                 includeModule("com.tangem", "blockchain")
                 includeModule("com.tangem", "wallet-core-proto")
                 includeModule("com.tangem", "wallet-core")
-                includeModule("com.tangem", "vico")
             }
         }
         maven {
@@ -176,6 +176,9 @@ include(":features:staking:impl")
 
 include(":features:details:api")
 include(":features:details:impl")
+
+include(":features:disclaimer:api")
+include(":features:disclaimer:impl")
 // endregion Feature modules
 
 // region Domain modules
