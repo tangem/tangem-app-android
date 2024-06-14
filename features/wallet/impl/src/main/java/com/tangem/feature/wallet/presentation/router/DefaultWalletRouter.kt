@@ -19,7 +19,9 @@ import androidx.navigation.navArgument
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
-import com.tangem.core.navigation.StateDialog
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.onboarding.navigation.OnboardingRouter
@@ -37,6 +39,8 @@ import kotlin.properties.Delegates
 /** Default implementation of wallet feature router */
 internal class DefaultWalletRouter(
     private val reduxNavController: ReduxNavController,
+    private val reduxStateHolder: ReduxStateHolder,
+    private val urlOpener: UrlOpener,
 ) : InnerWalletRouter {
 
     private var navController: NavHostController by Delegates.notNull()
@@ -138,7 +142,7 @@ internal class DefaultWalletRouter(
     }
 
     override fun openUrl(url: String) {
-        reduxNavController.navigate(action = NavigationAction.OpenUrl(url))
+        urlOpener.openUrl(url)
     }
 
     override fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
@@ -171,11 +175,7 @@ internal class DefaultWalletRouter(
     }
 
     override fun openScanFailedDialog() {
-        reduxNavController.navigate(
-            action = NavigationAction.OpenDialog(
-                StateDialog.ScanFailsDialog(StateDialog.ScanFailsSource.MAIN),
-            ),
-        )
+        reduxStateHolder.dispatchDialogShow(StateDialog.ScanFailsDialog(StateDialog.ScanFailsSource.MAIN))
     }
 
     private companion object {
