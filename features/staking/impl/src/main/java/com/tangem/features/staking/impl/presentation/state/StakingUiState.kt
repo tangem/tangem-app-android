@@ -12,7 +12,7 @@ import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickInten
 internal data class StakingUiState(
     val clickIntents: StakingClickIntents,
     val cryptoCurrencyName: String,
-    val currentScreen: StakingUiStateType,
+    val currentStep: StakingStep,
     val initialInfoState: StakingStates.InitialInfoState,
     val amountState: StakingStates.AmountState,
     val validatorState: StakingStates.ValidatorState,
@@ -94,6 +94,8 @@ internal sealed class StakingStates {
     sealed class ConfirmStakingState : StakingStates() {
         data class Data(
             override val isPrimaryButtonEnabled: Boolean,
+            val isSuccess: Boolean,
+            val isStaking: Boolean,
         ) : ConfirmStakingState()
 
         data class Empty(
@@ -102,7 +104,7 @@ internal sealed class StakingStates {
     }
 }
 
-enum class StakingUiStateType {
+enum class StakingStep {
     InitialInfo,
     Amount,
     ValidatorAndFee,
