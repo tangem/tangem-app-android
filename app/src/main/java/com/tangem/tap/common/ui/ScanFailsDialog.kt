@@ -6,7 +6,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.navigation.StateDialog
+import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.feedback.ScanFailsEmail
 import com.tangem.tap.common.redux.global.GlobalAction
