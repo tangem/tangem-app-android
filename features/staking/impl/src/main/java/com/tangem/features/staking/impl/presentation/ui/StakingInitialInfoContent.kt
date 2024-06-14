@@ -3,9 +3,11 @@ package com.tangem.features.staking.impl.presentation.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,7 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.rows.CornersToRound
 import com.tangem.core.ui.components.rows.RoundableCornersRow
 import com.tangem.core.ui.extensions.resolveReference
@@ -32,19 +33,13 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState) {
     Column(
         modifier = Modifier // Do not put fillMaxSize() in here
             .background(TangemTheme.colors.background.tertiary)
-            .padding(TangemTheme.dimens.spacing16),
+            .padding(TangemTheme.dimens.spacing16)
+            .verticalScroll(rememberScrollState()),
     ) {
         MetricsBlock(state)
         Spacer(modifier = Modifier.height(8.dp))
         StakingDetailsRows(state)
         Spacer(modifier = Modifier.height(8.dp))
-        PrimaryButton(
-            text = stringResource(id = R.string.common_stake),
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                // TODO staking
-            },
-        )
     }
 }
 
@@ -185,7 +180,7 @@ private class StakingInitialInfoContentPreviewProvider : PreviewParameterProvide
     override val values: Sequence<StakingStates.InitialInfoState.Data>
         get() = sequenceOf(
             StakingStates.InitialInfoState.Data(
-                isPrimaryButtonEnabled = false,
+                isPrimaryButtonEnabled = true,
                 available = "15 SOL",
                 onStake = "0 SOL",
                 aprRange = stringReference("2.54-5.12%"),
