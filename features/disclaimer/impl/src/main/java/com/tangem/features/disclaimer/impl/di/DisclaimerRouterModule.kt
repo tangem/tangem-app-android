@@ -1,6 +1,6 @@
 package com.tangem.features.disclaimer.impl.di
 
-import com.tangem.core.navigation.ReduxNavController
+import com.tangem.common.routing.AppRouter
 import com.tangem.features.disclaimer.api.DisclaimerRouter
 import com.tangem.features.disclaimer.impl.navigation.DefaultDisclaimerRouter
 import dagger.Module
@@ -18,7 +18,7 @@ object DisclaimerRouterModule {
 
     @Provides
     @ActivityScoped
-    fun provideDisclaimerRouter(reduxNavController: ReduxNavController): DisclaimerRouter {
-        return DefaultDisclaimerRouter(reduxNavController)
+    fun provideDisclaimerRouter(appRouter: AppRouter): DisclaimerRouter {
+        return DefaultDisclaimerRouter(appRouter)
     }
 }
