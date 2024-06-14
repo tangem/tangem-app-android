@@ -5,9 +5,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.derivation.DerivationStyle
-import com.tangem.core.navigation.StateDialog
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
 import com.tangem.tap.domain.walletconnect2.domain.WcSignMessage
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
