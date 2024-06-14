@@ -17,6 +17,7 @@ dependencies {
     implementation(deps.tangem.vico.compose)
     implementation(deps.tangem.vico.compose.m3)
 
+    implementation(deps.lifecycle.compose)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)

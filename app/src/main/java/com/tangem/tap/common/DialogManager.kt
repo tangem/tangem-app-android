@@ -2,7 +2,7 @@ package com.tangem.tap.common
 
 import android.app.Dialog
 import android.content.Context
-import com.tangem.core.navigation.StateDialog
+import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.ui.*
