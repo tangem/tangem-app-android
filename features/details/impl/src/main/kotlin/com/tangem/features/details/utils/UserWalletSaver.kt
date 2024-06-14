@@ -6,7 +6,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resourceReference
@@ -22,7 +21,6 @@ import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.details.impl.R
-import com.tangem.features.details.routing.DetailsRoute
 import javax.inject.Inject
 
 @ComponentScoped
@@ -44,7 +42,7 @@ internal class UserWalletSaver @Inject constructor(
 
             saveWallet(userWallet)
 
-            router.popTo(DetailsRoute.Screen(AppScreen.Wallet))
+            // router.popTo(DetailsRoute.Screen(AppScreen.Wallet))
         },
         recover = { error ->
             val message = error.message
@@ -77,7 +75,7 @@ internal class UserWalletSaver @Inject constructor(
             selectWalletUseCase(userWallet.walletId).bind()
         }
 
-        router.popTo(DetailsRoute.Screen(AppScreen.Wallet))
+        // router.popTo(DetailsRoute.Screen(AppScreen.Wallet))
     }
 
     private suspend fun Raise<Error>.createUserWallet(response: ScanResponse): UserWallet {
