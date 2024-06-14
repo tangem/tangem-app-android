@@ -4,7 +4,7 @@ import kotlin.reflect.KClass
 
 /**
  * Interface for a router in the application.
- * It provides methods for navigating through the application.
+ * It provides methods for navigating through the application by stack.
  */
 interface Router {
 
@@ -15,6 +15,14 @@ interface Router {
      * @param onComplete The callback to be invoked when the operation is complete.
      */
     fun push(route: Route, onComplete: (isSuccess: Boolean) -> Unit = {})
+
+    /**
+     * Replaces ***all*** routes in the navigation stack with the specified [routes].
+     *
+     * @param routes The routes to replace the current stack with.
+     * @param onComplete The callback to be invoked when the operation is complete.
+     */
+    fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit = {})
 
     /**
      * Pops the top route from the navigation stack.
@@ -38,11 +46,4 @@ interface Router {
      * @param onComplete The callback to be invoked when the operation is complete.
      */
     fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit = {})
-
-    /**
-     * Pops all routes from the navigation stack.
-     *
-     * @param onComplete The callback to be invoked when the operation is complete.
-     */
-    fun clear(onComplete: (isSuccess: Boolean) -> Unit = {})
 }

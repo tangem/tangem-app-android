@@ -54,7 +54,7 @@ internal class DetailsRouter @Inject constructor(
         TODO("This class will be removed in future")
     }
 
-    override fun clear(onComplete: (isSuccess: Boolean) -> Unit) {
+    override fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         TODO("This class will be removed in future")
     }
 }

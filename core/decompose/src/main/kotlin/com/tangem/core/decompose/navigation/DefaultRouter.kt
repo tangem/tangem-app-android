@@ -20,13 +20,22 @@ internal class DefaultRouter(
         navigation.pushNew(route, onComplete)
     }
 
+    override fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit) {
+        val newRoutes = routes.toList()
+
+        navigation.navigate(
+            transformer = { newRoutes },
+            onComplete = { newStack, _ -> onComplete(newStack.size == newRoutes.size) },
+        )
+    }
+
     override fun pop(onComplete: (isSuccess: Boolean) -> Unit) {
         navigation.pop(onComplete)
     }
 
-    override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
+    override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         navigation.popWhile(
-            predicate = { it::class != routeClass },
+            predicate = { it != route },
             onComplete = onComplete,
         )
     }
@@ -34,13 +43,6 @@ internal class DefaultRouter(
     override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
         navigation.popWhile(
             predicate = { it::class != routeClass },
-            onComplete = onComplete,
-        )
-    }
-
-    override fun clear(onComplete: (isSuccess: Boolean) -> Unit) {
-        navigation.popWhile(
-            predicate = { true },
             onComplete = onComplete,
         )
     }
