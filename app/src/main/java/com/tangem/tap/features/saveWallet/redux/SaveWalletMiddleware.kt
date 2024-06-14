@@ -157,11 +157,7 @@ internal class SaveWalletMiddleware {
 
     private fun navigateToWallet() {
         store.dispatchNavigationAction {
-            popTo<AppRoute.Wallet> { isSuccess ->
-                if (!isSuccess) {
-                    clear { push(AppRoute.Wallet) }
-                }
-            }
+            replaceAll(AppRoute.Wallet)
         }
     }
 }
