@@ -14,22 +14,22 @@ import java.math.BigDecimal
 /**
  * This class represents a transaction for updating the state and look of a Market Chart.
  *
- * @property look The updated look of the Market Chart.
- * @property state The updated state of the Market Chart.
+ * @property chartLook The updated look of the Market Chart.
+ * @property chartData The updated state of the Market Chart.
  */
 class Transaction(
-    private val currentState: MarketChartData,
+    private val currentData: MarketChartData,
     private val currentLook: MarketChartLook,
 ) {
-    var look: MarketChartLook? = null
-    var state: MarketChartData.NoData? = null
+    var chartLook: MarketChartLook? = null
+    var chartData: MarketChartData.NoData? = null
 
     fun updateLook(block: (prev: MarketChartLook) -> MarketChartLook) {
-        look = block(currentLook)
+        chartLook = block(currentLook)
     }
 
     fun updateState(block: (prev: MarketChartData) -> MarketChartData.NoData) {
-        state = block(currentState)
+        chartData = block(currentData)
     }
 }
 
@@ -37,34 +37,34 @@ class Transaction(
  * This class represents a transaction for updating the state and look of a Market Chart.
  * It extends the Transaction class and allows update state by data.
  *
- * @property state The updated state of the Market Chart.
- * @property look The updated look of the Market Chart.
+ * @property chartData The updated state of the Market Chart.
+ * @property chartLook The updated look of the Market Chart.
  */
 class TransactionSuspend(
-    private val currentState: MarketChartData,
+    private val currentData: MarketChartData,
     private val currentLook: MarketChartLook,
 ) {
     internal var nonSuspendTransaction: Transaction? = null
-    var state: MarketChartData? = null
-    var look: MarketChartLook?
-        get() = nonSuspendTransaction?.look
+    var chartData: MarketChartData? = null
+    var chartLook: MarketChartLook?
+        get() = nonSuspendTransaction?.chartLook
         set(value) {
             if (nonSuspendTransaction == null) {
-                nonSuspendTransaction = Transaction(currentState, currentLook)
+                nonSuspendTransaction = Transaction(currentData, currentLook)
             }
-            nonSuspendTransaction?.look = value
+            nonSuspendTransaction?.chartLook = value
         }
 
     fun updateLook(block: (prev: MarketChartLook) -> MarketChartLook) {
-        look = block(currentLook)
+        chartLook = block(currentLook)
     }
 
     internal fun updateState(block: (prev: MarketChartData) -> MarketChartData) {
-        state = block(currentState)
+        chartData = block(currentData)
     }
 
     internal fun updateData(block: (prev: MarketChartData.Data) -> MarketChartData.Data) {
-        state = when (val currentState = currentState) {
+        chartData = when (val currentState = currentData) {
             is MarketChartData.Data -> block(currentState)
             else -> currentState
         }
@@ -98,23 +98,23 @@ class MarketChartDataProducer private constructor(
 
     private suspend fun handleTransactionSuspend(transaction: TransactionSuspend) {
         val nonSuspendTransaction = transaction.nonSuspendTransaction
-        val data = transaction.state
+        val chartData = transaction.chartData
         val oldData = dataState.value
 
-        if (data != null) {
-            dataState.value = data
+        if (chartData != null) {
+            dataState.value = chartData
         }
 
-        if (data is MarketChartData.Data && (oldData !is MarketChartData.Data || oldData != data)) {
+        if (chartData is MarketChartData.Data && (oldData !is MarketChartData.Data || oldData != chartData)) {
             if (lookState.value.animationOnDataChange) {
                 startDrawingAnimation.emit(Unit)
             }
             withContext(dispatcher) {
-                val minX = data.x.min()
-                val minY = data.y.min()
+                val minX = chartData.x.min()
+                val minY = chartData.y.min()
 
-                val normY = data.y.map { normalize(it, minY) }
-                val normX = data.x.map { normalize(it, minX) }
+                val normY = chartData.y.map { normalize(it, minY) }
+                val normX = chartData.x.map { normalize(it, minX) }
 
                 val entriesLocal = normX.mapIndexed { index, fl -> LineCartesianLayerModel.Entry(fl, normY[index]) }
                 entries.value = entriesLocal
@@ -124,8 +124,8 @@ class MarketChartDataProducer private constructor(
 
                     updateExtras {
                         it[entriesKey] = entriesLocal
-                        it[xKey] = data.x
-                        it[yKey] = data.y
+                        it[xKey] = chartData.x
+                        it[yKey] = chartData.y
                     }
                 }.await()
             }
@@ -135,10 +135,10 @@ class MarketChartDataProducer private constructor(
     }
 
     private fun handleTransaction(transaction: Transaction) {
-        transaction.state?.let {
+        transaction.chartData?.let {
             dataState.value = it
         }
-        transaction.look?.let {
+        transaction.chartLook?.let {
             lookState.value = it
         }
     }
@@ -189,8 +189,8 @@ class MarketChartDataProducer private constructor(
             val transaction = Transaction(initialData, initialLook).apply(block)
 
             return MarketChartDataProducer(
-                initialData = transaction.state ?: initialData,
-                initialLook = transaction.look ?: initialLook,
+                initialData = transaction.chartData ?: initialData,
+                initialLook = transaction.chartLook ?: initialLook,
                 dispatcher = dispatcher,
             )
         }

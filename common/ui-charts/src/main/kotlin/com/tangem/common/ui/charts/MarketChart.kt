@@ -272,7 +272,7 @@ private fun MarketChartPreview(
 
     val dataProducer = remember {
         MarketChartDataProducer.build {
-            look = MarketChartLook(
+            chartLook = MarketChartLook(
                 type = MarketChartLook.Type.Growing,
                 markerHighlightRightSide = true,
                 animationOnDataChange = true,
@@ -282,7 +282,7 @@ private fun MarketChartPreview(
 
     LaunchedEffect(key1 = Unit) {
         dataProducer.runTransactionSuspend {
-            state = MarketChartData.Data(
+            chartData = MarketChartData.Data(
                 x = x,
                 y = y,
             )
