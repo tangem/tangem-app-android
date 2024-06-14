@@ -6,13 +6,13 @@ import com.tangem.core.navigation.ReduxNavController
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
-import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import org.rekotlin.Action
@@ -57,7 +57,7 @@ class AppStateHolder @Inject constructor() : ReduxNavController, ReduxStateHolde
         mainStore?.onUserWalletSelected(userWallet)
     }
 
-    override fun sendFeedbackEmail() {
-        mainStore?.dispatch(GlobalAction.SendEmail(FeedbackEmail()))
+    override fun dispatchDialogShow(dialog: StateDialog) {
+        mainStore?.dispatchDialogShow(dialog)
     }
 }
