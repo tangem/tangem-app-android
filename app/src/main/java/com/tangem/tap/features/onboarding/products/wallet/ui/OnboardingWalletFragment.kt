@@ -68,7 +68,8 @@ class OnboardingWalletFragment :
 
     private val canSkipBackup by lazy { arguments?.getBoolean(OnboardingRouter.CAN_SKIP_BACKUP) ?: true }
 
-    private val seedPhraseStateHandler: OnboardingSeedPhraseStateHandler = OnboardingSeedPhraseStateHandler()
+    private lateinit var seedPhraseStateHandler: OnboardingSeedPhraseStateHandler
+
     private val seedPhraseViewModel by viewModels<SeedPhraseViewModel>()
 
     private lateinit var cardsWidget: WalletCardsWidget
@@ -79,6 +80,7 @@ class OnboardingWalletFragment :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        seedPhraseStateHandler = OnboardingSeedPhraseStateHandler(activity = requireActivity())
 
         val newSeedPhraseRouter = makeSeedPhraseRouter()
         seedPhraseRouter = newSeedPhraseRouter
