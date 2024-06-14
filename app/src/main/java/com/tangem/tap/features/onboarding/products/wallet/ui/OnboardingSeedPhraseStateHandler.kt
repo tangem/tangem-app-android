@@ -1,6 +1,10 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
+import android.app.Activity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.feature.onboarding.api.OnboardingSeedPhraseScreen
 import com.tangem.feature.onboarding.api.OnboardingSeedPhraseApi
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseScreen
@@ -16,6 +20,7 @@ import com.tangem.wallet.R
  */
 internal class OnboardingSeedPhraseStateHandler(
     private val onboardingSeedPhraseApi: OnboardingSeedPhraseApi = OnboardingSeedPhraseScreen(),
+    private val activity: Activity,
 ) {
 
     fun newState(
@@ -49,11 +54,16 @@ internal class OnboardingSeedPhraseStateHandler(
             val subScreen = viewModel.currentScreen.collectAsState().value
             setMainScreenToolbarTitle(walletFragment, subScreen)
 
-            onboardingSeedPhraseApi.ScreenContent(
-                uiState = viewModel.uiState,
-                subScreen = subScreen,
-                progress = viewModel.progress.collectAsState(0).value.toFloat() / onboardingWalletMaxProgress,
-            )
+            TangemTheme(
+                isDark = isSystemInDarkTheme(),
+                windowSize = rememberWindowSize(activity = activity),
+            ) {
+                onboardingSeedPhraseApi.ScreenContent(
+                    uiState = viewModel.uiState,
+                    subScreen = subScreen,
+                    progress = viewModel.progress.collectAsState(0).value.toFloat() / onboardingWalletMaxProgress,
+                )
+            }
         }
     }
 
