@@ -84,4 +84,6 @@ dependencies {
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.send.api)
+    implementation(projects.features.staking.api)
+
 }
