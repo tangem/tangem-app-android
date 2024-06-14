@@ -1,5 +1,8 @@
 package com.tangem.utils.transformer
 
-interface Transformer<S, V> {
-    fun transform(prevState: S, value: V): S
+/**
+ * Transforms state to updated state.
+ */
+interface Transformer<S> {
+    fun transform(prevState: S): S
 }
