@@ -5,6 +5,8 @@ import androidx.fragment.app.Fragment
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.tokendetails.presentation.TokenDetailsFragment
@@ -12,6 +14,8 @@ import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 
 internal class DefaultTokenDetailsRouter(
     private val reduxNavController: ReduxNavController,
+    private val urlOpener: UrlOpener,
+    private val shareManager: ShareManager,
 ) : InnerTokenDetailsRouter {
 
     override fun getEntryFragment(): Fragment = TokenDetailsFragment()
@@ -21,11 +25,11 @@ internal class DefaultTokenDetailsRouter(
     }
 
     override fun openUrl(url: String) {
-        reduxNavController.navigate(NavigationAction.OpenUrl(url = url))
+        urlOpener.openUrl(url)
     }
 
     override fun share(text: String) {
-        reduxNavController.navigate(NavigationAction.Share(text))
+        shareManager.shareText(text)
     }
 
     override fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
