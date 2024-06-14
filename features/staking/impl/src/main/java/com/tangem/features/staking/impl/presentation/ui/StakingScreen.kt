@@ -12,11 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.StakingStep
+import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -121,8 +122,10 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                 StakingStep.InitialInfo -> StakingInitialInfoContent(
                     state = uiState.initialInfoState,
                 )
-                StakingStep.Amount -> StakingAmountContent(
-                    state = uiState.amountState,
+                StakingStep.Amount -> AmountScreenContent(
+                    amountState = uiState.amountState,
+                    isBalanceHiding = uiState.isBalanceHidden,
+                    clickIntents = uiState.clickIntents,
                 )
                 StakingStep.ValidatorAndFee -> StakingValidatorAndFeeContent(
                     state = uiState.validatorState,
