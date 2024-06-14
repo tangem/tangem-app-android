@@ -224,7 +224,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         appRouterConfig.componentRouter = routingComponent.router
 
         routingComponent.stack.observe(lifecycle.asEssentyLifecycle()) { childStack ->
-            appRouterConfig.baclStack = childStack.backStack.map { it.configuration }
+            appRouterConfig.stack = childStack.backStack
+                .plus(childStack.active)
+                .map { it.configuration }
 
             when (val child = childStack.active.instance) {
                 is RoutingComponent.Child.Initial -> Unit
@@ -514,10 +516,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
         if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
             store.dispatchNavigationAction {
-                push(AppRoute.Welcome(intentWhichStartedActivity?.let(::SerializableIntent)))
+                replaceAll(AppRoute.Welcome(intentWhichStartedActivity?.let(::SerializableIntent)))
             }
         } else {
-            store.dispatchNavigationAction { push(AppRoute.Home) }
+            store.dispatchNavigationAction { replaceAll(AppRoute.Home) }
             lifecycleScope.launch {
                 intentProcessor.handleIntent(intentWhichStartedActivity, false)
             }
