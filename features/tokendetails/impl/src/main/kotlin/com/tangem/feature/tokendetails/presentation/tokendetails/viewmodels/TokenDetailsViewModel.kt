@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.core.os.bundleOf
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
@@ -14,8 +13,6 @@ import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
@@ -70,7 +67,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
-import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
@@ -448,16 +444,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             val yield = getYieldUseCase.invoke(cryptoCurrency.id, cryptoCurrency.symbol).getOrNull()
             yield ?: error("Staking is unavailable")
 
-            reduxStateHolder.dispatch(
-                action = NavigationAction.NavigateTo(
-                    screen = AppScreen.Staking,
-                    bundle = bundleOf(
-                        StakingRouter.USER_WALLET_ID_KEY to userWalletId.stringValue,
-                        StakingRouter.CRYPTO_CURRENCY_ID_KEY to cryptoCurrency.id,
-                        StakingRouter.YIELD_KEY to yield,
-                    ),
-                ),
-            )
+            router.openStaking(userWalletId, cryptoCurrency, yield)
         }
     }
 
