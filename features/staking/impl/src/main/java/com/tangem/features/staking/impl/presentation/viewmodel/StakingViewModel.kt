@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.viewmodel
 
+import android.os.Bundle
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -7,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.bundle.unbundle
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
@@ -52,14 +55,18 @@ internal class StakingViewModel @Inject constructor(
     var stakingStateRouter: StakingStateRouter by Delegates.notNull()
         private set
 
-    private val cryptoCurrencyId: CryptoCurrency.ID = savedStateHandle[StakingRouter.CRYPTO_CURRENCY_ID_KEY]
+    private val cryptoCurrencyId: CryptoCurrency.ID = savedStateHandle.get<Bundle>(
+        AppRoute.Staking.CRYPTO_CURRENCY_ID_KEY,
+    )
+        ?.let { it.unbundle(CryptoCurrency.ID.serializer()) }
         ?: error("This screen can't be opened without `CryptoCurrency.ID`")
 
-    private val userWalletId: UserWalletId = savedStateHandle.get<String>(StakingRouter.USER_WALLET_ID_KEY)
-        ?.let { stringValue -> UserWalletId(stringValue) }
+    private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.Staking.USER_WALLET_ID_KEY)
+        ?.let { it.unbundle(UserWalletId.serializer()) }
         ?: error("This screen can't be opened without `UserWalletId`")
 
-    private val yield: Yield = savedStateHandle[StakingRouter.YIELD_KEY]
+    private val yield: Yield = savedStateHandle.get<Bundle>(AppRoute.Staking.YIELD_KEY)
+        ?.let { it.unbundle(Yield.serializer()) }
         ?: error("This screen can't be opened without `Yield`")
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
