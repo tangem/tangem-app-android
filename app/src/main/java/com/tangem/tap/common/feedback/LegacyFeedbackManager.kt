@@ -25,7 +25,7 @@ import java.io.StringWriter
 /**
 [REDACTED_AUTHOR]
  */
-class FeedbackManager(
+class LegacyFeedbackManager(
     val infoHolder: AdditionalFeedbackInfo,
     private val logCollector: TangemLogCollector,
     private val chatManager: ChatManager,
@@ -144,7 +144,7 @@ class FeedbackManager(
         }
     }
 
-    companion object {
+    private companion object {
         const val DEFAULT_SUPPORT_EMAIL = "support@tangem.com"
         const val S2C_SUPPORT_EMAIL = "cardsupport@start2coin.com"
         const val FEEDBACK_FILE = "feedback.txt"
