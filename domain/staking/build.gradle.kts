@@ -12,5 +12,8 @@ android {
 dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.serialization)
+
+
     implementation(projects.domain.tokens.models)
 }
