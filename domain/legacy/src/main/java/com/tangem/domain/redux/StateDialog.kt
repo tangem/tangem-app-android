@@ -1,4 +1,4 @@
-package com.tangem.core.navigation
+package com.tangem.domain.redux
 
 interface StateDialog {
 

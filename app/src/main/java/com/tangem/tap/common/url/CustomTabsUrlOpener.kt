@@ -1,4 +1,4 @@
-package com.tangem.tap.common
+package com.tangem.tap.common.url
 
 import android.content.Context
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
@@ -8,12 +8,22 @@ import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_DARK
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_LIGHT
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.getColorCompat
+import com.tangem.tap.foregroundActivityObserver
+import com.tangem.tap.withForegroundActivity
 import com.tangem.wallet.R
 
-class CustomTabsManager {
-    fun openUrl(url: String, context: Context) {
+internal class CustomTabsUrlOpener : UrlOpener {
+
+    override fun openUrl(url: String) {
+        foregroundActivityObserver.withForegroundActivity {
+            openUrl(url, context = it)
+        }
+    }
+
+    private fun openUrl(url: String, context: Context) {
         if (url.isEmpty()) return
         val customTabsIntent = CustomTabsIntent.Builder()
             .setDefaultColorSchemeParams(
