@@ -289,7 +289,7 @@ internal class WalletViewModel @Inject constructor(
             ),
         )
 
-        withContext(dispatchers.io) { delay(timeMillis = 700) }
+        withContext(dispatchers.io) { delay(timeMillis = 1000) }
 
         scrollToWallet(index = action.selectedWalletIndex)
     }
