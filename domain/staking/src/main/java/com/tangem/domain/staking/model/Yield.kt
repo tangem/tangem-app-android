@@ -1,5 +1,6 @@
 package com.tangem.domain.staking.model
 
+import java.io.Serializable
 import java.math.BigDecimal
 
 data class Yield(
@@ -14,24 +15,24 @@ data class Yield(
     val metadata: Metadata,
     val validators: List<Validator>,
     val isAvailable: Boolean,
-) {
+) : Serializable {
     data class Status(
         val enter: Boolean,
         val exit: Boolean?,
-    )
+    ) : Serializable
 
     data class Args(
         val enter: Enter,
         val exit: Enter?,
-    ) {
+    ) : Serializable {
         data class Enter(
             val addresses: Addresses,
             val args: Map<String, AddressArgument>,
-        ) {
+        ) : Serializable {
             data class Addresses(
                 val address: AddressArgument,
                 val additionalAddresses: Map<String, AddressArgument>? = null,
-            )
+            ) : Serializable
         }
     }
 
@@ -41,12 +42,12 @@ data class Yield(
         val name: String,
         val image: String?,
         val website: String?,
-        val apr: Double?,
+        val apr: BigDecimal?,
         val commission: Double?,
         val stakedBalance: String?,
         val votingPower: Double?,
         val preferred: Boolean,
-    )
+    ) : Serializable
 
     data class Metadata(
         val name: String,
@@ -66,14 +67,14 @@ data class Yield(
         val supportsMultipleValidators: Boolean,
         val revshare: Enabled,
         val fee: Enabled,
-    ) {
+    ) : Serializable {
         data class Period(
             val days: Int,
-        )
+        ) : Serializable
 
         data class Enabled(
             val enabled: Boolean,
-        )
+        ) : Serializable
     }
 
     enum class RewardType {
@@ -92,7 +93,7 @@ data class Token(
     val coinGeckoId: String?,
     val logoURI: String?,
     val isPoints: Boolean?,
-) {
+) : Serializable {
     enum class NetworkType {
         AVALANCHE_C,
         AVALANCHE_ATOMIC,
@@ -169,4 +170,4 @@ data class AddressArgument(
     val network: String? = null,
     val minimum: Double? = null,
     val maximum: Double? = null,
-)
+) : Serializable
