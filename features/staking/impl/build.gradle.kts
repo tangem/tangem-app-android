@@ -53,6 +53,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.staking)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
 
