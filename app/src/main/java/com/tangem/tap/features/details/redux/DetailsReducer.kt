@@ -74,7 +74,7 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: AppS
     return DetailsState(
         scanResponse = action.scanResponse,
         // If the current screen is ResetToFactory, we must save the ResetToFactory's state
-        cardSettingsState = if (router.backStack.lastOrNull() is AppRoute.ResetToFactory) {
+        cardSettingsState = if (router.stack.lastOrNull() is AppRoute.ResetToFactory) {
             state.detailsState.cardSettingsState
         } else {
             null
