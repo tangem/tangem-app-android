@@ -298,19 +298,21 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onResume() {
         super.onResume()
-        val nfcAdapter = NfcAdapter.getDefaultAdapter(this)
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
-        )
-        val intentFilters = arrayOf(
-            IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED),
-            IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED),
-            IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED),
-        )
-        nfcAdapter.enableForegroundDispatch(this, pendingIntent, intentFilters, null)
+        val nfcAdapter: NfcAdapter? = NfcAdapter.getDefaultAdapter(this)
+        if (nfcAdapter?.isEnabled == true) {
+            val pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
+            )
+            val intentFilters = arrayOf(
+                IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED),
+                IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED),
+                IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED),
+            )
+            nfcAdapter.enableForegroundDispatch(this, pendingIntent, intentFilters, null)
+        }
         // TODO: RESEARCH! NotificationsHandler is created in onResume and destroyed in onStop
         notificationsHandler = NotificationsHandler(binding.fragmentContainer)
 
@@ -319,8 +321,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onPause() {
         super.onPause()
-        val nfcAdapter = NfcAdapter.getDefaultAdapter(this)
-        nfcAdapter.disableForegroundDispatch(this)
+        val nfcAdapter: NfcAdapter? = NfcAdapter.getDefaultAdapter(this)
+
+        if (nfcAdapter?.isEnabled == true) {
+            nfcAdapter.disableForegroundDispatch(this)
+        }
     }
 
     override fun onStop() {
