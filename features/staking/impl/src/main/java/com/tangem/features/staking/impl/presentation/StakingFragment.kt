@@ -12,6 +12,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
+import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
 import com.tangem.features.staking.impl.presentation.ui.StakingScreen
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingViewModel
@@ -32,6 +33,9 @@ internal class StakingFragment : ComposeFragment() {
     lateinit var router: StakingRouter
 
     @Inject
+    lateinit var stateController: StakingStateController
+
+    @Inject
     lateinit var analyticsEventsHandler: AnalyticsEventHandler
 
     private val viewModel by viewModels<StakingViewModel>()
@@ -48,6 +52,7 @@ internal class StakingFragment : ComposeFragment() {
             innerStakingRouter,
             StakingStateRouter(
                 fragmentManager = WeakReference(parentFragmentManager),
+                stateController = stateController,
             ),
         )
     }
