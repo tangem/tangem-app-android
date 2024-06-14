@@ -16,7 +16,6 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.staking)
-    implementation(projects.features.staking.api)
 
 
     // region DI
