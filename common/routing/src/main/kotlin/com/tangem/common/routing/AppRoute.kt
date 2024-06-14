@@ -6,6 +6,7 @@ import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
@@ -160,5 +161,16 @@ sealed class AppRoute(val path: String) : Route, RouteBundleParams {
     data object ModalNotification : AppRoute(path = "/modal_notification")
 
     @Serializable
-    data object Staking : AppRoute(path = "/staking")
+    data class Staking(
+        val userWalletId: UserWalletId,
+        val cryptoCurrencyId: CryptoCurrency.ID,
+        val yield: Yield,
+    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/${yield.id}") {
+
+        companion object {
+            const val USER_WALLET_ID_KEY = "userWalletId"
+            const val CRYPTO_CURRENCY_ID_KEY = "cryptoCurrencyId"
+            const val YIELD_KEY = "yield"
+        }
+    }
 }
