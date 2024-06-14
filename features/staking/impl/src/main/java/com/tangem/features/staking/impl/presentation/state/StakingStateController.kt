@@ -35,7 +35,7 @@ internal class StakingStateController @Inject constructor() {
         return StakingUiState(
             clickIntents = StakingClickIntentsStub,
             cryptoCurrencyName = "",
-            currentScreen = StakingUiStateType.InitialInfo,
+            currentStep = StakingStep.InitialInfo,
             initialInfoState = StakingStates.InitialInfoState.Empty(),
             amountState = StakingStates.AmountState.Empty(),
             validatorState = StakingStates.ValidatorState.Empty(),
