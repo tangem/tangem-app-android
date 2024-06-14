@@ -5,7 +5,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
-import com.tangem.core.navigation.ReduxNavController
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
@@ -23,7 +23,7 @@ internal class DisclaimerFragment : ComposeFragment() {
     override lateinit var uiDependencies: UiDependencies
 
     @Inject
-    lateinit var reduxNavController: ReduxNavController
+    lateinit var appRouter: AppRouter
 
     private val viewModel by viewModels<DisclaimerViewModel>()
 
@@ -40,7 +40,7 @@ internal class DisclaimerFragment : ComposeFragment() {
         val systemBarsColor = TangemTheme.colors.background.primary
         BackHandler {
             if (isTosAccepted) {
-                reduxNavController.popBackStack()
+                appRouter.pop()
             } else {
                 requireActivity().finish()
             }
@@ -48,7 +48,7 @@ internal class DisclaimerFragment : ComposeFragment() {
         SystemBarsEffect {
             setSystemBarsColor(systemBarsColor)
         }
-        DisclaimerScreen(viewModel.state, reduxNavController::popBackStack)
+        DisclaimerScreen(viewModel.state, appRouter::pop)
     }
 
     companion object {
