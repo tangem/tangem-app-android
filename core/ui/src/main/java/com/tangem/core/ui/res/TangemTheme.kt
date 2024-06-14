@@ -8,9 +8,12 @@ import androidx.compose.runtime.*
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.haptic.MockHapticManager
 
+import com.tangem.core.ui.windowsize.WindowSize
+
 @Composable
 fun TangemTheme(
     isDark: Boolean = false,
+    windowSize: WindowSize,
     typography: TangemTypography = TangemTheme.typography,
     dimens: TangemDimens = TangemTheme.dimens,
     hapticManager: HapticManager = MockHapticManager,
@@ -33,6 +36,7 @@ fun TangemTheme(
             LocalIsInDarkTheme provides isDark,
             LocalHapticManager provides hapticManager,
             LocalSnackbarHostState provides snackbarHostState,
+            LocalWindowSize provides windowSize,
         ) {
             ProvideTextStyle(
                 value = TangemTheme.typography.body1,
@@ -208,4 +212,8 @@ val LocalHapticManager = staticCompositionLocalOf<HapticManager> {
 
 val LocalSnackbarHostState = staticCompositionLocalOf<SnackbarHostState> {
     error("No SnackbarHostState provided")
+}
+
+val LocalWindowSize = staticCompositionLocalOf<WindowSize> {
+    error("No WindowSize provided")
 }
