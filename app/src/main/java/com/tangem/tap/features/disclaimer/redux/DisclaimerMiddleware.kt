@@ -26,7 +26,9 @@ private fun handleDisclaimerMiddleware(action: Action, appState: AppState) {
 
     when (action) {
         is DisclaimerAction.Show -> {
-            store.dispatchNavigationAction { push(AppRoute.Disclaimer) }
+            store.dispatchNavigationAction {
+                push(AppRoute.Disclaimer(isTosAccepted = action.from == DisclaimerSource.Details))
+            }
         }
         is DisclaimerAction.AcceptDisclaimer -> {
             mainScope.launch {
