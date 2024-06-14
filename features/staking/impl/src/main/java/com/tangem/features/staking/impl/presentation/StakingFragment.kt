@@ -13,6 +13,7 @@ import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
+import com.tangem.features.staking.impl.presentation.ui.StakingScreen
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.lang.ref.WeakReference
@@ -57,8 +58,8 @@ internal class StakingFragment : ComposeFragment() {
         SystemBarsEffect {
             setSystemBarsColor(systemBarsColor)
         }
-        val currentState = viewModel.stakingStateRouter.currentState.collectAsStateWithLifecycle()
-        // StakingScreen(viewModel.uiState, currentState.value)
+        val currentState = viewModel.uiState.collectAsStateWithLifecycle()
+        StakingScreen(currentState.value)
     }
 
     override fun onDestroy() {
