@@ -89,7 +89,7 @@ internal class ItemsBuilder @Inject constructor(
                 id = "disclaimer",
                 title = resourceReference(R.string.disclaimer_title),
                 iconRes = R.drawable.ic_text_24,
-                onClick = { router.push(AppRoute.Disclaimer) },
+                onClick = { router.push(AppRoute.Disclaimer(isTosAccepted = true)) },
             ),
         ),
     )
