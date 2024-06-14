@@ -21,6 +21,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import com.tangem.common.ui.amountScreen.utils.getCryptoReference
+import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SecondaryButtonIconStart
@@ -32,12 +34,9 @@ import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
-import com.tangem.domain.tokens.model.Amount
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
-import com.tangem.features.send.impl.presentation.utils.getFiatString
-import com.tangem.features.send.impl.presentation.utils.getCryptoReference
 
 @Composable
 internal fun SendNavigationButtons(
