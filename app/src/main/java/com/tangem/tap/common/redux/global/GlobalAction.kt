@@ -2,14 +2,14 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.models.ChatConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.feedback.FeedbackData
-import com.tangem.tap.common.feedback.FeedbackManager
+import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.common.redux.DebugErrorAction
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
@@ -79,7 +79,7 @@ sealed class GlobalAction : Action {
 
     data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
     data class SetWarningManager(val warningManager: WarningMessagesManager) : GlobalAction()
-    data class SetFeedbackManager(val feedbackManager: FeedbackManager) : GlobalAction()
+    data class SetFeedbackManager(val feedbackManager: LegacyFeedbackManager) : GlobalAction()
 
     data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
     data class OpenChat(val feedbackData: FeedbackData, val chatConfig: ChatConfig? = null) : GlobalAction()

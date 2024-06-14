@@ -17,15 +17,7 @@ sealed class NavigationAction : Action {
 
     data class PopBackTo(val screen: AppScreen? = null, val inclusive: Boolean = false) : NavigationAction()
 
-    data class OpenUrl(val url: String) : NavigationAction()
-
     data class OpenDocument(val url: Uri) : NavigationAction()
-
-    object OpenBiometricsSettings : NavigationAction()
-
-    data class OpenDialog(val stateDialog: StateDialog) : NavigationAction()
-
-    data class Share(val data: String) : NavigationAction()
 
     data class ActivityCreated(val activity: WeakReference<AppCompatActivity>) : NavigationAction()
 
