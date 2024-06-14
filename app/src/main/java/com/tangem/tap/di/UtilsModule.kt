@@ -1,5 +1,6 @@
 package com.tangem.tap.di
 
+import android.content.Context
 import com.tangem.core.navigation.feedback.FeedbackManager
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.navigation.share.ShareManager
@@ -11,6 +12,7 @@ import com.tangem.tap.common.url.CustomTabsUrlOpener
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -32,5 +34,5 @@ internal object UtilsModule {
 
     @Provides
     @Singleton
-    fun provideAppFinisher(): AppFinisher = AndroidAppFinisher()
+    fun provideAppFinisher(@ApplicationContext context: Context): AppFinisher = AndroidAppFinisher(context)
 }
