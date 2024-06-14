@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
@@ -14,12 +15,13 @@ import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 
 internal class DefaultSendRouter(
     private val reduxNavController: ReduxNavController,
+    private val urlOpener: UrlOpener,
 ) : InnerSendRouter {
 
     override fun getEntryFragment(): Fragment = SendFragment.create()
 
     override fun openUrl(url: String) {
-        reduxNavController.navigate(NavigationAction.OpenUrl(url = url))
+        urlOpener.openUrl(url)
     }
 
     override fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
