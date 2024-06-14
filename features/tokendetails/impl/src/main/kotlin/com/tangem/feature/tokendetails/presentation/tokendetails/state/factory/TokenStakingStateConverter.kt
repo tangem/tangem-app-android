@@ -5,10 +5,12 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
 internal class TokenStakingStateConverter(
+    private val clickIntents: TokenDetailsClickIntents,
     private val currentStateProvider: Provider<TokenDetailsState>,
 ) : Converter<Either<Throwable, StakingEntryInfo>, StakingBlockState> {
 
@@ -28,6 +30,7 @@ internal class TokenStakingStateConverter(
                     periodInDays = it.periodInDays,
                     tokenSymbol = it.tokenSymbol,
                     iconState = currentStateProvider().tokenInfoBlockState.iconState,
+                    onStakeClicked = clickIntents::onStakeBannerClick,
                 )
             },
         )
