@@ -46,16 +46,16 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ReferralScreen(stateHolder: ReferralStateHolder, modifier: Modifier = Modifier) {
+internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
     var isBottomSheetVisible by remember { mutableStateOf(value = false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val snackbarHostState = remember(::SnackbarHostState)
 
     Scaffold(
-        modifier = modifier,
         topBar = {
             AppBarWithBackButton(
+                modifier = Modifier.statusBarsPadding(),
                 text = stringResource(R.string.details_referral_title),
                 onBackClick = stateHolder.headerState.onBackClicked,
             )
