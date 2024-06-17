@@ -3,7 +3,6 @@ package com.tangem.features.staking.impl.presentation.ui
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,19 +26,17 @@ import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.utils.getCryptoReference
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.features.staking.impl.presentation.state.StakingFeeSelectorState
+import com.tangem.features.staking.impl.presentation.state.InnerFeeState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import java.math.BigDecimal
 
 @Composable
-internal fun FeeBlock(feeState: StakingStates.FeeState, isClickDisabled: Boolean, onClick: () -> Unit) {
-    if (feeState !is StakingStates.FeeState.Data) return
+internal fun StakingFeeBlock(feeState: StakingStates.FeeState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .clickable(enabled = !isClickDisabled, onClick = onClick)
             .padding(TangemTheme.dimens.spacing12),
     ) {
         Text(
@@ -68,20 +65,20 @@ internal fun FeeBlock(feeState: StakingStates.FeeState, isClickDisabled: Boolean
                 showSelectedAppearance = false,
                 paddingValues = PaddingValues(),
             )
-            FeeLoading(feeState.feeSelectorState)
-            FeeError(feeState.feeSelectorState)
+            FeeLoading(feeState.innerFeeState)
+            FeeError(feeState.innerFeeState)
         }
     }
 }
 
 @Composable
-private fun BoxScope.FeeLoading(feeSelectorState: StakingFeeSelectorState) {
+private fun BoxScope.FeeLoading(feeSelectorState: InnerFeeState) {
     AnimatedContent(
         targetState = feeSelectorState,
         label = "Fee Loading State Change",
         modifier = Modifier.align(Alignment.CenterEnd),
     ) {
-        if (it == StakingFeeSelectorState.Loading) {
+        if (it == InnerFeeState.Loading) {
             RectangleShimmer(
                 radius = TangemTheme.dimens.radius3,
                 modifier = Modifier.size(
@@ -94,13 +91,13 @@ private fun BoxScope.FeeLoading(feeSelectorState: StakingFeeSelectorState) {
 }
 
 @Composable
-private fun BoxScope.FeeError(feeSelectorState: StakingFeeSelectorState) {
+private fun BoxScope.FeeError(feeSelectorState: InnerFeeState) {
     AnimatedContent(
         targetState = feeSelectorState,
         label = "Fee Error State Change",
         modifier = Modifier.align(Alignment.CenterEnd),
     ) {
-        if (it == StakingFeeSelectorState.Error) {
+        if (it == InnerFeeState.Error) {
             Text(
                 text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
                 color = TangemTheme.colors.text.primary1,
@@ -116,10 +113,8 @@ private fun BoxScope.FeeError(feeSelectorState: StakingFeeSelectorState) {
 @Composable
 private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) value: StakingStates.FeeState) {
     TangemThemePreview {
-        FeeBlock(
+        StakingFeeBlock(
             feeState = value,
-            isClickDisabled = true,
-            onClick = {},
         )
     }
 }
@@ -140,9 +135,8 @@ private class FeeBlockPreviewProvider : PreviewParameterProvider<StakingStates.F
         ),
     )
 
-    private val feeState = StakingStates.FeeState.Data(
-        isPrimaryButtonEnabled = false,
-        feeSelectorState = StakingFeeSelectorState.Content(TransactionFee.Single(normal = fee)),
+    private val feeState = StakingStates.FeeState(
+        innerFeeState = InnerFeeState.Content(TransactionFee.Single(normal = fee)),
         fee = fee,
         rate = BigDecimal.ONE,
         appCurrency = AppCurrency.Default,

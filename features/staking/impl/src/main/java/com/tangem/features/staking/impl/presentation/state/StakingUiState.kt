@@ -19,7 +19,6 @@ internal data class StakingUiState(
     val currentStep: StakingStep,
     val initialInfoState: StakingStates.InitialInfoState,
     val amountState: AmountState,
-    val validatorState: StakingStates.ValidatorState,
     val confirmStakingState: StakingStates.ConfirmStakingState,
     val isBalanceHidden: Boolean,
     val event: StateEvent<StakingEvent>,
@@ -28,12 +27,10 @@ internal data class StakingUiState(
     fun copyWrapped(
         initialInfoState: StakingStates.InitialInfoState = this.initialInfoState,
         amountState: AmountState = this.amountState,
-        validatorState: StakingStates.ValidatorState = this.validatorState,
         confirmStakingState: StakingStates.ConfirmStakingState = this.confirmStakingState,
     ): StakingUiState = copy(
         initialInfoState = initialInfoState,
         amountState = amountState,
-        validatorState = validatorState,
         confirmStakingState = confirmStakingState,
     )
 }
@@ -61,38 +58,12 @@ internal sealed class StakingStates {
         ) : InitialInfoState()
     }
 
-    /** Validator state */
-    sealed class ValidatorState : StakingStates() {
-        data class Data(
-            override val isPrimaryButtonEnabled: Boolean,
-        ) : ValidatorState()
-
-        data class Empty(
-            override val isPrimaryButtonEnabled: Boolean = false,
-        ) : ValidatorState()
-    }
-
-    /** Fee state */
-    sealed class FeeState : StakingStates() {
-        data class Data(
-            override val isPrimaryButtonEnabled: Boolean = false,
-            val feeSelectorState: StakingFeeSelectorState,
-            val fee: Fee?,
-            val rate: BigDecimal?,
-            val isFeeConvertibleToFiat: Boolean,
-            val appCurrency: AppCurrency,
-            val isFeeApproximate: Boolean,
-        ) : FeeState()
-
-        data class Empty(
-            override val isPrimaryButtonEnabled: Boolean = false,
-        ) : FeeState()
-    }
-
     /** Confirm state */
     sealed class ConfirmStakingState : StakingStates() {
         data class Data(
             override val isPrimaryButtonEnabled: Boolean,
+            val feeState: FeeState,
+            val validatorState: ValidatorState,
             val isSuccess: Boolean,
             val isStaking: Boolean,
         ) : ConfirmStakingState()
@@ -101,11 +72,24 @@ internal sealed class StakingStates {
             override val isPrimaryButtonEnabled: Boolean = false,
         ) : ConfirmStakingState()
     }
+
+    data class FeeState(
+        val innerFeeState: InnerFeeState,
+        val fee: Fee?,
+        val rate: BigDecimal?,
+        val isFeeConvertibleToFiat: Boolean,
+        val appCurrency: AppCurrency,
+        val isFeeApproximate: Boolean,
+    )
+
+    data class ValidatorState(
+        val validatorState: InnerValidatorState,
+    )
 }
 
 enum class StakingStep {
     InitialInfo,
     Amount,
-    ValidatorAndFee,
     Confirm,
+    Success,
 }
