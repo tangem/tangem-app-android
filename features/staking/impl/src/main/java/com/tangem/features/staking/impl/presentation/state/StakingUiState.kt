@@ -72,21 +72,21 @@ internal sealed class StakingStates {
         data class Empty(
             override val isPrimaryButtonEnabled: Boolean = false,
         ) : ConfirmStakingState()
-
-        data class FeeState(
-            val innerFeeState: InnerFeeState,
-            val fee: Fee?,
-            val rate: BigDecimal?,
-            val isFeeConvertibleToFiat: Boolean,
-            val appCurrency: AppCurrency,
-            val isFeeApproximate: Boolean,
-        )
-
-        data class ValidatorState(
-            val validatorState: InnerValidatorState,
-            val availableValidators: List<Yield.Validator>,
-        )
     }
+
+    data class FeeState(
+        val innerFeeState: InnerFeeState,
+        val fee: Fee?,
+        val rate: BigDecimal?,
+        val isFeeConvertibleToFiat: Boolean,
+        val appCurrency: AppCurrency,
+        val isFeeApproximate: Boolean,
+    )
+
+    data class ValidatorState(
+        val validatorState: InnerValidatorState,
+        val availableValidators: List<Yield.Validator>,
+    )
 }
 
 enum class StakingStep {
