@@ -8,7 +8,6 @@ import com.tangem.common.ui.amountScreen.utils.getFiatValue
 import com.tangem.common.ui.amountScreen.utils.getKeyboardAction
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
@@ -16,13 +15,16 @@ import java.math.BigDecimal
 /**
  * Reduces amount to specific value
  *
- * @property cryptoCurrencyStatusProvider current cryptocurrency status provider
+ * @property cryptoCurrencyStatus current cryptocurrency status
+ * @property value reduced to value
  */
 class AmountReduceToTransformer(
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : Transformer<AmountState, BigDecimal> {
-    override fun transform(prevState: AmountState, value: BigDecimal): AmountState {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val value: BigDecimal,
+) : Transformer<AmountState> {
+    override fun transform(prevState: AmountState): AmountState {
+        if (prevState !is AmountState.Data) return prevState
+
         val amountTextField = prevState.amountTextField
         val cryptoDecimals = amountTextField.cryptoAmount.decimals
         val fiatDecimals = amountTextField.fiatAmount.decimals
