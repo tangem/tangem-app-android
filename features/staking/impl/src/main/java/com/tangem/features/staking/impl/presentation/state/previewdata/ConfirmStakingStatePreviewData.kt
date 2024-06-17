@@ -8,7 +8,9 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.Yield
 import com.tangem.features.staking.impl.presentation.state.InnerFeeState
 import com.tangem.features.staking.impl.presentation.state.InnerValidatorState
+import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
+import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
 internal object ConfirmStakingStatePreviewData {
@@ -24,7 +26,7 @@ internal object ConfirmStakingStatePreviewData {
             stakedBalance = "355544384.45009977",
             website = "https://luganodes.com/",
             votingPower = 0.09778360195377911,
-            preferred = true
+            preferred = true,
         ),
         Yield.Validator(
             address = "0x35b1ca0f398905cf752e6fe122b51c88022fca32",
@@ -36,7 +38,7 @@ internal object ConfirmStakingStatePreviewData {
             stakedBalance = "12495684.05643019",
             website = "https://infstones.com/",
             votingPower = 0.0034366257754399774,
-            preferred = true
+            preferred = true,
         ),
         Yield.Validator(
             address = "0xd14a87025109013b0a2354a775cb335f926af65a",
@@ -73,12 +75,18 @@ internal object ConfirmStakingStatePreviewData {
         ),
         validatorState = StakingStates.ValidatorState(
             validatorState = InnerValidatorState.Content(
-                chosenValidator = validatorList[0]
+                chosenValidator = validatorList[0],
             ),
-            availableValidators = validatorList
+            availableValidators = validatorList,
+        ),
+        footerText = "You stake \$715.11 and will be receiving ~\$35 monthly",
+        notifications = persistentListOf(
+            StakingNotification.Warning.EarnRewards(
+                currencyName = "Solana",
+                days = 2,
+            ),
         ),
         isStaking = false,
         isSuccess = false,
     )
-
 }

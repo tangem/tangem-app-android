@@ -111,9 +111,7 @@ private fun BoxScope.FeeError(feeSelectorState: InnerFeeState) {
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun FeeBlockPreview(
-    @PreviewParameter(FeeBlockPreviewProvider::class) value: StakingStates.FeeState,
-) {
+private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) value: StakingStates.FeeState) {
     TangemThemePreview {
         StakingFeeBlock(
             feeState = value,

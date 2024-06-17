@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.Yield
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
+import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 
 /**
@@ -65,6 +66,8 @@ internal sealed class StakingStates {
             override val isPrimaryButtonEnabled: Boolean,
             val feeState: FeeState,
             val validatorState: ValidatorState,
+            val notifications: ImmutableList<StakingNotification>,
+            val footerText: String,
             val isSuccess: Boolean,
             val isStaking: Boolean,
         ) : ConfirmStakingState()
