@@ -5,7 +5,7 @@ import com.tangem.domain.settings.repositories.PermissionRepository
 
 class ShouldInitiallyAskPermissionUseCase(private val repository: PermissionRepository) {
 
-    suspend operator fun invoke(permission: Int): Either<Throwable, Boolean> = Either.catch {
+    suspend operator fun invoke(permission: String): Either<Throwable, Boolean> = Either.catch {
         repository.shouldInitiallyShowPermissionScreen(permission)
     }
 }
