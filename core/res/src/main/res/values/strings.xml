@@ -4,7 +4,9 @@
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
   <string name="address_qr_code_message_format">Send only %1$s (%2$s) from %3$s network to this address. Using other tokens and networks may result in loss of funds.</string>
+  <string name="alert_button_how_to_scan">How to scan</string>
   <string name="alert_button_request_support">Request support</string>
+  <string name="alert_button_try_again">Try again</string>
   <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
   <string name="alert_failed_to_send_transaction_message">Reason: %s</string>
   <string name="alert_failed_to_send_transaction_title">Can\'t send a transaction</string>
