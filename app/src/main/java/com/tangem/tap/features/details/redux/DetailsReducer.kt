@@ -1,6 +1,6 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.core.navigation.AppScreen
+import com.tangem.common.routing.AppRoute
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
@@ -69,10 +69,12 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 }
 
 private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: AppState): DetailsState {
+    val router = store.inject(DaggerGraphState::appRouter)
+
     return DetailsState(
         scanResponse = action.scanResponse,
         // If the current screen is ResetToFactory, we must save the ResetToFactory's state
-        cardSettingsState = if (store.state.navigationState.backStack.lastOrNull() == AppScreen.ResetToFactory) {
+        cardSettingsState = if (router.stack.lastOrNull() is AppRoute.ResetToFactory) {
             state.detailsState.cardSettingsState
         } else {
             null
