@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
