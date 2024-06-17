@@ -94,6 +94,20 @@ object PreferencesKeys {
     val IS_WALLET_NAMES_MIGRATION_DONE_KEY by lazy { booleanPreferencesKey(name = "isWalletNamesMigrationDone") }
 
     fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
+
+    // region Permission
+    fun getShouldShowPermission(permission: Int) = booleanPreferencesKey("shouldShowPushPermission_$permission")
+
+    fun getShouldShowInitialPermissionScreen(permission: Int) =
+        booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")
+
+    fun getIsFirstTimeAskingPermission(permission: Int) =
+        booleanPreferencesKey("shouldAskInitialPushPermission_$permission")
+
+    fun getPermissionLaunchCount(permission: Int) = intPreferencesKey("pushPermissionLaunchCount_$permission")
+
+    fun getPermissionDaysCount(permission: Int) = longPreferencesKey("pushPermissionDaysCount_$permission")
+    // endregion
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */

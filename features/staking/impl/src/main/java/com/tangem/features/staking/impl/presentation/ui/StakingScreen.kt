@@ -129,7 +129,6 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                 )
                 StakingStep.Confirm -> StakingConfirmContent(
                     state = uiState.confirmStakingState,
-                    clickIntents = uiState.clickIntents,
                 )
                 else -> TODO()
             }
