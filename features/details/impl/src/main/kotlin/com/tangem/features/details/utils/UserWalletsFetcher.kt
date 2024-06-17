@@ -1,10 +1,11 @@
 package com.tangem.features.details.utils
 
 import arrow.core.Either
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.error.SelectedAppCurrencyError
@@ -30,6 +31,7 @@ internal class UserWalletsFetcher @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val router: Router,
     private val messageSender: UiMessageSender,
 ) {
 
@@ -82,8 +84,7 @@ internal class UserWalletsFetcher @Inject constructor(
     }
 
     private fun navigateToWalletSettings(userWalletId: UserWalletId) {
-        val message = stringReference("Wallet settings have not yet been implemented: $userWalletId")
-        messageSender.send(SnackbarMessage(message))
+        router.push(AppRoute.WalletSettings(userWalletId))
     }
 
     sealed class Error {
