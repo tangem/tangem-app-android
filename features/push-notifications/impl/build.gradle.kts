@@ -29,6 +29,9 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.featuretoggles)
 
+    /** Common modules */
+    implementation(projects.common.routing)
+
     /** Domain module */
     implementation(projects.domain.settings)
 
