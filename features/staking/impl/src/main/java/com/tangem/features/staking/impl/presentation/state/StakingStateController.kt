@@ -1,8 +1,9 @@
 package com.tangem.features.staking.impl.presentation.state
 
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
-import com.tangem.features.staking.impl.presentation.state.transformers.StakingScreenStateTransformer
+import com.tangem.utils.transformer.Transformer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +24,7 @@ internal class StakingStateController @Inject constructor() {
         mutableUiState.update(function = function)
     }
 
-    fun update(transformer: StakingScreenStateTransformer) {
+    fun update(transformer: Transformer<StakingUiState>) {
         mutableUiState.update(function = transformer::transform)
     }
 
@@ -37,7 +38,7 @@ internal class StakingStateController @Inject constructor() {
             cryptoCurrencyName = "",
             currentStep = StakingStep.InitialInfo,
             initialInfoState = StakingStates.InitialInfoState.Empty(),
-            amountState = StakingStates.AmountState.Empty(),
+            amountState = AmountState.Empty(),
             validatorState = StakingStates.ValidatorState.Empty(),
             confirmStakingState = StakingStates.ConfirmStakingState.Empty(),
             isBalanceHidden = false,

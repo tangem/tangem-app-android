@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
@@ -14,7 +15,7 @@ internal data class StakingUiState(
     val cryptoCurrencyName: String,
     val currentStep: StakingStep,
     val initialInfoState: StakingStates.InitialInfoState,
-    val amountState: StakingStates.AmountState,
+    val amountState: AmountState,
     val validatorState: StakingStates.ValidatorState,
     val confirmStakingState: StakingStates.ConfirmStakingState,
     val isBalanceHidden: Boolean,
@@ -23,7 +24,7 @@ internal data class StakingUiState(
 
     fun copyWrapped(
         initialInfoState: StakingStates.InitialInfoState = this.initialInfoState,
-        amountState: StakingStates.AmountState = this.amountState,
+        amountState: AmountState = this.amountState,
         validatorState: StakingStates.ValidatorState = this.validatorState,
         confirmStakingState: StakingStates.ConfirmStakingState = this.confirmStakingState,
     ): StakingUiState = copy(
@@ -55,17 +56,6 @@ internal sealed class StakingStates {
         data class Empty(
             override val isPrimaryButtonEnabled: Boolean = false,
         ) : InitialInfoState()
-    }
-
-    /** Amount state */
-    sealed class AmountState : StakingStates() {
-        data class Data(
-            override val isPrimaryButtonEnabled: Boolean,
-        ) : AmountState()
-
-        data class Empty(
-            override val isPrimaryButtonEnabled: Boolean = false,
-        ) : AmountState()
     }
 
     /** Validator state */

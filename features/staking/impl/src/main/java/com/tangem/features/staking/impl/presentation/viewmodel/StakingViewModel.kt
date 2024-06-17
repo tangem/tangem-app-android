@@ -4,19 +4,28 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import arrow.core.getOrElse
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
-import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
+import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.transformers.HideBalanceStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.SetInitialDataStateTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountChangeStateTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountCurrencyChangeStateTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountMaxValueStateTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountPasteDismissStateTransformer
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,12 +34,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class StakingViewModel @Inject constructor(
     private val stateController: StakingStateController,
     private val dispatchers: CoroutineDispatcherProvider,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
 
@@ -53,6 +65,8 @@ internal class StakingViewModel @Inject constructor(
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
 
     private var innerRouter: InnerStakingRouter by Delegates.notNull()
+    private var userWallet: UserWallet by Delegates.notNull()
+    private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     init {
         subscribeOnBalanceHiding()
@@ -71,6 +85,22 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onBackClick()
     }
 
+    override fun onAmountValueChange(value: String) {
+        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, value))
+    }
+
+    override fun onAmountPasteTriggerDismiss() {
+        stateController.update(AmountPasteDismissStateTransformer())
+    }
+
+    override fun onMaxValueClick() {
+        stateController.update(AmountMaxValueStateTransformer(cryptoCurrencyStatus))
+    }
+
+    override fun onCurrencyChangeClick(isFiat: Boolean) {
+        stateController.update(AmountCurrencyChangeStateTransformer(cryptoCurrencyStatus, isFiat))
+    }
+
     fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
         innerRouter = router
         this.stakingStateRouter = stateRouter
@@ -78,6 +108,14 @@ internal class StakingViewModel @Inject constructor(
 
     private fun subscribeOnCurrencyStatusUpdates() {
         viewModelScope.launch {
+            getUserWalletUseCase(userWalletId).fold(
+                ifRight = { wallet ->
+                    userWallet = wallet
+                },
+                ifLeft = {
+// [REDACTED_TODO_COMMENT]
+                },
+            )
             getCryptoCurrencyStatusSyncUseCase(userWalletId, cryptoCurrencyId).fold(
                 ifRight = {
                     cryptoCurrencyStatus = it
@@ -86,6 +124,8 @@ internal class StakingViewModel @Inject constructor(
                             clickIntents = this@StakingViewModel,
                             yield = yield,
                             cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                            userWalletProvider = Provider { userWallet },
+                            appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
                         ),
                     )
                 },
@@ -105,5 +145,20 @@ internal class StakingViewModel @Inject constructor(
             }
             .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
+    }
+
+    private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
+        return getSelectedAppCurrencyUseCase()
+            .conflate()
+            .distinctUntilChanged()
+            .map { maybeAppCurrency ->
+                maybeAppCurrency.getOrElse { AppCurrency.Default }
+            }
+            .flowOn(dispatchers.main)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = AppCurrency.Default,
+            )
     }
 }

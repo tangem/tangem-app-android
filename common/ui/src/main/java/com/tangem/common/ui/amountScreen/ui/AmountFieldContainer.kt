@@ -21,7 +21,7 @@ import com.tangem.utils.Strings.STARS
 private const val AMOUNT_FIELD_KEY = "amountFieldKey"
 
 internal fun LazyListScope.amountField(
-    amountState: AmountState,
+    amountState: AmountState.Data,
     isBalanceHiding: Boolean,
     modifier: Modifier = Modifier,
 ) {
