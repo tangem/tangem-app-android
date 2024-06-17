@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.viewmodel
 
+import android.os.Bundle
 import android.os.SystemClock
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,6 +11,8 @@ import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -38,7 +41,6 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
@@ -101,17 +103,18 @@ internal class SendViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, SendClickIntents {
 
-    private val userWalletId: UserWalletId = savedStateHandle.get<String>(SendRouter.USER_WALLET_ID_KEY)
-        ?.let { stringValue -> UserWalletId(stringValue) }
+    private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.Send.USER_WALLET_ID_KEY)
+        ?.let { it.unbundle(UserWalletId.serializer()) }
         ?: error("This screen can't open without `UserWalletId`")
 
-    private val cryptoCurrency: CryptoCurrency = savedStateHandle[SendRouter.CRYPTO_CURRENCY_KEY]
+    private val cryptoCurrency: CryptoCurrency = savedStateHandle.get<Bundle>(AppRoute.Send.CRYPTO_CURRENCY_KEY)
+        ?.let { it.unbundle(CryptoCurrency.serializer()) }
         ?: error("This screen can't open without `CryptoCurrency`")
 
-    private val transactionId: String? = savedStateHandle[SendRouter.TRANSACTION_ID_KEY]
-    private val amount: String? = savedStateHandle[SendRouter.AMOUNT_KEY]
-    private val destinationAddress: String? = savedStateHandle[SendRouter.DESTINATION_ADDRESS_KEY]
-    private val memo: String? = savedStateHandle[SendRouter.TAG_KEY]
+    private val transactionId: String? = savedStateHandle[AppRoute.Send.TRANSACTION_ID_KEY]
+    private val amount: String? = savedStateHandle[AppRoute.Send.AMOUNT_KEY]
+    private val destinationAddress: String? = savedStateHandle[AppRoute.Send.DESTINATION_ADDRESS_KEY]
+    private val memo: String? = savedStateHandle[AppRoute.Send.TAG_KEY]
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
