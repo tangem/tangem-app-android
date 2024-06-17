@@ -15,7 +15,7 @@ import java.math.BigDecimal
 
 object AmountStatePreviewData {
 
-    val amountState = AmountState(
+    val amountState = AmountState.Data(
         isPrimaryButtonEnabled = false,
         walletName = "Family Wallet",
         walletBalance = stringReference("2 130,88 USDT (2 129,92 \$)"),
