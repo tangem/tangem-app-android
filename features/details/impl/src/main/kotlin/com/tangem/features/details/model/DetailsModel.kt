@@ -3,9 +3,10 @@ package com.tangem.features.details.model
 import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.entity.DetailsUM
@@ -24,14 +25,18 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @ComponentScoped
+@Suppress("LongParameterList")
 internal class DetailsModel @Inject constructor(
     private val socialsBuilder: SocialsBuilder,
     private val itemsBuilder: ItemsBuilder,
     private val appVersionProvider: AppVersionProvider,
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
     private val router: Router,
+    private val paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
+
+    private val params: DetailsComponent.Params = paramsContainer.require()
 
     private val items: MutableStateFlow<ImmutableList<DetailsItemUM>> = MutableStateFlow(value = persistentListOf())
 
@@ -50,10 +55,12 @@ internal class DetailsModel @Inject constructor(
         items
             .onEach(::updateState)
             .launchIn(modelScope)
+
+        checkWalletConnectAvailability()
     }
 
-    fun provideUserWalletId(userWalletId: UserWalletId) = modelScope.launch {
-        val isWalletConnectAvailable = checkIsWalletConnectAvailableUseCase(userWalletId).getOrElse {
+    private fun checkWalletConnectAvailability() = modelScope.launch {
+        val isWalletConnectAvailable = checkIsWalletConnectAvailableUseCase(params.userWalletId).getOrElse {
             Timber.w("Unable to check WalletConnect availability: $it")
 
             false
