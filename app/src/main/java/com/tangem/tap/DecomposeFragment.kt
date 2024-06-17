@@ -2,15 +2,17 @@ package com.tangem.tap
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.factory.ComponentFactory
-import com.tangem.core.ui.ComposableContentComponent
 import com.tangem.core.ui.UiDependencies
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.utils.Provider
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.WeakHashMap
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -20,7 +22,10 @@ internal class DecomposeFragment : ComposeFragment() {
     override lateinit var uiDependencies: UiDependencies
 
     private val component by lazy(mode = LazyThreadSafetyMode.NONE) {
-        requireNotNull(componentBuilder?.build()) {
+        val tag = requireArguments().getString(TAG_KEY)
+        val builder = componentsBuilders[tag]
+
+        requireNotNull(builder?.build()) {
             "Component builder is not set, call newInstance() for DecomposeFragment creation first."
         }
     }
@@ -46,16 +51,21 @@ internal class DecomposeFragment : ComposeFragment() {
 
     companion object {
 
-        private var componentBuilder: ComponentBuilder<*, *, *>? = null
+        private const val TAG_KEY = "tag"
+
+        private val componentsBuilders = WeakHashMap<String, ComponentBuilder<*, *, *>>()
 
         fun <C : ComposableContentComponent, P : Any, F : ComponentFactory<P, C>> newInstance(
+            tag: String,
             contextProvider: Provider<AppComponentContext>,
             params: P,
             componentFactory: F,
         ): Fragment {
-            this@Companion.componentBuilder = ComponentBuilder(contextProvider, params, componentFactory)
+            this@Companion.componentsBuilders[tag] = ComponentBuilder(contextProvider, params, componentFactory)
 
-            return DecomposeFragment()
+            return DecomposeFragment().apply {
+                this.arguments = bundleOf(TAG_KEY to tag)
+            }
         }
     }
 }

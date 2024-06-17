@@ -5,7 +5,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.factory.ComponentFactory
-import com.tangem.core.ui.ComposableContentComponent
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.tap.DecomposeFragment
 import com.tangem.tap.routing.RoutingComponent.Child
 import com.tangem.utils.Provider
@@ -29,6 +29,7 @@ internal fun <C : ComposableContentComponent, P : Any, F : ComponentFactory<P, C
 ): Child {
     val fragmentProvider = Provider {
         DecomposeFragment.newInstance(
+            tag = path,
             contextProvider = contextProvider,
             params = params,
             componentFactory = componentFactory,
