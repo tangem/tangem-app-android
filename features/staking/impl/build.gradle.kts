@@ -56,9 +56,13 @@ dependencies {
     implementation(projects.domain.staking)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
 
     /** Common */
-    implementation(projects.common)
+    implementation(projects.common.ui)
 
     /** Libs */
     implementation(projects.libs.crypto)
