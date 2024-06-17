@@ -17,19 +17,15 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultDetailsComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted private val params: DetailsComponent.Params,
+    @Assisted params: DetailsComponent.Params,
     userWalletListComponentFactory: UserWalletListComponent.Factory,
 ) : DetailsComponent, AppComponentContext by context {
 
-    private val model: DetailsModel = getOrCreateModel()
+    private val model: DetailsModel = getOrCreateModel(params)
 
     private val userWalletListComponent = userWalletListComponentFactory.create(
         context = child(key = "user_wallet_list"),
     )
-
-    init {
-        model.provideUserWalletId(params.selectedUserWalletId)
-    }
 
     @Composable
     override fun Content(modifier: Modifier) {
