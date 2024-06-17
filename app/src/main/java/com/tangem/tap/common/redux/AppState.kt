@@ -1,13 +1,11 @@
 package com.tangem.tap.common.redux
 
-import com.tangem.core.navigation.NavigationState
 import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.NetworkServices
 import com.tangem.tap.common.redux.global.GlobalMiddleware
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.legacy.LegacyMiddleware
-import com.tangem.tap.common.redux.navigation.navigationMiddleware
 import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectMiddleware
@@ -40,7 +38,6 @@ import org.rekotlin.Middleware
 import org.rekotlin.StateType
 
 data class AppState(
-    val navigationState: NavigationState = NavigationState(),
     val globalState: GlobalState = GlobalState(),
     val homeState: HomeState = HomeState(),
     val onboardingNoteState: OnboardingNoteState = OnboardingNoteState(),
@@ -73,7 +70,6 @@ data class AppState(
         fun getMiddleware(): List<Middleware<AppState>> {
             return listOf(
                 logMiddleware,
-                navigationMiddleware,
                 notificationsMiddleware,
                 GlobalMiddleware.handler,
                 HomeMiddleware.handler,
