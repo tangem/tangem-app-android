@@ -22,6 +22,12 @@ dependencies {
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.androidx.palette)
+    implementation(deps.androidx.windowManager) {
+        exclude(
+            deps.kotlin.coroutines.android.get().module.group,
+            deps.kotlin.coroutines.android.get().module.name
+        )
+    }
 
     /** Compose */
     implementation(deps.compose.constraintLayout)
