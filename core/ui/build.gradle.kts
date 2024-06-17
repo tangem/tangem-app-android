@@ -43,6 +43,7 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.compose.accompanist.permission)
     implementation(deps.material)
     implementation(deps.compose.shimmer)
     implementation(deps.kotlin.immutable.collections)
