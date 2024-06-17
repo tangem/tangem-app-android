@@ -9,8 +9,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.components.SystemBarsEffect
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
@@ -61,10 +59,6 @@ internal class SendFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        val systemBarsColor = TangemTheme.colors.background.tertiary
-        SystemBarsEffect {
-            setSystemBarsColor(systemBarsColor)
-        }
         val currentState = viewModel.stateRouter.currentState.collectAsStateWithLifecycle()
         SendScreen(viewModel.uiState, currentState.value)
     }
