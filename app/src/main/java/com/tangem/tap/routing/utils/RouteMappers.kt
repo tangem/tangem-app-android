@@ -22,7 +22,7 @@ internal fun AppRoute.asFragmentChild(fragmentProvider: Provider<Fragment>): Chi
     return Child.LegacyFragment(path, provider)
 }
 
-internal fun <C : ComposableContentComponent, P : Any, F : ComponentFactory<C, P>> AppRoute.asComponentChild(
+internal fun <C : ComposableContentComponent, P : Any, F : ComponentFactory<P, C>> AppRoute.asComponentChild(
     contextProvider: Provider<AppComponentContext>,
     params: P,
     componentFactory: F,
