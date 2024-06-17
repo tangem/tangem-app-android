@@ -1,5 +1,7 @@
 package com.tangem.features.tester.api
 
+import android.content.Intent
+
 /**
  * Outer tester feature router
  *
@@ -8,5 +10,5 @@ package com.tangem.features.tester.api
 interface TesterRouter {
 
     /** Open tester menu */
-    fun startTesterScreen()
+    fun getEntryIntent(): Intent
 }
