@@ -2,7 +2,9 @@ package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.staking.impl.R
 
 internal sealed class StakingNotification(val config: NotificationConfig) {
@@ -43,8 +45,8 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
             val currencyName: String,
             val days: Int,
         ) : Warning(
-            title = stringReference("Earn staking rewards"),
-            subtitle = stringReference("Staking allow you to earn Solana. Your staking rewards arrive every ~ 2 days."),
+            title = resourceReference(R.string.staking_notification_earn_rewards_title),
+            subtitle = resourceReference(R.string.staking_notification_earn_rewards_text, wrappedList(currencyName, days))
         )
     }
 }

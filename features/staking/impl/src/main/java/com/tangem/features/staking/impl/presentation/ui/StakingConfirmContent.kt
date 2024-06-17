@@ -11,12 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SpacerHMax
-import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmStakingStatePreviewData
+import com.tangem.features.staking.impl.presentation.ui.block.NotificationsBlock
+import com.tangem.features.staking.impl.presentation.ui.block.StakingFeeBlock
 
 @Composable
 internal fun StakingConfirmContent(state: StakingStates.ConfirmStakingState) {
@@ -32,24 +32,20 @@ internal fun StakingConfirmContent(state: StakingStates.ConfirmStakingState) {
     ) {
         StakingFeeBlock(feeState = state.feeState)
         NotificationsBlock(notifications = state.notifications)
-
         SpacerHMax()
-
-        Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = state.footerText,
-            color = TangemTheme.colors.text.tertiary,
-            style = TangemTheme.typography.caption2,
-            textAlign = TextAlign.Center,
-        )
+        FooterText(text = state.footerText)
     }
 }
 
 @Composable
-private fun NotificationsBlock(notifications: List<StakingNotification>) {
-    notifications.forEach {
-        Notification(config = it.config, iconTint = TangemTheme.colors.icon.accent)
-    }
+private fun FooterText(text: String) {
+    Text(
+        modifier = Modifier.fillMaxWidth(),
+        text = text,
+        color = TangemTheme.colors.text.tertiary,
+        style = TangemTheme.typography.caption2,
+        textAlign = TextAlign.Center,
+    )
 }
 
 @Preview(widthDp = 360, showBackground = true)

@@ -1,4 +1,4 @@
-package com.tangem.features.staking.impl.presentation.ui
+package com.tangem.features.staking.impl.presentation.ui.block
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
