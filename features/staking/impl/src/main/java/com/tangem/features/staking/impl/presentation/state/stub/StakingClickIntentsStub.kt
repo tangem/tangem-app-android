@@ -9,4 +9,14 @@ object StakingClickIntentsStub : StakingClickIntents {
     override fun onNextClick() {}
 
     override fun onPrevClick() {}
+
+    override fun onAmountValueChange(value: String) {}
+
+    override fun onAmountPasteTriggerDismiss() {}
+
+    override fun onMaxValueClick() {}
+
+    override fun onCurrencyChangeClick(isFiat: Boolean) {}
+
+    override fun onAmountNext() {}
 }
