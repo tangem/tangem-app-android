@@ -113,6 +113,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
 include(":common")
 include(":common:ui-charts")
+include(":common:routing")
 
 // region Core modules
 include(":core:analytics")
@@ -211,6 +212,7 @@ include(":domain:feedback")
 include(":domain:qr-scanning")
 include(":domain:qr-scanning:models")
 include(":domain:staking")
+include(":domain:staking:models")
 include(":domain:wallet-connect")
 // endregion Domain modules
 
