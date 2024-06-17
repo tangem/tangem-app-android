@@ -9,7 +9,6 @@ import com.tangem.common.ui.amountScreen.utils.getFiatValue
 import com.tangem.common.ui.amountScreen.utils.getKeyboardAction
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
@@ -17,14 +16,17 @@ import java.math.BigDecimal
 /**
  * Amount value change
  *
- * @property cryptoCurrencyStatusProvider current cryptocurrency status provider
+ * @property cryptoCurrencyStatus current cryptocurrency status
+ * @property value amount value
  */
 class AmountFieldChangeTransformer(
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : Transformer<AmountState, String> {
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val value: String,
+) : Transformer<AmountState> {
 
-    override fun transform(prevState: AmountState, value: String): AmountState {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+    override fun transform(prevState: AmountState): AmountState {
+        if (prevState !is AmountState.Data) return prevState
+
         val amountTextField = prevState.amountTextField
 
         if (value.isEmpty()) return prevState.emptyState()
@@ -67,7 +69,7 @@ class AmountFieldChangeTransformer(
         )
     }
 
-    private fun AmountState.emptyState(): AmountState {
+    private fun AmountState.Data.emptyState(): AmountState.Data {
         return copy(
             isPrimaryButtonEnabled = false,
             amountTextField = amountTextField.copy(
