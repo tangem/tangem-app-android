@@ -10,6 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
+import com.tangem.common.ui.amountScreen.ui.AmountBlock
 import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -19,7 +22,7 @@ import com.tangem.features.staking.impl.presentation.ui.block.NotificationsBlock
 import com.tangem.features.staking.impl.presentation.ui.block.StakingFeeBlock
 
 @Composable
-internal fun StakingConfirmContent(state: StakingStates.ConfirmStakingState) {
+internal fun StakingConfirmContent(amountState: AmountState, state: StakingStates.ConfirmStakingState) {
     if (state !is StakingStates.ConfirmStakingState.Data) return
 
     Column(
@@ -30,6 +33,12 @@ internal fun StakingConfirmContent(state: StakingStates.ConfirmStakingState) {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
+        AmountBlock(
+            amountState = amountState,
+            isClickDisabled = true,
+            isEditingDisabled = true,
+            onClick = {},
+        )
         StakingFeeBlock(feeState = state.feeState)
         NotificationsBlock(notifications = state.notifications)
         SpacerHMax()
@@ -54,7 +63,10 @@ private fun FooterText(text: String) {
 private fun Preview_StakingConfirmContent() {
     TangemThemePreview {
         Column(Modifier.background(TangemTheme.colors.background.primary)) {
-            StakingConfirmContent(state = ConfirmStakingStatePreviewData.confirmStakingState)
+            StakingConfirmContent(
+                amountState = AmountStatePreviewData.amountState,
+                state = ConfirmStakingStatePreviewData.confirmStakingState,
+            )
         }
     }
 }
