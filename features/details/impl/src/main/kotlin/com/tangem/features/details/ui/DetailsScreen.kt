@@ -15,11 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.ComposableContentComponent
+import com.tangem.core.ui.components.appbar.models.TopAppBarMedium
+import com.tangem.core.ui.components.block.BlockItem
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -28,8 +29,6 @@ import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.impl.R
-
-private const val COLLAPSED_APP_BAR_THRESHOLD = 0.4f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +51,13 @@ internal fun DetailsScreen(
                 hostState = LocalSnackbarHostState.current,
             )
         },
-        topBar = { TopBar(state, scrollBehavior) },
+        topBar = {
+            TopAppBarMedium(
+                title = resourceReference(R.string.details_title),
+                scrollBehavior = scrollBehavior,
+                onBackClick = state.popBack,
+            )
+        },
     ) { paddingValues ->
         Content(
             modifier = Modifier.padding(paddingValues),
@@ -60,54 +65,6 @@ internal fun DetailsScreen(
             userWalletListBlockContent = userWalletListBlockContent,
         )
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TopBar(state: DetailsUM, scrollBehavior: TopAppBarScrollBehavior, modifier: Modifier = Modifier) {
-    MediumTopAppBar(
-        modifier = modifier,
-        scrollBehavior = scrollBehavior,
-        colors = TopAppBarColors(
-            containerColor = TangemTheme.colors.background.secondary,
-            scrolledContainerColor = TangemTheme.colors.background.secondary,
-            navigationIconContentColor = TangemTheme.colors.icon.primary1,
-            titleContentColor = TangemTheme.colors.text.primary1,
-            actionIconContentColor = TangemTheme.colors.icon.primary1,
-        ),
-        title = {
-            val collapsedStyle = TangemTheme.typography.subtitle1
-            val expandedStyle = TangemTheme.typography.h1
-            val style by remember(scrollBehavior.state.collapsedFraction) {
-                derivedStateOf {
-                    if (scrollBehavior.state.collapsedFraction >= COLLAPSED_APP_BAR_THRESHOLD) {
-                        collapsedStyle
-                    } else {
-                        expandedStyle
-                    }
-                }
-            }
-
-            Text(
-                text = stringResource(id = R.string.details_title),
-                style = style,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        navigationIcon = {
-            IconButton(
-                modifier = Modifier.size(TangemTheme.dimens.size32),
-                onClick = state.popBack,
-            ) {
-                Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
-                    painter = painterResource(id = R.drawable.ic_back_24),
-                    contentDescription = null,
-                )
-            }
-        },
-    )
 }
 
 @Composable
@@ -168,7 +125,7 @@ private fun Block(
                     key(item.id) {
                         BlockItem(
                             modifier = itemModifier,
-                            model = item,
+                            model = item.block,
                         )
                     }
                 }
