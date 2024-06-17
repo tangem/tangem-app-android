@@ -180,6 +180,9 @@ include(":features:details:impl")
 
 include(":features:disclaimer:api")
 include(":features:disclaimer:impl")
+
+include(":features:push-notifications:api")
+include(":features:push-notifications:impl")
 // endregion Feature modules
 
 // region Domain modules
