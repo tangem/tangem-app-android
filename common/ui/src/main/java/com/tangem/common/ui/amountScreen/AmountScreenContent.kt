@@ -9,11 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import com.tangem.common.ui.amountScreen.ui.amountField
-import com.tangem.common.ui.amountScreen.ui.buttons
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountScreenClickIntentsStub
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
+import com.tangem.common.ui.amountScreen.ui.amountField
+import com.tangem.common.ui.amountScreen.ui.buttons
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -25,6 +25,8 @@ import com.tangem.core.ui.res.TangemThemePreview
  */
 @Composable
 fun AmountScreenContent(amountState: AmountState, isBalanceHiding: Boolean, clickIntents: AmountScreenClickIntents) {
+    if (amountState !is AmountState.Data) return
+
     // Do not put fillMaxSize() in here
     LazyColumn(
         modifier = Modifier
