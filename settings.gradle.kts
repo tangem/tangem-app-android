@@ -28,7 +28,6 @@ dependencyResolutionManagement {
         mavenCentral()
         mavenLocal()
         jcenter() // unable to replace with mavenCentral() due to rekotlin
-        maven("https://nexus.tangem-tech.com/repository/maven-releases/")
         maven {
             // setting any repository from tangem project allows maven search all packages in the project
             url = uri("https://maven.pkg.github.com/tangem/blockchain-sdk-kotlin")
