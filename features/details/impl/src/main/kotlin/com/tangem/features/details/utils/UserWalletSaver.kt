@@ -2,9 +2,11 @@ package com.tangem.features.details.utils
 
 import arrow.core.raise.*
 import arrow.core.recover
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.popTo
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.isNullOrEmpty
@@ -42,7 +44,7 @@ internal class UserWalletSaver @Inject constructor(
 
             saveWallet(userWallet)
 
-            // router.popTo(DetailsRoute.Screen(AppScreen.Wallet))
+            router.popTo<AppRoute.Wallet>()
         },
         recover = { error ->
             val message = error.message
@@ -75,7 +77,7 @@ internal class UserWalletSaver @Inject constructor(
             selectWalletUseCase(userWallet.walletId).bind()
         }
 
-        // router.popTo(DetailsRoute.Screen(AppScreen.Wallet))
+        router.popTo<AppRoute.Wallet>()
     }
 
     private suspend fun Raise<Error>.createUserWallet(response: ScanResponse): UserWallet {
