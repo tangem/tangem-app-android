@@ -5,6 +5,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
+import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.DisclaimerRouter
@@ -44,6 +45,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class ChildFactory @Inject constructor(
     private val detailsComponentFactory: DetailsComponent.Factory,
+    private val walletSettingsComponentFactory: WalletSettingsComponent.Factory,
     private val sendRouter: SendRouter,
     private val tokenDetailsRouter: TokenDetailsRouter,
     private val walletRouter: WalletRouter,
@@ -159,6 +161,13 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.PushNotification -> {
                 route.asFragmentChild(Provider { pushNotificationRouter.entryFragment() })
+            }
+            is AppRoute.WalletSettings -> {
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = WalletSettingsComponent.Params(route.userWalletId),
+                    componentFactory = walletSettingsComponentFactory,
+                )
             }
         }
     }
