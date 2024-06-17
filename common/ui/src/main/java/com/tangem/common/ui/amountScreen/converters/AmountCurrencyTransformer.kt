@@ -5,21 +5,24 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 
 /**
  * Selected currency change from crypto currency to app currency and vice versa
  *
- * @property cryptoCurrencyStatusProvider current cryptocurrency status provider
+ * @property cryptoCurrencyStatus current cryptocurrency status
+ * @property value is crypto currency or app currency
  */
 class AmountCurrencyTransformer(
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : Transformer<AmountState, Boolean> {
-    override fun transform(prevState: AmountState, value: Boolean): AmountState {
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val value: Boolean,
+) : Transformer<AmountState> {
+
+    override fun transform(prevState: AmountState): AmountState {
+        if (prevState !is AmountState.Data) return prevState
+
         val amountTextField = prevState.amountTextField
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
 
         val isValidFiatRate = cryptoCurrencyStatus.value.fiatRate.isNullOrZero()
         val isDoneActionEnabled = prevState.isPrimaryButtonEnabled
