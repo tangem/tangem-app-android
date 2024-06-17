@@ -6,6 +6,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.feedback.FeedbackManager
 import com.tangem.core.navigation.feedback.FeedbackType
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.details.entity.DetailsItemUM
@@ -48,9 +49,11 @@ internal class ItemsBuilder @Inject constructor(
         items = persistentListOf(
             DetailsItemUM.Basic.Item(
                 id = "buy_tangem_wallet",
-                title = resourceReference(R.string.details_buy_wallet),
-                iconRes = R.drawable.ic_tangem_24,
-                onClick = { urlOpener.openUrl(BUY_TANGEM_URL) },
+                block = BlockUM(
+                    text = resourceReference(R.string.details_buy_wallet),
+                    iconRes = R.drawable.ic_tangem_24,
+                    onClick = { urlOpener.openUrl(BUY_TANGEM_URL) },
+                ),
             ),
         ),
     )
@@ -60,17 +63,21 @@ internal class ItemsBuilder @Inject constructor(
         items = buildList {
             DetailsItemUM.Basic.Item(
                 id = "app_settings",
-                title = resourceReference(R.string.app_settings_title),
-                iconRes = R.drawable.ic_settings_24,
-                onClick = { router.push(AppRoute.AppSettings) },
+                block = BlockUM(
+                    text = resourceReference(R.string.app_settings_title),
+                    iconRes = R.drawable.ic_settings_24,
+                    onClick = { router.push(AppRoute.AppSettings) },
+                ),
             ).let(::add)
 
             if (BuildConfig.TESTER_MENU_ENABLED) {
                 DetailsItemUM.Basic.Item(
                     id = "tester_menu",
-                    title = stringReference(value = "Tester menu"),
-                    iconRes = R.drawable.ic_alert_24,
-                    onClick = { router.push(AppRoute.TesterMenu) },
+                    block = BlockUM(
+                        text = stringReference(value = "Tester menu"),
+                        iconRes = R.drawable.ic_alert_24,
+                        onClick = { router.push(AppRoute.TesterMenu) },
+                    ),
                 ).let(::add)
             }
         }.toImmutableList(),
@@ -81,15 +88,19 @@ internal class ItemsBuilder @Inject constructor(
         items = persistentListOf(
             DetailsItemUM.Basic.Item(
                 id = "send_feedback",
-                title = resourceReference(R.string.details_send_feedback),
-                iconRes = R.drawable.ic_comment_24,
-                onClick = { feedbackManager.sendEmail(FeedbackType.Feedback) },
+                block = BlockUM(
+                    text = resourceReference(R.string.details_send_feedback),
+                    iconRes = R.drawable.ic_comment_24,
+                    onClick = { feedbackManager.sendEmail(FeedbackType.Feedback) },
+                ),
             ),
             DetailsItemUM.Basic.Item(
                 id = "disclaimer",
-                title = resourceReference(R.string.disclaimer_title),
-                iconRes = R.drawable.ic_text_24,
-                onClick = { router.push(AppRoute.Disclaimer(isTosAccepted = true)) },
+                block = BlockUM(
+                    text = resourceReference(R.string.disclaimer_title),
+                    iconRes = R.drawable.ic_text_24,
+                    onClick = { router.push(AppRoute.Disclaimer(isTosAccepted = true)) },
+                ),
             ),
         ),
     )
