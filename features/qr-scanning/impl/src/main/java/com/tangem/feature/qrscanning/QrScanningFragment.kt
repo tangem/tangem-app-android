@@ -7,21 +7,16 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.mlkit.vision.common.InputImage
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.components.SystemBarsIconsDisposable
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.qrscanning.inner.MLKitBarcodeAnalyzer
 import com.tangem.feature.qrscanning.navigation.QrScanningInnerRouter
@@ -105,7 +100,8 @@ internal class QrScanningFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        StatusBarTransparencyDisposable()
+        SystemBarsIconsDisposable(darkIcons = false)
+
         QrScanningContent(
             executor = { cameraExecutor },
             analyzer = { cameraAnalyzer },
@@ -144,30 +140,5 @@ internal class QrScanningFragment : ComposeFragment() {
     companion object {
 
         fun create() = QrScanningFragment()
-    }
-}
-
-@Composable
-private fun StatusBarTransparencyDisposable() {
-    val systemUiController = rememberSystemUiController()
-    val systemBarsColor = TangemTheme.colors.background.secondary
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(Unit) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START) {
-                systemUiController.setSystemBarsColor(
-                    color = Color.Transparent,
-                    darkIcons = false,
-                )
-            }
-            if (event == Lifecycle.Event.ON_STOP) {
-                systemUiController.setSystemBarsColor(systemBarsColor)
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
     }
 }
