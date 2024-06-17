@@ -1,4 +1,4 @@
-package com.tangem.features.details.ui
+package com.tangem.core.ui.components.block
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -11,12 +11,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.details.entity.DetailsItemUM
 
 @Composable
-internal fun BlockItem(model: DetailsItemUM.Basic.Item, modifier: Modifier = Modifier) {
+fun BlockItem(model: BlockUM, modifier: Modifier = Modifier) {
     BlockCard(
         modifier = modifier,
         onClick = model.onClick,
@@ -29,14 +29,22 @@ internal fun BlockItem(model: DetailsItemUM.Basic.Item, modifier: Modifier = Mod
             Icon(
                 modifier = Modifier.size(TangemTheme.dimens.size24),
                 painter = painterResource(id = model.iconRes),
-                tint = TangemTheme.colors.icon.secondary,
+                tint = when (model.accentType) {
+                    BlockUM.AccentType.NONE -> TangemTheme.colors.icon.secondary
+                    BlockUM.AccentType.ACCENT -> TangemTheme.colors.text.accent
+                    BlockUM.AccentType.WARNING -> TangemTheme.colors.text.warning
+                },
                 contentDescription = null,
             )
 
             Text(
-                text = model.title.resolveReference(),
+                text = model.text.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = when (model.accentType) {
+                    BlockUM.AccentType.NONE -> TangemTheme.colors.text.primary1
+                    BlockUM.AccentType.ACCENT -> TangemTheme.colors.text.accent
+                    BlockUM.AccentType.WARNING -> TangemTheme.colors.text.warning
+                },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
