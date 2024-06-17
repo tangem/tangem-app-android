@@ -1,11 +1,14 @@
 package com.tangem.feature.swap.viewmodels
 
+import android.os.Bundle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -32,7 +35,6 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
-import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
@@ -70,8 +72,10 @@ internal class SwapViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
 
-    private val initialCryptoCurrency: CryptoCurrency =
-        savedStateHandle[SwapFragment.CURRENCY_BUNDLE_KEY] ?: error("no expected parameter CryptoCurrency found`")
+    private val initialCryptoCurrency: CryptoCurrency = savedStateHandle.get<Bundle>(AppRoute.Swap.CURRENCY_BUNDLE_KEY)
+        ?.let { it.unbundle(CryptoCurrency.serializer()) }
+        ?: error("no expected parameter CryptoCurrency found`")
+
     private lateinit var initialCryptoCurrencyStatus: CryptoCurrencyStatus
 
     private var isBalanceHidden = true
