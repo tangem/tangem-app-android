@@ -1,4 +1,4 @@
-package com.tangem.features.details.ui
+package com.tangem.core.ui.components.block
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material3.Card
@@ -9,9 +9,10 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-internal fun BlockCard(
+fun BlockCard(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    colors: CardColors = TangemBlockCardColors,
     onClick: () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
@@ -19,13 +20,13 @@ internal fun BlockCard(
         modifier = modifier,
         onClick = onClick,
         shape = TangemTheme.shapes.roundedCornersXMedium,
-        colors = BlockColors,
+        colors = colors,
         enabled = enabled,
         content = content,
     )
 }
 
-private val BlockColors: CardColors
+val TangemBlockCardColors: CardColors
     @Composable
     @ReadOnlyComposable
     get() = CardColors(
