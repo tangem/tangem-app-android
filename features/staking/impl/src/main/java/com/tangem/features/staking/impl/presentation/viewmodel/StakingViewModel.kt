@@ -66,10 +66,9 @@ internal class StakingViewModel @Inject constructor(
 
     private var innerRouter: InnerStakingRouter by Delegates.notNull()
     private var userWallet: UserWallet by Delegates.notNull()
-    private var appCurrency: AppCurrency by Delegates.notNull()
+    private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     init {
-        subscribeOnSelectedAppCurrency()
         subscribeOnBalanceHiding()
         subscribeOnCurrencyStatusUpdates()
     }
@@ -126,7 +125,7 @@ internal class StakingViewModel @Inject constructor(
                             yield = yield,
                             cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                             userWalletProvider = Provider { userWallet },
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
                         ),
                     )
                 },
@@ -148,12 +147,12 @@ internal class StakingViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun subscribeOnSelectedAppCurrency() {
-        getSelectedAppCurrencyUseCase()
+    private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
+        return getSelectedAppCurrencyUseCase()
             .conflate()
             .distinctUntilChanged()
-            .onEach { maybeAppCurrency ->
-                appCurrency = maybeAppCurrency.getOrElse { AppCurrency.Default }
+            .map { maybeAppCurrency ->
+                maybeAppCurrency.getOrElse { AppCurrency.Default }
             }
             .flowOn(dispatchers.main)
             .stateIn(
