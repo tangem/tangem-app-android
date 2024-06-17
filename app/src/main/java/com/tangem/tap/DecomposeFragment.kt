@@ -35,7 +35,7 @@ internal class DecomposeFragment : ComposeFragment() {
         )
     }
 
-    private class ComponentBuilder<C : ComposableContentComponent, P : Any, F : ComponentFactory<C, P>>(
+    private class ComponentBuilder<C : ComposableContentComponent, P : Any, F : ComponentFactory<P, C>>(
         private val contextProvider: Provider<AppComponentContext>,
         private val params: P,
         private val componentFactory: F,
@@ -48,7 +48,7 @@ internal class DecomposeFragment : ComposeFragment() {
 
         private var componentBuilder: ComponentBuilder<*, *, *>? = null
 
-        fun <C : ComposableContentComponent, P : Any, F : ComponentFactory<C, P>> newInstance(
+        fun <C : ComposableContentComponent, P : Any, F : ComponentFactory<P, C>> newInstance(
             contextProvider: Provider<AppComponentContext>,
             params: P,
             componentFactory: F,
