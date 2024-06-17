@@ -1,8 +1,7 @@
 package com.tangem.features.details.entity
 
-import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.components.block.model.BlockUM
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
@@ -17,10 +16,7 @@ internal sealed class DetailsItemUM {
 
         data class Item(
             val id: String,
-            val title: TextReference,
-            @DrawableRes
-            val iconRes: Int,
-            val onClick: () -> Unit,
+            val block: BlockUM,
         )
     }
 
