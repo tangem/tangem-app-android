@@ -1,31 +1,52 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
+import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.Provider
+import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
 
 internal class SetInitialDataStateTransformer(
     private val clickIntents: StakingClickIntents,
     private val yield: Yield,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : StakingScreenStateTransformer {
+    private val userWalletProvider: Provider<UserWallet>,
+    private val appCurrencyProvider: Provider<AppCurrency>,
+) : Transformer<StakingUiState> {
+
+    private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
+
+    private val amountStateConverter by lazy(LazyThreadSafetyMode.NONE) {
+        AmountStateConverter(
+            clickIntents = clickIntents,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            appCurrencyProvider = appCurrencyProvider,
+            userWalletProvider = userWalletProvider,
+            iconStateConverter = iconStateConverter,
+        )
+    }
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         return prevState.copy(
             clickIntents = clickIntents,
             currentStep = StakingStep.InitialInfo,
             initialInfoState = createInitialInfoState(),
+            amountState = createInitialAmountState(),
         )
     }
 
@@ -48,6 +69,10 @@ internal class SetInitialDataStateTransformer(
             rewardSchedule = yield.metadata.rewardSchedule,
 
         )
+    }
+
+    private fun createInitialAmountState(): AmountState {
+        return amountStateConverter.convert("")
     }
 
     private fun getAprRange(): TextReference {
