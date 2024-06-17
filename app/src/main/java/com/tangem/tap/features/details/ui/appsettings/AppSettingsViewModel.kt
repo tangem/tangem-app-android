@@ -4,13 +4,14 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.features.details.redux.AppSetting
@@ -128,7 +129,7 @@ internal class AppSettingsViewModel @Inject constructor(
     }
 
     private fun showAppCurrencySelector() {
-        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.AppCurrencySelector))
+        store.dispatchNavigationAction { push(AppRoute.AppCurrencySelector) }
     }
 
     private fun showThemeModeSelector(selectedMode: AppThemeMode) {

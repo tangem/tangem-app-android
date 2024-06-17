@@ -63,6 +63,7 @@ dependencies {
 
     /** Common */
     implementation(projects.common.ui)
+    implementation(projects.common.routing)
 
     /** Libs */
     implementation(projects.libs.crypto)
