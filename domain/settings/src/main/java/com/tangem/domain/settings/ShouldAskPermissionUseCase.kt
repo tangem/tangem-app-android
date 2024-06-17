@@ -6,5 +6,5 @@ class ShouldAskPermissionUseCase(
     private val repository: PermissionRepository,
 ) {
 
-    suspend operator fun invoke(permission: Int): Boolean = repository.shouldAskPermission(permission)
+    suspend operator fun invoke(permission: String): Boolean = repository.shouldAskPermission(permission)
 }
