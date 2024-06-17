@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.featuretoggles)
     implementation(projects.core.navigation)
+    implementation(projects.common.routing)
 
     /** Domain modules */
     implementation(projects.domain.models)
