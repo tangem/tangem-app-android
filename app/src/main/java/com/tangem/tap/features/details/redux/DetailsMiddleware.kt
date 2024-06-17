@@ -245,6 +245,7 @@ class DetailsMiddleware {
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Failure,
                 is DetailsAction.AppSettings.BiometricsStatusChanged,
+                is DetailsAction.AppSettings.Prepare,
                 -> Unit
             }
         }

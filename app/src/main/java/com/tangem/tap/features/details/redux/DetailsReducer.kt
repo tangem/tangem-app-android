@@ -283,6 +283,9 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
                 isHidingEnabled = action.hideBalance,
             ),
         )
+        is DetailsAction.AppSettings.Prepare -> state.copy(
+            appSettingsState = action.state,
+        )
         is DetailsAction.AppSettings.EnrollBiometrics,
         is DetailsAction.AppSettings.CheckBiometricsStatus,
         -> state
