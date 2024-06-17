@@ -52,7 +52,7 @@ class AmountStateConverter(
         val crypto = formatCryptoAmount(status.value.amount, status.currency.symbol, status.currency.decimals)
         val noFeeRate = status.value.fiatRate.isNullOrZero()
 
-        return AmountState(
+        return AmountState.Data(
             walletName = userWallet.name,
             walletBalance = resourceReference(R.string.send_wallet_balance_format, wrappedList(crypto, fiat)),
             tokenIconState = iconStateConverter.convert(status),
