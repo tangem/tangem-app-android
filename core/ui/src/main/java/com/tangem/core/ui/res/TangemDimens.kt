@@ -81,6 +81,7 @@ data class TangemDimens internal constructor(
     val size90: Dp = 90.dp,
     val size93: Dp = 93.dp,
     val size96: Dp = 96.dp,
+    val size100: Dp = 100.dp,
     val size102: Dp = 102.dp,
     val size108: Dp = 108.dp,
     val size110: Dp = 110.dp,
