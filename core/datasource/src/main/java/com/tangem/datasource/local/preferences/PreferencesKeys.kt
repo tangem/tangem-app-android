@@ -96,17 +96,17 @@ object PreferencesKeys {
     fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
 
     // region Permission
-    fun getShouldShowPermission(permission: Int) = booleanPreferencesKey("shouldShowPushPermission_$permission")
+    fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
 
-    fun getShouldShowInitialPermissionScreen(permission: Int) =
+    fun getShouldShowInitialPermissionScreen(permission: String) =
         booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")
 
-    fun getIsFirstTimeAskingPermission(permission: Int) =
+    fun getIsFirstTimeAskingPermission(permission: String) =
         booleanPreferencesKey("shouldAskInitialPushPermission_$permission")
 
-    fun getPermissionLaunchCount(permission: Int) = intPreferencesKey("pushPermissionLaunchCount_$permission")
+    fun getPermissionLaunchCount(permission: String) = intPreferencesKey("pushPermissionLaunchCount_$permission")
 
-    fun getPermissionDaysCount(permission: Int) = longPreferencesKey("pushPermissionDaysCount_$permission")
+    fun getPermissionDaysCount(permission: String) = longPreferencesKey("pushPermissionDaysCount_$permission")
     // endregion
 }
 
