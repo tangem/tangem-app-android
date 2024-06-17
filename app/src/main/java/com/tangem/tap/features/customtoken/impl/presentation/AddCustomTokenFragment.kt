@@ -1,12 +1,12 @@
 package com.tangem.tap.features.customtoken.impl.presentation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.tap.features.customtoken.impl.presentation.ui.AddCustomTokenScreen
@@ -30,12 +30,10 @@ internal class AddCustomTokenFragment : ComposeFragment() {
         val viewModel = hiltViewModel<AddCustomTokenViewModel>().apply {
             LocalLifecycleOwner.current.lifecycle.addObserver(this)
         }
-        val statusBarColor = TangemTheme.colors.background.secondary
-        SystemBarsEffect {
-            setSystemBarsColor(color = statusBarColor)
-        }
         AddCustomTokenScreen(
-            modifier = Modifier.systemBarsPadding(),
+            modifier = Modifier
+                .background(TangemTheme.colors.background.primary)
+                .systemBarsPadding(),
             stateHolder = viewModel.uiState,
         )
     }

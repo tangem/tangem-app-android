@@ -5,8 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.components.SystemBarsEffect
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
@@ -33,14 +32,8 @@ internal class TokenDetailsFragment : ComposeFragment() {
     override fun ScreenContent(modifier: Modifier) {
         val viewModel = hiltViewModel<TokenDetailsViewModel>()
         viewModel.router = this@TokenDetailsFragment.internalTokenDetailsRouter
-
         LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
-
-        val systemBarsColor = TangemTheme.colors.background.secondary
-        SystemBarsEffect {
-            setSystemBarsColor(systemBarsColor)
-        }
-
+        NavigationBar3ButtonsScrim()
         TokenDetailsScreen(state = viewModel.uiState)
     }
 }
