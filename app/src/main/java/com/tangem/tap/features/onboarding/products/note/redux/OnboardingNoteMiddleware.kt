@@ -2,8 +2,9 @@ package com.tangem.tap.features.onboarding.products.note.redux
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.NavigationAction
+
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
@@ -204,7 +205,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 OnboardingDialog.InterruptOnboarding(
                     onOk = {
                         OnboardingHelper.onInterrupted()
-                        store.dispatch(NavigationAction.PopBackTo())
+                        store.dispatchNavigationAction(AppRouter::pop)
                     },
                 ),
             )
