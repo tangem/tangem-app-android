@@ -40,5 +40,5 @@ internal object UtilsModule {
 
     @Provides
     @Singleton
-    fun provideSettingsManager(): SettingsManager = IntentSettingsManager()
+    fun provideSettingsManager(@ApplicationContext context: Context): SettingsManager = IntentSettingsManager(context)
 }
