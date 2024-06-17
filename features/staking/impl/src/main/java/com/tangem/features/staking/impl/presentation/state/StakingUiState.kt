@@ -6,6 +6,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.Yield
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import java.math.BigDecimal
 
@@ -71,20 +72,21 @@ internal sealed class StakingStates {
         data class Empty(
             override val isPrimaryButtonEnabled: Boolean = false,
         ) : ConfirmStakingState()
+
+        data class FeeState(
+            val innerFeeState: InnerFeeState,
+            val fee: Fee?,
+            val rate: BigDecimal?,
+            val isFeeConvertibleToFiat: Boolean,
+            val appCurrency: AppCurrency,
+            val isFeeApproximate: Boolean,
+        )
+
+        data class ValidatorState(
+            val validatorState: InnerValidatorState,
+            val availableValidators: List<Yield.Validator>,
+        )
     }
-
-    data class FeeState(
-        val innerFeeState: InnerFeeState,
-        val fee: Fee?,
-        val rate: BigDecimal?,
-        val isFeeConvertibleToFiat: Boolean,
-        val appCurrency: AppCurrency,
-        val isFeeApproximate: Boolean,
-    )
-
-    data class ValidatorState(
-        val validatorState: InnerValidatorState,
-    )
 }
 
 enum class StakingStep {

@@ -31,7 +31,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingStates
 import java.math.BigDecimal
 
 @Composable
-internal fun StakingFeeBlock(feeState: StakingStates.FeeState) {
+internal fun StakingFeeBlock(feeState: StakingStates.ConfirmStakingState.FeeState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -111,7 +111,9 @@ private fun BoxScope.FeeError(feeSelectorState: InnerFeeState) {
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) value: StakingStates.FeeState) {
+private fun FeeBlockPreview(
+    @PreviewParameter(FeeBlockPreviewProvider::class) value: StakingStates.ConfirmStakingState.FeeState,
+) {
     TangemThemePreview {
         StakingFeeBlock(
             feeState = value,
@@ -119,9 +121,9 @@ private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) va
     }
 }
 
-private class FeeBlockPreviewProvider : PreviewParameterProvider<StakingStates.FeeState> {
+private class FeeBlockPreviewProvider : PreviewParameterProvider<StakingStates.ConfirmStakingState.FeeState> {
 
-    override val values: Sequence<StakingStates.FeeState>
+    override val values: Sequence<StakingStates.ConfirmStakingState.FeeState>
         get() = sequenceOf(
             feeState,
         )
@@ -135,7 +137,7 @@ private class FeeBlockPreviewProvider : PreviewParameterProvider<StakingStates.F
         ),
     )
 
-    private val feeState = StakingStates.FeeState(
+    private val feeState = StakingStates.ConfirmStakingState.FeeState(
         innerFeeState = InnerFeeState.Content(TransactionFee.Single(normal = fee)),
         fee = fee,
         rate = BigDecimal.ONE,

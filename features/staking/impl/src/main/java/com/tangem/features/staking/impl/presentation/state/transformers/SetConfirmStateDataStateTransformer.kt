@@ -31,7 +31,7 @@ internal class SetConfirmStateDataStateTransformer(
         return prevState.copy(
             confirmStakingState = StakingStates.ConfirmStakingState.Data(
                 isPrimaryButtonEnabled = true,
-                feeState = StakingStates.FeeState(
+                feeState = StakingStates.ConfirmStakingState.FeeState(
                     innerFeeState = InnerFeeState.Content(TransactionFee.Single(fee)),
                     fee = fee,
                     rate = null,
@@ -39,10 +39,11 @@ internal class SetConfirmStateDataStateTransformer(
                     appCurrency = appCurrencyProvider.invoke(),
                     isFeeApproximate = isFeeApproximate(fee),
                 ),
-                validatorState = StakingStates.ValidatorState(
+                validatorState = StakingStates.ConfirmStakingState.ValidatorState(
                     validatorState = InnerValidatorState.Content(
                         chosenValidator = yield.validators.first(),
                     ),
+                    availableValidators = yield.validators,
                 ),
                 isStaking = false,
                 isSuccess = false,
