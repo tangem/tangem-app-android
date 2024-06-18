@@ -35,7 +35,7 @@ internal sealed class SettingsItem(
     data class WalletConnect(
         override val onClick: () -> Unit,
     ) : SettingsItem(
-        iconResId = R.drawable.ic_walletconnect,
+        iconResId = R.drawable.ic_wallet_connect_24,
         title = resourceReference(R.string.wallet_connect_title),
         subtitle = resourceReference(R.string.wallet_connect_subtitle),
         isLarge = true,
@@ -81,14 +81,14 @@ internal sealed class SettingsItem(
     data class Chat(
         override val onClick: () -> Unit,
     ) : SettingsItem(
-        iconResId = R.drawable.ic_chat,
+        iconResId = R.drawable.ic_chat_24,
         title = resourceReference(R.string.details_chat),
     )
 
     data class SendFeedback(
         override val onClick: () -> Unit,
     ) : SettingsItem(
-        iconResId = R.drawable.ic_comment,
+        iconResId = R.drawable.ic_comment_24,
         title = resourceReference(R.string.details_row_title_contact_to_support),
     )
 
@@ -102,7 +102,7 @@ internal sealed class SettingsItem(
     data class TermsOfService(
         override val onClick: () -> Unit,
     ) : SettingsItem(
-        iconResId = R.drawable.ic_text,
+        iconResId = R.drawable.ic_text_24,
         title = resourceReference(R.string.disclaimer_title),
     )
 
@@ -125,15 +125,15 @@ internal sealed class EventError {
 }
 
 sealed class SocialNetwork(val id: String, val iconRes: Int) {
-    object Twitter : SocialNetwork("Twitter", R.drawable.ic_twitter)
-    object Telegram : SocialNetwork("Telegram", R.drawable.ic_telegram)
-    object Discord : SocialNetwork("Discord", R.drawable.ic_discord)
-    object Reddit : SocialNetwork("Reddit", R.drawable.ic_reddit)
-    object Instagram : SocialNetwork("Instagram", R.drawable.ic_instagram)
-    object GitHub : SocialNetwork("GitHub", R.drawable.ic_github)
-    object Facebook : SocialNetwork("Facebook", R.drawable.ic_facebook)
-    object LinkedIn : SocialNetwork("LinkedIn", R.drawable.ic_linkedin)
-    object YouTube : SocialNetwork("YouTube", R.drawable.ic_youtube)
+    object Twitter : SocialNetwork("Twitter", R.drawable.ic_twitter_24)
+    object Telegram : SocialNetwork("Telegram", R.drawable.ic_telegram_24)
+    object Discord : SocialNetwork("Discord", R.drawable.ic_discord_24)
+    object Reddit : SocialNetwork("Reddit", R.drawable.ic_reddit_24)
+    object Instagram : SocialNetwork("Instagram", R.drawable.ic_instagram_24)
+    object GitHub : SocialNetwork("GitHub", R.drawable.ic_github_24)
+    object Facebook : SocialNetwork("Facebook", R.drawable.ic_facebook_24)
+    object LinkedIn : SocialNetwork("LinkedIn", R.drawable.ic_linkedin_24)
+    object YouTube : SocialNetwork("YouTube", R.drawable.ic_youtube_24)
 }
 
 internal object TangemSocialAccounts {
