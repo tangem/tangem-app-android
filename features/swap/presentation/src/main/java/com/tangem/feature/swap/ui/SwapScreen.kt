@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.states.ChooseFeeBottomSheetConfig
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
@@ -28,7 +29,7 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                 iconRes = R.drawable.ic_close_24,
             )
         },
-        contentWindowInsets = WindowInsets(left = 0, top = 0, right = 0, bottom = 0),
+        contentWindowInsets = WindowInsetsZero,
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
 
