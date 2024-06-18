@@ -8,10 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.common.analytics.events.WalletConnect
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import com.tangem.tap.store
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,7 +21,7 @@ import javax.inject.Inject
 internal class WalletConnectFragment : ComposeFragment(), StoreSubscriber<WalletConnectState> {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
+    override lateinit var uiDependencies: UiDependencies
 
     private val viewModel: WalletConnectViewModel by viewModels()
 
@@ -42,13 +41,6 @@ internal class WalletConnectFragment : ComposeFragment(), StoreSubscriber<Wallet
             modifier = modifier,
             state = state,
             onBackClick = {
-                if (state.isLoading) {
-                    store.dispatch(
-                        WalletConnectAction.FailureEstablishingSession(
-                            store.state.walletConnectState.newSessionData?.session?.session,
-                        ),
-                    )
-                }
                 store.dispatch(NavigationAction.PopBackTo())
             },
         )
