@@ -40,7 +40,7 @@ class AssociateAssetUseCase(
             catch(
                 block = {
                     when (val result = walletManagersFacade.associateAsset(userWalletId, currency, signer)) {
-                        is SimpleResult.Failure -> raise(AssociateAssetError.DataError(result.error.message))
+                        is SimpleResult.Failure -> raise(AssociateAssetError.DataError(result.error.customMessage))
                         SimpleResult.Success -> Unit
                     }
                 },
