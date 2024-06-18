@@ -5,9 +5,10 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.haptic.MockHapticManager
-
 import com.tangem.core.ui.windowsize.WindowSize
 
 @Composable
@@ -25,6 +26,16 @@ fun TangemTheme(
         .also { it.update(themeColors) }
 
     val shapes = remember { TangemShapes(dimens) }
+    val systemUiController = rememberSystemUiController()
+
+    SideEffect {
+        systemUiController.setSystemBarsColor(
+            color = Color.Transparent,
+            darkIcons = !isDark,
+            isNavigationBarContrastEnforced = false,
+        )
+    }
+
     MaterialTheme(
         colors = materialThemeColors(colors = themeColors, isDark = isDark),
     ) {

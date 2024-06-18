@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,7 +41,9 @@ internal fun AppCurrencySelectorScreen(state: AppCurrencySelectorState, modifier
     val listState = rememberLazyListState()
 
     Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = modifier
+            .imePadding()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = TangemTheme.colors.background.secondary,
         topBar = {
             TopBar(
@@ -49,6 +52,7 @@ internal fun AppCurrencySelectorScreen(state: AppCurrencySelectorState, modifier
                 state = state,
             )
         },
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
         content = { paddingValues ->
             val contentModifier = Modifier
                 .padding(paddingValues)
@@ -62,7 +66,7 @@ internal fun AppCurrencySelectorScreen(state: AppCurrencySelectorState, modifier
                     modifier = contentModifier,
                     listState = listState,
                     currencies = state.items,
-                    selectedId = state.selectedId.orEmpty(),
+                    selectedId = state.selectedId,
                     onCurrencyClick = state.onCurrencyClick,
                 )
             }
@@ -175,6 +179,7 @@ private fun SearchBar(onInputChange: (String) -> Unit, modifier: Modifier = Modi
 
 @Composable
 private fun LoadingList(modifier: Modifier = Modifier) {
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     Column(modifier = modifier) {
         repeat(times = 10) {
             Row(
@@ -199,6 +204,7 @@ private fun LoadingList(modifier: Modifier = Modifier) {
                 )
             }
         }
+        Spacer(Modifier.height(bottomBarHeight))
     }
 }
 
@@ -210,9 +216,11 @@ private fun CurrenciesList(
     onCurrencyClick: (Currency) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     LazyColumn(
         modifier = modifier,
         state = listState,
+        contentPadding = PaddingValues(bottom = bottomBarHeight),
     ) {
         items(
             items = currencies,
