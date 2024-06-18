@@ -30,4 +30,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.appCurrency.models)
+    implementation(deps.tangem.blockchain) {
+        exclude(module = "joda-time")
+    }
 }
