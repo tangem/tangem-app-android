@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.utils
+package com.tangem.common.ui.amountScreen.utils
 
 import com.tangem.blockchain.common.Amount
 import com.tangem.core.ui.extensions.TextReference
@@ -11,7 +11,7 @@ import java.math.BigDecimal
 
 private const val CRYPTO_FEE_DECIMALS = 6
 
-internal fun getCryptoReference(amount: Amount?, isFeeApproximate: Boolean): TextReference? {
+fun getCryptoReference(amount: Amount?, isFeeApproximate: Boolean): TextReference? {
     if (amount == null) return null
     return combinedReference(
         if (isFeeApproximate) stringReference("${BigDecimalFormatter.CAN_BE_LOWER_SIGN} ") else TextReference.EMPTY,
@@ -25,13 +25,13 @@ internal fun getCryptoReference(amount: Amount?, isFeeApproximate: Boolean): Tex
     )
 }
 
-internal fun getFiatReference(value: BigDecimal?, rate: BigDecimal?, appCurrency: AppCurrency): TextReference? {
+fun getFiatReference(value: BigDecimal?, rate: BigDecimal?, appCurrency: AppCurrency): TextReference? {
     if (value == null || rate == null) return null
     val formattedFiat = getFiatString(value = value, rate = rate, appCurrency = appCurrency)
     return stringReference(formattedFiat)
 }
 
-internal fun getFiatString(value: BigDecimal?, rate: BigDecimal?, appCurrency: AppCurrency): String {
+fun getFiatString(value: BigDecimal?, rate: BigDecimal?, appCurrency: AppCurrency): String {
     if (value == null || rate == null) return EMPTY_BALANCE_SIGN
     val feeValue = value.multiply(rate)
     return BigDecimalFormatter.formatFiatAmount(
