@@ -5,7 +5,9 @@ import com.tangem.blockchain.common.Token
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.model.Currency
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.utils.converter.TwoWayConverter
 
@@ -20,9 +22,7 @@ internal class CryptoCurrencyConverter : TwoWayConverter<Currency, CryptoCurrenc
                     blockchain = value.blockchain,
                     extraDerivationPath = value.derivationPath,
                     derivationStyleProvider = requireNotNull(
-                        store.state.globalState
-                            .userWalletsListManager
-                            ?.selectedUserWalletSync
+                        store.inject(DaggerGraphState::generalUserWalletsListManager).selectedUserWalletSync
                             ?.scanResponse
                             ?.derivationStyleProvider,
                     ),
@@ -34,9 +34,7 @@ internal class CryptoCurrencyConverter : TwoWayConverter<Currency, CryptoCurrenc
                     blockchain = value.blockchain,
                     extraDerivationPath = value.derivationPath,
                     derivationStyleProvider = requireNotNull(
-                        store.state.globalState
-                            .userWalletsListManager
-                            ?.selectedUserWalletSync
+                        store.inject(DaggerGraphState::generalUserWalletsListManager).selectedUserWalletSync
                             ?.scanResponse
                             ?.derivationStyleProvider,
                     ),
