@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.minimalAmount
+import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -25,7 +26,6 @@ import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
-import com.tangem.features.send.impl.presentation.utils.getFiatString
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.isTezos

@@ -39,7 +39,6 @@ internal class StakingStateController @Inject constructor() {
             currentStep = StakingStep.InitialInfo,
             initialInfoState = StakingStates.InitialInfoState.Empty(),
             amountState = AmountState.Empty(),
-            validatorState = StakingStates.ValidatorState.Empty(),
             confirmStakingState = StakingStates.ConfirmStakingState.Empty(),
             isBalanceHidden = false,
             event = consumedEvent(),
