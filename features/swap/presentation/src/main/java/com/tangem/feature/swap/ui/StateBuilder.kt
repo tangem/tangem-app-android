@@ -88,7 +88,6 @@ internal class StateBuilder(
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             providerState = ProviderState.Empty(),
             shouldShowMaxAmount = false,
-            reduceAmountIgnore = false,
             priceImpact = PriceImpact.Empty(),
         )
     }
@@ -217,7 +216,6 @@ internal class StateBuilder(
         val warnings = getWarningsForSuccessState(
             quoteModel = quoteModel,
             fromToken = fromToken,
-            ignoreAmountReduce = uiStateHolder.reduceAmountIgnore,
             selectedFeeType = selectedFeeType,
         )
         val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
@@ -317,11 +315,10 @@ internal class StateBuilder(
     private fun getWarningsForSuccessState(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
-        ignoreAmountReduce: Boolean,
         selectedFeeType: FeeType,
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
-        maybeAddDomainWarnings(quoteModel, warnings, ignoreAmountReduce)
+        maybeAddDomainWarnings(quoteModel, warnings)
         maybeAddNeedReserveToCreateAccountWarning(quoteModel, warnings)
         maybeAddPermissionNeededWarning(quoteModel, warnings, fromToken)
         maybeAddNetworkFeeCoverageWarning(quoteModel, warnings, selectedFeeType)
@@ -357,29 +354,11 @@ internal class StateBuilder(
         }
     }
 
-    private fun maybeAddDomainWarnings(
-        quoteModel: SwapState.QuotesLoadedState,
-        warnings: MutableList<SwapWarning>,
-        ignoreAmountReduce: Boolean,
-    ) {
+    private fun maybeAddDomainWarnings(quoteModel: SwapState.QuotesLoadedState, warnings: MutableList<SwapWarning>) {
         quoteModel.warnings.forEach {
             when (it) {
                 is Warning.ExistentialDepositWarning -> {
-                    warnings.add(
-                        SwapWarning.GeneralInformational(
-                            NotificationConfig(
-                                title = resourceReference(R.string.warning_existential_deposit_title),
-                                subtitle = resourceReference(
-                                    R.string.warning_existential_deposit_message,
-                                    wrappedList(
-                                        quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.name,
-                                        it.existentialDeposit.toPlainString(),
-                                    ),
-                                ),
-                                iconResId = R.drawable.ic_alert_circle_24,
-                            ),
-                        ),
-                    )
+                    warnings.add(createLeaveExistentialDepositWarning(quoteModel, it))
                 }
                 is Warning.MinAmountWarning -> {
                     warnings.add(
@@ -399,24 +378,30 @@ internal class StateBuilder(
                     )
                 }
                 is Warning.ReduceAmountWarning -> {
-                    if (!ignoreAmountReduce) {
-                        warnings.add(
-                            SwapWarning.ReduceAmount(
-                                notificationConfig = createReduceAmountNotificationConfig(
-                                    currencyName = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.name,
-                                    amount = it.tezosFeeThreshold.toPlainString(),
-                                    onConfirmClick = {
-                                        val fromAmount = quoteModel.fromTokenInfo.tokenAmount
-                                        val patchedAmount = fromAmount.copy(
-                                            value = fromAmount.value - it.tezosFeeThreshold,
-                                        )
-                                        actions.onReduceAmount(patchedAmount)
-                                    },
-                                    onDismissClick = actions.onReduceAmountIgnoreClick,
-                                ),
+                    warnings.add(
+                        SwapWarning.ReduceAmount(
+                            notificationConfig = createReduceAmountNotificationConfig(
+                                currencyName = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.name,
+                                amount = it.tezosFeeThreshold.toPlainString(),
+                                onConfirmClick = {
+                                    val fromAmount = quoteModel.fromTokenInfo.tokenAmount
+                                    val patchedAmount = fromAmount.copy(
+                                        value = fromAmount.value - it.tezosFeeThreshold,
+                                    )
+                                    actions.onReduceAmount(patchedAmount)
+                                },
                             ),
-                        )
-                    }
+                        ),
+                    )
+                }
+                Warning.Cardano.InsufficientBalanceToTransferCoin -> {
+                    warnings.add(createInsufficientBalanceToTransferCoin())
+                }
+                is Warning.Cardano.InsufficientBalanceToTransferToken -> {
+                    warnings.add(createInsufficientBalanceToTransferToken(tokenName = it.tokenName))
+                }
+                is Warning.Cardano.MinAdaValueCharged -> {
+                    warnings.add(createMinAdaValueCharged(minAdaValue = it.minAdaValue, tokenName = it.tokenName))
                 }
             }
         }
@@ -444,6 +429,41 @@ internal class StateBuilder(
         }
     }
 
+    private fun createLeaveExistentialDepositWarning(
+        quoteModel: SwapState.QuotesLoadedState,
+        domainWarning: Warning.ExistentialDepositWarning,
+    ): SwapWarning {
+        val fromCurrency = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency
+        val deposit = BigDecimalFormatter.formatCryptoAmountUncapped(
+            cryptoAmount = domainWarning.existentialDeposit,
+            cryptoCurrency = fromCurrency,
+        )
+        return SwapWarning.GeneralError(
+            NotificationConfig(
+                title = resourceReference(R.string.send_notification_existential_deposit_title),
+                subtitle = resourceReference(
+                    R.string.send_notification_existential_deposit_text,
+                    wrappedList(deposit),
+                ),
+                iconResId = R.drawable.ic_alert_circle_24,
+                buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                    text = resourceReference(
+                        R.string.send_notification_leave_button,
+                        wrappedList(deposit),
+                    ),
+                    onClick = {
+                        actions.onLeaveExistentialDeposit(
+                            SwapAmount(
+                                domainWarning.minAvailableAmount,
+                                fromCurrency.decimals,
+                            ),
+                        )
+                    },
+                ),
+            ),
+        )
+    }
+
     private fun maybeAddPermissionNeededWarning(
         quoteModel: SwapState.QuotesLoadedState,
         warnings: MutableList<SwapWarning>,
@@ -469,17 +489,23 @@ internal class StateBuilder(
         when (quoteModel.preparedSwapConfigState.includeFeeInAmount) {
             is IncludeFeeInAmount.Included -> {
                 val fee = selectFeeByType(selectedFeeType, quoteModel.txFee) ?: return
-                warnings.add(
-                    SwapWarning.GeneralWarning(
-                        createNetworkFeeCoverageNotificationConfig(
-                            fee.feeCryptoFormatted,
-                            fee.feeFiatFormatted,
+                if (needShowNetworkFeeCoverageWarningShow(quoteModel)) {
+                    warnings.add(
+                        SwapWarning.GeneralWarning(
+                            createNetworkFeeCoverageNotificationConfig(
+                                fee.feeCryptoFormatted,
+                                fee.feeFiatFormatted,
+                            ),
                         ),
-                    ),
-                )
+                    )
+                }
             }
             else -> Unit
         }
+    }
+
+    private fun needShowNetworkFeeCoverageWarningShow(quoteModel: SwapState.QuotesLoadedState): Boolean {
+        return quoteModel.warnings.none { it is Warning.ExistentialDepositWarning }
     }
 
     private fun selectFeeByType(feeType: FeeType, txFeeState: TxFeeState): TxFee? {
@@ -542,8 +568,17 @@ internal class StateBuilder(
         val preparedSwapConfigState = quoteModel.preparedSwapConfigState
         // check has has outgoing transaction
         if (preparedSwapConfigState.hasOutgoingTransaction) return false
+
         // check has MinAmountWarning warning
-        if (quoteModel.warnings.filterIsInstance<Warning.MinAmountWarning>().isNotEmpty()) return false
+        val hasCriticalWarning = quoteModel.warnings.any {
+            it is Warning.MinAmountWarning ||
+                it is Warning.Cardano.InsufficientBalanceToTransferCoin ||
+                it is Warning.Cardano.InsufficientBalanceToTransferToken ||
+                it is Warning.ExistentialDepositWarning
+        }
+
+        if (hasCriticalWarning) return false
+
         return when (preparedSwapConfigState.includeFeeInAmount) {
             IncludeFeeInAmount.BalanceNotEnough -> false
             IncludeFeeInAmount.Excluded ->
@@ -1014,6 +1049,18 @@ internal class StateBuilder(
         )
     }
 
+    fun createDemoModeAlert(uiState: SwapStateHolder, onAlertClick: () -> Unit): SwapStateHolder {
+        return uiState.copy(
+            alert = SwapWarning.GenericWarning(
+                title = resourceReference(id = R.string.warning_demo_mode_title),
+                message = resourceReference(id = R.string.warning_demo_mode_message),
+                onClick = onAlertClick,
+                type = GenericWarningType.OTHER,
+            ),
+            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
+        )
+    }
+
     private fun getProviderErrorMessage(dataError: DataError): TextReference? {
         return when (dataError) {
             is DataError.SwapsAreUnavailableNowError -> resourceReference(
@@ -1377,17 +1424,14 @@ internal class StateBuilder(
         currencyName: String,
         amount: String,
         onConfirmClick: () -> Unit,
-        onDismissClick: () -> Unit,
     ): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.send_notification_high_fee_title),
             subtitle = resourceReference(R.string.send_notification_high_fee_text, wrappedList(currencyName, amount)),
             iconResId = R.drawable.img_attention_20,
-            buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
-                primaryText = resourceReference(R.string.xtz_withdrawal_message_reduce, wrappedList(amount)),
-                onPrimaryClick = onConfirmClick,
-                secondaryText = resourceReference(R.string.xtz_withdrawal_message_ignore),
-                onSecondaryClick = onDismissClick,
+            buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(R.string.xtz_withdrawal_message_reduce, wrappedList(amount)),
+                onClick = onConfirmClick,
             ),
         )
     }
@@ -1429,6 +1473,42 @@ internal class StateBuilder(
                 wrappedList(cryptoAmount, fiatAmount),
             ),
             iconResId = R.drawable.img_attention_20,
+        )
+    }
+
+    private fun createMinAdaValueCharged(minAdaValue: String, tokenName: String): SwapWarning {
+        return SwapWarning.Cardano.MinAdaValueCharged(
+            NotificationConfig(
+                title = resourceReference(id = R.string.cardano_coin_will_be_send_with_token_title),
+                subtitle = resourceReference(
+                    id = R.string.cardano_coin_will_be_send_with_token_description,
+                    formatArgs = wrappedList(minAdaValue, tokenName),
+                ),
+                iconResId = R.drawable.img_attention_20,
+            ),
+        )
+    }
+
+    private fun createInsufficientBalanceToTransferCoin(): SwapWarning {
+        return SwapWarning.Cardano.InsufficientBalanceToTransferCoin(
+            NotificationConfig(
+                title = resourceReference(id = R.string.cardano_max_amount_has_token_title),
+                subtitle = resourceReference(id = R.string.cardano_max_amount_has_token_description),
+                iconResId = R.drawable.ic_alert_circle_24,
+            ),
+        )
+    }
+
+    private fun createInsufficientBalanceToTransferToken(tokenName: String): SwapWarning {
+        return SwapWarning.Cardano.InsufficientBalanceToTransferToken(
+            NotificationConfig(
+                title = resourceReference(id = R.string.cardano_insufficient_balance_to_send_token_title),
+                subtitle = resourceReference(
+                    id = R.string.cardano_insufficient_balance_to_send_token_description,
+                    formatArgs = wrappedList(tokenName),
+                ),
+                iconResId = R.drawable.ic_alert_circle_24,
+            ),
         )
     }
     // end region

@@ -1,5 +1,6 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +22,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
 import com.tangem.feature.onboarding.presentation.wallet2.model.ButtonState
@@ -204,11 +206,12 @@ private fun Modifier.rowPadding(index: Int, rowSize: Int, outSide: Dp, inSide: D
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun SuggestionsBlockPreview_Light(
+private fun SuggestionsBlockPreview(
     @PreviewParameter(SuggestionsPreviewParamsProvider::class) suggestions: ImmutableList<String>,
 ) {
-    TangemTheme(isDark = false) {
+    TangemThemePreview {
         SuggestionsBlock(
             suggestionsList = suggestions,
             onClick = {},
@@ -217,24 +220,12 @@ private fun SuggestionsBlockPreview_Light(
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun SuggestionsBlockPreview_Dark(
+private fun ImportSeedPhraseScreenPreview(
     @PreviewParameter(SuggestionsPreviewParamsProvider::class) suggestions: ImmutableList<String>,
 ) {
-    TangemTheme(isDark = true) {
-        SuggestionsBlock(
-            suggestionsList = suggestions,
-            onClick = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun ImportSeedPhraseScreenPreview_Light(
-    @PreviewParameter(SuggestionsPreviewParamsProvider::class) suggestions: ImmutableList<String>,
-) {
-    TangemTheme(isDark = false) {
+    TangemThemePreview {
         Box(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
             ImportSeedPhraseScreen(
                 ImportSeedPhraseState(

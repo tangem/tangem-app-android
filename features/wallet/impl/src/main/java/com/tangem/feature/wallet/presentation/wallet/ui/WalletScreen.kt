@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.animateFloatAsState
@@ -22,9 +23,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.components.Keyboard
@@ -37,9 +43,15 @@ import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBot
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
+import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TestTags
 import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
@@ -126,16 +138,17 @@ private fun WalletContent(
             mutableStateOf(value = lazyTxHistoryItems)
         }
 
-        val betweenItemsPadding = TangemTheme.dimens.spacing14
+        val betweenItemsPadding = TangemTheme.dimens.spacing12
         val horizontalPadding = TangemTheme.dimens.spacing16
         val itemModifier = movableItemModifier
             .padding(top = betweenItemsPadding)
             .padding(horizontal = horizontalPadding)
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag(TestTags.WALLET_SCREEN),
             contentPadding = PaddingValues(
-                top = TangemTheme.dimens.spacing8,
                 bottom = TangemTheme.dimens.spacing92,
             ),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -284,7 +297,11 @@ private fun BaseScaffoldManageTokenRedesign(
 
     BottomSheetScaffold(
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+            WalletSnackbarHost(
+                snackbarHostState = it,
+                event = state.event,
+                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing16),
+            )
         },
         containerColor = TangemTheme.colors.background.secondary,
         sheetContainerColor = TangemTheme.colors.background.primary,
@@ -315,7 +332,9 @@ private fun BaseScaffoldManageTokenRedesign(
         content = { paddingValues ->
             val pullRefreshState = rememberPullRefreshState(
                 refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                onRefresh = selectedWallet.pullToRefreshConfig.onRefresh,
+                onRefresh = {
+                    selectedWallet.pullToRefreshConfig.onRefresh(WalletPullToRefreshConfig.ShowRefreshState(true))
+                },
             )
 
             Column(
@@ -486,7 +505,13 @@ private fun BaseScaffold(
 ) {
     Scaffold(
         topBar = { WalletTopBar(config = state.topBarConfig) },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            WalletSnackbarHost(
+                snackbarHostState = snackbarHostState,
+                event = state.event,
+                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing16),
+            )
+        },
         floatingActionButton = {
             val manageTokensButtonConfig by remember(state.selectedWalletIndex) {
                 mutableStateOf(
@@ -501,7 +526,9 @@ private fun BaseScaffold(
         content = {
             val pullRefreshState = rememberPullRefreshState(
                 refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                onRefresh = selectedWallet.pullToRefreshConfig.onRefresh,
+                onRefresh = {
+                    selectedWallet.pullToRefreshConfig.onRefresh(WalletPullToRefreshConfig.ShowRefreshState(true))
+                },
             )
 
             Box(
@@ -519,6 +546,21 @@ private fun BaseScaffold(
             }
         },
     )
+}
+
+@Composable
+private fun WalletSnackbarHost(
+    snackbarHostState: SnackbarHostState,
+    event: StateEvent<WalletEvent>,
+    modifier: Modifier = Modifier,
+) {
+    SnackbarHost(hostState = snackbarHostState, modifier = modifier) { data ->
+        if (event is StateEvent.Triggered && event.data is WalletEvent.CopyAddress) {
+            CopiedTextSnackbar(data)
+        } else {
+            TangemSnackbar(data)
+        }
+    }
 }
 
 @Composable
@@ -545,3 +587,26 @@ internal fun LazyListScope.organizeTokens(state: WalletState, itemModifier: Modi
         }
     }
 }
+
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun WalletScreen_Preview(@PreviewParameter(WalletScreenPreviewProvider::class) data: WalletScreenState) {
+    TangemThemePreview {
+        WalletScreen(
+            state = data,
+            bottomSheetHeaderHeightProvider = { 0.dp },
+            bottomSheetContent = {},
+        )
+    }
+}
+
+private class WalletScreenPreviewProvider : PreviewParameterProvider<WalletScreenState> {
+    override val values: Sequence<WalletScreenState>
+        get() = sequenceOf(
+            walletScreenState,
+            walletScreenState.copy(selectedWalletIndex = 1),
+        )
+}
+// endregion

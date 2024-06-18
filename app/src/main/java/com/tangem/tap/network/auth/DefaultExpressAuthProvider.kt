@@ -15,11 +15,11 @@ internal class DefaultExpressAuthProvider(
     private var uuid = AtomicReference(UUID.randomUUID())
 
     override fun getApiKey(): String {
-        return configManager.config.express?.apiKey ?: ""
+        return configManager.config.express?.apiKey ?: error("No express api key provided")
     }
 
     override fun getUserId(): String {
-        return userWalletsStore.selectedUserWalletOrNull?.walletId?.stringValue ?: ""
+        return userWalletsStore.selectedUserWalletOrNull?.walletId?.stringValue ?: error("No user id provided")
     }
 
     override fun getSessionId(): String {
