@@ -13,6 +13,7 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
@@ -753,7 +754,12 @@ internal class TokenDetailsViewModel @Inject constructor(
                                 ),
                             )
                         }
-                        is AssociateAssetError.DataError -> Timber.e(e.message)
+                        is AssociateAssetError.DataError -> {
+                            internalUiState.value = stateFactory.getStateWithErrorDialog(
+                                stringReference(e.message.orEmpty()),
+                            )
+                            Timber.e(e.message)
+                        }
                     }
                 },
                 ifRight = { internalUiState.value = stateFactory.getStateWithRemovedHederaAssociateNotification() },
