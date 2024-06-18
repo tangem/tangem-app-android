@@ -65,7 +65,6 @@ private fun Content(state: ManageTokensState, onHeaderSizeChange: (Dp) -> Unit) 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .navigationBarsPadding()
             .imePadding()
             .background(color = TangemTheme.colors.background.primary),
     ) {

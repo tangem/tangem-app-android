@@ -12,15 +12,18 @@ import android.nfc.NfcAdapter
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -195,6 +198,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         installAppTheme() // We need to call it before onCreate to prevent unnecessary activity recreation
 
+        enableEdgeToEdge(
+            navigationBarStyle = SystemBarStyle.auto(
+                Color.Transparent.toArgb(),
+                Color.Transparent.toArgb(),
+            ),
+        )
+
         super.onCreate(savedInstanceState)
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
@@ -307,8 +317,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @SuppressLint("SourceLockedOrientationActivity")
     private fun initContent() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
         supportFragmentManager.registerFragmentLifecycleCallbacks(
             NavBarInsetsFragmentLifecycleCallback(),
             true,
