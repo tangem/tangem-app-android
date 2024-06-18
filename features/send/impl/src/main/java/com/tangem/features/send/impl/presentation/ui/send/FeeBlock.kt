@@ -14,6 +14,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.common.ui.amountScreen.utils.getCryptoReference
+import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.res.TangemThemePreview
@@ -24,8 +26,6 @@ import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.previewdata.FeeStatePreviewData
-import com.tangem.features.send.impl.presentation.utils.getCryptoReference
-import com.tangem.features.send.impl.presentation.utils.getFiatReference
 
 @Composable
 internal fun FeeBlock(feeState: SendStates.FeeState, isClickDisabled: Boolean, onClick: () -> Unit) {
