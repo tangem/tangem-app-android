@@ -19,7 +19,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.ComposableContentComponent
-import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
@@ -41,10 +40,6 @@ internal fun DetailsScreen(
 ) {
     val backgroundColor = TangemTheme.colors.background.secondary
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
-    SystemBarsEffect {
-        setSystemBarsColor(backgroundColor)
-    }
 
     BackHandler(onBack = state.popBack)
 
