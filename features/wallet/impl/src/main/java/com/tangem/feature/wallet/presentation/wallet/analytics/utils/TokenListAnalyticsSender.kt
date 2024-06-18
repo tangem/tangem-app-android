@@ -2,15 +2,16 @@ package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.analytics.CheckIsWalletToppedUpUseCase
 import com.tangem.domain.analytics.model.WalletBalanceState
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
@@ -33,9 +34,9 @@ internal class TokenListAnalyticsSender @Inject constructor(
     private val mutex = Mutex()
 
     suspend fun send(displayedUiState: WalletState?, userWallet: UserWallet, tokenList: TokenList) {
-        if (screenLifecycleProvider.isBackground) return
+        if (screenLifecycleProvider.isBackgroundState.value) return
         if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
-        if (tokenList.totalFiatBalance is TokenList.FiatBalance.Loading) return
+        if (tokenList.totalFiatBalance is TotalFiatBalance.Loading) return
 
         val currenciesStatuses = getCurrenciesStatuses(tokenList)
 
@@ -52,7 +53,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
     }
 
     private fun sendBalanceLoadedEventIfNeeded(
-        fiatBalance: TokenList.FiatBalance,
+        fiatBalance: TotalFiatBalance,
         currenciesStatuses: List<CryptoCurrencyStatus>,
     ) {
         createCardBalanceState(fiatBalance, currenciesStatuses)?.let { balanceState ->
@@ -61,13 +62,13 @@ internal class TokenListAnalyticsSender @Inject constructor(
     }
 
     private fun createCardBalanceState(
-        fiatBalance: TokenList.FiatBalance,
+        fiatBalance: TotalFiatBalance,
         currenciesStatuses: List<CryptoCurrencyStatus>,
     ): AnalyticsParam.CardBalanceState? {
         return when (fiatBalance) {
-            is TokenList.FiatBalance.Failed -> getCardBalanceState(currenciesStatuses)
-            is TokenList.FiatBalance.Loaded -> getCardBalanceState(fiatBalance)
-            is TokenList.FiatBalance.Loading -> null
+            is TotalFiatBalance.Failed -> getCardBalanceState(currenciesStatuses)
+            is TotalFiatBalance.Loaded -> getCardBalanceState(fiatBalance)
+            is TotalFiatBalance.Loading -> null
         }
     }
 
@@ -125,7 +126,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
         }
     }
 
-    private fun getCardBalanceState(fiatBalance: TokenList.FiatBalance.Loaded): AnalyticsParam.CardBalanceState {
+    private fun getCardBalanceState(fiatBalance: TotalFiatBalance.Loaded): AnalyticsParam.CardBalanceState {
         return if (fiatBalance.amount > BigDecimal.ZERO) {
             AnalyticsParam.CardBalanceState.Full
         } else {
@@ -135,7 +136,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
 
     private suspend fun sendToppedUpEventIfNeeded(
         userWallet: UserWallet,
-        fiatBalance: TokenList.FiatBalance,
+        fiatBalance: TotalFiatBalance,
         currenciesStatuses: List<CryptoCurrencyStatus>,
     ) {
         val balanceState = getWalletBalanceState(fiatBalance) ?: return
@@ -157,17 +158,17 @@ internal class TokenListAnalyticsSender @Inject constructor(
         }
     }
 
-    private fun getWalletBalanceState(fiatBalance: TokenList.FiatBalance): WalletBalanceState? {
+    private fun getWalletBalanceState(fiatBalance: TotalFiatBalance): WalletBalanceState? {
         return when (fiatBalance) {
-            is TokenList.FiatBalance.Failed -> WalletBalanceState.Error
-            is TokenList.FiatBalance.Loaded -> {
+            is TotalFiatBalance.Failed -> WalletBalanceState.Error
+            is TotalFiatBalance.Loaded -> {
                 if (fiatBalance.amount > BigDecimal.ZERO) {
                     WalletBalanceState.ToppedUp
                 } else {
                     WalletBalanceState.Empty
                 }
             }
-            is TokenList.FiatBalance.Loading -> null
+            is TotalFiatBalance.Loading -> null
         }
     }
 
