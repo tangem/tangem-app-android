@@ -42,13 +42,6 @@ object BnbTransactionDialog {
             setTitle(context.getString(R.string.wallet_connect_title))
             setMessage(fullMessage)
             setPositiveButton(positiveButtonTitle) { _, _ ->
-                store.dispatch(
-                    WalletConnectAction.BinanceTransaction.Sign(
-                        id = preparedData.requestId,
-                        data = data.data,
-                        topic = preparedData.topic,
-                    ),
-                )
                 store.dispatch(WalletConnectAction.PerformRequestedAction(preparedData))
             }
             setNegativeButton(context.getText(R.string.common_reject)) { _, _ ->
