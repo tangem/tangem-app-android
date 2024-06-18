@@ -10,6 +10,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.blockchain.blockchains.hedera.HederaTokenAddressConverter
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.derivation.DerivationStyle
@@ -77,6 +78,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private val actionsHandler = ActionsHandler(featureRouter)
     private val testActionsHandler = TestActionsHandler()
     private val formStateBuilder = FormStateBuilder()
+    private val hederaAddressConverter = HederaTokenAddressConverter()
 
     private var currentCryptoCurrencies: List<CryptoCurrency> = emptyList()
 
@@ -365,7 +367,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private fun updateForm(address: String, selectedNetwork: Blockchain) {
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
-                featureInteractor.findToken(address = address, blockchain = selectedNetwork)
+                val tokenAddress = convertTokenAddress(selectedNetwork, address)
+                featureInteractor.findToken(address = tokenAddress, blockchain = selectedNetwork)
             }
                 .onSuccess { token ->
                     foundToken = token
@@ -849,8 +852,10 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
             val currency = when (getCustomTokenType()) {
                 CustomTokenType.TOKEN -> {
-                    val contractAddress = foundToken?.network?.contractAddress
-                        ?: uiState.form.contractAddressInputField.value
+                    val contractAddress = convertTokenAddress(
+                        blockchain = blockchain,
+                        address = foundToken?.network?.contractAddress ?: uiState.form.contractAddressInputField.value,
+                    )
                     CustomCurrency.CustomToken(
                         token = Token(
                             name = uiState.form.tokenNameInputField.value,
@@ -885,6 +890,13 @@ internal class AddCustomTokenViewModel @Inject constructor(
                         Timber.e(it)
                     }
             }
+        }
+    }
+
+    private fun convertTokenAddress(blockchain: Blockchain, address: String): String {
+        return when (blockchain) {
+            Blockchain.Hedera, Blockchain.HederaTestnet -> hederaAddressConverter.convertToTokenId(address)
+            else -> address
         }
     }
 
