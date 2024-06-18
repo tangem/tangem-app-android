@@ -2,6 +2,7 @@ package com.tangem.data.staking
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.data.staking.converters.StakingNetworkTypeConverter
 import com.tangem.data.staking.converters.YieldConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
@@ -20,7 +21,8 @@ internal class DefaultStakingRepository(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : StakingRepository {
 
-    private val yieldConverter = YieldConverter()
+    private val stakingNetworkTypeConverter = StakingNetworkTypeConverter()
+    private val yieldConverter = YieldConverter(stakingNetworkTypeConverter)
 
     override fun isStakingSupported(currencyId: String): Boolean {
         return integrationIds.contains(currencyId)
