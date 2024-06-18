@@ -841,9 +841,14 @@ internal class SwapInteractorImpl @Inject constructor(
                 gasLimit = fee.gasLimit.toLong(),
             )
             blockchain == Blockchain.Aptos -> {
+                val gasUnitPrice = fee.feeValue.divide(
+                    BigDecimal(fee.gasLimit),
+                    Blockchain.Aptos.decimals(),
+                    RoundingMode.HALF_UP,
+                )
                 Fee.Aptos(
                     amount = feeAmount,
-                    gasUnitPrice = fee.feeValue.divide(BigDecimal(fee.gasLimit))
+                    gasUnitPrice = gasUnitPrice
                         .movePointRight(Blockchain.Aptos.decimals())
                         .toLong(),
                     gasLimit = fee.gasLimit.toLong(),
