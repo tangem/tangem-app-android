@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.stakekit.models.response.model
+package com.tangem.datasource.api.stakekit.models.response.model.transaction
 
 import com.squareup.moshi.Json
 

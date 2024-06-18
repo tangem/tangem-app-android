@@ -4,7 +4,7 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.stakekit.models.request.*
 import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
 import com.tangem.datasource.api.stakekit.models.response.EnterActionResponse
-import com.tangem.datasource.api.stakekit.models.response.model.StakingTransactionDTO
+import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenWithYieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO

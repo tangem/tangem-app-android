@@ -2,8 +2,9 @@ package com.tangem.datasource.api.stakekit.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import com.tangem.datasource.api.stakekit.models.response.model.StakingActionTypeDTO
-import com.tangem.datasource.api.stakekit.models.response.model.StakingTransactionDTO
+import com.tangem.datasource.api.stakekit.models.response.model.action.ActionStatusDTO
+import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
+import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionDTO
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
@@ -30,26 +31,4 @@ data class EnterActionResponse(
     @Json(name = "createdAt")
     val createdAt: DateTime,
 
-) {
-    enum class ActionStatusDTO {
-        @Json(name = "CANCELED")
-        CANCELED,
-
-        @Json(name = "CREATED")
-        CREATED,
-
-        @Json(name = "WAITING_FOR_NEXT")
-        WAITING_FOR_NEXT,
-
-        @Json(name = "PROCESSING")
-        PROCESSING,
-
-        @Json(name = "FAILED")
-        FAILED,
-
-        @Json(name = "SUCCESS")
-        SUCCESS,
-
-        UNKNOWN,
-    }
-}
+)

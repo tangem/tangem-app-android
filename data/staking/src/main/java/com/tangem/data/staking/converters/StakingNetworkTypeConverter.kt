@@ -4,10 +4,11 @@ import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.domain.staking.model.NetworkType
 import com.tangem.utils.converter.Converter
 
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 class StakingNetworkTypeConverter : Converter<NetworkTypeDTO, NetworkType> {
 
     override fun convert(value: NetworkTypeDTO): NetworkType {
-        return when(value) {
+        return when (value) {
             NetworkTypeDTO.AVALANCHE_C -> NetworkType.AVALANCHE_C
             NetworkTypeDTO.AVALANCHE_ATOMIC -> NetworkType.AVALANCHE_ATOMIC
             NetworkTypeDTO.AVALANCHE_P -> NetworkType.AVALANCHE_P
@@ -77,5 +78,4 @@ class StakingNetworkTypeConverter : Converter<NetworkTypeDTO, NetworkType> {
             else -> NetworkType.UNKNOWN
         }
     }
-
 }

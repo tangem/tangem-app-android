@@ -1,7 +1,10 @@
-package com.tangem.datasource.api.stakekit.models.response.model
+package com.tangem.datasource.api.stakekit.models.response.model.transaction
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 
+@JsonClass(generateAdapter = true)
 data class StakingTransactionDTO(
     @Json(name = "id")
     val id: String,

@@ -4,6 +4,9 @@ import com.squareup.moshi.*
 import com.squareup.moshi.adapters.EnumJsonAdapter
 import com.tangem.datasource.api.stakekit.models.response.EnterActionResponse
 import com.tangem.datasource.api.stakekit.models.response.model.*
+import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
+import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionStatusDTO
+import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionTypeDTO
 
 /**
  * Object to create a adapter for enum types with support for unknown enum values.

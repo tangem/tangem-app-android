@@ -1,20 +1,19 @@
 package com.tangem.data.staking.converters
 
 import com.tangem.datasource.api.stakekit.models.response.model.AddressArgumentDTO
-import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.domain.staking.model.*
 import com.tangem.utils.converter.Converter
 
 class YieldConverter(
-    private val stakingNetworkTypeConverter: StakingNetworkTypeConverter
+    private val tokenConverter: TokenConverter,
 ) : Converter<YieldDTO, Yield> {
 
     override fun convert(value: YieldDTO): Yield {
         return Yield(
             id = value.id,
-            token = convertToken(value.token),
-            tokens = value.tokens.map { convertToken(it) },
+            token = tokenConverter.convert(value.token),
+            tokens = value.tokens.map { tokenConverter.convert(it) },
             args = convertArgs(value.args),
             status = convertStatus(value.status),
             apy = value.apy,
@@ -25,21 +24,6 @@ class YieldConverter(
             isAvailable = value.isAvailable,
         )
     }
-
-    private fun convertToken(tokenDTO: TokenDTO): Token {
-        return Token(
-            name = tokenDTO.name,
-            network = stakingNetworkTypeConverter.convert(tokenDTO.network),
-            symbol = tokenDTO.symbol,
-            decimals = tokenDTO.decimals,
-            address = tokenDTO.address,
-            coinGeckoId = tokenDTO.coinGeckoId,
-            logoURI = tokenDTO.logoURI,
-            isPoints = tokenDTO.isPoints,
-        )
-    }
-
-
 
     private fun convertArgs(argsDTO: YieldDTO.ArgsDTO): Yield.Args {
         return Yield.Args(
@@ -84,9 +68,9 @@ class YieldConverter(
             logoUri = metadataDTO.logoUri,
             description = metadataDTO.description,
             documentation = metadataDTO.documentation,
-            gasFeeToken = convertToken(metadataDTO.gasFeeTokenDTO),
-            token = convertToken(metadataDTO.tokenDTO),
-            tokens = metadataDTO.tokensDTO.map { convertToken(it) },
+            gasFeeToken = tokenConverter.convert(metadataDTO.gasFeeTokenDTO),
+            token = tokenConverter.convert(metadataDTO.tokenDTO),
+            tokens = metadataDTO.tokensDTO.map { tokenConverter.convert(it) },
             type = metadataDTO.type,
             rewardSchedule = metadataDTO.rewardSchedule,
             cooldownPeriod = convertPeriod(metadataDTO.cooldownPeriod),
