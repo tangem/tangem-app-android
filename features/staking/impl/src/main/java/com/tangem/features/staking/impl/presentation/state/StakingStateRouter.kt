@@ -1,7 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import androidx.fragment.app.FragmentManager
-import kotlinx.coroutines.flow.update
 import java.lang.ref.WeakReference
 
 internal class StakingStateRouter(
@@ -22,7 +21,7 @@ internal class StakingStateRouter(
             isSuccess -> popBackStack()
             else -> when (type) {
                 StakingStep.Amount -> showInitial()
-                StakingStep.ValidatorAndFee -> showAmount()
+                StakingStep.Confirm -> showAmount()
                 else -> popBackStack()
             }
         }
@@ -31,9 +30,9 @@ internal class StakingStateRouter(
     fun onNextClick() {
         when (stateController.uiState.value.currentStep) {
             StakingStep.InitialInfo -> showAmount()
-            StakingStep.Amount -> showValidator()
-            StakingStep.ValidatorAndFee -> showConfirm()
-            StakingStep.Confirm -> onBackClick()
+            StakingStep.Amount -> showConfirm()
+            StakingStep.Confirm -> showSuccess()
+            StakingStep.Success -> onBackClick()
         }
     }
 
@@ -52,12 +51,12 @@ internal class StakingStateRouter(
         stateController.update { it.copy(currentStep = StakingStep.Amount) }
     }
 
-    fun showValidator() {
-        stateController.update { it.copy(currentStep = StakingStep.ValidatorAndFee) }
-    }
-
     fun showConfirm() {
         stateController.update { it.copy(currentStep = StakingStep.Confirm) }
+    }
+
+    fun showSuccess() {
+        stateController.update { it.copy(currentStep = StakingStep.Success) }
     }
 
     private fun getInitialState() = StakingStep.InitialInfo
