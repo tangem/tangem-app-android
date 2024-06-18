@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.appsettings.components
 
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -8,7 +9,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.DialogButton
 import com.tangem.core.ui.components.SelectorDialog
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsDialogsFactory
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Dialog
 import com.tangem.wallet.R
@@ -31,17 +32,10 @@ internal fun SettingsSelectorDialog(dialog: Dialog.Selector) {
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun SettingsSelectorDialogPreview_Light(@PreviewParameter(DialogProvider::class) param: Dialog.Selector) {
-    TangemTheme(isDark = false) {
-        SettingsSelectorDialog(param)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun SettingsSelectorDialogPreview_Dark(@PreviewParameter(DialogProvider::class) param: Dialog.Selector) {
-    TangemTheme(isDark = true) {
+private fun SettingsSelectorDialogPreview(@PreviewParameter(DialogProvider::class) param: Dialog.Selector) {
+    TangemThemePreview {
         SettingsSelectorDialog(param)
     }
 }
