@@ -12,9 +12,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class AppRoute(val path: String) : Route, RouteBundleParams {
-
-    override fun getBundle(): Bundle = bundle(serializer())
+sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data object Initial : AppRoute(path = "/initial")
@@ -25,7 +23,9 @@ sealed class AppRoute(val path: String) : Route, RouteBundleParams {
     @Serializable
     data class Welcome(
         val intent: SerializableIntent? = null,
-    ) : AppRoute(path = "/welcome") {
+    ) : AppRoute(path = "/welcome"), RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
 
         companion object {
             const val INITIAL_INTENT_KEY = "intent"
@@ -35,7 +35,9 @@ sealed class AppRoute(val path: String) : Route, RouteBundleParams {
     @Serializable
     data class Disclaimer(
         val isTosAccepted: Boolean,
-    ) : AppRoute(path = "/disclaimer${if (isTosAccepted) "/tos_accepted" else ""}") {
+    ) : AppRoute(path = "/disclaimer${if (isTosAccepted) "/tos_accepted" else ""}"), RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
 
         companion object {
             const val IS_TOS_ACCEPTED_KEY = "isTosAccepted"
@@ -48,7 +50,9 @@ sealed class AppRoute(val path: String) : Route, RouteBundleParams {
     @Serializable
     data class OnboardingWallet(
         val canSkipBackup: Boolean = true,
-    ) : AppRoute(path = "/onboarding/wallet${if (canSkipBackup) "/skippable" else ""}") {
+    ) : AppRoute(path = "/onboarding/wallet${if (canSkipBackup) "/skippable" else ""}"), RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
 
         companion object {
             const val CAN_SKIP_BACKUP_KEY = "canSkipBackup"
@@ -68,7 +72,9 @@ sealed class AppRoute(val path: String) : Route, RouteBundleParams {
     data class CurrencyDetails(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
-    ) : AppRoute(path = "/currency_details/${userWalletId.stringValue}/${currency.id.value}") {
+    ) : AppRoute(path = "/currency_details/${userWalletId.stringValue}/${currency.id.value}"), RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
 
         companion object {
             const val USER_WALLET_ID_KEY = "userWalletId"
@@ -90,7 +96,11 @@ sealed class AppRoute(val path: String) : Route, RouteBundleParams {
             "&$amount" +
             "&$tag" +
             "&$destinationAddress",
-    ) {
+    ),
+        RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
+
         companion object {
             const val USER_WALLET_ID_KEY = "userWalletId"
             const val CRYPTO_CURRENCY_KEY = "currency"
@@ -134,7 +144,9 @@ sealed class AppRoute(val path: String) : Route, RouteBundleParams {
     data class QrScanning(
         val source: SourceType,
         val networkName: String? = null,
-    ) : AppRoute(path = "/qr_scanning") {
+    ) : AppRoute(path = "/$source/qr_scanning${if (networkName != null) "/$networkName" else ""}"), RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
 
         companion object {
             const val SOURCE_KEY = "source"
@@ -148,7 +160,9 @@ sealed class AppRoute(val path: String) : Route, RouteBundleParams {
     @Serializable
     data class Swap(
         val currency: CryptoCurrency,
-    ) : AppRoute(path = "/swap") {
+    ) : AppRoute(path = "/swap/${currency.id.value}"), RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
 
         companion object {
             const val CURRENCY_BUNDLE_KEY = "currency"
@@ -172,7 +186,10 @@ sealed class AppRoute(val path: String) : Route, RouteBundleParams {
         val userWalletId: UserWalletId,
         val cryptoCurrencyId: CryptoCurrency.ID,
         val yield: Yield,
-    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/${yield.id}") {
+    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/${yield.id}"),
+        RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
 
         companion object {
             const val USER_WALLET_ID_KEY = "userWalletId"
