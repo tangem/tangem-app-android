@@ -60,6 +60,7 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
+    implementation(projects.domain.transaction)
 
     /** Common */
     implementation(projects.common.ui)
