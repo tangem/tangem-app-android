@@ -10,13 +10,19 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.blockchain.blockchains.hedera.HederaTokenAddressConverter
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.derivation.DerivationStyle
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.isSupportedInApp
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.extensions.*
+import com.tangem.domain.common.extensions.canHandleBlockchain
+import com.tangem.domain.common.extensions.canHandleToken
+import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
@@ -72,6 +78,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private val actionsHandler = ActionsHandler(featureRouter)
     private val testActionsHandler = TestActionsHandler()
     private val formStateBuilder = FormStateBuilder()
+    private val hederaAddressConverter = HederaTokenAddressConverter()
 
     private var currentCryptoCurrencies: List<CryptoCurrency> = emptyList()
 
@@ -232,7 +239,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 ifRight = { it.scanResponse },
             )
             val derivationStyle = scanResponse?.derivationStyleProvider?.getDerivationStyle()
-            return listOf(defaultNetwork) + Blockchain.values()
+            return listOf(defaultNetwork) + Blockchain.entries
                 .filter { blockchain ->
                     scanResponse?.card?.supportedBlockchains(scanResponse.cardTypesResolver)
                         ?.contains(blockchain) == true && isDerivationPathNotEmpty(derivationStyle, blockchain)
@@ -316,7 +323,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     type = DerivationPathSelectorType.CUSTOM,
                     derivationPath = "",
                 ),
-            ) + Blockchain.values()
+            ) + Blockchain.entries
                 .filter { blockchain ->
                     blockchain.isSupportedInApp() && !blockchain.isTestnet()
                 }
@@ -360,7 +367,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private fun updateForm(address: String, selectedNetwork: Blockchain) {
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
-                featureInteractor.findToken(address = address, blockchain = selectedNetwork)
+                val tokenAddress = convertTokenAddress(selectedNetwork, address)
+                featureInteractor.findToken(address = tokenAddress, blockchain = selectedNetwork)
             }
                 .onSuccess { token ->
                     foundToken = token
@@ -844,8 +852,10 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
             val currency = when (getCustomTokenType()) {
                 CustomTokenType.TOKEN -> {
-                    val contractAddress = foundToken?.network?.contractAddress
-                        ?: uiState.form.contractAddressInputField.value
+                    val contractAddress = convertTokenAddress(
+                        blockchain = blockchain,
+                        address = foundToken?.network?.contractAddress ?: uiState.form.contractAddressInputField.value,
+                    )
                     CustomCurrency.CustomToken(
                         token = Token(
                             name = uiState.form.tokenNameInputField.value,
@@ -880,6 +890,13 @@ internal class AddCustomTokenViewModel @Inject constructor(
                         Timber.e(it)
                     }
             }
+        }
+    }
+
+    private fun convertTokenAddress(blockchain: Blockchain, address: String): String {
+        return when (blockchain) {
+            Blockchain.Hedera, Blockchain.HederaTestnet -> hederaAddressConverter.convertToTokenId(address)
+            else -> address
         }
     }
 
