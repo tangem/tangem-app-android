@@ -18,7 +18,7 @@ object UnknownEnumMoshiAdapter {
 
 fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
     val map = mapOf(
-        TokenDTO.NetworkTypeDTO::class.java to TokenDTO.NetworkTypeDTO.UNKNOWN,
+        NetworkTypeDTO::class.java to NetworkTypeDTO.UNKNOWN,
         StakingActionTypeDTO::class.java to StakingActionTypeDTO.UNKNOWN,
         YieldDTO.RewardTypeDTO::class.java to YieldDTO.RewardTypeDTO.UNKNOWN,
         YieldBalanceWrapperDTO.BalanceDTO.BalanceType::class.java to

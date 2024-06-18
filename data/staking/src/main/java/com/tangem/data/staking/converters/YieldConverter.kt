@@ -1,6 +1,7 @@
 package com.tangem.data.staking.converters
 
 import com.tangem.datasource.api.stakekit.models.response.model.AddressArgumentDTO
+import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.domain.staking.model.*
@@ -38,75 +39,75 @@ class YieldConverter : Converter<YieldDTO, Yield> {
     }
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
-    private fun convertNetworkType(networkTypeDTO: TokenDTO.NetworkTypeDTO): Token.NetworkType {
+    private fun convertNetworkType(networkTypeDTO: NetworkTypeDTO): NetworkType {
         return when (networkTypeDTO) {
-            TokenDTO.NetworkTypeDTO.AVALANCHE_C -> Token.NetworkType.AVALANCHE_C
-            TokenDTO.NetworkTypeDTO.AVALANCHE_ATOMIC -> Token.NetworkType.AVALANCHE_ATOMIC
-            TokenDTO.NetworkTypeDTO.AVALANCHE_P -> Token.NetworkType.AVALANCHE_P
-            TokenDTO.NetworkTypeDTO.ARBITRUM -> Token.NetworkType.ARBITRUM
-            TokenDTO.NetworkTypeDTO.BINANCE -> Token.NetworkType.BINANCE
-            TokenDTO.NetworkTypeDTO.CELO -> Token.NetworkType.CELO
-            TokenDTO.NetworkTypeDTO.ETHEREUM -> Token.NetworkType.ETHEREUM
-            TokenDTO.NetworkTypeDTO.ETHEREUM_GOERLI -> Token.NetworkType.ETHEREUM_GOERLI
-            TokenDTO.NetworkTypeDTO.ETHEREUM_HOLESKY -> Token.NetworkType.ETHEREUM_HOLESKY
-            TokenDTO.NetworkTypeDTO.FANTOM -> Token.NetworkType.FANTOM
-            TokenDTO.NetworkTypeDTO.HARMONY -> Token.NetworkType.HARMONY
-            TokenDTO.NetworkTypeDTO.OPTIMISM -> Token.NetworkType.OPTIMISM
-            TokenDTO.NetworkTypeDTO.POLYGON -> Token.NetworkType.POLYGON
-            TokenDTO.NetworkTypeDTO.GNOSIS -> Token.NetworkType.GNOSIS
-            TokenDTO.NetworkTypeDTO.MOONRIVER -> Token.NetworkType.MOONRIVER
-            TokenDTO.NetworkTypeDTO.OKC -> Token.NetworkType.OKC
-            TokenDTO.NetworkTypeDTO.ZKSYNC -> Token.NetworkType.ZKSYNC
-            TokenDTO.NetworkTypeDTO.VICTION -> Token.NetworkType.VICTION
-            TokenDTO.NetworkTypeDTO.AGORIC -> Token.NetworkType.AGORIC
-            TokenDTO.NetworkTypeDTO.AKASH -> Token.NetworkType.AKASH
-            TokenDTO.NetworkTypeDTO.AXELAR -> Token.NetworkType.AXELAR
-            TokenDTO.NetworkTypeDTO.BAND_PROTOCOL -> Token.NetworkType.BAND_PROTOCOL
-            TokenDTO.NetworkTypeDTO.BITSONG -> Token.NetworkType.BITSONG
-            TokenDTO.NetworkTypeDTO.CANTO -> Token.NetworkType.CANTO
-            TokenDTO.NetworkTypeDTO.CHIHUAHUA -> Token.NetworkType.CHIHUAHUA
-            TokenDTO.NetworkTypeDTO.COMDEX -> Token.NetworkType.COMDEX
-            TokenDTO.NetworkTypeDTO.COREUM -> Token.NetworkType.COREUM
-            TokenDTO.NetworkTypeDTO.COSMOS -> Token.NetworkType.COSMOS
-            TokenDTO.NetworkTypeDTO.CRESCENT -> Token.NetworkType.CRESCENT
-            TokenDTO.NetworkTypeDTO.CRONOS -> Token.NetworkType.CRONOS
-            TokenDTO.NetworkTypeDTO.CUDOS -> Token.NetworkType.CUDOS
-            TokenDTO.NetworkTypeDTO.DESMOS -> Token.NetworkType.DESMOS
-            TokenDTO.NetworkTypeDTO.DYDX -> Token.NetworkType.DYDX
-            TokenDTO.NetworkTypeDTO.EVMOS -> Token.NetworkType.EVMOS
-            TokenDTO.NetworkTypeDTO.FETCH_AI -> Token.NetworkType.FETCH_AI
-            TokenDTO.NetworkTypeDTO.GRAVITY_BRIDGE -> Token.NetworkType.GRAVITY_BRIDGE
-            TokenDTO.NetworkTypeDTO.INJECTIVE -> Token.NetworkType.INJECTIVE
-            TokenDTO.NetworkTypeDTO.IRISNET -> Token.NetworkType.IRISNET
-            TokenDTO.NetworkTypeDTO.JUNO -> Token.NetworkType.JUNO
-            TokenDTO.NetworkTypeDTO.KAVA -> Token.NetworkType.KAVA
-            TokenDTO.NetworkTypeDTO.KI_NETWORK -> Token.NetworkType.KI_NETWORK
-            TokenDTO.NetworkTypeDTO.MARS_PROTOCOL -> Token.NetworkType.MARS_PROTOCOL
-            TokenDTO.NetworkTypeDTO.NYM -> Token.NetworkType.NYM
-            TokenDTO.NetworkTypeDTO.OKEX_CHAIN -> Token.NetworkType.OKEX_CHAIN
-            TokenDTO.NetworkTypeDTO.ONOMY -> Token.NetworkType.ONOMY
-            TokenDTO.NetworkTypeDTO.OSMOSIS -> Token.NetworkType.OSMOSIS
-            TokenDTO.NetworkTypeDTO.PERSISTENCE -> Token.NetworkType.PERSISTENCE
-            TokenDTO.NetworkTypeDTO.QUICKSILVER -> Token.NetworkType.QUICKSILVER
-            TokenDTO.NetworkTypeDTO.REGEN -> Token.NetworkType.REGEN
-            TokenDTO.NetworkTypeDTO.SECRET -> Token.NetworkType.SECRET
-            TokenDTO.NetworkTypeDTO.SENTINEL -> Token.NetworkType.SENTINEL
-            TokenDTO.NetworkTypeDTO.SOMMELIER -> Token.NetworkType.SOMMELIER
-            TokenDTO.NetworkTypeDTO.STAFI -> Token.NetworkType.STAFI
-            TokenDTO.NetworkTypeDTO.STARGAZE -> Token.NetworkType.STARGAZE
-            TokenDTO.NetworkTypeDTO.STRIDE -> Token.NetworkType.STRIDE
-            TokenDTO.NetworkTypeDTO.TERITORI -> Token.NetworkType.TERITORI
-            TokenDTO.NetworkTypeDTO.TGRADE -> Token.NetworkType.TGRADE
-            TokenDTO.NetworkTypeDTO.UMEE -> Token.NetworkType.UMEE
-            TokenDTO.NetworkTypeDTO.POLKADOT -> Token.NetworkType.POLKADOT
-            TokenDTO.NetworkTypeDTO.KUSAMA -> Token.NetworkType.KUSAMA
-            TokenDTO.NetworkTypeDTO.WESTEND -> Token.NetworkType.WESTEND
-            TokenDTO.NetworkTypeDTO.BINANCEBEACON -> Token.NetworkType.BINANCEBEACON
-            TokenDTO.NetworkTypeDTO.NEAR -> Token.NetworkType.NEAR
-            TokenDTO.NetworkTypeDTO.SOLANA -> Token.NetworkType.SOLANA
-            TokenDTO.NetworkTypeDTO.TEZOS -> Token.NetworkType.TEZOS
-            TokenDTO.NetworkTypeDTO.TRON -> Token.NetworkType.TRON
-            else -> Token.NetworkType.UNKNOWN
+            NetworkTypeDTO.AVALANCHE_C -> NetworkType.AVALANCHE_C
+            NetworkTypeDTO.AVALANCHE_ATOMIC -> NetworkType.AVALANCHE_ATOMIC
+            NetworkTypeDTO.AVALANCHE_P -> NetworkType.AVALANCHE_P
+            NetworkTypeDTO.ARBITRUM -> NetworkType.ARBITRUM
+            NetworkTypeDTO.BINANCE -> NetworkType.BINANCE
+            NetworkTypeDTO.CELO -> NetworkType.CELO
+            NetworkTypeDTO.ETHEREUM -> NetworkType.ETHEREUM
+            NetworkTypeDTO.ETHEREUM_GOERLI -> NetworkType.ETHEREUM_GOERLI
+            NetworkTypeDTO.ETHEREUM_HOLESKY -> NetworkType.ETHEREUM_HOLESKY
+            NetworkTypeDTO.FANTOM -> NetworkType.FANTOM
+            NetworkTypeDTO.HARMONY -> NetworkType.HARMONY
+            NetworkTypeDTO.OPTIMISM -> NetworkType.OPTIMISM
+            NetworkTypeDTO.POLYGON -> NetworkType.POLYGON
+            NetworkTypeDTO.GNOSIS -> NetworkType.GNOSIS
+            NetworkTypeDTO.MOONRIVER -> NetworkType.MOONRIVER
+            NetworkTypeDTO.OKC -> NetworkType.OKC
+            NetworkTypeDTO.ZKSYNC -> NetworkType.ZKSYNC
+            NetworkTypeDTO.VICTION -> NetworkType.VICTION
+            NetworkTypeDTO.AGORIC -> NetworkType.AGORIC
+            NetworkTypeDTO.AKASH -> NetworkType.AKASH
+            NetworkTypeDTO.AXELAR -> NetworkType.AXELAR
+            NetworkTypeDTO.BAND_PROTOCOL -> NetworkType.BAND_PROTOCOL
+            NetworkTypeDTO.BITSONG -> NetworkType.BITSONG
+            NetworkTypeDTO.CANTO -> NetworkType.CANTO
+            NetworkTypeDTO.CHIHUAHUA -> NetworkType.CHIHUAHUA
+            NetworkTypeDTO.COMDEX -> NetworkType.COMDEX
+            NetworkTypeDTO.COREUM -> NetworkType.COREUM
+            NetworkTypeDTO.COSMOS -> NetworkType.COSMOS
+            NetworkTypeDTO.CRESCENT -> NetworkType.CRESCENT
+            NetworkTypeDTO.CRONOS -> NetworkType.CRONOS
+            NetworkTypeDTO.CUDOS -> NetworkType.CUDOS
+            NetworkTypeDTO.DESMOS -> NetworkType.DESMOS
+            NetworkTypeDTO.DYDX -> NetworkType.DYDX
+            NetworkTypeDTO.EVMOS -> NetworkType.EVMOS
+            NetworkTypeDTO.FETCH_AI -> NetworkType.FETCH_AI
+            NetworkTypeDTO.GRAVITY_BRIDGE -> NetworkType.GRAVITY_BRIDGE
+            NetworkTypeDTO.INJECTIVE -> NetworkType.INJECTIVE
+            NetworkTypeDTO.IRISNET -> NetworkType.IRISNET
+            NetworkTypeDTO.JUNO -> NetworkType.JUNO
+            NetworkTypeDTO.KAVA -> NetworkType.KAVA
+            NetworkTypeDTO.KI_NETWORK -> NetworkType.KI_NETWORK
+            NetworkTypeDTO.MARS_PROTOCOL -> NetworkType.MARS_PROTOCOL
+            NetworkTypeDTO.NYM -> NetworkType.NYM
+            NetworkTypeDTO.OKEX_CHAIN -> NetworkType.OKEX_CHAIN
+            NetworkTypeDTO.ONOMY -> NetworkType.ONOMY
+            NetworkTypeDTO.OSMOSIS -> NetworkType.OSMOSIS
+            NetworkTypeDTO.PERSISTENCE -> NetworkType.PERSISTENCE
+            NetworkTypeDTO.QUICKSILVER -> NetworkType.QUICKSILVER
+            NetworkTypeDTO.REGEN -> NetworkType.REGEN
+            NetworkTypeDTO.SECRET -> NetworkType.SECRET
+            NetworkTypeDTO.SENTINEL -> NetworkType.SENTINEL
+            NetworkTypeDTO.SOMMELIER -> NetworkType.SOMMELIER
+            NetworkTypeDTO.STAFI -> NetworkType.STAFI
+            NetworkTypeDTO.STARGAZE -> NetworkType.STARGAZE
+            NetworkTypeDTO.STRIDE -> NetworkType.STRIDE
+            NetworkTypeDTO.TERITORI -> NetworkType.TERITORI
+            NetworkTypeDTO.TGRADE -> NetworkType.TGRADE
+            NetworkTypeDTO.UMEE -> NetworkType.UMEE
+            NetworkTypeDTO.POLKADOT -> NetworkType.POLKADOT
+            NetworkTypeDTO.KUSAMA -> NetworkType.KUSAMA
+            NetworkTypeDTO.WESTEND -> NetworkType.WESTEND
+            NetworkTypeDTO.BINANCEBEACON -> NetworkType.BINANCEBEACON
+            NetworkTypeDTO.NEAR -> NetworkType.NEAR
+            NetworkTypeDTO.SOLANA -> NetworkType.SOLANA
+            NetworkTypeDTO.TEZOS -> NetworkType.TEZOS
+            NetworkTypeDTO.TRON -> NetworkType.TRON
+            else -> NetworkType.UNKNOWN
         }
     }
 
