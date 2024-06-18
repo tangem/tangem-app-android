@@ -2,10 +2,8 @@ package com.tangem.datasource.api.common.adapter
 
 import com.squareup.moshi.*
 import com.squareup.moshi.adapters.EnumJsonAdapter
-import com.tangem.datasource.api.stakekit.models.response.model.StakingActionTypeDTO
-import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.datasource.api.stakekit.models.response.EnterActionResponse
+import com.tangem.datasource.api.stakekit.models.response.model.*
 
 /**
  * Object to create a adapter for enum types with support for unknown enum values.
@@ -25,6 +23,9 @@ fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
         YieldDTO.RewardTypeDTO::class.java to YieldDTO.RewardTypeDTO.UNKNOWN,
         YieldBalanceWrapperDTO.BalanceDTO.BalanceType::class.java to
             YieldBalanceWrapperDTO.BalanceDTO.BalanceType.UNKNOWN,
+        StakingTransactionTypeDTO::class.java to StakingTransactionTypeDTO.UNKNOWN,
+        StakingTransactionStatusDTO::class.java to StakingTransactionStatusDTO.UNKNOWN,
+        EnterActionResponse.ActionStatusDTO::class.java to EnterActionResponse.ActionStatusDTO.UNKNOWN,
     )
 
     return apply {
