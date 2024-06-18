@@ -1,6 +1,5 @@
 package com.tangem.tap.common.redux.global
 
-import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.navigation.StateDialog
@@ -9,7 +8,6 @@ import com.tangem.datasource.config.models.ChatConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.common.feedback.FeedbackData
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.redux.DebugErrorAction
@@ -85,7 +83,6 @@ sealed class GlobalAction : Action {
 
     data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
     data class OpenChat(val feedbackData: FeedbackData, val chatConfig: ChatConfig? = null) : GlobalAction()
-    data class UpdateFeedbackInfo(val walletManagers: List<WalletManager>) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
         object Init : GlobalAction() {
@@ -101,6 +98,5 @@ sealed class GlobalAction : Action {
         data class Success(val countryCode: String) : GlobalAction()
     }
 
-    data class UpdateUserWalletsListManager(val manager: UserWalletsListManager) : GlobalAction()
     data class ChangeAppThemeMode(val appThemeMode: AppThemeMode) : GlobalAction()
 }
