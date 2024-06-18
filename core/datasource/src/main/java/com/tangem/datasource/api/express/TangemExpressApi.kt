@@ -2,6 +2,7 @@ package com.tangem.datasource.api.express
 
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.express.models.request.AssetsRequestBody
+import com.tangem.datasource.api.express.models.request.ExchangeSentRequestBody
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.express.models.response.*
 import retrofit2.http.Body
@@ -42,6 +43,7 @@ interface TangemExpressApi {
         @Query("fromContractAddress") fromContractAddress: String,
         @Query("fromNetwork") fromNetwork: String,
         @Query("toContractAddress") toContractAddress: String,
+        @Query("fromAddress") fromAddress: String,
         @Query("toNetwork") toNetwork: String,
         @Query("fromAmount") fromAmount: String,
         @Query("fromDecimals") fromDecimals: Int,
@@ -56,4 +58,7 @@ interface TangemExpressApi {
 
     @GET("exchange-status")
     suspend fun getExchangeStatus(@Query("txId") txId: String): ApiResponse<ExchangeStatusResponse>
+
+    @POST("exchange-sent")
+    suspend fun exchangeSent(@Body body: ExchangeSentRequestBody): ApiResponse<ExchangeSentResponseBody>
 }

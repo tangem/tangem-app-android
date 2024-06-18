@@ -330,6 +330,7 @@ class ReceiptReducer : SendInternalReducer {
                 FeePaidCurrency.Coin -> wallet.blockchain.currency
                 FeePaidCurrency.SameCurrency -> store.state.sendState.currency?.symbol
                 is FeePaidCurrency.Token -> feePaidCurrency.token.symbol
+                is FeePaidCurrency.FeeResource -> feePaidCurrency.currency
             },
         )
     }
@@ -356,9 +357,12 @@ class ReceiptReducer : SendInternalReducer {
             FeePaidCurrency.Coin -> when (amountType) {
                 AmountType.Coin -> ReceiptLayoutType.FIAT
                 is AmountType.Token -> ReceiptLayoutType.TOKEN_FIAT
-                AmountType.Reserve -> ReceiptLayoutType.UNKNOWN
+                is AmountType.FeeResource,
+                AmountType.Reserve,
+                -> ReceiptLayoutType.UNKNOWN
             }
             FeePaidCurrency.SameCurrency -> ReceiptLayoutType.SAME_CURRENCY_FIAT
+            is FeePaidCurrency.FeeResource -> ReceiptLayoutType.SAME_CURRENCY
         }
     }
 
@@ -374,8 +378,11 @@ class ReceiptReducer : SendInternalReducer {
             FeePaidCurrency.Coin -> when (amountType) {
                 AmountType.Coin -> ReceiptLayoutType.CRYPTO
                 is AmountType.Token -> ReceiptLayoutType.TOKEN_CRYPTO
-                AmountType.Reserve -> ReceiptLayoutType.UNKNOWN
+                is AmountType.FeeResource,
+                AmountType.Reserve,
+                -> ReceiptLayoutType.UNKNOWN
             }
+            is FeePaidCurrency.FeeResource -> ReceiptLayoutType.UNKNOWN
         }
     }
 

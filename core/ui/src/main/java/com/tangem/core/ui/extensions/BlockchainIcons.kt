@@ -67,6 +67,9 @@ fun getActiveIconRes(blockchainId: String): Int {
         "taraxa", "taraxa/test" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
         "base" -> R.drawable.img_base_22
+        "joystream" -> R.drawable.img_joystream_22
+        "koinos", "koinos/test" -> R.drawable.img_koinos_22
+        "bittensor" -> R.drawable.img_bittensor_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -127,7 +130,7 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "pls", "pls/test" -> R.drawable.img_pls_22
         "zksync", "zksync/test" -> R.drawable.img_zksync_22
         "moonbeam", "moonbeam/test" -> R.drawable.img_moonbeam_22
-        "manta-network", "manta-network/test" -> R.drawable.img_manta_22
+        "manta-pacific", "manta-pacific/test" -> R.drawable.img_manta_22
         "polygon-zkevm", "polygon-zkevm/test" -> R.drawable.img_polygon_22
         "moonriver", "moonriver/test" -> R.drawable.img_moonriver_22
         "mantle", "mantle/test" -> R.drawable.img_mantle_22
@@ -135,6 +138,9 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "taraxa", "taraxa/test" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
         "base" -> R.drawable.img_base_22
+        "joystream" -> R.drawable.img_joystream_22
+        "koinos", "koinos/test" -> R.drawable.img_koinos_22
+        "bittensor" -> R.drawable.img_bittensor_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -192,7 +198,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "pls" -> R.drawable.img_pls_22
         "zksync-ethereum" -> R.drawable.img_zksync_22
         "moonbeam" -> R.drawable.img_moonbeam_22
-        "manta-network-ethereum" -> R.drawable.img_manta_22
+        "manta-pacific" -> R.drawable.img_manta_22
         "polygon-zkevm-ethereum" -> R.drawable.img_polygon_22
         "moonriver" -> R.drawable.img_moonriver_22
         "mantle" -> R.drawable.img_mantle_22
@@ -200,6 +206,9 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "taraxa" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
         "base" -> R.drawable.img_base_22
+        "joystream" -> R.drawable.img_joystream_22
+        "koinos", "koinos/test" -> R.drawable.img_koinos_22
+        "bittensor" -> R.drawable.img_bittensor_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -268,6 +277,9 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "taraxa", "taraxa/test" -> R.drawable.ic_taraxa_22
         "radiant" -> R.drawable.ic_radiant_22
         "base", "base/test" -> R.drawable.ic_base_22
+        "joystream" -> R.drawable.ic_joystream_22
+        "koinos", "koinos/test" -> R.drawable.ic_koinos_22
+        "bittensor" -> R.drawable.ic_bittensor_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -328,7 +340,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "pls", "pls/test" -> R.drawable.ic_pls_22
         "zksync", "zksync/test" -> R.drawable.ic_zksync_22
         "moonbeam", "moonbeam/test" -> R.drawable.ic_moonbeam_22
-        "manta-network", "manta-network/test" -> R.drawable.ic_manta_22
+        "manta-pacific", "manta-pacific/test" -> R.drawable.ic_manta_22
         "polygon-zkevm", "polygon-zkevm/test" -> R.drawable.ic_polygon_22
         "moonriver", "moonriver/test" -> R.drawable.ic_moonriver_22
         "mantle", "mantle/test" -> R.drawable.ic_mantle_22
@@ -336,6 +348,9 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "taraxa", "taraxa/test" -> R.drawable.ic_taraxa_22
         "radiant" -> R.drawable.ic_radiant_22
         "base", "base/test" -> R.drawable.ic_base_22
+        "joystream" -> R.drawable.ic_joystream_22
+        "koinos", "koinos/test" -> R.drawable.ic_koinos_22
+        "bittensor" -> R.drawable.ic_bittensor_22
         else -> R.drawable.ic_alert_24
     }
 }
