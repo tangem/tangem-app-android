@@ -23,12 +23,12 @@ object ContractAddressValidator {
 
     private fun validateAddress(blockchain: Blockchain, address: String): Boolean {
         return when (blockchain) {
-            Blockchain.Unknown, Blockchain.Binance, Blockchain.BinanceTestnet -> {
-                SuccessAddressValidator.validate(address)
-            }
-            else -> {
-                blockchain.validateAddress(address)
-            }
+            Blockchain.Unknown,
+            Blockchain.Binance,
+            Blockchain.BinanceTestnet,
+            Blockchain.Cardano,
+            -> SuccessAddressValidator.validate(address)
+            else -> blockchain.validateAddress(address)
         }
     }
 
