@@ -51,8 +51,8 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
     val isSuccess = (confirmState as? StakingStates.ConfirmStakingState.Data)?.isSuccess ?: false
     val isStaking = (confirmState as? StakingStates.ConfirmStakingState.Data)?.isStaking ?: false
 
-    val isButtonsVisible = uiState.currentStep != StakingStep.Confirm
-    val isStakingState = uiState.currentStep == StakingStep.Confirm && !isSuccess && !isStaking
+    val isButtonsVisible = uiState.currentStep != StakingStep.Success
+    val isStakingState = uiState.currentStep == StakingStep.Success && !isSuccess && !isStaking
 
     val (buttonTextId, buttonClick) = getButtonData(
         currentState = uiState,
@@ -103,8 +103,8 @@ private fun getButtonData(currentState: StakingUiState): Pair<Int, () -> Unit> {
     return when (currentState.currentStep) {
         StakingStep.InitialInfo,
         StakingStep.Amount,
-        StakingStep.ValidatorAndFee,
         StakingStep.Confirm,
+        StakingStep.Success,
         -> R.string.common_next to { currentState.clickIntents.onNextClick() }
     }
 }
@@ -113,7 +113,7 @@ private fun isButtonEnabled(uiState: StakingUiState): Boolean {
     return when (uiState.currentStep) {
         StakingStep.InitialInfo -> uiState.initialInfoState.isPrimaryButtonEnabled
         StakingStep.Amount -> uiState.amountState.isPrimaryButtonEnabled
-        StakingStep.ValidatorAndFee -> uiState.validatorState.isPrimaryButtonEnabled
         StakingStep.Confirm -> uiState.confirmStakingState.isPrimaryButtonEnabled
+        StakingStep.Success -> true
     }
 }
