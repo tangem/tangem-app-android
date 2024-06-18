@@ -1,6 +1,6 @@
 package com.tangem.domain.staking.model.action
 
-enum class ActionStatus {
+enum class StakingActionStatus {
     CANCELED,
     CREATED,
     WAITING_FOR_NEXT,

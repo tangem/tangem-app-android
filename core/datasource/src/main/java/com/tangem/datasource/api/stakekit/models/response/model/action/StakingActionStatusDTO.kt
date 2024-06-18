@@ -2,7 +2,7 @@ package com.tangem.datasource.api.stakekit.models.response.model.action
 
 import com.squareup.moshi.Json
 
-enum class ActionStatusDTO {
+enum class StakingActionStatusDTO {
     @Json(name = "CANCELED")
     CANCELED,
 

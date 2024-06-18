@@ -25,7 +25,7 @@ data class StakingTransactionDTO(
     @Json(name = "error")
     val error: String?,
     @Json(name = "gasEstimate")
-    val gasEstimate: GasEstimateDTO?,
+    val gasEstimate: StakingGasEstimateDTO?,
     @Json(name = "stakeId")
     val stakeId: String?,
     @Json(name = "explorerUrl")

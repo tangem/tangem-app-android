@@ -2,7 +2,7 @@ package com.tangem.datasource.api.stakekit.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import com.tangem.datasource.api.stakekit.models.response.model.action.ActionStatusDTO
+import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionDTO
 import org.joda.time.DateTime
@@ -15,7 +15,7 @@ data class EnterActionResponse(
     @Json(name = "integrationId")
     val integrationId: Boolean,
     @Json(name = "status")
-    val status: ActionStatusDTO,
+    val status: StakingActionStatusDTO,
     @Json(name = "page")
     val type: StakingActionTypeDTO,
     @Json(name = "currentStepIndex")

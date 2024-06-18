@@ -6,7 +6,7 @@ import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
-data class GasEstimateDTO(
+data class StakingGasEstimateDTO(
     @Json(name = "amount")
     val amount: BigDecimal,
     @Json(name = "token")

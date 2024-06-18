@@ -12,7 +12,7 @@ data class StakingTransaction(
     val unsignedTransaction: String?,
     val stepIndex: Int,
     val error: String?,
-    val gasEstimate: GasEstimate?,
+    val gasEstimate: StakingGasEstimate?,
     val stakeId: String?,
     val explorerUrl: String?,
     val ledgerHwAppId: String?,

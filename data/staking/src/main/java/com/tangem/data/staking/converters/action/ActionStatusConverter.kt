@@ -1,19 +1,19 @@
 package com.tangem.data.staking.converters.action
 
-import com.tangem.datasource.api.stakekit.models.response.model.action.ActionStatusDTO
-import com.tangem.domain.staking.model.action.ActionStatus
+import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
+import com.tangem.domain.staking.model.action.StakingActionStatus
 import com.tangem.utils.converter.Converter
 
-class ActionStatusConverter : Converter<ActionStatusDTO, ActionStatus> {
-    override fun convert(value: ActionStatusDTO): ActionStatus {
+class ActionStatusConverter : Converter<StakingActionStatusDTO, StakingActionStatus> {
+    override fun convert(value: StakingActionStatusDTO): StakingActionStatus {
         return when (value) {
-            ActionStatusDTO.CANCELED -> ActionStatus.CANCELED
-            ActionStatusDTO.CREATED -> ActionStatus.CREATED
-            ActionStatusDTO.WAITING_FOR_NEXT -> ActionStatus.WAITING_FOR_NEXT
-            ActionStatusDTO.PROCESSING -> ActionStatus.PROCESSING
-            ActionStatusDTO.FAILED -> ActionStatus.FAILED
-            ActionStatusDTO.SUCCESS -> ActionStatus.SUCCESS
-            else -> ActionStatus.UNKNOWN
+            StakingActionStatusDTO.CANCELED -> StakingActionStatus.CANCELED
+            StakingActionStatusDTO.CREATED -> StakingActionStatus.CREATED
+            StakingActionStatusDTO.WAITING_FOR_NEXT -> StakingActionStatus.WAITING_FOR_NEXT
+            StakingActionStatusDTO.PROCESSING -> StakingActionStatus.PROCESSING
+            StakingActionStatusDTO.FAILED -> StakingActionStatus.FAILED
+            StakingActionStatusDTO.SUCCESS -> StakingActionStatus.SUCCESS
+            else -> StakingActionStatus.UNKNOWN
         }
     }
 }
