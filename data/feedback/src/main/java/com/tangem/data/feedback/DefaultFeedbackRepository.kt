@@ -3,6 +3,7 @@ package com.tangem.data.feedback
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.os.Build
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.feedback.converters.BlockchainInfoConverter
 import com.tangem.data.feedback.converters.CardInfoConverter
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -13,6 +14,9 @@ import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import timber.log.Timber
 import java.io.File
 import java.io.FileWriter
@@ -35,6 +39,8 @@ internal class DefaultFeedbackRepository(
     private val context: Context,
 ) : FeedbackRepository {
 
+    private val blockchainsErrors = MutableStateFlow<Map<UserWalletId, BlockchainErrorInfo>>(emptyMap())
+
     override suspend fun getUserWalletsInfo(): UserWalletsInfo {
         return UserWalletsInfo(
             selectedUserWalletId = getSelectedUserWallet().walletId.stringValue,
@@ -52,12 +58,38 @@ internal class DefaultFeedbackRepository(
             .map(BlockchainInfoConverter::convert)
     }
 
+    override suspend fun getBlockchainInfo(blockchainId: String, derivationPath: String?): BlockchainInfo? {
+        return walletManagersStore
+            .getSyncOrNull(
+                userWalletId = getSelectedUserWallet().walletId,
+                blockchain = Blockchain.fromId(blockchainId),
+                derivationPath = derivationPath,
+            )
+            ?.let(BlockchainInfoConverter::convert)
+    }
+
     override fun getPhoneInfo(): PhoneInfo {
         return PhoneInfo(
             phoneModel = Build.MODEL,
             osVersion = Build.VERSION.SDK_INT.toString(),
             appVersion = getAppVersion(),
         )
+    }
+
+    override fun saveBlockchainErrorInfo(error: BlockchainErrorInfo) {
+        blockchainsErrors.update {
+            it.toMutableMap().apply {
+                put(getSelectedUserWallet().walletId, error)
+            }
+        }
+    }
+
+    override suspend fun getBlockchainErrorInfo(): BlockchainErrorInfo? {
+        return blockchainsErrors.value[getSelectedUserWallet().walletId].also {
+            if (it == null) {
+                Timber.e("Blockchain error info is null for ${getSelectedUserWallet().walletId}")
+            }
+        }
     }
 
     override suspend fun getAppLogs(): List<AppLogModel> {

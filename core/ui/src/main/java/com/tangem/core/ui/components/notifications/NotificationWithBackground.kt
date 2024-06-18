@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.notifications
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -32,6 +33,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemColorPalette.Dark6
 import com.tangem.core.ui.res.TangemColorPalette.Light4
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -153,21 +155,12 @@ fun NotificationWithBackground(config: NotificationConfig, modifier: Modifier = 
 
 //region preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun NotificationWithBackgroundPreview_Light(
+private fun NotificationWithBackgroundPreview(
     @PreviewParameter(NotificationWithBackgroundPreviewProvider::class) config: NotificationConfig,
 ) {
-    TangemTheme {
-        NotificationWithBackground(config = config)
-    }
-}
-
-@Preview
-@Composable
-private fun NotificationWithBackgroundPreview_Dark(
-    @PreviewParameter(NotificationWithBackgroundPreviewProvider::class) config: NotificationConfig,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         NotificationWithBackground(config = config)
     }
 }
