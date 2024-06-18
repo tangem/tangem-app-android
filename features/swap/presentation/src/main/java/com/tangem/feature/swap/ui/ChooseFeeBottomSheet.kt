@@ -23,6 +23,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.models.states.ChooseFeeBottomSheetConfig
 import com.tangem.feature.swap.models.states.FeeItemState
@@ -168,7 +169,7 @@ private fun ChooseFeeBottomSheetContent_Preview() {
         ),
     ).toImmutableList()
     Column {
-        TangemTheme(isDark = true) {
+        TangemThemePreview(isDark = true) {
             ChooseFeeBottomSheetContent(
                 ChooseFeeBottomSheetConfig(
                     selectedFee = FeeType.NORMAL,
@@ -183,7 +184,7 @@ private fun ChooseFeeBottomSheetContent_Preview() {
 
         SpacerH24()
 
-        TangemTheme(isDark = false) {
+        TangemThemePreview(isDark = false) {
             ChooseFeeBottomSheetContent(
                 ChooseFeeBottomSheetConfig(
                     selectedFee = FeeType.NORMAL,
