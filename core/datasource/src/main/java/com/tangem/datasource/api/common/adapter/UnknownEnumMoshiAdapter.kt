@@ -2,8 +2,8 @@ package com.tangem.datasource.api.common.adapter
 
 import com.squareup.moshi.*
 import com.squareup.moshi.adapters.EnumJsonAdapter
-import com.tangem.datasource.api.stakekit.models.response.EnterActionResponse
 import com.tangem.datasource.api.stakekit.models.response.model.*
+import com.tangem.datasource.api.stakekit.models.response.model.action.ActionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionTypeDTO
@@ -28,7 +28,7 @@ fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
             YieldBalanceWrapperDTO.BalanceDTO.BalanceType.UNKNOWN,
         StakingTransactionTypeDTO::class.java to StakingTransactionTypeDTO.UNKNOWN,
         StakingTransactionStatusDTO::class.java to StakingTransactionStatusDTO.UNKNOWN,
-        EnterActionResponse.ActionStatusDTO::class.java to EnterActionResponse.ActionStatusDTO.UNKNOWN,
+        ActionStatusDTO::class.java to ActionStatusDTO.UNKNOWN,
     )
 
     return apply {

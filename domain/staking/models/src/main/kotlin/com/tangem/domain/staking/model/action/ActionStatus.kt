@@ -7,5 +7,5 @@ enum class ActionStatus {
     PROCESSING,
     FAILED,
     SUCCESS,
-    UNKNOWN
+    UNKNOWN,
 }
