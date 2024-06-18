@@ -10,20 +10,20 @@ data class TokenActionsState(
 
     sealed class ActionState {
 
-        abstract val enabled: Boolean
+        abstract val unavailabilityReason: ScenarioUnavailabilityReason
 
-        data class Buy(override val enabled: Boolean) : ActionState()
+        data class Buy(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
-        data class CopyAddress(override val enabled: Boolean) : ActionState()
+        data class CopyAddress(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
-        data class Sell(override val enabled: Boolean) : ActionState()
+        data class Sell(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
-        data class Receive(override val enabled: Boolean) : ActionState()
+        data class Receive(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
-        data class Swap(override val enabled: Boolean) : ActionState()
+        data class Swap(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
-        data class Send(override val enabled: Boolean) : ActionState()
+        data class Send(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
-        data class HideToken(override val enabled: Boolean) : ActionState()
+        data class HideToken(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
     }
 }

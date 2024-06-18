@@ -1,9 +1,8 @@
 package com.tangem.tap.proxy.di
 
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.tap.proxy.*
@@ -28,13 +27,11 @@ internal object ProxyModule {
     @Singleton
     fun provideUserWalletManager(
         walletManagersFacade: WalletManagersFacade,
-        currenciesRepository: CurrenciesRepository,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListManager: UserWalletsListManager,
     ): UserWalletManager {
         return UserWalletManagerImpl(
             walletManagersFacade = walletManagersFacade,
-            currenciesRepository = currenciesRepository,
-            userWalletsStore = userWalletsStore,
+            userWalletsListManager = userWalletsListManager,
         )
     }
 
@@ -44,11 +41,13 @@ internal object ProxyModule {
         appStateHolder: AppStateHolder,
         cardSdkConfigRepository: CardSdkConfigRepository,
         walletManagersFacade: WalletManagersFacade,
+        userWalletsListManager: UserWalletsListManager,
     ): TransactionManager {
         return TransactionManagerImpl(
             appStateHolder = appStateHolder,
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
+            userWalletsListManager = userWalletsListManager,
         )
     }
 }
