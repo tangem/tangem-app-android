@@ -6,14 +6,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.components.SystemBarsIconsDisposable
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.tap.common.analytics.events.IntroductionProcess
@@ -44,15 +42,12 @@ class HomeFragment : ComposeFragment(), StoreSubscriber<HomeState> {
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         BackHandler(onBack = requireActivity()::finish)
-        SystemBarsEffect {
-            setSystemBarsColor(color = Color.Transparent, darkIcons = false)
-        }
+        SystemBarsIconsDisposable(darkIcons = false)
         ScreenContent()
     }
 
     override fun onStart() {
         super.onStart()
-        activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, false) }
 
         store.subscribe(subscriber = this) { state ->
             state

@@ -1,9 +1,7 @@
 package com.tangem.feature.wallet.presentation.router
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
@@ -86,7 +84,6 @@ internal class DefaultWalletRouter(
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
                 OrganizeTokensScreen(
-                    modifier = Modifier.statusBarsPadding(),
                     state = uiState,
                 )
             }

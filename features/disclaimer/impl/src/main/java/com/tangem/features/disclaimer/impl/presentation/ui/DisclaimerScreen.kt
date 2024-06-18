@@ -15,17 +15,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.tangem.core.ui.components.BottomFade
+import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithAdditionalButtons
 import com.tangem.core.ui.components.appbar.models.AdditionalButton
@@ -39,17 +38,14 @@ import com.tangem.features.disclaimer.impl.presentation.state.DummyDisclaimer
 
 @Composable
 internal fun DisclaimerScreen(state: DisclaimerState, onBackClick: () -> Unit) {
-    val bottomPadding = if (state.isTosAccepted) TangemTheme.dimens.spacing16 else TangemTheme.dimens.size64
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+
     Box(
         modifier = Modifier
-            .statusBarsPadding()
-            .background(TangemColorPalette.Dark6),
+            .background(TangemColorPalette.Dark6)
+            .statusBarsPadding(),
     ) {
-        Column(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .padding(bottom = bottomPadding),
-        ) {
+        Column {
             AppBarWithAdditionalButtons(
                 text = resourceReference(R.string.disclaimer_title),
                 startButton = AdditionalButton(
@@ -58,23 +54,34 @@ internal fun DisclaimerScreen(state: DisclaimerState, onBackClick: () -> Unit) {
                 ).takeIf { state.isTosAccepted },
             )
             DisclaimerContent(state.url)
+            Spacer(
+                modifier = Modifier
+                    .background(TangemColorPalette.Dark6)
+                    .height(
+                        height = if (!state.isTosAccepted) {
+                            bottomBarHeight
+                        } else {
+                            bottomBarHeight + TangemTheme.dimens.size64
+                        },
+                    ),
+            )
         }
+
         if (!state.isTosAccepted) {
+            BottomFade(Modifier.align(Alignment.BottomCenter), backgroundColor = TangemColorPalette.Dark6)
             DisclaimerButton(state.onAccept)
+        } else {
+            NavigationBar3ButtonsScrim()
         }
     }
 }
 
 @Composable
 private fun ColumnScope.DisclaimerContent(url: String) {
-    val transparent = Color.Transparent
-
     val progressState = remember { mutableStateOf(ProgressState.Loading) }
     val webClient = remember { DisclaimerWebViewClient(progressState) }
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f),
+        modifier = Modifier,
     ) {
         AndroidView(
             factory = {
@@ -83,9 +90,10 @@ private fun ColumnScope.DisclaimerContent(url: String) {
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT,
                     )
-                    setBackgroundColor(transparent.toArgb())
+                    setBackgroundColor(TangemColorPalette.Dark6.toArgb())
                     settings.allowFileAccess = false
                     settings.javaScriptEnabled = false
+
                     overScrollMode = View.OVER_SCROLL_NEVER
                     webViewClient = webClient
                     loadUrl(url)
@@ -94,28 +102,34 @@ private fun ColumnScope.DisclaimerContent(url: String) {
         )
 
         when (progressState.value) {
-            ProgressState.Loading -> CircularProgressIndicator(
-                color = TangemTheme.colors.icon.informative,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(TangemTheme.dimens.spacing8),
-            )
-            ProgressState.Error -> Column(
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(TangemTheme.dimens.spacing16)
-                    .align(Alignment.Center),
-            ) {
-                Text(
-                    text = stringResource(id = R.string.disclaimer_error_loading),
-                    style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.constantWhite,
-                )
-                PrimaryButton(
-                    text = stringResource(R.string.common_retry),
-                    onClick = { webClient.reset() },
-                )
+            ProgressState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    CircularProgressIndicator(
+                        color = TangemTheme.colors.icon.informative,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(TangemTheme.dimens.spacing8),
+                    )
+                }
+            }
+            ProgressState.Error -> Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(TangemTheme.dimens.spacing16)
+                        .align(Alignment.Center),
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.disclaimer_error_loading),
+                        style = TangemTheme.typography.body1,
+                        color = TangemTheme.colors.text.constantWhite,
+                    )
+                    PrimaryButton(
+                        text = stringResource(R.string.common_retry),
+                        onClick = { webClient.reset() },
+                    )
+                }
             }
             else -> Unit
         }
@@ -130,23 +144,6 @@ private fun BoxScope.DisclaimerButton(onAccept: (Boolean) -> Unit) {
     } else {
         true
     }
-    val bottomInsetsPx = WindowInsets.navigationBars.getBottom(LocalDensity.current)
-    Box(
-        modifier = Modifier
-            .align(Alignment.BottomCenter)
-            .fillMaxWidth()
-            .height(TangemTheme.dimens.size110 + bottomInsetsPx.dp)
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        TangemTheme.colors.background.primary.copy(alpha = 0f),
-                        TangemTheme.colors.background.primary.copy(alpha = 0.75f),
-                        TangemTheme.colors.background.primary.copy(alpha = 0.95f),
-                        TangemTheme.colors.background.primary,
-                    ),
-                ),
-            ),
-    )
     PrimaryButton(
         text = stringResource(id = R.string.common_accept),
         onClick = { onAccept(shouldAskPushPermission) },
