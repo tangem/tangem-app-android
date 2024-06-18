@@ -543,6 +543,7 @@
   <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
   <string name="send_validation_invalid_address">Неверный адрес</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
+  <string name="settings_card_settings_footer">Подготовьтесь к сканированию карты, которую вы хотите настроить.</string>
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
