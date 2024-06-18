@@ -71,6 +71,7 @@ internal data class SendUiState(
             editAmountState = amountState,
             editFeeState = feeState,
             editRecipientState = recipientState,
+            sendState = sendState,
         )
     } else {
         copy(
@@ -125,6 +126,7 @@ internal sealed class SendStates {
         val feeSelectorState: FeeSelectorState,
         val fee: Fee?,
         val rate: BigDecimal?,
+        val isFeeConvertibleToFiat: Boolean,
         val appCurrency: AppCurrency,
         val isFeeApproximate: Boolean,
         val isCustomSelected: Boolean,
