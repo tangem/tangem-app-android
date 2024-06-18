@@ -28,10 +28,10 @@ internal fun StakingScreen(uiState: StakingUiState) {
     BackHandler(onBack = uiState.clickIntents::onBackClick)
     Column(
         modifier = Modifier
+            .background(color = TangemTheme.colors.background.tertiary)
             .fillMaxSize()
             .imePadding()
-            .systemBarsPadding()
-            .background(color = TangemTheme.colors.background.tertiary),
+            .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SendAppBar(

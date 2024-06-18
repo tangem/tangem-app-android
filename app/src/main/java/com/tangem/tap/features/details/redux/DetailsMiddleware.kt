@@ -5,9 +5,11 @@ import com.tangem.common.*
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.core.UserCodeRequestPolicy
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -70,7 +72,8 @@ class DetailsMiddleware {
             is DetailsAction.AppSettings -> appSettingsMiddleware.handle(state, action)
             is DetailsAction.ReCreateTwinsWallet -> {
                 store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
+
+                store.dispatchNavigationAction { push(AppRoute.OnboardingTwins) }
             }
             is DetailsAction.AccessCodeRecovery -> accessCodeRecoveryMiddleware.handle(state, action)
             is DetailsAction.ScanCard -> scanCard(state)
@@ -90,7 +93,7 @@ class DetailsMiddleware {
                         store.dispatch(DetailsAction.ReCreateTwinsWallet)
                         return
                     } else {
-                        store.dispatch(NavigationAction.NavigateTo(AppScreen.ResetToFactory))
+                        store.dispatchNavigationAction { push(AppRoute.ResetToFactory) }
                     }
                 }
                 is DetailsAction.ResetToFactory.Proceed -> {
@@ -131,15 +134,15 @@ class DetailsMiddleware {
 
                                 val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
                                 if (selectedUserWallet != null) {
-                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                                    store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
                                     store.onUserWalletSelected(selectedUserWallet)
                                 } else {
                                     val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
                                         .fold(onSuccess = { true }, onFailure = { false })
                                     if (isLocked && userWalletsListManager.hasUserWallets) {
-                                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
+                                        store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
                                     } else {
-                                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                                        store.dispatchNavigationAction { replaceAll(AppRoute.Home) }
                                     }
                                 }
                             }
@@ -163,7 +166,7 @@ class DetailsMiddleware {
         fun handle(action: DetailsAction.ManageSecurity, detailsState: DetailsState) {
             when (action) {
                 is DetailsAction.ManageSecurity.OpenSecurity -> {
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsSecurity))
+                    store.dispatchNavigationAction { push(AppRoute.DetailsSecurity) }
                 }
                 is DetailsAction.ManageSecurity.SaveChanges -> {
                     val cardSettingsState = detailsState.cardSettingsState
@@ -182,7 +185,7 @@ class DetailsMiddleware {
                                 is CompletionResult.Success -> {
                                     Analytics.send(Settings.CardSettings.SecurityModeChanged(paramValue))
                                     store.dispatch(GlobalAction.UpdateSecurityOptions(selectedOption))
-                                    store.dispatch(NavigationAction.PopBackTo())
+                                    store.dispatchNavigationAction(AppRouter::pop)
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Success)
                                 }
                                 is CompletionResult.Failure -> {
@@ -242,6 +245,7 @@ class DetailsMiddleware {
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Failure,
                 is DetailsAction.AppSettings.BiometricsStatusChanged,
+                is DetailsAction.AppSettings.Prepare,
                 -> Unit
             }
         }
@@ -393,7 +397,7 @@ class DetailsMiddleware {
             deleteSavedAccessCodes()
             store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
 
-            store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
+            store.dispatchNavigationAction { popTo<AppRoute.Home>() }
 
             return CompletionResult.Success(Unit)
         }
@@ -432,7 +436,7 @@ class DetailsMiddleware {
             when (action) {
                 is DetailsAction.AccessCodeRecovery.Open -> {
                     Analytics.send(Settings.CardSettings.AccessCodeRecoveryButton())
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.AccessCodeRecovery))
+                    store.dispatchNavigationAction { push(AppRoute.AccessCodeRecovery) }
                 }
                 is DetailsAction.AccessCodeRecovery.SaveChanges -> {
                     scope.launch {
@@ -444,7 +448,7 @@ class DetailsMiddleware {
                                         AnalyticsParam.AccessCodeRecoveryStatus.from(action.enabled),
                                     ),
                                 )
-                                store.dispatchOnMain(NavigationAction.PopBackTo())
+                                store.dispatchNavigationAction(AppRouter::pop)
                                 store.dispatchOnMain(
                                     DetailsAction.AccessCodeRecovery.SaveChanges.Success(action.enabled),
                                 )
@@ -503,7 +507,7 @@ class DetailsMiddleware {
                 store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
             },
             disclaimerWillShow = {
-                store.dispatchOnMain(NavigationAction.PopBackTo())
+                store.dispatchNavigationAction(AppRouter::pop)
             },
             onSuccess = { scanResponse ->
                 createUserWallet(scanResponse)
@@ -547,7 +551,7 @@ class DetailsMiddleware {
                 store.onUserWalletSelected(userWallet)
 
                 store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
-                store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
             }
             .doOnFailure { error ->
                 if (error is UserWalletsListError.WalletAlreadySaved) {
@@ -555,7 +559,7 @@ class DetailsMiddleware {
                     store.onUserWalletSelected(userWallet)
 
                     store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
-                    store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                    store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
                 } else {
                     Timber.e(error, "Unable to create user wallet")
                     handleError(error, prevUseBiometricsForAccessCode)

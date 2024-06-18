@@ -3,8 +3,6 @@ package com.tangem.feature.wallet.presentation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.components.SystemBarsEffect
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.features.managetokens.navigation.ManageTokensUi
@@ -37,11 +35,6 @@ internal class WalletFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        val systemBarsColor = TangemTheme.colors.background.secondary
-        SystemBarsEffect {
-            setSystemBarsColor(systemBarsColor)
-        }
-
         _walletRouter.Initialize(
             onFinish = requireActivity()::finish,
             manageTokensUi = manageTokensUi,

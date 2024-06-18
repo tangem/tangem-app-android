@@ -12,27 +12,33 @@ import android.nfc.NfcAdapter
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.arkivanov.decompose.value.observe
+import com.arkivanov.essenty.lifecycle.asEssentyLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.deeplink.DeepLinksRegistry
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
@@ -60,6 +66,8 @@ import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
+import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.extensions.showFragmentAllowingStateLoss
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
@@ -69,9 +77,10 @@ import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHan
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
-import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
+import com.tangem.tap.routing.RoutingComponent
+import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
@@ -79,7 +88,6 @@ import com.tangem.wallet.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.lang.ref.WeakReference
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
@@ -162,6 +170,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var stakingRouter: StakingRouter
 
+    @Inject
+    @RootAppComponentContext
+    internal lateinit var rootComponentContext: AppComponentContext
+
+    @Inject
+    internal lateinit var appRouterConfig: AppRouterConfig
+
+    @Inject
+    internal lateinit var routingComponentFactory: RoutingComponent.Factory
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -180,6 +198,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         installAppTheme() // We need to call it before onCreate to prevent unnecessary activity recreation
 
+        enableEdgeToEdge(
+            navigationBarStyle = SystemBarStyle.auto(
+                Color.Transparent.toArgb(),
+                Color.Transparent.toArgb(),
+            ),
+        )
+
         super.onCreate(savedInstanceState)
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
@@ -188,6 +213,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         observeAppThemeModeUpdates()
 
         setContentView(R.layout.activity_main)
+        installRouting()
         initContent()
 
         checkForNotificationPermission()
@@ -196,6 +222,31 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         if (intent != null) {
             deepLinksRegistry.launch(intent)
+        }
+    }
+
+    private fun installRouting() {
+        val routingComponent = routingComponentFactory.create(
+            context = rootComponentContext,
+        )
+
+        appRouterConfig.routerScope = lifecycleScope
+        appRouterConfig.componentRouter = routingComponent.router
+
+        routingComponent.stack.observe(lifecycle.asEssentyLifecycle()) { childStack ->
+            appRouterConfig.stack = childStack.backStack
+                .plus(childStack.active)
+                .map { it.configuration }
+
+            when (val child = childStack.active.instance) {
+                is RoutingComponent.Child.Initial -> Unit
+                is RoutingComponent.Child.LegacyFragment -> {
+                    supportFragmentManager.showFragmentAllowingStateLoss(child.name, child.fragmentProvider)
+                }
+                is RoutingComponent.Child.LegacyIntent -> {
+                    startActivity(child.intent)
+                }
+            }
         }
     }
 
@@ -220,8 +271,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun installActivityDependencies() {
-        store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
-
         cardSdkLifecycleObserver.onCreate(context = this)
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
@@ -268,8 +317,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @SuppressLint("SourceLockedOrientationActivity")
     private fun initContent() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
         supportFragmentManager.registerFragmentLifecycleCallbacks(
             NavBarInsetsFragmentLifecycleCallback(),
             true,
@@ -335,7 +382,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     override fun onDestroy() {
-        store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
         intentProcessor.removeAll()
         cardSdkLifecycleObserver.onDestroy(this)
         super.onDestroy()
@@ -477,16 +523,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
         if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
-            store.dispatch(
-                NavigationAction.NavigateTo(
-                    screen = AppScreen.Welcome,
-                    bundle = intentWhichStartedActivity?.let {
-                        bundleOf(WelcomeFragment.INITIAL_INTENT_KEY to it)
-                    },
-                ),
-            )
+            store.dispatchNavigationAction {
+                replaceAll(AppRoute.Welcome(intentWhichStartedActivity?.let(::SerializableIntent)))
+            }
         } else {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
+            store.dispatchNavigationAction { replaceAll(AppRoute.Home) }
             lifecycleScope.launch {
                 intentProcessor.handleIntent(intentWhichStartedActivity, false)
             }

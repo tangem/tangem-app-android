@@ -46,10 +46,10 @@ internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen)
     BackHandler(onBack = onBackClick)
     Column(
         modifier = Modifier
+            .background(color = TangemTheme.colors.background.tertiary)
             .fillMaxSize()
             .imePadding()
-            .systemBarsPadding()
-            .background(color = TangemTheme.colors.background.tertiary),
+            .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SendAppBar(

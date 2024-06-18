@@ -1,7 +1,6 @@
 package com.tangem.tap.common.redux
 
 import com.tangem.tap.common.redux.global.globalReducer
-import com.tangem.tap.common.redux.navigation.NavigationReducer
 import com.tangem.tap.features.details.redux.DetailsReducer
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectReducer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerReducer
@@ -23,7 +22,6 @@ fun appReducer(action: Action, state: AppState?, appStateHolder: AppStateHolder)
     if (action is AppAction.RestoreState) return action.state
 
     return AppState(
-        navigationState = NavigationReducer.reduce(action, state),
         globalState = globalReducer(action, state, appStateHolder),
         homeState = HomeReducer.reduce(action, state),
         onboardingNoteState = OnboardingNoteReducer.reduce(action, state),

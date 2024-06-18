@@ -1,21 +1,16 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.wallets.usecase.GetWalletNamesUseCase
-import com.tangem.domain.wallets.usecase.RenameWalletUseCase
-import com.tangem.feature.wallet.impl.R
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.navigation.ReduxNavController
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.*
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -52,7 +47,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val reduxStateHolder: ReduxStateHolder,
-    private val reduxNavController: ReduxNavController,
+    private val appRouter: AppRouter,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(), WalletCardClickIntents {
 
@@ -123,7 +118,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
                 reduxStateHolder.onUserWalletSelected(selectedWallet)
             } else {
                 stateHolder.clear()
-                reduxNavController.navigate(NavigationAction.PopBackTo(AppScreen.Home))
+                appRouter.replaceAll(AppRoute.Home)
             }
         }
     }

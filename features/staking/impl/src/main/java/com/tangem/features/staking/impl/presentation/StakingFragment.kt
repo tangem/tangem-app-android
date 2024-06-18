@@ -7,8 +7,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.components.SystemBarsEffect
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
@@ -59,10 +57,6 @@ internal class StakingFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        val systemBarsColor = TangemTheme.colors.background.tertiary
-        SystemBarsEffect {
-            setSystemBarsColor(systemBarsColor)
-        }
         val currentState = viewModel.uiState.collectAsStateWithLifecycle()
         StakingScreen(currentState.value)
     }
