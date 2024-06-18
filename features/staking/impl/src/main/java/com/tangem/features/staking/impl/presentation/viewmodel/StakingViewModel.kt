@@ -181,10 +181,6 @@ internal class StakingViewModel @Inject constructor(
                 appCurrency = maybeAppCurrency.getOrElse { AppCurrency.Default }
             }
             .flowOn(dispatchers.main)
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = AppCurrency.Default,
-            )
+            .launchIn(viewModelScope)
     }
 }
