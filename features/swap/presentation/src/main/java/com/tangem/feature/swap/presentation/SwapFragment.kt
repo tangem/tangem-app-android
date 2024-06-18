@@ -2,13 +2,13 @@ package com.tangem.feature.swap.presentation
 
 import android.os.Bundle
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import com.tangem.common.routing.AppRouter
 
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.swap.router.CustomTabsManager
@@ -47,17 +47,17 @@ class SwapFragment : ComposeFragment() {
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         viewModel.onScreenOpened()
-
-        val backgroundColor = TangemTheme.colors.background.secondary
-        SystemBarsEffect { setSystemBarsColor(backgroundColor) }
-
         ScreenContent(viewModel = viewModel)
     }
 
     @Suppress("TopLevelComposableFunctions")
     @Composable
     private fun ScreenContent(viewModel: SwapViewModel) {
-        Crossfade(targetState = viewModel.currentScreen, label = "") { screen ->
+        Crossfade(
+            modifier = Modifier.background(TangemTheme.colors.background.secondary),
+            targetState = viewModel.currentScreen,
+            label = "",
+        ) { screen ->
             when (screen) {
                 SwapNavScreen.Main -> SwapScreen(stateHolder = viewModel.uiState)
                 SwapNavScreen.Success -> {
