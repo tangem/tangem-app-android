@@ -73,7 +73,10 @@ sealed class ApiResponseError : Exception() {
     }
 
     /** Represents a network error, typically when there's no connectivity. */
-    object NetworkException : ApiResponseError()
+    data object NetworkException : ApiResponseError()
+
+    /** Represents a timeout error, typically when the server takes too long to respond. */
+    data object TimeoutException : ApiResponseError()
 
     /**
      * Represents an unexpected exception that doesn't fall into one of the other categories.
