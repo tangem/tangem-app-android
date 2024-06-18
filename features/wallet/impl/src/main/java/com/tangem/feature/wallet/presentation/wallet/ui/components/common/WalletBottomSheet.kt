@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -19,6 +20,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomSheetConfig
 
@@ -114,30 +116,21 @@ private fun SecondaryButton(config: WalletBottomSheetConfig.ButtonConfig, modifi
     }
 }
 
-@Preview
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun WalletBottomSheetContent_Light(
+private fun WalletBottomSheetContent_Preview(
     @PreviewParameter(WalletBottomSheetConfigProvider::class)
     config: WalletBottomSheetConfig,
 ) {
-    TangemTheme(isDark = false) {
+    TangemThemePreview {
         // Use preview of content because ModalBottomSheet isn't supported in Preview mode
         BottomSheetContent(config = config)
     }
 }
 
-@Preview
-@Composable
-private fun WalletBottomSheetContent_Dark(
-    @PreviewParameter(WalletBottomSheetConfigProvider::class)
-    config: WalletBottomSheetConfig,
-) {
-    TangemTheme(isDark = false) {
-        // Use preview of content because ModalBottomSheet isn't supported in Preview mode
-        BottomSheetContent(config = config)
-    }
-}
-
-private class WalletBottomSheetConfigProvider : CollectionPreviewParameterProvider<TangemBottomSheetConfig>(
-    collection = listOf(WalletPreviewData.bottomSheet),
+private class WalletBottomSheetConfigProvider : CollectionPreviewParameterProvider<WalletBottomSheetConfig>(
+    collection = listOf(WalletPreviewData.bottomSheet.content as WalletBottomSheetConfig),
 )
+// endregion
