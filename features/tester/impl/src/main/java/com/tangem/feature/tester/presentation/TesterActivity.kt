@@ -6,9 +6,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeActivity
 import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
@@ -45,9 +45,8 @@ internal class TesterActivity : ComposeActivity() {
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         val systemBarsColor = TangemTheme.colors.background.secondary
-        SystemBarsEffect {
-            setSystemBarsColor(systemBarsColor)
-        }
+        val systemUiController = rememberSystemUiController()
+        systemUiController.setSystemBarsColor(systemBarsColor)
 
         TesterNavHost()
     }
