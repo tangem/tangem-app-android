@@ -6,7 +6,7 @@ data class StakingTransactionDTO(
     @Json(name = "id")
     val id: String,
     @Json(name = "network")
-    val network: TokenDTO.NetworkTypeDTO,
+    val network: NetworkTypeDTO,
     @Json(name = "status")
     val status: StakingTransactionStatusDTO,
     @Json(name = "type")
