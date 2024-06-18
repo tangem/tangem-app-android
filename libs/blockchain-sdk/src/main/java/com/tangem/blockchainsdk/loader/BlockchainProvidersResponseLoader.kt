@@ -3,7 +3,6 @@ package com.tangem.blockchainsdk.loader
 import androidx.core.util.PatternsCompat
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
-import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechServiceApi
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.config.models.ProviderModel
@@ -17,7 +16,6 @@ import javax.inject.Singleton
  * Loader of [BlockchainProvidersResponse]
  *
  * @property tangemTechServiceApi tangem tech api
- * @property authProvider         auth provider
  * @property assetLoader          asset loader for local config loading
  * @property dispatchers          dispatchers
  *
@@ -26,7 +24,6 @@ import javax.inject.Singleton
 @Singleton
 internal class BlockchainProvidersResponseLoader @Inject constructor(
     private val tangemTechServiceApi: TangemTechServiceApi,
-    private val authProvider: AuthProvider,
     private val assetLoader: AssetLoader,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
@@ -51,12 +48,7 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
         return assetLoader.load<BlockchainProvidersResponse>(fileName = PROVIDER_TYPES_FILE_NAME)
     }
 
-    private suspend fun loadRemote(): BlockchainProvidersResponse {
-        return tangemTechServiceApi.getBlockchainProviders(
-            cardPublicKey = authProvider.getCardPublicKey(),
-            cardId = authProvider.getCardId(),
-        )
-    }
+    private suspend fun loadRemote() = tangemTechServiceApi.getBlockchainProviders()
 
     /** Merge blockchains with non-empty providers [remote] from remote with blockchains from local [local] */
     private fun mergeResponses(
@@ -87,7 +79,7 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
             recordException(missingBlockchains = missingBlockchains + blockchainsWithoutProviders)
         }
 
-        return result
+        return result.guaranteeUrlsEndWithSlash()
     }
 
     private fun List<ProviderModel>.filterUnsupportedProviders() = filter { it !is ProviderModel.UnsupportedType }
@@ -116,6 +108,24 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
         Timber.e(exception)
 
         firebaseCrashlytics.recordException(exception)
+    }
+
+    /*
+     * Example:
+     * https://qwe.com --> https://qwe.com/
+     */
+    private fun BlockchainProvidersResponse.guaranteeUrlsEndWithSlash(): BlockchainProvidersResponse {
+        return mapValues {
+            it.value.map { provider -> provider.addSlashIfAbsent() }
+        }
+    }
+
+    private fun ProviderModel.addSlashIfAbsent(): ProviderModel {
+        return if (this is ProviderModel.Public && url.last() != '/') {
+            copy(url = "$url/")
+        } else {
+            this
+        }
     }
 
     private companion object {
