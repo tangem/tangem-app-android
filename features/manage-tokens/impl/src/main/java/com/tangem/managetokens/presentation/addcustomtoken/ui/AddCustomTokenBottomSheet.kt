@@ -4,12 +4,7 @@ import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -36,6 +31,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalDensity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -43,7 +39,9 @@ import androidx.navigation.compose.rememberNavController
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetDraggableHeader
 import com.tangem.core.ui.components.bottomsheets.collapse
+import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.managetokens.presentation.addcustomtoken.router.AddCustomTokenRoute
 import com.tangem.managetokens.presentation.addcustomtoken.router.AddCustomTokenRouter
 import com.tangem.managetokens.presentation.addcustomtoken.viewmodels.AddCustomTokenViewModel
@@ -57,6 +55,7 @@ fun AddCustomTokenBottomSheet(config: TangemBottomSheetConfig) {
 
     var isVisible by remember { mutableStateOf(value = config.isShow) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val statusBarHeight = with(LocalDensity.current) { WindowInsets.statusBars.getTop(this).toDp() }
 
     if (isVisible) {
         // ViewModel cannot be scoped to ModalBottomSheet's lifecycle,
@@ -67,11 +66,13 @@ fun AddCustomTokenBottomSheet(config: TangemBottomSheetConfig) {
         }
 
         ModalBottomSheetWithBackHandling(
+            modifier = Modifier
+                .sizeIn(maxHeight = LocalWindowSize.current.height - statusBarHeight),
             onDismissRequest = config.onDismissRequest,
             sheetState = sheetState,
             containerColor = TangemTheme.colors.background.tertiary,
             shape = TangemTheme.shapes.bottomSheetLarge,
-            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
+            windowInsets = WindowInsetsZero,
             dragHandle = { TangemBottomSheetDraggableHeader(color = TangemTheme.colors.background.tertiary) },
             properties = ModalBottomSheetDefaults.properties(shouldDismissOnBackPress = false),
         ) {
