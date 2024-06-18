@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
@@ -9,6 +10,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
@@ -39,25 +41,10 @@ internal fun NetworkItemArrow(itemHeight: Dp, isLastItem: Boolean) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_NetworkItemArrow_Column_Light() {
-    TangemTheme(isDark = false) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = TangemTheme.colors.background.primary)
-                .padding(start = TangemTheme.dimens.size36),
-        ) {
-            NetworkItemArrow(itemHeight = TangemTheme.dimens.size62, isLastItem = false)
-            NetworkItemArrow(itemHeight = TangemTheme.dimens.size62, isLastItem = true)
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_NetworkItemArrow_Column_Dark() {
-    TangemTheme(isDark = true) {
+private fun Preview_NetworkItemArrow_Column() {
+    TangemThemePreview {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
