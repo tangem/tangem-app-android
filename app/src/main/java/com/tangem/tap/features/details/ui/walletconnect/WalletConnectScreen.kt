@@ -88,7 +88,7 @@ private fun EmptyScreen(state: WalletConnectScreenState) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_walletconnect),
+            painter = painterResource(id = R.drawable.ic_wallet_connect_24),
             contentDescription = "",
             colorFilter = ColorFilter.tint(TangemTheme.colors.icon.inactive),
             contentScale = ContentScale.FillWidth,

@@ -38,7 +38,9 @@ class GetFeePaidCryptoCurrencyStatusSyncUseCase(
                     operations
                         .getNetworkCoinSync(cryptoCurrency.network.id, cryptoCurrency.network.derivationPath)
                         .getOrNull()
-                FeePaidCurrency.SameCurrency -> cryptoCurrencyStatus
+                FeePaidCurrency.SameCurrency,
+                is FeePaidCurrency.FeeResource,
+                -> cryptoCurrencyStatus
                 is FeePaidCurrency.Token -> operations.getCurrencyStatusSync(feePaidCurrency.tokenId).getOrNull()
             }
         }
