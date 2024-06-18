@@ -1,10 +1,13 @@
 package com.tangem.features.send.impl.presentation.state
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.R
+import java.math.BigDecimal
 
 internal sealed class SendNotification(val config: NotificationConfig) {
 
@@ -159,6 +162,72 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             subtitle = resourceReference(
                 R.string.common_network_fee_warning_content,
                 wrappedList(cryptoAmount, fiatAmount),
+            ),
+        )
+    }
+
+    sealed interface Cardano {
+
+        data class MinAdaValueCharged(val tokenName: String, val minAdaValue: String) : Warning(
+            title = resourceReference(id = R.string.cardano_coin_will_be_send_with_token_title),
+            subtitle = resourceReference(
+                id = R.string.cardano_coin_will_be_send_with_token_description,
+                formatArgs = wrappedList(minAdaValue, tokenName),
+            ),
+        )
+
+        data object InsufficientBalanceToTransferCoin : Error(
+            title = resourceReference(id = R.string.cardano_max_amount_has_token_title),
+            subtitle = resourceReference(id = R.string.cardano_max_amount_has_token_description),
+        )
+
+        data class InsufficientBalanceToTransferToken(val tokenName: String) : Error(
+            title = resourceReference(id = R.string.cardano_insufficient_balance_to_send_token_title),
+            subtitle = resourceReference(
+                id = R.string.cardano_insufficient_balance_to_send_token_description,
+                formatArgs = wrappedList(tokenName),
+            ),
+        )
+    }
+
+    sealed interface Koinos {
+        data class InsufficientRecoverableMana(
+            val mana: BigDecimal,
+            val maxMana: BigDecimal,
+        ) : Error(
+            title = resourceReference(R.string.koinos_insufficient_mana_to_send_koin_title),
+            subtitle = resourceReference(
+                R.string.koinos_insufficient_mana_to_send_koin_description,
+                formatArgs = wrappedList(
+                    BigDecimalFormatter.formatCryptoAmountShorted(mana, "", Blockchain.Koinos.decimals()),
+                    BigDecimalFormatter.formatCryptoAmountShorted(maxMana, "", Blockchain.Koinos.decimals()),
+                ),
+            ),
+        )
+
+        data object InsufficientBalance : Error(
+            title = resourceReference(R.string.koinos_insufficient_balance_to_send_koin_title),
+            subtitle = resourceReference(R.string.koinos_insufficient_balance_to_send_koin_description),
+        )
+
+        data class ManaExceedsBalance(
+            val availableKoinForTransfer: BigDecimal,
+            val onReduceClick: () -> Unit,
+        ) : Error(
+            title = resourceReference(R.string.koinos_mana_exceeds_koin_balance_title),
+            subtitle = resourceReference(
+                R.string.koinos_mana_exceeds_koin_balance_description,
+                formatArgs = wrappedList(
+                    BigDecimalFormatter.formatCryptoAmount(
+                        availableKoinForTransfer,
+                        Blockchain.Koinos.currency,
+                        Blockchain.Koinos.decimals(),
+                    ),
+                ),
+            ),
+            buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(R.string.send_notification_reduce_to, wrappedList(availableKoinForTransfer)),
+                onClick = onReduceClick,
             ),
         )
     }
