@@ -93,7 +93,7 @@ internal class SetInitialDataStateTransformer(
         if (maxApr - minApr < EQUALITY_THRESHOLD) {
             return stringReference("$formattedMinApr%")
         }
-        return resourceReference(R.string.common_percent_range, wrappedList(formattedMinApr, formattedMaxApr))
+        return resourceReference(R.string.common_range, wrappedList(formattedMinApr, formattedMaxApr))
     }
 
     companion object {
