@@ -2,6 +2,7 @@ package com.tangem.datasource.api.stakekit.models.response.model
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
