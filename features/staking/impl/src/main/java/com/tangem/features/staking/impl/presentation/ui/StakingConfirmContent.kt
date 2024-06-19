@@ -18,11 +18,18 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmStakingStatePreviewData
+import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.ui.block.NotificationsBlock
 import com.tangem.features.staking.impl.presentation.ui.block.StakingFeeBlock
+import com.tangem.features.staking.impl.presentation.ui.block.ValidatorBlock
+import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 
 @Composable
-internal fun StakingConfirmContent(amountState: AmountState, state: StakingStates.ConfirmStakingState) {
+internal fun StakingConfirmContent(
+    amountState: AmountState,
+    state: StakingStates.ConfirmStakingState,
+    clickIntents: StakingClickIntents,
+) {
     if (state !is StakingStates.ConfirmStakingState.Data) return
 
     Column(
@@ -39,6 +46,7 @@ internal fun StakingConfirmContent(amountState: AmountState, state: StakingState
             isEditingDisabled = true,
             onClick = {},
         )
+        ValidatorBlock(validatorState = state.validatorState, onClick = clickIntents::openValidators)
         StakingFeeBlock(feeState = state.feeState)
         NotificationsBlock(notifications = state.notifications)
         SpacerHMax()
@@ -66,6 +74,7 @@ private fun Preview_StakingConfirmContent() {
             StakingConfirmContent(
                 amountState = AmountStatePreviewData.amountState,
                 state = ConfirmStakingStatePreviewData.confirmStakingState,
+                clickIntents = StakingClickIntentsStub,
             )
         }
     }
