@@ -1,15 +1,12 @@
 package com.tangem.tap
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.nfc.NfcAdapter
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.activity.SystemBarStyle
@@ -21,8 +18,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
@@ -46,6 +41,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.data.card.sdk.CardSdkLifecycleObserver
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
@@ -53,7 +49,9 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.features.disclaimer.api.DisclaimerRouter
 import com.tangem.features.managetokens.navigation.ManageTokensUi
+import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tester.api.TesterRouter
@@ -67,6 +65,7 @@ import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.showFragmentAllowingStateLoss
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.sdk.TangemSdkManager
@@ -79,10 +78,10 @@ import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.routing.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
-import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -180,6 +179,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     internal lateinit var routingComponentFactory: RoutingComponent.Factory
 
+    @Inject
+    lateinit var disclaimerRouter: DisclaimerRouter
+
+    @Inject
+    lateinit var pushNotificationsRouter: PushNotificationsRouter
+
+    @Inject
+    lateinit var cardRepository: CardRepository
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -215,7 +223,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         installRouting()
         initContent()
 
-        checkForNotificationPermission()
         observeStateUpdates()
         observePolkadotAccountHealthCheck()
 
@@ -295,6 +302,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 qrScanningRouter = qrScanningRouter,
                 emailSender = emailSender,
                 stakingRouter = stakingRouter,
+                disclaimerRouter = disclaimerRouter,
+                pushNotificationsRouter = pushNotificationsRouter,
             ),
         )
     }
@@ -526,23 +535,17 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 replaceAll(AppRoute.Welcome(intentWhichStartedActivity?.let(::SerializableIntent)))
             }
         } else {
-            store.dispatchNavigationAction { replaceAll(AppRoute.Home) }
             lifecycleScope.launch {
+                val toggles = store.inject(getDependency = DaggerGraphState::pushNotificationsFeatureToggles)
+                val isEnabled = toggles.isPushNotificationsEnabled && !cardRepository.isTangemTOSAccepted()
+                val route = if (isEnabled) AppRoute.Disclaimer(isTosAccepted = false) else AppRoute.Home
+
+                store.dispatchNavigationAction { replaceAll(route) }
                 intentProcessor.handleIntent(intentWhichStartedActivity, false)
             }
         }
 
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
-    }
-
-    private fun checkForNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            BuildConfig.LOG_ENABLED &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
-            PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
-        }
     }
 
     private fun observePolkadotAccountHealthCheck() {
