@@ -13,10 +13,10 @@ data class EnterActionResponse(
     @Json(name = "id")
     val id: String,
     @Json(name = "integrationId")
-    val integrationId: Boolean,
+    val integrationId: String,
     @Json(name = "status")
     val status: StakingActionStatusDTO,
-    @Json(name = "page")
+    @Json(name = "type")
     val type: StakingActionTypeDTO,
     @Json(name = "currentStepIndex")
     val currentStepIndex: Int,
@@ -30,5 +30,4 @@ data class EnterActionResponse(
     val transactions: List<StakingTransactionDTO>?,
     @Json(name = "createdAt")
     val createdAt: DateTime,
-
 )

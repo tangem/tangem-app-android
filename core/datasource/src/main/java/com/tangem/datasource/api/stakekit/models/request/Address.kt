@@ -8,7 +8,7 @@ data class Address(
     @Json(name = "additionalAddresses")
     val additionalAddresses: AdditionalAddresses? = null,
     @Json(name = "explorerUrl")
-    val explorerUrl: String,
+    val explorerUrl: String? = null,
 ) {
 
     data class AdditionalAddresses(

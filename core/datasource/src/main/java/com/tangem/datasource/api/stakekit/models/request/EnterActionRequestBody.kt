@@ -12,30 +12,30 @@ data class EnterActionRequestBody(
     @Json(name = "args")
     val args: EnterActionRequestBodyArgs,
     @Json(name = "referralCode")
-    val referralCode: String,
+    val referralCode: String? = null,
 ) {
 
     data class EnterActionRequestBodyArgs(
         @Json(name = "amount")
         val amount: String,
         @Json(name = "validatorAddress")
-        val validatorAddress: String?,
+        val validatorAddress: String? = null,
         @Json(name = "validatorAddresses")
-        val validatorAddresses: List<String>?,
+        val validatorAddresses: List<String>? = null,
         @Json(name = "providerId")
-        val providerId: String?,
+        val providerId: String? = null,
         @Json(name = "duration")
-        val duration: String?,
+        val duration: String? = null,
         @Json(name = "nfts")
-        val nfts: List<YieldBalanceWrapperDTO.BalanceDTO.PendingAction.PendingActionArgs.Nft>?,
+        val nfts: List<YieldBalanceWrapperDTO.BalanceDTO.PendingAction.PendingActionArgs.Nft>? = null,
         @Json(name = "ledgerWalletAPICompatible")
-        val ledgerWalletAPICompatible: Boolean?,
+        val ledgerWalletAPICompatible: Boolean? = null,
         @Json(name = "tronResource")
-        val tronResource: String?,
+        val tronResource: String? = null,
         @Json(name = "signatureVerification")
-        val signatureVerification: SignatureVerification?,
+        val signatureVerification: SignatureVerification? = null,
         @Json(name = "inputToken")
-        val inputToken: TokenDTO?,
+        val inputToken: TokenDTO? = null,
     )
 
     data class SignatureVerification(

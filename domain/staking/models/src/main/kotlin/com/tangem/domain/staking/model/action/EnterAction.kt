@@ -6,7 +6,7 @@ import java.math.BigDecimal
 
 data class EnterAction(
     val id: String,
-    val integrationId: Boolean,
+    val integrationId: String,
     val status: StakingActionStatus,
     val type: StakingActionType,
     val currentStepIndex: Int,

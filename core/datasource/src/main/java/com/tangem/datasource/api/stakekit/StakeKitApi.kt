@@ -43,10 +43,8 @@ interface StakeKitApi {
     @GET("tokens")
     suspend fun getTokens(): ApiResponse<List<TokenWithYieldDTO>>
 
-    @POST("action/enter")
-    suspend fun createEnterAction(
-        @Body body: EnterActionRequestBody
-    ): ApiResponse<EnterActionResponse>
+    @POST("actions/enter")
+    suspend fun createEnterAction(@Body body: EnterActionRequestBody): ApiResponse<EnterActionResponse>
 
     @PATCH("transactions/{transactionId}")
     suspend fun constructTransaction(
