@@ -26,9 +26,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.ValidatorState
+import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmStakingStatePreviewData
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
-import com.tangem.features.staking.impl.presentation.state.stub.StakingValidatorStateStub
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import java.math.BigDecimal
 
@@ -37,11 +37,10 @@ import java.math.BigDecimal
  */
 @Composable
 internal fun StakingValidatorListContent(
-    state: StakingStates.ValidatorState,
+    state: ValidatorState,
     clickIntents: StakingClickIntents,
     modifier: Modifier = Modifier,
 ) {
-    if (state !is StakingStates.ValidatorState.Data) return
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     LazyColumn(
@@ -65,41 +64,44 @@ internal fun StakingValidatorListContent(
                     ),
             )
         }
-        items(
-            count = state.validators.size,
-            key = { state.validators[it] },
-            contentType = { state.validators[it]::class.java },
-        ) { index ->
-            val item = state.validators[index]
+        if (state is ValidatorState.Content) {
+            val validators = state.availableValidators
+            items(
+                count = validators.size,
+                key = { validators[it].address },
+                contentType = { validators[it]::class.java },
+            ) { index ->
+                val item = validators[index]
 
-            InputRowImageSelector(
-                subtitle = stringReference(item.name),
-                caption = combinedReference(
-                    resourceReference(R.string.staking_details_apr),
-                    annotatedReference(
-                        buildAnnotatedString {
-                            append(" ")
-                            withStyle(style = SpanStyle(color = TangemTheme.colors.text.accent)) {
-                                append(
-                                    BigDecimalFormatter.formatPercent(item.apr ?: BigDecimal.ZERO, true),
-                                )
-                            }
-                        },
+                InputRowImageSelector(
+                    subtitle = stringReference(item.name),
+                    caption = combinedReference(
+                        resourceReference(R.string.staking_details_apr),
+                        annotatedReference(
+                            buildAnnotatedString {
+                                append(" ")
+                                withStyle(style = SpanStyle(color = TangemTheme.colors.text.accent)) {
+                                    append(
+                                        BigDecimalFormatter.formatPercent(item.apr ?: BigDecimal.ZERO, true),
+                                    )
+                                }
+                            },
+                        ),
                     ),
-                ),
-                imageUrl = item.image.orEmpty(),
-                isSelected = item == state.selectedValidator,
-                onSelect = { clickIntents.onValidatorSelect(item) },
-                modifier = Modifier
-                    .clip(
-                        if (index == state.validators.lastIndex) {
-                            CornersToRound.BOTTOM_2
-                        } else {
-                            CornersToRound.ZERO
-                        }.getShape(),
-                    )
-                    .background(TangemTheme.colors.background.action),
-            )
+                    imageUrl = item.image.orEmpty(),
+                    isSelected = item == state.chosenValidator,
+                    onSelect = { clickIntents.onValidatorSelect(item) },
+                    modifier = Modifier
+                        .clip(
+                            if (index == validators.lastIndex) {
+                                CornersToRound.BOTTOM_2
+                            } else {
+                                CornersToRound.ZERO
+                            }.getShape(),
+                        )
+                        .background(TangemTheme.colors.background.action),
+                )
+            }
         }
     }
 }
@@ -110,7 +112,7 @@ internal fun StakingValidatorListContent(
 @Composable
 private fun StakingValidatorListContent_Preview(
     @PreviewParameter(StakingValidatorListContentPreviewProvider::class)
-    data: StakingStates.ValidatorState.Data,
+    data: ValidatorState,
 ) {
     TangemThemePreview {
         StakingValidatorListContent(
@@ -120,8 +122,8 @@ private fun StakingValidatorListContent_Preview(
     }
 }
 
-private class StakingValidatorListContentPreviewProvider : PreviewParameterProvider<StakingStates.ValidatorState.Data> {
-    override val values: Sequence<StakingStates.ValidatorState.Data>
-        get() = sequenceOf(StakingValidatorStateStub.state)
+private class StakingValidatorListContentPreviewProvider : PreviewParameterProvider<ValidatorState> {
+    override val values: Sequence<ValidatorState>
+        get() = sequenceOf(ConfirmStakingStatePreviewData.confirmStakingState.validatorState)
 }
 // endregion

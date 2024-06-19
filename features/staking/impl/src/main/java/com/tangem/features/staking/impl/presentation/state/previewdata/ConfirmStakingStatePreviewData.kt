@@ -7,9 +7,9 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.Yield
 import com.tangem.features.staking.impl.presentation.state.InnerFeeState
-import com.tangem.features.staking.impl.presentation.state.InnerValidatorState
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.ValidatorState
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
@@ -73,10 +73,8 @@ internal object ConfirmStakingStatePreviewData {
             isFeeApproximate = false,
             isFeeConvertibleToFiat = true,
         ),
-        validatorState = StakingStates.ValidatorState(
-            validatorState = InnerValidatorState.Content(
-                chosenValidator = validatorList[0],
-            ),
+        validatorState = ValidatorState.Content(
+            chosenValidator = validatorList[0],
             availableValidators = validatorList,
         ),
         footerText = "You stake \$715.11 and will be receiving ~\$35 monthly",
