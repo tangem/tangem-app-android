@@ -1,6 +1,8 @@
 package com.tangem.features.staking.impl.presentation.ui
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -9,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,8 +26,8 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.StakingStep
+import com.tangem.features.staking.impl.presentation.state.StakingUiState
 
 @Composable
 internal fun StakingNavigationButtons(uiState: StakingUiState, modifier: Modifier = Modifier) {
@@ -105,7 +107,8 @@ private fun getButtonData(currentState: StakingUiState): Pair<Int, () -> Unit> {
         StakingStep.Amount,
         StakingStep.Confirm,
         StakingStep.Success,
-        -> R.string.common_next to { currentState.clickIntents.onNextClick() }
+        -> R.string.common_next to currentState.clickIntents::onNextClick
+        StakingStep.Validators -> R.string.common_continue to currentState.clickIntents::onNextClick
     }
 }
 
@@ -113,6 +116,7 @@ private fun isButtonEnabled(uiState: StakingUiState): Boolean {
     return when (uiState.currentStep) {
         StakingStep.InitialInfo -> uiState.initialInfoState.isPrimaryButtonEnabled
         StakingStep.Amount -> uiState.amountState.isPrimaryButtonEnabled
+        StakingStep.Validators -> uiState.confirmStakingState.isPrimaryButtonEnabled
         StakingStep.Confirm -> uiState.confirmStakingState.isPrimaryButtonEnabled
         StakingStep.Success -> true
     }
