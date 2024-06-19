@@ -46,6 +46,7 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
+import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -193,6 +194,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val appRouter: AppRouter
         get() = entryPoint.getAppRouter()
+
+    private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles
+        get() = entryPoint.getPushNotificationsFeatureToggles()
     // endregion
 
     override fun onCreate() {
@@ -284,6 +288,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     urlOpener = urlOpener,
                     shareManager = shareManager,
                     appRouter = appRouter,
+                    pushNotificationsFeatureToggles = pushNotificationsFeatureToggles,
                 ),
             ),
         )
