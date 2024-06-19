@@ -26,11 +26,18 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param isSelected Whether the radio button is selected
  * @param onClick Called when the user clicks the button
  * @param modifier Modifier to be applied to the button
+ * @param isEnabled Whether the button click is enabled
  */
 @Composable
-fun TangemRadioButton(isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun TangemRadioButton(
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
+) {
     Box(
         modifier = modifier.clickable(
+            enabled = isEnabled,
             interactionSource = remember { MutableInteractionSource() },
             indication = rememberRipple(bounded = false, radius = TangemTheme.dimens.size16),
             onClick = onClick,

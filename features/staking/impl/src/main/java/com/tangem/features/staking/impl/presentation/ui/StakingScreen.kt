@@ -16,6 +16,7 @@ import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import kotlinx.coroutines.delay
@@ -50,13 +51,16 @@ internal fun StakingScreen(uiState: StakingUiState) {
 @Composable
 private fun SendAppBar(uiState: StakingUiState) {
     val titleRes = when (uiState.currentStep) {
-        StakingStep.InitialInfo -> stringResource(id = R.string.common_stake)
         StakingStep.Amount -> stringResource(id = R.string.send_amount_label)
-        StakingStep.Confirm -> stringResource(id = R.string.common_stake)
+        StakingStep.InitialInfo,
+        StakingStep.Validators,
+        StakingStep.Confirm,
+        -> stringResource(id = R.string.common_stake)
         StakingStep.Success -> ""
     }
     val backIcon = when (uiState.currentStep) {
         StakingStep.Amount,
+        StakingStep.Validators,
         StakingStep.Confirm,
         StakingStep.Success,
         -> {
@@ -130,7 +134,16 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                 StakingStep.Confirm -> StakingConfirmContent(
                     amountState = uiState.amountState,
                     state = uiState.confirmStakingState,
+                    clickIntents = uiState.clickIntents,
                 )
+                StakingStep.Validators -> {
+                    val confirmState = uiState.confirmStakingState
+                    if (confirmState !is StakingStates.ConfirmStakingState.Data) return@AnimatedContent
+                    StakingValidatorListContent(
+                        state = confirmState.validatorState,
+                        clickIntents = uiState.clickIntents,
+                    )
+                }
                 else -> TODO()
             }
         }
