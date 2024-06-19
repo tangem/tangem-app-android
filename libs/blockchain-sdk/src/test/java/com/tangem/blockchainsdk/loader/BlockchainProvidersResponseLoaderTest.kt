@@ -279,15 +279,15 @@ internal class BlockchainProvidersResponseLoaderTest {
         const val LOCAL_PROVIDERS_JSON = "doesn't matter"
 
         val localProviders: BlockchainProvidersResponse = mapOf(
-            "aptos" to listOf(ProviderModel.Private(name = "private_apt")),
+            "aptos" to listOf(ProviderModel.Private(name = "nownodes")),
             "algorand" to listOf(
-                ProviderModel.Private(name = "private_alg"),
+                ProviderModel.Private(name = "nownodes"),
                 ProviderModel.Public(url = "https://public_alg.com/"),
             ),
         )
 
         val remoteProviders: BlockchainProvidersResponse = localProviders + mapOf(
-            "bitcoin" to listOf(ProviderModel.Private(name = "private_btc")),
+            "bitcoin" to listOf(ProviderModel.Private(name = "blockchair")),
         )
     }
 }
