@@ -1,17 +1,14 @@
 package com.tangem.datasource.api.stakekit
 
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
-import com.tangem.datasource.api.stakekit.models.request.RevenueOption
-import com.tangem.datasource.api.stakekit.models.request.YieldType
+import com.tangem.datasource.api.stakekit.models.request.*
 import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
+import com.tangem.datasource.api.stakekit.models.response.EnterActionResponse
+import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenWithYieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.Query
+import retrofit2.http.*
 
 @Suppress("LongParameterList")
 interface StakeKitApi {
@@ -45,4 +42,19 @@ interface StakeKitApi {
 
     @GET("tokens")
     suspend fun getTokens(): ApiResponse<List<TokenWithYieldDTO>>
+
+    @POST("actions/enter")
+    suspend fun createEnterAction(@Body body: EnterActionRequestBody): ApiResponse<EnterActionResponse>
+
+    @PATCH("transactions/{transactionId}")
+    suspend fun constructTransaction(
+        @Path("transactionId") transactionId: String,
+        @Body body: ConstructTransactionRequestBody,
+    ): ApiResponse<StakingTransactionDTO>
+
+    @POST("transactions/{transactionId}/submit_hash")
+    suspend fun submitTransactionHash(
+        @Path("transactionId") transactionId: String,
+        @Body body: SubmitTransactionHashRequestBody,
+    ): ApiResponse<Unit>
 }
