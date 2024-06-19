@@ -30,7 +30,9 @@ internal class StakingStateRouter(
     fun onNextClick() {
         when (stateController.uiState.value.currentStep) {
             StakingStep.InitialInfo -> showAmount()
-            StakingStep.Amount -> showConfirm()
+            StakingStep.Validators,
+            StakingStep.Amount,
+            -> showConfirm()
             StakingStep.Confirm -> showSuccess()
             StakingStep.Success -> onBackClick()
         }
@@ -49,6 +51,10 @@ internal class StakingStateRouter(
 
     fun showAmount() {
         stateController.update { it.copy(currentStep = StakingStep.Amount) }
+    }
+
+    fun showValidators() {
+        stateController.update { it.copy(currentStep = StakingStep.Validators) }
     }
 
     fun showConfirm() {
