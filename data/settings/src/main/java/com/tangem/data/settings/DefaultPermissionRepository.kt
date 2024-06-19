@@ -16,26 +16,27 @@ internal class DefaultPermissionRepository(
     private val appPreferencesStore: AppPreferencesStore,
 ) : PermissionRepository {
 
-    override suspend fun shouldInitiallyShowPermissionScreen(permission: Int): Boolean {
+    override suspend fun shouldInitiallyShowPermissionScreen(permission: String): Boolean {
         val key = getShouldShowInitialPermissionScreen(permission)
         val initialPermissionScreen = appPreferencesStore.getSyncOrDefault(key = key, default = true)
         if (initialPermissionScreen) appPreferencesStore.store(key = key, value = false)
         return initialPermissionScreen
     }
 
-    override suspend fun isFirstTimeAskingPermission(permission: Int): Boolean = appPreferencesStore.getSyncOrDefault(
-        key = getIsFirstTimeAskingPermission(permission),
-        default = true,
-    )
+    override suspend fun isFirstTimeAskingPermission(permission: String): Boolean =
+        appPreferencesStore.getSyncOrDefault(
+            key = getIsFirstTimeAskingPermission(permission),
+            default = true,
+        )
 
-    override suspend fun setFirstTimeAskingPermission(permission: Int, value: Boolean) {
+    override suspend fun setFirstTimeAskingPermission(permission: String, value: Boolean) {
         appPreferencesStore.store(
             key = getIsFirstTimeAskingPermission(permission),
             value = value,
         )
     }
 
-    override suspend fun shouldAskPermission(permission: Int): Boolean {
+    override suspend fun shouldAskPermission(permission: String): Boolean {
         val shouldAskPermission = appPreferencesStore.getSyncOrDefault(getShouldShowPermission(permission), true)
         val delayedLaunches = appPreferencesStore.getSyncOrDefault(getPermissionLaunchCount(permission), 0)
         val delayedDays = appPreferencesStore.getSyncOrDefault(getPermissionDaysCount(permission), 0)
@@ -47,11 +48,11 @@ internal class DefaultPermissionRepository(
         return shouldAskPermission && isDaysDelayed && isLaunchesDelayed
     }
 
-    override suspend fun neverAskPermission(permission: Int) {
+    override suspend fun neverAskPermission(permission: String) {
         appPreferencesStore.store(key = getShouldShowPermission(permission), value = false)
     }
 
-    override suspend fun delayPermissionAsking(permission: Int) {
+    override suspend fun delayPermissionAsking(permission: String) {
         appPreferencesStore.editData {
             val appLaunchCounter = it.getOrDefault(PreferencesKeys.APP_LAUNCH_COUNT_KEY, 0)
             val nowMillis = SystemClock.elapsedRealtime()

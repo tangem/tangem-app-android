@@ -4,13 +4,14 @@ import androidx.compose.runtime.Immutable
 import com.tangem.domain.staking.model.Yield
 
 @Immutable
-internal sealed class InnerValidatorState {
+internal sealed class ValidatorState {
 
     data class Content(
         val chosenValidator: Yield.Validator,
-    ) : InnerValidatorState()
+        val availableValidators: List<Yield.Validator>,
+    ) : ValidatorState()
 
-    data object Loading : InnerValidatorState()
+    data object Loading : ValidatorState()
 
-    data object Error : InnerValidatorState()
+    data object Error : ValidatorState()
 }

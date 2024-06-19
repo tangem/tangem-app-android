@@ -14,8 +14,10 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.StakingStep
+import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.ValidatorState
+import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmStakingStatePreviewData
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
@@ -47,6 +49,7 @@ internal class SetInitialDataStateTransformer(
             currentStep = StakingStep.InitialInfo,
             initialInfoState = createInitialInfoState(),
             amountState = createInitialAmountState(),
+            confirmStakingState = createInitialConfirmationState(),
         )
     }
 
@@ -73,6 +76,15 @@ internal class SetInitialDataStateTransformer(
 
     private fun createInitialAmountState(): AmountState {
         return amountStateConverter.convert("")
+    }
+
+    private fun createInitialConfirmationState(): StakingStates.ConfirmStakingState {
+        return ConfirmStakingStatePreviewData.confirmStakingState.copy(
+            validatorState = ValidatorState.Content(
+                chosenValidator = yield.validators.first(),
+                availableValidators = yield.validators,
+            ),
+        )
     }
 
     private fun getAprRange(): TextReference {

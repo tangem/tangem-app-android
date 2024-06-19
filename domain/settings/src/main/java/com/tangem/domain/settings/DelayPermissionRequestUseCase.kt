@@ -7,7 +7,7 @@ class DelayPermissionRequestUseCase(
     private val repository: PermissionRepository,
 ) {
 
-    suspend operator fun invoke(permission: Int): Either<Throwable, Unit> = Either.catch {
+    suspend operator fun invoke(permission: String): Either<Throwable, Unit> = Either.catch {
         repository.delayPermissionAsking(permission)
     }
 }
