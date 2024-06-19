@@ -99,6 +99,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 ),
                 chiaFireAcademyApiKey = configValues.chiaFireAcademyApiKey,
                 chiaTangemApiKey = configValues.chiaTangemApiKey,
+                hederaArkhiaApiKey = configValues.hederaArkhiaKey,
                 polygonScanApiKey = configValues.polygonScanApiKey,
                 bittensorDwellirApiKey = configValues.bittensorDwellirApiKey,
                 bittensorOnfinalityApiKey = configValues.bittensorOnfinalityKey,
