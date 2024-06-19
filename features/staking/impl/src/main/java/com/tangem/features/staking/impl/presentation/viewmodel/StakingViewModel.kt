@@ -15,22 +15,20 @@ import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
-import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.transformers.HideBalanceStateTransformer
-import com.tangem.features.staking.impl.presentation.state.transformers.SetConfirmStateDataStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.SetInitialDataStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountChangeStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountCurrencyChangeStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountMaxValueStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountPasteDismissStateTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,7 +46,6 @@ internal class StakingViewModel @Inject constructor(
     private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
 
@@ -58,18 +55,17 @@ internal class StakingViewModel @Inject constructor(
     var stakingStateRouter: StakingStateRouter by Delegates.notNull()
         private set
 
-    private val cryptoCurrencyId: CryptoCurrency.ID = savedStateHandle.get<Bundle>(
-        AppRoute.Staking.CRYPTO_CURRENCY_ID_KEY,
-    )
-        ?.let { it.unbundle(CryptoCurrency.ID.serializer()) }
-        ?: error("This screen can't be opened without `CryptoCurrency.ID`")
+    private val cryptoCurrencyId: CryptoCurrency.ID =
+        savedStateHandle.get<Bundle>(AppRoute.Staking.CRYPTO_CURRENCY_ID_KEY)
+            ?.unbundle(CryptoCurrency.ID.serializer())
+            ?: error("This screen can't be opened without `CryptoCurrency.ID`")
 
     private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.Staking.USER_WALLET_ID_KEY)
-        ?.let { it.unbundle(UserWalletId.serializer()) }
+        ?.unbundle(UserWalletId.serializer())
         ?: error("This screen can't be opened without `UserWalletId`")
 
     private val yield: Yield = savedStateHandle.get<Bundle>(AppRoute.Staking.YIELD_KEY)
-        ?.let { it.unbundle(Yield.serializer()) }
+        ?.unbundle(Yield.serializer())
         ?: error("This screen can't be opened without `Yield`")
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
@@ -90,27 +86,6 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onNextClick() {
         stakingStateRouter.onNextClick()
-        when (value.currentStep) {
-            StakingStep.Confirm -> {
-                stateController.update(
-                    SetConfirmStateDataStateTransformer(
-                        yield = yield,
-                        appCurrencyProvider = Provider { appCurrency },
-                        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-                        isFeeApproximateUseCase = isFeeApproximateUseCase,
-                    ),
-                )
-            }
-            StakingStep.InitialInfo -> {
-                // TODO staking
-            }
-            StakingStep.Amount -> {
-                // TODO staking
-            }
-            StakingStep.Success -> {
-                // TODO staking
-            }
-        }
     }
 
     override fun onPrevClick() {
@@ -131,6 +106,12 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {
         stateController.update(AmountCurrencyChangeStateTransformer(cryptoCurrencyStatus, isFiat))
+    }
+
+    override fun openValidators() = stakingStateRouter.showValidators()
+
+    override fun onValidatorSelect(validator: Yield.Validator) {
+        stateController.update(ValidatorSelectChangeTransformer(validator))
     }
 
     fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
