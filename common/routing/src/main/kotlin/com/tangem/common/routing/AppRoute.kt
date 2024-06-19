@@ -197,4 +197,7 @@ sealed class AppRoute(val path: String) : Route {
             const val YIELD_KEY = "yield"
         }
     }
+
+    @Serializable
+    data object PushNotification : AppRoute(path = "/push_notification")
 }
