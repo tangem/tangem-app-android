@@ -3,6 +3,7 @@ package com.tangem.blockchainsdk.loader
 import androidx.core.util.PatternsCompat
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
+import com.tangem.blockchainsdk.utils.createPrivateProviderType
 import com.tangem.datasource.api.tangemTech.TangemTechServiceApi
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.config.models.ProviderModel
@@ -82,7 +83,17 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
         return result.guaranteeUrlsEndWithSlash()
     }
 
-    private fun List<ProviderModel>.filterUnsupportedProviders() = filter { it !is ProviderModel.UnsupportedType }
+    private fun List<ProviderModel>.filterUnsupportedProviders() = filter {
+        val isSupportedType = it !is ProviderModel.UnsupportedType
+
+        val isSupportedPrivateType = if (it is ProviderModel.Private) {
+            createPrivateProviderType(it.name) != null
+        } else {
+            true
+        }
+
+        isSupportedType && isSupportedPrivateType
+    }
 
     private fun List<ProviderModel>.filterInvalidProviders() = mapNotNull { provider ->
         if (provider is ProviderModel.Public) {
