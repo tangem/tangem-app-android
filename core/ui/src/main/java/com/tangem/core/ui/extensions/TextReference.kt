@@ -49,6 +49,13 @@ sealed interface TextReference {
     data class Str(val value: String) : TextReference
 
     /**
+     * Annotated text
+     *
+     * @property value annotated string
+     */
+    data class Annotated(val value: AnnotatedString) : TextReference
+
+    /**
      * Combined reference. It concatenates all [refs].
      *
      * @see [TextReference.plus] method
@@ -81,6 +88,16 @@ fun resourceReference(@StringRes id: Int, formatArgs: WrappedList<Any> = Wrapped
  */
 fun stringReference(value: String): TextReference {
     return TextReference.Str(value)
+}
+
+/**
+ * Creates a [TextReference] using an annotated string value.
+ *
+ * @param value The annotated string value.
+ * @return A [TextReference] representing the provided annotated string value.
+ */
+fun annotatedReference(value: AnnotatedString): TextReference {
+    return TextReference.Annotated(value)
 }
 
 /**
@@ -133,6 +150,7 @@ fun TextReference.resolveReference(): String {
         }
         is TextReference.PluralRes -> pluralStringResource(id, count, *formatArgs.toTypedArray())
         is TextReference.Str -> value
+        is TextReference.Annotated -> value.text
         is TextReference.Combined -> {
             buildString {
                 refs.forEach {
@@ -155,6 +173,7 @@ fun TextReference.resolveReference(resources: Resources): String {
         }
         is TextReference.PluralRes -> resources.getQuantityString(id, count, *formatArgs.toTypedArray())
         is TextReference.Str -> value
+        is TextReference.Annotated -> value.text
         is TextReference.Combined -> {
             buildString {
                 refs.forEach {
@@ -180,9 +199,10 @@ fun TextReference.resolveAnnotatedReference(): AnnotatedString {
             pluralStringResource(id, count, *formatArgs.toTypedArray()),
         )
         is TextReference.Str -> formatAnnotated(value)
+        is TextReference.Annotated -> value
         is TextReference.Combined -> buildAnnotatedString {
             refs.forEach {
-                append(formatAnnotated(it.resolveReference()))
+                append(it.resolveAnnotatedReference())
             }
         }
     }
@@ -195,6 +215,7 @@ operator fun TextReference.plus(ref: TextReference): TextReference {
         is TextReference.PluralRes,
         is TextReference.Res,
         is TextReference.Str,
+        is TextReference.Annotated,
         -> TextReference.Combined(refs = wrappedList(this, ref))
     }
 }
