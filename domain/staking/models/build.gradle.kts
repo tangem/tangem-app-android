@@ -8,4 +8,5 @@ dependencies {
     implementation(projects.domain.core)
 
     implementation(deps.kotlin.serialization)
+    implementation(deps.jodatime)
 }
