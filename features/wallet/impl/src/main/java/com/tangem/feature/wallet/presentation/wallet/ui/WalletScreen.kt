@@ -37,6 +37,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
@@ -53,6 +54,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
+import com.tangem.feature.wallet.presentation.wallet.ui.components.PushNotificationsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
@@ -204,17 +206,7 @@ private fun WalletContent(
             organizeTokens(state = selectedWallet, itemModifier = itemModifier)
         }
 
-        val bottomSheetConfig = selectedWallet.bottomSheetConfig
-        if (bottomSheetConfig != null) {
-            when (bottomSheetConfig.content) {
-                is WalletBottomSheetConfig -> WalletBottomSheet(config = bottomSheetConfig)
-                is TokenReceiveBottomSheetConfig -> TokenReceiveBottomSheet(config = bottomSheetConfig)
-                is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
-                is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
-                is BalancesAndLimitsBottomSheetConfig -> BalancesAndLimitsBottomSheet(config = bottomSheetConfig)
-                is VisaTxDetailsBottomSheetConfig -> VisaTxDetailsBottomSheet(config = bottomSheetConfig)
-            }
-        }
+        ShowBottomSheet(bottomSheetConfig = selectedWallet.bottomSheetConfig)
 
         WalletsListEffects(
             lazyListState = walletsListState,
@@ -602,6 +594,21 @@ internal fun LazyListScope.organizeTokens(state: WalletState, itemModifier: Modi
                     onClick = config.onClick,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ShowBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
+    if (bottomSheetConfig != null) {
+        when (bottomSheetConfig.content) {
+            is WalletBottomSheetConfig -> WalletBottomSheet(config = bottomSheetConfig)
+            is TokenReceiveBottomSheetConfig -> TokenReceiveBottomSheet(config = bottomSheetConfig)
+            is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
+            is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
+            is BalancesAndLimitsBottomSheetConfig -> BalancesAndLimitsBottomSheet(config = bottomSheetConfig)
+            is VisaTxDetailsBottomSheetConfig -> VisaTxDetailsBottomSheet(config = bottomSheetConfig)
+            is PushNotificationsBottomSheetConfig -> PushNotificationsBottomSheet(config = bottomSheetConfig)
         }
     }
 }
