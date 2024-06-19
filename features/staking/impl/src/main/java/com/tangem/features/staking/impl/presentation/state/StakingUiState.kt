@@ -6,7 +6,6 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.staking.model.Yield
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
@@ -85,16 +84,12 @@ internal sealed class StakingStates {
         val appCurrency: AppCurrency,
         val isFeeApproximate: Boolean,
     )
-
-    data class ValidatorState(
-        val validatorState: InnerValidatorState,
-        val availableValidators: List<Yield.Validator>,
-    )
 }
 
 enum class StakingStep {
     InitialInfo,
     Amount,
+    Validators,
     Confirm,
     Success,
 }
