@@ -5,7 +5,7 @@ import com.tangem.domain.settings.repositories.PermissionRepository
 
 class SetFirstTimeAskingPermissionUseCase(private val repository: PermissionRepository) {
 
-    suspend operator fun invoke(permission: Int): Either<Throwable, Unit> = Either.catch {
+    suspend operator fun invoke(permission: String): Either<Throwable, Unit> = Either.catch {
         repository.setFirstTimeAskingPermission(permission, false)
     }
 }
