@@ -24,6 +24,7 @@ dependencies {
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.accompanist.permission)
     implementation(deps.compose.material3)
+    implementation(deps.compose.material)
 
     /** Core modules */
     implementation(projects.core.ui)
@@ -35,12 +36,13 @@ dependencies {
     /** Domain modules */
     implementation(projects.domain.models)
     implementation(projects.domain.card)
+    implementation(projects.domain.settings)
 
     /** Feature modules */
     implementation(projects.features.disclaimer.api)
+    implementation(projects.features.pushNotifications.api)
 
     /** DI */
     implementation(deps.hilt.android)
-    implementation(project(":domain:settings"))
     kapt(deps.hilt.kapt)
 }
