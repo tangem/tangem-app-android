@@ -10,6 +10,7 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.BalanceType
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
@@ -23,6 +24,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val isStakingEnabled: Boolean,
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
@@ -39,7 +41,11 @@ internal class TokenDetailsLoadedBalanceConverter(
     private fun convertError(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(
-            tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(state.tokenBalanceBlockState.actionButtons),
+            tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(
+                actionButtons = state.tokenBalanceBlockState.actionButtons,
+                balanceSegmentedButtonConfig = state.tokenBalanceBlockState.balanceSegmentedButtonConfig,
+                selectedBalanceType = state.tokenBalanceBlockState.selectedBalanceType,
+            ),
             marketPriceBlockState = MarketPriceBlockState.Error(state.marketPriceBlockState.currencySymbol),
             notifications = persistentListOf(TokenDetailsNotification.NetworksUnreachable),
         )
@@ -74,12 +80,24 @@ internal class TokenDetailsLoadedBalanceConverter(
                 actionButtons = currentState.actionButtons,
                 fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
                 cryptoBalance = formatCryptoAmount(status),
+                isStakingEnabled = isStakingEnabled,
+                balanceSegmentedButtonConfig = currentState.balanceSegmentedButtonConfig,
+                onBalanceSelect = clickIntents::onBalanceSelect,
+                selectedBalanceType = currentState.selectedBalanceType,
             )
-            is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(currentState.actionButtons)
+            is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(
+                actionButtons = currentState.actionButtons,
+                balanceSegmentedButtonConfig = currentState.balanceSegmentedButtonConfig,
+                selectedBalanceType = BalanceType.ALL,
+            )
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Unreachable,
             is CryptoCurrencyStatus.NoAmount,
-            -> TokenDetailsBalanceBlockState.Error(currentState.actionButtons)
+            -> TokenDetailsBalanceBlockState.Error(
+                actionButtons = currentState.actionButtons,
+                balanceSegmentedButtonConfig = currentState.balanceSegmentedButtonConfig,
+                selectedBalanceType = BalanceType.ALL,
+            )
         }
     }
 
