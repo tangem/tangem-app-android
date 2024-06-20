@@ -11,6 +11,7 @@ import com.tangem.core.ui.components.showcase.model.ShowcaseItemModel
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.requestPushPermission
 import com.tangem.feature.pushnotifications.impl.R
+import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -27,6 +28,7 @@ internal fun PushNotificationsScreen(
         onAllow = onAllow,
         onDeny = onLater,
         onOpenSettings = onOpenSettings,
+        pushPermission = getPushPermissionOrNull(),
     )
 
     Showcase(
