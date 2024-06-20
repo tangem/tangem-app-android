@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,12 +40,16 @@ fun AppBarWithAdditionalButtons(
     modifier: Modifier = Modifier,
     startButton: AdditionalButton? = null,
     endButton: AdditionalButton? = null,
+    textColor: Color = TangemTheme.colors.text.primary1,
+    iconColor: Color = TangemTheme.colors.icon.primary1,
 ) {
     AppBarWithAdditionalButtons(
         text = text.resolveReference(),
         startButton = startButton,
         endButton = endButton,
         modifier = modifier,
+        textColor = textColor,
+        iconColor = iconColor,
     )
 }
 
@@ -63,6 +68,8 @@ fun AppBarWithAdditionalButtons(
     modifier: Modifier = Modifier,
     startButton: AdditionalButton? = null,
     endButton: AdditionalButton? = null,
+    textColor: Color = TangemTheme.colors.text.primary1,
+    iconColor: Color = TangemTheme.colors.icon.primary1,
 ) {
     Box(
         modifier = modifier
@@ -73,7 +80,7 @@ fun AppBarWithAdditionalButtons(
             Icon(
                 painter = painterResource(id = startButton.iconRes),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.primary1,
+                tint = iconColor,
                 modifier = Modifier
                     .size(TangemTheme.dimens.size24)
                     .align(Alignment.CenterStart)
@@ -92,7 +99,7 @@ fun AppBarWithAdditionalButtons(
         Text(
             text = text,
             modifier = Modifier.align(Alignment.Center),
-            color = TangemTheme.colors.text.primary1,
+            color = textColor,
             maxLines = 1,
             style = TangemTheme.typography.subtitle1,
         )
@@ -101,7 +108,7 @@ fun AppBarWithAdditionalButtons(
             Icon(
                 painter = painterResource(id = endButton.iconRes),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.primary1,
+                tint = iconColor,
                 modifier = Modifier
                     .size(TangemTheme.dimens.size24)
                     .align(Alignment.CenterEnd)
