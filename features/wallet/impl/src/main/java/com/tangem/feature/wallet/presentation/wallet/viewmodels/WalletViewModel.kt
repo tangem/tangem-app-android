@@ -155,7 +155,8 @@ internal class WalletViewModel @Inject constructor(
     private fun subscribeOnPushNotificationsPermission() {
         viewModelScope.launch {
             if (!shouldAskPermissionUseCase(PUSH_PERMISSION)) return@launch
-            withContext(dispatchers.io) { delay(timeMillis = 1_800) }
+
+            delay(timeMillis = 1_800)
 
             val isFirstTimeAsking = isFirstTimeAskingPermissionUseCase(PUSH_PERMISSION).getOrElse { true }
             val wasInitiallyAsk = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { true }
@@ -167,8 +168,8 @@ internal class WalletViewModel @Inject constructor(
             stateHolder.showBottomSheet(
                 PushNotificationsBottomSheetConfig(
                     isFirstTimeAsking = isFirstTimeAsking,
-                    onAllow = clickIntents::onAllowPushPermission,
-                    onAllowed = clickIntents::onNeverAskPushPermission,
+                    onRequest = clickIntents::onRequestPushPermission,
+                    onAllow = clickIntents::onNeverAskPushPermission,
                     onDeny = onDenyClick,
                     openSettings = settingsManager::openSettings,
                 ),
