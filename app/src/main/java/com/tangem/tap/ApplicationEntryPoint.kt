@@ -31,6 +31,7 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
+import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
@@ -116,4 +117,6 @@ interface ApplicationEntryPoint {
     fun getShareManager(): ShareManager
 
     fun getAppRouter(): AppRouter
+
+    fun getPushNotificationsFeatureToggles(): PushNotificationsFeatureToggles
 }

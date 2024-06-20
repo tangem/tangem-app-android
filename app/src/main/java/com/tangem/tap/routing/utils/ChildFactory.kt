@@ -7,6 +7,9 @@ import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
+import com.tangem.features.disclaimer.api.DisclaimerRouter
+import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
+import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tester.api.TesterRouter
@@ -48,6 +51,9 @@ internal class ChildFactory @Inject constructor(
     private val stakingRouter: StakingRouter,
     private val testerRouter: TesterRouter,
     private val detailsFeatureToggles: DetailsFeatureToggles,
+    private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles,
+    private val pushNotificationRouter: PushNotificationsRouter,
+    private val disclaimerRouter: DisclaimerRouter,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -97,7 +103,11 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { SecurityModeFragment() })
             }
             is AppRoute.Disclaimer -> {
-                route.asFragmentChild(Provider { DisclaimerFragment() })
+                if (pushNotificationsFeatureToggles.isPushNotificationsEnabled) {
+                    route.asFragmentChild(Provider { disclaimerRouter.entryFragment() })
+                } else {
+                    route.asFragmentChild(Provider { DisclaimerFragment() })
+                }
             }
             is AppRoute.Home -> {
                 route.asFragmentChild(Provider { HomeFragment() })
@@ -146,6 +156,9 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.Staking -> {
                 route.asFragmentChild(Provider { stakingRouter.getEntryFragment() })
+            }
+            is AppRoute.PushNotification -> {
+                route.asFragmentChild(Provider { pushNotificationRouter.entryFragment() })
             }
         }
     }
