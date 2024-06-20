@@ -1,7 +1,5 @@
 package com.tangem.core.ui.utils
 
-import android.Manifest
-import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -14,17 +12,18 @@ import com.google.accompanist.permissions.shouldShowRationale
  * Returns push permission requester.
  * Handles granting permission from app settings.
  */
+@Suppress("LongParameterList")
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun requestPushPermission(
     isFirstTimeAsking: Boolean,
+    pushPermission: String?,
     isClicked: MutableState<Boolean>,
     onAllow: () -> Unit,
     onDeny: () -> Unit,
     onOpenSettings: () -> Unit,
 ): () -> Unit {
-    val permissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        val permission = Manifest.permission.POST_NOTIFICATIONS
+    val permissionState = pushPermission?.let { permission ->
         val tempPermissionState = rememberPermissionState(permission = permission)
         rememberPermissionState(permission = permission) {
             when {
@@ -33,8 +32,6 @@ fun requestPushPermission(
                 else -> onDeny()
             }
         }
-    } else {
-        null
     }
 
     // Check if user granted permission and close bottom sheet
