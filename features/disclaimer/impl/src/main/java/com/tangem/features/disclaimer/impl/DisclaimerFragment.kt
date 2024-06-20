@@ -5,10 +5,10 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
+import com.tangem.common.routing.AppRoute.Disclaimer.Companion.IS_TOS_ACCEPTED_KEY
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.features.disclaimer.api.DisclaimerRouter
 import com.tangem.features.disclaimer.impl.presentation.ui.DisclaimerScreen
 import com.tangem.features.disclaimer.impl.presentation.viewmodel.DisclaimerViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,7 +26,7 @@ internal class DisclaimerFragment : ComposeFragment() {
     private val viewModel by viewModels<DisclaimerViewModel>()
 
     private val isTosAccepted: Boolean
-        get() = arguments?.getBoolean(DisclaimerRouter.IS_TOS_ACCEPTED_KEY) ?: false
+        get() = arguments?.getBoolean(IS_TOS_ACCEPTED_KEY) ?: false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
