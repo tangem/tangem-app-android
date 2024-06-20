@@ -40,6 +40,7 @@ dependencies {
 
     /** Feature modules */
     implementation(projects.features.disclaimer.api)
+    implementation(projects.features.pushNotifications.api)
 
     /** DI */
     implementation(deps.hilt.android)
