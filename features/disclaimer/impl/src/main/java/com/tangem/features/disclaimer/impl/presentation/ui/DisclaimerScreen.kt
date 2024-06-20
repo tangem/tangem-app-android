@@ -1,9 +1,7 @@
 package com.tangem.features.disclaimer.impl.presentation.ui
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.res.Configuration
-import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -37,6 +35,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.disclaimer.impl.R
 import com.tangem.features.disclaimer.impl.presentation.state.DisclaimerState
 import com.tangem.features.disclaimer.impl.presentation.state.DummyDisclaimer
+import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 
 @Composable
 internal fun DisclaimerScreen(state: DisclaimerState, onBackClick: () -> Unit) {
@@ -135,11 +134,9 @@ private fun DisclaimerContent(url: String, isTosAccepted: Boolean) {
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun BoxScope.DisclaimerButton(onAccept: (Boolean) -> Unit) {
-    val shouldAskPushPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS).status.isGranted
-    } else {
-        true
-    }
+    val shouldAskPushPermission = getPushPermissionOrNull()?.let { permission ->
+        rememberPermissionState(permission = permission).status.isGranted
+    } ?: true
     PrimaryButton(
         text = stringResource(id = R.string.common_accept),
         onClick = { onAccept(shouldAskPushPermission) },
