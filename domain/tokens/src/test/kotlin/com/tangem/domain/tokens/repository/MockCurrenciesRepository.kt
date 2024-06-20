@@ -122,7 +122,7 @@ internal class MockCurrenciesRepository(
         return isSortedByBalance.map { it.getOrElse { e -> throw e } }
     }
 
-    override fun hasPendingTransactions(
+    override fun isSendBlockedByPendingTransactions(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
     ): Boolean {
