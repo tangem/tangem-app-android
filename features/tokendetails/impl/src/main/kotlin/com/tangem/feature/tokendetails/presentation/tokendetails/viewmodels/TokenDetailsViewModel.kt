@@ -63,6 +63,7 @@ import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRout
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
@@ -125,12 +126,12 @@ internal class TokenDetailsViewModel @Inject constructor(
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
     private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.USER_WALLET_ID_KEY)
-        ?.let { it.unbundle(UserWalletId.serializer()) }
+        ?.unbundle(UserWalletId.serializer())
         ?: error("This screen can't open without `UserWalletId`")
 
     private val cryptoCurrency: CryptoCurrency =
         savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
-            ?.let { it.unbundle(CryptoCurrency.serializer()) }
+            ?.unbundle(CryptoCurrency.serializer())
             ?: error("This screen can't open without `CryptoCurrency`")
 
     private val userWallet: UserWallet
@@ -154,6 +155,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
         featureToggles = tokenDetailsFeatureToggles,
+        isStakingEnabled = stakingFeatureToggles.isStakingEnabled,
     )
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -785,6 +787,10 @@ internal class TokenDetailsViewModel @Inject constructor(
                 ifRight = { uiState = stateFactory.getStateWithRemovedHederaAssociateNotification() },
             )
         }
+    }
+
+    override fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig) {
+        uiState = stateFactory.getStateWithUpdatedBalanceSegmentedButtonConfig(config)
     }
 
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
