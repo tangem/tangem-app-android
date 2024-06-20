@@ -28,6 +28,10 @@ dependencies {
     /** Core modules */
     implementation(projects.core.ui)
     implementation(projects.core.featuretoggles)
+    implementation(projects.core.navigation)
+
+    /** Common modules */
+    implementation(projects.common.routing)
 
     /** Common modules */
     implementation(projects.common.routing)
@@ -40,6 +44,5 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
-    implementation(project(":core:navigation"))
     kapt(deps.hilt.kapt)
 }
