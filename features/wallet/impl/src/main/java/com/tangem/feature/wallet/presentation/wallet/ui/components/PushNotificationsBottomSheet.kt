@@ -24,6 +24,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.requestPushPermission
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.PushNotificationsBottomSheetConfig
+import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -37,10 +38,11 @@ internal fun PushNotificationsBottomSheet(config: TangemBottomSheetConfig) {
 private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetConfig, onDismiss: () -> Unit) {
     val isClicked = remember { mutableStateOf(false) }
     val requestPushPermission = requestPushPermission(
+        pushPermission = getPushPermissionOrNull(),
         isFirstTimeAsking = content.isFirstTimeAsking,
         isClicked = isClicked,
         onAllow = {
-            content.onAllowed()
+            content.onAllow()
             onDismiss()
         },
         onDeny = {
@@ -87,7 +89,7 @@ private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetC
                 text = stringResource(R.string.common_allow),
                 onClick = {
                     isClicked.value = true
-                    content.onAllow()
+                    content.onRequest()
                     requestPushPermission()
                 },
                 modifier = Modifier.weight(1f),
@@ -105,8 +107,8 @@ private fun PushNotificationsSheetContent_Preview() {
         PushNotificationsSheetContent(
             PushNotificationsBottomSheetConfig(
                 isFirstTimeAsking = false,
+                onRequest = {},
                 onAllow = {},
-                onAllowed = {},
                 onDeny = {},
                 openSettings = {},
             ),
