@@ -41,10 +41,10 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingAvailable
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBalance
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
@@ -52,6 +52,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheet
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.swapTransactionsItems
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.StakingBalanceBlock
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlock
 
 // TODO: Split to blocks [REDACTED_JIRA]
 @Suppress("LongMethod")
@@ -140,10 +142,27 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
 
                 if (state.isStakingBlockShown) {
                     item(
-                        key = StakingBlockState::class.java,
-                        contentType = StakingBlockState::class.java,
-                        content = { TokenStakingBlock(modifier = itemModifier, state = state.stakingBlockState) },
+                        key = StakingAvailable::class.java,
+                        contentType = StakingAvailable::class.java,
+                        content = {
+                            TokenStakingBlock(
+                                modifier = itemModifier,
+                                state = state.stakingBlocksState.stakingAvailable,
+                            )
+                        },
                     )
+                    if (state.stakingBlocksState.stakingBalance is StakingBalance.Content) {
+                        item(
+                            key = StakingBalance::class.java,
+                            contentType = StakingBalance::class.java,
+                            content = {
+                                StakingBalanceBlock(
+                                    state = state.stakingBlocksState.stakingBalance,
+                                    modifier = itemModifier,
+                                )
+                            },
+                        )
+                    }
                 }
 
                 swapTransactionsItems(
