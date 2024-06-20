@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 internal interface WalletPushPermissionClickIntents {
 
-    fun onAllowPushPermission()
+    fun onRequestPushPermission()
 
     fun onDelayAskPushPermission()
 
@@ -24,7 +24,7 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
     private val delayPermissionRequestUseCase: DelayPermissionRequestUseCase,
 ) : BaseWalletClickIntents(), WalletPushPermissionClickIntents {
 
-    override fun onAllowPushPermission() {
+    override fun onRequestPushPermission() {
         viewModelScope.launch {
             setFirstTimeAskingPermissionUseCase(PUSH_PERMISSION)
         }
