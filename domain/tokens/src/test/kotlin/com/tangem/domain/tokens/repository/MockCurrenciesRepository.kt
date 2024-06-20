@@ -124,7 +124,7 @@ internal class MockCurrenciesRepository(
 
     override fun isSendBlockedByPendingTransactions(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        coinStatus: CryptoCurrencyStatus?
+        coinStatus: CryptoCurrencyStatus?,
     ): Boolean {
         return false
     }
