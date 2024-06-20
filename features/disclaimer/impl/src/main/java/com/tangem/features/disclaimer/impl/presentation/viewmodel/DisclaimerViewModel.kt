@@ -4,8 +4,8 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.common.routing.AppRoute.Disclaimer.Companion.IS_TOS_ACCEPTED_KEY
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.features.disclaimer.api.DisclaimerRouter.Companion.IS_TOS_ACCEPTED_KEY
 import com.tangem.features.disclaimer.impl.navigation.DefaultDisclaimerRouter
 import com.tangem.features.disclaimer.impl.presentation.state.DisclaimerState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,8 +31,7 @@ internal class DisclaimerViewModel @Inject constructor(
     override fun onAccept(shouldAskPushPermission: Boolean) {
         viewModelScope.launch {
             cardRepository.acceptTangemTOS()
-            // todo [REDACTED_JIRA]
-            disclaimerRouter.openHome()
+            disclaimerRouter.openPushNotificationPermission()
         }
     }
 
