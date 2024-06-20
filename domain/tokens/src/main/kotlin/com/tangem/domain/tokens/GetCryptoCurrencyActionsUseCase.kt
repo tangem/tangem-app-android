@@ -261,7 +261,7 @@ class GetCryptoCurrencyActionsUseCase(
             cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
                 ScenarioUnavailabilityReason.EmptyBalance(ScenarioUnavailabilityReason.WithdrawalScenario.SEND)
             }
-            currenciesRepository.hasPendingTransactions(
+            currenciesRepository.isSendBlockedByPendingTransactions(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 coinStatus = coinStatus,
             ) -> {
