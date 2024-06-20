@@ -88,4 +88,5 @@ dependencies {
     implementation(projects.features.tester.api)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.details.api)
+    implementation(projects.features.pushNotifications.api)
 }

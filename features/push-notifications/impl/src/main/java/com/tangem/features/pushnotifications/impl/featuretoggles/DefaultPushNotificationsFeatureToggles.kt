@@ -6,6 +6,6 @@ import com.tangem.features.pushnotifications.api.featuretoggles.PushNotification
 internal class DefaultPushNotificationsFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : PushNotificationsFeatureToggles {
-    override val isRedesignedSendEnabled: Boolean
+    override val isPushNotificationsEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled("PUSH_NOTIFICATIONS_ENABLED")
 }
