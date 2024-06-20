@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.viewmodel
 
 import android.os.Bundle
+import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -8,21 +9,26 @@ import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.staking.CreateEnterActionUseCase
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
+import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.transformers.HideBalanceStateTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.SetConfirmStateDataStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.SetInitialDataStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountChangeStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountCurrencyChangeStateTransformer
@@ -34,6 +40,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -46,6 +53,8 @@ internal class StakingViewModel @Inject constructor(
     private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
+    private val createEnterActionUseCase: CreateEnterActionUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
 
@@ -86,6 +95,43 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onNextClick() {
         stakingStateRouter.onNextClick()
+        when (value.currentStep) {
+            StakingStep.Confirm -> {
+                viewModelScope.launch {
+                    val enterAction = createEnterActionUseCase(
+                        integrationId = yield.id,
+                        amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                            ?: error("No amount provided"),
+                        address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                            ?: error("No available address"),
+                        validatorAddress = yield.validators[0].address,
+                        token = yield.token,
+                    )
+                    Timber.tag("Creation Result").d(enterAction.toString())
+                }
+
+                stateController.update(
+                    SetConfirmStateDataStateTransformer(
+                        yield = yield,
+                        appCurrencyProvider = Provider { appCurrency },
+                        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                        isFeeApproximateUseCase = isFeeApproximateUseCase,
+                    ),
+                )
+            }
+            StakingStep.InitialInfo -> {
+                // TODO staking
+            }
+            StakingStep.Amount -> {
+                // TODO staking
+            }
+            StakingStep.Success -> {
+                // TODO staking
+            }
+            StakingStep.Validators -> {
+                // TODO staking
+            }
+        }
     }
 
     override fun onPrevClick() {
