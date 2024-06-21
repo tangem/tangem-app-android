@@ -41,7 +41,7 @@ jobs:
         run: |
           cp "app/src/main/assets/tangem-app-config/android/google-services.json" "app/"
       - name: Build internal artifact
-        run: bash ./gradlew clean assembleInternalQA -PversionCode=${{ env.VERSION_CODE }}"
+        run: bash ./gradlew clean assembleInternalQA -PversionCode=${{ env.VERSION_CODE }}
       - name: upload artifact to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
