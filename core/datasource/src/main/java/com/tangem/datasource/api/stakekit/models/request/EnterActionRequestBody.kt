@@ -1,8 +1,8 @@
 package com.tangem.datasource.api.stakekit.models.request
 
 import com.squareup.moshi.Json
+import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 
 data class EnterActionRequestBody(
     @Json(name = "integrationId")
@@ -27,7 +27,7 @@ data class EnterActionRequestBody(
         @Json(name = "duration")
         val duration: String? = null,
         @Json(name = "nfts")
-        val nfts: List<YieldBalanceWrapperDTO.BalanceDTO.PendingAction.PendingActionArgs.Nft>? = null,
+        val nfts: List<BalanceDTO.PendingAction.PendingActionArgs.Nft>? = null,
         @Json(name = "ledgerWalletAPICompatible")
         val ledgerWalletAPICompatible: Boolean? = null,
         @Json(name = "tronResource")
