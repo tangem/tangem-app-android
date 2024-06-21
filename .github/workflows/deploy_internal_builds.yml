@@ -1,0 +1,47 @@
+name: Android CI/CD Internal
+on:
+  push:
+    branches:
+      - 'develop'
+  workflow_dispatch:
+  workflow_call:
+    secrets:
+      FIREBASE_APP_ID:
+        required: true
+      FIREBASE_CLI_TOKEN:
+        required: true
+      # Token must have read access to all the submodule repositories
+      GH_MOBILE_PAT:
+        required: true
+
+env:
+  INITIAL_VERSION_CODE: ${{ 1000 }}
+
+jobs:
+  build:
+    name: Upload apk to App Tester
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.GH_MOBILE_PAT }}
+      - name: set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: '17'
+      - name: Increment version code
+        env:
+          NUM: ${{ github.run_number }}
+        run: |
+          echo "VERSION_CODE=$(($NUM + $INITIAL_VERSION_CODE))" >> $GITHUB_ENV
+      - name: Build internal artifact
+        run: bash ./gradlew clean assembleInternalQA -PversionCode=${{ env.VERSION_CODE }}"
+      - name: upload artifact to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{secrets.FIREBASE_APP_ID}}
+          token: ${{secrets.FIREBASE_CLI_TOKEN}}
+          groups:  qa-android
+          file: app/build/outputs/apk/release/app-release-unsigned.apk
