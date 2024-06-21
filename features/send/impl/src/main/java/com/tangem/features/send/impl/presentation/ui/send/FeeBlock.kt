@@ -53,7 +53,7 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isClickDisabled: Boolean, o
                     FeeType.Slow -> R.string.common_fee_selector_option_slow to R.drawable.ic_tortoise_24
                     FeeType.Market -> R.string.common_fee_selector_option_market to R.drawable.ic_bird_24
                     FeeType.Fast -> R.string.common_fee_selector_option_fast to R.drawable.ic_hare_24
-                    FeeType.Custom -> R.string.common_fee_selector_option_custom to R.drawable.ic_edit_24
+                    FeeType.Custom -> R.string.common_custom to R.drawable.ic_edit_24
                 }
             } else {
                 R.string.common_fee_selector_option_market to R.drawable.ic_bird_24

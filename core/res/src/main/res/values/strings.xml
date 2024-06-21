@@ -67,6 +67,7 @@
   <string name="cardano_max_amount_has_token_title">Not enough ADA</string>
   <string name="common_accept">Accept</string>
   <string name="common_access_denied">Access denied</string>
+  <string name="common_all">All</string>
   <string name="common_allow">Allow</string>
   <string name="common_apply">Apply</string>
   <string name="common_approval">Approval</string>
@@ -84,6 +85,7 @@
   <string name="common_copy">Copy</string>
   <string name="common_copy_address">Copy address</string>
   <string name="common_create">Create</string>
+  <string name="common_custom">Custom</string>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
   <string name="common_done">Done</string>
@@ -95,7 +97,6 @@
   <string name="common_explorer">Explorer</string>
   <string name="common_fee_label">Fee</string>
   <string name="common_fee_selector_footer">Network fees are charges users pay to process and confirm transactions. The fee amount can be affected by network congestion, transaction size, and execution priority. %s</string>
-  <string name="common_fee_selector_option_custom">Custom</string>
   <string name="common_fee_selector_option_fast">Fast</string>
   <string name="common_fee_selector_option_market">Market</string>
   <string name="common_fee_selector_option_slow">Slow</string>
@@ -304,6 +305,7 @@
     <item quantity="one">%1$d of %2$d wallet</item>
     <item quantity="other">%1$d of %2$d wallets</item>
   </plurals>
+  <string name="manage_tokens_remove">Remove</string>
   <string name="manage_tokens_search_placeholder">e.g. BTC I trust, hodl I must</string>
   <string name="manage_tokens_toast_portfolio_updated">Your portfolio has been updated</string>
   <string name="manage_tokens_unavailable_description">The selected token is currently unavailable for actions within the crypto wallet. But worry not, you can express your interest by upvoting it.</string>
@@ -562,9 +564,11 @@
   <string name="staking_details_on_stake">On stake</string>
   <string name="staking_details_reward_claiming">Reward claiming</string>
   <string name="staking_details_reward_schedule">Reward schedule</string>
+  <string name="staking_details_rewards_to_claim">Rewards to claim: %s</string>
   <string name="staking_details_title">Staking %s</string>
   <string name="staking_details_unbonding_period">Unbonding Period</string>
   <string name="staking_details_warmup_period">Warmup period</string>
+  <string name="staking_native">Native staking</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">Staking allow you to earn %1s. Your staking rewards arrive every ~%2s days.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_rewards">Rewards</string>
