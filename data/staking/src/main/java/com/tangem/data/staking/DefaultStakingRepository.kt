@@ -2,23 +2,33 @@ package com.tangem.data.staking
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toCoinId
-import com.tangem.data.staking.converters.StakingNetworkTypeConverter
-import com.tangem.data.staking.converters.TokenConverter
-import com.tangem.data.staking.converters.YieldConverter
+import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.staking.converters.*
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
+import com.tangem.datasource.api.stakekit.models.request.Address
+import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
+import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
-import com.tangem.domain.staking.model.StakingAvailability
-import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.Yield
+import com.tangem.domain.staking.model.*
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingYieldsStore: StakingYieldsStore,
+    private val stakingBalanceStore: StakingBalanceStore,
+    private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : StakingRepository {
 
@@ -30,6 +40,10 @@ internal class DefaultStakingRepository(
     private val yieldConverter = YieldConverter(
         tokenConverter = tokenConverter,
     )
+
+    private val yieldBalanceConverter = YieldBalanceConverter()
+
+    private val yieldBalanceListConverter = YieldBalanceListConverter()
 
     override fun isStakingSupported(currencyId: String): Boolean {
         return integrationIds.contains(currencyId)
@@ -94,15 +108,121 @@ internal class DefaultStakingRepository(
         }
     }
 
+    override suspend fun fetchSingleYieldBalance(
+        userWalletId: UserWalletId,
+        networkStatus: NetworkStatus,
+        integrationId: String,
+        refresh: Boolean,
+    ) = withContext(dispatchers.io) {
+        cacheRegistry.invokeOnExpire(
+            key = getYieldBalancesKey(userWalletId),
+            skipCache = refresh,
+            block = {
+                val result = stakeKitApi.getSingleYieldBalance(
+                    integrationId = integrationId,
+                    body = getBalanceRequestData(networkStatus),
+                ).getOrThrow()
+
+                stakingBalanceStore.store(
+                    integrationId,
+                    YieldBalanceWrapperDTO(
+                        balances = result,
+                        integrationId = integrationId,
+                    ),
+                )
+            },
+        )
+    }
+
+    override fun getSingleYieldBalanceFlow(
+        userWalletId: UserWalletId,
+        networkStatus: NetworkStatus,
+        integrationId: String,
+    ): Flow<List<YieldBalance>> = channelFlow {
+        launch(dispatchers.io) {
+            stakingBalanceStore.get(integrationId)
+                .collectLatest {
+                    send(yieldBalanceConverter.convertList(it))
+                }
+        }
+
+        withContext(dispatchers.io) {
+            fetchSingleYieldBalance(
+                userWalletId,
+                networkStatus,
+                integrationId,
+            )
+        }
+    }.cancellable()
+
+    override suspend fun fetchMultiYieldBalance(
+        userWalletId: UserWalletId,
+        networks: Set<NetworkStatus>,
+        integrationId: String,
+        refresh: Boolean,
+    ) = withContext(dispatchers.io) {
+        cacheRegistry.invokeOnExpire(
+            key = getYieldBalancesKey(userWalletId),
+            skipCache = refresh,
+            block = {
+                val result = stakeKitApi.getMultipleYieldBalances(
+                    networks.map(::getBalanceRequestData),
+                ).getOrThrow()
+
+                stakingBalanceStore.store(result)
+            },
+        )
+    }
+
+    override fun getMultiYieldBalanceFlow(
+        userWalletId: UserWalletId,
+        networks: Set<NetworkStatus>,
+        integrationId: String,
+    ): Flow<List<YieldBalanceList>> = channelFlow {
+        launch(dispatchers.io) {
+            stakingBalanceStore.get()
+                .collectLatest { send(yieldBalanceListConverter.convertList(it)) }
+        }
+
+        withContext(dispatchers.io) {
+            fetchMultiYieldBalance(
+                userWalletId,
+                networks,
+                integrationId,
+            )
+        }
+    }.cancellable()
+
     private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {
-        return yields
-            .find { it.token.coinGeckoId == currencyId && it.token.symbol == symbol }
+        return yields.find { it.token.coinGeckoId == currencyId && it.token.symbol == symbol }
     }
 
     private suspend fun getEnabledYields(): List<Yield>? {
         val yields = stakingYieldsStore.getSyncOrNull() ?: return null
         return yields.map { yieldConverter.convert(it) }
     }
+
+    private fun getBalanceRequestData(networkStatus: NetworkStatus): YieldBalanceRequestBody {
+        val networkAddress = when (val network = networkStatus.value) {
+            NetworkStatus.MissedDerivation -> null
+            is NetworkStatus.NoAccount -> network.address
+            is NetworkStatus.Unreachable -> network.address
+            is NetworkStatus.Verified -> network.address
+        }
+        val address = networkAddress?.defaultAddress?.value.orEmpty()
+        return YieldBalanceRequestBody(
+            addresses = Address(
+                address = address,
+                additionalAddresses = null, // todo fill additional addresses metadata if needed
+                explorerUrl = "", // todo fill exporer url
+            ),
+            args = YieldBalanceRequestBody.YieldBalanceRequestArgs(
+                validatorAddresses = listOf(), // todo add validator addresses
+            ),
+        )
+    }
+
+    private fun getYieldBalancesKey(userWalletId: UserWalletId) = "yield_balance_${userWalletId.stringValue}"
 
     companion object {
         private val integrationIds = setOf(
