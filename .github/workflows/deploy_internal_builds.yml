@@ -44,4 +44,4 @@ jobs:
           appId: ${{secrets.FIREBASE_APP_ID}}
           token: ${{secrets.FIREBASE_CLI_TOKEN}}
           groups:  qa-android
-          file: app/build/outputs/apk/release/app-release-unsigned.apk
+          file: build/outputs/app-internal.apk
