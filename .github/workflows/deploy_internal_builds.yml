@@ -36,6 +36,9 @@ jobs:
           NUM: ${{ github.run_number }}
         run: |
           echo "VERSION_CODE=$(($NUM + $INITIAL_VERSION_CODE))" >> $GITHUB_ENV
+      - name: Copy GoogleServices JSON
+        run: |
+          cp "app/src/main/assets/tangem-app-config/android/google-services.json" "app/"
       - name: Build internal artifact
         run: bash ./gradlew clean assembleInternalQA -PversionCode=${{ env.VERSION_CODE }}"
       - name: upload artifact to Firebase App Distribution
