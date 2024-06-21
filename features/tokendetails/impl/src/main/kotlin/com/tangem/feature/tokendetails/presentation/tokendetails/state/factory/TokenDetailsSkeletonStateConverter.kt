@@ -48,9 +48,16 @@ internal class TokenDetailsSkeletonStateConverter(
                     )
                 },
             ),
-            tokenBalanceBlockState = TokenDetailsBalanceBlockState.Loading(actionButtons = createButtons()),
+            tokenBalanceBlockState = TokenDetailsBalanceBlockState.Loading(
+                actionButtons = createButtons(),
+                balanceSegmentedButtonConfig = createBalanceSegmentedButtonConfig(),
+                selectedBalanceType = BalanceType.ALL,
+            ),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
-            stakingBlockState = StakingBlockState.Loading(iconState = iconState),
+            stakingBlocksState = StakingBlocksState(
+                stakingAvailable = StakingAvailable.Loading(iconState),
+                stakingBalance = StakingBalance.Empty,
+            ),
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
             swapTxs = persistentListOf(),
@@ -96,6 +103,19 @@ internal class TokenDetailsSkeletonStateConverter(
             TokenDetailsActionButton.Receive(onClick = {}, onLongClick = null),
             TokenDetailsActionButton.Sell(dimContent = false, onClick = {}),
             TokenDetailsActionButton.Swap(dimContent = false, onClick = {}),
+        )
+    }
+
+    private fun createBalanceSegmentedButtonConfig(): ImmutableList<TokenBalanceSegmentedButtonConfig> {
+        return persistentListOf(
+            TokenBalanceSegmentedButtonConfig(
+                title = resourceReference(R.string.common_all),
+                type = BalanceType.ALL,
+            ),
+            TokenBalanceSegmentedButtonConfig(
+                title = resourceReference(R.string.staking_details_available),
+                type = BalanceType.AVAILABLE,
+            ),
         )
     }
 
