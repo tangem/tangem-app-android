@@ -4,6 +4,7 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.stakekit.models.request.*
 import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
 import com.tangem.datasource.api.stakekit.models.response.EnterActionResponse
+import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenWithYieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
@@ -29,16 +30,16 @@ interface StakeKitApi {
         @Query("ledgerWalletAPICompatible") ledgerWalletAPICompatible: Boolean = false,
     ): ApiResponse<YieldDTO>
 
-    @GET("yields/balances")
+    @POST("yields/balances")
     suspend fun getMultipleYieldBalances(
         @Body body: List<YieldBalanceRequestBody>,
     ): ApiResponse<List<YieldBalanceWrapperDTO>>
 
-    @GET("yields/{integrationId}/balances")
+    @POST("yields/{integrationId}/balances")
     suspend fun getSingleYieldBalance(
         @Path("integrationId") integrationId: String,
         @Body body: YieldBalanceRequestBody,
-    ): ApiResponse<YieldBalanceWrapperDTO>
+    ): ApiResponse<List<BalanceDTO>>
 
     @GET("tokens")
     suspend fun getTokens(): ApiResponse<List<TokenWithYieldDTO>>
