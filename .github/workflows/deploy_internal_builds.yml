@@ -50,6 +50,7 @@ jobs:
           "build/outputs/app-internal.apk" \
           --app ${{secrets.FIREBASE_APP_ID}} \
           --groups "qa-android" \
+          --release-notes "Bug fixes and improvements"
 #        uses: wzieba/Firebase-Distribution-Github-Action@v1
 #        with:
 #          appId: ${{secrets.FIREBASE_APP_ID}}
