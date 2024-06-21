@@ -1,11 +1,12 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
+package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -14,14 +15,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.components.*
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
 import com.tangem.core.ui.utils.GrayscaleColorFilter
 import com.tangem.core.ui.utils.NORMAL_ALPHA
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.IconState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingAvailable
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.CurrencyIcon
 import com.tangem.features.tokendetails.impl.R
 
 /**
@@ -31,7 +35,7 @@ import com.tangem.features.tokendetails.impl.R
  * @param modifier modifier
  */
 @Composable
-internal fun TokenStakingBlock(state: StakingBlockState, modifier: Modifier = Modifier) {
+internal fun TokenStakingBlock(state: StakingAvailable, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(
@@ -49,7 +53,7 @@ internal fun TokenStakingBlock(state: StakingBlockState, modifier: Modifier = Mo
 }
 
 @Composable
-private fun Content(state: StakingBlockState, modifier: Modifier = Modifier) {
+private fun Content(state: StakingAvailable, modifier: Modifier = Modifier) {
     AnimatedContent(
         modifier = modifier.heightIn(min = TangemTheme.dimens.size60),
         targetState = state,
@@ -57,24 +61,24 @@ private fun Content(state: StakingBlockState, modifier: Modifier = Modifier) {
         label = "Update the content",
     ) { stakingBlockState ->
         when (stakingBlockState) {
-            is StakingBlockState.Content -> {
+            is StakingAvailable.Content -> {
                 StakingContent(
                     stakingBlockState = stakingBlockState,
                     iconState = stakingBlockState.iconState,
                 )
             }
-            is StakingBlockState.Loading -> {
+            is StakingAvailable.Loading -> {
                 StakingLoading(
                     iconState = stakingBlockState.iconState,
                 )
             }
-            is StakingBlockState.Error -> Row {} // TODO staking
+            is StakingAvailable.Error -> Row {} // TODO staking
         }
     }
 }
 
 @Composable
-private fun StakingContent(stakingBlockState: StakingBlockState.Content, iconState: IconState) {
+private fun StakingContent(stakingBlockState: StakingAvailable.Content, iconState: IconState) {
     Column {
         Row {
             val (alpha, colorFilter) = remember(iconState.isGrayscale) {
@@ -177,24 +181,24 @@ private fun StakingLoading(iconState: IconState) {
 @Composable
 private fun Preview_TokenStakingBlock(
     @PreviewParameter(StakingBlockStateProvider::class)
-    state: StakingBlockState,
+    state: StakingAvailable,
 ) {
     TangemThemePreview {
         TokenStakingBlock(state = state)
     }
 }
 
-private class StakingBlockStateProvider : CollectionPreviewParameterProvider<StakingBlockState>(
+private class StakingBlockStateProvider : CollectionPreviewParameterProvider<StakingAvailable>(
     collection = listOf(
-        StakingBlockState.Content(
+        StakingAvailable.Content(
             iconState = iconState,
             interestRate = "10",
             periodInDays = 4,
             tokenSymbol = "SOL",
             onStakeClicked = {},
         ),
-        StakingBlockState.Loading(iconState = iconState),
-        StakingBlockState.Error(iconState = iconState),
+        StakingAvailable.Loading(iconState = iconState),
+        StakingAvailable.Error(iconState = iconState),
     ),
 )
 
