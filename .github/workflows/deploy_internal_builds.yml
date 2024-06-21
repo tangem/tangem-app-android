@@ -14,6 +14,10 @@ on:
       # Token must have read access to all the submodule repositories
       GH_MOBILE_PAT:
         required: true
+      GITHUB_TOKEN:
+        required: true
+      GITHUB_ACTOR:
+        required: true
 
 env:
   INITIAL_VERSION_CODE: ${{ 1000 }}
@@ -41,8 +45,10 @@ jobs:
         run: |
           cp "app/src/main/assets/tangem-app-config/android/google-services.json" "app/"
       - name: Build internal artifact
-        run: bash ./gradlew clean assembleInternalQA -PversionCode=${{ env.VERSION_CODE }}
-      - name: upload artifact to Firebase App Distribution
+        run: |
+          echo sdk.dir = $ANDROID_HOME > local.properties
+          ./gradlew -PGITHUB_ACTOR=${{ secrets.GITHUB_ACTOR }} -PGITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} -PversionCode=${{ env.VERSION_CODE }} assembleInternalQA
+      - name: Upload artifact to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: ${{secrets.FIREBASE_APP_ID}}
