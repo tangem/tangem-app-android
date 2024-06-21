@@ -84,6 +84,7 @@
   <string name="common_copy">Копировать</string>
   <string name="common_copy_address">Скопировать адрес</string>
   <string name="common_create">Создать</string>
+  <string name="common_custom">Свое</string>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
   <string name="common_done">Готово</string>
@@ -95,7 +96,6 @@
   <string name="common_explorer">Обозреватель</string>
   <string name="common_fee_label">Комиссия</string>
   <string name="common_fee_selector_footer">Сетевые комиссии – это плата пользователя за обработку и подтверждение транзакций. Размер комиссии зависит от нагрузки на сеть, объема транзакции и приоритета исполнения. %s</string>
-  <string name="common_fee_selector_option_custom">Свое</string>
   <string name="common_fee_selector_option_fast">Быстро</string>
   <string name="common_fee_selector_option_market">По рынку</string>
   <string name="common_fee_selector_option_slow">Медленно</string>
@@ -302,6 +302,7 @@
     <item quantity="many">%1$d из %2$d кошельков</item>
     <item quantity="other">%1$d из %2$d кошельков</item>
   </plurals>
+  <string name="manage_tokens_remove">Удалить</string>
   <string name="manage_tokens_search_placeholder">например Bitcoin</string>
   <string name="manage_tokens_toast_portfolio_updated">Ваш портфель был обновлен</string>
   <string name="manage_tokens_unavailable_description">Выбранный токен не доступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
