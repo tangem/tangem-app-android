@@ -43,7 +43,7 @@ jobs:
       - name: Build internal artifact
         run: |
           echo sdk.dir = $ANDROID_HOME > local.properties
-          GITHUB_USER=${{ secrets.GITHUB_ACTOR }} GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} ./gradlew assembleInternalQA -PversionCode=${{ env.VERSION_CODE }}
+          GITHUB_ACTOR=${{ secrets.GITHUB_ACTOR }} GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} ./gradlew assembleInternalQA -PversionCode=${{ env.VERSION_CODE }}
       - name: Upload artifact to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
