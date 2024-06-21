@@ -93,11 +93,11 @@ internal class SendViewModel @Inject constructor(
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
     private val isUtxoConsolidationAvailableUseCase: IsUtxoConsolidationAvailableUseCase,
+    private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     validateTransactionUseCase: ValidateTransactionUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
-    validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, SendClickIntents {
@@ -669,6 +669,10 @@ internal class SendViewModel @Inject constructor(
         maybeValidAddress
     }.getOrElse { ValidateAddressError.DataError(it).left() }
 
+    private fun validateMemo(value: String?): Boolean {
+        return value?.let { validateWalletMemoUseCase(cryptoCurrency.network, it).getOrElse { false } } ?: true
+    }
+
     private suspend fun checkIfXrpAddressValue(value: String): Boolean {
         return BlockchainUtils.decodeRippleXAddress(value, cryptoCurrency.network.id.value)?.let { decodedAddress ->
             uiState =
@@ -685,8 +689,11 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun autoNextFromRecipient(type: EnterAddressSource?, isValidAddress: Boolean) {
+        val memo = uiState.getRecipientState(stateRouter.isEditState)?.memoTextField?.value
+        val isValidMemo = validateMemo(memo)
+
         val isRecent = type == EnterAddressSource.RecentAddress
-        if (isRecent && isValidAddress) onNextClick(stateRouter.isEditState)
+        if (isRecent && isValidAddress && isValidMemo) onNextClick(stateRouter.isEditState)
     }
 // endregion
 
