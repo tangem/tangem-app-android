@@ -1,10 +1,6 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.settings.*
-import com.tangem.domain.staking.GetStakingAvailabilityUseCase
-import com.tangem.domain.staking.GetStakingEntryInfoUseCase
-import com.tangem.domain.staking.FetchStakingTokensUseCase
-import com.tangem.domain.staking.GetYieldUseCase
+import com.tangem.domain.staking.*
 import com.tangem.domain.staking.repositories.StakingRepository
 import dagger.Module
 import dagger.Provides
@@ -46,5 +42,17 @@ internal object StakingDomainModule {
         return FetchStakingTokensUseCase(
             stakingRepository = stakingRepository,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideFetchStakingYieldBalanceUseCase(stakingRepository: StakingRepository): FetchStakingYieldBalanceUseCase {
+        return FetchStakingYieldBalanceUseCase(stakingRepository = stakingRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetStakingYieldBalanceUseCase(stakingRepository: StakingRepository): GetStakingYieldBalanceUseCase {
+        return GetStakingYieldBalanceUseCase(stakingRepository = stakingRepository)
     }
 }
