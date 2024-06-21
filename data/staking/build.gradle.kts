@@ -12,10 +12,17 @@ android {
 
 dependencies {
 
+    /** Core modules */
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+
+    /** Common modules */
+    implementation(projects.data.common)
+
+    /** Domain modules */
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.staking)
+    implementation(projects.domain.wallets.models)
 
 
     // region DI
