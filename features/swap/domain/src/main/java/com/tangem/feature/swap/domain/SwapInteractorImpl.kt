@@ -393,6 +393,7 @@ internal class SwapInteractorImpl @Inject constructor(
             warnings = warnings,
             fromToken = fromToken,
             amount = amount,
+            feeState = feeState,
             userWalletId = userWalletId,
             minAdaValue = minAdaValue,
         )
@@ -478,12 +479,24 @@ internal class SwapInteractorImpl @Inject constructor(
         warnings: MutableList<Warning>,
         fromToken: CryptoCurrency,
         amount: SwapAmount,
+        feeState: TxFeeState,
         userWalletId: UserWalletId,
         minAdaValue: BigDecimal?,
     ) {
+        val fee = Fee.Common(
+            amount = Amount(
+                value = when (feeState) {
+                    TxFeeState.Empty -> BigDecimal.ZERO
+                    is TxFeeState.MultipleFeeState -> feeState.normalFee.feeValue
+                    is TxFeeState.SingleFeeState -> feeState.fee.feeValue
+                },
+                blockchain = Blockchain.fromId(fromToken.network.id.value),
+            ),
+        )
+
         transactionRepository.validateTransaction(
             amount = amount.value.convertToAmount(fromToken),
-            fee = null,
+            fee = fee,
             memo = null,
             txExtras = null,
             destination = getTokenAddress(fromToken),
@@ -1260,10 +1273,10 @@ internal class SwapInteractorImpl @Inject constructor(
                 swapState.copy(
                     permissionState = PermissionDataState.Empty,
                     warnings = manageWarnings(
-                        fromToken,
-                        amount,
-                        txFeeState,
-                        (feeData as? ProxyFees.SingleFee)?.let {
+                        fromTokenStatus = fromToken,
+                        amount = amount,
+                        feeState = txFeeState,
+                        minAdaValue = (feeData as? ProxyFees.SingleFee)?.let {
                             (it.singleFee as? ProxyFee.CardanoToken)?.minAdaValue
                         },
                     ),
