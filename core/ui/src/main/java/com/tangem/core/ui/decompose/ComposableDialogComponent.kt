@@ -1,13 +1,14 @@
-package com.tangem.core.ui
+package com.tangem.core.ui.decompose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.Modifier
 
 @Stable
-fun interface ComposableContentComponent {
+interface ComposableDialogComponent {
+
+    val doOnDismiss: () -> Unit
 
     @Composable
     @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
-    fun Content(modifier: Modifier)
+    fun Dialog()
 }
