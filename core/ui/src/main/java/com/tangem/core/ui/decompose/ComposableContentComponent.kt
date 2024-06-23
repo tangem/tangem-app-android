@@ -1,4 +1,4 @@
-package com.tangem.core.ui
+package com.tangem.core.ui.decompose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
