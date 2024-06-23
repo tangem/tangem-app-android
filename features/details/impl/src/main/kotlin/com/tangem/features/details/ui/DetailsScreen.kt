@@ -16,10 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.ComposableContentComponent
 import com.tangem.core.ui.components.appbar.models.TopAppBarMedium
 import com.tangem.core.ui.components.block.BlockItem
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
