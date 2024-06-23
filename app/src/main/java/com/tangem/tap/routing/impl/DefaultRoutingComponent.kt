@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackCallback
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
@@ -34,6 +35,10 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     init {
         backHandler.register(backCallback)
+
+        lifecycle.doOnDestroy {
+            childFactory.doOnDestroy()
+        }
     }
 
     private fun getInitialRoute(): AppRoute = AppRoute.Initial
