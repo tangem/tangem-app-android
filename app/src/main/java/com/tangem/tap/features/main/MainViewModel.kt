@@ -7,7 +7,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
-
+import com.tangem.datasource.local.token.UserTokensStoreMigrationRunner
 import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -45,6 +45,7 @@ internal class MainViewModel @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val sendFeatureToggles: SendFeatureToggles,
     private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
+    private val userTokensStoreMigrationRunner: UserTokensStoreMigrationRunner,
     private val dispatchers: CoroutineDispatcherProvider,
     private val stakingFeatureToggles: StakingFeatureToggles,
     private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
@@ -73,6 +74,7 @@ internal class MainViewModel @Inject constructor(
         observeFlips()
         displayBalancesHidingStatusToast()
         displayHiddenBalancesModalNotification()
+        runUserTokensMigrations()
 
         if (stakingFeatureToggles.isStakingEnabled) {
             fetchStakingTokens()
@@ -193,6 +195,18 @@ internal class MainViewModel @Inject constructor(
         if (!settings.isBalanceHidingNotificationEnabled || !settings.isBalanceHidden) {
             stateHolder.updateWithHiddenBalancesToast(settings.isBalanceHidden)
         }
+    }
+
+    // TODO: delete in 5.15 (Mobile Sprint 161) https://tangem.atlassian.net/browse/AND-7442
+    private fun runUserTokensMigrations() {
+        userWalletsListManager.userWallets
+            .filter { it.isNotEmpty() }
+            .take(1)
+            .onEach { userWallets ->
+                userTokensStoreMigrationRunner.run(ids = userWallets.map { it.walletId.stringValue })
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(viewModelScope)
     }
 
     override fun onHiddenBalanceToastAction() {
