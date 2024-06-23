@@ -1,14 +1,14 @@
-package com.tangem.features.details.component
+package com.tangem.feature.walletsettings.component
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.wallets.models.UserWalletId
 
-interface DetailsComponent : ComposableContentComponent {
-
-    interface Factory : ComponentFactory<Params, DetailsComponent>
+interface WalletSettingsComponent : ComposableContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
     )
+
+    interface Factory : ComponentFactory<Params, WalletSettingsComponent>
 }
