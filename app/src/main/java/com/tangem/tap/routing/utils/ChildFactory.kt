@@ -163,6 +163,10 @@ internal class ChildFactory @Inject constructor(
         }
     }
 
+    fun doOnDestroy() {
+        componentContexts.clear()
+    }
+
     private fun contextProvider(
         appRoute: AppRoute,
         contextFactory: (route: AppRoute) -> AppComponentContext,
