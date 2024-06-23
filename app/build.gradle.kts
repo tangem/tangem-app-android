@@ -140,6 +140,8 @@ dependencies {
     implementation(projects.features.disclaimer.impl)
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.pushNotifications.impl)
+    implementation(projects.features.walletSettings.api)
+    implementation(projects.features.walletSettings.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
