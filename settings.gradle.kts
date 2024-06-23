@@ -183,6 +183,9 @@ include(":features:disclaimer:impl")
 
 include(":features:push-notifications:api")
 include(":features:push-notifications:impl")
+
+include(":features:wallet-settings:api")
+include(":features:wallet-settings:impl")
 // endregion Feature modules
 
 // region Domain modules
