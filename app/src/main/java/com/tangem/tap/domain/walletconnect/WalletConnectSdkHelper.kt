@@ -192,17 +192,17 @@ class WalletConnectSdkHelper {
             ),
         )
         return when (result) {
-            SimpleResult.Success -> {
+            is Result.Success -> {
                 val sentFrom = CoreAnalyticsParam.TxSentFrom.WalletConnect
                 Analytics.send(Basic.TransactionSent(sentFrom = sentFrom, memoType = MemoType.Null))
-                val hash = data.walletManager.wallet.recentTransactions.last().hash
-                if (hash?.startsWith(HEX_PREFIX) == true) {
+                val hash = result.data.hash
+                if (hash.startsWith(HEX_PREFIX)) {
                     hash
                 } else {
                     HEX_PREFIX + hash
                 }
             }
-            is SimpleResult.Failure -> {
+            is Result.Failure -> {
                 Timber.e(result.error as BlockchainSdkError)
                 null
             }

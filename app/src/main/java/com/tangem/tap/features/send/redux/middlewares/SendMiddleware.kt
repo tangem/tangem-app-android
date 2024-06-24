@@ -11,7 +11,7 @@ import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder.XrpTransactionExtras
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRouter
@@ -246,7 +246,7 @@ private fun sendTransaction(
             tangemSdk.config.linkedTerminal = linkedTerminalState
 
             when (sendResult) {
-                is SimpleResult.Success -> {
+                is Result.Success -> {
                     dispatch(SendAction.SendSuccess)
 
                     if (externalTransactionData != null) {
@@ -273,7 +273,7 @@ private fun sendTransaction(
                         store.dispatchNavigationAction(AppRouter::pop)
                     }
                 }
-                is SimpleResult.Failure -> {
+                is Result.Failure -> {
                     updateFeedbackManagerInfo(
                         sendResult = sendResult.error,
                         walletManager = walletManager,
