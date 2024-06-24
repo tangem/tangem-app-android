@@ -9,6 +9,7 @@ import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApiV2
 import com.tangem.datasource.api.tangemTech.TangemTechServiceApi
+import com.tangem.datasource.utils.RequestHeader
 import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.addLoggers
@@ -39,7 +40,7 @@ class NetworkModule {
         appVersionProvider: AppVersionProvider,
     ): TangemExpressApi {
         val url = if (BuildConfig.ENVIRONMENT == "dev") {
-            DEV_EXPRESS_BASE_URL
+            STAGE_EXPRESS_BASE_URL
         } else {
             PROD_EXPRESS_BASE_URL
         }
@@ -118,11 +119,12 @@ class NetworkModule {
         appVersionProvider: AppVersionProvider,
     ): TangemTechServiceApi {
         return provideTangemTechApiInternal(
-            moshi,
-            context,
-            appVersionProvider,
-            PROD_V1_TANGEM_TECH_BASE_URL,
+            moshi = moshi,
+            context = context,
+            appVersionProvider = appVersionProvider,
+            baseUrl = PROD_V1_TANGEM_TECH_BASE_URL,
             timeoutSeconds = TANGEM_TECH_SERVICE_TIMEOUT_SECONDS,
+            requestHeaders = listOf(AppVersionPlatformHeaders(appVersionProvider)),
         )
     }
 
@@ -132,6 +134,7 @@ class NetworkModule {
         appVersionProvider: AppVersionProvider,
         baseUrl: String,
         timeoutSeconds: Long? = null,
+        requestHeaders: List<RequestHeader> = listOf(CacheControlHeader, AppVersionPlatformHeaders(appVersionProvider)),
     ): T {
         val client = OkHttpClient.Builder()
             .let { builder ->
@@ -142,8 +145,7 @@ class NetworkModule {
                 }
             }
             .addHeaders(
-                CacheControlHeader,
-                AppVersionPlatformHeaders(appVersionProvider),
+                *requestHeaders.toTypedArray(),
                 // TODO("refactor header init") get auth data after biometric auth to avoid race condition
                 // AuthenticationHeader(authProvider),
             )
@@ -162,6 +164,7 @@ class NetworkModule {
     private companion object {
         const val STAKEKIT_BASE_URL = "https://api.stakek.it/v1/"
         const val PROD_EXPRESS_BASE_URL = "[REDACTED_ENV_URL]"
+        const val STAGE_EXPRESS_BASE_URL = "[REDACTED_ENV_URL]"
         const val DEV_EXPRESS_BASE_URL = "[REDACTED_ENV_URL]"
 
         const val DEV_V1_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
