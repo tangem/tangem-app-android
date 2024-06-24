@@ -7,7 +7,7 @@ import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.core.TangemSdkError
-import com.tangem.core.navigation.StateDialog
+import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.analytics.events.Token.Send.AddressEntered
 import com.tangem.tap.common.redux.ToastNotificationAction
