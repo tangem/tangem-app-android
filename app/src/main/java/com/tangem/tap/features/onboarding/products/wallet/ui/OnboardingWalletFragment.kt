@@ -21,13 +21,13 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.tangem.common.CardIdFormatter
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardIdDisplayFormat
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
-import com.tangem.feature.onboarding.navigation.OnboardingRouter
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseRouter
@@ -66,9 +66,10 @@ class OnboardingWalletFragment :
 
     internal val bindingSeedPhrase: LayoutOnboardingSeedPhraseBinding by lazy { binding.onboardingSeedPhraseContainer }
 
-    private val canSkipBackup by lazy { arguments?.getBoolean(OnboardingRouter.CAN_SKIP_BACKUP) ?: true }
+    private val canSkipBackup by lazy { arguments?.getBoolean(AppRoute.OnboardingWallet.CAN_SKIP_BACKUP_KEY) ?: true }
 
-    private val seedPhraseStateHandler: OnboardingSeedPhraseStateHandler = OnboardingSeedPhraseStateHandler()
+    private lateinit var seedPhraseStateHandler: OnboardingSeedPhraseStateHandler
+
     private val seedPhraseViewModel by viewModels<SeedPhraseViewModel>()
 
     private lateinit var cardsWidget: WalletCardsWidget
@@ -79,6 +80,7 @@ class OnboardingWalletFragment :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        seedPhraseStateHandler = OnboardingSeedPhraseStateHandler(activity = requireActivity())
 
         val newSeedPhraseRouter = makeSeedPhraseRouter()
         seedPhraseRouter = newSeedPhraseRouter
