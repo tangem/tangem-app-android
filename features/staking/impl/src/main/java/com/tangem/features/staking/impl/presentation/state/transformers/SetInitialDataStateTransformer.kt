@@ -70,7 +70,7 @@ internal class SetInitialDataStateTransformer(
             rewardClaiming = yield.metadata.rewardClaiming,
             warmupPeriod = yield.metadata.warmupPeriod.days.toString(),
             rewardSchedule = yield.metadata.rewardSchedule,
-
+            onInfoClick = clickIntents::onInfoClick,
         )
     }
 
