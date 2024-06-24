@@ -97,8 +97,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "zksync/test" -> Blockchain.ZkSyncEraTestnet
         "moonbeam" -> Blockchain.Moonbeam
         "moonbeam/test" -> Blockchain.MoonbeamTestnet
-        "manta-network" -> Blockchain.Manta
-        "manta-network/test" -> Blockchain.MantaTestnet
+        "manta-pacific" -> Blockchain.Manta
+        "manta-pacific/test" -> Blockchain.MantaTestnet
         "polygon-zkevm" -> Blockchain.PolygonZkEVM
         "polygon-zkevm/test" -> Blockchain.PolygonZkEVMTestnet
         "nexa" -> Blockchain.Nexa // FIXME
@@ -216,8 +216,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.ZkSyncEraTestnet -> "zksync/test"
         Blockchain.Moonbeam -> "moonbeam"
         Blockchain.MoonbeamTestnet -> "moonbeam/test"
-        Blockchain.Manta -> "manta-network"
-        Blockchain.MantaTestnet -> "manta-network/test"
+        Blockchain.Manta -> "manta-pacific"
+        Blockchain.MantaTestnet -> "manta-pacific/test"
         Blockchain.PolygonZkEVM -> "polygon-zkevm"
         Blockchain.PolygonZkEVMTestnet -> "polygon-zkevm/test"
         Blockchain.Nexa -> "nexa" // FIXME
@@ -301,7 +301,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.PulseChain, Blockchain.PulseChainTestnet -> "pulsechain"
         Blockchain.ZkSyncEra, Blockchain.ZkSyncEraTestnet -> "zksync-ethereum"
         Blockchain.Moonbeam, Blockchain.MoonbeamTestnet -> "moonbeam"
-        Blockchain.Manta, Blockchain.MantaTestnet -> "manta-network-ethereum"
+        Blockchain.Manta, Blockchain.MantaTestnet -> "manta-pacific"
         Blockchain.PolygonZkEVM, Blockchain.PolygonZkEVMTestnet -> "polygon-zkevm-ethereum"
         Blockchain.Nexa, Blockchain.NexaTestnet -> "nexa" // FIXME
         Blockchain.Radiant -> "radiant"
@@ -341,10 +341,9 @@ private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
-    Blockchain.Manta,
-    Blockchain.MantaTestnet,
     Blockchain.Mantle,
     Blockchain.MantleTestnet,
     Blockchain.Koinos,
     Blockchain.KoinosTestnet,
+    Blockchain.Bittensor,
 )
