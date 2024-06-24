@@ -2,8 +2,8 @@ package com.tangem.tap.domain.scanCard.chains
 
 import arrow.core.left
 import arrow.core.right
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.util.twinsIsTwinned
@@ -55,8 +55,8 @@ class CheckForOnboardingChain(
                         canSkipBackup = previousChainResult.card.canSkipBackup,
                     ),
                 )
-                val appScreen = OnboardingHelper.whereToNavigate(previousChainResult)
-                ScanChainException.OnboardingNeeded(appScreen).left()
+                val route = OnboardingHelper.whereToNavigate(previousChainResult)
+                ScanChainException.OnboardingNeeded(route).left()
             }
             else -> {
                 Analytics.setContext(previousChainResult)
@@ -69,7 +69,7 @@ class CheckForOnboardingChain(
                     store.dispatchOnMain(
                         TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(previousChainResult)),
                     )
-                    ScanChainException.OnboardingNeeded(AppScreen.OnboardingTwins).left()
+                    ScanChainException.OnboardingNeeded(AppRoute.OnboardingTwins).left()
                 } else {
                     delay(DELAY_SDK_DIALOG_CLOSE)
                     previousChainResult.right()

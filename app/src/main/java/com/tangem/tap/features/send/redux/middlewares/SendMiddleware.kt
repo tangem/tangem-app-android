@@ -14,10 +14,10 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.demo.DemoTransactionSender
@@ -270,7 +270,7 @@ private fun sendTransaction(
                             ),
                         )
                         Analytics.sendSelectedCurrencyEvent(mainCurrencyType)
-                        dispatch(NavigationAction.PopBackTo())
+                        store.dispatchNavigationAction(AppRouter::pop)
                     }
                 }
                 is Result.Failure -> {
@@ -326,7 +326,7 @@ private fun sendTransaction(
                                         AppDialog.SimpleOkDialogRes(
                                             headerId = R.string.common_done,
                                             messageId = R.string.alert_demo_feature_disabled,
-                                            onOk = { dispatch(NavigationAction.PopBackTo()) },
+                                            onOk = { store.dispatchNavigationAction(AppRouter::pop) },
                                         ),
                                     )
                                 }

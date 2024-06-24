@@ -4,11 +4,11 @@ import androidx.compose.runtime.MutableState
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.settings.CanUseBiometryUseCase
-import com.tangem.domain.settings.IsWalletsScrollPreviewEnabled
-import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
+import com.tangem.domain.settings.*
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -19,6 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWal
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.model.PushNotificationsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.DemonstrateWalletsScrollPreview.Direction
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletPullToRefreshConfig
@@ -28,6 +29,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSend
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.features.managetokens.navigation.ExpandableState
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -55,12 +57,16 @@ internal class WalletViewModel @Inject constructor(
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletDeepLinksHandler: WalletDeepLinksHandler,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
+    private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
+    private val isFirstTimeAskingPermissionUseCase: IsFirstTimeAskingPermissionUseCase,
+    private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
+    private val settingsManager: SettingsManager,
+    analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
@@ -80,6 +86,7 @@ internal class WalletViewModel @Inject constructor(
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
         subscribeToScreenBackgroundState()
+        subscribeOnPushNotificationsPermission()
     }
 
     private fun maybeMigrateNames() {
@@ -143,6 +150,31 @@ internal class WalletViewModel @Inject constructor(
             }
             .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
+    }
+
+    private fun subscribeOnPushNotificationsPermission() {
+        viewModelScope.launch {
+            if (!shouldAskPermissionUseCase(PUSH_PERMISSION)) return@launch
+
+            delay(timeMillis = 1_800)
+
+            val isFirstTimeAsking = isFirstTimeAskingPermissionUseCase(PUSH_PERMISSION).getOrElse { true }
+            val wasInitiallyAsk = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { true }
+            val onDenyClick: () -> Unit = if (wasInitiallyAsk) {
+                clickIntents::onDelayAskPushPermission
+            } else {
+                clickIntents::onNeverAskPushPermission
+            }
+            stateHolder.showBottomSheet(
+                PushNotificationsBottomSheetConfig(
+                    isFirstTimeAsking = isFirstTimeAsking,
+                    onRequest = clickIntents::onRequestPushPermission,
+                    onAllow = clickIntents::onNeverAskPushPermission,
+                    onDeny = onDenyClick,
+                    openSettings = settingsManager::openSettings,
+                ),
+            )
+        }
     }
 
     private fun subscribeOnSelectedWalletFlow() {
