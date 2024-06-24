@@ -554,6 +554,7 @@
   <string name="settings_wallet_name_title">Name</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
+  <string name="staking_details_apy_info">The annual percentage return you can earn from participating in staking.</string>
   <string name="staking_details_available">Available</string>
   <string name="staking_details_average_reward_rate">Average Reward Rate</string>
   <string name="staking_details_estimated_profit">%s est. profit</string>
@@ -563,11 +564,15 @@
   <string name="staking_details_no_rewards_to_claim">No rewards to claim</string>
   <string name="staking_details_on_stake">On stake</string>
   <string name="staking_details_reward_claiming">Reward claiming</string>
+  <string name="staking_details_reward_claiming_info">A way to receive staking rewards. It can be claimed automatically or manually.</string>
   <string name="staking_details_reward_schedule">Reward schedule</string>
+  <string name="staking_details_reward_schedule_info">This is a schedule that determines when participants in staking receive their rewards.</string>
   <string name="staking_details_rewards_to_claim">Rewards to claim: %s</string>
   <string name="staking_details_title">Staking %s</string>
   <string name="staking_details_unbonding_period">Unbonding Period</string>
+  <string name="staking_details_unbonding_period_info">The period you must wait after requesting to withdraw funds from staking before the tokens become available.</string>
   <string name="staking_details_warmup_period">Warmup period</string>
+  <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">Staking allow you to earn %1s. Your staking rewards arrive every ~%2s days.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
