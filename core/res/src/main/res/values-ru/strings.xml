@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="add_custom_token_choose_network">Выберите сеть</string>
   <string name="add_custom_token_title">Добавить токен</string>
   <string name="add_tokens_title">Валюты</string>
   <string name="address_qr_code_message_format">Отправляйте только %1$s (%2$s) в сети %3$s на этот адрес. Использование другой сети может привести к утрате средств.</string>
+  <string name="alert_button_how_to_scan">Как сканировать</string>
   <string name="alert_button_request_support">Обратиться в поддержку</string>
+  <string name="alert_button_try_again">Попробовать снова</string>
   <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
   <string name="alert_failed_to_send_transaction_message">Причина: %s</string>
   <string name="alert_failed_to_send_transaction_title">Не могу отправить транзакцию</string>
@@ -81,6 +84,7 @@
   <string name="common_copy">Копировать</string>
   <string name="common_copy_address">Скопировать адрес</string>
   <string name="common_create">Создать</string>
+  <string name="common_custom">Свое</string>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
   <string name="common_done">Готово</string>
@@ -92,7 +96,6 @@
   <string name="common_explorer">Обозреватель</string>
   <string name="common_fee_label">Комиссия</string>
   <string name="common_fee_selector_footer">Сетевые комиссии – это плата пользователя за обработку и подтверждение транзакций. Размер комиссии зависит от нагрузки на сеть, объема транзакции и приоритета исполнения. %s</string>
-  <string name="common_fee_selector_option_custom">Свое</string>
   <string name="common_fee_selector_option_fast">Быстро</string>
   <string name="common_fee_selector_option_market">По рынку</string>
   <string name="common_fee_selector_option_slow">Медленно</string>
@@ -117,6 +120,7 @@
   <string name="common_reject">Отклонить</string>
   <string name="common_reload">Перезагрузить</string>
   <string name="common_rename">Переименовать</string>
+  <string name="common_save">Сохранить</string>
   <string name="common_save_changes">Сохранить изменения</string>
   <string name="common_search">Искать</string>
   <string name="common_search_tokens">Поиск токенов</string>
@@ -128,6 +132,7 @@
   <string name="common_share">Поделиться</string>
   <string name="common_sign">Подписать</string>
   <string name="common_sign_and_send">Подписать и отправить</string>
+  <string name="common_staking">Стейкинг</string>
   <string name="common_start">Начать</string>
   <string name="common_submit">Отправить</string>
   <string name="common_success">Успешно</string>
@@ -169,6 +174,7 @@
   <string name="custom_token_validation_error_not_found">Токены могут быть созданы кем угодно. Остерегайтесь мошеннических токенов, они могут ничего не стоить</string>
   <string name="custom_token_validation_error_not_found_description">Остерегайтесь мошеннических токенов, они могут ничего не стоить</string>
   <string name="custom_token_validation_error_not_found_title">Токены могут быть созданы кем угодно</string>
+  <string name="details_buy_wallet">Купить кошелек Tangem</string>
   <string name="details_chat">Чат</string>
   <string name="details_manage_security_access_code">Код доступа</string>
   <string name="details_manage_security_access_code_description">Перед сканированием карты вам нужно будет ввести правильный код доступа.</string>
@@ -186,6 +192,7 @@
   <string name="details_row_title_flip_to_hide">Скрывать балансы жестом переворота</string>
   <string name="details_row_title_issuer">Эмитент</string>
   <string name="details_row_title_signed_hashes">Подписано</string>
+  <string name="details_send_feedback">Отправить отзыв</string>
   <string name="details_title">Подробности</string>
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
   <string name="disclaimer_title">Условия использования</string>
@@ -295,7 +302,9 @@
     <item quantity="many">%1$d из %2$d кошельков</item>
     <item quantity="other">%1$d из %2$d кошельков</item>
   </plurals>
+  <string name="manage_tokens_remove">Удалить</string>
   <string name="manage_tokens_search_placeholder">например Bitcoin</string>
+  <string name="manage_tokens_toast_portfolio_updated">Ваш портфель был обновлен</string>
   <string name="manage_tokens_unavailable_description">Выбранный токен не доступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
   <string name="manage_tokens_unavailable_vote">Голосовать</string>
   <string name="manage_tokens_wallet_selector_title">Выберите кошелек</string>
@@ -535,9 +544,12 @@
   <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
   <string name="send_validation_invalid_address">Неверный адрес</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
+  <string name="settings_card_settings_footer">Подготовьтесь к сканированию карты, которую вы хотите настроить.</string>
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
+  <string name="staking_details_available">Доступно</string>
+  <string name="staking_details_title">Стейкинг %s</string>
   <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
   <string name="story_awe_title">Революционный аппаратный кошелек</string>
   <string name="story_backup_description">До трех карт с одним кошельком</string>
@@ -579,9 +591,10 @@
   <string name="token_button_unavailability_reason_empty_balance_sell">У вас нет средств для продажи. Пополните счет, чтобы иметь возможность продать с него средства.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">У вас нет средств для отправки. Пополните счет, чтобы иметь возможность отправить с него средства.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">В данный момент обмен монеты %s недоступен. Следите за нашими обновлениями.</string>
-  <string name="token_button_unavailability_reason_pending_transaction_sell">Продажа средств станет доступной после завершения транзакции(-ий) в сети  %s</string>
+  <string name="token_button_unavailability_reason_pending_transaction_sell">Продажа средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">В данный момент продажа %s недоступна. Следите за нашими обновлениями.</string>
+  <string name="token_button_unavailability_reason_staking_unavailable">В данный момент стейкинг монеты %s недоступен. Следите за нашими обновлениями.</string>
   <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
   <string name="token_details_hide_alert_hide">Скрыть</string>
   <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
