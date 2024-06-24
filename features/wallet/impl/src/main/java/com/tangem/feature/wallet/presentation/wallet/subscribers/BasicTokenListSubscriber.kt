@@ -63,7 +63,14 @@ internal abstract class BasicTokenListSubscriber(
             transform = { maybeTokenList, maybeAppCurrency ->
                 val tokenList = maybeTokenList.getOrElse(
                     ifLoading = { maybeContent ->
-                        maybeContent ?: return@combine
+                        val isRefreshing = stateHolder.getWalletState(userWallet.walletId)
+                            ?.pullToRefreshConfig
+                            ?.isRefreshing
+                            ?: false
+
+                        maybeContent
+                            ?.takeIf { !isRefreshing }
+                            ?: return@combine
                     },
                     ifError = { e ->
                         Timber.e("Failed to load token list: $e")
