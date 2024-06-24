@@ -3,9 +3,11 @@ package com.tangem.features.staking.impl.presentation.state
 import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
@@ -22,6 +24,7 @@ internal data class StakingUiState(
     val amountState: AmountState,
     val confirmStakingState: StakingStates.ConfirmStakingState,
     val isBalanceHidden: Boolean,
+    val bottomSheetConfig: TangemBottomSheetConfig?,
     val event: StateEvent<StakingEvent>,
 ) {
 
@@ -52,6 +55,7 @@ internal sealed class StakingStates {
             val rewardClaiming: String,
             val warmupPeriod: String,
             val rewardSchedule: String,
+            val onInfoClick: (InfoType) -> Unit,
         ) : InitialInfoState()
 
         data class Empty(
