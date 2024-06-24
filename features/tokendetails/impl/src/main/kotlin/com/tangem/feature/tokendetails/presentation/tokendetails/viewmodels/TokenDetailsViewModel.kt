@@ -1,9 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
 import android.os.Bundle
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
@@ -19,6 +16,7 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
@@ -149,7 +147,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private val stateFactory = TokenDetailsStateFactory(
-        currentStateProvider = Provider { uiState },
+        currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
@@ -169,7 +167,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             clickIntents = this,
             appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
             analyticsEventsHandlerProvider = Provider { analyticsEventsHandler },
-            currentStateProvider = Provider { uiState },
+            currentStateProvider = Provider { uiState.value },
             userWalletId = userWalletId,
             cryptoCurrency = cryptoCurrency,
         )
@@ -186,8 +184,8 @@ internal class TokenDetailsViewModel @Inject constructor(
         TokenDetailsCurrencyStatusAnalyticsSender(analyticsEventsHandler)
     }
 
-    var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(cryptoCurrency))
-        private set
+    private val internalUiState = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
+    val uiState: StateFlow<TokenDetailsState> = internalUiState
 
     init {
         deepLinksRegistry.registerWithViewModel(
@@ -232,7 +230,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         getBalanceHidingSettingsUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .onEach {
-                uiState = stateFactory.getStateWithUpdatedHidden(
+                internalUiState.value = stateFactory.getStateWithUpdatedHidden(
                     isBalanceHidden = it.isBalanceHidden,
                 )
             }
@@ -246,13 +244,15 @@ internal class TokenDetailsViewModel @Inject constructor(
         )
             .conflate()
             .distinctUntilChanged()
-            .onEach { uiState = stateFactory.getManageButtonsState(actions = it.states) }
-            .flowOn(dispatchers.io)
+            .onEach {
+                internalUiState.value = stateFactory.getManageButtonsState(actions = it.states)
+            }
+            .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
     }
 
     private fun updateWarnings(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch(dispatchers.main) {
             getCurrencyWarningsUseCase.invoke(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
@@ -262,8 +262,8 @@ internal class TokenDetailsViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .onEach {
                     val updatedState = stateFactory.getStateWithNotifications(it)
-                    notificationsAnalyticsSender.send(uiState, updatedState.notifications)
-                    uiState = updatedState
+                    notificationsAnalyticsSender.send(internalUiState.value, updatedState.notifications)
+                    internalUiState.value = updatedState
                 }
                 .launchIn(viewModelScope)
                 .saveIn(warningsJobHolder)
@@ -271,7 +271,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch(dispatchers.main) {
             getCurrencyStatusUpdatesUseCase(
                 userWalletId = userWalletId,
                 currencyId = cryptoCurrency.id,
@@ -279,7 +279,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             )
                 .distinctUntilChanged()
                 .onEach { maybeCurrencyStatus ->
-                    uiState = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
+                    internalUiState.value = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
                     maybeCurrencyStatus.onRight { status ->
                         cryptoCurrencyStatus = status
                         updateButtons(currencyStatus = status)
@@ -287,14 +287,14 @@ internal class TokenDetailsViewModel @Inject constructor(
                     }
                     currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
                 }
-                .flowOn(dispatchers.io)
+                .flowOn(dispatchers.main)
                 .launchIn(viewModelScope)
                 .saveIn(marketPriceJobHolder)
         }
     }
 
     private fun subscribeOnExchangeTransactionsUpdates() {
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch(dispatchers.main) {
             swapTxStatusTaskScheduler.cancelTask()
             exchangeStatusFactory.invoke()
                 .distinctUntilChanged()
@@ -306,8 +306,8 @@ internal class TokenDetailsViewModel @Inject constructor(
                         PeriodicTask(
                             delay = EXCHANGE_STATUS_UPDATE_DELAY,
                             task = {
-                                runCatching(dispatchers.io) {
-                                    exchangeStatusFactory.updateSwapTxStatuses(uiState.swapTxs)
+                                runCatching {
+                                    exchangeStatusFactory.updateSwapTxStatuses(internalUiState.value.swapTxs)
                                 }
                             },
                             onSuccess = ::updateSwapTx,
@@ -315,20 +315,20 @@ internal class TokenDetailsViewModel @Inject constructor(
                         ),
                     )
                 }
-                .flowOn(dispatchers.io)
+                .flowOn(dispatchers.main)
                 .launchIn(viewModelScope)
                 .saveIn(swapTxJobHolder)
         }
     }
 
     private fun updateSwapTx(swapTxs: PersistentList<SwapTransactionsState>) {
-        val config = uiState.bottomSheetConfig
+        val config = internalUiState.value.bottomSheetConfig
         val exchangeBottomSheet = config?.content as? ExchangeStatusBottomSheetConfig
         val currentTx = swapTxs.firstOrNull { it.txId == exchangeBottomSheet?.value?.txId }
         if (currentTx?.activeStatus == ExchangeStatus.Finished) {
             updateNetworkToSwapBalance(currentTx.toCryptoCurrency)
         }
-        uiState = uiState.copy(
+        internalUiState.value = internalUiState.value.copy(
             swapTxs = swapTxs,
             bottomSheetConfig = currentTx?.let(
                 stateFactory::updateStateWithExchangeStatusBottomSheet,
@@ -351,7 +351,7 @@ internal class TokenDetailsViewModel @Inject constructor(
      * @param showItemsLoading - show loading items placeholder.
      */
     private fun updateTxHistory(refresh: Boolean, showItemsLoading: Boolean) {
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch(dispatchers.main) {
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
                 userWalletId = userWalletId,
                 currency = cryptoCurrency,
@@ -359,9 +359,9 @@ internal class TokenDetailsViewModel @Inject constructor(
 
             // if countEither is left, handling error state run inside getLoadingTxHistoryState
             if (showItemsLoading || txHistoryItemsCountEither.isLeft()) {
-                uiState = stateFactory.getLoadingTxHistoryState(
+                internalUiState.value = stateFactory.getLoadingTxHistoryState(
                     itemsCountEither = txHistoryItemsCountEither,
-                    pendingTransactions = uiState.pendingTxs,
+                    pendingTransactions = internalUiState.value.pendingTxs,
                 )
             }
 
@@ -372,28 +372,28 @@ internal class TokenDetailsViewModel @Inject constructor(
                     refresh = refresh,
                 ).map { it.cachedIn(viewModelScope) }
 
-                uiState = stateFactory.getLoadedTxHistoryState(maybeTxHistory)
+                internalUiState.value = stateFactory.getLoadedTxHistoryState(maybeTxHistory)
             }
         }
     }
 
     private fun updateStakingInfo() {
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch {
             val stakingAvailability = getStakingAvailabilityUseCase(
                 cryptoCurrencyId = cryptoCurrency.id,
                 symbol = cryptoCurrency.symbol,
             )
-            uiState = stateFactory.getStateWithUpdatedStakingAvailability(stakingAvailability)
+            internalUiState.value = stateFactory.getStateWithUpdatedStakingAvailability(stakingAvailability)
             if (stakingAvailability is StakingAvailability.Available) {
                 val stakingInfo = getStakingEntryInfoUseCase(stakingAvailability.integrationId)
-                uiState = stateFactory.getStateWithStaking(stakingInfo)
+                internalUiState.value = stateFactory.getStateWithStaking(stakingInfo)
             }
         }
     }
 
     private fun updateTopBarMenu() {
         viewModelScope.launch(dispatchers.main) {
-            uiState = stateFactory.getStateWithUpdatedMenu(
+            internalUiState.value = stateFactory.getStateWithUpdatedMenu(
                 cardTypesResolver = userWallet.scanResponse.cardTypesResolver,
                 isBitcoin = isBitcoin(cryptoCurrency.network.id.value),
             )
@@ -452,7 +452,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onReloadClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonReload(cryptoCurrency.symbol))
-        uiState = stateFactory.getLoadingTxHistoryState()
+        internalUiState.value = stateFactory.getLoadingTxHistoryState()
         updateTxHistory(refresh = true, showItemsLoading = true)
     }
 
@@ -498,7 +498,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         feeCurrencyStatus: CryptoCurrencyStatus?,
         transactionInfo: TransactionInfo?,
     ) {
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch(dispatchers.main) {
             val maybeCoinStatus = getNetworkCoinStatusUseCase(
                 userWalletId = userWalletId,
                 networkId = tokenCurrency.network.id,
@@ -530,11 +530,11 @@ internal class TokenDetailsViewModel @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch(dispatchers.main) {
             analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrency.symbol))
             analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
 
-            uiState = stateFactory.getStateWithReceiveBottomSheet(
+            internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
                 currency = cryptoCurrency,
                 networkAddress = networkAddress,
                 sendCopyAnalyticsEvent = {
@@ -595,7 +595,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onDismissDialog() {
-        uiState = stateFactory.getStateWithClosedDialog()
+        internalUiState.value = stateFactory.getStateWithClosedDialog()
     }
 
     override fun onHideClick() {
@@ -603,7 +603,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
         viewModelScope.launch {
             val hasLinkedTokens = removeCurrencyUseCase.hasLinkedTokens(userWalletId, cryptoCurrency)
-            uiState = if (hasLinkedTokens) {
+            internalUiState.value = if (hasLinkedTokens) {
                 stateFactory.getStateWithLinkedTokensDialog(cryptoCurrency)
             } else {
                 stateFactory.getStateWithConfirmHideTokenDialog(cryptoCurrency)
@@ -627,10 +627,10 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun openExplorer() {
         val currencyStatus = cryptoCurrencyStatus ?: return
 
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch(dispatchers.main) {
             when (val addresses = currencyStatus.value.networkAddress) {
                 is NetworkAddress.Selectable -> {
-                    uiState = stateFactory.getStateWithChooseAddressBottomSheet(cryptoCurrency, addresses)
+                    internalUiState.value = stateFactory.getStateWithChooseAddressBottomSheet(cryptoCurrency, addresses)
                 }
                 is NetworkAddress.Single -> {
                     router.openUrl(
@@ -649,11 +649,11 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
         viewModelScope.launch(dispatchers.main) {
             if (isDemoCardUseCase(cardId = userWallet.cardId)) {
-                uiState = stateFactory.getStateWithClosedBottomSheet()
-                uiState = stateFactory.getStateAndTriggerEvent(
-                    state = uiState,
+                internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+                internalUiState.value = stateFactory.getStateAndTriggerEvent(
+                    state = internalUiState.value,
                     errorMessage = resourceReference(id = R.string.alert_demo_feature_disabled),
-                    setUiState = { uiState = it },
+                    setUiState = { internalUiState.value = it },
                 )
             } else {
                 action()
@@ -670,7 +670,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                     addressType = AddressType.valueOf(addressModel.type.name),
                 ),
             )
-            uiState = stateFactory.getStateWithClosedBottomSheet()
+            internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
         }
     }
 
@@ -687,9 +687,9 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onRefreshSwipe() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Refreshed(cryptoCurrency.symbol))
 
-        uiState = stateFactory.getRefreshingState()
+        internalUiState.value = stateFactory.getRefreshingState()
 
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch(dispatchers.main) {
             listOf(
                 async {
                     fetchCurrencyStatusUseCase(
@@ -701,32 +701,32 @@ internal class TokenDetailsViewModel @Inject constructor(
                 async {
                     updateTxHistory(
                         refresh = true,
-                        showItemsLoading = uiState.txHistoryState !is TxHistoryState.Content,
+                        showItemsLoading = internalUiState.value.txHistoryState !is TxHistoryState.Content,
                     )
                     subscribeOnExchangeTransactionsUpdates()
                 },
             ).awaitAll()
-            uiState = stateFactory.getRefreshedState()
+            internalUiState.value = stateFactory.getRefreshedState()
         }.saveIn(refreshStateJobHolder)
     }
 
     override fun onDismissBottomSheet() {
-        if (uiState.bottomSheetConfig?.content is ExchangeStatusBottomSheetConfig) {
+        if (internalUiState.value.bottomSheetConfig?.content is ExchangeStatusBottomSheetConfig) {
             viewModelScope.launch(dispatchers.main) {
-                uiState = exchangeStatusFactory.removeTransactionOnBottomSheetClosed()
+                internalUiState.value = exchangeStatusFactory.removeTransactionOnBottomSheetClosed()
             }
         }
-        uiState = stateFactory.getStateWithClosedBottomSheet()
+        internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
     }
 
     override fun onCloseRentInfoNotification() {
-        uiState = stateFactory.getStateWithRemovedRentNotification()
+        internalUiState.value = stateFactory.getStateWithRemovedRentNotification()
     }
 
     override fun onSwapTransactionClick(txId: String) {
-        val swapTxState = uiState.swapTxs.first { it.txId == txId }
+        val swapTxState = internalUiState.value.swapTxs.first { it.txId == txId }
         analyticsEventsHandler.send(TokenExchangeAnalyticsEvent.CexTxStatusOpened(cryptoCurrency.symbol))
-        uiState = stateFactory.getStateWithExchangeStatusBottomSheet(swapTxState)
+        internalUiState.value = stateFactory.getStateWithExchangeStatusBottomSheet(swapTxState)
     }
 
     override fun onGoToProviderClick(url: String) {
@@ -774,29 +774,34 @@ internal class TokenDetailsViewModel @Inject constructor(
                 ifLeft = { e ->
                     when (e) {
                         is AssociateAssetError.NotEnoughBalance -> {
-                            uiState = stateFactory.getStateWithErrorDialog(
+                            internalUiState.value = stateFactory.getStateWithErrorDialog(
                                 resourceReference(
                                     id = R.string.warning_hedera_token_association_not_enough_hbar_message,
                                     formatArgs = wrappedList(e.feeCurrency.symbol),
                                 ),
                             )
                         }
-                        is AssociateAssetError.DataError -> Timber.e(e.message)
+                        is AssociateAssetError.DataError -> {
+                            internalUiState.value = stateFactory.getStateWithErrorDialog(
+                                stringReference(e.message.orEmpty()),
+                            )
+                            Timber.e(e.message)
+                        }
                     }
                 },
-                ifRight = { uiState = stateFactory.getStateWithRemovedHederaAssociateNotification() },
+                ifRight = { internalUiState.value = stateFactory.getStateWithRemovedHederaAssociateNotification() },
             )
         }
     }
 
     override fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig) {
-        uiState = stateFactory.getStateWithUpdatedBalanceSegmentedButtonConfig(config)
+        internalUiState.value = stateFactory.getStateWithUpdatedBalanceSegmentedButtonConfig(config)
     }
 
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
-        uiState = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason)
+        internalUiState.value = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason)
 
         return true
     }

@@ -11,12 +11,16 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.SavedSwapTransactionListConverter
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.models.domain.*
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 
 class DefaultSwapTransactionRepository(
     private val appPreferencesStore: AppPreferencesStore,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : SwapTransactionRepository {
 
     private val converter = SavedSwapTransactionListConverter()
@@ -70,28 +74,30 @@ class DefaultSwapTransactionRepository(
         cryptoCurrencyId: CryptoCurrency.ID,
         scanResponse: ScanResponse,
     ): Flow<List<SavedSwapTransactionListModel>?> {
-        val txStatuses = appPreferencesStore.getObjectMap<ExchangeStatusModel>(
-            key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
-        )
-        return appPreferencesStore.getObjectList<SavedSwapTransactionListModelInner>(
-            key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
-        ).map { savedTransactions ->
-            val currencyTxs = savedTransactions
-                ?.filter {
-                    it.userWalletId == userWalletId.stringValue &&
-                        (
-                            it.toCryptoCurrencyId == cryptoCurrencyId.value ||
-                                it.fromCryptoCurrencyId == cryptoCurrencyId.value
-                            )
-                }
+        return withContext(dispatchers.io) {
+            val txStatuses = appPreferencesStore.getObjectMap<ExchangeStatusModel>(
+                key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+            )
+            appPreferencesStore.getObjectList<SavedSwapTransactionListModelInner>(
+                key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
+            ).map { savedTransactions ->
+                val currencyTxs = savedTransactions
+                    ?.filter {
+                        it.userWalletId == userWalletId.stringValue &&
+                            (
+                                it.toCryptoCurrencyId == cryptoCurrencyId.value ||
+                                    it.fromCryptoCurrencyId == cryptoCurrencyId.value
+                                )
+                    }
 
-            currencyTxs?.mapNotNull {
-                converter.convertBack(
-                    value = it,
-                    scanResponse = scanResponse,
-                    txStatuses = txStatuses,
-                )
-            }
+                currencyTxs?.mapNotNull {
+                    converter.convertBack(
+                        value = it,
+                        scanResponse = scanResponse,
+                        txStatuses = txStatuses,
+                    )
+                }
+            }.flowOn(dispatchers.io)
         }
     }
 
