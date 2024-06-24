@@ -1,11 +1,12 @@
 package com.tangem.feature.referral.router
 
-import androidx.fragment.app.FragmentManager
-import java.lang.ref.WeakReference
+import com.tangem.common.routing.AppRouter
 
-internal class ReferralRouter(private val fragmentManager: WeakReference<FragmentManager>) {
+internal class ReferralRouter(
+    private val appRouter: AppRouter,
+) {
 
     fun back() {
-        fragmentManager.get()?.popBackStack()
+        appRouter.pop()
     }
 }
