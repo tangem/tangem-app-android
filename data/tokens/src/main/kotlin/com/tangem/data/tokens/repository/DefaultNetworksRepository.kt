@@ -106,15 +106,15 @@ internal class DefaultNetworksRepository(
     override suspend fun getNetworkAddresses(
         userWalletId: UserWalletId,
         network: Network,
-    ): List<CryptoCurrencyAddress> {
+    ): List<CryptoCurrencyAddress> = withContext(dispatchers.io) {
         // Get list of currencies matching [network]
         val currencies = getCurrencies(userWalletId)
             .filter { currency -> network.id == currency.network.id }
 
         // There is no currencies matching given [networks] in [userWalletId]
-        if (currencies.toList().isEmpty()) return emptyList()
+        if (currencies.toList().isEmpty()) return@withContext emptyList()
 
-        return currencies.toList().map { currency ->
+        currencies.toList().map { currency ->
             CryptoCurrencyAddress(
                 cryptoCurrency = currency,
                 address = walletManagersFacade.getAddresses(userWalletId, currency.network)
