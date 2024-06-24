@@ -1,29 +1,61 @@
 package com.tangem.data.staking
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.data.staking.converters.StakingNetworkTypeConverter
+import com.tangem.data.staking.converters.TokenConverter
+import com.tangem.data.staking.converters.YieldConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
+import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
-    private val stakingFeatureToggles: StakingFeatureToggles,
+    private val stakingYieldsStore: StakingYieldsStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : StakingRepository {
 
-    override fun getStakingAvailability(blockchainId: String): StakingAvailability {
-        if (!stakingFeatureToggles.isStakingEnabled) {
-            return StakingAvailability.Unavailable
-        }
+    private val stakingNetworkTypeConverter = StakingNetworkTypeConverter()
 
-        return integrationIdMap[Blockchain.fromId(blockchainId)]?.let {
-            StakingAvailability.Available(it)
-        } ?: StakingAvailability.Unavailable
+    private val tokenConverter = TokenConverter(
+        stakingNetworkTypeConverter = stakingNetworkTypeConverter,
+    )
+    private val yieldConverter = YieldConverter(
+        tokenConverter = tokenConverter,
+    )
+
+    override fun isStakingSupported(currencyId: String): Boolean {
+        return integrationIds.contains(currencyId)
+    }
+
+    override suspend fun fetchEnabledYields() {
+        withContext(dispatchers.io) {
+            val stakingTokensWithYields = stakeKitApi.getMultipleYields().getOrThrow()
+
+            stakingYieldsStore.store(stakingTokensWithYields.data)
+        }
+    }
+
+    override suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield {
+        return withContext(dispatchers.io) {
+            val yields = getEnabledYields() ?: error("No yields found")
+            val rawCurrencyId = cryptoCurrencyId.rawCurrencyId ?: error("Staking custom tokens is not available")
+
+            val prefetchedYield = findPrefetchedYield(
+                yields = yields,
+                currencyId = rawCurrencyId,
+                symbol = symbol,
+            )
+
+            prefetchedYield ?: error("Staking is unavailable")
+        }
     }
 
     override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo {
@@ -38,31 +70,53 @@ internal class DefaultStakingRepository(
         }
     }
 
-    companion object {
-        private const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
-        private const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
-        private const val POLKADOT_INTEGRATION_ID = "polkadot-dot-validator-staking"
-        private const val ETHEREUM_INTEGRATION_ID = "ethereum-matic-native-staking"
-        private const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
-        private const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
-        private const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
-        private const val BINANCE_INTEGRATION_ID = "binance-bnb-native-staking"
-        private const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
-        private const val NEAR_INTEGRATION_ID = "near-near-native-staking"
-        private const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
+    override suspend fun getStakingAvailabilityForActions(
+        cryptoCurrencyId: CryptoCurrency.ID,
+        symbol: String,
+    ): StakingAvailability {
+        val rawCurrencyId = cryptoCurrencyId.rawCurrencyId ?: return StakingAvailability.Unavailable
 
-        private val integrationIdMap = mapOf(
-            Blockchain.Solana to SOLANA_INTEGRATION_ID,
-            Blockchain.Cosmos to COSMOS_INTEGRATION_ID,
-            Blockchain.Polkadot to POLKADOT_INTEGRATION_ID,
-            Blockchain.Polygon to ETHEREUM_INTEGRATION_ID,
-            Blockchain.Avalanche to AVALANCHE_INTEGRATION_ID,
-            Blockchain.Tron to TRON_INTEGRATION_ID,
-            Blockchain.Cronos to CRONOS_INTEGRATION_ID,
-            Blockchain.Binance to BINANCE_INTEGRATION_ID,
-            Blockchain.Kava to KAVA_INTEGRATION_ID,
-            Blockchain.Near to NEAR_INTEGRATION_ID,
-            Blockchain.Tezos to TEZOS_INTEGRATION_ID,
+        return withContext(dispatchers.io) {
+            val yields = getEnabledYields() ?: return@withContext StakingAvailability.Unavailable
+
+            val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, symbol)
+            val isSupported = isStakingSupported(rawCurrencyId)
+
+            when {
+                prefetchedYield != null && isSupported -> {
+                    StakingAvailability.Available(prefetchedYield.id)
+                }
+                prefetchedYield == null && isSupported -> {
+                    StakingAvailability.TemporaryDisabled
+                }
+                else -> StakingAvailability.Unavailable
+            }
+        }
+    }
+
+    private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {
+        return yields
+            .find { it.token.coinGeckoId == currencyId && it.token.symbol == symbol }
+    }
+
+    private suspend fun getEnabledYields(): List<Yield>? {
+        val yields = stakingYieldsStore.getSyncOrNull() ?: return null
+        return yields.map { yieldConverter.convert(it) }
+    }
+
+    companion object {
+        private val integrationIds = setOf(
+            Blockchain.Solana.toCoinId(),
+            Blockchain.Cosmos.toCoinId(),
+            Blockchain.Polkadot.toCoinId(),
+            Blockchain.Polygon.toCoinId(),
+            Blockchain.Avalanche.toCoinId(),
+            Blockchain.Tron.toCoinId(),
+            Blockchain.Cronos.toCoinId(),
+            Blockchain.Binance.toCoinId(),
+            Blockchain.Kava.toCoinId(),
+            Blockchain.Near.toCoinId(),
+            Blockchain.Tezos.toCoinId(),
         )
     }
 }
