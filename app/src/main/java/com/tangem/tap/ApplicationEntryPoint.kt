@@ -2,8 +2,11 @@ package com.tangem.tap
 
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.connection.NetworkConnectionManager
@@ -26,9 +29,9 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
-import com.tangem.features.details.DetailsEntryPoint
 import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
+import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
@@ -109,5 +112,11 @@ interface ApplicationEntryPoint {
 
     fun getDetailsFeatureToggles(): DetailsFeatureToggles
 
-    fun getDetailsEntryPoint(): DetailsEntryPoint
+    fun getUrlOpener(): UrlOpener
+
+    fun getShareManager(): ShareManager
+
+    fun getAppRouter(): AppRouter
+
+    fun getPushNotificationsFeatureToggles(): PushNotificationsFeatureToggles
 }
