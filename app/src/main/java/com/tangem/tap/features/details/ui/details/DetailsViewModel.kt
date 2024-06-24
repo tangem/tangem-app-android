@@ -3,11 +3,11 @@ package com.tangem.tap.features.details.ui.details
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.tangem.common.extensions.guard
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
@@ -16,15 +16,14 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.extensions.addContext
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
+import com.tangem.tap.features.disclaimer.redux.DisclaimerSource
 import com.tangem.tap.features.home.LocaleRegionProvider
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.scope
@@ -128,15 +127,17 @@ internal class DetailsViewModel(
     }
 
     private fun navigateToTesterMenu() {
-        store.state.daggerGraphState.testerRouter?.startTesterScreen()
+        store.dispatchNavigationAction {
+            push(AppRoute.TesterMenu)
+        }
     }
 
     private fun navigateToToS() {
-        store.dispatchOnMain(DisclaimerAction.Show(AppScreen.Details))
+        store.dispatchOnMain(DisclaimerAction.Show(DisclaimerSource.Details))
     }
 
     private fun navigateToReferralProgram() {
-        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
+        store.dispatchNavigationAction { push(AppRoute.ReferralProgram) }
     }
 
     private fun sendFeedback() {
@@ -146,12 +147,12 @@ internal class DetailsViewModel(
 
     private fun navigateToAppSettings() {
         Analytics.send(Settings.ButtonAppSettings())
-        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.AppSettings))
+        store.dispatchNavigationAction { push(AppRoute.AppSettings) }
     }
 
     private fun navigateToCardSettings() {
         Analytics.send(Settings.ButtonCardSettings())
-        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.CardSettings))
+        store.dispatchNavigationAction { push(AppRoute.CardSettings) }
     }
 
     private fun linkMoreCards() {
@@ -164,7 +165,7 @@ internal class DetailsViewModel(
         val scanResponse = selectedUserWallet.scanResponse
         Analytics.addContext(scanResponse)
         store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
-        store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+        store.dispatchNavigationAction { push(AppRoute.OnboardingWallet()) }
     }
 
     private fun scanAndSaveUserWallet() {
@@ -174,12 +175,12 @@ internal class DetailsViewModel(
 
     private fun navigateToWalletConnect() {
         Analytics.send(Settings.ButtonWalletConnect())
-        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
+        store.dispatchNavigationAction { push(AppRoute.WalletConnectSessions) }
     }
 
     private fun handleSocialNetworkClick(link: SocialNetworkLink) {
         Analytics.send(Settings.ButtonSocialNetwork(link.network))
-        store.dispatchOnMain(NavigationAction.OpenUrl(link.url))
+        store.dispatchOpenUrl(link.url)
     }
 
     private fun getSocialLinks(): ImmutableList<SocialNetworkLink> {
