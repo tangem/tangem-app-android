@@ -64,6 +64,7 @@ internal class SetRefreshStateTransformer(
                     is WalletManageButton.Send -> button.copy(enabled = isButtonsEnabled)
                     is WalletManageButton.Sell -> button.copy(enabled = isButtonsEnabled)
                     is WalletManageButton.Receive -> button
+                    is WalletManageButton.Stake -> null
                     is WalletManageButton.Swap -> null
                 }
             }

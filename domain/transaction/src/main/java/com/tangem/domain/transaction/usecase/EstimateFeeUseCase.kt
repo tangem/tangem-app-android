@@ -12,10 +12,8 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import java.math.BigDecimal
 
 /**
@@ -23,7 +21,6 @@ import java.math.BigDecimal
  */
 class EstimateFeeUseCase(
     private val walletManagersFacade: WalletManagersFacade,
-    private val dispatcher: CoroutineDispatcherProvider,
 ) {
     suspend operator fun invoke(
         amount: BigDecimal,
@@ -43,7 +40,7 @@ class EstimateFeeUseCase(
                 null -> GetFeeError.UnknownError.left()
             }
             emit(maybeFee)
-        }.flowOn(dispatcher.io)
+        }
     }
 
     private fun convertCryptoCurrencyToAmount(cryptoCurrency: CryptoCurrency, amount: BigDecimal) = Amount(

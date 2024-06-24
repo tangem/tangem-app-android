@@ -165,7 +165,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     override fun onScanToUnlockWalletClick() {
         analyticsEventHandler.send(MainScreen.UnlockWithCardScan)
+        openScanCardDialog()
+    }
 
+    private fun openScanCardDialog() {
         viewModelScope.launch(dispatchers.main) {
             scanCardToUnlockWalletClickHandler(walletId = stateHolder.getSelectedWalletId())
                 .onLeft { error ->
@@ -175,7 +178,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                                 event = WalletEvent.ShowAlert(WalletAlertState.WrongCardIsScanned),
                             )
                         }
-                        ScanCardToUnlockWalletError.ManyScanFails -> router.openScanFailedDialog()
+                        ScanCardToUnlockWalletError.ManyScanFails -> router.openScanFailedDialog(::openScanCardDialog)
                     }
                 }
         }
