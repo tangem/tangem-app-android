@@ -42,5 +42,9 @@
     {
         "name": "DETAILS_REDESIGN_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "PUSH_NOTIFICATIONS_ENABLED",
+        "version": "undefined"
     }
 ]
