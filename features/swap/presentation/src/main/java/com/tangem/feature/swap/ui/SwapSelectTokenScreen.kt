@@ -18,7 +18,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.common.Strings
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.ExpandableSearchView
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
@@ -30,6 +29,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.presentation.R
+import com.tangem.utils.Strings
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 

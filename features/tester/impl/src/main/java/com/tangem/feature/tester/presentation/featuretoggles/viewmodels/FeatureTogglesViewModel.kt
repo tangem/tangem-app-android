@@ -7,10 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.core.featuretoggle.manager.MutableFeatureTogglesManager
+import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
-import com.tangem.features.tester.api.AppRestarter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -40,10 +40,10 @@ internal class FeatureTogglesViewModel @Inject constructor(
         }
 
     /** Setup navigation state property by router [router] and provides app restart method by [appRestarter] */
-    fun setupInteractions(router: InnerTesterRouter, appRestarter: AppRestarter) {
+    fun setupInteractions(router: InnerTesterRouter, appFinisher: AppFinisher) {
         uiState = uiState.copy(
             onBackClick = router::back,
-            onApplyChangesClick = appRestarter::restart,
+            onApplyChangesClick = appFinisher::restart,
         )
     }
 

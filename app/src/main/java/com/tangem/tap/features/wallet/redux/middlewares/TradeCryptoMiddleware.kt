@@ -1,18 +1,16 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import androidx.core.os.bundleOf
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.feature.swap.presentation.SwapFragment
-import com.tangem.features.send.api.navigation.SendRouter
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.*
@@ -150,7 +148,7 @@ object TradeCryptoMiddleware {
     }
 
     private fun openReceiptUrl(transactionId: String) {
-        store.dispatchOnMain(NavigationAction.PopBackTo())
+        store.dispatchNavigationAction(AppRouter::pop)
         store.state.globalState.exchangeManager.getSellCryptoReceiptUrl(
             action = CurrencyExchangeManager.Action.Sell,
             transactionId = transactionId,
@@ -158,11 +156,7 @@ object TradeCryptoMiddleware {
     }
 
     private fun openSwap(currency: CryptoCurrency) {
-        val bundle = bundleOf(
-            SwapFragment.CURRENCY_BUNDLE_KEY to currency,
-        )
-
-        store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Swap, bundle = bundle))
+        store.dispatchNavigationAction { push(AppRoute.Swap(currency = currency)) }
     }
 
     private fun handleSendToken(action: TradeCryptoAction.SendToken) {
@@ -214,11 +208,12 @@ object TradeCryptoMiddleware {
                 )
             }
 
-            val bundle = bundleOf(
-                SendRouter.CRYPTO_CURRENCY_KEY to currency,
-                SendRouter.USER_WALLET_ID_KEY to action.userWallet.walletId.stringValue,
+            val route = AppRoute.Send(
+                currency = currency,
+                userWalletId = action.userWallet.walletId,
             )
-            store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
+
+            store.dispatchNavigationAction { push(route) }
         }
     }
 
@@ -285,17 +280,17 @@ object TradeCryptoMiddleware {
                 )
             }
 
-            val bundle = bundleOf(
-                SendRouter.CRYPTO_CURRENCY_KEY to currency,
-                SendRouter.USER_WALLET_ID_KEY to action.userWallet.walletId.stringValue,
+            val route = AppRoute.Send(
+                currency = currency,
+                userWalletId = action.userWallet.walletId,
             )
-            store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
+            store.dispatchNavigationAction { push(route) }
         }
     }
 
     private fun handleNewSendToken(action: TradeCryptoAction.SendToken) {
         handleNewSend(
-            userWalletId = action.userWallet.walletId.stringValue,
+            userWalletId = action.userWallet.walletId,
             txInfo = action.transactionInfo,
             currency = action.tokenCurrency,
         )
@@ -303,25 +298,26 @@ object TradeCryptoMiddleware {
 
     private fun handleNewSendCoin(action: TradeCryptoAction.SendCoin) {
         handleNewSend(
-            userWalletId = action.userWallet.walletId.stringValue,
+            userWalletId = action.userWallet.walletId,
             txInfo = action.transactionInfo,
             currency = action.coinStatus.currency,
         )
     }
 
     private fun handleNewSend(
-        userWalletId: String,
+        userWalletId: UserWalletId,
         txInfo: TradeCryptoAction.TransactionInfo?,
         currency: CryptoCurrency,
     ) {
-        val bundle = bundleOf(
-            SendRouter.CRYPTO_CURRENCY_KEY to currency,
-            SendRouter.USER_WALLET_ID_KEY to userWalletId,
-            SendRouter.TRANSACTION_ID_KEY to txInfo?.transactionId,
-            SendRouter.DESTINATION_ADDRESS_KEY to txInfo?.destinationAddress,
-            SendRouter.AMOUNT_KEY to txInfo?.amount,
-            SendRouter.TAG_KEY to txInfo?.tag,
+        val route = AppRoute.Send(
+            currency = currency,
+            userWalletId = userWalletId,
+            transactionId = txInfo?.transactionId,
+            destinationAddress = txInfo?.destinationAddress,
+            amount = txInfo?.amount,
+            tag = txInfo?.tag,
         )
-        store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
+
+        store.dispatchNavigationAction { push(route) }
     }
 }
