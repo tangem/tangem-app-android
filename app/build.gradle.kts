@@ -14,6 +14,11 @@ android {
     testOptions {
         animationsDisabled = true
     }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 configurations.all {
@@ -71,6 +76,7 @@ dependencies {
     implementation(projects.domain.walletConnect)
 
     implementation(projects.common)
+    implementation(projects.common.routing)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
@@ -130,6 +136,12 @@ dependencies {
     implementation(projects.features.staking.impl)
     implementation(projects.features.details.api)
     implementation(projects.features.details.impl)
+    implementation(projects.features.disclaimer.api)
+    implementation(projects.features.disclaimer.impl)
+    implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.pushNotifications.impl)
+    implementation(projects.features.walletSettings.api)
+    implementation(projects.features.walletSettings.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -166,6 +178,7 @@ dependencies {
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
+    implementation(deps.firebase.messaging)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain) {
