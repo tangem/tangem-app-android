@@ -1,13 +1,17 @@
 package com.tangem.tap.domain.card
 
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.EllipticCurve
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWallet
@@ -45,7 +49,10 @@ internal class DefaultDerivationsRepository(
         tangemSdkManager.derivePublicKeys(cardId = null, derivations = derivations)
             .doOnSuccess { response ->
                 updatePublicKeys(userWalletId = userWalletId, keys = response.entries).fold(
-                    onSuccess = { return },
+                    onSuccess = {
+                        validateDerivations(userWallet.scanResponse, derivations)
+                        return
+                    },
                     onFailure = { throw it },
                 )
             }
@@ -73,6 +80,22 @@ internal class DefaultDerivationsRepository(
         return when (result) {
             is CompletionResult.Failure -> throw result.error
             is CompletionResult.Success -> result.data
+        }
+    }
+
+    /**
+     * It throws an exception if any of the provided derivations are invalid
+     * Validation for NonHardened moved to application layer, to avoid fails when derive multiple paths
+     * It needs to be called after success [derivePublicKeys] or in same flows
+     */
+    private fun validateDerivations(scanResponse: ScanResponse, derivations: Derivations) {
+        derivations.entries.forEach { derivationForKey ->
+            val wallet = scanResponse.card.wallets.firstOrNull { it.publicKey.toMapKey() == derivationForKey.key }
+            if (wallet == null) return@forEach
+            val hasHardenedNodes = derivationForKey.value.any { path -> path.nodes.any { node -> !node.isHardened } }
+            if (wallet.curve == EllipticCurve.Ed25519Slip0010 && hasHardenedNodes) {
+                throw TangemSdkError.NonHardenedDerivationNotSupported()
+            }
         }
     }
 

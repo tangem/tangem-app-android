@@ -1,7 +1,8 @@
 package com.tangem.tap.features.disclaimer.redux
 
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
@@ -25,17 +26,19 @@ private fun handleDisclaimerMiddleware(action: Action, appState: AppState) {
 
     when (action) {
         is DisclaimerAction.Show -> {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
+            store.dispatchNavigationAction {
+                push(AppRoute.Disclaimer(isTosAccepted = action.from == DisclaimerSource.Details))
+            }
         }
         is DisclaimerAction.AcceptDisclaimer -> {
             mainScope.launch {
                 state.disclaimer.accept()
-                store.dispatch(NavigationAction.PopBackTo())
+                store.dispatchNavigationAction(AppRouter::pop)
                 state.callback?.onAccept?.invoke()
             }
         }
         is DisclaimerAction.OnBackPressed -> {
-            store.dispatch(NavigationAction.PopBackTo())
+            store.dispatchNavigationAction(AppRouter::pop)
             state.callback?.onDismiss?.invoke()
         }
     }
