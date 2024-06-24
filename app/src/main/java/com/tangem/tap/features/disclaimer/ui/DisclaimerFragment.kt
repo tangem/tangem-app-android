@@ -7,7 +7,7 @@ import android.webkit.WebView
 import androidx.lifecycle.lifecycleScope
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tangem.core.navigation.AppScreen
+
 import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.beginDelayedTransition
@@ -18,6 +18,7 @@ import com.tangem.tap.features.BaseFragment
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.disclaimer.Disclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
+import com.tangem.tap.features.disclaimer.redux.DisclaimerSource
 import com.tangem.tap.features.disclaimer.redux.DisclaimerState
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -76,16 +77,13 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
 
     override fun configureTransitions() {
         val inflater = TransitionInflater.from(requireContext())
-        when (store.state.disclaimerState.showedFromScreen) {
-            AppScreen.Home -> {
+        when (store.state.disclaimerState.showedFrom) {
+            DisclaimerSource.Home -> {
                 enterTransition = inflater.inflateTransition(android.R.transition.slide_bottom)
                 exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
             }
-            AppScreen.Details -> {
+            DisclaimerSource.Details -> {
                 super.configureTransitions()
-            }
-            else -> {
-                /* no-op */
             }
         }
     }

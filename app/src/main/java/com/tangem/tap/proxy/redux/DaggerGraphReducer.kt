@@ -23,6 +23,9 @@ object DaggerGraphReducer {
                 sendRouter = action.sendRouter,
                 qrScanningRouter = action.qrScanningRouter,
                 emailSender = action.emailSender,
+                stakingRouter = action.stakingRouter,
+                disclaimerRouter = action.disclaimerRouter,
+                pushNotificationsRouter = action.pushNotificationsRouter,
             )
         }
     }
