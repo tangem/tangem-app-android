@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.common.ui.amountScreen.ui.AmountBlock
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -53,7 +54,7 @@ internal fun SendContent(uiState: SendUiState) {
 }
 
 private fun LazyListScope.blocks(uiState: SendUiState) {
-    val amountState = uiState.amountState ?: return
+    val amountState = uiState.amountState
     val recipientState = uiState.recipientState ?: return
     val feeState = uiState.feeState ?: return
     val sendState = uiState.sendState ?: return

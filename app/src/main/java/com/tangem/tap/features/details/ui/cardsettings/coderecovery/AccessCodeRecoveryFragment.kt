@@ -4,9 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import com.tangem.core.navigation.NavigationAction
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,7 +29,7 @@ class AccessCodeRecoveryFragment : ComposeFragment(), StoreSubscriber<DetailsSta
     override fun ScreenContent(modifier: Modifier) {
         AccessCodeRecoveryScreen(
             state = screenState.value,
-            onBackClick = { store.dispatch(NavigationAction.PopBackTo()) },
+            onBackClick = { store.dispatchNavigationAction(AppRouter::pop) },
         )
     }
 

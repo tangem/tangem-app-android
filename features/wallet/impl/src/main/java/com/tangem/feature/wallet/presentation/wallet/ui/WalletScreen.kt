@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -33,16 +34,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.tangem.core.ui.components.Keyboard
-import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
-import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -50,10 +49,12 @@ import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags
+import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
+import com.tangem.feature.wallet.presentation.wallet.ui.components.PushNotificationsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
@@ -112,7 +113,7 @@ internal fun WalletScreen(
     )
 }
 
-@Suppress("LongMethod", "LongParameterList")
+@Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod")
 @Composable
 private fun WalletContent(
     state: WalletScreenState,
@@ -144,17 +145,20 @@ private fun WalletContent(
             .padding(top = betweenItemsPadding)
             .padding(horizontal = horizontalPadding)
 
+        val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .testTag(TestTags.WALLET_SCREEN),
             contentPadding = PaddingValues(
-                bottom = TangemTheme.dimens.spacing92,
+                bottom = TangemTheme.dimens.spacing92 + bottomBarHeight,
             ),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             item(
-                key = state.wallets.map { it.walletCardState.id },
+                // !!! Type of the key should be saveable via Bundle on Android !!!
+                key = state.wallets.map { it.walletCardState.id.stringValue },
                 contentType = state.wallets.map { it.walletCardState.id },
             ) {
                 WalletsList(
@@ -202,17 +206,7 @@ private fun WalletContent(
             organizeTokens(state = selectedWallet, itemModifier = itemModifier)
         }
 
-        val bottomSheetConfig = selectedWallet.bottomSheetConfig
-        if (bottomSheetConfig != null) {
-            when (bottomSheetConfig.content) {
-                is WalletBottomSheetConfig -> WalletBottomSheet(config = bottomSheetConfig)
-                is TokenReceiveBottomSheetConfig -> TokenReceiveBottomSheet(config = bottomSheetConfig)
-                is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
-                is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
-                is BalancesAndLimitsBottomSheetConfig -> BalancesAndLimitsBottomSheet(config = bottomSheetConfig)
-                is VisaTxDetailsBottomSheetConfig -> VisaTxDetailsBottomSheet(config = bottomSheetConfig)
-            }
-        }
+        ShowBottomSheet(bottomSheetConfig = selectedWallet.bottomSheetConfig)
 
         WalletsListEffects(
             lazyListState = walletsListState,
@@ -329,7 +323,7 @@ private fun BaseScaffoldManageTokenRedesign(
                 coroutineScope.launch { bottomSheetState.partialExpand() }
             }
         },
-        content = { paddingValues ->
+        content = { _ ->
             val pullRefreshState = rememberPullRefreshState(
                 refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
                 onRefresh = {
@@ -337,9 +331,7 @@ private fun BaseScaffoldManageTokenRedesign(
                 },
             )
 
-            Column(
-                modifier = Modifier.padding(paddingValues),
-            ) {
+            Column {
                 WalletTopBar(config = state.topBarConfig)
                 Box(
                     modifier = Modifier.pullRefresh(pullRefreshState),
@@ -391,7 +383,7 @@ private fun BottomSheetScrim(color: Color, visible: Boolean, onDismissRequest: (
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Suppress("CyclomaticComplexMethod")
+@Suppress("CyclomaticComplexMethod", "MagicNumber")
 @Composable
 private fun BottomSheetStateEffects(
     bottomSheetState: SheetState,
@@ -424,19 +416,29 @@ private fun BottomSheetStateEffects(
 
     val systemUiController = rememberSystemUiController()
     val navigationBarColor = TangemTheme.colors.background.primary
-    val navigationBarColorWithout = TangemTheme.colors.background.secondary
 
-    SystemBarsEffect {
-        if (showManageTokensBottomSheet) {
-            setNavigationBarColor(navigationBarColor)
+    LaunchedEffect(key1 = bottomSheetState.targetValue, navigationBarColor) {
+        when (bottomSheetState.targetValue) {
+            SheetValue.Hidden,
+            SheetValue.Expanded,
+            -> systemUiController.setNavigationBarColor(
+                color = Color.Transparent,
+                darkIcons = navigationBarColor.luminance() > 0.5f,
+                navigationBarContrastEnforced = true,
+            )
+            SheetValue.PartiallyExpanded,
+            -> systemUiController.setNavigationBarColor(navigationBarColor)
         }
     }
-    DisposableEffect(
-        showManageTokensBottomSheet,
-    ) {
+
+    DisposableEffect(showManageTokensBottomSheet) {
         onDispose {
             if (showManageTokensBottomSheet) {
-                systemUiController.setNavigationBarColor(navigationBarColorWithout)
+                systemUiController.setNavigationBarColor(
+                    color = Color.Transparent,
+                    darkIcons = navigationBarColor.luminance() > 0.5f,
+                    navigationBarContrastEnforced = false,
+                )
             }
         }
     }
@@ -505,6 +507,7 @@ private fun BaseScaffold(
 ) {
     Scaffold(
         topBar = { WalletTopBar(config = state.topBarConfig) },
+        contentWindowInsets = WindowInsetsZero,
         snackbarHost = {
             WalletSnackbarHost(
                 snackbarHostState = snackbarHostState,
@@ -519,7 +522,12 @@ private fun BaseScaffold(
                 )
             }
 
-            manageTokensButtonConfig?.let { ManageTokensButton(onClick = it.onClick) }
+            manageTokensButtonConfig?.let {
+                ManageTokensButton(
+                    modifier = Modifier.navigationBarsPadding(),
+                    onClick = it.onClick,
+                )
+            }
         },
         floatingActionButtonPosition = FabPosition.Center,
         containerColor = TangemTheme.colors.background.secondary,
@@ -543,6 +551,8 @@ private fun BaseScaffold(
                     state = pullRefreshState,
                     modifier = Modifier.align(Alignment.TopCenter),
                 )
+
+                BottomFade(Modifier.align(Alignment.BottomCenter))
             }
         },
     )
@@ -564,11 +574,11 @@ private fun WalletSnackbarHost(
 }
 
 @Composable
-private fun ManageTokensButton(onClick: () -> Unit) {
+private fun ManageTokensButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     PrimaryButton(
         text = stringResource(id = R.string.main_manage_tokens),
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = TangemTheme.dimens.spacing16),
     )
@@ -584,6 +594,21 @@ internal fun LazyListScope.organizeTokens(state: WalletState, itemModifier: Modi
                     onClick = config.onClick,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ShowBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
+    if (bottomSheetConfig != null) {
+        when (bottomSheetConfig.content) {
+            is WalletBottomSheetConfig -> WalletBottomSheet(config = bottomSheetConfig)
+            is TokenReceiveBottomSheetConfig -> TokenReceiveBottomSheet(config = bottomSheetConfig)
+            is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
+            is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
+            is BalancesAndLimitsBottomSheetConfig -> BalancesAndLimitsBottomSheet(config = bottomSheetConfig)
+            is VisaTxDetailsBottomSheetConfig -> VisaTxDetailsBottomSheet(config = bottomSheetConfig)
+            is PushNotificationsBottomSheetConfig -> PushNotificationsBottomSheet(config = bottomSheetConfig)
         }
     }
 }

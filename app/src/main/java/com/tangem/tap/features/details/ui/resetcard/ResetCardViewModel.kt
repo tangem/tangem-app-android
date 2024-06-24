@@ -2,13 +2,15 @@ package com.tangem.tap.features.details.ui.resetcard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.utils.popTo
+
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction.ResetToFactory
@@ -165,9 +167,9 @@ internal class ResetCardViewModel @Inject constructor(
         val newSelectedWallet = getSelectedWalletSyncUseCase().getOrNull()
 
         if (newSelectedWallet != null) {
-            store.dispatch(NavigationAction.PopBackTo(AppScreen.Wallet))
+            store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
         } else {
-            store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+            store.dispatchNavigationAction { popTo<AppRoute.Home>() }
         }
     }
 
