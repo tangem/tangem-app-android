@@ -30,8 +30,8 @@ internal object WalletManagersFacadeModule {
             walletManagersStore = walletManagersStore,
             userWalletsStore = userWalletsStore,
             assetLoader = assetLoader,
-            blockchainSDKFactory = blockchainSDKFactory,
             dispatchers = dispatchers,
+            blockchainSDKFactory = blockchainSDKFactory,
         )
     }
 }
