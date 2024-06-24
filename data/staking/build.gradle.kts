@@ -14,8 +14,8 @@ dependencies {
 
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    implementation(projects.domain.tokens.models)
     implementation(projects.domain.staking)
-    implementation(projects.features.staking.api)
 
 
     // region DI
@@ -29,6 +29,7 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
 
+    implementation(projects.libs.blockchainSdk)
     implementation(deps.tangem.blockchain) {
         exclude(module = "joda-time")
     }
