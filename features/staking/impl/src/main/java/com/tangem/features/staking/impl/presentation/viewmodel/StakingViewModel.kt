@@ -22,8 +22,7 @@ import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
-import com.tangem.features.staking.impl.presentation.state.transformers.HideBalanceStateTransformer
-import com.tangem.features.staking.impl.presentation.state.transformers.SetInitialDataStateTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountChangeStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountCurrencyChangeStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountMaxValueStateTransformer
@@ -90,6 +89,14 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onPrevClick() {
         stakingStateRouter.onBackClick()
+    }
+
+    override fun onInfoClick(infoType: InfoType) {
+        stateController.update(
+            ShowInfoBottomSheetStateTransformer(infoType) {
+                stateController.update(DismissBottomSheetStateTransformer())
+            },
+        )
     }
 
     override fun onAmountValueChange(value: String) {
