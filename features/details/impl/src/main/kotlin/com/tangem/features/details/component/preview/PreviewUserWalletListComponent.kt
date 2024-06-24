@@ -46,7 +46,7 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
 
     @Composable
     @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
-    override fun View(modifier: Modifier) {
+    override fun Content(modifier: Modifier) {
         UserWalletListBlock(state = previewState, modifier = modifier)
     }
 
