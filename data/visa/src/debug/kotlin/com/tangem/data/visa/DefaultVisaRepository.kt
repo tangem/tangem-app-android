@@ -10,10 +10,8 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.data.common.cache.CacheRegistry
-import com.tangem.data.visa.utils.VisaConfig
-import com.tangem.data.visa.utils.VisaCurrencyFactory
-import com.tangem.data.visa.utils.VisaTxDetailsFactory
-import com.tangem.data.visa.utils.VisaTxHistoryPagingSource
+import com.tangem.data.visa.config.VisaLibLoader
+import com.tangem.data.visa.utils.*
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -24,8 +22,6 @@ import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.domain.visa.repository.VisaRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.lib.visa.VisaContractInfoProvider
-import com.tangem.lib.visa.api.VisaApi
 import com.tangem.lib.visa.model.VisaTxHistoryResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
@@ -35,9 +31,8 @@ import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 internal class DefaultVisaRepository(
-    private val visaContractInfoProvider: VisaContractInfoProvider,
+    private val visaLibLoader: VisaLibLoader,
     private val tangemTechApi: TangemTechApi,
-    private val visaApi: VisaApi,
     private val cacheRegistry: CacheRegistry,
     private val userWalletsStore: UserWalletsStore,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -76,9 +71,11 @@ internal class DefaultVisaRepository(
     }
 
     private suspend fun fetchVisaCurrency(address: String) {
+        val contractInfoProvider = visaLibLoader.getOrCreateProvider()
+
         parZip(
             dispatchers.io,
-            { visaContractInfoProvider.getContractInfo(address) },
+            { contractInfoProvider.getContractInfo(address) },
             { getFiatRate() },
             { contractInfo, fiatRate ->
                 fetchedCurrencies.update { value ->
@@ -97,6 +94,7 @@ internal class DefaultVisaRepository(
     ): Flow<PagingData<VisaTxHistoryItem>> {
         val userWallet = findVisaUserWallet(userWalletId)
         val cardPubKey = getCardPubKey(userWallet)
+        val api = visaLibLoader.getOrCreateApi()
         val pager = Pager(
             config = PagingConfig(
                 pageSize = pageSize,
@@ -110,7 +108,7 @@ internal class DefaultVisaRepository(
                         isRefresh = isRefresh,
                     ),
                     cacheRegistry = cacheRegistry,
-                    visaApi = visaApi,
+                    visaApi = api,
                     fetchedItems = fetchedHistoryItems,
                     dispatchers = dispatchers,
                 )
@@ -137,7 +135,7 @@ internal class DefaultVisaRepository(
     }
 
     private suspend fun makeAddress(userWalletId: UserWalletId): String {
-        if (IS_DEMO_MODE_ENABLED) return DEMO_ADDRESS
+        if (VisaConstants.IS_DEMO_MODE_ENABLED) return getDemoAddress()
 
         val userWallet = findVisaUserWallet(userWalletId)
         val walletAddresses = makeWalletAddresses(userWallet)
@@ -149,13 +147,13 @@ internal class DefaultVisaRepository(
     }
 
     private suspend fun getFiatRate(): BigDecimal? {
-        val fiatCurrencyId = VisaConfig.fiatCurrency.code.lowercase()
+        val fiatCurrencyId = VisaConstants.fiatCurrency.code.lowercase()
         val quotes = tangemTechApi.getQuotes(
             currencyId = fiatCurrencyId,
-            coinIds = VisaConfig.TOKEN_ID,
+            coinIds = VisaConstants.TOKEN_ID,
         ).getOrThrow()
 
-        return quotes.quotes[VisaConfig.TOKEN_ID]?.price
+        return quotes.quotes[VisaConstants.TOKEN_ID]?.price
     }
 
     private fun makeWalletAddresses(userWallet: UserWallet): Set<Address> {
@@ -165,7 +163,7 @@ internal class DefaultVisaRepository(
     }
 
     private fun getCardPubKey(userWallet: UserWallet): String {
-        if (IS_DEMO_MODE_ENABLED) return DEMO_PUBLIC_KEY
+        if (VisaConstants.IS_DEMO_MODE_ENABLED) return getDemoPublicKey()
 
         val cardWallet = userWallet.scanResponse.card.wallets.firstOrNull {
             it.curve == EllipticCurve.Secp256k1
@@ -188,13 +186,5 @@ internal class DefaultVisaRepository(
 
     private fun getVisaCurrencyKey(address: String): String {
         return "visa_currency_$address"
-    }
-
-    private companion object {
-        // Must be `false` in production
-        const val IS_DEMO_MODE_ENABLED = false
-
-        const val DEMO_ADDRESS = "0x40d8194b7168723ece51fa34d16825c60ba03dfa"
-        const val DEMO_PUBLIC_KEY = "02C2BBA0DA1E066EA968C1EB129499F6DEBC5FD82D70D61DCAF691CDB69AF5D8B9"
     }
 }
