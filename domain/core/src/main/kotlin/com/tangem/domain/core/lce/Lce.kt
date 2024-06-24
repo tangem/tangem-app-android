@@ -83,13 +83,16 @@ sealed class Lce<out E : Any, out C : Any> {
     }
 
     /**
-     * Returns the content of this [Lce] if it's a [Lce.Content] or partial content if it's a [Lce.Loading],
-     * `null` if it's a [Lce.Error].
+     * Returns the content of this [Lce] if it's a [Lce.Content] or partial content if it's a [Lce.Loading]
+     * and [isPartialContentAccepted] is `true`, `null` if it's a [Lce.Error].
+     *
+     * @param isPartialContentAccepted A flag indicating whether partial content should be accepted
+     * and returned. Default is `true`.
      *
      * @return The content of this [Lce] or `null`.
      */
-    fun getOrNull(): C? = fold(
-        ifLoading = ::identity,
+    fun getOrNull(isPartialContentAccepted: Boolean = true): C? = fold(
+        ifLoading = { if (isPartialContentAccepted) it else null },
         ifContent = ::identity,
         ifError = { null },
     )
