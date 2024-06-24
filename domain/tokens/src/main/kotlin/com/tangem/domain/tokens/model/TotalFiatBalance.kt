@@ -10,13 +10,13 @@ sealed class TotalFiatBalance {
      * Represents the loading state of the fiat balance.
      * This state indicates that the fiat balance is currently being retrieved or calculated.
      */
-    object Loading : TotalFiatBalance()
+    data object Loading : TotalFiatBalance()
 
     /**
      * Represents the failure state of the fiat balance.
      * This state indicates that an attempt to retrieve or calculate the fiat balance has failed.
      */
-    object Failed : TotalFiatBalance()
+    data object Failed : TotalFiatBalance()
 
     /**
      * Represents the successfully loaded state of the fiat balance.
