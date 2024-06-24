@@ -31,6 +31,7 @@ internal class ExpressDataConverter : Converter<ExchangeDataResponseWithTxDetail
                 txTo = transactionDto.txTo,
                 txFrom = requireNotNull(transactionDto.txFrom),
                 txData = requireNotNull(transactionDto.txData),
+                txExtraId = transactionDto.txExtraId,
             )
         } else {
             ExpressTransactionModel.CEX(

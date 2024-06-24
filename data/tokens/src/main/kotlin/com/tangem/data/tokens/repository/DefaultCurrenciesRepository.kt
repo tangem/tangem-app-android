@@ -261,7 +261,7 @@ internal class DefaultCurrenciesRepository(
 
         launch(dispatchers.io) {
             combine(
-                getMultiCurrencyWalletCurrencies(userWallet),
+                getMultiCurrencyWalletCurrencies(userWallet).distinctUntilChanged(),
                 isMultiCurrencyWalletCurrenciesFetching.map { it.getOrElse(userWallet.walletId) { false } },
             ) { currencies, isFetching ->
                 send(currencies, isStillLoading = isFetching)
@@ -278,7 +278,7 @@ internal class DefaultCurrenciesRepository(
     override suspend fun getMultiCurrencyWalletCurrenciesSync(
         userWalletId: UserWalletId,
         refresh: Boolean,
-    ): List<CryptoCurrency> {
+    ): List<CryptoCurrency> = withContext(dispatchers.io) {
         val userWallet = getUserWallet(userWalletId)
         ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
 
@@ -288,7 +288,7 @@ internal class DefaultCurrenciesRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
 
-        return responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
+        responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
     }
 
     override suspend fun getMultiCurrencyWalletCurrency(

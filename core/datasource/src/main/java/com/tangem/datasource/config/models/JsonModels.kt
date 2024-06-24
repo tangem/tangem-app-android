@@ -40,6 +40,7 @@ class ConfigValueModel(
     val chiaTangemApiKey: String?,
     val devExpress: ExpressModel?,
     val express: ExpressModel?,
+    @Json(name = "hederaArkhiaKey") val hederaArkhiaKey: String?,
     val polygonScanApiKey: String?,
     val stakeKitApiKey: String?,
     @Json(name = "bittensorDwellirKey") val bittensorDwellirApiKey: String?,
