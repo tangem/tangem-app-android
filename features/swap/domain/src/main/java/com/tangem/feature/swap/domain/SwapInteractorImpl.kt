@@ -563,6 +563,9 @@ internal class SwapInteractorImpl @Inject constructor(
         includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
     ): SwapTransactionState {
+        val cardId = getSelectedWallet()?.scanResponse?.card?.cardId ?: return SwapTransactionState.UnknownError
+        if (demoConfig.isDemoCardId(cardId)) return SwapTransactionState.DemoMode
+
         return when (swapProvider.type) {
             ExchangeProviderType.CEX -> {
                 val amountDecimal = toBigDecimalOrNull(amountToSwap)
@@ -749,8 +752,7 @@ internal class SwapInteractorImpl @Inject constructor(
             currencyToSend.currency.network.backendId,
             exchangeDataCex.txExtraId,
         )
-        val cardId = getSelectedWallet()?.scanResponse?.card?.cardId ?: return SwapTransactionState.UnknownError
-        if (txExtras == null && exchangeDataCex.txExtraId != null && !demoConfig.isDemoCardId(cardId)) {
+        if (txExtras == null && exchangeDataCex.txExtraId != null) {
             return SwapTransactionState.UnknownError
         }
         val txData = createTransactionUseCase(
