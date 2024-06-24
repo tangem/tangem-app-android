@@ -83,7 +83,6 @@ class TangemColors internal constructor(
         warning: Color,
         attention: Color,
         accent: Color = TangemColorPalette.Azure,
-        constant: Color = TangemColorPalette.White,
     ) {
         var primary1 by mutableStateOf(primary1)
             private set
