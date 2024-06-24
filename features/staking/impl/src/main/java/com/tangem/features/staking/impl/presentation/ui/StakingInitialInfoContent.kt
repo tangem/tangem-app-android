@@ -25,6 +25,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
 
 @Composable
 internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState) {
@@ -121,11 +122,13 @@ internal fun StakingDetailsRows(state: StakingStates.InitialInfoState.Data) {
         startText = stringResource(id = R.string.staking_details_apy),
         endText = state.aprRange.resolveReference(),
         cornersToRound = CornersToRound.ZERO,
+        iconClick = { state.onInfoClick(InfoType.APY) },
     )
     InitialInfoContentRow(
         startText = stringResource(id = R.string.staking_details_unbonding_period),
         endText = state.unbondingPeriod,
         cornersToRound = CornersToRound.ZERO,
+        iconClick = { state.onInfoClick(InfoType.UNBOUNDING_PERIOD) },
     )
     InitialInfoContentRow(
         startText = stringResource(id = R.string.staking_details_minimum_requirement),
@@ -136,21 +139,29 @@ internal fun StakingDetailsRows(state: StakingStates.InitialInfoState.Data) {
         startText = stringResource(id = R.string.staking_details_reward_claiming),
         endText = state.rewardClaiming,
         cornersToRound = CornersToRound.ZERO,
+        iconClick = { state.onInfoClick(InfoType.REWARD_CLAIMING) },
     )
     InitialInfoContentRow(
         startText = stringResource(id = R.string.staking_details_warmup_period),
         endText = state.warmupPeriod,
         cornersToRound = CornersToRound.ZERO,
+        iconClick = { state.onInfoClick(InfoType.WARMUP_PERIOD) },
     )
     InitialInfoContentRow(
         startText = stringResource(id = R.string.staking_details_reward_schedule),
         endText = state.rewardSchedule,
         cornersToRound = CornersToRound.BOTTOM_2,
+        iconClick = { state.onInfoClick(InfoType.REWARD_SCHEDULE) },
     )
 }
 
 @Composable
-private fun InitialInfoContentRow(startText: String, endText: String, cornersToRound: CornersToRound) {
+private fun InitialInfoContentRow(
+    startText: String,
+    endText: String,
+    cornersToRound: CornersToRound,
+    iconClick: (() -> Unit)? = null,
+) {
     RoundableCornersRow(
         startText = startText,
         startTextColor = TangemTheme.colors.text.primary1,
@@ -159,7 +170,8 @@ private fun InitialInfoContentRow(startText: String, endText: String, cornersToR
         endTextColor = TangemTheme.colors.text.tertiary,
         endTextStyle = TangemTheme.typography.body2,
         cornersToRound = cornersToRound,
-        iconResId = null, // TODO staking add bottom sheets when text will be available
+        iconResId = R.drawable.ic_information_24,
+        iconClick = iconClick,
     )
 }
 
@@ -189,6 +201,7 @@ private class StakingInitialInfoContentPreviewProvider : PreviewParameterProvide
                 rewardClaiming = "Auto",
                 warmupPeriod = "Days",
                 rewardSchedule = "Block",
+                onInfoClick = {},
             ),
         )
 }
