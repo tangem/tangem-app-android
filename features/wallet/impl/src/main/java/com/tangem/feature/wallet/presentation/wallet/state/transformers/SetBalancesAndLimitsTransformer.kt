@@ -19,24 +19,25 @@ internal class SetBalancesAndLimitsTransformer(
     private val userWallet: UserWallet,
     private val maybeVisaCurrency: Either<Throwable, VisaCurrency>,
     private val clickIntents: WalletClickIntents,
-) : WalletStateTransformer(userWallet.walletId) {
+) : TypedWalletStateTransformer<WalletState.Visa.Content>(
+    userWalletId = userWallet.walletId,
+    targetStateClass = WalletState.Visa.Content::class,
+) {
 
-    override fun transform(prevState: WalletState): WalletState {
-        return prevState.transformWhenInState<WalletState.Visa.Content> { state ->
-            val visaCurrency = maybeVisaCurrency.getOrElse {
-                return state.copy(
-                    walletCardState = getErrorWalletCardState(state.walletCardState),
-                    depositButtonState = state.depositButtonState.copy(isEnabled = false),
-                    balancesAndLimitBlockState = BalancesAndLimitsBlockState.Error,
-                )
-            }
-
-            state.copy(
-                walletCardState = getContentWalletCardState(state.walletCardState, visaCurrency),
-                depositButtonState = state.depositButtonState.copy(isEnabled = true),
-                balancesAndLimitBlockState = getContentBlockState(visaCurrency),
+    override fun transformTyped(prevState: WalletState.Visa.Content): WalletState {
+        val visaCurrency = maybeVisaCurrency.getOrElse {
+            return prevState.copy(
+                walletCardState = getErrorWalletCardState(prevState.walletCardState),
+                depositButtonState = prevState.depositButtonState.copy(isEnabled = false),
+                balancesAndLimitBlockState = BalancesAndLimitsBlockState.Error,
             )
         }
+
+        return prevState.copy(
+            walletCardState = getContentWalletCardState(prevState.walletCardState, visaCurrency),
+            depositButtonState = prevState.depositButtonState.copy(isEnabled = true),
+            balancesAndLimitBlockState = getContentBlockState(visaCurrency),
+        )
     }
 
     private fun getContentBlockState(visaCurrency: VisaCurrency) = BalancesAndLimitsBlockState.Content(

@@ -11,6 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.ui.amountScreen.utils.getCryptoReference
+import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.rows.SelectorRowItem
@@ -20,8 +22,6 @@ import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
-import com.tangem.features.send.impl.presentation.utils.getCryptoReference
-import com.tangem.features.send.impl.presentation.utils.getFiatReference
 
 @Composable
 internal fun SendSpeedSelectorItem(
