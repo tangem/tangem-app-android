@@ -455,12 +455,12 @@ class DefaultWalletManagersFacade(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<TransactionFee>? {
+    ): Result<TransactionFee>? = withContext(dispatchers.io) {
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = network,
         )
-        return (walletManager as? TransactionSender)?.getFee(
+        (walletManager as? TransactionSender)?.getFee(
             amount = amount,
             destination = destination,
         )
@@ -515,20 +515,6 @@ class DefaultWalletManagersFacade(
         )
 
         return walletManager?.createTransaction(amount, fee, destination)
-    }
-
-    @Deprecated("Will be removed in future")
-    override suspend fun sendTransaction(
-        txData: TransactionData,
-        signer: CommonSigner,
-        userWalletId: UserWalletId,
-        network: Network,
-    ): SimpleResult {
-        val walletManager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = network,
-        )
-        return (walletManager as TransactionSender).send(txData, signer)
     }
 
     override suspend fun getRecentTransactions(
