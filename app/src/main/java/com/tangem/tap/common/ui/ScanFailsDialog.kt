@@ -65,7 +65,7 @@ internal object ScanFailsDialog {
             }
             customView.findViewById<TextView>(R.id.request_support_button)?.setOnClickListener {
                 Analytics.send(Basic.ButtonSupport(sourceAnalytics))
-                store.dispatch(GlobalAction.SendEmail(ScanFailsEmail()))
+                store.dispatch(GlobalAction.SendEmail(feedbackData = ScanFailsEmail(), scanResponse = null))
             }
             customView.findViewById<TextView>(R.id.cancel_button)?.setOnClickListener {
                 store.dispatchDialogHide()
