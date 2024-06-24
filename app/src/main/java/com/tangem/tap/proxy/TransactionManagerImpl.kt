@@ -8,8 +8,8 @@ import com.tangem.blockchain.blockchains.optimism.EthereumOptimisticRollupWallet
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.extensions.Result
-import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.externallinkprovider.TxExploreState
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.blockchainsdk.utils.fromNetworkId
@@ -301,12 +301,12 @@ class TransactionManagerImpl(
         }
     }
 
-    private fun handleSendResult(result: SimpleResult): SendTxResult {
+    private fun handleSendResult(result: Result<TransactionSendResult>): SendTxResult {
         when (result) {
-            is SimpleResult.Success -> {
+            is Result.Success -> {
                 return SendTxResult.Success
             }
-            is SimpleResult.Failure -> {
+            is Result.Failure -> {
                 if (ResultChecker.isNetworkError(result)) return SendTxResult.NetworkError(result.error)
                 val error = result.error as? BlockchainSdkError ?: return SendTxResult.UnknownError()
                 when (error) {

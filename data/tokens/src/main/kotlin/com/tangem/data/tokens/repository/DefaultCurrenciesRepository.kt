@@ -61,6 +61,18 @@ internal class DefaultCurrenciesRepository(
     private val isMultiCurrencyWalletCurrenciesFetching = MutableStateFlow(
         value = emptyMap<UserWalletId, Boolean>(),
     )
+    private val parallelTransactionsEnabledBlockchains = setOf(
+        Blockchain.Ethereum,
+        Blockchain.EthereumTestnet,
+        Blockchain.Polygon,
+        Blockchain.PolygonTestnet,
+        Blockchain.Arbitrum,
+        Blockchain.ArbitrumTestnet,
+        Blockchain.Binance,
+        Blockchain.BinanceTestnet,
+        Blockchain.Tron,
+        Blockchain.TronTestnet,
+    )
 
     override suspend fun saveTokens(
         userWalletId: UserWalletId,
@@ -249,7 +261,7 @@ internal class DefaultCurrenciesRepository(
 
         launch(dispatchers.io) {
             combine(
-                getMultiCurrencyWalletCurrencies(userWallet),
+                getMultiCurrencyWalletCurrencies(userWallet).distinctUntilChanged(),
                 isMultiCurrencyWalletCurrenciesFetching.map { it.getOrElse(userWallet.walletId) { false } },
             ) { currencies, isFetching ->
                 send(currencies, isStillLoading = isFetching)
@@ -266,7 +278,7 @@ internal class DefaultCurrenciesRepository(
     override suspend fun getMultiCurrencyWalletCurrenciesSync(
         userWalletId: UserWalletId,
         refresh: Boolean,
-    ): List<CryptoCurrency> {
+    ): List<CryptoCurrency> = withContext(dispatchers.io) {
         val userWallet = getUserWallet(userWalletId)
         ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
 
@@ -276,7 +288,7 @@ internal class DefaultCurrenciesRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
 
-        return responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
+        responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
     }
 
     override suspend fun getMultiCurrencyWalletCurrency(
@@ -366,18 +378,19 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    override fun hasPendingTransactions(
+    override fun isSendBlockedByPendingTransactions(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
     ): Boolean {
         val blockchain = Blockchain.fromId(cryptoCurrencyStatus.currency.network.id.value)
         val isBitcoinBlockchain = blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
-
-        return if (cryptoCurrencyStatus.currency is CryptoCurrency.Coin && isBitcoinBlockchain) {
-            val outgoingTransactions = cryptoCurrencyStatus.value.pendingTransactions.filter { it.isOutgoing }
-            outgoingTransactions.isNotEmpty()
-        } else {
-            coinStatus?.value?.hasCurrentNetworkTransactions == true
+        return when {
+            cryptoCurrencyStatus.currency is CryptoCurrency.Coin && isBitcoinBlockchain -> {
+                val outgoingTransactions = cryptoCurrencyStatus.value.pendingTransactions.filter { it.isOutgoing }
+                outgoingTransactions.isNotEmpty()
+            }
+            parallelTransactionsEnabledBlockchains.contains(blockchain) -> false
+            else -> coinStatus?.value?.hasCurrentNetworkTransactions == true
         }
     }
 

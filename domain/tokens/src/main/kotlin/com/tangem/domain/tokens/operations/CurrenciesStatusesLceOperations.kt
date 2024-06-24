@@ -122,6 +122,9 @@ internal class CurrenciesStatusesLceOperations(
         val quotes = recover({ maybeQuotes?.bind()?.toNonEmptySetOrNull() }) {
             quotesRetrievingFailed = true
             null
+        }?.ifEmpty {
+            quotesRetrievingFailed = true
+            null
         }
 
         currencies.map { currency ->

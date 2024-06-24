@@ -14,11 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingInfoBottomSheetConfig
+import com.tangem.features.staking.impl.presentation.ui.bottomsheet.StakingInfoBottomSheet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -45,6 +48,15 @@ internal fun StakingScreen(uiState: StakingUiState) {
         StakingNavigationButtons(
             uiState = uiState,
         )
+        StakingBottomSheet(bottomSheetConfig = uiState.bottomSheetConfig)
+    }
+}
+
+@Composable
+fun StakingBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
+    if (bottomSheetConfig == null) return
+    when (bottomSheetConfig.content) {
+        is StakingInfoBottomSheetConfig -> StakingInfoBottomSheet(bottomSheetConfig)
     }
 }
 

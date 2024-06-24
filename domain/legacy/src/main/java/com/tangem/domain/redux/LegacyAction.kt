@@ -1,7 +1,10 @@
 package com.tangem.domain.redux
 
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.models.UserWalletId
 import org.rekotlin.Action
+import java.math.BigDecimal
 
 sealed interface LegacyAction : Action {
 
@@ -16,6 +19,20 @@ sealed interface LegacyAction : Action {
 
     /**
      * Sending an email to support when sending transaction failed
+     *
+     * @param cryptoCurrency current currency
+     * @param userWalletId selected user wallet id
+     * @param amount sending amount
+     * @param fee spending fee
+     * @param destinationAddress recipient address
+     * @param errorMessage sending error
      */
-    data class SendEmailTransactionFailed(val errorMessage: String) : LegacyAction
+    data class SendEmailTransactionFailed(
+        val cryptoCurrency: CryptoCurrency,
+        val userWalletId: UserWalletId,
+        val amount: BigDecimal?,
+        val fee: BigDecimal?,
+        val destinationAddress: String?,
+        val errorMessage: String,
+    ) : LegacyAction
 }

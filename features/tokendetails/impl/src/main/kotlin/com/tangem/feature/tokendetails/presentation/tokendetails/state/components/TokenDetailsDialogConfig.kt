@@ -55,6 +55,7 @@ internal data class TokenDetailsDialogConfig(
         }
 
         data class HasLinkedTokensConfig(
+            val currencyName: String,
             val currencySymbol: String,
             val networkName: String,
             val onConfirmClick: () -> Unit,
@@ -66,7 +67,7 @@ internal data class TokenDetailsDialogConfig(
 
             override val message: TextReference = TextReference.Res(
                 id = R.string.token_details_unable_hide_alert_message,
-                formatArgs = wrappedList(currencySymbol, networkName),
+                formatArgs = wrappedList(currencyName, currencySymbol, networkName),
             )
 
             override val cancelButtonConfig: ButtonConfig?

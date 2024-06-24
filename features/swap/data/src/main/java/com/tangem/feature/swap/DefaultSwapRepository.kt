@@ -14,6 +14,7 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
+import com.tangem.datasource.api.express.models.request.ExchangeSentRequestBody
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.express.models.response.ExchangeDataResponseWithTxDetails
 import com.tangem.datasource.api.express.models.response.SwapPair
@@ -300,6 +301,31 @@ internal class DefaultSwapRepository @Inject constructor(
             } catch (ex: Exception) {
                 getDataError(ex).left()
             }
+        }
+    }
+
+    override suspend fun exchangeSent(
+        txId: String,
+        fromNetwork: String,
+        fromAddress: String,
+        payInAddress: String,
+        txHash: String,
+        payInExtraId: String?,
+    ): Either<DataError, Unit> = withContext(coroutineDispatcher.io) {
+        try {
+            tangemExpressApi.exchangeSent(
+                ExchangeSentRequestBody(
+                    txId = txId,
+                    fromNetwork = fromNetwork,
+                    fromAddress = fromAddress,
+                    payinAddress = payInAddress,
+                    payinExtraId = payInExtraId,
+                    txHash = txHash,
+                ),
+            ).getOrThrow()
+            Unit.right()
+        } catch (ex: Exception) {
+            getDataError(ex).left()
         }
     }
 

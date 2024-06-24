@@ -33,12 +33,8 @@ internal class ApiResponseCallDelegate<T : Any>(
         }
 
         override fun onFailure(call: Call<T>, t: Throwable) {
-            val e = if (t.isNetworkException()) {
-                ApiResponseError.NetworkException
-            } else {
-                ApiResponseError.UnknownException(t)
-            }
-            val safeResponse = apiError<T>(e)
+            val error = t.toApiError()
+            val safeResponse = apiError<T>(error)
 
             responseCallback.onResponse(this@ApiResponseCallDelegate, Response.success(safeResponse))
         }

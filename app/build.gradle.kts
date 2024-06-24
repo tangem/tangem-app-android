@@ -136,6 +136,12 @@ dependencies {
     implementation(projects.features.staking.impl)
     implementation(projects.features.details.api)
     implementation(projects.features.details.impl)
+    implementation(projects.features.disclaimer.api)
+    implementation(projects.features.disclaimer.impl)
+    implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.pushNotifications.impl)
+    implementation(projects.features.walletSettings.api)
+    implementation(projects.features.walletSettings.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)

@@ -35,6 +35,7 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
         isSwap: Boolean,
+        txExtras: TransactionExtras?,
         hash: String?,
     ): TransactionData? = withContext(coroutineDispatcherProvider.io) {
         val blockchain = Blockchain.fromId(network.id.value)
@@ -51,6 +52,7 @@ internal class DefaultTransactionRepository(
             destination = destination,
             network = network,
             isSwap = isSwap,
+            txExtras = txExtras,
             hash = hash,
         )
     }
@@ -63,8 +65,9 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
         isSwap: Boolean,
+        txExtras: TransactionExtras?,
         hash: String?,
-    ): Result<Unit> {
+    ): Result<Unit> = withContext(coroutineDispatcherProvider.io) {
         val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = walletManagersStore.getSyncOrNull(
             userWalletId = userWalletId,
@@ -74,7 +77,7 @@ internal class DefaultTransactionRepository(
 
         val validator = walletManager as? TransactionValidator
 
-        return if (validator != null) {
+        if (validator != null) {
             val transaction = walletManager.createTransactionInternal(
                 amount = amount,
                 fee = fee ?: Fee.Common(amount = amount),
@@ -82,6 +85,7 @@ internal class DefaultTransactionRepository(
                 destination = destination,
                 network = network,
                 isSwap = isSwap,
+                txExtras = txExtras,
                 hash = hash,
             )
 
@@ -115,17 +119,24 @@ internal class DefaultTransactionRepository(
         destination: String,
         network: Network,
         isSwap: Boolean,
+        txExtras: TransactionExtras?,
         hash: String?,
     ): TransactionData {
+        // TODO: refactor workaround to use general mechanism in bsdk for build tx for DEX
         val txAmount = if (isSwap) {
             createAmountForSwap(amount)
         } else {
             amount
         }
 
+        if (txExtras != null && memo != null) {
+            // throw error for now to avoid programmers errors when use extras
+            error("Both txExtras and memo provided, use only one of them")
+        }
+        val extras = txExtras ?: getMemoExtras(network.id.value, memo)
         return createTransaction(txAmount, fee, destination).copy(
             hash = hash,
-            extras = getMemoExtras(network.id.value, memo),
+            extras = extras,
         )
     }
 

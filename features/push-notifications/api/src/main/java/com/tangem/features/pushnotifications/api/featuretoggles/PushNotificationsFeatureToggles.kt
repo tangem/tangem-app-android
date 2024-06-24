@@ -5,5 +5,5 @@ package com.tangem.features.pushnotifications.api.featuretoggles
  */
 interface PushNotificationsFeatureToggles {
     /** Availability of push notifications */
-    val isRedesignedSendEnabled: Boolean
+    val isPushNotificationsEnabled: Boolean
 }
