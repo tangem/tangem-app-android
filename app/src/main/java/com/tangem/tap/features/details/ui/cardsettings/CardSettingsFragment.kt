@@ -4,9 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.fragment.app.viewModels
-import com.tangem.core.navigation.NavigationAction
+import com.tangem.common.routing.AppRouter
+
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.store
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,7 +31,7 @@ internal class CardSettingsFragment : ComposeFragment() {
             state = viewModel.screenState.value,
             onBackClick = {
                 store.dispatch(DetailsAction.ResetCardSettingsData)
-                store.dispatch(NavigationAction.PopBackTo())
+                store.dispatchNavigationAction(AppRouter::pop)
             },
         )
     }
