@@ -3,10 +3,9 @@ package com.tangem.features.staking.impl.presentation.state.previewdata
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType.Coin
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.Yield
-import com.tangem.features.staking.impl.presentation.state.InnerFeeState
+import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.ValidatorState
@@ -65,8 +64,7 @@ internal object ConfirmStakingStatePreviewData {
 
     val confirmStakingState = StakingStates.ConfirmStakingState.Data(
         isPrimaryButtonEnabled = true,
-        feeState = StakingStates.FeeState(
-            innerFeeState = InnerFeeState.Content(TransactionFee.Single(fee)),
+        feeState = FeeState.Content(
             fee = fee,
             rate = BigDecimal.ONE,
             appCurrency = AppCurrency.Default,

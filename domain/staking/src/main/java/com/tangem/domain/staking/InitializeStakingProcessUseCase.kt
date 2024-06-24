@@ -11,7 +11,7 @@ import java.math.BigDecimal
 /**
  * Use case for creating enter action
  */
-class CreateEnterActionUseCase(private val stakingRepository: StakingRepository) {
+class InitializeStakingProcessUseCase(private val stakingRepository: StakingRepository) {
 
     suspend operator fun invoke(
         integrationId: String,

@@ -1,6 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.settings.*
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.repositories.StakingRepository
 import dagger.Module
@@ -47,7 +46,7 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideCreateEnterActionUseCase(stakingRepository: StakingRepository): CreateEnterActionUseCase {
-        return CreateEnterActionUseCase(stakingRepository)
+    fun provideCreateEnterActionUseCase(stakingRepository: StakingRepository): InitializeStakingProcessUseCase {
+        return InitializeStakingProcessUseCase(stakingRepository)
     }
 }
