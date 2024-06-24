@@ -52,7 +52,7 @@ abstract class ComposeBottomSheetFragment : BottomSheetDialogFragment(), Compose
     override fun getTheme(): Int = R.style.AppTheme_TransparentBottomSheetDialog
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return createComposeView(inflater.context)
+        return createComposeView(inflater.context, requireActivity())
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
