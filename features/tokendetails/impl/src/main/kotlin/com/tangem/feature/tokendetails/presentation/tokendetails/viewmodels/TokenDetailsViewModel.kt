@@ -1,9 +1,12 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
+import android.os.Bundle
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
@@ -27,6 +30,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
+import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
@@ -57,12 +61,13 @@ import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRout
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
+import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -99,7 +104,9 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
+    private val stakingFeatureToggles: StakingFeatureToggles,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
+    private val getYieldUseCase: GetYieldUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val quotesRepository: QuotesRepository,
@@ -116,12 +123,14 @@ internal class TokenDetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
-    private val userWalletId: UserWalletId = savedStateHandle.get<String>(TokenDetailsRouter.USER_WALLET_ID_KEY)
-        ?.let { stringValue -> UserWalletId(stringValue) }
+    private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.USER_WALLET_ID_KEY)
+        ?.unbundle(UserWalletId.serializer())
         ?: error("This screen can't open without `UserWalletId`")
 
-    private val cryptoCurrency: CryptoCurrency = savedStateHandle[TokenDetailsRouter.CRYPTO_CURRENCY_KEY]
-        ?: error("This screen can't open without `CryptoCurrency`")
+    private val cryptoCurrency: CryptoCurrency =
+        savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
+            ?.unbundle(CryptoCurrency.serializer())
+            ?: error("This screen can't open without `CryptoCurrency`")
 
     private val userWallet: UserWallet
 
@@ -140,13 +149,11 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        stakingAvailabilityProvider = Provider {
-            getStakingAvailabilityUseCase.invoke(cryptoCurrency.network.id.value)
-        },
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
         featureToggles = tokenDetailsFeatureToggles,
+        isStakingEnabled = stakingFeatureToggles.isStakingEnabled,
     )
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -213,7 +220,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         subscribeOnCurrencyStatusUpdates()
         subscribeOnExchangeTransactionsUpdates()
         updateTxHistory(refresh = false, showItemsLoading = true)
-        updateStakingInfo()
+
+        if (stakingFeatureToggles.isStakingEnabled) {
+            updateStakingInfo()
+        }
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {
@@ -368,8 +378,12 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     private fun updateStakingInfo() {
-        viewModelScope.launch(dispatchers.main) {
-            val stakingAvailability = getStakingAvailabilityUseCase(cryptoCurrency.network.id.value)
+        viewModelScope.launch {
+            val stakingAvailability = getStakingAvailabilityUseCase(
+                cryptoCurrencyId = cryptoCurrency.id,
+                symbol = cryptoCurrency.symbol,
+            )
+            internalUiState.value = stateFactory.getStateWithUpdatedStakingAvailability(stakingAvailability)
             if (stakingAvailability is StakingAvailability.Available) {
                 val stakingInfo = getStakingEntryInfoUseCase(stakingAvailability.integrationId)
                 internalUiState.value = stateFactory.getStateWithStaking(stakingInfo)
@@ -425,6 +439,15 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onBuyCoinClick(cryptoCurrency: CryptoCurrency) {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrency.symbol))
         router.openTokenDetails(userWalletId = userWalletId, currency = cryptoCurrency)
+    }
+
+    override fun onStakeBannerClick() {
+        viewModelScope.launch {
+            val yield = getYieldUseCase.invoke(cryptoCurrency.id, cryptoCurrency.symbol).getOrNull()
+            yield ?: error("Staking is unavailable")
+
+            router.openStaking(userWalletId, cryptoCurrency, yield)
+        }
     }
 
     override fun onReloadClick() {
@@ -522,6 +545,10 @@ internal class TokenDetailsViewModel @Inject constructor(
                 },
             )
         }
+    }
+
+    override fun onStakeClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        Timber.e("Not implemented yet")
     }
 
     override fun onGenerateExtendedKey() {
@@ -765,6 +792,10 @@ internal class TokenDetailsViewModel @Inject constructor(
                 ifRight = { internalUiState.value = stateFactory.getStateWithRemovedHederaAssociateNotification() },
             )
         }
+    }
+
+    override fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig) {
+        internalUiState.value = stateFactory.getStateWithUpdatedBalanceSegmentedButtonConfig(config)
     }
 
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
