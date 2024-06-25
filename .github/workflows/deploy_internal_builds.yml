@@ -21,7 +21,7 @@ env:
 jobs:
   build:
     name: Upload apk to App Tester
-    runs-on: [self-hosted, old]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -45,15 +45,15 @@ jobs:
           echo sdk.dir = $ANDROID_HOME > local.properties
           GITHUB_ACTOR=${{ secrets.GITHUB_ACTOR }} GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} ./gradlew assembleInternalQA -PversionCode=${{ env.VERSION_CODE }}
       - name: Upload artifact to Firebase App Distribution
-        run: |
-          FIREBASE_TOKEN=${{secrets.FIREBASE_CLI_TOKEN}} firebase appdistribution:distribute \
-          "build/outputs/app-internal.apk" \
-          --app "1:721920782444:android:d97de53a7196475c3f2849" \
-          --groups "qa-android" \
-          --release-notes "Bug fixes and improvements"
-#        uses: wzieba/Firebase-Distribution-Github-Action@v1
-#        with:
-#          appId: ${{secrets.FIREBASE_APP_ID}}
-#          token: ${{secrets.FIREBASE_CLI_TOKEN}}
-#          groups: qa-android
-#          file: build/outputs/app-internal.apk
+#        run: |
+#          FIREBASE_TOKEN=${{secrets.FIREBASE_CLI_TOKEN}} firebase appdistribution:distribute \
+#          "build/outputs/app-internal.apk" \
+#          --app "1:721920782444:android:d97de53a7196475c3f2849" \
+#          --groups "qa-android" \
+#          --release-notes "Bug fixes and improvements"
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: "1:721920782444:android:d97de53a7196475c3f2849"
+          token: ${{secrets.FIREBASE_CLI_TOKEN}}
+          groups: qa-android
+          file: build/outputs/app-internal.apk
