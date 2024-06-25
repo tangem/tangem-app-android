@@ -46,6 +46,7 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.*
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
+import com.tangem.utils.Provider
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentOnboardingWalletBinding
 import com.tangem.wallet.databinding.LayoutOnboardingSeedPhraseBinding
@@ -115,7 +116,12 @@ class OnboardingWalletFragment :
         )
     }
 
-    override fun loadToolbarMenu(): MenuProvider = OnboardingMenuProvider()
+    override fun loadToolbarMenu(): MenuProvider = OnboardingMenuProvider(
+        scanResponseProvider = Provider {
+            store.state.globalState.onboardingState.onboardingManager?.scanResponse
+                ?: error("ScanResponse must be not null")
+        },
+    )
 
     private fun reInitCardsWidgetIfNeeded(backupCardsCounts: Int) = with(binding) {
         val viewBackupCount = flCardsContainer.childCount - 1
@@ -507,7 +513,13 @@ class OnboardingWalletFragment :
         onOpenChat = {
             Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Intro))
             // changed on email support [REDACTED_TASK_KEY]
-            store.dispatch(GlobalAction.SendEmail(SupportInfo()))
+            store.dispatch(
+                GlobalAction.SendEmail(
+                    feedbackData = SupportInfo(),
+                    scanResponse = store.state.globalState.onboardingState.onboardingManager?.scanResponse
+                        ?: error("ScanResponse must be not null"),
+                ),
+            )
         },
         onOpenUriClick = { uri ->
             store.dispatchOpenUrl(uri.toString())

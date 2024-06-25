@@ -28,6 +28,7 @@ dependencies {
 
     /* Project - Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.feedback)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.card)
