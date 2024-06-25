@@ -2,7 +2,6 @@ package com.tangem.domain.feedback.utils
 
 import android.content.res.Resources
 import com.tangem.domain.feedback.R
-import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 
 /**
@@ -14,19 +13,19 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
  */
 internal class EmailSubjectResolver(private val resources: Resources) {
 
-    /** Resolve email message body by [type] using [cardInfo] */
-    fun resolve(type: FeedbackEmailType, cardInfo: CardInfo): String {
+    /** Resolve email message body by [type] */
+    fun resolve(type: FeedbackEmailType): String {
         return when (type) {
-            FeedbackEmailType.DirectUserRequest -> {
-                if (cardInfo.isStart2Coin) {
+            is FeedbackEmailType.DirectUserRequest -> {
+                if (type.cardInfo.isStart2Coin) {
                     R.string.feedback_subject_support
                 } else {
                     R.string.feedback_subject_support_tangem
                 }
             }
-            FeedbackEmailType.RateCanBeBetter -> R.string.feedback_subject_rate_negative
-            FeedbackEmailType.ScanningProblem -> R.string.feedback_subject_scan_failed
-            FeedbackEmailType.TransactionSendingProblem -> R.string.feedback_subject_tx_failed
+            is FeedbackEmailType.RateCanBeBetter -> R.string.feedback_subject_rate_negative
+            is FeedbackEmailType.ScanningProblem -> R.string.feedback_subject_scan_failed
+            is FeedbackEmailType.TransactionSendingProblem -> R.string.feedback_subject_tx_failed
         }
             .let(resources::getString)
     }
