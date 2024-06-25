@@ -204,7 +204,12 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             neverToSuggestRateAppUseCase()
 
-            reduxStateHolder.dispatch(LegacyAction.SendEmailRateCanBeBetter)
+            reduxStateHolder.dispatch(
+                LegacyAction.SendEmailRateCanBeBetter(
+                    scanResponse = getSelectedUserWallet()?.scanResponse
+                        ?: error("ScanResponse must be not null"),
+                ),
+            )
         }
     }
 
@@ -250,7 +255,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    private suspend fun getSelectedUserWallet(): UserWallet? {
+    private fun getSelectedUserWallet(): UserWallet? {
         val userWalletId = stateHolder.getSelectedWalletId()
         return getUserWalletUseCase(userWalletId).getOrElse {
             Timber.e(
