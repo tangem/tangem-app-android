@@ -75,15 +75,9 @@ class MarketChartState internal constructor(
             val state = dataProducer.dataState.value as? MarketChartData.Data
                 ?: return@CartesianValueFormatter value.toString()
 
-            val sMin = state.x.min()
-            val scale = sMin.scale()
-            val bVal = if (scale > 2) {
-                value.toBigDecimal().movePointLeft(scale - 2) + sMin
-            } else {
-                value.toBigDecimal() + sMin
-            }
-
-            lookState.value.xAxisFormatter.format(bVal)
+            lookState.value.xAxisFormatter.format(
+                value = dataProducer.pointsValuesConverter.prepareRawXForFormat(value, state),
+            )
         }
     }
 
@@ -92,15 +86,9 @@ class MarketChartState internal constructor(
             val state = dataProducer.dataState.value as? MarketChartData.Data
                 ?: return@CartesianValueFormatter value.toString()
 
-            val sMin = state.y.min()
-            val scale = sMin.scale()
-            val bVal = if (scale > 2) {
-                value.toBigDecimal().movePointLeft(scale - 2) + sMin
-            } else {
-                value.toBigDecimal() + sMin
-            }
-
-            lookState.value.yAxisFormatter.format(bVal)
+            lookState.value.yAxisFormatter.format(
+                value = dataProducer.pointsValuesConverter.prepareRawYForFormat(value, state),
+            )
         }
     }
 
