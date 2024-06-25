@@ -376,7 +376,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromToken = fromTokenStatus.currency
         val userWalletId = getSelectedWallet()?.walletId ?: return emptyList()
         val warnings = mutableListOf<Warning>()
-        manageExistentialDepositWarning(warnings, userWalletId, amount, fromToken)
+        manageExistentialDepositWarning(warnings, userWalletId, amount, fromToken, feeState)
         manageDustWarning(warnings, feeState, userWalletId, fromTokenStatus, amount)
         manageReduceAmountWarning(warnings, fromTokenStatus, amount)
         return warnings
@@ -387,6 +387,7 @@ internal class SwapInteractorImpl @Inject constructor(
         userWalletId: UserWalletId,
         amount: SwapAmount,
         fromToken: CryptoCurrency,
+        txFee: TxFeeState,
     ) {
         val existentialDeposit = currencyChecksRepository.getExistentialDeposit(userWalletId, fromToken.network)
         if (existentialDeposit != null) {
@@ -394,8 +395,18 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromToken.network.backendId,
                 fromToken.network.derivationPath.value,
             ) ?: ProxyAmount.empty()
-            if (nativeBalance.value.minus(amount.value) < existentialDeposit) {
-                warnings.add(Warning.ExistentialDepositWarning(existentialDeposit))
+            // ignore if amount is bigger than balance
+            if (amount.value > nativeBalance.value) {
+                return
+            }
+            val fee = when (txFee) {
+                TxFeeState.Empty -> BigDecimal.ZERO
+                is TxFeeState.MultipleFeeState -> txFee.priorityFee.feeValue
+                is TxFeeState.SingleFeeState -> txFee.fee.feeValue
+            }
+            val minAvailableAmount = nativeBalance.value - existentialDeposit - fee
+            if (nativeBalance.value.minus(amount.value + fee) < existentialDeposit) {
+                warnings.add(Warning.ExistentialDepositWarning(existentialDeposit, minAvailableAmount))
             }
         }
     }
