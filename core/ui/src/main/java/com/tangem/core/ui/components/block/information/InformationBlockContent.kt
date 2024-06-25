@@ -82,3 +82,32 @@ inline fun <T : Any> InformationBlockContentScope.GridItems(
         }
     }
 }
+
+@Composable
+inline fun <T : Any> InformationBlockContentScope.ArrowRowItems(
+    items: ImmutableList<T>,
+    rootContent: @Composable BoxScope.() -> Unit,
+    itemContent: @Composable BoxScope.(T) -> Unit,
+    modifier: Modifier = Modifier,
+    itemPadding: PaddingValues = PaddingValues(all = TangemTheme.dimens.spacing0),
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.CenterStart,
+            content = rootContent,
+        )
+
+        items.forEachIndexed { index, item ->
+            ArrowRow(
+                modifier = Modifier.fillMaxWidth(),
+                content = { itemContent(item) },
+                contentPadding = itemPadding,
+                isLastItem = index == items.size - 1,
+            )
+        }
+    }
+}

@@ -180,6 +180,38 @@ private fun Preview_Plain() {
 }
 
 @Composable
+@Preview(showBackground = true, widthDp = 328)
+@Preview(showBackground = true, widthDp = 328, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun Preview_Tree() {
+    TangemThemePreview {
+        InformationBlock(
+            title = {
+                TooltipText(
+                    text = stringReference("Tree title"),
+                    onInfoClick = { },
+                )
+            },
+            content = {
+                ArrowRowItems(
+                    itemPadding = PaddingValues(vertical = TangemTheme.dimens.spacing4),
+                    items = persistentListOf(
+                        stringReference("Fist item"),
+                        stringReference("Second item"),
+                        stringReference("Third item"),
+                    ),
+                    rootContent = {
+                        PreviewItem(stringReference("Root"))
+                    },
+                    itemContent = {
+                        PreviewItem(it)
+                    },
+                )
+            },
+        )
+    }
+}
+
+@Composable
 private fun PreviewItem(text: TextReference) {
     Box(
         modifier = Modifier
