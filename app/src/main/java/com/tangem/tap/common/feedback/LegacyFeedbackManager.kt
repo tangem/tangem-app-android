@@ -7,13 +7,14 @@ import com.tangem.domain.common.TapWorkarounds
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.foregroundActivityObserver
-import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.withForegroundActivity
 import kotlinx.coroutines.launch
@@ -36,16 +37,24 @@ class LegacyFeedbackManager(
     private var sessionFeedbackFile: File? = null
     private var sessionLogsFile: File? = null
 
-    fun sendEmail(feedbackData: FeedbackData, onFail: ((Exception) -> Unit)? = null) {
+    fun sendEmail(feedbackData: FeedbackData, scanResponse: ScanResponse?) {
         if (feedbackManagerFeatureToggles.isLocalLogsEnabled) {
-            mainScope.launch {
+            scope.launch {
+                val getCardInfo = suspend {
+                    scanResponse ?: error("ScanResponse must be not null")
+                    store.inject(DaggerGraphState::getCardInfoUseCase).invoke(scanResponse).getOrNull()
+                        ?: error("CardInfo must be not null")
+                }
+
                 val email = getFeedbackEmailUseCase(
-                    when (feedbackData) {
-                        is FeedbackEmail -> FeedbackEmailType.DirectUserRequest
-                        is RateCanBeBetterEmail -> FeedbackEmailType.RateCanBeBetter
+                    type = when (feedbackData) {
+                        is FeedbackEmail -> FeedbackEmailType.DirectUserRequest(cardInfo = getCardInfo())
+                        is RateCanBeBetterEmail -> FeedbackEmailType.RateCanBeBetter(cardInfo = getCardInfo())
                         is ScanFailsEmail -> FeedbackEmailType.ScanningProblem
-                        is SendTransactionFailedEmail -> FeedbackEmailType.TransactionSendingProblem
-                        else -> FeedbackEmailType.DirectUserRequest
+                        is SendTransactionFailedEmail -> {
+                            FeedbackEmailType.TransactionSendingProblem(cardInfo = getCardInfo())
+                        }
+                        else -> FeedbackEmailType.DirectUserRequest(cardInfo = getCardInfo())
                     },
                 )
 
@@ -66,9 +75,25 @@ class LegacyFeedbackManager(
                     subject = activity.getString(feedbackData.subjectResId),
                     message = feedbackData.joinTogether(activity, infoHolder),
                     file = getLogFile(activity),
-                    onFail = onFail,
                 )
             }
+        }
+    }
+
+    fun sendEmail(type: FeedbackEmailType) {
+        if (!feedbackManagerFeatureToggles.isLocalLogsEnabled) error("LOCAL_LOGS feature toggle must be enabled")
+
+        scope.launch {
+            val email = getFeedbackEmailUseCase(type = type)
+
+            store.inject(DaggerGraphState::emailSender).send(
+                email = EmailSender.Email(
+                    address = email.address,
+                    subject = email.subject,
+                    message = email.message,
+                    attachment = email.file,
+                ),
+            )
         }
     }
 
