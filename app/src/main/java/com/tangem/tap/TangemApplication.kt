@@ -275,6 +275,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,
                     detailsFeatureToggles = detailsFeatureToggles,
                     detailsEntryPoint = detailsEntryPoint,
+                    assetLoader = assetLoader,
                 ),
             ),
         )
