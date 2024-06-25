@@ -2,10 +2,14 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +34,11 @@ fun StakingBalanceBlock(state: StakingBalance.Content, modifier: Modifier = Modi
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(),
+                onClick = state.onStakeClicked,
+            )
             .padding(TangemTheme.dimens.spacing12),
     ) {
         Column(
@@ -44,7 +53,7 @@ fun StakingBalanceBlock(state: StakingBalance.Content, modifier: Modifier = Modi
             )
             Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
                 Text(
-                    text = state.fiatAmount.resolveReference(),
+                    text = state.fiatValue.resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.primary1,
                 )
@@ -54,13 +63,13 @@ fun StakingBalanceBlock(state: StakingBalance.Content, modifier: Modifier = Modi
                     color = TangemTheme.colors.text.primary1,
                 )
                 Text(
-                    text = state.cryptoAmount.resolveReference(),
+                    text = state.cryptoValue.resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
                 )
             }
             Text(
-                text = state.rewardAmount.resolveReference(),
+                text = state.rewardValue.resolveReference(),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
             )

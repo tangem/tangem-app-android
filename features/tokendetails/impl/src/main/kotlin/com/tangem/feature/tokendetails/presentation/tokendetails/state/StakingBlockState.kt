@@ -2,6 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
+import java.math.BigDecimal
 
 internal data class StakingBlocksState(
     val stakingAvailable: StakingAvailable,
@@ -30,8 +31,11 @@ sealed class StakingBalance {
     data object Empty : StakingBalance()
 
     data class Content(
-        val cryptoAmount: TextReference,
-        val fiatAmount: TextReference,
-        val rewardAmount: TextReference,
+        val cryptoValue: TextReference,
+        val fiatValue: TextReference,
+        val rewardValue: TextReference,
+        val cryptoAmount: BigDecimal?,
+        val fiatAmount: BigDecimal?,
+        val onStakeClicked: () -> Unit,
     ) : StakingBalance()
 }
