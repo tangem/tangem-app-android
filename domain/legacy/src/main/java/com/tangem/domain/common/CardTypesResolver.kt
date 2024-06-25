@@ -54,6 +54,10 @@ interface CardTypesResolver {
 
     fun isVoltInuWallet(): Boolean
 
+    fun isVividWallet(): Boolean
+
+    fun isPastelWallet(): Boolean
+
     fun isWhiteWallet(): Boolean
 
     fun isWallet2(): Boolean
