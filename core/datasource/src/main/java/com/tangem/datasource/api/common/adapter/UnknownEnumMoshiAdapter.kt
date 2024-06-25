@@ -1,8 +1,11 @@
 package com.tangem.datasource.api.common.adapter
 
-import com.squareup.moshi.*
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.EnumJsonAdapter
-import com.tangem.datasource.api.stakekit.models.response.model.*
+import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
+import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
+import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionStatusDTO
@@ -24,8 +27,7 @@ fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
         NetworkTypeDTO::class.java to NetworkTypeDTO.UNKNOWN,
         StakingActionTypeDTO::class.java to StakingActionTypeDTO.UNKNOWN,
         YieldDTO.RewardTypeDTO::class.java to YieldDTO.RewardTypeDTO.UNKNOWN,
-        YieldBalanceWrapperDTO.BalanceDTO.BalanceType::class.java to
-            YieldBalanceWrapperDTO.BalanceDTO.BalanceType.UNKNOWN,
+        BalanceDTO.BalanceType::class.java to BalanceDTO.BalanceType.UNKNOWN,
         StakingTransactionTypeDTO::class.java to StakingTransactionTypeDTO.UNKNOWN,
         StakingTransactionStatusDTO::class.java to StakingTransactionStatusDTO.UNKNOWN,
         StakingActionStatusDTO::class.java to StakingActionStatusDTO.UNKNOWN,
