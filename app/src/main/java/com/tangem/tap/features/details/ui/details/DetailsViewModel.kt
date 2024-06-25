@@ -142,7 +142,13 @@ internal class DetailsViewModel(
 
     private fun sendFeedback() {
         Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Settings))
-        store.dispatchOnMain(GlobalAction.SendEmail(FeedbackEmail()))
+        store.dispatchOnMain(
+            GlobalAction.SendEmail(
+                feedbackData = FeedbackEmail(),
+                scanResponse = userWalletsListManager.selectedUserWalletSync?.scanResponse
+                    ?: error("ScanResponse must be not null"),
+            ),
+        )
     }
 
     private fun navigateToAppSettings() {
