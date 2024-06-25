@@ -36,8 +36,8 @@ abstract class BaseOnboardingFragment<T> : BaseStoreFragment(R.layout.fragment_o
 
     override fun loadToolbarMenu(): MenuProvider = OnboardingMenuProvider(
         scanResponseProvider = Provider {
-            store.state.detailsState.scanResponse
-                ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
+            store.state.globalState.onboardingState.onboardingManager?.scanResponse
+                ?: store.state.detailsState.scanResponse
                 ?: error("ScanResponse must be not null")
         },
     )
