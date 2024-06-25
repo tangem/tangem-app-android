@@ -4,15 +4,26 @@ import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrap
 import com.tangem.domain.staking.model.YieldBalanceList
 import com.tangem.utils.converter.Converter
 
-internal class YieldBalanceListConverter : Converter<YieldBalanceWrapperDTO, YieldBalanceList> {
+internal class YieldBalanceListConverter : Converter<List<YieldBalanceWrapperDTO>, YieldBalanceList> {
 
     internal val converter by lazy(LazyThreadSafetyMode.NONE) {
         YieldBalanceConverter()
     }
 
-    override fun convert(value: YieldBalanceWrapperDTO): YieldBalanceList {
-        return YieldBalanceList(
-            balances = converter.convertList(value.balances),
-        )
+    override fun convert(value: List<YieldBalanceWrapperDTO>): YieldBalanceList {
+        return if (value.isEmpty()) {
+            YieldBalanceList.Empty
+        } else {
+            YieldBalanceList.Data(
+                balances = value.map {
+                    converter.convert(
+                        YieldBalanceConverter.Data(
+                            balance = it.balances,
+                            integrationId = it.integrationId,
+                        ),
+                    )
+                },
+            )
+        }
     }
 }
