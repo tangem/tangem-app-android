@@ -3,8 +3,6 @@ package com.tangem.features.details.utils
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.navigation.feedback.FeedbackManager
-import com.tangem.core.navigation.feedback.FeedbackType
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
@@ -21,18 +19,18 @@ import javax.inject.Inject
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
     private val urlOpener: UrlOpener,
-    private val feedbackManager: FeedbackManager,
 ) {
 
-    suspend fun buldAll(isWalletConnectAvailable: Boolean): ImmutableList<DetailsItemUM> = buildList {
-        buildWalletConnectBlock(isWalletConnectAvailable)?.let(::add)
-        buildUserWalletListBlock().let(::add)
-        buildShopBlock().let(::add)
-        buildSettingsBlock().let(::add)
-        buildSupportBlock().let(::add)
-    }.toImmutableList()
+    fun buildAll(isWalletConnectAvailable: Boolean, onSupportClick: () -> Unit): ImmutableList<DetailsItemUM> =
+        buildList {
+            buildWalletConnectBlock(isWalletConnectAvailable)?.let(::add)
+            buildUserWalletListBlock().let(::add)
+            buildShopBlock().let(::add)
+            buildSettingsBlock().let(::add)
+            buildSupportBlock(onSupportClick).let(::add)
+        }.toImmutableList()
 
-    private suspend fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean): DetailsItemUM? {
+    private fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean): DetailsItemUM? {
         return if (isWalletConnectAvailable) {
             DetailsItemUM.WalletConnect(
                 onClick = { router.push(AppRoute.WalletConnectSessions) },
@@ -83,7 +81,7 @@ internal class ItemsBuilder @Inject constructor(
         }.toImmutableList(),
     )
 
-    private fun buildSupportBlock(): DetailsItemUM = DetailsItemUM.Basic(
+    private fun buildSupportBlock(onClick: () -> Unit): DetailsItemUM = DetailsItemUM.Basic(
         id = "support",
         items = persistentListOf(
             DetailsItemUM.Basic.Item(
@@ -91,7 +89,7 @@ internal class ItemsBuilder @Inject constructor(
                 block = BlockUM(
                     text = resourceReference(R.string.details_send_feedback),
                     iconRes = R.drawable.ic_comment_24,
-                    onClick = { feedbackManager.sendEmail(FeedbackType.Feedback) },
+                    onClick = onClick,
                 ),
             ),
             DetailsItemUM.Basic.Item(

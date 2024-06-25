@@ -23,7 +23,13 @@ object WalletActivationErrorDialog {
             setNegativeButton(R.string.common_support) { _, _ ->
                 // changed on email support AND-6202
                 Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Intro))
-                store.dispatch(GlobalAction.SendEmail(SupportInfo()))
+                store.dispatch(
+                    GlobalAction.SendEmail(
+                        feedbackData = SupportInfo(),
+                        scanResponse = store.state.globalState.onboardingState.onboardingManager?.scanResponse
+                            ?: error("ScanResponse must be not null"),
+                    ),
+                )
             }
             setOnDismissListener { store.dispatchDialogHide() }
             setCancelable(false)
