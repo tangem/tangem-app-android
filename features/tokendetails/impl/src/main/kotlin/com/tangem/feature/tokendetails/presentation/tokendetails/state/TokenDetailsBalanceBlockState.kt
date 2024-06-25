@@ -2,6 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state
 
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import kotlinx.collections.immutable.ImmutableList
+import java.math.BigDecimal
 
 internal sealed class TokenDetailsBalanceBlockState {
 
@@ -19,10 +20,11 @@ internal sealed class TokenDetailsBalanceBlockState {
         override val actionButtons: ImmutableList<TokenDetailsActionButton>,
         override val balanceSegmentedButtonConfig: ImmutableList<TokenBalanceSegmentedButtonConfig>,
         override val selectedBalanceType: BalanceType,
-        val fiatBalance: String,
-        val cryptoBalance: String,
-        val isStakingEnabled: Boolean,
+        val fiatBalance: BigDecimal?,
+        val cryptoBalance: BigDecimal?,
         val onBalanceSelect: (TokenBalanceSegmentedButtonConfig) -> Unit,
+        val displayCryptoBalance: String,
+        val displayFiatBalance: String,
     ) : TokenDetailsBalanceBlockState()
 
     data class Error(
