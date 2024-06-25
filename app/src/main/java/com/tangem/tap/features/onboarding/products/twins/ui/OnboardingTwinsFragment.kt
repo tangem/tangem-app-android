@@ -6,6 +6,7 @@ import android.view.View
 import android.view.animation.OvershootInterpolator
 import androidx.annotation.LayoutRes
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
 import coil.load
@@ -25,12 +26,14 @@ import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.domain.twins.TwinsCardWidget
 import com.tangem.tap.features.addBackPressHandler
+import com.tangem.tap.features.onboarding.OnboardingMenuProvider
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
 import com.tangem.tap.store
+import com.tangem.utils.Provider
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutOnboardingContainerTopBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -60,6 +63,15 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
             }
         }
     }
+
+    override fun loadToolbarMenu(): MenuProvider = OnboardingMenuProvider(
+        scanResponseProvider = Provider {
+            store.state.twinCardsState.welcomeOnlyScanResponse
+                ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
+                ?: store.state.detailsState.scanResponse
+                ?: error("ScanResponse must be not null")
+        },
+    )
 
     @Suppress("MagicNumber")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
