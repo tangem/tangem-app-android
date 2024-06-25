@@ -3,7 +3,6 @@ package com.tangem.features.details.component.preview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.navigation.DummyRouter
-import com.tangem.core.navigation.feedback.DummyFeedbackManager
 import com.tangem.core.navigation.url.DummyUrlOpener
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
@@ -19,8 +18,7 @@ internal class PreviewDetailsComponent : DetailsComponent {
         ItemsBuilder(
             router = DummyRouter(),
             urlOpener = DummyUrlOpener(),
-            feedbackManager = DummyFeedbackManager(),
-        ).buldAll(isWalletConnectAvailable = true)
+        ).buildAll(isWalletConnectAvailable = true, onSupportClick = {})
     }
 
     private val previewFooter = DetailsFooterUM(
