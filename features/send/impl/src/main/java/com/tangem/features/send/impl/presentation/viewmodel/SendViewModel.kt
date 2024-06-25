@@ -530,6 +530,7 @@ internal class SendViewModel @Inject constructor(
                 fee = feeValue,
                 destinationAddress = recipient,
                 errorMessage = errorMessage,
+                scanResponse = userWallet.scanResponse,
             ),
         )
     }
