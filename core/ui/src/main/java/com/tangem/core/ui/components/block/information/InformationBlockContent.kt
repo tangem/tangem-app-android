@@ -8,26 +8,30 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEach
+import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun <T : Any> InformationBlockContentScope.ListItems(
+inline fun <T : Any> InformationBlockContentScope.ListItems(
     items: ImmutableList<T>,
     itemContent: @Composable BoxScope.(T) -> Unit,
     modifier: Modifier = Modifier,
+    itemPadding: PaddingValues = PaddingValues(all = TangemTheme.dimens.spacing0),
+    horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    verticalArragement: Arrangement.Vertical = Arrangement.Top,
 ) {
     Column(
-        modifier = modifier
-            .padding(vertical = TangemTheme.dimens.spacing8)
-            .fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8, Alignment.Top),
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = horizontalAlignment,
+        verticalArrangement = verticalArragement,
     ) {
         items.fastForEach { item ->
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .padding(itemPadding)
+                    .fillMaxWidth(),
             ) {
                 itemContent(item)
             }
@@ -36,10 +40,13 @@ fun <T : Any> InformationBlockContentScope.ListItems(
 }
 
 @Composable
-fun <T : Any> InformationBlockContentScope.GridItems(
+inline fun <T : Any> InformationBlockContentScope.GridItems(
     items: ImmutableList<T>,
     itemContent: @Composable BoxScope.(T) -> Unit,
     modifier: Modifier = Modifier,
+    itemPadding: PaddingValues = PaddingValues(all = TangemTheme.dimens.spacing0),
+    verticalAlignment: Alignment.Vertical = Alignment.Top,
+    horizontalArragement: Arrangement.Horizontal = Arrangement.Start,
 ) {
     val rowItems by remember(items) {
         derivedStateOf {
@@ -57,15 +64,15 @@ fun <T : Any> InformationBlockContentScope.GridItems(
     ) {
         rowItems.fastForEach { row ->
             Row(
-                modifier = Modifier
-                    .padding(vertical = TangemTheme.dimens.spacing8)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12, Alignment.Start),
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = verticalAlignment,
+                horizontalArrangement = horizontalArragement,
             ) {
                 row.fastForEach { item ->
                     Box(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .padding(itemPadding)
+                            .weight(1f),
                         contentAlignment = Alignment.Center,
                     ) {
                         itemContent(item)

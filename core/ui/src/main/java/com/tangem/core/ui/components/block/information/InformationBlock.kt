@@ -97,6 +97,7 @@ private fun Preview_Grid() {
             },
             content = {
                 GridItems(
+                    itemPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing4),
                     items = persistentListOf(
                         stringReference("Fist item"),
                         stringReference("Second item"),
@@ -104,6 +105,7 @@ private fun Preview_Grid() {
                     itemContent = {
                         PreviewItem(text = it)
                     },
+                    horizontalArragement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
                 )
             },
         )
@@ -141,6 +143,7 @@ private fun Preview_List() {
                     itemContent = {
                         PreviewItem(it)
                     },
+                    verticalArragement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
                 )
             },
         )
@@ -159,7 +162,7 @@ private fun Preview_Plain() {
                 ) {
                     TooltipText(
                         text = stringReference("Title"),
-                        onInfoClick = { /*TODO*/ },
+                        onInfoClick = { },
                     )
 
                     Text(
