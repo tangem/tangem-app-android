@@ -107,6 +107,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                         modifier = itemModifier,
                         isBalanceHidden = state.isBalanceHidden,
                         state = state.tokenBalanceBlockState,
+                        isStakingAvailable = state.isStakingBlockShown,
                     )
                 }
                 items(
@@ -140,16 +141,6 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                 }
 
                 if (state.isStakingBlockShown) {
-                    item(
-                        key = StakingAvailable::class.java,
-                        contentType = StakingAvailable::class.java,
-                        content = {
-                            TokenStakingBlock(
-                                modifier = itemModifier,
-                                state = state.stakingBlocksState.stakingAvailable,
-                            )
-                        },
-                    )
                     if (state.stakingBlocksState.stakingBalance is StakingBalance.Content) {
                         item(
                             key = StakingBalance::class.java,
@@ -162,6 +153,16 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                             },
                         )
                     }
+                    item(
+                        key = StakingAvailable::class.java,
+                        contentType = StakingAvailable::class.java,
+                        content = {
+                            TokenStakingBlock(
+                                modifier = itemModifier,
+                                state = state.stakingBlocksState.stakingAvailable,
+                            )
+                        },
+                    )
                 }
 
                 swapTransactionsItems(
