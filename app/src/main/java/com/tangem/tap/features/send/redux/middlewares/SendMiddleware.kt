@@ -288,11 +288,25 @@ private fun sendTransaction(
                             val tangemSdkError = error.tangemError as? TangemSdkError ?: return@withMainContext
                             if (tangemSdkError is TangemSdkError.UserCancelled) return@withMainContext
 
-                            dispatch(SendAction.Dialog.SendTransactionFails.CardSdkError(tangemSdkError))
+                            dispatch(
+                                SendAction.Dialog.SendTransactionFails.CardSdkError(
+                                    error = tangemSdkError,
+                                    scanResponse = store.inject(DaggerGraphState::generalUserWalletsListManager)
+                                        .selectedUserWalletSync?.scanResponse
+                                        ?: error("ScanResponse must be not null"),
+                                ),
+                            )
                         }
                         is BlockchainSdkError.CreateAccountUnderfunded -> {
                             // from XLM, XRP, Polkadot
-                            dispatch(SendAction.Dialog.SendTransactionFails.BlockchainSdkError(error))
+                            dispatch(
+                                SendAction.Dialog.SendTransactionFails.BlockchainSdkError(
+                                    error = error,
+                                    scanResponse = store.inject(DaggerGraphState::generalUserWalletsListManager)
+                                        .selectedUserWalletSync?.scanResponse
+                                        ?: error("ScanResponse must be not null"),
+                                ),
+                            )
                         }
                         is BlockchainSdkError.Kaspa.UtxoAmountError -> {
                             dispatch(
@@ -331,7 +345,14 @@ private fun sendTransaction(
                                     )
                                 }
                                 else -> {
-                                    dispatch(SendAction.Dialog.SendTransactionFails.BlockchainSdkError(error))
+                                    dispatch(
+                                        SendAction.Dialog.SendTransactionFails.BlockchainSdkError(
+                                            error = error,
+                                            scanResponse = store.inject(DaggerGraphState::generalUserWalletsListManager)
+                                                .selectedUserWalletSync?.scanResponse
+                                                ?: error("ScanResponse must be not null"),
+                                        ),
+                                    )
                                 }
                             }
                         }
