@@ -598,8 +598,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
         return currentCryptoCurrencies
             .filterIsInstance<CryptoCurrency.Token>()
             .any { token ->
-                val contractAddress = uiState.form.contractAddressInputField.value
                 val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
+                val contractAddress = convertTokenAddress(
+                    blockchain = networkSelectorValue,
+                    address = uiState.form.contractAddressInputField.value,
+                )
                 val networkId = Blockchain.fromNetworkId(networkSelectorValue.toNetworkId())?.id
 
                 val sameId = if (!token.isCustom) {
