@@ -74,6 +74,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.feedback)
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.settings)
