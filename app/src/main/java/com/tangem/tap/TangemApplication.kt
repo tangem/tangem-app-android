@@ -33,6 +33,7 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
+import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
@@ -183,6 +184,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase
         get() = entryPoint.getSaveBlockchainErrorUseCase()
 
+    private val getCardInfoUseCase: GetCardInfoUseCase
+        get() = entryPoint.getGetCardInfoUseCase()
+
     private val detailsFeatureToggles: DetailsFeatureToggles
         get() = entryPoint.getDetailsFeatureToggles()
 
@@ -284,6 +288,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
                     saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,
+                    getFeedbackEmailUseCase = getFeedbackEmailUseCase,
+                    getCardInfoUseCase = getCardInfoUseCase,
+                    assetLoader = assetLoader,
                     detailsFeatureToggles = detailsFeatureToggles,
                     urlOpener = urlOpener,
                     shareManager = shareManager,
