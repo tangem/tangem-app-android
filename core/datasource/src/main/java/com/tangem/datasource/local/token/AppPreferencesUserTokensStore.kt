@@ -6,9 +6,11 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.*
 
 /**
  * Implementation of [UserTokensStore] that based on [appPreferencesStore]
@@ -19,7 +21,14 @@ import kotlinx.coroutines.flow.filterNotNull
  */
 internal class AppPreferencesUserTokensStore(
     private val appPreferencesStore: AppPreferencesStore,
+    private val userTokensStoreMigrationRunner: UserTokensStoreMigrationRunner,
+    private val userWalletsStore: UserWalletsStore,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : UserTokensStore {
+
+    init {
+        runUserTokensMigrations()
+    }
 
     override fun get(key: UserWalletId): Flow<UserTokensResponse> {
         return appPreferencesStore
@@ -38,5 +47,17 @@ internal class AppPreferencesUserTokensStore(
             key = PreferencesKeys.getUserTokensKey(userWalletId = key.stringValue),
             value = value,
         )
+    }
+
+    // TODO: delete in 5.15 (Mobile Sprint 161) https://tangem.atlassian.net/browse/AND-7442
+    private fun runUserTokensMigrations() {
+        userWalletsStore.userWallets
+            .filter { it.isNotEmpty() }
+            .take(1)
+            .onEach { userWallets ->
+                userTokensStoreMigrationRunner.run(ids = userWallets.map { it.walletId.stringValue })
+            }
+            .flowOn(dispatchers.io)
+            .launchIn(CoroutineScope(dispatchers.io))
     }
 }
