@@ -66,9 +66,9 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
 
     override fun loadToolbarMenu(): MenuProvider = OnboardingMenuProvider(
         scanResponseProvider = Provider {
-            store.state.detailsState.scanResponse
-                ?: store.state.twinCardsState.welcomeOnlyScanResponse
+            store.state.twinCardsState.welcomeOnlyScanResponse
                 ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
+                ?: store.state.detailsState.scanResponse
                 ?: error("ScanResponse must be not null")
         },
     )
