@@ -81,7 +81,7 @@ sealed class GlobalAction : Action {
     data class SetWarningManager(val warningManager: WarningMessagesManager) : GlobalAction()
     data class SetFeedbackManager(val feedbackManager: LegacyFeedbackManager) : GlobalAction()
 
-    data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
+    data class SendEmail(val feedbackData: FeedbackData, val scanResponse: ScanResponse?) : GlobalAction()
     data class OpenChat(val feedbackData: FeedbackData, val chatConfig: ChatConfig? = null) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
