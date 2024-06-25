@@ -18,6 +18,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -42,9 +43,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
-    private val isStakingEnabled: Boolean,
     symbol: String,
     decimals: Int,
 ) {
@@ -64,7 +65,6 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
-            isStakingEnabled = isStakingEnabled,
             symbol = symbol,
             decimals = decimals,
             clickIntents = clickIntents,
@@ -107,14 +107,25 @@ internal class TokenDetailsStateFactory(
         )
     }
 
+    private val balanceSelectStateConverter by lazy {
+        TokenDetailsBalanceSelectStateConverter(
+            currentStateProvider = currentStateProvider,
+            appCurrencyProvider = appCurrencyProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+        )
+    }
+
     fun getInitialState(screenArgument: CryptoCurrency): TokenDetailsState {
         return skeletonStateConverter.convert(value = screenArgument)
     }
 
     fun getCurrencyLoadedBalanceState(
         cryptoCurrencyEither: Either<CurrencyStatusError, CryptoCurrencyStatus>,
+        yieldBalanceEither: Either<Throwable, YieldBalance>?,
     ): TokenDetailsState {
-        return tokenDetailsLoadedBalanceConverter.convert(cryptoCurrencyEither)
+        return tokenDetailsLoadedBalanceConverter.convert(
+            TokenDetailsLoadedBalanceConverter.Data(cryptoCurrencyEither, yieldBalanceEither),
+        )
     }
 
     fun getManageButtonsState(actions: List<TokenActionsState.ActionState>): TokenDetailsState {
@@ -352,12 +363,7 @@ internal class TokenDetailsStateFactory(
     fun getStateWithUpdatedBalanceSegmentedButtonConfig(
         buttonConfig: TokenBalanceSegmentedButtonConfig,
     ): TokenDetailsState {
-        return with(currentStateProvider()) {
-            val updatedState = (tokenBalanceBlockState as? TokenDetailsBalanceBlockState.Content)
-                ?.copy(selectedBalanceType = buttonConfig.type)
-                ?: tokenBalanceBlockState
-            copy(tokenBalanceBlockState = updatedState)
-        }
+        return balanceSelectStateConverter.convert(buttonConfig)
     }
 
     private fun TokenDetailsAppBarMenuConfig.updateMenu(
