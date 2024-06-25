@@ -48,7 +48,7 @@ jobs:
         run: |
           FIREBASE_TOKEN=${{secrets.FIREBASE_CLI_TOKEN}} firebase appdistribution:distribute \
           "build/outputs/app-internal.apk" \
-          --app ${{secrets.FIREBASE_APP_ID}} \
+          --app "1:721920782444:android:d97de53a7196475c3f2849" \
           --groups "qa-android" \
           --release-notes "Bug fixes and improvements"
 #        uses: wzieba/Firebase-Distribution-Github-Action@v1
