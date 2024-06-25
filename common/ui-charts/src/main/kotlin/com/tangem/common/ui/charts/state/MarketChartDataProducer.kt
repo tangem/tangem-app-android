@@ -75,6 +75,7 @@ class TransactionSuspend(
 class MarketChartDataProducer private constructor(
     initialData: MarketChartData,
     initialLook: MarketChartLook,
+    val pointsValuesConverter: PointValuesConverter = DefaultPointValuesConverter,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     internal val startDrawingAnimation = MutableSharedFlow<Unit>()
@@ -110,13 +111,11 @@ class MarketChartDataProducer private constructor(
                 startDrawingAnimation.emit(Unit)
             }
             withContext(dispatcher) {
-                val minX = chartData.x.min()
-                val minY = chartData.y.min()
+                val rawData = pointsValuesConverter.convert(chartData)
 
-                val normY = chartData.y.map { normalize(it, minY) }
-                val normX = chartData.x.map { normalize(it, minX) }
+                val entriesLocal =
+                    rawData.x.mapIndexed { index, fl -> LineCartesianLayerModel.Entry(fl, rawData.y[index]) }
 
-                val entriesLocal = normX.mapIndexed { index, fl -> LineCartesianLayerModel.Entry(fl, normY[index]) }
                 entries.value = entriesLocal
 
                 modelProducer.runTransaction {
@@ -160,6 +159,7 @@ class MarketChartDataProducer private constructor(
          * @return A MarketChartDataProducer.
          */
         suspend fun buildSuspend(
+            pointsValuesConverter: PointValuesConverter = DefaultPointValuesConverter,
             dispatcher: CoroutineDispatcher = Dispatchers.Default,
             block: TransactionSuspend.() -> Unit,
         ): MarketChartDataProducer {
@@ -169,6 +169,7 @@ class MarketChartDataProducer private constructor(
                 initialData = initialData,
                 initialLook = initialLook,
                 dispatcher = dispatcher,
+                pointsValuesConverter = pointsValuesConverter,
             ).apply {
                 handleTransactionSuspend(transaction)
             }
@@ -183,6 +184,7 @@ class MarketChartDataProducer private constructor(
          * @return A MarketChartDataProducer.
          */
         fun build(
+            pointsValuesConverter: PointValuesConverter = DefaultPointValuesConverter,
             dispatcher: CoroutineDispatcher = Dispatchers.Default,
             block: Transaction.() -> Unit,
         ): MarketChartDataProducer {
@@ -192,16 +194,8 @@ class MarketChartDataProducer private constructor(
                 initialData = transaction.chartData ?: initialData,
                 initialLook = transaction.chartLook ?: initialLook,
                 dispatcher = dispatcher,
+                pointsValuesConverter = pointsValuesConverter,
             )
         }
-    }
-}
-
-private fun normalize(value: BigDecimal, min: BigDecimal, scale: Int = min.scale()): Float {
-    val n = value - min
-    return if (scale > 2) {
-        n.movePointRight(scale - 2).toFloat()
-    } else {
-        n.toFloat()
     }
 }
