@@ -1,11 +1,11 @@
 package com.tangem.tap.di
 
 import android.content.Context
-import com.tangem.core.navigation.feedback.FeedbackManager
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.feedback.FeedbackManager
 import com.tangem.tap.common.feedback.ProxyFeedbackManager
 import com.tangem.tap.common.finisher.AndroidAppFinisher
 import com.tangem.tap.common.settings.IntentSettingsManager
