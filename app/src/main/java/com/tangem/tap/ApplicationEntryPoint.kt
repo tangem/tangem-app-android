@@ -18,6 +18,7 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
+import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
@@ -111,6 +112,8 @@ interface ApplicationEntryPoint {
     fun getSaveBlockchainErrorUseCase(): SaveBlockchainErrorUseCase
 
     fun getDetailsFeatureToggles(): DetailsFeatureToggles
+
+    fun getGetCardInfoUseCase(): GetCardInfoUseCase
 
     fun getUrlOpener(): UrlOpener
 
