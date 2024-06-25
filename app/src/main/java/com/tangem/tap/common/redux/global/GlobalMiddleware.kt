@@ -69,7 +69,10 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             }
         }
         is GlobalAction.SendEmail -> {
-            store.state.globalState.feedbackManager?.sendEmail(action.feedbackData)
+            store.state.globalState.feedbackManager?.sendEmail(
+                feedbackData = action.feedbackData,
+                scanResponse = action.scanResponse,
+            )
         }
         is GlobalAction.OpenChat -> {
             val globalState = store.state.globalState

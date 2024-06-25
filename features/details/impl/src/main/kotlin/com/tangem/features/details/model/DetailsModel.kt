@@ -5,7 +5,11 @@ import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.feedback.FeedbackManager
+import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
@@ -33,6 +37,9 @@ internal class DetailsModel @Inject constructor(
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
     private val router: Router,
     private val paramsContainer: ParamsContainer,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val feedbackManager: FeedbackManager,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -66,7 +73,22 @@ internal class DetailsModel @Inject constructor(
             false
         }
 
-        items.value = itemsBuilder.buldAll(isWalletConnectAvailable)
+        items.value = itemsBuilder.buildAll(
+            isWalletConnectAvailable = isWalletConnectAvailable,
+            onSupportClick = ::sendFeedback,
+        )
+    }
+
+    private fun sendFeedback() {
+        modelScope.launch {
+            val scanResponse = getSelectedWalletSyncUseCase().getOrNull()?.scanResponse
+                ?: error("Selected wallet is null")
+
+            val cardInfo = getCardInfoUseCase(scanResponse = scanResponse).getOrNull()
+                ?: error("CardInfo must be not null")
+
+            feedbackManager.sendEmail(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+        }
     }
 
     private suspend fun updateState(items: ImmutableList<DetailsItemUM>) {
