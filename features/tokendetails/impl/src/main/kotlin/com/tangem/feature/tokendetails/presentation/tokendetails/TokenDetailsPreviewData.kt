@@ -19,6 +19,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.math.BigDecimal
 
 @Suppress("LargeClass")
 internal object TokenDetailsPreviewData {
@@ -121,12 +122,13 @@ internal object TokenDetailsPreviewData {
     )
     val balanceContent = TokenDetailsBalanceBlockState.Content(
         actionButtons = actionButtons,
-        fiatBalance = "91,50$",
-        cryptoBalance = "966,96 XLM",
-        isStakingEnabled = true,
+        fiatBalance = BigDecimal.ZERO,
+        cryptoBalance = BigDecimal.ZERO,
         balanceSegmentedButtonConfig = balanceSegmentedButtonConfig,
         selectedBalanceType = BalanceType.ALL,
         onBalanceSelect = {},
+        displayCryptoBalance = "966,96 XLM",
+        displayFiatBalance = "91,50$",
     )
     val balanceError = TokenDetailsBalanceBlockState.Error(
         actionButtons = actionButtons,
@@ -139,9 +141,12 @@ internal object TokenDetailsPreviewData {
     private val stakingLoading = StakingBlocksState(
         stakingAvailable = StakingAvailable.Loading(iconState),
         stakingBalance = StakingBalance.Content(
-            cryptoAmount = stringReference("5 SOL"),
-            fiatAmount = stringReference("456.34 $"),
-            rewardAmount = resourceReference(R.string.staking_details_no_rewards_to_claim, wrappedList("0.43 $")),
+            cryptoValue = stringReference("5 SOL"),
+            fiatValue = stringReference("456.34 $"),
+            rewardValue = resourceReference(R.string.staking_details_no_rewards_to_claim, wrappedList("0.43 $")),
+            cryptoAmount = BigDecimal.ZERO,
+            fiatAmount = BigDecimal.ZERO,
+            onStakeClicked = {},
         ),
     )
 
@@ -320,9 +325,12 @@ internal object TokenDetailsPreviewData {
                 onStakeClicked = {},
             ),
             stakingBalance = StakingBalance.Content(
-                cryptoAmount = stringReference("5 SOL"),
-                fiatAmount = stringReference("456.34 $"),
-                rewardAmount = resourceReference(R.string.staking_details_rewards_to_claim, wrappedList("0.43 $")),
+                cryptoValue = stringReference("5 SOL"),
+                fiatValue = stringReference("456.34 $"),
+                rewardValue = resourceReference(R.string.staking_details_no_rewards_to_claim, wrappedList("0.43 $")),
+                cryptoAmount = BigDecimal.ZERO,
+                fiatAmount = BigDecimal.ZERO,
+                onStakeClicked = {},
             ),
         ),
         notifications = persistentListOf(),
