@@ -12,13 +12,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
-import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * [Input Row Approx](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2207-810&mode=design&t=fM1ZU6zQF6g3CaTv-4)
@@ -35,10 +35,10 @@ import com.tangem.core.ui.res.TangemTheme
 @Suppress("LongParameterList")
 @Composable
 fun InputRowApprox(
-    leftIcon: TokenIconState,
+    leftIcon: CurrencyIconState,
     leftTitle: TextReference,
     leftSubtitle: TextReference,
-    rightIcon: TokenIconState,
+    rightIcon: CurrencyIconState,
     rightTitle: TextReference,
     rightSubtitle: TextReference,
     modifier: Modifier = Modifier,
@@ -86,7 +86,7 @@ fun InputRowApprox(
 
 @Composable
 private fun InputRowApproxItem(
-    iconState: TokenIconState,
+    iconState: CurrencyIconState,
     title: TextReference,
     subtitle: TextReference,
     modifier: Modifier = Modifier,
@@ -95,7 +95,7 @@ private fun InputRowApproxItem(
     Row(
         modifier = modifier,
     ) {
-        TokenIcon(
+        CurrencyIcon(
             state = iconState,
             modifier = Modifier
                 .size(TangemTheme.dimens.size36),
@@ -131,11 +131,11 @@ private fun InputRowApproxPreview() {
     TangemThemePreview {
         Column {
             InputRowApprox(
-                leftIcon = TokenIconState.Loading,
+                leftIcon = CurrencyIconState.Loading,
                 leftTitle = TextReference.Str("Left title USD"),
                 leftSubtitle = TextReference.Str("Left subtitle USD"),
                 leftTitleEllipsisOffset = 3,
-                rightIcon = TokenIconState.Loading,
+                rightIcon = CurrencyIconState.Loading,
                 rightTitle = TextReference.Str("Right title Right title Right title Right title Right title USD"),
                 rightSubtitle = TextReference.Str("Right subtitle Right subtitle Right subtitle USD"),
                 rightTitleEllipsisOffset = 3,
@@ -143,11 +143,11 @@ private fun InputRowApproxPreview() {
                     .background(TangemTheme.colors.background.action),
             )
             InputRowApprox(
-                leftIcon = TokenIconState.Loading,
+                leftIcon = CurrencyIconState.Loading,
                 leftTitle = TextReference.Str("Left title Left title Left title Left title Left title USD"),
                 leftSubtitle = TextReference.Str("Left subtitle Left subtitle Left subtitle USD"),
                 leftTitleEllipsisOffset = 3,
-                rightIcon = TokenIconState.Loading,
+                rightIcon = CurrencyIconState.Loading,
                 rightTitle = TextReference.Str("Right title USD"),
                 rightSubtitle = TextReference.Str("Right subtitle USD"),
                 rightTitleEllipsisOffset = 3,
