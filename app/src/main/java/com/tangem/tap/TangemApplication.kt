@@ -46,7 +46,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.details.DetailsFeatureToggles
-import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
@@ -111,9 +110,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val walletConnectSessionsRepository: WalletConnectSessionsRepository
         get() = entryPoint.getWalletConnectSessionsRepository()
-
-    private val manageTokensFeatureToggles: ManageTokensFeatureToggles
-        get() = entryPoint.getManageTokensFeatureToggles()
 
     private val scanCardProcessor: ScanCardProcessor
         get() = entryPoint.getScanCardProcessor()
@@ -267,7 +263,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     customTokenFeatureToggles = customTokenFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
-                    manageTokensFeatureToggles = manageTokensFeatureToggles,
                     scanCardProcessor = scanCardProcessor,
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
