@@ -12,7 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.inputrow.InputRowBestRate
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImage
@@ -65,7 +65,7 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
             title = TextReference.Res(R.string.swapping_from_title),
             subtitle = state.fromTokenAmount,
             caption = state.fromTokenFiatAmount,
-            tokenIconState = state.fromTokenIconState ?: TokenIconState.Loading,
+            tokenIconState = state.fromTokenIconState ?: CurrencyIconState.Loading,
             modifier = Modifier
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
                 .background(TangemTheme.colors.background.action),
@@ -76,7 +76,7 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
             title = TextReference.Res(R.string.swapping_to_title),
             subtitle = state.toTokenAmount,
             caption = state.toTokenFiatAmount,
-            tokenIconState = state.toTokenIconState ?: TokenIconState.Loading,
+            tokenIconState = state.toTokenIconState ?: CurrencyIconState.Loading,
             modifier = Modifier
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
                 .background(TangemTheme.colors.background.action),
@@ -161,8 +161,8 @@ private val state = SwapSuccessStateHolder(
     toTokenAmount = TextReference.Str("1 000 MATIC"),
     fromTokenFiatAmount = TextReference.Str("1 000 $"),
     toTokenFiatAmount = TextReference.Str("1 000 $"),
-    fromTokenIconState = TokenIconState.Loading,
-    toTokenIconState = TokenIconState.Loading,
+    fromTokenIconState = CurrencyIconState.Loading,
+    toTokenIconState = CurrencyIconState.Loading,
     rate = TextReference.Str("1 000 DAI ~ 1 000 MATIC"),
     onExploreButtonClick = {},
     onStatusButtonClick = {},
