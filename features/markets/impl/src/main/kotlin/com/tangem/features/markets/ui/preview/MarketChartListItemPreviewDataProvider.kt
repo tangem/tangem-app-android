@@ -36,7 +36,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
         ),
         MarketsListItemModel(
             id = "1",
-            name = "Bitcoin",
+            name = "Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin",
             currencySymbol = "BTC",
             iconUrl = null,
             ratingPosition = "10",
