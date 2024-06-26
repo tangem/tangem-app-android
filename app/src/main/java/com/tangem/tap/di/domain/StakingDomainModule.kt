@@ -46,6 +46,18 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
+    fun provideFetchStakingYieldBalanceUseCase(stakingRepository: StakingRepository): FetchStakingYieldBalanceUseCase {
+        return FetchStakingYieldBalanceUseCase(stakingRepository = stakingRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetStakingYieldBalanceUseCase(stakingRepository: StakingRepository): GetStakingYieldBalanceUseCase {
+        return GetStakingYieldBalanceUseCase(stakingRepository = stakingRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideCreateEnterActionUseCase(stakingRepository: StakingRepository): InitializeStakingProcessUseCase {
         return InitializeStakingProcessUseCase(stakingRepository)
     }
