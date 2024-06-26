@@ -50,7 +50,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.disclaimer.api.DisclaimerRouter
-import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
@@ -132,9 +131,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     lateinit var tokenDetailsRouter: TokenDetailsRouter
-
-    @Inject
-    lateinit var manageTokensUi: ManageTokensUi
 
     @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
@@ -297,7 +293,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 walletRouter = walletRouter,
                 walletConnectInteractor = walletConnectInteractor,
                 tokenDetailsRouter = tokenDetailsRouter,
-                manageTokensUi = manageTokensUi,
                 cardSdkConfigRepository = cardSdkConfigRepository,
                 sendRouter = sendRouter,
                 qrScanningRouter = qrScanningRouter,

@@ -5,7 +5,6 @@ import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.features.disclaimer.api.DisclaimerRouter
-import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
@@ -23,7 +22,6 @@ sealed interface DaggerGraphAction : Action {
         val walletRouter: WalletRouter,
         val walletConnectInteractor: WalletConnectInteractor,
         val tokenDetailsRouter: TokenDetailsRouter,
-        val manageTokensUi: ManageTokensUi,
         val cardSdkConfigRepository: CardSdkConfigRepository,
         val sendRouter: SendRouter,
         val qrScanningRouter: QrScanningRouter,
