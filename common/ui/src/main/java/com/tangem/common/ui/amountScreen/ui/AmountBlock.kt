@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.core.ui.components.ResizableText
-import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -54,7 +54,7 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
             .padding(TangemTheme.dimens.spacing16),
     ) {
-        TokenIcon(state = amountState.tokenIconState)
+        CurrencyIcon(state = amountState.tokenIconState)
         ResizableText(
             text = firstAmount,
             style = TangemTheme.typography.h2,
