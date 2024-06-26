@@ -3,7 +3,7 @@ package com.tangem.features.send.impl.presentation.state
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
