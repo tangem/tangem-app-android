@@ -23,7 +23,9 @@ internal class QrScanningViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val source: SourceType = savedStateHandle[AppRoute.QrScanning.SOURCE_KEY] ?: error("Source is mandatory")
+    private val source: SourceType = savedStateHandle.get<Int>(AppRoute.QrScanning.SOURCE_KEY)
+        ?.let { SourceType.entries[it] }
+        ?: error("Source is mandatory")
     private val network: String? = savedStateHandle[AppRoute.QrScanning.NETWORK_KEY]
 
     val uiState: StateFlow<QrScanningState> = stateHolder.uiState
