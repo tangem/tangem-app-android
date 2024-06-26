@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.utils.Strings.STARS
@@ -55,7 +55,7 @@ internal fun LazyListScope.amountField(
                         .padding(top = TangemTheme.dimens.spacing2),
                 )
             }
-            TokenIcon(
+            CurrencyIcon(
                 state = amountState.tokenIconState,
                 modifier = Modifier
                     .padding(top = TangemTheme.dimens.spacing32),
