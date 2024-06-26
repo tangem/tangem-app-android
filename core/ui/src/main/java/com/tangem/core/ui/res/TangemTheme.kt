@@ -139,7 +139,7 @@ private fun lightThemeColors(): TangemColors {
         ),
         stroke = TangemColors.Stroke(
             primary = TangemColorPalette.Light2,
-            secondary = TangemColorPalette.Dark5,
+            secondary = TangemColorPalette.Light5,
             transparency = TangemColorPalette.White,
         ),
         field = TangemColors.Field(
