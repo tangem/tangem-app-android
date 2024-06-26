@@ -57,4 +57,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
         run: |
-          bundle exec fastlane publishToFirebase app_id_internal:${{secrets.FIREBASE_APP_ID_INTERNAL}} apk_path_internal:build/outputs/app-internal.apk versionCode:${{ env.VERSION_CODE }} versionName:${{ steps.version.outputs.versionName }}
+          bundle exec fastlane publishToFirebase app_id_internal:${{secrets.FIREBASE_APP_ID_INTERNAL}} apk_path_internal:build/outputs/app-internal.apk versionCode:${{ env.VERSION_CODE }} versionName:${{ steps.version.outputs.versionName }} groups:testers
