@@ -39,9 +39,6 @@ jobs:
           RUN_NUMBER: ${{ github.run_number }}
         run: |
           echo "VERSION_CODE=$((RUN_NUMBER + $INITIAL_VERSION_CODE))" >> $GITHUB_ENV
-#      - name: Copy GoogleServices JSON
-#        run: |
-#          cp "app/src/main/assets/tangem-app-config/android/google-services.json" "app/"
       - name: Read version.properties file
         uses: BrycensRanch/read-properties-action@v1
         id: version
@@ -51,18 +48,13 @@ jobs:
           default: 0.0.1
       - name: Echo version.properties
         run: echo ${{ steps.version.outputs.versionName }} ${{ env.VERSION_CODE }}
-#      - name: Build internal artifact
-#        run: |
-#          echo sdk.dir = $ANDROID_HOME > local.properties
-#          GITHUB_ACTOR=${{ secrets.GITHUB_ACTOR }} GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} ./gradlew assembleInternalQA -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ steps.version.outputs.versionName }}
       - name: Bundle install
         run: |
           bundle config path vendor/bundle
           bundle install --jobs 4 --retry 3
-#      - name: Upload artifact to Firebase App Distribution
-#        run: |
-#          FIREBASE_TOKEN=${{secrets.FIREBASE_CLI_TOKEN}} firebase appdistribution:distribute \
-#          "build/outputs/app-internal.apk" \
-#          --app ${{secrets.FIREBASE_APP_ID_INTERNAL}} \
-#          --groups "qa-android" \
-#          --release-notes "Bug fixes and improvements"
+      - name: Build and upload
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+        run: |
+          bundle exec fastlane publishToFirebase app_id_internal:${{secrets.FIREBASE_APP_ID_INTERNAL}} apk_path_internal:build/outputs/app-internal.apk versionCode:${{ env.VERSION_CODE }} versionName:${{ steps.version.outputs.versionName }}
