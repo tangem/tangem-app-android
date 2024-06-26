@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import com.tangem.core.ui.components.currency.tokenicon.LoadingIcon
+import com.tangem.core.ui.components.currency.icon.LoadingIcon
 import com.tangem.core.ui.res.TangemTheme
 
 /**
