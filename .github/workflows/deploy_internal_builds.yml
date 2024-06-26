@@ -50,7 +50,7 @@ jobs:
           property: versionName
           default: 0.0.1
       - name: Echo version.properties
-        run: echo ${{ steps.version.outputs.versionName }} ${{ VERSION_CODE }}
+        run: echo ${{ steps.version.outputs.versionName }} ${{ env.VERSION_CODE }}
 #      - name: Build internal artifact
 #        run: |
 #          echo sdk.dir = $ANDROID_HOME > local.properties
