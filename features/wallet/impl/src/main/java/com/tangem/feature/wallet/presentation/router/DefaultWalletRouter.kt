@@ -1,9 +1,9 @@
 package com.tangem.feature.wallet.presentation.router
 
 import android.annotation.SuppressLint
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,8 +25,6 @@ import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScree
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
-import com.tangem.features.managetokens.navigation.ExpandableState
-import com.tangem.features.managetokens.navigation.ManageTokensUi
 import kotlin.properties.Delegates
 
 /** Default implementation of wallet feature router */
@@ -42,7 +40,7 @@ internal class DefaultWalletRouter(
     override fun getEntryFragment(): Fragment = WalletFragment.create()
 
     @Composable
-    override fun Initialize(onFinish: () -> Unit, manageTokensUi: ManageTokensUi) {
+    override fun Initialize(onFinish: () -> Unit) {
         this.onFinish = onFinish
 
         NavHost(
@@ -55,20 +53,8 @@ internal class DefaultWalletRouter(
                     subscribeToLifecycle(LocalLifecycleOwner.current)
                 }
 
-                var bottomSheetHeaderHeight by remember { mutableStateOf(0.dp) }
-
                 WalletScreen(
                     state = viewModel.uiState.collectAsStateWithLifecycle().value,
-                    bottomSheetHeaderHeightProvider = { bottomSheetHeaderHeight },
-                    bottomSheetContent = {
-                        val state = remember { mutableStateOf(ExpandableState.COLLAPSED) }
-                        // Manage Tokens
-                        manageTokensUi.Content(
-                            onHeaderSizeChange = { bottomSheetHeaderHeight = it },
-                            state = state,
-                        )
-                        viewModel.setExpandableState(state)
-                    },
                 )
             }
 
