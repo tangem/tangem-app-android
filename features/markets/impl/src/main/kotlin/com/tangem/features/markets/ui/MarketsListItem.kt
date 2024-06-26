@@ -30,7 +30,7 @@ import com.tangem.common.ui.charts.MarketChartMini
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.currency.fiaticon.FiatIcon
+import com.tangem.core.ui.components.currency.tokenicon.CoinIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.res.LocalHapticManager
@@ -186,11 +186,11 @@ private fun MarketsListItemContent(model: MarketsListItemModel, modifier: Modifi
         ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        FiatIcon(
+        CoinIcon(
             modifier = Modifier.size(TangemTheme.dimens.size36),
             url = model.iconUrl,
-            size = TangemTheme.dimens.size36,
-            isGrayscale = false,
+            alpha = 1f,
+            colorFilter = null,
             fallbackResId = R.drawable.ic_custom_token_44,
         )
 
