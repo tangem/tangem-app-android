@@ -220,12 +220,13 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     private fun updateContent() {
-        subscribeOnExchangeTransactionsUpdates()
-        updateTxHistory(refresh = false, showItemsLoading = true)
-
         if (stakingFeatureToggles.isStakingEnabled) {
             updateStakingInfo()
+        } else {
+            subscribeOnCurrencyStatusUpdates()
         }
+        subscribeOnExchangeTransactionsUpdates()
+        updateTxHistory(refresh = false, showItemsLoading = true)
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {
