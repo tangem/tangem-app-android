@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.currency.tokenicon
+package com.tangem.core.ui.components.currency.icon
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -14,7 +14,7 @@ import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-internal fun NetworkBadge(
+internal fun TopBadge(
     @DrawableRes iconResId: Int,
     alpha: Float,
     colorFilter: ColorFilter?,
@@ -41,7 +41,7 @@ internal fun NetworkBadge(
 }
 
 @Composable
-internal fun CustomBadge(modifier: Modifier = Modifier) {
+internal fun BottomBadge(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(TangemTheme.dimens.size12)
