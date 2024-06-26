@@ -6,41 +6,54 @@ import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.BalanceType
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryTransactionStateConverter
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import java.math.BigDecimal
 
 internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val isStakingEnabled: Boolean,
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
-) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, TokenDetailsState> {
+) : Converter<TokenDetailsLoadedBalanceConverter.Data, TokenDetailsState> {
 
     private val txHistoryItemConverter by lazy {
         TokenDetailsTxHistoryTransactionStateConverter(symbol, decimals, clickIntents)
     }
 
-    override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): TokenDetailsState {
-        return value.fold(ifLeft = { convertError() }, ifRight = ::convert)
+    data class Data(
+        val maybeCryptoCurrencyStatus: Either<CurrencyStatusError, CryptoCurrencyStatus>,
+        val maybeYieldBalance: Either<Throwable, YieldBalance>?,
+    )
+
+    override fun convert(value: Data): TokenDetailsState {
+        return value.maybeCryptoCurrencyStatus.fold(
+            ifLeft = { convertError() },
+            ifRight = { convert(it, value.maybeYieldBalance?.getOrNull() ?: YieldBalance.Empty) },
+        )
     }
 
     private fun convertError(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(
+            isStakingBlockShown = false,
             tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(
                 actionButtons = state.tokenBalanceBlockState.actionButtons,
                 balanceSegmentedButtonConfig = state.tokenBalanceBlockState.balanceSegmentedButtonConfig,
@@ -51,12 +64,23 @@ internal class TokenDetailsLoadedBalanceConverter(
         )
     }
 
-    private fun convert(status: CryptoCurrencyStatus): TokenDetailsState {
+    private fun convert(status: CryptoCurrencyStatus, yieldBalance: YieldBalance): TokenDetailsState {
         val state = currentStateProvider()
         val currencyName = state.marketPriceBlockState.currencySymbol
         val pendingTxs = status.value.pendingTransactions.map(txHistoryItemConverter::convert).toPersistentList()
+        val stakingCryptoAmount = (yieldBalance as? YieldBalance.Data)?.let {
+            yieldBalance.balance.items.sumOf { it.amount }
+        }
+        val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
+
         return state.copy(
-            tokenBalanceBlockState = getBalanceState(state.tokenBalanceBlockState, status),
+            tokenBalanceBlockState = getBalanceState(
+                currentState = state.tokenBalanceBlockState,
+                status = status,
+                stakingCryptoAmount = stakingCryptoAmount,
+                stakingFiatAmount = stakingFiatAmount,
+            ),
+            stakingBlocksState = getYieldBalance(status, yieldBalance, state),
             marketPriceBlockState = getMarketPriceState(status = status.value, currencySymbol = currencyName),
             pendingTxs = pendingTxs,
             txHistoryState = if (state.txHistoryState is TxHistoryState.NotSupported) {
@@ -70,6 +94,8 @@ internal class TokenDetailsLoadedBalanceConverter(
     private fun getBalanceState(
         currentState: TokenDetailsBalanceBlockState,
         status: CryptoCurrencyStatus,
+        stakingCryptoAmount: BigDecimal?,
+        stakingFiatAmount: BigDecimal?,
     ): TokenDetailsBalanceBlockState {
         return when (status.value) {
             is CryptoCurrencyStatus.NoQuote,
@@ -78,9 +104,19 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.Custom,
             -> TokenDetailsBalanceBlockState.Content(
                 actionButtons = currentState.actionButtons,
-                fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
-                cryptoBalance = formatCryptoAmount(status),
-                isStakingEnabled = isStakingEnabled,
+                cryptoBalance = status.value.amount,
+                fiatBalance = status.value.fiatAmount,
+                displayFiatBalance = formatFiatAmount(
+                    status.value,
+                    stakingFiatAmount,
+                    currentState.selectedBalanceType,
+                    appCurrencyProvider(),
+                ),
+                displayCryptoBalance = formatCryptoAmount(
+                    status,
+                    stakingCryptoAmount,
+                    currentState.selectedBalanceType,
+                ),
                 balanceSegmentedButtonConfig = currentState.balanceSegmentedButtonConfig,
                 onBalanceSelect = clickIntents::onBalanceSelect,
                 selectedBalanceType = currentState.selectedBalanceType,
@@ -88,7 +124,7 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(
                 actionButtons = currentState.actionButtons,
                 balanceSegmentedButtonConfig = currentState.balanceSegmentedButtonConfig,
-                selectedBalanceType = BalanceType.ALL,
+                selectedBalanceType = currentState.selectedBalanceType,
             )
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Unreachable,
@@ -96,9 +132,56 @@ internal class TokenDetailsLoadedBalanceConverter(
             -> TokenDetailsBalanceBlockState.Error(
                 actionButtons = currentState.actionButtons,
                 balanceSegmentedButtonConfig = currentState.balanceSegmentedButtonConfig,
-                selectedBalanceType = BalanceType.ALL,
+                selectedBalanceType = currentState.selectedBalanceType,
             )
         }
+    }
+
+    private fun getYieldBalance(
+        status: CryptoCurrencyStatus,
+        yieldBalance: YieldBalance,
+        state: TokenDetailsState,
+    ): StakingBlocksState {
+        val stakingCryptoAmount = (yieldBalance as? YieldBalance.Data)?.let {
+            yieldBalance.balance.items.sumOf { it.amount }
+        }
+        val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
+        val stakingRewardAmount = (yieldBalance as? YieldBalance.Data)?.let {
+            yieldBalance.balance.items.sumOf { it.amount.multiply(it.pricePerShare) }
+        }
+        val stakingBalance = if (stakingCryptoAmount == null) {
+            StakingBalance.Empty
+        } else {
+            StakingBalance.Content(
+                cryptoAmount = stakingCryptoAmount,
+                fiatAmount = stakingFiatAmount,
+                cryptoValue = stringReference(
+                    BigDecimalFormatter.formatCryptoAmount(stakingCryptoAmount, symbol, decimals),
+                ),
+                fiatValue = stringReference(
+                    BigDecimalFormatter.formatFiatAmount(
+                        stakingFiatAmount,
+                        appCurrencyProvider().code,
+                        appCurrencyProvider().symbol,
+                    ),
+                ),
+                rewardValue = resourceReference(
+                    R.string.staking_details_rewards_to_claim,
+                    wrappedList(
+                        BigDecimalFormatter.formatFiatAmount(
+                            stakingRewardAmount,
+                            appCurrencyProvider().code,
+                            appCurrencyProvider().symbol,
+                        ),
+                    ),
+                ),
+                onStakeClicked = clickIntents::onStakeBannerClick,
+            )
+        }
+        return state.stakingBlocksState.copy(
+            stakingAvailable = state.stakingBlocksState.stakingAvailable,
+            stakingBalance = stakingBalance,
+        )
     }
 
     private fun getMarketPriceState(
@@ -158,19 +241,30 @@ internal class TokenDetailsLoadedBalanceConverter(
         )
     }
 
-    private fun formatFiatAmount(status: CryptoCurrencyStatus.Value, appCurrency: AppCurrency): String {
+    private fun formatFiatAmount(
+        status: CryptoCurrencyStatus.Value,
+        stakingFiatAmount: BigDecimal?,
+        selectedBalanceType: BalanceType,
+        appCurrency: AppCurrency,
+    ): String {
         val fiatAmount = status.fiatAmount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+        val totalAmount = fiatAmount.getBalance(selectedBalanceType, stakingFiatAmount)
 
         return BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = fiatAmount,
+            fiatAmount = totalAmount,
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
         )
     }
 
-    private fun formatCryptoAmount(status: CryptoCurrencyStatus): String {
+    private fun formatCryptoAmount(
+        status: CryptoCurrencyStatus,
+        stakingCryptoAmount: BigDecimal?,
+        selectedBalanceType: BalanceType,
+    ): String {
         val amount = status.value.amount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+        val totalAmount = amount.getBalance(selectedBalanceType, stakingCryptoAmount)
 
-        return BigDecimalFormatter.formatCryptoAmount(amount, status.currency.symbol, status.currency.decimals)
+        return BigDecimalFormatter.formatCryptoAmount(totalAmount, status.currency.symbol, status.currency.decimals)
     }
 }
