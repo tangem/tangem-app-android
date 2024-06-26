@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.common.preview
 
-import androidx.compose.runtime.mutableStateOf
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
@@ -12,7 +11,6 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarConfig
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
-import com.tangem.features.managetokens.navigation.ExpandableState
 import kotlinx.collections.immutable.persistentListOf
 
 internal object WalletScreenPreviewData {
@@ -151,7 +149,6 @@ internal object WalletScreenPreviewData {
 
     internal val walletScreenState = WalletScreenState(
         onBackClick = {},
-        manageTokensExpandableState = mutableStateOf(ExpandableState.COLLAPSED),
         topBarConfig = topBarConfig,
         selectedWalletIndex = 0,
         wallets = persistentListOf(
@@ -161,6 +158,5 @@ internal object WalletScreenPreviewData {
         onWalletChange = {},
         event = consumedEvent(),
         isHidingMode = false,
-        manageTokenRedesignToggle = false,
     )
 }
