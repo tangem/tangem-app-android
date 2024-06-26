@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.currency.tokenicon
+package com.tangem.core.ui.components.currency.icon
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -26,23 +26,23 @@ import com.tangem.core.ui.utils.NORMAL_ALPHA
  * @param shouldDisplayNetwork specifies whether to display network badge
  */
 @Composable
-fun TokenIcon(state: TokenIconState, modifier: Modifier = Modifier, shouldDisplayNetwork: Boolean = true) {
+fun CurrencyIcon(state: CurrencyIconState, modifier: Modifier = Modifier, shouldDisplayNetwork: Boolean = true) {
     BaseContainer(modifier = modifier) {
         val iconModifier = Modifier
             .align(Alignment.Center)
             .size(TangemTheme.dimens.size36)
 
         when (state) {
-            is TokenIconState.Loading -> LoadingIcon(modifier = iconModifier)
-            is TokenIconState.Locked -> LockedIcon(modifier = iconModifier)
-            is TokenIconState.CoinIcon,
-            is TokenIconState.CustomTokenIcon,
-            is TokenIconState.TokenIcon,
+            is CurrencyIconState.Loading -> LoadingIcon(modifier = iconModifier)
+            is CurrencyIconState.Locked -> LockedIcon(modifier = iconModifier)
+            is CurrencyIconState.CoinIcon,
+            is CurrencyIconState.CustomTokenIcon,
+            is CurrencyIconState.TokenIcon,
             -> {
                 ContentIconContainer(
                     icon = state,
                     modifier = iconModifier,
-                    shouldDisplayNetwork = shouldDisplayNetwork,
+                    shouldShowTopBadge = shouldDisplayNetwork,
                 )
             }
         }
@@ -70,9 +70,9 @@ private fun LockedIcon(modifier: Modifier = Modifier) {
 
 @Composable
 private fun BoxScope.ContentIconContainer(
-    icon: TokenIconState,
+    icon: CurrencyIconState,
+    shouldShowTopBadge: Boolean,
     modifier: Modifier = Modifier,
-    shouldDisplayNetwork: Boolean = true,
 ) {
     val networkBadgeOffset = TangemTheme.dimens.spacing4
     val (alpha, colorFilter) = remember(icon.isGrayscale) {
@@ -90,19 +90,21 @@ private fun BoxScope.ContentIconContainer(
         colorFilter = colorFilter,
     )
 
-    if (icon.networkBadgeIconResId != null && shouldDisplayNetwork) {
-        NetworkBadge(
+    if (icon.topBadgeIconResId != null && shouldShowTopBadge) {
+        TopBadge(
             modifier = Modifier
                 .offset(x = networkBadgeOffset, y = -networkBadgeOffset)
                 .align(Alignment.TopEnd),
-            iconResId = requireNotNull(icon.networkBadgeIconResId),
+            iconResId = requireNotNull(icon.topBadgeIconResId),
             alpha = alpha,
             colorFilter = colorFilter,
         )
     }
 
     if (icon.showCustomBadge) {
-        CustomBadge(modifier = Modifier.align(Alignment.BottomEnd))
+        BottomBadge(
+            modifier = Modifier.align(Alignment.BottomEnd),
+        )
     }
 }
 
