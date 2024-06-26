@@ -29,6 +29,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal fun TokenDetailsBalanceBlock(
     state: TokenDetailsBalanceBlockState,
     isBalanceHidden: Boolean,
+    isStakingAvailable: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -53,7 +54,7 @@ internal fun TokenDetailsBalanceBlock(
                         .weight(1f)
                         .padding(top = TangemTheme.dimens.spacing12),
                 )
-                BalanceButtons(state)
+                if (isStakingAvailable) BalanceButtons(state)
             }
             FiatBalance(
                 state = state,
@@ -94,7 +95,7 @@ private fun FiatBalance(
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
             modifier = modifier,
-            text = if (isBalanceHidden) STARS else state.fiatBalance,
+            text = if (isBalanceHidden) STARS else state.displayFiatBalance,
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
@@ -122,7 +123,7 @@ private fun CryptoBalance(
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
             modifier = modifier,
-            text = if (isBalanceHidden) STARS else state.cryptoBalance,
+            text = if (isBalanceHidden) STARS else state.displayCryptoBalance,
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -171,7 +172,7 @@ private fun Preview_TokenDetailsBalanceBlock(
     @PreviewParameter(TokenDetailsBalanceBlockStateProvider::class) state: TokenDetailsBalanceBlockState,
 ) {
     TangemThemePreview {
-        TokenDetailsBalanceBlock(state = state, isBalanceHidden = false)
+        TokenDetailsBalanceBlock(state = state, isBalanceHidden = false, isStakingAvailable = true)
     }
 }
 
