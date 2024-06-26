@@ -28,13 +28,11 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             currencySymbol = "BTC",
             iconUrl = null,
             ratingPosition = "10",
-            marketCap = "$6.23348172384781234 B",
+            marketCap = "$6.233 B",
             price = MarketsListItemModel.Price(text = "31 285.72$"),
             trendPercentText = "12.43%",
-            trendType = PriceChangeType.DOWN,
-            chardData = MarketChartRawData(
-                y = listOf(0.4f, 0.2f, 0.4f, 0.1f, 0.4f, 2f, 5f, 0.1f, 2f, 2f, 3f),
-            ),
+            trendType = PriceChangeType.NEUTRAL,
+            chardData = null,
         ),
         MarketsListItemModel(
             id = "1",
@@ -42,11 +40,13 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             currencySymbol = "BTC",
             iconUrl = null,
             ratingPosition = "10",
-            marketCap = "$6.233 B",
+            marketCap = "$6.23348172384781234 B",
             price = MarketsListItemModel.Price(text = "31 285.72$"),
             trendPercentText = "12.43%",
-            trendType = PriceChangeType.NEUTRAL,
-            chardData = null,
+            trendType = PriceChangeType.DOWN,
+            chardData = MarketChartRawData(
+                y = listOf(0.4f, 0.2f, 0.4f, 0.1f, 0.4f, 2f, 5f, 0.1f, 2f, 2f, 3f),
+            ),
         ),
         MarketsListItemModel(
             id = "1",

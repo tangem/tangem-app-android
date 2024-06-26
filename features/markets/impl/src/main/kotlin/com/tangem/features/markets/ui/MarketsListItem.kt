@@ -380,8 +380,8 @@ private fun Chart(chartType: MarketChartLook.Type, chartRawData: MarketChartRawD
 
 // region preview
 @Preview(showBackground = true, widthDp = 360, name = "normal")
+@Preview(showBackground = true, widthDp = 360, name = "normal night", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(showBackground = true, widthDp = 320, name = "small width")
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::class) state: MarketsListItemModel) {
     TangemThemePreview {
