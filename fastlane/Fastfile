@@ -89,6 +89,11 @@ platform :android do
 
   desc "Publish internal and external builds to Firebase App Distribution"
   lane :publishToFirebase do |options|
+    UI.important options[:versionCode]
+    UI.important options[:versionName]
+    UI.important options[:app_id_internal]
+    UI.important options[:apk_path_internal]
+    UI.important options[:groups]
     gradle(
       task: "clean assembleInternalQA",
       build_type: "Internal",
