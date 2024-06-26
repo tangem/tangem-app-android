@@ -9,6 +9,8 @@ on:
     secrets:
       FIREBASE_APP_ID:
         required: true
+      FIREBASE_APP_ID_INTERNAL:
+        required: true
       FIREBASE_CLI_TOKEN:
         required: true
       # Token must have read access to all the submodule repositories
@@ -20,8 +22,8 @@ env:
 
 jobs:
   build:
-    name: Upload apk to App Tester
-    runs-on: ubuntu-latest
+    name: Upload apk to Firebase
+    runs-on: [self-hosted, old]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -34,26 +36,31 @@ jobs:
           java-version: '17'
       - name: Increment version code
         env:
-          NUM: ${{ github.run_number }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
-          echo "VERSION_CODE=$(($NUM + $INITIAL_VERSION_CODE))" >> $GITHUB_ENV
-      - name: Copy GoogleServices JSON
+          echo "VERSION_CODE=$((RUN_NUMBER + $INITIAL_VERSION_CODE))" >> $GITHUB_ENV
+#      - name: Copy GoogleServices JSON
+#        run: |
+#          cp "app/src/main/assets/tangem-app-config/android/google-services.json" "app/"
+      - name: Read version.properties file
+        uses: BrycensRanch/read-properties-action@v1
+        id: version
+        with:
+          file: version.properties
+          property: versionName
+          default: 0.0.1
+#      - name: Build internal artifact
+#        run: |
+#          echo sdk.dir = $ANDROID_HOME > local.properties
+#          GITHUB_ACTOR=${{ secrets.GITHUB_ACTOR }} GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} ./gradlew assembleInternalQA -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ steps.version.outputs.versionName }}
+      - name: Bundle install
         run: |
-          cp "app/src/main/assets/tangem-app-config/android/google-services.json" "app/"
-      - name: Build internal artifact
-        run: |
-          echo sdk.dir = $ANDROID_HOME > local.properties
-          GITHUB_ACTOR=${{ secrets.GITHUB_ACTOR }} GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} ./gradlew assembleInternalQA -PversionCode=${{ env.VERSION_CODE }}
-      - name: Upload artifact to Firebase App Distribution
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+#      - name: Upload artifact to Firebase App Distribution
 #        run: |
 #          FIREBASE_TOKEN=${{secrets.FIREBASE_CLI_TOKEN}} firebase appdistribution:distribute \
 #          "build/outputs/app-internal.apk" \
-#          --app "1:721920782444:android:d97de53a7196475c3f2849" \
+#          --app ${{secrets.FIREBASE_APP_ID_INTERNAL}} \
 #          --groups "qa-android" \
 #          --release-notes "Bug fixes and improvements"
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          appId: "1:721920782444:android:d97de53a7196475c3f2849"
-          token: ${{secrets.FIREBASE_CLI_TOKEN}}
-          groups: qa-android
-          file: build/outputs/app-internal.apk
