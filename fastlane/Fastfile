@@ -89,6 +89,18 @@ platform :android do
 
   desc "Publish internal and external builds to Firebase App Distribution"
   lane :publishToFirebase do |options|
-    UI.important ENV['GITHUB_ACTOR']
+    gradle(
+      task: "clean assemble",
+      build_type: "Internal",
+      properties: {
+        'versionCode' => ENV['versionCode'],
+        'versionName' => ENV['versionName'],
+      }
+    )
+    firebase_app_distribution(
+      app: ENV['app_id_internal'],
+      apk_path: ENV['apk_path_internal'],
+      groups: ENV['groups']
+    )
   end
 end
