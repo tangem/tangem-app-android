@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.currency.tokenicon
+package com.tangem.core.ui.components.currency.icon
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -18,20 +18,20 @@ import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 internal fun ContentIcon(
-    icon: TokenIconState,
+    icon: CurrencyIconState,
     alpha: Float,
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
 ) {
     when (icon) {
-        is TokenIconState.CoinIcon -> CoinIcon(
+        is CurrencyIconState.CoinIcon -> CoinIcon(
             modifier = modifier,
             url = icon.url,
             fallbackResId = icon.fallbackResId,
             alpha = alpha,
             colorFilter = colorFilter,
         )
-        is TokenIconState.TokenIcon -> TokenIcon(
+        is CurrencyIconState.TokenIcon -> TokenIcon(
             modifier = modifier,
             url = icon.url,
             alpha = alpha,
@@ -45,14 +45,14 @@ internal fun ContentIcon(
                 )
             },
         )
-        is TokenIconState.CustomTokenIcon -> CustomTokenIcon(
+        is CurrencyIconState.CustomTokenIcon -> CustomTokenIcon(
             modifier = modifier,
             tint = icon.tint,
             background = icon.background,
             alpha = alpha,
         )
-        TokenIconState.Loading,
-        TokenIconState.Locked,
+        CurrencyIconState.Loading,
+        CurrencyIconState.Locked,
         -> Unit
     }
 }
