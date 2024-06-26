@@ -5,7 +5,7 @@ import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
-import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList

@@ -5,7 +5,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.tokens.model.Amount
@@ -19,11 +19,11 @@ object AmountStatePreviewData {
         isPrimaryButtonEnabled = false,
         walletName = "Family Wallet",
         walletBalance = stringReference("2 130,88 USDT (2 129,92 \$)"),
-        tokenIconState = TokenIconState.Loading,
+        tokenIconState = CurrencyIconState.Loading,
         segmentedButtonConfig = persistentListOf(
             AmountSegmentedButtonsConfig(
                 title = stringReference("USDT"),
-                iconState = TokenIconState.Locked,
+                iconState = CurrencyIconState.Locked,
                 isFiat = false,
             ),
             AmountSegmentedButtonsConfig(

@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.common.preview
 
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
@@ -16,7 +16,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal object WalletScreenPreviewData {
     private val tokenItemState = TokenItemState.Content(
         id = "1",
-        iconState = TokenIconState.Locked,
+        iconState = CurrencyIconState.Locked,
         titleState = TokenItemState.TitleState.Content(text = "Bitcoin"),
         fiatAmountState = TokenItemState.FiatAmountState.Content(text = "12 368,14 \$"),
         cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "0,35853044 BTC"),
@@ -56,7 +56,7 @@ internal object WalletScreenPreviewData {
             WalletTokensListState.TokensListItemState.Token(
                 state = TokenItemState.Unreachable(
                     id = "3",
-                    iconState = TokenIconState.Locked,
+                    iconState = CurrencyIconState.Locked,
                     titleState = TokenItemState.TitleState.Content(text = "Polygon"),
                     onItemClick = {},
                     onItemLongClick = {},
