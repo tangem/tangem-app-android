@@ -97,6 +97,7 @@ private fun Preview_Grid() {
             },
             content = {
                 GridItems(
+                    itemPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing4),
                     items = persistentListOf(
                         stringReference("Fist item"),
                         stringReference("Second item"),
@@ -104,6 +105,7 @@ private fun Preview_Grid() {
                     itemContent = {
                         PreviewItem(text = it)
                     },
+                    horizontalArragement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
                 )
             },
         )
@@ -141,6 +143,7 @@ private fun Preview_List() {
                     itemContent = {
                         PreviewItem(it)
                     },
+                    verticalArragement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
                 )
             },
         )
@@ -159,7 +162,7 @@ private fun Preview_Plain() {
                 ) {
                     TooltipText(
                         text = stringReference("Title"),
-                        onInfoClick = { /* [REDACTED_TODO_COMMENT]*/ },
+                        onInfoClick = { },
                     )
 
                     Text(
@@ -171,6 +174,38 @@ private fun Preview_Plain() {
             },
             action = {
                 PreviewItem(text = stringReference("Action"))
+            },
+        )
+    }
+}
+
+@Composable
+@Preview(showBackground = true, widthDp = 328)
+@Preview(showBackground = true, widthDp = 328, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun Preview_Tree() {
+    TangemThemePreview {
+        InformationBlock(
+            title = {
+                TooltipText(
+                    text = stringReference("Tree title"),
+                    onInfoClick = { },
+                )
+            },
+            content = {
+                ArrowRowItems(
+                    itemPadding = PaddingValues(vertical = TangemTheme.dimens.spacing4),
+                    items = persistentListOf(
+                        stringReference("Fist item"),
+                        stringReference("Second item"),
+                        stringReference("Third item"),
+                    ),
+                    rootContent = {
+                        PreviewItem(stringReference("Root"))
+                    },
+                    itemContent = {
+                        PreviewItem(it)
+                    },
+                )
             },
         )
     }
