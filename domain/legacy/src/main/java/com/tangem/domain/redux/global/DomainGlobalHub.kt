@@ -2,11 +2,11 @@ package com.tangem.domain.redux.global
 
 import android.webkit.ValueCallback
 import com.tangem.common.extensions.toHexString
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.utils.RequestHeader
 import com.tangem.domain.redux.BaseStoreHub
 import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.ReStoreReducer
-import com.tangem.lib.auth.AuthProvider
 import org.rekotlin.Action
 
 /**
