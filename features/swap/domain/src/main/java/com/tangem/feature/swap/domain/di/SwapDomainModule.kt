@@ -12,10 +12,7 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.TransactionRepository
-import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
-import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
-import com.tangem.domain.transaction.usecase.SendTransactionUseCase
-import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
+import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -45,6 +42,7 @@ class SwapDomainModule {
         getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
         @SwapScope sendTransactionUseCase: SendTransactionUseCase,
         @SwapScope createTransactionUseCase: CreateTransactionUseCase,
+        createTransactionDataExtrasUseCase: CreateTransactionDataExtrasUseCase,
         quotesRepository: QuotesRepository,
         swapTransactionRepository: SwapTransactionRepository,
         appCurrencyRepository: AppCurrencyRepository,
@@ -63,6 +61,7 @@ class SwapDomainModule {
             getMultiCryptoCurrencyStatusUseCase = getCryptoCurrencyStatusUseCase,
             sendTransactionUseCase = sendTransactionUseCase,
             createTransactionUseCase = createTransactionUseCase,
+            createTransactionExtrasUseCase = createTransactionDataExtrasUseCase,
             quotesRepository = quotesRepository,
             swapTransactionRepository = swapTransactionRepository,
             appCurrencyRepository = appCurrencyRepository,
