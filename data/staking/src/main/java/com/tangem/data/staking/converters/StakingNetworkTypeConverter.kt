@@ -2,10 +2,10 @@ package com.tangem.data.staking.converters
 
 import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.domain.staking.model.NetworkType
-import com.tangem.utils.converter.Converter
+import com.tangem.utils.converter.TwoWayConverter
 
 @Suppress("CyclomaticComplexMethod", "LongMethod")
-class StakingNetworkTypeConverter : Converter<NetworkTypeDTO, NetworkType> {
+class StakingNetworkTypeConverter : TwoWayConverter<NetworkTypeDTO, NetworkType> {
 
     override fun convert(value: NetworkTypeDTO): NetworkType {
         return when (value) {
@@ -76,6 +76,78 @@ class StakingNetworkTypeConverter : Converter<NetworkTypeDTO, NetworkType> {
             NetworkTypeDTO.TEZOS -> NetworkType.TEZOS
             NetworkTypeDTO.TRON -> NetworkType.TRON
             else -> NetworkType.UNKNOWN
+        }
+    }
+
+    override fun convertBack(value: NetworkType): NetworkTypeDTO {
+        return when (value) {
+            NetworkType.AVALANCHE_C -> NetworkTypeDTO.AVALANCHE_C
+            NetworkType.AVALANCHE_ATOMIC -> NetworkTypeDTO.AVALANCHE_ATOMIC
+            NetworkType.AVALANCHE_P -> NetworkTypeDTO.AVALANCHE_P
+            NetworkType.ARBITRUM -> NetworkTypeDTO.ARBITRUM
+            NetworkType.BINANCE -> NetworkTypeDTO.BINANCE
+            NetworkType.CELO -> NetworkTypeDTO.CELO
+            NetworkType.ETHEREUM -> NetworkTypeDTO.ETHEREUM
+            NetworkType.ETHEREUM_GOERLI -> NetworkTypeDTO.ETHEREUM_GOERLI
+            NetworkType.ETHEREUM_HOLESKY -> NetworkTypeDTO.ETHEREUM_HOLESKY
+            NetworkType.FANTOM -> NetworkTypeDTO.FANTOM
+            NetworkType.HARMONY -> NetworkTypeDTO.HARMONY
+            NetworkType.OPTIMISM -> NetworkTypeDTO.OPTIMISM
+            NetworkType.POLYGON -> NetworkTypeDTO.POLYGON
+            NetworkType.GNOSIS -> NetworkTypeDTO.GNOSIS
+            NetworkType.MOONRIVER -> NetworkTypeDTO.MOONRIVER
+            NetworkType.OKC -> NetworkTypeDTO.OKC
+            NetworkType.ZKSYNC -> NetworkTypeDTO.ZKSYNC
+            NetworkType.VICTION -> NetworkTypeDTO.VICTION
+            NetworkType.AGORIC -> NetworkTypeDTO.AGORIC
+            NetworkType.AKASH -> NetworkTypeDTO.AKASH
+            NetworkType.AXELAR -> NetworkTypeDTO.AXELAR
+            NetworkType.BAND_PROTOCOL -> NetworkTypeDTO.BAND_PROTOCOL
+            NetworkType.BITSONG -> NetworkTypeDTO.BITSONG
+            NetworkType.CANTO -> NetworkTypeDTO.CANTO
+            NetworkType.CHIHUAHUA -> NetworkTypeDTO.CHIHUAHUA
+            NetworkType.COMDEX -> NetworkTypeDTO.COMDEX
+            NetworkType.COREUM -> NetworkTypeDTO.COREUM
+            NetworkType.COSMOS -> NetworkTypeDTO.COSMOS
+            NetworkType.CRESCENT -> NetworkTypeDTO.CRESCENT
+            NetworkType.CRONOS -> NetworkTypeDTO.CRONOS
+            NetworkType.CUDOS -> NetworkTypeDTO.CUDOS
+            NetworkType.DESMOS -> NetworkTypeDTO.DESMOS
+            NetworkType.DYDX -> NetworkTypeDTO.DYDX
+            NetworkType.EVMOS -> NetworkTypeDTO.EVMOS
+            NetworkType.FETCH_AI -> NetworkTypeDTO.FETCH_AI
+            NetworkType.GRAVITY_BRIDGE -> NetworkTypeDTO.GRAVITY_BRIDGE
+            NetworkType.INJECTIVE -> NetworkTypeDTO.INJECTIVE
+            NetworkType.IRISNET -> NetworkTypeDTO.IRISNET
+            NetworkType.JUNO -> NetworkTypeDTO.JUNO
+            NetworkType.KAVA -> NetworkTypeDTO.KAVA
+            NetworkType.KI_NETWORK -> NetworkTypeDTO.KI_NETWORK
+            NetworkType.MARS_PROTOCOL -> NetworkTypeDTO.MARS_PROTOCOL
+            NetworkType.NYM -> NetworkTypeDTO.NYM
+            NetworkType.OKEX_CHAIN -> NetworkTypeDTO.OKEX_CHAIN
+            NetworkType.ONOMY -> NetworkTypeDTO.ONOMY
+            NetworkType.OSMOSIS -> NetworkTypeDTO.OSMOSIS
+            NetworkType.PERSISTENCE -> NetworkTypeDTO.PERSISTENCE
+            NetworkType.QUICKSILVER -> NetworkTypeDTO.QUICKSILVER
+            NetworkType.REGEN -> NetworkTypeDTO.REGEN
+            NetworkType.SECRET -> NetworkTypeDTO.SECRET
+            NetworkType.SENTINEL -> NetworkTypeDTO.SENTINEL
+            NetworkType.SOMMELIER -> NetworkTypeDTO.SOMMELIER
+            NetworkType.STAFI -> NetworkTypeDTO.STAFI
+            NetworkType.STARGAZE -> NetworkTypeDTO.STARGAZE
+            NetworkType.STRIDE -> NetworkTypeDTO.STRIDE
+            NetworkType.TERITORI -> NetworkTypeDTO.TERITORI
+            NetworkType.TGRADE -> NetworkTypeDTO.TGRADE
+            NetworkType.UMEE -> NetworkTypeDTO.UMEE
+            NetworkType.POLKADOT -> NetworkTypeDTO.POLKADOT
+            NetworkType.KUSAMA -> NetworkTypeDTO.KUSAMA
+            NetworkType.WESTEND -> NetworkTypeDTO.WESTEND
+            NetworkType.BINANCEBEACON -> NetworkTypeDTO.BINANCEBEACON
+            NetworkType.NEAR -> NetworkTypeDTO.NEAR
+            NetworkType.SOLANA -> NetworkTypeDTO.SOLANA
+            NetworkType.TEZOS -> NetworkTypeDTO.TEZOS
+            NetworkType.TRON -> NetworkTypeDTO.TRON
+            else -> NetworkTypeDTO.UNKNOWN
         }
     }
 }
