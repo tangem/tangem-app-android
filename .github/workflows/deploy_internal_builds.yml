@@ -1,10 +1,6 @@
 name: Deploy to Firebase
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'develop'
-      - 'feature/AND-7341_publishing_internal_builds'
   workflow_call:
     secrets:
       FIREBASE_APP_ID:
