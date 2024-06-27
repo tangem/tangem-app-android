@@ -37,7 +37,7 @@ internal class DefaultTransactionRepository(
         isSwap: Boolean,
         txExtras: TransactionExtras?,
         hash: String?,
-    ): TransactionData? = withContext(coroutineDispatcherProvider.io) {
+    ): TransactionData.Uncompiled? = withContext(coroutineDispatcherProvider.io) {
         val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -45,7 +45,7 @@ internal class DefaultTransactionRepository(
             derivationPath = network.derivationPath.value,
         )
 
-        return@withContext walletManager?.createTransactionInternal(
+        return@withContext walletManager?.createTransactionDataInternal(
             amount = amount,
             fee = fee,
             memo = memo,
@@ -78,7 +78,7 @@ internal class DefaultTransactionRepository(
         val validator = walletManager as? TransactionValidator
 
         if (validator != null) {
-            val transaction = walletManager.createTransactionInternal(
+            val transactionData = walletManager.createTransactionDataInternal(
                 amount = amount,
                 fee = fee ?: Fee.Common(amount = amount),
                 memo = memo,
@@ -89,7 +89,7 @@ internal class DefaultTransactionRepository(
                 hash = hash,
             )
 
-            validator.validate(transaction = transaction)
+            validator.validate(transactionData = transactionData)
         } else {
             Timber.e("${walletManager?.wallet?.blockchain} does not support transaction validation")
             Result.success(Unit)
@@ -112,7 +112,7 @@ internal class DefaultTransactionRepository(
     }
 
     @Suppress("LongParameterList")
-    private fun WalletManager.createTransactionInternal(
+    private fun WalletManager.createTransactionDataInternal(
         amount: Amount,
         fee: Fee,
         memo: String?,
@@ -121,7 +121,7 @@ internal class DefaultTransactionRepository(
         isSwap: Boolean,
         txExtras: TransactionExtras?,
         hash: String?,
-    ): TransactionData {
+    ): TransactionData.Uncompiled {
         // TODO: refactor workaround to use general mechanism in bsdk for build tx for DEX
         val txAmount = if (isSwap) {
             createAmountForSwap(amount)
