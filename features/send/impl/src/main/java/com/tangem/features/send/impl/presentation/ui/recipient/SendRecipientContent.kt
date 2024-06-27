@@ -25,6 +25,7 @@ import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
@@ -70,7 +71,7 @@ internal fun SendRecipientContent(
         )
         memoField(
             memoField = memoField,
-            onMemoChange = clickIntents::onRecipientMemoValueChange,
+            onMemoChange = { clickIntents.onRecipientMemoValueChange(it, true) },
         )
         listHeaderItem(
             titleRes = R.string.send_recipient_wallets_title,
@@ -117,6 +118,7 @@ private fun LazyListScope.addressItem(
                 isError = isError,
                 isLoading = isValidating,
                 error = address.error,
+                isValuePasted = address.isValuePasted,
                 modifier = Modifier
                     .background(
                         color = TangemTheme.colors.background.action,
@@ -143,6 +145,7 @@ private fun LazyListScope.memoField(memoField: SendTextField.RecipientMemo?, onM
                 isError = memoField.isError,
                 error = memoField.error,
                 isReadOnly = !memoField.isEnabled,
+                isValuePasted = memoField.isValuePasted,
             )
         }
     }
@@ -258,7 +261,7 @@ private fun AnimateRecentAppearance(isVisible: Boolean, content: @Composable () 
 private fun SendRecipientContent_Preview(
     @PreviewParameter(SendRecipientContentPreviewProvider::class) recipientState: SendStates.RecipientState,
 ) {
-    TangemTheme(isDark = false) {
+    TangemThemePreview {
         SendRecipientContent(
             uiState = recipientState,
             clickIntents = SendClickIntentsStub,

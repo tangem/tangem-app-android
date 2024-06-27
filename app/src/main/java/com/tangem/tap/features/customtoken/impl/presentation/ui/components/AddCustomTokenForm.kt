@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.common.compose.TangemTextFieldsDefault
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenForm
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenInputField
@@ -195,7 +196,7 @@ private fun SelectorField(model: AddCustomTokenSelectorField) {
 @Preview
 @Composable
 private fun Preview_AddCustomTokenForm(@PreviewParameter(AddCustomTokenFormProvider::class) model: AddCustomTokenForm) {
-    TangemTheme {
+    TangemThemePreview {
         AddCustomTokenForm(model)
     }
 }
