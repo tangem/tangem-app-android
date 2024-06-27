@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.inputrow
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,6 +16,7 @@ import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -79,26 +81,14 @@ fun InputRowRecipientDefault(
 
 //region preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun InputRowRecipientPreview_Light() {
-    TangemTheme {
+private fun InputRowRecipientPreview() {
+    TangemThemePreview {
         InputRowRecipientDefault(
             value = "0x391316d97a07027a0702c8A002c8A0C25d8470",
             title = TextReference.Res(R.string.send_recipient),
             showDivider = true,
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun InputRowRecipientPreview_Dark() {
-    TangemTheme(isDark = true) {
-        InputRowRecipientDefault(
-            value = "0x391316d97a07027a0702c8A002c8A0C25d8470",
-            title = TextReference.Res(R.string.send_recipient),
-            showDivider = false,
             modifier = Modifier.background(TangemTheme.colors.background.primary),
         )
     }
