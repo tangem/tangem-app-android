@@ -18,7 +18,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -32,6 +31,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.t
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter.TokenDetailsLoadingTxHistoryModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
@@ -46,6 +46,7 @@ internal class TokenDetailsStateFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
+    stakingFeatureToggles: StakingFeatureToggles,
     symbol: String,
     decimals: Int,
 ) {
@@ -68,6 +69,7 @@ internal class TokenDetailsStateFactory(
             symbol = symbol,
             decimals = decimals,
             clickIntents = clickIntents,
+            stakingFeatureToggles = stakingFeatureToggles,
         )
     }
 
@@ -121,11 +123,8 @@ internal class TokenDetailsStateFactory(
 
     fun getCurrencyLoadedBalanceState(
         cryptoCurrencyEither: Either<CurrencyStatusError, CryptoCurrencyStatus>,
-        yieldBalanceEither: Either<Throwable, YieldBalance>?,
     ): TokenDetailsState {
-        return tokenDetailsLoadedBalanceConverter.convert(
-            TokenDetailsLoadedBalanceConverter.Data(cryptoCurrencyEither, yieldBalanceEither),
-        )
+        return tokenDetailsLoadedBalanceConverter.convert(cryptoCurrencyEither)
     }
 
     fun getManageButtonsState(actions: List<TokenActionsState.ActionState>): TokenDetailsState {
