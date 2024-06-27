@@ -8,10 +8,11 @@ import kotlinx.collections.immutable.ImmutableList
 internal sealed class CurrencyItemUM {
 
     abstract val id: String
+    abstract val model: ChainRowUM
 
     data class Basic(
         override val id: String,
-        val model: ChainRowUM,
+        override val model: ChainRowUM,
         val networks: NetworksUM,
         val onExpandClick: () -> Unit,
     ) : CurrencyItemUM() {
@@ -29,7 +30,7 @@ internal sealed class CurrencyItemUM {
 
     data class Custom(
         override val id: String,
-        val model: ChainRowUM,
+        override val model: ChainRowUM,
         val onRemoveClick: () -> Unit,
     ) : CurrencyItemUM()
 }
