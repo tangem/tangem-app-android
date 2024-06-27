@@ -1,0 +1,9 @@
+package com.tangem.core.ui.test
+
+object TestTags {
+    const val STORIES_SCREEN = "STORIES_SCREEN_CONTAINER"
+    const val STORIES_SCREEN_SCAN_BUTTON = "STORIES_SCREEN_SCAN_BUTTON"
+    const val STORIES_SCREEN_ORDER_BUTTON = "STORIES_SCREEN_ORDER_BUTTON"
+
+    const val WALLET_SCREEN = "WALLET_SCREEN_CONTAINER"
+}

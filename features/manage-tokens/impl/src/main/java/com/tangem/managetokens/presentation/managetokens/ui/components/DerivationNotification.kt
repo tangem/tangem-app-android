@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -18,6 +19,7 @@ import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.managetokens.impl.R
 import com.tangem.managetokens.presentation.managetokens.state.previewdata.DerivationNotificationStatePreviewData
@@ -127,17 +129,10 @@ private fun TextsBlock(title: TextReference, subtitle: TextReference) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ManageTokensScreen_LightTheme() {
-    TangemTheme(isDark = false) {
-        DerivationNotification(DerivationNotificationStatePreviewData.state.config)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_ManageTokensScreen_DarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_ManageTokensScreen() {
+    TangemThemePreview {
         DerivationNotification(DerivationNotificationStatePreviewData.state.config)
     }
 }

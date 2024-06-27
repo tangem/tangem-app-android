@@ -52,7 +52,7 @@ internal class QuotesUnsupportedCurrenciesIdAdapter {
             "optimistic-ethereum" to "ethereum",
             "arbitrum-one" to "ethereum",
             "zksync-ethereum" to "ethereum",
-            "manta-network-ethereum" to "ethereum",
+            "manta-pacific" to "ethereum",
             "polygon-zkevm-ethereum" to "ethereum",
             "aurora-ethereum" to "ethereum",
             "base-ethereum" to "ethereum",

@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.buttons
 
+import android.content.res.Configuration
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -90,17 +92,10 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_SmallButton_Light() {
-    TangemTheme(isDark = false) {
-        ButtonsSample()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview_SmallButton_Dark() {
-    TangemTheme(isDark = true) {
+private fun Preview_SmallButton() {
+    TangemThemePreview {
         ButtonsSample()
     }
 }

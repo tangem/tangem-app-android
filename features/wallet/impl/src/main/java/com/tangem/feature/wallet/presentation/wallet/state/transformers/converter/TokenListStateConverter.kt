@@ -6,6 +6,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.TokensListItemState
@@ -79,7 +80,7 @@ internal class TokenListStateConverter(
     private fun getOrganizeTokensButtonState(currenciesSize: Int): WalletOrganizeTokensButtonConfig? {
         return if (currenciesSize > 1 && !isSingleCurrencyWalletWithToken()) {
             WalletOrganizeTokensButtonConfig(
-                isEnabled = tokenList.totalFiatBalance !is TokenList.FiatBalance.Loading,
+                isEnabled = tokenList.totalFiatBalance !is TotalFiatBalance.Loading,
                 onClick = clickIntents::onOrganizeTokensClick,
             )
         } else {

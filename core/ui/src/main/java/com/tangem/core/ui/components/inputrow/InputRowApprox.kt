@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.inputrow
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -16,6 +17,7 @@ import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -123,40 +125,36 @@ private fun InputRowApproxItem(
 
 //region Preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun InputRowApproxPreview_Light() {
-    TangemTheme {
-        InputRowApprox(
-            leftIcon = TokenIconState.Loading,
-            leftTitle = TextReference.Str("Left title USD"),
-            leftSubtitle = TextReference.Str("Left subtitle USD"),
-            leftTitleEllipsisOffset = 3,
-            rightIcon = TokenIconState.Loading,
-            rightTitle = TextReference.Str("Right title Right title Right title Right title Right title USD"),
-            rightSubtitle = TextReference.Str("Right subtitle Right subtitle Right subtitle USD"),
-            rightTitleEllipsisOffset = 3,
-            modifier = Modifier
-                .background(TangemTheme.colors.background.action),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun InputRowApproxPreview_Dark() {
-    TangemTheme(isDark = true) {
-        InputRowApprox(
-            leftIcon = TokenIconState.Loading,
-            leftTitle = TextReference.Str("Left title Left title Left title Left title Left title USD"),
-            leftSubtitle = TextReference.Str("Left subtitle Left subtitle Left subtitle USD"),
-            leftTitleEllipsisOffset = 3,
-            rightIcon = TokenIconState.Loading,
-            rightTitle = TextReference.Str("Right title USD"),
-            rightSubtitle = TextReference.Str("Right subtitle USD"),
-            rightTitleEllipsisOffset = 3,
-            modifier = Modifier
-                .background(TangemTheme.colors.background.action),
-        )
+private fun InputRowApproxPreview() {
+    TangemThemePreview {
+        Column {
+            InputRowApprox(
+                leftIcon = TokenIconState.Loading,
+                leftTitle = TextReference.Str("Left title USD"),
+                leftSubtitle = TextReference.Str("Left subtitle USD"),
+                leftTitleEllipsisOffset = 3,
+                rightIcon = TokenIconState.Loading,
+                rightTitle = TextReference.Str("Right title Right title Right title Right title Right title USD"),
+                rightSubtitle = TextReference.Str("Right subtitle Right subtitle Right subtitle USD"),
+                rightTitleEllipsisOffset = 3,
+                modifier = Modifier
+                    .background(TangemTheme.colors.background.action),
+            )
+            InputRowApprox(
+                leftIcon = TokenIconState.Loading,
+                leftTitle = TextReference.Str("Left title Left title Left title Left title Left title USD"),
+                leftSubtitle = TextReference.Str("Left subtitle Left subtitle Left subtitle USD"),
+                leftTitleEllipsisOffset = 3,
+                rightIcon = TokenIconState.Loading,
+                rightTitle = TextReference.Str("Right title USD"),
+                rightSubtitle = TextReference.Str("Right subtitle USD"),
+                rightTitleEllipsisOffset = 3,
+                modifier = Modifier
+                    .background(TangemTheme.colors.background.action),
+            )
+        }
     }
 }
 //endregion
