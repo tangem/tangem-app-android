@@ -12,5 +12,5 @@ data class StakingGasEstimateDTO(
     @Json(name = "token")
     val token: TokenDTO,
     @Json(name = "gasLimit")
-    val gasLimit: BigDecimal,
+    val gasLimit: String?,
 )
