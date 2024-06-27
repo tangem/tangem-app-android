@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.buttons
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -41,21 +43,12 @@ fun HorizontalActionChips(
 
 // region Preview
 @Preview(widthDp = 360)
+@Preview(widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_HorizontalActionChips_Light(
+private fun Preview_HorizontalActionChips(
     @PreviewParameter(ActionButtonConfigProvider::class) buttons: HorizontalActionChips,
 ) {
-    TangemTheme(isDark = false) {
-        HorizontalActionChips(buttons = buttons.buttons)
-    }
-}
-
-@Preview(widthDp = 360)
-@Composable
-private fun Preview_HorizontalActionChips_Dark(
-    @PreviewParameter(ActionButtonConfigProvider::class) buttons: HorizontalActionChips,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         HorizontalActionChips(buttons = buttons.buttons)
     }
 }

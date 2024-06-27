@@ -660,12 +660,12 @@
             ]
         },
         {
-            "id": "manta-network-ethereum",
+            "id": "manta-pacific",
             "name": "Manta Testnet",
             "symbol": "ETH",
             "networks": [
                 {
-                    "networkId": "manta-network/test"
+                    "networkId": "manta-pacific/test"
                 }
             ]
         },

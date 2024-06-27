@@ -5,8 +5,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,7 +22,7 @@ class AccessCodeRecoveryFragment : ComposeFragment(), StoreSubscriber<DetailsSta
         mutableStateOf(viewModel.updateState(store.state.detailsState.cardSettingsState?.accessCodeRecovery))
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
+    override lateinit var uiDependencies: UiDependencies
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {

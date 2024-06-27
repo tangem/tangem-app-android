@@ -2,10 +2,10 @@ package com.tangem.feature.wallet.presentation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -21,7 +21,7 @@ import javax.inject.Inject
 internal class WalletFragment : ComposeFragment() {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
+    override lateinit var uiDependencies: UiDependencies
 
     @Inject
     internal lateinit var manageTokensUi: ManageTokensUi
