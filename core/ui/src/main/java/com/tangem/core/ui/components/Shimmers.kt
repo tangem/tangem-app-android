@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.infiniteRepeatable
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.valentinilk.shimmer.*
 
@@ -90,37 +92,24 @@ private val TangemShimmerColors: List<Color>
 
 // region preview
 
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun ShimmersPreview() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(TangemTheme.colors.background.primary),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing18),
-    ) {
-        RectangleShimmer(
+    TangemThemePreview {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(TangemTheme.dimens.size24),
-        )
-        CircleShimmer(modifier = Modifier.size(size = TangemTheme.dimens.size42))
+                .background(TangemTheme.colors.background.primary),
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing18),
+        ) {
+            RectangleShimmer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(TangemTheme.dimens.size24),
+            )
+            CircleShimmer(modifier = Modifier.size(size = TangemTheme.dimens.size42))
+        }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-private fun Shimmers_InLightTheme() {
-    TangemTheme(isDark = false) {
-        ShimmersPreview()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun Shimmers_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        ShimmersPreview()
-    }
-}
-
 // endregion preview

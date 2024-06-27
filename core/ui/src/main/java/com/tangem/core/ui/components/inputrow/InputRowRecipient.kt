@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.inputrow
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,6 +24,7 @@ import com.tangem.core.ui.components.inputrow.inner.PasteButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.coroutines.delay
 
 /**
@@ -54,6 +56,7 @@ fun InputRowRecipient(
     isError: Boolean = false,
     showDivider: Boolean = false,
     isLoading: Boolean = false,
+    isValuePasted: Boolean = false,
 ) {
     val (titleText, color) = if (isError && error != null) {
         error to TangemTheme.colors.text.warning
@@ -93,6 +96,7 @@ fun InputRowRecipient(
                         placeholder = placeholder,
                         onValueChange = onValueChange,
                         singleLine = singleLine,
+                        isValuePasted = isValuePasted,
                         modifier = Modifier
                             .padding(start = TangemTheme.dimens.spacing12)
                             .weight(1f)
@@ -152,11 +156,12 @@ private fun RowScope.InputIcon(isLoading: Boolean, value: String) {
 
 //region preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun InputRowRecipientPreview_Light(
+private fun InputRowRecipientPreview(
     @PreviewParameter(InputRowRecipientPreviewDataProvider::class) value: InputRowRecipientPreviewData,
 ) {
-    TangemTheme {
+    TangemThemePreview {
         InputRowRecipient(
             value = value.value,
             title = TextReference.Res(R.string.send_recipient),
@@ -164,27 +169,6 @@ private fun InputRowRecipientPreview_Light(
             error = TextReference.Str("Error"),
             isError = value.isError,
             isLoading = value.isLoading,
-            showDivider = true,
-            onValueChange = {},
-            onPasteClick = {},
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun InputRowRecipientPreview_Dark(
-    @PreviewParameter(InputRowRecipientPreviewDataProvider::class) value: InputRowRecipientPreviewData,
-) {
-    TangemTheme(isDark = true) {
-        InputRowRecipient(
-            value = value.value,
-            title = TextReference.Res(R.string.send_recipient),
-            placeholder = TextReference.Res(R.string.send_optional_field),
-            error = TextReference.Str("Error"),
-            isLoading = value.isLoading,
-            isError = value.isError,
             showDivider = true,
             onValueChange = {},
             onPasteClick = {},

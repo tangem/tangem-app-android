@@ -6,10 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import com.tangem.core.navigation.ReduxNavController
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.feature.swap.router.CustomTabsManager
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
@@ -25,7 +25,7 @@ import javax.inject.Inject
 class SwapFragment : ComposeFragment() {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
+    override lateinit var uiDependencies: UiDependencies
 
     @Inject
     lateinit var reduxNavController: ReduxNavController

@@ -26,7 +26,9 @@ sealed class DetailsAction : Action {
         data object Failure : ResetToFactory()
         data object Success : ResetToFactory()
 
-        data class LastWarningDialogVisibility(val isShown: Boolean) : ResetToFactory()
+        data class ShowDialog(val dialog: CardSettingsState.Dialog) : ResetToFactory()
+
+        data object DismissDialog : ResetToFactory()
     }
 
     data object ScanCard : DetailsAction()

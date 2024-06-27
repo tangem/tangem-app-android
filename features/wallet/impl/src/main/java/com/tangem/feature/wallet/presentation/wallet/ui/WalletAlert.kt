@@ -64,7 +64,9 @@ private fun TextInputAlert(state: WalletAlertState.TextInput, onDismiss: () -> U
         fieldValue = value,
         confirmButton = DialogButton(
             title = state.confirmButtonText.resolveReference(),
-            enabled = value.text.isNotEmpty() && value.text != state.text,
+            enabled = value.text.isNotEmpty() &&
+                value.text != state.text &&
+                state.errorTextProvider(value.text) == null,
             onClick = {
                 state.onConfirmClick(value.text)
                 onDismiss()
@@ -76,6 +78,8 @@ private fun TextInputAlert(state: WalletAlertState.TextInput, onDismiss: () -> U
         dismissButton = DialogButton(title = stringResource(id = R.string.common_cancel), onClick = onDismiss),
         textFieldParams = AdditionalTextInputDialogParams(
             label = state.label.resolveReference(),
+            isError = state.errorTextProvider(value.text) != null,
+            caption = state.errorTextProvider(value.text)?.resolveReference(),
         ),
     )
 }

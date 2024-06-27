@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.transactions
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,6 +13,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -59,17 +61,10 @@ internal fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Mod
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TransactionsBlockTitle_Light() {
-    TangemTheme(isDark = false) {
-        TxHistoryTitle(onExploreClick = {})
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_TransactionsBlockTitle_Dark() {
-    TangemTheme(isDark = true) {
+private fun Preview_TransactionsBlockTitle() {
+    TangemThemePreview {
         TxHistoryTitle(onExploreClick = {})
     }
 }
