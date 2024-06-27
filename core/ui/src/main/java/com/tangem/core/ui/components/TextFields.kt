@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -25,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -505,17 +507,10 @@ private fun OutlineTextFieldSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun OutlineTextFieldPreview_Light() {
-    TangemTheme {
-        OutlineTextFieldSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun OutlineTextFieldPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun OutlineTextFieldPreview() {
+    TangemThemePreview {
         OutlineTextFieldSample()
     }
 }

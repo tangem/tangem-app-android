@@ -33,31 +33,52 @@ internal class GeneralUserWalletsListManager(
 ) : UserWalletsListManager.Lockable {
 
     private val applicationScope = CoroutineScope(dispatchers.io)
-    private val implementation = MutableStateFlow(runtimeUserWalletsListManager)
+    private val implementation: MutableStateFlow<UserWalletsListManager?> = MutableStateFlow(value = null)
+
+    private val requireImplementation: UserWalletsListManager
+        get() = requireNotNull(implementation.value) {
+            "UserWalletsListManager is not initialized"
+        }
 
     init {
         subscribeOnCurrentManager()
     }
 
+    override val isLockable: Boolean
+        get() = requireImplementation.isLockable
+
     override val userWallets: Flow<List<UserWallet>>
-        get() = implementation.flatMapLatest { it.userWallets }
+        get() = implementation.transformLatest { impl ->
+            if (impl != null && impl.hasUserWallets) {
+                emitAll(impl.userWallets)
+            }
+        }
+
+    override val userWalletsSync: List<UserWallet>
+        get() = requireImplementation.userWalletsSync
 
     override val selectedUserWallet: Flow<UserWallet>
-        get() = implementation.flatMapLatest { it.selectedUserWallet }
+        get() = implementation.transformLatest { impl ->
+            if (impl != null && impl.hasUserWallets) {
+                emitAll(impl.selectedUserWallet)
+            }
+        }
 
     override val selectedUserWalletSync: UserWallet?
-        get() = implementation.value.selectedUserWalletSync
+        get() = requireImplementation.selectedUserWalletSync
 
     override val hasUserWallets: Boolean
-        get() = implementation.value.hasUserWallets
+        get() = requireImplementation.hasUserWallets
 
     override val walletsCount: Int
-        get() = implementation.value.walletsCount
+        get() = requireImplementation.walletsCount
 
     override val isLocked: Flow<Boolean>
-        get() = implementation.flatMapLatest {
-            if (it is UserWalletsListManager.Lockable) {
-                it.isLocked
+        get() = implementation.transformLatest { impl ->
+            if (impl == null) return@transformLatest
+
+            if (impl is UserWalletsListManager.Lockable) {
+                emitAll(impl.isLocked)
             } else {
                 error("RuntimeUserWalletsListManager is not lockable")
             }
@@ -65,43 +86,45 @@ internal class GeneralUserWalletsListManager(
 
     override val isLockedSync: Boolean
         get() {
-            val implementation = implementation.value
-            return if (implementation is UserWalletsListManager.Lockable) {
-                implementation.isLockedSync
+            val impl = requireImplementation
+
+            return if (impl is UserWalletsListManager.Lockable) {
+                impl.isLockedSync
             } else {
                 error("RuntimeUserWalletsListManager is not lockable")
             }
         }
 
     override suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet> {
-        return implementation.value.select(userWalletId)
+        return requireImplementation.select(userWalletId)
     }
 
     override suspend fun save(userWallet: UserWallet, canOverride: Boolean): CompletionResult<Unit> {
-        return implementation.value.save(userWallet, canOverride)
+        return requireImplementation.save(userWallet, canOverride)
     }
 
     override suspend fun update(
         userWalletId: UserWalletId,
         update: suspend (UserWallet) -> UserWallet,
     ): CompletionResult<UserWallet> {
-        return implementation.value.update(userWalletId, update)
+        return requireImplementation.update(userWalletId, update)
     }
 
     override suspend fun delete(userWalletIds: List<UserWalletId>): CompletionResult<Unit> {
-        return implementation.value.delete(userWalletIds)
+        return requireImplementation.delete(userWalletIds)
     }
 
     override suspend fun clear(): CompletionResult<Unit> {
-        return implementation.value.clear()
+        return requireImplementation.clear()
     }
 
     override suspend fun get(userWalletId: UserWalletId): CompletionResult<UserWallet> {
-        return implementation.value.get(userWalletId)
+        return requireImplementation.get(userWalletId)
     }
 
     override suspend fun unlock(type: UserWalletsListManager.Lockable.UnlockType): CompletionResult<UserWallet> {
-        val implementation = implementation.value
+        val implementation = requireImplementation
+
         return if (implementation is UserWalletsListManager.Lockable) {
             implementation.unlock(type)
         } else {
@@ -110,16 +133,13 @@ internal class GeneralUserWalletsListManager(
     }
 
     override fun lock() {
-        val implementation = implementation.value
+        val implementation = requireImplementation
+
         return if (implementation is UserWalletsListManager.Lockable) {
             implementation.lock()
         } else {
             error("RuntimeUserWalletsListManager is not lockable")
         }
-    }
-
-    override fun isLockable(): Boolean {
-        return implementation.value.isLockable()
     }
 
     private fun subscribeOnCurrentManager() {
@@ -144,17 +164,17 @@ internal class GeneralUserWalletsListManager(
                     destinationManager = possibleManager,
                 )
 
-                previousManager.clear()
+                previousManager?.clear()
             }
             .flowOn(dispatchers.io)
             .launchIn(applicationScope)
     }
 
     private suspend fun copySelectedUserWallet(
-        sourceManager: UserWalletsListManager,
+        sourceManager: UserWalletsListManager?,
         destinationManager: UserWalletsListManager,
     ): UserWalletsListManager {
-        sourceManager.selectedUserWalletSync?.let { selectedWallet ->
+        sourceManager?.selectedUserWalletSync?.let { selectedWallet ->
             destinationManager.save(selectedWallet, canOverride = true)
         }
 

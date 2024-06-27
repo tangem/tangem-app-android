@@ -7,10 +7,7 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.NetworkGroup
-import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.*
 import java.math.BigDecimal
 
 internal class TokenListSortingOperations(
@@ -22,7 +19,7 @@ internal class TokenListSortingOperations(
     constructor(
         tokenList: TokenList,
         sortByBalance: Boolean = tokenList.sortedBy == TokenList.SortType.BALANCE,
-        isAnyTokenLoading: Boolean = tokenList.totalFiatBalance is TokenList.FiatBalance.Loading,
+        isAnyTokenLoading: Boolean = tokenList.totalFiatBalance is TotalFiatBalance.Loading,
     ) : this(
         currencies = when (tokenList) {
             is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { it.currencies }

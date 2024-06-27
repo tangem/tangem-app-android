@@ -24,6 +24,7 @@ internal class SendRecipientAddressFieldConverter(
             error = resourceReference(R.string.send_recipient_address_error),
             placeholder = resourceReference(R.string.send_enter_address_field),
             label = resourceReference(R.string.send_recipient),
+            isValuePasted = false,
         )
     }
 }

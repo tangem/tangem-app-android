@@ -8,6 +8,7 @@ import javax.inject.Inject
 
 interface CoroutineDispatcherProvider {
     val main: CoroutineDispatcher
+    val mainImmediate: CoroutineDispatcher
     val io: CoroutineDispatcher
     val default: CoroutineDispatcher
     val single: CoroutineDispatcher
@@ -15,6 +16,7 @@ interface CoroutineDispatcherProvider {
 
 class AppCoroutineDispatcherProvider @Inject constructor() : CoroutineDispatcherProvider {
     override val main: CoroutineDispatcher = Dispatchers.Main
+    override val mainImmediate: CoroutineDispatcher = Dispatchers.Main.immediate
     override val io: CoroutineDispatcher = Dispatchers.IO
     override val default: CoroutineDispatcher = Dispatchers.Default
     override val single: CoroutineDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
@@ -22,6 +24,7 @@ class AppCoroutineDispatcherProvider @Inject constructor() : CoroutineDispatcher
 
 class TestingCoroutineDispatcherProvider(
     override val main: CoroutineDispatcher = Dispatchers.Unconfined,
+    override val mainImmediate: CoroutineDispatcher = Dispatchers.Unconfined,
     override val io: CoroutineDispatcher = Dispatchers.Unconfined,
     override val default: CoroutineDispatcher = Dispatchers.Unconfined,
     override val single: CoroutineDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher(),

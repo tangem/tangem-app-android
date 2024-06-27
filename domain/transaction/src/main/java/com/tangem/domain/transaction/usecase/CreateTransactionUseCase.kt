@@ -2,6 +2,7 @@ package com.tangem.domain.transaction.usecase
 
 import arrow.core.Either
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.TransactionRepository
@@ -22,6 +23,9 @@ class CreateTransactionUseCase(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
+        txExtras: TransactionExtras? = null,
+        isSwap: Boolean = false,
+        hash: String? = null,
     ) = Either.catch {
         requireNotNull(
             transactionRepository.createTransaction(
@@ -31,6 +35,9 @@ class CreateTransactionUseCase(
                 destination = destination,
                 userWalletId = userWalletId,
                 network = network,
+                isSwap = isSwap,
+                txExtras = txExtras,
+                hash = hash,
             ),
         ) { "Failed to create transaction" }
     }
