@@ -30,7 +30,6 @@ import com.tangem.data.staking.converters.*
 import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.token.StakingBalanceStore
-import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.*
