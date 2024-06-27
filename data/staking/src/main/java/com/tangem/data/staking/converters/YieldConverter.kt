@@ -20,7 +20,10 @@ class YieldConverter(
             rewardRate = value.rewardRate,
             rewardType = convertRewardType(value.rewardType),
             metadata = convertMetadata(value.metadata),
-            validators = value.validators.map { convertValidator(it) },
+            validators = value.validators
+                .filter { it.preferred }
+                .map { convertValidator(it) }
+                .sortedByDescending { it.apr },
             isAvailable = value.isAvailable,
         )
     }
