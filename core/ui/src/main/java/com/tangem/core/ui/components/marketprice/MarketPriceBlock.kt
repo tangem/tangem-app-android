@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.marketprice
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 
@@ -203,23 +205,13 @@ private fun QuoteTimeStatus() {
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_MarketPriceBlock_Light(
+private fun Preview_MarketPriceBlock(
     @PreviewParameter(WalletMarketPriceBlockStateProvider::class)
     state: MarketPriceBlockState,
 ) {
-    TangemTheme(isDark = false) {
-        MarketPriceBlock(state = state)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun Preview_MarketPriceBlock_Dark(
-    @PreviewParameter(WalletMarketPriceBlockStateProvider::class)
-    state: MarketPriceBlockState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         MarketPriceBlock(state = state)
     }
 }

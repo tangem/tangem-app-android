@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.transactions
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +34,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import java.util.UUID
 
 /**
@@ -317,23 +319,12 @@ private fun LockedContent(modifier: Modifier = Modifier) {
     )
 }
 
-@Preview
+@Preview(showBackground = true, widthDp = 368)
+@Preview(showBackground = true, widthDp = 368, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TransactionItem_LightTheme(
-    @PreviewParameter(TransactionItemStateProvider::class) state: TransactionState,
-) {
-    TangemTheme(isDark = false) {
-        Transaction(state = state, isBalanceHidden = false)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_TransactionItem_DarkTheme(
-    @PreviewParameter(TransactionItemStateProvider::class) state: TransactionState,
-) {
-    TangemTheme(isDark = true) {
-        Transaction(state = state, isBalanceHidden = false)
+private fun Preview_TransactionItem(@PreviewParameter(TransactionItemStateProvider::class) state: TransactionState) {
+    TangemThemePreview {
+        Transaction(state = state, isBalanceHidden = false, modifier = Modifier.padding(TangemTheme.dimens.spacing20))
     }
 }
 

@@ -1,5 +1,6 @@
 package com.tangem.tap.features.saveWallet.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import com.tangem.core.ui.components.SpacerHHalf
 import com.tangem.core.ui.components.SpacerW24
 import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.atoms.Hand
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
@@ -196,17 +198,10 @@ private fun SaveWalletScreenContentSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun SaveWalletScreenContentPreview_Light() {
-    TangemTheme {
-        SaveWalletScreenContentSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun SaveWalletScreenContentPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun SaveWalletScreenContentPreview() {
+    TangemThemePreview {
         SaveWalletScreenContentSample()
     }
 }

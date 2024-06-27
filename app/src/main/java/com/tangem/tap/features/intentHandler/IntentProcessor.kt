@@ -19,9 +19,9 @@ class IntentProcessor {
         intentHandlers.clear()
     }
 
-    fun handleIntent(intent: Intent?) {
+    fun handleIntent(intent: Intent?, isFromForeground: Boolean) {
         intentHandlers.forEach {
-            it.handleIntent(intent)
+            it.handleIntent(intent, isFromForeground)
         }
     }
 }

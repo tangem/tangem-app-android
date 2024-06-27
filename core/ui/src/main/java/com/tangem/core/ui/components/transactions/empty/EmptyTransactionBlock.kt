@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.transactions.empty
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -15,6 +16,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -87,20 +89,11 @@ private fun PairButtons(state: EmptyTransactionsBlockState.ButtonsState.PairButt
 
 @Composable
 @Preview(widthDp = 360, showBackground = true)
-private fun EmptyTransactionBlock_Light(
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun EmptyTransactionBlockPreview(
     @PreviewParameter(EmptyTransactionBlockStateProvider::class) state: EmptyTransactionsBlockState,
 ) {
-    TangemTheme {
-        EmptyTransactionBlock(state = state)
-    }
-}
-
-@Composable
-@Preview(widthDp = 360, showBackground = true)
-private fun EmptyTransactionBlock_Dark(
-    @PreviewParameter(EmptyTransactionBlockStateProvider::class) state: EmptyTransactionsBlockState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         EmptyTransactionBlock(state = state)
     }
 }

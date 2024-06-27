@@ -4,10 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsViewModel
@@ -19,7 +20,7 @@ import javax.inject.Inject
 internal class TokenDetailsFragment : ComposeFragment() {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
+    override lateinit var uiDependencies: UiDependencies
 
     @Inject
     lateinit var tokenDetailsRouter: TokenDetailsRouter
@@ -41,6 +42,6 @@ internal class TokenDetailsFragment : ComposeFragment() {
             setSystemBarsColor(systemBarsColor)
         }
 
-        TokenDetailsScreen(state = viewModel.uiState)
+        TokenDetailsScreen(state = viewModel.uiState.collectAsStateWithLifecycle().value)
     }
 }

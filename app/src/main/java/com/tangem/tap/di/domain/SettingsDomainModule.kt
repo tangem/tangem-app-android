@@ -9,38 +9,38 @@ import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.PromoSettingsRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.settings.DefaultLegacySettingsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 internal object SettingsDomainModule {
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesIsReadyToShowRatingUseCase(appRatingRepository: AppRatingRepository): IsReadyToShowRateAppUseCase {
         return IsReadyToShowRateAppUseCase(appRatingRepository = appRatingRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesRemindToRateAppLaterUseCase(appRatingRepository: AppRatingRepository): RemindToRateAppLaterUseCase {
         return RemindToRateAppLaterUseCase(appRatingRepository = appRatingRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesNeverToSuggestRateAppUseCase(appRatingRepository: AppRatingRepository): NeverToSuggestRateAppUseCase {
         return NeverToSuggestRateAppUseCase(appRatingRepository = appRatingRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesSetWalletWithFundsFoundUseCase(
         appRatingRepository: AppRatingRepository,
     ): SetWalletWithFundsFoundUseCase {
@@ -48,7 +48,7 @@ internal object SettingsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesShouldShowSaveWalletScreenUseCase(
         settingsRepository: SettingsRepository,
     ): ShouldShowSaveWalletScreenUseCase {
@@ -56,7 +56,7 @@ internal object SettingsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesCanUseBiometryUseCase(tangemSdkManager: TangemSdkManager): CanUseBiometryUseCase {
         return CanUseBiometryUseCase(
             legacySettingsRepository = DefaultLegacySettingsRepository(tangemSdkManager = tangemSdkManager),
@@ -64,7 +64,7 @@ internal object SettingsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesGetBalanceHidingSettingsUseCase(
         balanceHidingRepository: BalanceHidingRepository,
     ): GetBalanceHidingSettingsUseCase {
@@ -74,7 +74,7 @@ internal object SettingsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesListenUseCase(
         flipDetector: DeviceFlipDetector,
         balanceHidingRepository: BalanceHidingRepository,
@@ -86,7 +86,7 @@ internal object SettingsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideUpdateHideBalancesSettingsUseCase(
         balanceHidingRepository: BalanceHidingRepository,
     ): UpdateBalanceHidingSettingsUseCase {
@@ -94,19 +94,19 @@ internal object SettingsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideSetWalletsScrollPreviewIsShown(settingsRepository: SettingsRepository): NeverToShowWalletsScrollPreview {
         return NeverToShowWalletsScrollPreview(settingsRepository = settingsRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideIsWalletsScrollPreviewEnabled(settingsRepository: SettingsRepository): IsWalletsScrollPreviewEnabled {
         return IsWalletsScrollPreviewEnabled(settingsRepository = settingsRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideShouldShowSwapPromoWalletUseCase(
         promoSettingsRepository: PromoSettingsRepository,
     ): ShouldShowSwapPromoWalletUseCase {
@@ -114,7 +114,7 @@ internal object SettingsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideShouldShowTravalaPromoWalletUseCase(
         promoSettingsRepository: PromoSettingsRepository,
     ): ShouldShowTravalaPromoWalletUseCase {
@@ -122,7 +122,7 @@ internal object SettingsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideShouldShowSwapPromoTokenUseCase(
         promoSettingsRepository: PromoSettingsRepository,
     ): ShouldShowSwapPromoTokenUseCase {
@@ -130,13 +130,13 @@ internal object SettingsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideDeleteDeprecatedLogsUseCase(settingsRepository: SettingsRepository): DeleteDeprecatedLogsUseCase {
         return DeleteDeprecatedLogsUseCase(settingsRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideIsSendTapHelpPreviewEnabledUseCase(
         settingsRepository: SettingsRepository,
     ): IsSendTapHelpEnabledUseCase {
@@ -144,8 +144,24 @@ internal object SettingsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideNeverShowTapHelpUseCase(settingsRepository: SettingsRepository): NeverShowTapHelpUseCase {
         return NeverShowTapHelpUseCase(settingsRepository = settingsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSetSaveWalletScreenShownUseCase(
+        settingsRepository: SettingsRepository,
+    ): SetSaveWalletScreenShownUseCase {
+        return SetSaveWalletScreenShownUseCase(settingsRepository = settingsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIncrementAppLaunchCounterUseCase(
+        settingsRepository: SettingsRepository,
+    ): IncrementAppLaunchCounterUseCase {
+        return IncrementAppLaunchCounterUseCase(settingsRepository = settingsRepository)
     }
 }
