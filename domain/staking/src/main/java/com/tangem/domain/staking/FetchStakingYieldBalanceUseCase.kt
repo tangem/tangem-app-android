@@ -2,7 +2,6 @@ package com.tangem.domain.staking
 
 import arrow.core.Either
 import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
 
 class FetchStakingYieldBalanceUseCase(
@@ -11,13 +10,13 @@ class FetchStakingYieldBalanceUseCase(
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
-        networkStatus: NetworkStatus,
+        address: String,
         integrationId: String,
         refresh: Boolean = false,
     ): Either<Throwable, Unit> = Either.catch {
         stakingRepository.fetchSingleYieldBalance(
             userWalletId = userWalletId,
-            networkStatus = networkStatus,
+            address = address,
             integrationId = integrationId,
             refresh = refresh,
         )
