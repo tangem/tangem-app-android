@@ -100,6 +100,6 @@ internal class ItemsBuilder(
     )
 
     private companion object {
-        const val BUY_TANGEM_URL = "https://buy.tangem.com/"
+        const val BUY_TANGEM_URL = "https://buy.tangem.com/?utm_source=tangem&utm_medium=app"
     }
 }
