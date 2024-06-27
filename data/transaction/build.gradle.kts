@@ -16,15 +16,19 @@ dependencies {
     implementation(deps.tangem.blockchain)
 
     /** Core */
+    implementation(projects.core.datasource)
     implementation(projects.core.utils)
 
     /** Domain */
     implementation(projects.domain.transaction)
     implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens.models)
 
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    implementation(deps.timber)
 }
