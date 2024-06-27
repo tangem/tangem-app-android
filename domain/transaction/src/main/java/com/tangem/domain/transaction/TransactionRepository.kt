@@ -19,7 +19,7 @@ interface TransactionRepository {
         isSwap: Boolean,
         txExtras: TransactionExtras?,
         hash: String?,
-    ): TransactionData?
+    ): TransactionData.Uncompiled?
 
     @Suppress("LongParameterList")
     suspend fun validateTransaction(
