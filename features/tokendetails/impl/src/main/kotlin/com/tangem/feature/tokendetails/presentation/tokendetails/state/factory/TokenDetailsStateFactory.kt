@@ -12,14 +12,14 @@ import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.TokenActionsState
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
@@ -40,10 +40,11 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
     symbol: String,
@@ -54,6 +55,7 @@ internal class TokenDetailsStateFactory(
         TokenDetailsSkeletonStateConverter(
             clickIntents = clickIntents,
             featureToggles = featureToggles,
+            stakingAvailabilityProvider = stakingAvailabilityProvider,
         )
     }
 
@@ -96,6 +98,12 @@ internal class TokenDetailsStateFactory(
 
     private val refreshStateConverter by lazy {
         TokenDetailsRefreshStateConverter(
+            currentStateProvider = currentStateProvider,
+        )
+    }
+
+    private val stakingStateConverter by lazy {
+        TokenStakingStateConverter(
             currentStateProvider = currentStateProvider,
         )
     }
@@ -155,7 +163,7 @@ internal class TokenDetailsStateFactory(
                 isShow = true,
                 onDismissRequest = clickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.ConfirmHideConfig(
-                    currencySymbol = currency.symbol,
+                    currencyTitle = currency.name,
                     onConfirmClick = clickIntents::onHideConfirmed,
                     onCancelClick = clickIntents::onDismissDialog,
                 ),
@@ -169,11 +177,44 @@ internal class TokenDetailsStateFactory(
                 isShow = true,
                 onDismissRequest = clickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.HasLinkedTokensConfig(
+                    currencyName = currency.name,
                     currencySymbol = currency.symbol,
                     networkName = currency.network.name,
                     onConfirmClick = clickIntents::onDismissDialog,
                 ),
             ),
+        )
+    }
+
+    fun getStateWithActionButtonErrorDialog(unavailabilityReason: ScenarioUnavailabilityReason): TokenDetailsState {
+        return currentStateProvider().copy(
+            dialogConfig = TokenDetailsDialogConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissDialog,
+                content = TokenDetailsDialogConfig.DialogContentConfig.DisabledButtonReasonDialogConfig(
+                    text = getUnavailabilityReasonText(unavailabilityReason),
+                    onConfirmClick = clickIntents::onDismissDialog,
+                ),
+            ),
+        )
+    }
+
+    fun getStateWithErrorDialog(text: TextReference): TokenDetailsState {
+        return currentStateProvider().copy(
+            dialogConfig = TokenDetailsDialogConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissDialog,
+                content = TokenDetailsDialogConfig.DialogContentConfig.ErrorDialogConfig(
+                    text = text,
+                    onConfirmClick = clickIntents::onDismissDialog,
+                ),
+            ),
+        )
+    }
+
+    fun getStateWithStaking(stakingEither: Either<Throwable, StakingEntryInfo>): TokenDetailsState {
+        return currentStateProvider().copy(
+            stakingBlockState = stakingStateConverter.convert(stakingEither),
         )
     }
 
@@ -244,6 +285,11 @@ internal class TokenDetailsStateFactory(
     fun getStateWithRemovedRentNotification(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(notifications = notificationConverter.removeRentInfo(state))
+    }
+
+    fun getStateWithRemovedHederaAssociateNotification(): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(notifications = notificationConverter.removeHederaAssociateWarning(state))
     }
 
     fun getStateWithExchangeStatusBottomSheet(swapTxState: SwapTransactionsState): TokenDetailsState {
@@ -320,5 +366,61 @@ internal class TokenDetailsStateFactory(
                 ).let(::add)
             }.toImmutableList(),
         )
+    }
+
+    private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason): TextReference {
+        return when (unavailabilityReason) {
+            is ScenarioUnavailabilityReason.PendingTransaction -> {
+                when (unavailabilityReason.withdrawalScenario) {
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
+                        id = R.string.token_button_unavailability_reason_pending_transaction_send,
+                        formatArgs = wrappedList(unavailabilityReason.networkName),
+                    )
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> resourceReference(
+                        id = R.string.token_button_unavailability_reason_pending_transaction_sell,
+                        formatArgs = wrappedList(unavailabilityReason.networkName),
+                    )
+                }
+            }
+            is ScenarioUnavailabilityReason.EmptyBalance -> {
+                when (unavailabilityReason.withdrawalScenario) {
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
+                        id = R.string.token_button_unavailability_reason_empty_balance_send,
+                    )
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> resourceReference(
+                        id = R.string.token_button_unavailability_reason_empty_balance_sell,
+                    )
+                }
+            }
+            is ScenarioUnavailabilityReason.BuyUnavailable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_buy_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
+            is ScenarioUnavailabilityReason.NotExchangeable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_not_exchangeable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
+            is ScenarioUnavailabilityReason.NotSupportedBySellService -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_sell_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
+            ScenarioUnavailabilityReason.Unreachable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_generic_description,
+                )
+            }
+            ScenarioUnavailabilityReason.UnassociatedAsset -> resourceReference(
+                id = R.string.warning_receive_blocked_hedera_token_association_required_message,
+            )
+            ScenarioUnavailabilityReason.None -> {
+                throw IllegalArgumentException("The unavailability reason must be other than None")
+            }
+        }
     }
 }

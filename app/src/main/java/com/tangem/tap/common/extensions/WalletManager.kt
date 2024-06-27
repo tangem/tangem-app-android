@@ -4,8 +4,8 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchainsdk.utils.amountToCreateAccount
 import com.tangem.common.services.Result
-import com.tangem.domain.common.extensions.amountToCreateAccount
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder

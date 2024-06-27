@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.visa
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -17,6 +18,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBottomSheetConfig
 
@@ -159,21 +161,12 @@ private inline fun ContentContainer(
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun BalancesAndLimitsBottomSheetPreview_Light(
+private fun BalancesAndLimitsBottomSheetPreview(
     @PreviewParameter(BalancesAndLimitsBottomSheetParameterProvider::class) state: BalancesAndLimitsBottomSheetConfig,
 ) {
-    TangemTheme {
-        BalancesAndLimitsContent(state)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun BalancesAndLimitsBottomSheetPreview_Dark(
-    @PreviewParameter(BalancesAndLimitsBottomSheetParameterProvider::class) state: BalancesAndLimitsBottomSheetConfig,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         BalancesAndLimitsContent(state)
     }
 }

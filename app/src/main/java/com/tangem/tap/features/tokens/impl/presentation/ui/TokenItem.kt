@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -24,6 +25,7 @@ import androidx.constraintlayout.compose.Dimension
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.CurrencyPlaceholderIcon
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
@@ -216,33 +218,19 @@ private fun ChangeNetworksViewButton(isExpanded: Boolean, onClick: () -> Unit, m
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TokenItem_ManageAccess_Light() {
-    TangemTheme(isDark = false) {
-        TokenItem(model = TokenListPreviewData.createManageToken())
-    }
-}
-
-@Preview()
-@Composable
-private fun Preview_TokenItem_ManageAccess_Dark() {
-    TangemTheme(isDark = true) {
+private fun Preview_TokenItem_ManageAccess() {
+    TangemThemePreview {
         TokenItem(model = TokenListPreviewData.createManageToken())
     }
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TokenItem_ReadAccess_Light() {
-    TangemTheme(isDark = false) {
-        TokenItem(model = TokenListPreviewData.createReadToken())
-    }
-}
-
-@Preview()
-@Composable
-private fun Preview_TokenItem_ReadAccess_Dark() {
-    TangemTheme(isDark = true) {
+private fun Preview_TokenItem_ReadAccess() {
+    TangemThemePreview {
         TokenItem(model = TokenListPreviewData.createReadToken())
     }
 }

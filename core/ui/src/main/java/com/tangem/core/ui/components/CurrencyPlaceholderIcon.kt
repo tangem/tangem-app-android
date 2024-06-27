@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -39,19 +41,11 @@ fun CurrencyPlaceholderIcon(id: String, modifier: Modifier = Modifier) {
 // region preview
 
 @Preview(showBackground = true, heightDp = 40, widthDp = 40)
+@Preview(showBackground = true, heightDp = 40, widthDp = 40, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_CurrencyPlaceholderIcon_InLightTheme() {
-    TangemTheme(isDark = false) {
+private fun Preview_CurrencyPlaceholderIcon() {
+    TangemThemePreview {
         CurrencyPlaceholderIcon(id = "DAI")
     }
 }
-
-@Preview(showBackground = true, heightDp = 40, widthDp = 40)
-@Composable
-private fun Preview_CurrencyPlaceholderIcon_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        CurrencyPlaceholderIcon(id = "DAI")
-    }
-}
-
 // endregion preview

@@ -2,5 +2,7 @@ package com.tangem.domain.wallets.models
 
 sealed interface UpdateWalletError {
 
-    object DataError : UpdateWalletError
+    data object DataError : UpdateWalletError
+
+    data object NameAlreadyExists : UpdateWalletError
 }

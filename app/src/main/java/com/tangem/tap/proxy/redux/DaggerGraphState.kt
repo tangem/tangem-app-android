@@ -1,9 +1,9 @@
 package com.tangem.tap.proxy.redux
 
 import com.tangem.TangemSdkLogger
-import com.tangem.blockchain.common.AccountCreator
-import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
-import com.tangem.blockchain.common.logging.BlockchainSDKLogger
+import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.core.navigation.email.EmailSender
+import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
@@ -13,15 +13,19 @@ import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
+import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.feature.qrscanning.QrScanningRouter
+import com.tangem.features.details.DetailsEntryPoint
+import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
@@ -30,7 +34,7 @@ import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
@@ -42,7 +46,7 @@ data class DaggerGraphState(
     val customTokenFeatureToggles: CustomTokenFeatureToggles? = null,
     val scanCardUseCase: ScanCardUseCase? = null,
     val walletRouter: WalletRouter? = null,
-    val walletConnectRepository: WalletConnectRepository? = null,
+    val walletConnectRepository: LegacyWalletConnectRepository? = null,
     val walletConnectSessionsRepository: WalletConnectSessionsRepository? = null,
     val walletConnectInteractor: WalletConnectInteractor? = null,
     val tokenDetailsRouter: TokenDetailsRouter? = null,
@@ -61,14 +65,18 @@ data class DaggerGraphState(
     val sendRouter: SendRouter? = null,
     val qrScanningRouter: QrScanningRouter? = null,
     val currenciesRepository: CurrenciesRepository? = null,
-    val blockchainDataStorage: BlockchainDataStorage? = null,
-    val accountCreator: AccountCreator? = null,
-    val userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles? = null,
     val generalUserWalletsListManager: UserWalletsListManager? = null,
     val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase? = null,
     val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase? = null,
+    val generateWalletNameUseCase: GenerateWalletNameUseCase? = null,
     val cardRepository: CardRepository? = null,
     val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles? = null,
     val tangemSdkLogger: TangemSdkLogger? = null,
-    val blockchainSDKLogger: BlockchainSDKLogger? = null,
+    val settingsRepository: SettingsRepository? = null,
+    val blockchainSDKFactory: BlockchainSDKFactory? = null,
+    val emailSender: EmailSender? = null,
+    val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase? = null,
+    val assetLoader: AssetLoader? = null,
+    val detailsFeatureToggles: DetailsFeatureToggles? = null,
+    val detailsEntryPoint: DetailsEntryPoint? = null,
 ) : StateType
