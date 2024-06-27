@@ -2,10 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.componen
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.networkIconResId
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.features.tokendetails.impl.R
@@ -66,7 +63,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         ),
     )
 
-    object NetworksUnreachable : Warning(
+    data object NetworksUnreachable : Warning(
         title = resourceReference(R.string.warning_network_unreachable_title),
         subtitle = resourceReference(R.string.warning_network_unreachable_message),
     )
@@ -117,8 +114,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
             ),
         ),
         iconResId = currency.networkIconResId,
-        buttonsState =
-        NotificationConfig.ButtonsState.SecondaryButtonConfig(
+        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
             text = resourceReference(
                 id = R.string.common_buy_currency,
                 formatArgs = wrappedList(
@@ -167,21 +163,46 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         ),
     )
 
-    object TopUpWithoutReserve : Informational(
+    data object TopUpWithoutReserve : Informational(
         title = resourceReference(id = R.string.warning_no_account_title),
         subtitle = resourceReference(id = R.string.no_account_send_to_create),
-    )
-
-    class HasPendingTransactions(val coinSymbol: String) : Informational(
-        title = resourceReference(R.string.warning_send_blocked_pending_transactions_title),
-        subtitle = resourceReference(
-            id = R.string.warning_send_blocked_pending_transactions_message,
-            formatArgs = wrappedList(coinSymbol),
-        ),
     )
 
     data class NetworkShutdown(private val title: TextReference, private val subtitle: TextReference) : Warning(
         title = title,
         subtitle = subtitle,
+    )
+
+    data class HederaAssociateWarning(
+        private val currency: CryptoCurrency,
+        private val fee: String?,
+        private val feeCurrencySymbol: String?,
+        private val onAssociateClick: () -> Unit,
+    ) : Warning(
+        title = resourceReference(R.string.warning_hedera_missing_token_association_title),
+        subtitle = if (fee != null && feeCurrencySymbol != null) {
+            resourceReference(
+                id = R.string.warning_hedera_missing_token_association_message,
+                formatArgs = wrappedList(fee, feeCurrencySymbol),
+            )
+        } else {
+            resourceReference(R.string.warning_hedera_missing_token_association_message_brief)
+        },
+        iconResId = currency.networkIconResId,
+        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+            text = resourceReference(R.string.warning_hedera_missing_token_association_button_title),
+            onClick = onAssociateClick,
+        ),
+    )
+
+    data class KoinosMana(
+        val manaBalanceAmount: String,
+        val maxManaBalanceAmount: String,
+    ) : Informational(
+        title = resourceReference(id = R.string.koinos_mana_level_title),
+        subtitle = resourceReference(
+            id = R.string.koinos_mana_level_description,
+            formatArgs = wrappedList(manaBalanceAmount, maxManaBalanceAmount),
+        ),
     )
 }

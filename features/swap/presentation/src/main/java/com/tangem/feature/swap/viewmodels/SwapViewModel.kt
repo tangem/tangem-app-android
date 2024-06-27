@@ -540,6 +540,12 @@ internal class SwapViewModel @Inject constructor(
                     is SwapTransactionState.UserCancelled -> {
                         startLoadingQuotesFromLastState()
                     }
+                    is SwapTransactionState.DemoMode -> {
+                        startLoadingQuotesFromLastState()
+                        uiState = stateBuilder.createDemoModeAlert(uiState) {
+                            uiState = stateBuilder.clearAlert(uiState)
+                        }
+                    }
                     else -> {
                         startLoadingQuotesFromLastState()
                         uiState = stateBuilder.createErrorTransaction(uiState, it) {
@@ -886,12 +892,6 @@ internal class SwapViewModel @Inject constructor(
             onMaxAmountSelected = ::onMaxAmountClicked,
             onReduceAmount = ::onReduceAmountClicked,
             onLeaveExistentialDeposit = ::onLeaveExistentialDepositClicked,
-            onReduceAmountIgnoreClick = {
-                uiState = uiState.copy(
-                    reduceAmountIgnore = true,
-                    warnings = uiState.warnings.filter { it !is SwapWarning.ReduceAmount },
-                )
-            },
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
