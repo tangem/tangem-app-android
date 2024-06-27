@@ -55,12 +55,6 @@ Submit a new Beta Build to Firebase App Distribution
 
 Publish internal and external builds to Firebase App Distribution
 
-### android logging
-
-```sh
-[bundle exec] fastlane android logging
-```
-
 
 
 ----
