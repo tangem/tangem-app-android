@@ -32,6 +32,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.transaction.models)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
     implementation(projects.domain.staking)
