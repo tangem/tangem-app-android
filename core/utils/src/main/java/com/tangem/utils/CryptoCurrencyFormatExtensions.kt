@@ -41,24 +41,3 @@ fun BigDecimal.toFormattedCurrencyString(
     val formattedCurrency = currency?.let { " $it" } ?: ""
     return "$formattedAmount$formattedCurrency"
 }
-
-fun BigDecimal.toFiatString(
-    rateValue: BigDecimal,
-    fiatCurrencyName: String,
-    formatWithSpaces: Boolean = false,
-): String {
-    val fiatValue = rateValue.multiply(this)
-    val formatter = NumberFormat.getInstance(Locale.getDefault()) as? DecimalFormat
-    val df = formatter?.apply {
-        maximumFractionDigits = 2
-        minimumFractionDigits = 2
-        isGroupingUsed = true
-        this.roundingMode = roundingMode
-    }
-    val formatted = if (formatWithSpaces) {
-        "${df?.format(fiatValue)} $fiatCurrencyName"
-    } else {
-        "${df?.format(fiatValue)}$fiatCurrencyName"
-    }
-    return formatted
-}

@@ -12,7 +12,7 @@ import java.math.BigDecimal
  * @property sortedBy The criteria used for sorting the tokens.
  */
 sealed class TokenList {
-    open val totalFiatBalance: FiatBalance = FiatBalance.Loading
+    open val totalFiatBalance: TotalFiatBalance = TotalFiatBalance.Loading
     open val sortedBy: SortType = SortType.NONE
 
     /**
@@ -24,7 +24,7 @@ sealed class TokenList {
      */
     data class GroupedByNetwork(
         val groups: List<NetworkGroup>,
-        override val totalFiatBalance: FiatBalance,
+        override val totalFiatBalance: TotalFiatBalance,
         override val sortedBy: SortType,
     ) : TokenList()
 
@@ -37,14 +37,14 @@ sealed class TokenList {
      */
     data class Ungrouped(
         val currencies: List<CryptoCurrencyStatus>,
-        override val totalFiatBalance: FiatBalance,
+        override val totalFiatBalance: TotalFiatBalance,
         override val sortedBy: SortType,
     ) : TokenList()
 
     /** Represents a state where the token list is empty. */
     object Empty : TokenList() {
 
-        override val totalFiatBalance: FiatBalance = FiatBalance.Loaded(
+        override val totalFiatBalance: TotalFiatBalance = TotalFiatBalance.Loaded(
             amount = BigDecimal.ZERO,
             isAllAmountsSummarized = true,
         )
@@ -53,33 +53,5 @@ sealed class TokenList {
     /** Defines the possible sorting criteria for the tokens. */
     enum class SortType {
         NONE, BALANCE,
-    }
-
-    /**
-     * Represents the possible states of the fiat balance, including loading, failure, or a loaded amount.
-     */
-    sealed class FiatBalance {
-        /**
-         * Represents the loading state of the fiat balance.
-         * This state indicates that the fiat balance is currently being retrieved or calculated.
-         */
-        object Loading : FiatBalance()
-
-        /**
-         * Represents the failure state of the fiat balance.
-         * This state indicates that an attempt to retrieve or calculate the fiat balance has failed.
-         */
-        object Failed : FiatBalance()
-
-        /**
-         * Represents the successfully loaded state of the fiat balance.
-         *
-         * @property amount The loaded fiat balance amount.
-         * @property isAllAmountsSummarized Indicates whether the amount includes a summary of all underlying amounts.
-         */
-        data class Loaded(
-            val amount: BigDecimal,
-            val isAllAmountsSummarized: Boolean,
-        ) : FiatBalance()
     }
 }

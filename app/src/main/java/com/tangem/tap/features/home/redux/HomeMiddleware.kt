@@ -11,7 +11,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
@@ -19,11 +19,9 @@ import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -77,8 +75,10 @@ private fun handleHomeAction(action: Action) {
 }
 
 private suspend fun readCard() {
+    val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+
     store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
-        isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
+        isBiometricsRequestPolicy = shouldSaveAccessCodes,
     )
 
     store.inject(DaggerGraphState::scanCardProcessor).scan(
@@ -103,11 +103,13 @@ private suspend fun readCard() {
 }
 
 private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
-    val userWallet = UserWalletBuilder(scanResponse).build().guard {
+    val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+    val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase).build().guard {
         Timber.e("User wallet not created")
         return@launch
     }
 
+    val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
     userWalletsListManager.save(userWallet)
         .doOnFailure { error ->
             Timber.e(error, "Unable to save user wallet")
@@ -127,6 +129,8 @@ private fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
     )
 
     if (currency != null) {
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+
         Analytics.send(
             event = Basic.SignedIn(
                 currency = currency,

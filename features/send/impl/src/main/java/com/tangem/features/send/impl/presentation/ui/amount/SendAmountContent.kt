@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui.amount
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.previewdata.AmountStatePreviewData
@@ -42,12 +44,13 @@ internal fun SendAmountContent(
 }
 
 // region Preview
-@Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun AmountFieldPreview_Light(
-    @PreviewParameter(AmountStatePreviewProvider::class) amountState: SendStates.AmountState,
+private fun SendAmountContentPreview(
+    @PreviewParameter(SendAmountContentPreviewProvider::class) amountState: SendStates.AmountState,
 ) {
-    TangemTheme {
+    TangemThemePreview {
         SendAmountContent(
             amountState = amountState,
             isBalanceHiding = false,
@@ -56,21 +59,7 @@ private fun AmountFieldPreview_Light(
     }
 }
 
-@Preview
-@Composable
-private fun AmountFieldPreview_Dark(
-    @PreviewParameter(AmountStatePreviewProvider::class) amountState: SendStates.AmountState,
-) {
-    TangemTheme(isDark = true) {
-        SendAmountContent(
-            amountState = amountState,
-            isBalanceHiding = false,
-            clickIntents = SendClickIntentsStub,
-        )
-    }
-}
-
-private class AmountStatePreviewProvider : PreviewParameterProvider<SendStates.AmountState> {
+private class SendAmountContentPreviewProvider : PreviewParameterProvider<SendStates.AmountState> {
     override val values: Sequence<SendStates.AmountState>
         get() = sequenceOf(
             AmountStatePreviewData.amountState,

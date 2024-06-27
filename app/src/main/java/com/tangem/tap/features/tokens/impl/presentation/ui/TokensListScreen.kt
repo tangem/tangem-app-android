@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
@@ -34,6 +35,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListStateHolder
@@ -193,21 +195,12 @@ private fun SaveChangesButton(showProgress: Boolean, onClick: () -> Unit, modifi
 }
 
 @Preview(showSystemUi = true)
+@Preview(showSystemUi = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TokensListScreen_Light(
+private fun Preview_TokensListScreen(
     @PreviewParameter(TokensListScreenProvider::class) stateHolder: TokensListStateHolder,
 ) {
-    TangemTheme(isDark = false) {
-        TokensListScreen(stateHolder)
-    }
-}
-
-@Preview(showSystemUi = true)
-@Composable
-private fun Preview_TokensListScreen_Dark(
-    @PreviewParameter(TokensListScreenProvider::class) stateHolder: TokensListStateHolder,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         TokensListScreen(stateHolder)
     }
 }

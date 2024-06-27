@@ -10,5 +10,5 @@ import com.tangem.datasource.local.testnet.models.TestnetTokensConfig
 interface TestnetTokensStorage {
 
     /** Get a testnet tokens data */
-    fun getConfig(): TestnetTokensConfig
+    suspend fun getConfig(): TestnetTokensConfig
 }

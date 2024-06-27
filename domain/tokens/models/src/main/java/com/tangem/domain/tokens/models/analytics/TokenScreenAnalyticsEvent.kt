@@ -72,4 +72,9 @@ sealed class TokenScreenAnalyticsEvent(
         event = "Token Bought",
         params = mapOf("Token" to token),
     )
+
+    class Associate(tokenSymbol: String, blockchain: String) : TokenScreenAnalyticsEvent(
+        event = "Button - Token Trustline",
+        params = mapOf("Token" to tokenSymbol, "Blockchain" to blockchain),
+    )
 }
