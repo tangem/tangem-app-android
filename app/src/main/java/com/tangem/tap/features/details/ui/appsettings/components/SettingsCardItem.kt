@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.appsettings.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
@@ -16,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.SpacerW16
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsItemsFactory
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
@@ -59,17 +61,10 @@ internal fun SettingsCardItem(item: Item.Card, modifier: Modifier = Modifier) {
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun CardItemPreview_Light(@PreviewParameter(CardItemProvider::class) item: Item.Card) {
-    TangemTheme {
-        SettingsCardItem(item = item)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun CardItemPreview_Dark(@PreviewParameter(CardItemProvider::class) item: Item.Card) {
-    TangemTheme(isDark = true) {
+private fun CardItemPreview(@PreviewParameter(CardItemProvider::class) item: Item.Card) {
+    TangemThemePreview {
         SettingsCardItem(item = item)
     }
 }

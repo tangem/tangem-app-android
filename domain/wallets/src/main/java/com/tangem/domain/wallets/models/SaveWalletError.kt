@@ -5,7 +5,9 @@ package com.tangem.domain.wallets.models
  */
 sealed interface SaveWalletError {
 
-    object DataError : SaveWalletError
+    val messageId: Int?
 
-    data class WalletAlreadySaved(val messageId: Int) : SaveWalletError
+    data class DataError(override val messageId: Int?) : SaveWalletError
+
+    data class WalletAlreadySaved(override val messageId: Int) : SaveWalletError
 }

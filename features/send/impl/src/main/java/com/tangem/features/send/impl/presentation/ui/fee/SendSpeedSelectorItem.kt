@@ -54,7 +54,11 @@ internal fun SendSpeedSelectorItem(
                 onSelect = onSelect,
                 modifier = modifier,
                 preDot = getCryptoReference(amount, state.isFeeApproximate),
-                postDot = getFiatReference(amount?.value, state.rate, state.appCurrency),
+                postDot = if (state.isFeeConvertibleToFiat) {
+                    getFiatReference(amount?.value, state.rate, state.appCurrency)
+                } else {
+                    null
+                },
                 ellipsizeOffset = amount?.currencySymbol?.length,
                 isSelected = content?.selectedFee == feeType,
                 showDivider = showDivider,

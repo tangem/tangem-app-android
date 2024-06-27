@@ -5,7 +5,6 @@ import com.tangem.common.*
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.core.UserCodeRequestPolicy
-import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -16,23 +15,24 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.UserWalletBuilder
-import com.tangem.domain.userwallets.UserWalletIdBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.legacy.asLockable
-import com.tangem.tap.*
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
-import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.wallet.R
@@ -83,6 +83,8 @@ class DetailsMiddleware {
     class EraseWalletMiddleware {
         @Suppress("CyclomaticComplexMethod")
         fun handle(action: DetailsAction.ResetToFactory) {
+            val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+
             when (action) {
                 is DetailsAction.ResetToFactory.Start -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
@@ -329,8 +331,10 @@ class DetailsMiddleware {
         }
 
         private fun toggleSaveAccessCodes(state: DetailsState, enable: Boolean) = scope.launch {
+            val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+
             // Nothing to change
-            if (preferencesStorage.shouldSaveAccessCodes == enable) {
+            if (shouldSaveAccessCodes == enable) {
                 store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
                 return@launch
             }
@@ -369,50 +373,6 @@ class DetailsMiddleware {
             scanResponse: ScanResponse?,
             enableAccessCodesSaving: Boolean,
         ): CompletionResult<Unit> {
-            val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
-
-            return if (featureToggles.isGeneralManagerEnabled) {
-                saveCurrentWalletByNewWay(scanResponse, enableAccessCodesSaving)
-            } else {
-                saveCurrentWalletByOldWay(scanResponse, enableAccessCodesSaving)
-            }
-        }
-
-        private suspend fun saveCurrentWalletByOldWay(
-            scanResponse: ScanResponse?,
-            enableAccessCodesSaving: Boolean,
-        ): CompletionResult<Unit> {
-            val userWallet = userWalletsListManager.selectedUserWalletSync
-                ?: scanResponse?.let { UserWalletBuilder(it).build() }
-                ?: return CompletionResult.Failure(
-                    error = TangemSdkError.ExceptionError(IllegalStateException("scanResponse is null")),
-                )
-
-            updateUserWalletsListManager(enableUserWalletsSaving = true)
-
-            return userWalletsListManager.save(userWallet)
-                .flatMap {
-                    if (enableAccessCodesSaving) {
-                        saveAccessCodes(scanResponse)
-                    } else {
-                        CompletionResult.Success(Unit)
-                    }
-                }
-                .doOnSuccess {
-                    Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.On))
-
-                    preferencesStorage.shouldShowSaveUserWalletScreen = false
-                    store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
-                }
-                .doOnFailure { error ->
-                    Timber.e(error, "Unable to save user wallet")
-                }
-        }
-
-        private suspend fun saveCurrentWalletByNewWay(
-            scanResponse: ScanResponse?,
-            enableAccessCodesSaving: Boolean,
-        ): CompletionResult<Unit> {
             store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
 
             return if (enableAccessCodesSaving) {
@@ -429,31 +389,6 @@ class DetailsMiddleware {
         }
 
         private suspend fun deleteSavedWalletsAndAccessCodes(): CompletionResult<Unit> {
-            val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
-
-            return if (featureToggles.isGeneralManagerEnabled) {
-                deleteSavedWalletsAndAccessCodesByNewWay()
-            } else {
-                deleteSavedWalletsAndAccessCodesByOldWay()
-            }
-        }
-
-        private suspend fun deleteSavedWalletsAndAccessCodesByOldWay(): CompletionResult<Unit> {
-            return userWalletsListManager.clear()
-                .doOnSuccess {
-                    Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
-                    deleteSavedAccessCodes()
-                    updateUserWalletsListManager(enableUserWalletsSaving = false)
-                    store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
-
-                    store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
-                }
-                .doOnFailure { error ->
-                    Timber.e(error, "Unable to delete saved wallets")
-                }
-        }
-
-        private suspend fun deleteSavedWalletsAndAccessCodesByNewWay(): CompletionResult<Unit> {
             Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
 
             deleteSavedAccessCodes()
@@ -464,12 +399,14 @@ class DetailsMiddleware {
             return CompletionResult.Success(Unit)
         }
 
-        private fun saveAccessCodes(scanResponse: ScanResponse?): CompletionResult<Unit> {
+        private suspend fun saveAccessCodes(scanResponse: ScanResponse?): CompletionResult<Unit> {
             Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.On))
 
-            preferencesStorage.shouldSaveAccessCodes = true
-            store.inject(DaggerGraphState::cardSdkConfigRepository)
-                .setAccessCodeRequestPolicy(isBiometricsRequestPolicy = scanResponse?.card?.isAccessCodeSet == true)
+            store.inject(DaggerGraphState::settingsRepository).setShouldSaveAccessCodes(value = true)
+
+            store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+                isBiometricsRequestPolicy = scanResponse?.card?.isAccessCodeSet == true,
+            )
 
             return CompletionResult.Success(Unit)
         }
@@ -479,32 +416,15 @@ class DetailsMiddleware {
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.Off))
 
-                    preferencesStorage.shouldSaveAccessCodes = false
-                    store.inject(DaggerGraphState::cardSdkConfigRepository)
-                        .setAccessCodeRequestPolicy(isBiometricsRequestPolicy = false)
+                    store.inject(DaggerGraphState::settingsRepository).setShouldSaveAccessCodes(value = false)
+
+                    store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+                        isBiometricsRequestPolicy = false,
+                    )
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to delete saved access codes")
                 }
-        }
-
-        private suspend fun updateUserWalletsListManager(enableUserWalletsSaving: Boolean) {
-            val manager = if (enableUserWalletsSaving) {
-                createBiometricsUserWalletsManager() ?: return
-            } else {
-                UserWalletsListManager.provideRuntimeImplementation()
-            }
-
-            store.dispatchWithMain(GlobalAction.UpdateUserWalletsListManager(manager))
-        }
-
-        private fun createBiometricsUserWalletsManager(): UserWalletsListManager? {
-            val context = foregroundActivityObserver.foregroundActivity?.applicationContext.guard {
-                Timber.e(IllegalStateException("No activities in foreground"))
-                return null
-            }
-
-            return UserWalletsListManager.provideBiometricImplementation(context)
         }
     }
 
@@ -574,9 +494,8 @@ class DetailsMiddleware {
         val prevUseBiometricsForAccessCode = cardSdkConfigRepository.isBiometricsRequestPolicy()
 
         // Update access code policy for access code saving when a card was scanned
-        cardSdkConfigRepository.setAccessCodeRequestPolicy(
-            isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
-        )
+        val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+        cardSdkConfigRepository.setAccessCodeRequestPolicy(isBiometricsRequestPolicy = shouldSaveAccessCodes)
 
         store.inject(DaggerGraphState::scanCardProcessor).scan(
             analyticsSource = CoreAnalyticsParam.ScreensSources.Settings,
@@ -588,35 +507,70 @@ class DetailsMiddleware {
                 store.dispatchOnMain(NavigationAction.PopBackTo())
             },
             onSuccess = { scanResponse ->
-                saveUserWalletAndPopBackToWalletScreen(scanResponse)
+                createUserWallet(scanResponse)
+                    .doOnSuccess {
+                        saveUserWalletAndPopBackToWalletScreen(
+                            userWallet = it,
+                            prevUseBiometricsForAccessCode = prevUseBiometricsForAccessCode,
+                        )
+                    }
                     .doOnFailure { error ->
-                        // Rollback policy if card saving was failed
-                        cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
-                        Timber.e(error, "Unable to save user wallet")
-
-                        store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Error(error.toTextReference()))
+                        Timber.e(error, "Unable to create user wallet")
+                        handleError(error = error, prevUseBiometricsForAccessCode = prevUseBiometricsForAccessCode)
                     }
             },
             onFailure = { error ->
-                // Rollback policy if card scanning was failed
-                cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
                 Timber.e(error, "Unable to scan card")
-                store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Error(error.toTextReference()))
+                handleError(error = error, prevUseBiometricsForAccessCode = prevUseBiometricsForAccessCode)
             },
         )
     }
 
-    private suspend fun saveUserWalletAndPopBackToWalletScreen(scanResponse: ScanResponse): CompletionResult<Unit> {
-        val userWallet = UserWalletBuilder(scanResponse).build()
-            ?: return CompletionResult.Failure(TangemSdkError.WalletIsNotCreated())
+    private suspend fun createUserWallet(scanResponse: ScanResponse): CompletionResult<UserWallet> {
+        val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+        val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase).build()
 
-        return userWalletsListManager.save(userWallet)
+        return if (userWallet != null) {
+            CompletionResult.Success(userWallet)
+        } else {
+            CompletionResult.Failure(TangemSdkError.WalletIsNotCreated())
+        }
+    }
+
+    private suspend fun saveUserWalletAndPopBackToWalletScreen(
+        userWallet: UserWallet,
+        prevUseBiometricsForAccessCode: Boolean,
+    ) {
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+
+        userWalletsListManager.save(userWallet)
             .doOnSuccess {
                 store.onUserWalletSelected(userWallet)
 
                 store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
                 store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
             }
+            .doOnFailure { error ->
+                if (error is UserWalletsListError.WalletAlreadySaved) {
+                    userWalletsListManager.select(userWallet.walletId)
+                    store.onUserWalletSelected(userWallet)
+
+                    store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
+                    store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                } else {
+                    Timber.e(error, "Unable to create user wallet")
+                    handleError(error, prevUseBiometricsForAccessCode)
+                }
+            }
+    }
+
+    private suspend fun handleError(error: TangemError, prevUseBiometricsForAccessCode: Boolean) {
+        val cardSdkConfigRepository = store.inject(DaggerGraphState::cardSdkConfigRepository)
+
+        // Rollback policy if card saving was failed
+        cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+
+        store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Error(error.toTextReference()))
     }
 
     private fun TangemError.toTextReference(): TextReference? {

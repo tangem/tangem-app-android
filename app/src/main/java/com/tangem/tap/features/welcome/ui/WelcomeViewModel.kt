@@ -31,14 +31,12 @@ internal class WelcomeViewModel @Inject constructor(
     private val stateInternal = MutableStateFlow(WelcomeScreenState())
     val state: StateFlow<WelcomeScreenState> = stateInternal
 
-    init {
+    override fun onCreate(owner: LifecycleOwner) {
         store.dispatch(WelcomeAction.SetCoroutineScope(viewModelScope))
 
         subscribeToStoreChanges()
         initGlobalState()
-    }
 
-    override fun onCreate(owner: LifecycleOwner) {
         val welcomeAction = if (initialIntent != null) {
             WelcomeAction.ProceedWithIntent(initialIntent)
         } else {
@@ -80,9 +78,10 @@ internal class WelcomeViewModel @Inject constructor(
         }
     }
 
-    override fun onCleared() {
+    override fun onDestroy(owner: LifecycleOwner) {
         store.dispatch(WelcomeAction.ClearCoroutineScope)
         store.unsubscribe(this)
+        super.onDestroy(owner)
     }
 
     private fun createWarningIfNeeded(error: TangemError?): WarningModel? {

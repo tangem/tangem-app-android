@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -105,7 +106,7 @@ private fun getValuePercentageForRange(value: Float, max: Float, min: Float): Fl
 @Preview(widthDp = 150, heightDp = 150, showBackground = true)
 @Composable
 private fun Chart_Positive_Preview() {
-    TangemTheme(isDark = true) {
+    TangemThemePreview(isDark = true) {
         PriceChangesChart(
             persistentListOf(1f, 2f, 4f, 1f, 5f),
         )
@@ -115,7 +116,7 @@ private fun Chart_Positive_Preview() {
 @Preview(widthDp = 150, heightDp = 150, showBackground = true)
 @Composable
 private fun Chart_Negative_Preview() {
-    TangemTheme(isDark = true) {
+    TangemThemePreview(isDark = true) {
         PriceChangesChart(
             persistentListOf(10f, 2f, 4f, 1f, 5f),
         )
@@ -125,7 +126,7 @@ private fun Chart_Negative_Preview() {
 @Preview(widthDp = 150, heightDp = 150, showBackground = true)
 @Composable
 private fun Chart_Neutral_Preview() {
-    TangemTheme(isDark = true) {
+    TangemThemePreview(isDark = true) {
         PriceChangesChart(
             persistentListOf(5f, 2f, 4f, 1f, 5f),
         )

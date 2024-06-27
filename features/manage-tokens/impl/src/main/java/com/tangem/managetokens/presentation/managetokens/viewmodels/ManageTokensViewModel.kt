@@ -391,6 +391,7 @@ internal class ManageTokensViewModel @Inject constructor(
                 event = Event.ShowAlert(
                     AlertState.CannotHideNetworkWithTokens(
                         tokenName = cryptoCurrency.name,
+                        currencySymbol = cryptoCurrency.symbol,
                         networkName = cryptoCurrency.network.name,
                     ),
                 ),

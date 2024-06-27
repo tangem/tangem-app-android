@@ -25,6 +25,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState.InputField
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState.Title
@@ -171,7 +172,7 @@ private fun Hint(value: String) {
 @Preview
 @Composable
 private fun Preview_AddTokensToolbar_EditAccess() {
-    TangemTheme {
+    TangemThemePreview {
         TokensListToolbar(
             state = Title.Manage(
                 titleResId = R.string.main_manage_tokens,
@@ -186,7 +187,7 @@ private fun Preview_AddTokensToolbar_EditAccess() {
 @Preview
 @Composable
 private fun Preview_AddTokensToolbar_ReadAccess() {
-    TangemTheme {
+    TangemThemePreview {
         TokensListToolbar(
             state = Title.Read(
                 titleResId = R.string.common_search_tokens,
@@ -202,7 +203,7 @@ private fun Preview_AddTokensToolbar_ReadAccess() {
 private fun Preview_AddTokensToolbar_SearchInputField() {
     var value by remember { mutableStateOf("") }
 
-    TangemTheme {
+    TangemThemePreview {
         TokensListToolbar(
             state = InputField(
                 onBackButtonClick = {},

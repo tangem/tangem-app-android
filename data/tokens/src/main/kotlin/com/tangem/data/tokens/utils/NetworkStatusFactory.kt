@@ -81,8 +81,7 @@ internal class NetworkStatusFactory {
                     }
                     is CryptoCurrency.Token -> transactions.filterTo(hashSetOf()) { transaction ->
                         transaction is CryptoCurrencyTransaction.Token &&
-                            transaction.tokenId == currency.id.rawCurrencyId &&
-                            transaction.tokenContractAddress == currency.contractAddress
+                            transaction.tokenContractAddress.equals(currency.contractAddress, ignoreCase = true)
                     }
                 }
 

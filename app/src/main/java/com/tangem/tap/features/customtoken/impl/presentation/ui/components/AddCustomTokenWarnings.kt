@@ -1,5 +1,6 @@
 package com.tangem.tap.features.customtoken.impl.presentation.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenWarning
 import com.tangem.tap.features.customtoken.impl.presentation.ui.AddCustomTokenPreviewData
@@ -71,17 +73,10 @@ private fun AddCustomTokenWarning(warning: AddCustomTokenWarning) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_AddCustomTokenWarnings_Light() {
-    TangemTheme {
-        AddCustomTokenWarnings(warnings = AddCustomTokenPreviewData.createWarnings())
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_AddCustomTokenWarnings_Dark() {
-    TangemTheme(isDark = true) {
+private fun Preview_AddCustomTokenWarnings() {
+    TangemThemePreview {
         AddCustomTokenWarnings(warnings = AddCustomTokenPreviewData.createWarnings())
     }
 }

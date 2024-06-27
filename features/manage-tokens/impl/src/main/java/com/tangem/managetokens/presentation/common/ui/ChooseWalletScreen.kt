@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.common.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +24,7 @@ import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.managetokens.impl.R
 import com.tangem.managetokens.presentation.common.state.ChooseWalletState
 import com.tangem.managetokens.presentation.common.state.WalletState
@@ -137,19 +139,10 @@ private fun WalletItem(wallet: WalletState, selectedWallet: WalletState?, modifi
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ChooseWalletScreen_Light() {
-    TangemTheme(isDark = false) {
-        ChooseWalletScreen(
-            state = ChooseWalletStatePreviewData.state,
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_ChooseWalletScreen_Dark() {
-    TangemTheme(isDark = false) {
+private fun Preview_ChooseWalletScreen() {
+    TangemThemePreview {
         ChooseWalletScreen(
             state = ChooseWalletStatePreviewData.state,
         )

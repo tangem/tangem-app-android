@@ -8,7 +8,6 @@ data class Config(
     val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
     val mercuryoWidgetId: String = "",
     val mercuryoSecret: String = "",
-    val appsFlyerDevKey: String = "",
     val amplitudeApiKey: String = "",
     val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
     val isTopUpEnabled: Boolean = false,
@@ -18,4 +17,5 @@ data class Config(
     val walletConnectProjectId: String = "",
     val tangemComAuthorization: String? = null,
     val express: ExpressModel? = null,
+    val stakeKitApiKey: String? = null,
 )
