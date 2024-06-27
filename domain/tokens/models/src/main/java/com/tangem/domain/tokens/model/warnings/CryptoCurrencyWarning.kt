@@ -31,7 +31,7 @@ sealed class CryptoCurrencyWarning {
         val amountCurrency: CryptoCurrency,
     ) : CryptoCurrencyWarning()
 
-    object TopUpWithoutReserve : CryptoCurrencyWarning()
+    data object TopUpWithoutReserve : CryptoCurrencyWarning()
 
     /**
      * Represents wallet blockchain rent
@@ -41,12 +41,18 @@ sealed class CryptoCurrencyWarning {
      */
     data class Rent(val rent: BigDecimal, val exemptionAmount: BigDecimal) : CryptoCurrencyWarning()
 
-    data class HasPendingTransactions(val blockchainSymbol: String) : CryptoCurrencyWarning()
-
     data class SwapPromo(
         val startDateTime: DateTime,
         val endDateTime: DateTime,
     ) : CryptoCurrencyWarning()
 
     data object BeaconChainShutdown : CryptoCurrencyWarning()
+
+    /**
+     * Shows a warning about an available fee resource for a transaction in several blockchains (ex. Koinos)
+     */
+    data class FeeResourceInfo(
+        val amount: BigDecimal,
+        val maxAmount: BigDecimal?,
+    ) : CryptoCurrencyWarning()
 }
