@@ -413,13 +413,17 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromToken.network.backendId,
                 fromToken.network.derivationPath.value,
             ) ?: ProxyAmount.empty()
+            // ignore if amount is bigger than balance
+            if (amount.value > nativeBalance.value) {
+                return
+            }
             val fee = when (txFee) {
                 TxFeeState.Empty -> BigDecimal.ZERO
                 is TxFeeState.MultipleFeeState -> txFee.priorityFee.feeValue
                 is TxFeeState.SingleFeeState -> txFee.fee.feeValue
             }
             val minAvailableAmount = nativeBalance.value - existentialDeposit - fee
-            if (nativeBalance.value.minus(amount.value) < existentialDeposit) {
+            if (nativeBalance.value.minus(amount.value + fee) < existentialDeposit) {
                 warnings.add(Warning.ExistentialDepositWarning(existentialDeposit, minAvailableAmount))
             }
         }
