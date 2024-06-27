@@ -21,26 +21,21 @@ import coil.request.ImageRequest
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.IconState
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun CurrencyIcon(
-    icon: TokenInfoBlockState.IconState,
-    alpha: Float,
-    colorFilter: ColorFilter?,
-    modifier: Modifier = Modifier,
-) {
+internal fun CurrencyIcon(icon: IconState, alpha: Float, colorFilter: ColorFilter?, modifier: Modifier = Modifier) {
     when (icon) {
-        is TokenInfoBlockState.IconState.CoinIcon -> CoinIcon(
+        is IconState.CoinIcon -> CoinIcon(
             modifier = modifier,
             url = icon.url,
             fallbackResId = icon.fallbackResId,
             alpha = alpha,
             colorFilter = colorFilter,
         )
-        is TokenInfoBlockState.IconState.TokenIcon -> TokenIcon(
+        is IconState.TokenIcon -> TokenIcon(
             modifier = modifier,
             url = icon.url,
             alpha = alpha,
@@ -54,7 +49,7 @@ internal fun CurrencyIcon(
                 )
             },
         )
-        is TokenInfoBlockState.IconState.CustomTokenIcon -> CustomTokenIcon(
+        is IconState.CustomTokenIcon -> CustomTokenIcon(
             modifier = modifier,
             tint = icon.tint,
             background = icon.background,
