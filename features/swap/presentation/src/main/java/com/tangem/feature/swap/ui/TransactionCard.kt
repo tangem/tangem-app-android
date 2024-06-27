@@ -282,7 +282,10 @@ private fun Content(
 
             if (amountEquivalent != null) {
                 if (type is TransactionCardType.ReadOnly) {
-                    Row(modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20)) {
+                    Row(
+                        modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         if (priceImpact is PriceImpact.Value) {
                             Text(
                                 text = makePriceImpactBalanceWarning(
@@ -291,8 +294,6 @@ private fun Content(
                                 ),
                                 color = TangemTheme.colors.text.tertiary,
                                 style = TangemTheme.typography.body2,
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically),
                             )
                         } else {
                             AnimatedContent(targetState = amountEquivalent, label = "") {
@@ -312,7 +313,7 @@ private fun Content(
                                 modifier = Modifier.size(size = TangemTheme.dimens.size20),
                             ) {
                                 Icon(
-                                    painter = painterResource(id = R.drawable.ic_alert_24),
+                                    painter = painterResource(id = R.drawable.ic_information_24),
                                     contentDescription = null,
                                     tint = if (priceImpact is PriceImpact.Value) {
                                         TangemTheme.colors.text.attention
