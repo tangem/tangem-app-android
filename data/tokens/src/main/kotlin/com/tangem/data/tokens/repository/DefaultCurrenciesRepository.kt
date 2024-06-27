@@ -1,6 +1,9 @@
 package com.tangem.data.tokens.repository
 
+import arrow.core.raise.catch
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.*
@@ -15,11 +18,11 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.AssetsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.extensions.toCoinId
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -54,6 +57,10 @@ internal class DefaultCurrenciesRepository(
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
     private val customTokensMerger = CustomTokensMerger(tangemTechApi, dispatchers)
+
+    private val isMultiCurrencyWalletCurrenciesFetching = MutableStateFlow(
+        value = emptyMap<UserWalletId, Boolean>(),
+    )
 
     override suspend fun saveTokens(
         userWalletId: UserWalletId,
@@ -166,6 +173,23 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
+    override fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): LceFlow<Throwable, List<CryptoCurrency>> {
+        return lceFlow {
+            val userWallet = catch({ getUserWallet(userWalletId) }) {
+                raise(it)
+            }
+
+            if (userWallet.isMultiCurrency) {
+                getMultiCurrencyWalletCurrenciesUpdatesLce(userWalletId).collect(::send)
+            } else {
+                val currency = catch({ getSingleCurrencyWalletPrimaryCurrency(userWalletId) }) {
+                    raise(it)
+                }
+                send(listOf(currency))
+            }
+        }
+    }
+
     override suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
         return withContext(dispatchers.io) {
             val userWallet = getUserWallet(userWalletId)
@@ -215,10 +239,34 @@ internal class DefaultCurrenciesRepository(
             .cancellable()
     }
 
+    override fun getMultiCurrencyWalletCurrenciesUpdatesLce(
+        userWalletId: UserWalletId,
+    ): LceFlow<Throwable, List<CryptoCurrency>> = lceFlow {
+        val userWallet = getUserWallet(userWalletId)
+        catch({ ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true) }) {
+            raise(it)
+        }
+
+        launch(dispatchers.io) {
+            combine(
+                getMultiCurrencyWalletCurrencies(userWallet).distinctUntilChanged(),
+                isMultiCurrencyWalletCurrenciesFetching.map { it.getOrElse(userWallet.walletId) { false } },
+            ) { currencies, isFetching ->
+                send(currencies, isStillLoading = isFetching)
+            }.collect()
+        }
+
+        withContext(dispatchers.io) {
+            catch({ fetchTokensIfCacheExpired(userWallet, refresh = false) }) {
+                raise(it)
+            }
+        }
+    }
+
     override suspend fun getMultiCurrencyWalletCurrenciesSync(
         userWalletId: UserWalletId,
         refresh: Boolean,
-    ): List<CryptoCurrency> {
+    ): List<CryptoCurrency> = withContext(dispatchers.io) {
         val userWallet = getUserWallet(userWalletId)
         ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
 
@@ -228,7 +276,7 @@ internal class DefaultCurrenciesRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
 
-        return responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
+        responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
     }
 
     override suspend fun getMultiCurrencyWalletCurrency(
@@ -356,7 +404,15 @@ internal class DefaultCurrenciesRepository(
                     balance = balance,
                 )
             }
+            is FeePaidSdkCurrency.FeeResource -> FeePaidCurrency.FeeResource(currency = feePaidCurrency.currency)
         }
+    }
+
+    override fun createTokenCurrency(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token {
+        return CryptoCurrencyFactory().createToken(
+            cryptoCurrency = cryptoCurrency,
+            network = network,
+        )
     }
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
@@ -369,11 +425,21 @@ internal class DefaultCurrenciesRepository(
     }
 
     private suspend fun fetchTokensIfCacheExpired(userWallet: UserWallet, refresh: Boolean) {
-        cacheRegistry.invokeOnExpire(
-            key = getTokensCacheKey(userWallet.walletId),
-            skipCache = refresh,
-            block = { fetchTokens(userWallet) },
-        )
+        try {
+            isMultiCurrencyWalletCurrenciesFetching.update {
+                it + (userWallet.walletId to true)
+            }
+
+            cacheRegistry.invokeOnExpire(
+                key = getTokensCacheKey(userWallet.walletId),
+                skipCache = refresh,
+                block = { fetchTokens(userWallet) },
+            )
+        } finally {
+            isMultiCurrencyWalletCurrenciesFetching.update {
+                it - userWallet.walletId
+            }
+        }
     }
 
     private suspend fun fetchTokens(userWallet: UserWallet) {
