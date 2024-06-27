@@ -91,9 +91,8 @@ class WalletConnectSdkHelper {
 
         val destinationAddress = requireNotNull(transaction.to) { "Destination address is null" }
 
-        val transactionData = TransactionData(
+        val transactionData = TransactionData.Uncompiled(
             amount = Amount(value, wallet.blockchain),
-// [REDACTED_TODO_COMMENT]
             fee = Fee.Common(Amount(fee, wallet.blockchain)),
             sourceAddress = transaction.from,
             destinationAddress = destinationAddress,
