@@ -116,8 +116,8 @@ private fun isButtonEnabled(uiState: StakingUiState): Boolean {
     return when (uiState.currentStep) {
         StakingStep.InitialInfo -> uiState.initialInfoState.isPrimaryButtonEnabled
         StakingStep.Amount -> uiState.amountState.isPrimaryButtonEnabled
-        StakingStep.Validators -> uiState.confirmStakingState.isPrimaryButtonEnabled
         StakingStep.Confirm -> uiState.confirmStakingState.isPrimaryButtonEnabled
         StakingStep.Success -> true
+        StakingStep.Validators -> true
     }
 }
