@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.transaction)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
@@ -56,6 +57,9 @@ dependencies {
     implementation(projects.features.swap.api)
     implementation(projects.features.tokendetails.api)
 
+    /** Libs */
+    implementation(projects.libs.crypto)
+
     /** Other libraries */
     implementation(deps.compose.shimmer)
     implementation(deps.compose.accompanist.webView)
@@ -67,5 +71,4 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
-
 }
