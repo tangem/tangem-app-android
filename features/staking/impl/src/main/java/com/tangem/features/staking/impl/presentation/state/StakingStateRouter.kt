@@ -7,22 +7,20 @@ internal class StakingStateRouter(
     private val fragmentManager: WeakReference<FragmentManager>,
     private val stateController: StakingStateController,
 ) {
-    fun clear() {
-        stateController.update { it.copy(currentStep = getInitialState()) }
-    }
 
-    fun popBackStack() {
+    private fun closeStaking() {
         fragmentManager.get()?.popBackStack()
+        stateController.clear()
     }
 
     fun onBackClick(isSuccess: Boolean = false) {
         val type = stateController.uiState.value.currentStep
         when {
-            isSuccess -> popBackStack()
+            isSuccess -> closeStaking()
             else -> when (type) {
                 StakingStep.Amount -> showInitial()
                 StakingStep.Confirm -> showAmount()
-                else -> popBackStack()
+                else -> closeStaking()
             }
         }
     }
@@ -34,14 +32,17 @@ internal class StakingStateRouter(
             StakingStep.Amount,
             -> showConfirm()
             StakingStep.Confirm -> showSuccess()
-            StakingStep.Success -> onBackClick()
+            StakingStep.Success -> closeStaking()
         }
     }
 
     fun onPrevClick() {
         when (stateController.uiState.value.currentStep) {
             StakingStep.Amount -> showInitial()
-            else -> popBackStack()
+            StakingStep.Confirm -> showAmount()
+            StakingStep.Success -> closeStaking()
+            StakingStep.Validators -> showConfirm()
+            else -> closeStaking()
         }
     }
 
@@ -64,6 +65,4 @@ internal class StakingStateRouter(
     fun showSuccess() {
         stateController.update { it.copy(currentStep = StakingStep.Success) }
     }
-
-    private fun getInitialState() = StakingStep.InitialInfo
 }
