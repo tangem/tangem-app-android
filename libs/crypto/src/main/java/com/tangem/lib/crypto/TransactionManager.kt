@@ -1,17 +1,9 @@
 package com.tangem.lib.crypto
 
 import com.tangem.lib.crypto.models.*
-import com.tangem.lib.crypto.models.transactions.SendTxResult
 import java.math.BigDecimal
 
 interface TransactionManager {
-
-    @Throws(IllegalStateException::class)
-    suspend fun sendApproveTransaction(
-        txData: ApproveTxData,
-        derivationPath: String?,
-        analyticsData: AnalyticsData,
-    ): SendTxResult
 
     /**
      * Get fee
