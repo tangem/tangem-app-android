@@ -150,7 +150,7 @@ internal class SendStateFactory(
         )
     }
 
-    fun getTransactionSendState(txData: TransactionData, txUrl: String): SendUiState {
+    fun getTransactionSendState(txData: TransactionData.Uncompiled, txUrl: String): SendUiState {
         val state = currentStateProvider()
         val sendState = state.sendState ?: return state
         return state.copy(
