@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,6 +23,7 @@ import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SpacerH18
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.managetokens.presentation.addcustomtoken.ui.AddCustomTokenBottomSheet
 import com.tangem.managetokens.presentation.common.state.AlertState
@@ -177,23 +179,13 @@ private fun ManageTokensBottomSheet(selectedToken: TokenItemState.Loaded, state:
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ManageTokensScreen_LightTheme(
+private fun Preview_ManageTokensScreen(
     @PreviewParameter(ManageTokensConfigProvider::class)
     state: ManageTokensState,
 ) {
-    TangemTheme(isDark = false) {
-        ManageTokensScreen(state) {}
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_ManageTokensScreen_DarkTheme(
-    @PreviewParameter(ManageTokensConfigProvider::class)
-    state: ManageTokensState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         ManageTokensScreen(state) {}
     }
 }
