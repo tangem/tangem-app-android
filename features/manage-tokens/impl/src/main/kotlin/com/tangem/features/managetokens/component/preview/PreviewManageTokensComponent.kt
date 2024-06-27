@@ -7,9 +7,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.components.rows.model.ChainRowUM
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.entity.CurrencyItemUM
 import com.tangem.features.managetokens.entity.CurrencyNetworkUM
@@ -21,24 +22,54 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import kotlin.random.Random
 
 internal class PreviewManageTokensComponent : ManageTokensComponent {
 
-    private var items = List(size = 30) { index ->
-        if (index < 2) {
-            getCustomItem(index)
-        } else {
-            getBasicItem(index)
-        }
-    }.toPersistentList()
+    private val changedItemsIds: MutableSet<String> = mutableSetOf()
+
+    private var items = initItems()
 
     private val previewState = MutableStateFlow(
         value = ManageTokensUM(
             popBack = {},
             items = items,
+            search = SearchBarUM(
+                placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
+                query = "",
+                onQueryChange = ::searchCurrencies,
+                isActive = false,
+                onActiveChange = ::toggleSearchBar,
+            ),
+            hasChanges = false,
+            onSaveClick = {},
+            onAddCustomToken = {},
         ),
     )
+
+    private fun searchCurrencies(query: String) {
+        previewState.update { state ->
+            items = if (query.isBlank()) {
+                initItems()
+            } else {
+                items.filter { currency ->
+                    currency.model.name.contains(query, ignoreCase = true)
+                }.toPersistentList()
+            }
+
+            state.copy(
+                search = state.search.copy(query = query),
+                items = items,
+            )
+        }
+    }
+
+    private fun toggleSearchBar(isActive: Boolean) {
+        previewState.update { state ->
+            state.copy(
+                search = state.search.copy(isActive = isActive),
+            )
+        }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -50,15 +81,23 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
         )
     }
 
+    private fun initItems() = List(size = 30) { index ->
+        if (index < 2) {
+            getCustomItem(index)
+        } else {
+            getBasicItem(index)
+        }
+    }.toPersistentList()
+
     private fun getCustomItem(index: Int) = CurrencyItemUM.Custom(
         id = index.toString(),
         model = ChainRowUM(
-            name = stringReference("Custom token $index"),
-            type = stringReference("CT$index"),
+            name = "Custom token $index",
+            type = "CT$index",
             icon = CurrencyIconState.CustomTokenIcon(
                 tint = Color.White,
                 background = Color.Black,
-                networkBadgeIconResId = R.drawable.img_eth_22,
+                topBadgeIconResId = R.drawable.img_eth_22,
                 isGrayscale = false,
                 showCustomBadge = true,
             ),
@@ -70,8 +109,8 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
     private fun getBasicItem(index: Int) = CurrencyItemUM.Basic(
         id = index.toString(),
         model = ChainRowUM(
-            name = stringReference("Currency $index"),
-            type = stringReference("C$index"),
+            name = "Currency $index",
+            type = "C$index",
             icon = CurrencyIconState.CoinIcon(
                 url = null,
                 fallbackResId = R.drawable.img_btc_22,
@@ -85,18 +124,16 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
     )
 
     private fun getCurrencyNetworks(currencyIndex: Int) = List(size = 5) { networkIndex ->
-        val selectedIndex = Random.nextInt(from = 0, until = 5)
-
         CurrencyNetworkUM(
             id = networkIndex.toString(),
             model = BlockchainRowUM(
-                name = stringReference("NETWORK$networkIndex"),
-                type = stringReference("N$networkIndex"),
-                icon = CurrencyIconState.Locked,
-                isAccented = networkIndex == 0,
-                usePrimaryTextColor = networkIndex == selectedIndex,
+                name = "NETWORK$networkIndex",
+                type = "N$networkIndex",
+                iconResId = R.drawable.ic_eth_16,
+                isMainNetwork = networkIndex == 0,
+                isSelected = false,
             ),
-            isSelected = networkIndex == selectedIndex,
+            isSelected = false,
             onSelectedStateChange = { toggleNetwork(currencyIndex, networkIndex, isSelected = it) },
         )
     }.toImmutableList()
@@ -131,7 +168,12 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
                                 if (index == networkIndex) {
                                     it[index] = network.copy(
                                         model = network.model.copy(
-                                            usePrimaryTextColor = isSelected,
+                                            iconResId = if (isSelected) {
+                                                R.drawable.img_eth_22
+                                            } else {
+                                                R.drawable.ic_eth_16
+                                            },
+                                            isSelected = isSelected,
                                         ),
                                         isSelected = isSelected,
                                     )
@@ -146,11 +188,21 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
             is CurrencyItemUM.Custom -> return
         }
 
+        val id = "${currencyIndex}_$networkIndex"
+        if (changedItemsIds.contains(id)) {
+            changedItemsIds.remove(id)
+        } else {
+            changedItemsIds.add(id)
+        }
+
         previewState.update { state ->
             items = items.mutate {
                 it[currencyIndex] = updatedItem
             }
-            state.copy(items = items)
+            state.copy(
+                items = items,
+                hasChanges = changedItemsIds.isNotEmpty(),
+            )
         }
     }
 }
