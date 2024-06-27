@@ -7,6 +7,7 @@ import com.squareup.moshi.JsonClass
 [REDACTED_AUTHOR]
  */
 
+// TODO remove
 class FeatureModel(
     val isTopUpEnabled: Boolean,
     val isCreatingTwinCardsAllowed: Boolean,
@@ -30,7 +31,6 @@ class ConfigValueModel(
     @Json(name = "tonCenterApiKey") val tonCenterKeys: TonCenterKeys,
     val blockcypherTokens: Set<String>?,
     val infuraProjectId: String?,
-    val appsFlyer: AppsFlyer,
     val sprinklr: SprinklrConfig?,
     val tronGridApiKey: String,
     val amplitudeApiKey: String,
@@ -41,6 +41,11 @@ class ConfigValueModel(
     val chiaTangemApiKey: String?,
     val devExpress: ExpressModel?,
     val express: ExpressModel?,
+    @Json(name = "hederaArkhiaKey") val hederaArkhiaKey: String?,
+    val polygonScanApiKey: String?,
+    val stakeKitApiKey: String?,
+    @Json(name = "bittensorDwellirKey") val bittensorDwellirApiKey: String?,
+    @Json(name = "bittensorOnfinalityKey") val bittensorOnfinalityKey: String?,
 )
 
 @JsonClass(generateAdapter = true)
@@ -78,11 +83,6 @@ data class GetBlockToken(
     @Json(name = "blockBookRest") val blockBookRest: String?,
     @Json(name = "rest") val rest: String?,
     @Json(name = "rosetta") val rosetta: String?,
-)
-
-data class AppsFlyer(
-    val appsFlyerDevKey: String,
-    val appsFlyerAppID: String,
 )
 
 class ConfigModel(
