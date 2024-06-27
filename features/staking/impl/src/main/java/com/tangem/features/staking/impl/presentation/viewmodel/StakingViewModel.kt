@@ -8,9 +8,11 @@ import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.staking.InitializeStakingProcessUseCase
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -21,6 +23,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
+import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountChangeStateTransformer
@@ -45,6 +48,7 @@ internal class StakingViewModel @Inject constructor(
     private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val initializeStakingProcessUseCase: InitializeStakingProcessUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
 
@@ -85,10 +89,60 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onNextClick() {
         stakingStateRouter.onNextClick()
+        when (value.currentStep) {
+            StakingStep.Confirm -> {
+                initStaking()
+            }
+            StakingStep.InitialInfo -> {
+                // TODO staking
+            }
+            StakingStep.Amount -> {
+                // TODO staking
+            }
+            StakingStep.Success -> {
+                // TODO staking
+            }
+            StakingStep.Validators -> {
+                // TODO staking
+            }
+        }
+    }
+
+    private fun initStaking() {
+        viewModelScope.launch {
+            stateController.update(
+                SetConfirmLoadingStateTransformer(
+                    yield = yield,
+                ),
+            )
+
+            val actionWithTransaction = initializeStakingProcessUseCase(
+                integrationId = yield.id,
+                amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                    ?: error("No amount provided"),
+                address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                    ?: error("No available address"),
+                validatorAddress = yield.validators.getOrNull(0)?.address ?: error("No available validator"),
+                token = yield.token,
+            )
+            val (enterAction, stakingTransaction) = actionWithTransaction.getOrElse {
+                error("Can't retrieve action and transaction")
+            }
+
+            val stakingGasEstimate = stakingTransaction.gasEstimate ?: error("Can't get fee info")
+
+            stateController.update(
+                SetConfirmStateDataStateTransformer(
+                    appCurrencyProvider = Provider { appCurrency },
+                    cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                    stakingGasEstimate = stakingGasEstimate,
+                ),
+            )
+        }
     }
 
     override fun onPrevClick() {
-        stakingStateRouter.onBackClick()
+        stakingStateRouter.onPrevClick()
     }
 
     override fun onInfoClick(infoType: InfoType) {
