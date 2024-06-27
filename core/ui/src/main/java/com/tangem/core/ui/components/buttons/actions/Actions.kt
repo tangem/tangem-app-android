@@ -1,8 +1,11 @@
 package com.tangem.core.ui.components.buttons.actions
 
+import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
@@ -13,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,6 +27,7 @@ import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * Rounded action button
@@ -72,6 +77,7 @@ fun ActionButton(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Button(
     config: ActionButtonConfig,
@@ -83,13 +89,24 @@ private fun Button(
         targetValue = if (config.enabled) color else TangemTheme.colors.button.disabled,
         label = "Update background color",
     )
-
+    val context = LocalContext.current
     Row(
         modifier = modifier
             .heightIn(min = TangemTheme.dimens.size36)
             .clip(shape)
             .background(color = backgroundColor)
-            .clickable(enabled = config.enabled, onClick = config.onClick)
+            .combinedClickable(
+                enabled = config.enabled,
+                onClick = config.onClick,
+                onLongClick = {
+                    val toastReference = config.onLongClick?.invoke()
+                    toastReference?.let {
+                        Toast
+                            .makeText(context, toastReference.resolveReference(context.resources), Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                },
+            )
             .padding(start = TangemTheme.dimens.spacing16, end = TangemTheme.dimens.spacing24)
             .padding(vertical = TangemTheme.dimens.spacing8),
         horizontalArrangement = Arrangement.Center,
@@ -133,33 +150,19 @@ private fun Button(
 }
 
 @Preview(group = "RoundedActionButton", showBackground = true)
+@Preview(group = "RoundedActionButton", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_RoundedActionButton_Light(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
-    TangemTheme(isDark = false) {
-        RoundedActionButton(state)
-    }
-}
-
-@Preview(group = "RoundedActionButton", showBackground = true)
-@Composable
-private fun Preview_RoundedActionButton_Dark(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
-    TangemTheme(isDark = true) {
+private fun Preview_RoundedActionButton(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
+    TangemThemePreview {
         RoundedActionButton(state)
     }
 }
 
 @Preview(group = "ActionButton", showBackground = true)
+@Preview(group = "ActionButton", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ActionButton_Light(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
-    TangemTheme(isDark = false) {
-        ActionButton(state)
-    }
-}
-
-@Preview(group = "ActionButton", showBackground = true)
-@Composable
-private fun Preview_ActionButton_Dark(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
-    TangemTheme(isDark = true) {
+private fun Preview_ActionButton(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
+    TangemThemePreview {
         ActionButton(state)
     }
 }

@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.IntroductionProcess
@@ -17,6 +18,8 @@ import com.tangem.tap.features.demo.DemoHelper
 class CardContextInterceptor(
     private val scanResponse: ScanResponse,
 ) : ParamsInterceptor {
+
+    private val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
 
     override fun id(): String = CardContextInterceptor.id()
 
@@ -32,6 +35,9 @@ class CardContextInterceptor(
         params[AnalyticsParam.BATCH] = card.batchId
         params[AnalyticsParam.PRODUCT_TYPE] = getProductType(scanResponse)
         params[AnalyticsParam.FIRMWARE] = card.firmwareVersion.stringValue
+        if (userWalletId != null) {
+            params[AnalyticsParam.USER_WALLET_ID] = userWalletId.stringValue
+        }
 
         ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)?.let {
             params[AnalyticsParam.CURRENCY] = it.value

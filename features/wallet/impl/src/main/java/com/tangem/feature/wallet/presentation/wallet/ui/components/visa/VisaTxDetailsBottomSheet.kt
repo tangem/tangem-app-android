@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.visa
 
+import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +20,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.VisaTxDetailsBottomSheetConfig
 import kotlinx.collections.immutable.persistentListOf
@@ -213,21 +215,12 @@ private fun ContentContainer(
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun VisaTxDetailsBottomSheetPreview_Light(
+private fun VisaTxDetailsBottomSheetPreview(
     @PreviewParameter(VisaTxDetailsBottomSheetParameterProvider::class) state: VisaTxDetailsBottomSheetConfig,
 ) {
-    TangemTheme {
-        VisaTxDetailsBottomSheetContent(state)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun VisaTxDetailsBottomSheetPreview_Dark(
-    @PreviewParameter(VisaTxDetailsBottomSheetParameterProvider::class) state: VisaTxDetailsBottomSheetConfig,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         VisaTxDetailsBottomSheetContent(state)
     }
 }

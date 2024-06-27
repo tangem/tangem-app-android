@@ -4,7 +4,9 @@ import arrow.core.raise.Raise
 import arrow.core.raise.recover
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
+import kotlin.time.Duration
 
 /**
  * A wrapper around the [Raise] interface specific for [ApiResponseError]. It provides utility functions to
@@ -29,6 +31,28 @@ value class ApiResponseRaise(
 }
 
 /**
+ * Attempts to execute an API call safely, providing error handling and a timeout.
+ *
+ * @param T The return type of the API call and the function.
+ * @param timeoutMillis The timeout in milliseconds for the API call. Default is 30 seconds.
+ * @param call The API call block to execute.
+ * @param onError A function to handle errors and return a fallback value of type [T].
+ *
+ * @return The result of the API call or the fallback value provided by [onError] if an error occurs.
+ */
+suspend inline fun <T> safeApiCallWithTimeout(
+    timeoutMillis: Duration = with(Duration) { 30.seconds },
+    crossinline call: suspend ApiResponseRaise.() -> T,
+    crossinline onError: suspend (ApiResponseError) -> T,
+): T = safeApiCall(
+    call = {
+        withTimeoutOrNull(timeoutMillis) { call() }
+            ?: raise(ApiResponseError.TimeoutException)
+    },
+    onError = onError,
+)
+
+/**
  * Attempts to execute an API call safely, providing error handling.
  *
  * @param T The return type of the API call and the function.
@@ -40,12 +64,10 @@ value class ApiResponseRaise(
 suspend inline fun <T> safeApiCall(
     crossinline call: suspend ApiResponseRaise.() -> T,
     crossinline onError: suspend (ApiResponseError) -> T,
-): T {
-    return recover(
-        block = { call(ApiResponseRaise(raise = this)) },
-        recover = {
-            Timber.w(it, "Unable to perform safe API call")
-            onError(it)
-        },
-    )
-}
+): T = recover(
+    block = { call(ApiResponseRaise(raise = this)) },
+    recover = {
+        Timber.w(it, "Unable to perform safe API call")
+        onError(it)
+    },
+)

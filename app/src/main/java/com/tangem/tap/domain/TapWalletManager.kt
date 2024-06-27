@@ -1,9 +1,7 @@
 package com.tangem.tap.domain
 
-import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
 import com.tangem.datasource.config.ConfigManager
@@ -15,7 +13,6 @@ import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -32,28 +29,11 @@ class TapWalletManager(
     private val dispatchers: CoroutineDispatcherProvider = AppCoroutineDispatcherProvider(),
 ) {
 
-    private val blockchainSdkConfig by lazy {
-        store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
-    }
-
     private var loadUserWalletDataJob: Job? = null
         set(value) {
             field?.cancel()
             field = value
         }
-
-    val walletManagerFactory: WalletManagerFactory by lazy {
-        WalletManagerFactory(
-            config = blockchainSdkConfig,
-            accountCreator = store.inject(DaggerGraphState::accountCreator),
-            blockchainDataStorage = store.inject(DaggerGraphState::blockchainDataStorage),
-            loggers = if (store.inject(DaggerGraphState::feedbackManagerFeatureToggles).isLocalLogsEnabled) {
-                listOf(store.inject(DaggerGraphState::blockchainSDKLogger))
-            } else {
-                emptyList()
-            },
-        )
-    }
 
     suspend fun onWalletSelected(userWallet: UserWallet, sendAnalyticsEvent: Boolean) {
         // If a previous job was running, it gets cancelled before the new one starts,
@@ -73,15 +53,18 @@ class TapWalletManager(
         val attestationFailed = card.attestation.status == Attestation.Status.Failed
 
         tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
-        store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(scanResponse)
+
+        val featureToggles = store.inject(DaggerGraphState::feedbackManagerFeatureToggles)
+        if (!featureToggles.isLocalLogsEnabled) {
+            store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(scanResponse)
+        }
+
         updateConfigManager(scanResponse)
         withMainContext {
             // Order is important
             store.dispatch(DisclaimerAction.SetDisclaimer(card.createDisclaimer()))
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
-            store.dispatch(WalletConnectAction.ResetState)
             store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
-            store.dispatch(WalletConnectAction.RestoreSessions(scanResponse))
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
         }
     }
