@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +27,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SelctorDialogParamsProvider.SelectorDialogParams
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.fields.SimpleDialogTextField
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -450,33 +452,19 @@ private fun BasicDialogPreview() {
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_SimpleOkDialog_InLightTheme() {
-    TangemTheme(isDark = false) {
+private fun Preview_SimpleOkDialog() {
+    TangemThemePreview {
         SimpleOkDialogPreview()
     }
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_BasicDialog_InLightTheme() {
-    TangemTheme(isDark = false) {
-        BasicDialogPreview()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview_SimpleOkDialog_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        SimpleOkDialogPreview()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview_BasicDialog_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_BasicDialog() {
+    TangemThemePreview {
         BasicDialogPreview()
     }
 }
@@ -498,17 +486,10 @@ private fun WarningBasicDialogSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun WarningBasicDialogPreview_Light() {
-    TangemTheme {
-        WarningBasicDialogSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun WarningBasicDialogPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun WarningBasicDialogPreview() {
+    TangemThemePreview {
         WarningBasicDialogSample()
     }
 }
@@ -532,44 +513,19 @@ private fun TextInputDialogSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TextInputDialogPreview_Light() {
-    TangemTheme {
+private fun TextInputDialogPreview() {
+    TangemThemePreview {
         TextInputDialogSample()
     }
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TextInputDialogPreview_Dark() {
-    TangemTheme(isDark = true) {
-        TextInputDialogSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun SelectorDialogPreview_Light(
-    @PreviewParameter(SelctorDialogParamsProvider::class) param: SelectorDialogParams,
-) {
-    TangemTheme(isDark = false) {
-        SelectorDialog(
-            title = param.title,
-            items = param.items,
-            selectedItemIndex = param.selectedItemIndex,
-            confirmButton = DialogButton(title = "Cancel", onClick = {}),
-            onSelect = {},
-            onDismissDialog = {},
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun SelectorDialogPreview_Dark(
-    @PreviewParameter(SelctorDialogParamsProvider::class) param: SelectorDialogParams,
-) {
-    TangemTheme(isDark = true) {
+private fun SelectorDialogPreview(@PreviewParameter(SelctorDialogParamsProvider::class) param: SelectorDialogParams) {
+    TangemThemePreview {
         SelectorDialog(
             title = param.title,
             items = param.items,
