@@ -6,5 +6,5 @@ import java.math.BigDecimal
 data class StakingGasEstimate(
     val amount: BigDecimal,
     val token: Token,
-    val gasLimit: BigDecimal,
+    val gasLimit: String?,
 )
