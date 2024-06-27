@@ -14,4 +14,6 @@ sealed class YieldBalanceList {
     }
 
     data object Empty : YieldBalanceList()
+
+    data object Error : YieldBalanceList()
 }

@@ -124,6 +124,60 @@ internal class DefaultNetworksRepository(
         }
     }
 
+    override suspend fun getNetworkAddress(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): CryptoCurrencyAddress = withContext(dispatchers.io) {
+        CryptoCurrencyAddress(
+            cryptoCurrency = currency,
+            address = walletManagersFacade.getAddresses(userWalletId, currency.network)
+                .firstOrNull { it.type == AddressType.Default }
+                ?.value.orEmpty(),
+        )
+    }
+
+    override fun getNetworkAddressFlow(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): Flow<CryptoCurrencyAddress> = channelFlow {
+        launch(dispatchers.io) {
+            send(getNetworkAddress(userWalletId, currency))
+        }
+    }
+
+    override suspend fun getNetworkAddresses(userWalletId: UserWalletId): List<CryptoCurrencyAddress> =
+        withContext(dispatchers.io) {
+            // Get list of currencies matching [network]
+            val currencies = getCurrencies(userWalletId)
+
+            // There is no currencies matching given [networks] in [userWalletId]
+            if (currencies.toList().isEmpty()) return@withContext emptyList()
+
+            currencies.toList().map { currency ->
+                CryptoCurrencyAddress(
+                    cryptoCurrency = currency,
+                    address = walletManagersFacade.getAddresses(userWalletId, currency.network)
+                        .firstOrNull { it.type == AddressType.Default }
+                        ?.value.orEmpty(),
+                )
+            }
+        }
+
+    override fun getNetworkAddressesFlow(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): Flow<List<CryptoCurrencyAddress>> = channelFlow {
+        launch(dispatchers.io) {
+            send(getNetworkAddresses(userWalletId, network))
+        }
+    }
+
+    override fun getNetworkAddressesFlow(userWalletId: UserWalletId): Flow<List<CryptoCurrencyAddress>> = channelFlow {
+        launch(dispatchers.io) {
+            send(getNetworkAddresses(userWalletId))
+        }
+    }
+
     private suspend fun fetchNetworksStatusesIfCacheExpired(
         userWalletId: UserWalletId,
         networks: Set<Network>,
