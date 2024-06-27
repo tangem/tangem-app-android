@@ -870,7 +870,7 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private suspend fun sendTransaction(txData: TransactionData) {
+    private suspend fun sendTransaction(txData: TransactionData.Uncompiled) {
         sendTransactionUseCase(
             txData = txData,
             userWallet = userWallet,
@@ -911,7 +911,7 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private suspend fun updateTransactionStatus(txData: TransactionData) {
+    private suspend fun updateTransactionStatus(txData: TransactionData.Uncompiled) {
         val txUrl = getExplorerTransactionUrlUseCase(
             userWalletId = userWalletId,
             network = cryptoCurrency.network,

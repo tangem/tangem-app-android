@@ -5,7 +5,6 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
-import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.wallet.navigation.WalletRouter
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -21,9 +20,6 @@ internal class WalletFragment : ComposeFragment() {
     @Inject
     override lateinit var uiDependencies: UiDependencies
 
-    @Inject
-    internal lateinit var manageTokensUi: ManageTokensUi
-
     /** Feature router */
     @Inject
     internal lateinit var walletRouter: WalletRouter
@@ -37,7 +33,6 @@ internal class WalletFragment : ComposeFragment() {
     override fun ScreenContent(modifier: Modifier) {
         _walletRouter.Initialize(
             onFinish = requireActivity()::finish,
-            manageTokensUi = manageTokensUi,
         )
     }
 
