@@ -1,13 +1,22 @@
 package com.tangem.tap.common.feedback
 
 import android.content.Context
+import com.tangem.core.navigation.email.EmailSender
 import com.tangem.datasource.config.models.ChatConfig
 import com.tangem.domain.common.TapWorkarounds
+import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
+import com.tangem.domain.feedback.GetFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.tap.common.chat.ChatManager
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.foregroundActivityObserver
+import com.tangem.tap.mainScope
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.store
 import com.tangem.tap.withForegroundActivity
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 import java.io.FileWriter
@@ -20,21 +29,46 @@ class FeedbackManager(
     val infoHolder: AdditionalFeedbackInfo,
     private val logCollector: TangemLogCollector,
     private val chatManager: ChatManager,
+    private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
+    private val getFeedbackEmailUseCase: GetFeedbackEmailUseCase,
 ) {
 
     private var sessionFeedbackFile: File? = null
     private var sessionLogsFile: File? = null
 
     fun sendEmail(feedbackData: FeedbackData, onFail: ((Exception) -> Unit)? = null) {
-        feedbackData.prepare(infoHolder)
-        foregroundActivityObserver.withForegroundActivity { activity ->
-            activity.sendEmail(
-                email = getSupportEmail(),
-                subject = activity.getString(feedbackData.subjectResId),
-                message = feedbackData.joinTogether(activity, infoHolder),
-                file = getLogFile(activity),
-                onFail = onFail,
-            )
+        if (feedbackManagerFeatureToggles.isLocalLogsEnabled) {
+            mainScope.launch {
+                val email = getFeedbackEmailUseCase(
+                    when (feedbackData) {
+                        is FeedbackEmail -> FeedbackEmailType.DirectUserRequest
+                        is RateCanBeBetterEmail -> FeedbackEmailType.RateCanBeBetter
+                        is ScanFailsEmail -> FeedbackEmailType.ScanningProblem
+                        is SendTransactionFailedEmail -> FeedbackEmailType.TransactionSendingProblem
+                        else -> FeedbackEmailType.DirectUserRequest
+                    },
+                )
+
+                store.inject(DaggerGraphState::emailSender).send(
+                    email = EmailSender.Email(
+                        address = email.address,
+                        subject = email.subject,
+                        message = email.message,
+                        attachment = email.file,
+                    ),
+                )
+            }
+        } else {
+            feedbackData.prepare(infoHolder)
+            foregroundActivityObserver.withForegroundActivity { activity ->
+                activity.sendEmail(
+                    email = getSupportEmail(),
+                    subject = activity.getString(feedbackData.subjectResId),
+                    message = feedbackData.joinTogether(activity, infoHolder),
+                    file = getLogFile(activity),
+                    onFail = onFail,
+                )
+            }
         }
     }
 
