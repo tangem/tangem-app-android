@@ -27,6 +27,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -63,6 +64,7 @@ internal class WalletViewModel @Inject constructor(
     private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
     private val isFirstTimeAskingPermissionUseCase: IsFirstTimeAskingPermissionUseCase,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
+    private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles,
     private val settingsManager: SettingsManager,
     analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
@@ -146,7 +148,9 @@ internal class WalletViewModel @Inject constructor(
 
     private fun subscribeOnPushNotificationsPermission() {
         viewModelScope.launch {
-            if (!shouldAskPermissionUseCase(PUSH_PERMISSION)) return@launch
+            val isPushToggled = pushNotificationsFeatureToggles.isPushNotificationsEnabled
+            val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
+            if (!isPushToggled || !shouldRequestPush) return@launch
 
             delay(timeMillis = 1_800)
 
