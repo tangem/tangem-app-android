@@ -1,9 +1,5 @@
 name: Deploy to Firebase
 on:
-  push:
-    branches:
-      - 'develop'
-      - 'feature/AND-7341_publishing_internal_builds'
   workflow_dispatch:
   workflow_call:
     secrets:
