@@ -2,34 +2,49 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.staking.model.Yield
+import com.tangem.domain.staking.model.transaction.StakingGasEstimate
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
+import com.tangem.features.staking.impl.presentation.state.FeeState
+import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
-import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmStakingStatePreviewData
 import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
+import com.tangem.blockchain.common.Amount
 
 @Suppress("UnusedPrivateMember")
 internal class SetConfirmStateDataStateTransformer(
-    private val yield: Yield,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-    private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
+    private val stakingGasEstimate: StakingGasEstimate,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
-        // TODO staking fill with real data
         return prevState.copy(
-            confirmStakingState = ConfirmStakingStatePreviewData.confirmStakingState,
+            confirmStakingState = prevState.confirmStakingState.copyWrapped(stakingGasEstimate),
         )
     }
 
-    private fun isFeeApproximate(fee: Fee): Boolean {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        return isFeeApproximateUseCase(
-            networkId = cryptoCurrencyStatus.currency.network.id,
-            amountType = fee.amount.type,
-        )
+    private fun StakingStates.ConfirmStakingState.copyWrapped(
+        gasEstimate: StakingGasEstimate,
+    ): StakingStates.ConfirmStakingState {
+        if (this is StakingStates.ConfirmStakingState.Data) {
+            return copy(
+                feeState = FeeState.Content(
+                    fee = Fee.Common(
+                        Amount(
+                            currencySymbol = gasEstimate.token.symbol,
+                            value = gasEstimate.amount,
+                            decimals = gasEstimate.token.decimals,
+                        ),
+                    ),
+                    rate = cryptoCurrencyStatusProvider().value.fiatRate,
+                    isFeeConvertibleToFiat = cryptoCurrencyStatusProvider().currency.network.hasFiatFeeRate,
+                    appCurrency = appCurrencyProvider(),
+                    isFeeApproximate = false,
+                ),
+            )
+        } else {
+            return this
+        }
     }
 }
