@@ -2,25 +2,33 @@ package com.tangem.features.managetokens.ui
 
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEachIndexed
+import com.tangem.core.ui.components.BottomFade
+import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.TangemSwitch
+import com.tangem.core.ui.components.appbar.models.TangemTopAppBarColors
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
+import com.tangem.core.ui.components.fields.SearchBar
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.components.rows.BlockchainRow
 import com.tangem.core.ui.components.rows.ChainRow
@@ -37,29 +45,151 @@ import kotlinx.collections.immutable.ImmutableList
 private const val CHEVRON_ROTATION_EXPANDED = 180f
 private const val CHEVRON_ROTATION_COLLAPSED = 0f
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modifier) {
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     BackHandler(onBack = state.popBack)
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = TangemTheme.colors.background.primary,
+        topBar = {
+            TopBar(
+                scrollBehavior = scrollBehavior,
+                onAddCustomToken = state.onAddCustomToken,
+                onPopBack = state.popBack,
+            )
+        },
         content = { innerPadding ->
-            Currencies(
+            Content(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize(),
-                items = state.items,
+                state = state,
+            )
+        },
+        floatingActionButtonPosition = FabPosition.Center,
+        floatingActionButton = {
+            SaveChangesButton(
+                modifier = Modifier
+                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                    .fillMaxWidth(),
+                isVisible = state.hasChanges,
+                onClick = state.onSaveClick,
             )
         },
     )
 }
 
 @Composable
-private fun Currencies(items: ImmutableList<CurrencyItemUM>, modifier: Modifier = Modifier) {
+@OptIn(ExperimentalMaterial3Api::class)
+private fun TopBar(
+    scrollBehavior: TopAppBarScrollBehavior,
+    onPopBack: () -> Unit,
+    onAddCustomToken: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    TopAppBar(
+        modifier = modifier,
+        scrollBehavior = scrollBehavior,
+        colors = TangemTopAppBarColors.copy(
+            containerColor = TangemTheme.colors.background.primary,
+            scrolledContainerColor = TangemTheme.colors.background.primary,
+        ),
+        navigationIcon = {
+            IconButton(
+                modifier = Modifier.size(TangemTheme.dimens.size32),
+                onClick = onPopBack,
+            ) {
+                Icon(
+                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    painter = painterResource(id = R.drawable.ic_back_24),
+                    contentDescription = null,
+                )
+            }
+        },
+        title = {
+            Text(
+                text = stringResource(id = R.string.main_manage_tokens),
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+            )
+        },
+        actions = {
+            IconButton(
+                modifier = Modifier.size(TangemTheme.dimens.size32),
+                onClick = onAddCustomToken,
+            ) {
+                Icon(
+                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    painter = painterResource(id = R.drawable.ic_plus_24),
+                    contentDescription = null,
+                )
+            }
+        },
+    )
+}
+
+@Composable
+private fun SaveChangesButton(isVisible: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    AnimatedVisibility(
+        modifier = modifier,
+        visible = isVisible,
+        enter = fadeIn(),
+        exit = fadeOut(),
+        label = "save_button_visibility",
+    ) {
+        PrimaryButtonIconEnd(
+            text = stringResource(id = R.string.common_save),
+            iconResId = R.drawable.ic_tangem_24,
+            onClick = onClick,
+        )
+    }
+}
+
+@Composable
+private fun Content(state: ManageTokensUM, modifier: Modifier = Modifier) {
+    Box(modifier = modifier) {
+        Currencies(
+            modifier = Modifier.fillMaxSize(),
+            items = state.items,
+            search = state.search,
+        )
+
+        AnimatedVisibility(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            visible = state.hasChanges,
+            label = "bottom_fade_visibility",
+        ) {
+            BottomFade()
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun Currencies(items: ImmutableList<CurrencyItemUM>, search: SearchBarUM, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier,
     ) {
+        stickyHeader(key = "search") {
+            Column(
+                modifier = Modifier
+                    .background(TangemTheme.colors.background.primary)
+                    .padding(
+                        vertical = TangemTheme.dimens.spacing12,
+                        horizontal = TangemTheme.dimens.spacing16,
+                    )
+                    .fillMaxWidth(),
+            ) {
+                SearchBar(state = search)
+            }
+        }
+
         items(
             items = items,
             key = CurrencyItemUM::id,
@@ -132,7 +262,7 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, modifier: Modifier = M
         )
 
         NetworksList(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
             networks = item.networks,
             currencyId = item.id,
         )
@@ -140,20 +270,24 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, modifier: Modifier = M
 }
 
 @Composable
-private fun ColumnScope.NetworksList(networks: NetworksUM, currencyId: String, modifier: Modifier = Modifier) {
+private fun NetworksList(networks: NetworksUM, currencyId: String, modifier: Modifier = Modifier) {
     AnimatedVisibility(
         modifier = modifier,
         visible = networks is NetworksUM.Expanded,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
         label = "networks_visibility",
     ) {
         Column {
             val items = (networks as? NetworksUM.Expanded)?.networks
-            // to keep items on collapse, and avoid animation cancellation
-            val rememberedItems = remember(key1 = currencyId) { items }
 
-            (items ?: rememberedItems)?.fastForEachIndexed { index, network ->
+            // To keep items on collapse and avoid animation cancellation
+            val rememberedItems = remember(key1 = currencyId) { items }
+            val currentItems = items ?: rememberedItems
+
+            currentItems?.fastForEachIndexed { index, network ->
                 ArrowRow(
-                    isLastItem = index == items?.lastIndex,
+                    isLastItem = index == currentItems.lastIndex,
                     content = {
                         BlockchainRow(
                             model = network.model,
