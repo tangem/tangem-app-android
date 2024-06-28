@@ -1,19 +1,21 @@
 package com.tangem.tap.features.send.redux.middlewares
 
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.BlockchainSdkError
-import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
-import com.tangem.tap.common.redux.AppState
 import com.tangem.domain.demo.DemoTransactionSender
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
+import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.send.redux.AmountActionUi
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.ReceiptAction
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +29,7 @@ import java.math.BigDecimal
  */
 class RequestFeeMiddleware {
 
+    @Suppress("CyclomaticComplexMethod")
     fun handle(appState: AppState?, dispatch: DispatchFunction) {
         val sendState = appState?.sendState ?: return
         val walletManager = sendState.walletManager ?: return
@@ -45,7 +48,7 @@ class RequestFeeMiddleware {
         val txSender = if (scanResponse.isDemoCard()) {
             DemoTransactionSender(walletManager)
         } else {
-            walletManager as TransactionSender
+            walletManager
         }
         scope.launch {
             val feeResult = txSender.getFee(destinationAmount, destinationAddress)
@@ -73,12 +76,17 @@ class RequestFeeMiddleware {
                         dispatch(FeeAction.FeeCalculation.ClearResult)
                         dispatch(FeeAction.ChangeLayoutVisibility(main = false))
 
-                        store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
-                            walletManager = walletManager,
-                            amountToSend = destinationAmount,
-                            feeAmount = null,
-                            destinationAddress = destinationAddress,
-                        )
+                        val featureToggles = store.inject(DaggerGraphState::feedbackManagerFeatureToggles)
+                        if (featureToggles.isLocalLogsEnabled) {
+                            saveBlockchainError(feeResult, destinationAddress, destinationAmount, walletManager)
+                        } else {
+                            store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
+                                walletManager = walletManager,
+                                amountToSend = destinationAmount,
+                                feeAmount = null,
+                                destinationAddress = destinationAddress,
+                            )
+                        }
 
                         val blockchainSdkError = feeResult.error as? BlockchainSdkError ?: return@withContext
                         dispatch(
@@ -92,5 +100,29 @@ class RequestFeeMiddleware {
                 dispatch(AmountActionUi.CheckAmountToSend)
             }
         }
+    }
+
+    private fun saveBlockchainError(
+        feeResult: Result.Failure,
+        destinationAddress: String,
+        destinationAmount: Amount,
+        walletManager: WalletManager,
+    ) {
+        store.inject(DaggerGraphState::saveBlockchainErrorUseCase).invoke(
+            error = BlockchainErrorInfo(
+                errorMessage = (feeResult.error as? BlockchainSdkError)?.customMessage
+                    ?: "It isn't BlockchainSdkError",
+                blockchainId = walletManager.wallet.blockchain.id,
+                derivationPath = walletManager.wallet.publicKey.derivationPath?.rawPath ?: "",
+                destinationAddress = destinationAddress,
+                tokenSymbol = if (destinationAmount.type is AmountType.Token) {
+                    destinationAmount.currencySymbol
+                } else {
+                    ""
+                },
+                amount = destinationAmount.value?.stripZeroPlainString() ?: "0",
+                fee = null,
+            ),
+        )
     }
 }
