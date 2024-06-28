@@ -6,5 +6,6 @@ import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggle
 internal class DefaultTokenDetailsFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : TokenDetailsFeatureToggles {
+
     override fun isGenerateXPubEnabled() = featureTogglesManager.isFeatureEnabled(name = "GENERATE_XPUB_ENABLED")
 }
