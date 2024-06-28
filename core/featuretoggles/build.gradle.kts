@@ -26,6 +26,7 @@ dependencies {
 
     /** Core modules */
     implementation(projects.core.datasource)
+    implementation(projects.core.utils)
 
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit)

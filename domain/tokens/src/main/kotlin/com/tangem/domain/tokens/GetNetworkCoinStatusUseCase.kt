@@ -39,6 +39,26 @@ class GetNetworkCoinStatusUseCase(
             .flowOn(dispatchers.io)
     }
 
+    suspend fun invokeSync(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+        isSingleWalletWithTokens: Boolean,
+    ): Either<CurrencyStatusError, CryptoCurrencyStatus> {
+        val operations = CurrenciesStatusesOperations(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            userWalletId = userWalletId,
+        )
+        val maybeCurrency = if (isSingleWalletWithTokens) {
+            operations.getNetworkCoinForSingleWalletWithTokenSync(networkId)
+        } else {
+            operations.getNetworkCoinSync(networkId, derivationPath)
+        }
+        return maybeCurrency.mapLeft(CurrenciesStatusesOperations.Error::mapToCurrencyError)
+    }
+
     private suspend fun getCurrency(
         userWalletId: UserWalletId,
         networkId: Network.ID,
