@@ -5,11 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.navigation.email.EmailSender
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
-import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
-import com.tangem.domain.feedback.GetSupportFeedbackEmailUseCase
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.features.details.redux.DetailsState
@@ -22,19 +20,13 @@ import javax.inject.Inject
 internal class DetailsFragment : ComposeFragment(), StoreSubscriber<DetailsState> {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
+    override lateinit var uiDependencies: UiDependencies
 
     @Inject
     lateinit var walletsRepository: WalletsRepository
 
     @Inject
-    lateinit var feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles
-
-    @Inject
-    lateinit var getSupportFeedbackEmailUseCase: GetSupportFeedbackEmailUseCase
-
-    @Inject
-    lateinit var emailSender: EmailSender
+    lateinit var userWalletsListManager: UserWalletsListManager
 
     private lateinit var detailsViewModel: DetailsViewModel
 
@@ -43,9 +35,7 @@ internal class DetailsFragment : ComposeFragment(), StoreSubscriber<DetailsState
         detailsViewModel = DetailsViewModel(
             store = store,
             walletsRepository = walletsRepository,
-            feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
-            getSupportFeedbackEmailUseCase = getSupportFeedbackEmailUseCase,
-            emailSender = emailSender,
+            userWalletsListManager = userWalletsListManager,
         )
         Analytics.send(Settings.ScreenOpened())
     }
