@@ -1,8 +1,21 @@
 package com.tangem.lib.crypto.models
 
+import java.math.BigDecimal
 import java.math.BigInteger
 
-data class ProxyFee(
-    val gasLimit: BigInteger,
-    val fee: ProxyAmount,
-)
+sealed interface ProxyFee {
+
+    val gasLimit: BigInteger
+    val fee: ProxyAmount
+
+    data class Common(
+        override val gasLimit: BigInteger,
+        override val fee: ProxyAmount,
+    ) : ProxyFee
+
+    data class CardanoToken(
+        override val gasLimit: BigInteger,
+        override val fee: ProxyAmount,
+        val minAdaValue: BigDecimal,
+    ) : ProxyFee
+}

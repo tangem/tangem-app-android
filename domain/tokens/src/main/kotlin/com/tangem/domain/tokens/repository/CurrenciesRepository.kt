@@ -1,5 +1,7 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.domain.core.error.DataError
+import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
@@ -20,7 +22,7 @@ interface CurrenciesRepository {
      * @param currencies The list of cryptocurrencies to be saved.
      * @param isGroupedByNetwork A boolean flag indicating whether the tokens should be grouped by network.
      * @param isSortedByBalance A boolean flag indicating whether the tokens should be sorted by balance.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
     suspend fun saveTokens(
@@ -35,7 +37,7 @@ interface CurrenciesRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @param currencies The currencies which must be added.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
     suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
@@ -45,7 +47,7 @@ interface CurrenciesRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @param currency The currency which must be removed.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
      * ID provided.
      */
     suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency)
@@ -55,17 +57,28 @@ interface CurrenciesRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @param currencies The currencies which must be removed.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
     suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
+
+    /**
+     * Retrieves the list of cryptocurrencies within a user wallet.
+     *
+     * This method returns a list of cryptocurrencies associated with the user wallet regardless of whether
+     * it is a multi-currency or single-currency wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @return A list of [CryptoCurrency].
+     */
+    fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): LceFlow<Throwable, List<CryptoCurrency>>
 
     /**
      * Retrieves the primary cryptocurrency for a specific single-currency user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @return The primary cryptocurrency associated with the user wallet.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
      * ID provided.
      */
     suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency
@@ -75,7 +88,7 @@ interface CurrenciesRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @return The primary cryptocurrency associated with the user wallet.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
      * ID provided.
      */
     suspend fun getSingleCurrencyWalletWithCardCurrencies(userWalletId: UserWalletId): List<CryptoCurrency>
@@ -87,7 +100,7 @@ interface CurrenciesRepository {
      * @param userWalletId The unique identifier of the user wallet.
      * @param id The unique identifier of the cryptocurrency to be retrieved.
      * @return The cryptocurrency associated with the user wallet and ID.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
     suspend fun getSingleCurrencyWalletWithCardCurrency(
@@ -102,10 +115,21 @@ interface CurrenciesRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @return A [Flow] emitting the set of cryptocurrencies associated with the user wallet.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
     fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
+
+    /**
+     * Retrieves updates of the list of cryptocurrencies within a multi-currency wallet.
+     *
+     * Loads remote cryptocurrencies if they have expired.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @return A [LceFlow] emitting the set of cryptocurrencies associated with the user wallet. May emit an
+     * [DataError.UserWalletError.WrongUserWallet] if single-currency user wallet ID provided.
+     */
+    fun getMultiCurrencyWalletCurrenciesUpdatesLce(userWalletId: UserWalletId): LceFlow<Throwable, List<CryptoCurrency>>
 
     /**
      * Retrieves the list of cryptocurrencies within a multi-currency wallet.
@@ -115,7 +139,7 @@ interface CurrenciesRepository {
      * @param userWalletId The unique identifier of the user wallet.
      * @param refresh A boolean flag indicating whether the data should be refreshed.
      * @return A list of [CryptoCurrency].
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
     suspend fun getMultiCurrencyWalletCurrenciesSync(
@@ -129,7 +153,7 @@ interface CurrenciesRepository {
      * @param userWalletId The unique identifier of the user wallet.
      * @param id The unique identifier of the cryptocurrency to be retrieved.
      * @return The cryptocurrency associated with the user wallet and ID.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
     suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: CryptoCurrency.ID): CryptoCurrency
@@ -152,7 +176,7 @@ interface CurrenciesRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @return A [Flow] emitting a boolean value indicating whether the tokens are grouped.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
     fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean>
@@ -162,7 +186,7 @@ interface CurrenciesRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @return A [Flow] emitting a boolean value indicating whether the tokens are sorted by balance.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
     fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean>
@@ -181,4 +205,9 @@ interface CurrenciesRepository {
      * Retrieves fee paid currency for specific [currency].
      */
     suspend fun getFeePaidCurrency(userWalletId: UserWalletId, currency: CryptoCurrency): FeePaidCurrency
+
+    /**
+     * Creates token [cryptoCurrency] based on current token and [network] it`s will be added
+     */
+    fun createTokenCurrency(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token
 }
