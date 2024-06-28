@@ -35,7 +35,7 @@ internal interface InnerWalletRouter : WalletRouter {
     fun openOrganizeTokensScreen(userWalletId: UserWalletId)
 
     /** Open details screen */
-    fun openDetailsScreen()
+    fun openDetailsScreen(selectedWalletId: UserWalletId)
 
     /** Open onboarding screen */
     fun openOnboardingScreen()

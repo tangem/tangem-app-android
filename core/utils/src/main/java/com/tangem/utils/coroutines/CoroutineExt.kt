@@ -10,6 +10,13 @@ suspend fun <R> runCatching(dispatcher: CoroutineDispatcher, block: suspend () -
     }
 }
 
+suspend fun <R> waitForDelay(delay: Long, block: suspend CoroutineScope.() -> R): R = coroutineScope {
+    val minWaitingTime = async { delay(delay) }
+    val actionInvoke = async { block() }
+    minWaitingTime.await()
+    actionInvoke.await()
+}
+
 class Debouncer {
 
     private var debounceJob: Job? = null

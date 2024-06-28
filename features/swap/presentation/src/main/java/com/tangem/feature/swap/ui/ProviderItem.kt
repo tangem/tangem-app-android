@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,8 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -27,6 +26,9 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
+import com.tangem.core.ui.utils.GrayscaleColorFilter
 import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 
@@ -35,11 +37,6 @@ import com.tangem.feature.swap.models.states.ProviderState
  *
  * https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?type=design&node-id=7856-41909&mode=design&t=vo7dyElitnzSPSW3-4
  */
-
-private const val GRAY_SCALE_SATURATION = 0f
-private const val GRAY_SCALE_ALPHA = 0.4f
-private val GrayscaleColorFilter: ColorFilter
-    get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })
 
 @Composable
 fun ProviderItemBlock(state: ProviderState, modifier: Modifier = Modifier) {
@@ -390,25 +387,12 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ProviderItemPreview_Light(
+private fun ProviderItemPreview(
     @PreviewParameter(ProviderItemParameterProvider::class) state: Pair<ProviderState, Boolean>,
 ) {
-    TangemTheme {
-        ProviderItem(
-            modifier = Modifier.background(TangemTheme.colors.background.action),
-            state = state.first,
-            isSelected = state.second,
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun ProviderItemPreview_Dark(
-    @PreviewParameter(ProviderItemParameterProvider::class) state: Pair<ProviderState, Boolean>,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         ProviderItem(
             modifier = Modifier.background(TangemTheme.colors.background.action),
             state = state.first,

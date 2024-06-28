@@ -14,12 +14,9 @@ import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
 import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
-import com.trustwallet.walletconnect.models.WCPeerMeta
-import com.trustwallet.walletconnect.models.session.WCSession
 
 data class WalletConnectState(
     val loading: Boolean = false,
-    val sessions: List<WalletConnectSession> = listOf(),
     val wc2Sessions: List<WcSessionForScreen> = listOf(),
     val newSessionData: NewWcSessionData? = null,
 )
@@ -34,8 +31,6 @@ data class WalletConnectSession(
     val peerId: String,
     val remotePeerId: String?,
     val wallet: WalletForSession,
-    val session: WCSession,
-    val peerMeta: WCPeerMeta,
 ) {
     fun getAddress(): String? {
         val key = wallet.derivedPublicKey ?: wallet.walletPublicKey ?: return null

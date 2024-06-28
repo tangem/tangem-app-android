@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.managetokens.impl.R
 
 @Composable
@@ -49,17 +51,10 @@ internal fun AddCustomTokenButton(onButtonClick: () -> Unit, modifier: Modifier 
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun AddCustomTokenButton_Preview_Light() {
-    TangemTheme(isDark = false) {
-        AddCustomTokenButton(onButtonClick = { })
-    }
-}
-
-@Preview
-@Composable
-private fun AddCustomTokenButton_Preview_Dark() {
-    TangemTheme(isDark = true) {
+private fun AddCustomTokenButton_Preview() {
+    TangemThemePreview {
         AddCustomTokenButton(onButtonClick = { })
     }
 }

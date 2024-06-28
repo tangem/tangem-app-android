@@ -13,6 +13,7 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -211,22 +212,6 @@ interface WalletManagersFacade {
         network: Network,
     ): TransactionData?
 
-    /**
-     * Sends transaction
-     *
-     * @param txData transaction data
-     * @param signer card signer
-     * @param userWalletId selected wallet id
-     * @param network network of currency
-     */
-    @Deprecated("Will be removed in future")
-    suspend fun sendTransaction(
-        txData: TransactionData,
-        signer: CommonSigner,
-        userWalletId: UserWalletId,
-        network: Network,
-    ): SimpleResult
-
     /** Get recent transactions of [userWalletId] for [currency] */
     suspend fun getRecentTransactions(userWalletId: UserWalletId, currency: CryptoCurrency): List<TxHistoryItem>
 
@@ -240,4 +225,24 @@ interface WalletManagersFacade {
         decimals: Int,
         id: String? = null,
     ): BigDecimal
+
+    /**
+     * Get requirements for asset(currency)
+     * @return null if there's no requirement, otherwise [AssetRequirementsCondition].
+     */
+    suspend fun getAssetRequirements(userWalletId: UserWalletId, currency: CryptoCurrency): AssetRequirementsCondition?
+
+    suspend fun associateAsset(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        signer: CommonSigner,
+    ): SimpleResult
+
+    /**
+     * Indicates UTXO consolidation availability
+     *
+     * @param userWalletId selected user wallet
+     * @param network availability for network
+     */
+    suspend fun checkUtxoConsolidationAvailability(userWalletId: UserWalletId, network: Network): Boolean
 }

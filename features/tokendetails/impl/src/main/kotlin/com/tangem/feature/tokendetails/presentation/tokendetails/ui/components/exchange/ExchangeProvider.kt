@@ -22,6 +22,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.inputrow.InputRowBestRate
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
 internal fun ExchangeProvider(
@@ -90,7 +91,7 @@ internal fun ExchangeProvider(
 @Preview(showBackground = true)
 @Composable
 private fun ExchangeProvider_Preview() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         ExchangeProvider(
             providerName = TextReference.Str("Changelly"),
             providerType = TextReference.Str("CEX"),
