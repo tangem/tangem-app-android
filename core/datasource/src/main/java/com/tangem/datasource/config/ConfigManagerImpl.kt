@@ -19,7 +19,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
 
     private var defaultConfig = Config()
 
-    override fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)?) {
+    override suspend fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)?) {
         configLoader.load { configModel ->
             setupFeature(configModel.features)
             setupConfigValues(configModel.configValues)
@@ -99,13 +99,17 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 ),
                 chiaFireAcademyApiKey = configValues.chiaFireAcademyApiKey,
                 chiaTangemApiKey = configValues.chiaTangemApiKey,
+                hederaArkhiaApiKey = configValues.hederaArkhiaKey,
+                polygonScanApiKey = configValues.polygonScanApiKey,
+                bittensorDwellirApiKey = configValues.bittensorDwellirApiKey,
+                bittensorOnfinalityApiKey = configValues.bittensorOnfinalityKey,
             ),
-            appsFlyerDevKey = configValues.appsFlyer.appsFlyerDevKey,
             amplitudeApiKey = configValues.amplitudeApiKey,
             sprinklr = configValues.sprinklr,
             walletConnectProjectId = configValues.walletConnectProjectId,
             tangemComAuthorization = configValues.tangemComAuthorization,
             express = if (BuildConfig.ENVIRONMENT == "dev") configValues.devExpress else configValues.express,
+            stakeKitApiKey = configValues.stakeKitApiKey,
         )
     }
 
@@ -146,8 +150,8 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                     blockBookRest = accessTokens.bitcoin?.blockBookRest,
                 ),
                 algorand = GetBlockAccessToken(rest = accessTokens.algorand?.rest),
-                zkSync = GetBlockAccessToken(rest = accessTokens.zksync?.jsonRPC),
-                polygonZkevm = GetBlockAccessToken(rest = accessTokens.polygonZkevm?.jsonRPC),
+                zkSyncEra = GetBlockAccessToken(rest = accessTokens.zksync?.jsonRPC),
+                polygonZkEvm = GetBlockAccessToken(rest = accessTokens.polygonZkevm?.jsonRPC),
                 base = GetBlockAccessToken(rest = accessTokens.base?.jsonRPC),
             )
         }
