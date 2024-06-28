@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -14,6 +15,7 @@ import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
@@ -129,21 +131,12 @@ private fun CryptoBalance(
 }
 
 @Preview(widthDp = 328, heightDp = 152)
+@Preview(widthDp = 328, heightDp = 152, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TokenDetailsBalanceBlock_LightTheme(
+private fun Preview_TokenDetailsBalanceBlock(
     @PreviewParameter(TokenDetailsBalanceBlockStateProvider::class) state: TokenDetailsBalanceBlockState,
 ) {
-    TangemTheme(isDark = false) {
-        TokenDetailsBalanceBlock(state = state, isBalanceHidden = false)
-    }
-}
-
-@Preview(widthDp = 328, heightDp = 152)
-@Composable
-private fun Preview_TokenDetailsBalanceBlock_DarkTheme(
-    @PreviewParameter(TokenDetailsBalanceBlockStateProvider::class) state: TokenDetailsBalanceBlockState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         TokenDetailsBalanceBlock(state = state, isBalanceHidden = false)
     }
 }

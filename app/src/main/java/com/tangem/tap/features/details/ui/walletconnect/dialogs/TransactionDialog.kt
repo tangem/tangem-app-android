@@ -32,11 +32,9 @@ object TransactionDialog {
             setMessage(message)
             setPositiveButton(positiveButtonTitle) { _, _ ->
                 if (data.isEnoughFundsToSend) {
-                    store.dispatch(WalletConnectAction.SendTransaction(data.topic))
                     store.dispatch(WalletConnectAction.PerformRequestedAction(preparedData))
                 } else {
                     store.dispatch(WalletConnectAction.RejectRequest(data.topic, data.id))
-                    store.dispatch(WalletConnectAction.NotEnoughFunds)
                 }
             }
             setNegativeButton(context.getText(R.string.common_reject)) { _, _ ->

@@ -1,10 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
+import android.content.res.Configuration
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
@@ -36,17 +38,10 @@ internal fun WalletTopBar(config: WalletTopBarConfig) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_WalletTopBar_LightTheme() {
-    TangemTheme(isDark = false) {
-        WalletTopBar(config = WalletPreviewData.topBarConfig)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_WalletTopBar_DarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_WalletTopBar() {
+    TangemThemePreview {
         WalletTopBar(config = WalletPreviewData.topBarConfig)
     }
 }

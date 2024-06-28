@@ -6,6 +6,7 @@ import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,10 +24,12 @@ internal object TxHistoryDataModule {
         walletManagersFacade: WalletManagersFacade,
         userWalletsStore: UserWalletsStore,
         txHistoryItemsStore: TxHistoryItemsStore,
+        dispatchers: CoroutineDispatcherProvider,
     ): TxHistoryRepository = DefaultTxHistoryRepository(
         cacheRegistry,
         walletManagersFacade,
         userWalletsStore,
         txHistoryItemsStore,
+        dispatchers,
     )
 }

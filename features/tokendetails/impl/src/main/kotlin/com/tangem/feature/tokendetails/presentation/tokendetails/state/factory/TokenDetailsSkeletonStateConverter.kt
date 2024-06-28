@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
@@ -16,6 +17,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.Toke
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -25,11 +27,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class TokenDetailsSkeletonStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
+    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
 ) : Converter<CryptoCurrency, TokenDetailsState> {
 
     private val iconStateConverter by lazy { TokenDetailsIconStateConverter() }
 
     override fun convert(value: CryptoCurrency): TokenDetailsState {
+        val iconState = iconStateConverter.convert(value)
         return TokenDetailsState(
             topAppBarConfig = TokenDetailsTopAppBarConfig(
                 onBackClick = clickIntents::onBackClick,
@@ -37,7 +41,7 @@ internal class TokenDetailsSkeletonStateConverter(
             ),
             tokenInfoBlockState = TokenInfoBlockState(
                 name = value.name,
-                iconState = iconStateConverter.convert(value),
+                iconState = iconState,
                 currency = when (value) {
                     is CryptoCurrency.Coin -> TokenInfoBlockState.Currency.Native
                     is CryptoCurrency.Token -> TokenInfoBlockState.Currency.Token(
@@ -49,6 +53,7 @@ internal class TokenDetailsSkeletonStateConverter(
             ),
             tokenBalanceBlockState = TokenDetailsBalanceBlockState.Loading(actionButtons = createButtons()),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
+            stakingBlockState = StakingBlockState.Loading(iconState = iconState),
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
             swapTxs = persistentListOf(),
@@ -62,6 +67,7 @@ internal class TokenDetailsSkeletonStateConverter(
             bottomSheetConfig = null,
             isBalanceHidden = true,
             isMarketPriceAvailable = value.id.rawCurrencyId != null,
+            isStakingAvailable = stakingAvailabilityProvider.invoke() is StakingAvailability.Available,
             event = consumedEvent(),
         )
     }
@@ -88,11 +94,11 @@ internal class TokenDetailsSkeletonStateConverter(
 
     private fun createButtons(): ImmutableList<TokenDetailsActionButton> {
         return persistentListOf(
-            TokenDetailsActionButton.Buy(enabled = false, onClick = {}),
-            TokenDetailsActionButton.Send(enabled = false, onClick = {}),
-            TokenDetailsActionButton.Receive(onClick = {}),
-            TokenDetailsActionButton.Sell(enabled = false, onClick = {}),
-            TokenDetailsActionButton.Swap(enabled = false, onClick = {}),
+            TokenDetailsActionButton.Buy(dimContent = false, onClick = {}),
+            TokenDetailsActionButton.Send(dimContent = false, onClick = {}),
+            TokenDetailsActionButton.Receive(onClick = {}, onLongClick = null),
+            TokenDetailsActionButton.Sell(dimContent = false, onClick = {}),
+            TokenDetailsActionButton.Swap(dimContent = false, onClick = {}),
         )
     }
 
