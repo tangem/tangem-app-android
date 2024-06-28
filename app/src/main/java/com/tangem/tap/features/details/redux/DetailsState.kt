@@ -39,6 +39,7 @@ data class AccessCodeRecoveryState(
 data class CardSettingsState(
     val cardInfo: CardInfo,
     val card: CardDTO,
+    val scanResponse: ScanResponse,
     val manageSecurityState: ManageSecurityState?,
     val resetCardAllowed: Boolean,
     val resetButtonEnabled: Boolean,
