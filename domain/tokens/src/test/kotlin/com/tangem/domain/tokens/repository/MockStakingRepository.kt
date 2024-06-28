@@ -181,7 +181,7 @@ class MockStakingRepository : StakingRepository {
         validatorAddress = null,
         validatorAddresses = listOf(),
         transactions = listOf(),
-        createdAt = DateTime.now()
+        createdAt = DateTime.now(),
     )
 
     override suspend fun constructTransaction(transactionId: String): StakingTransaction = StakingTransaction(
@@ -198,7 +198,6 @@ class MockStakingRepository : StakingRepository {
         stakeId = null,
         explorerUrl = null,
         ledgerHwAppId = null,
-        isMessage = false
-
+        isMessage = false,
     )
 }

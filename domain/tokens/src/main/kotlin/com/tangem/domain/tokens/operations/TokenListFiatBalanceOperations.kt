@@ -58,13 +58,13 @@ internal class TokenListFiatBalanceOperations(
         currentBalance: TotalFiatBalance,
     ): TotalFiatBalance {
         return with(currentBalance) {
-            val yieldBalance = (status.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero()
-            val fiatYieldBalance = status.fiatRate.times(yieldBalance)
+            val stakingBalance = (status.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero()
+            val fiatStakingBalance = status.fiatRate.times(stakingBalance)
 
             (this as? TotalFiatBalance.Loaded)?.copy(
-                amount = this.amount + status.fiatAmount + fiatYieldBalance,
+                amount = this.amount + status.fiatAmount + fiatStakingBalance,
             ) ?: TotalFiatBalance.Loaded(
-                amount = status.fiatAmount + fiatYieldBalance,
+                amount = status.fiatAmount + fiatStakingBalance,
                 isAllAmountsSummarized = true,
             )
         }
