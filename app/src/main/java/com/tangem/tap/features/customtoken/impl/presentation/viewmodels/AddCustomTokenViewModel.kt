@@ -10,6 +10,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.blockchain.blockchains.cardano.CardanoTokenAddressConverter
 import com.tangem.blockchain.blockchains.hedera.HederaTokenAddressConverter
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
@@ -79,6 +80,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private val testActionsHandler = TestActionsHandler()
     private val formStateBuilder = FormStateBuilder()
     private val hederaAddressConverter = HederaTokenAddressConverter()
+    private val cardanoTokenAddressConverter = CardanoTokenAddressConverter()
 
     private var currentCryptoCurrencies: List<CryptoCurrency> = emptyList()
 
@@ -898,6 +900,12 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private fun convertTokenAddress(blockchain: Blockchain, address: String): String {
         return when (blockchain) {
             Blockchain.Hedera, Blockchain.HederaTestnet -> hederaAddressConverter.convertToTokenId(address)
+            Blockchain.Cardano -> {
+                cardanoTokenAddressConverter.convertToFingerprint(
+                    address = address,
+                    symbol = uiState.form.tokenSymbolInputField.value,
+                )
+            }
             else -> address
         }
     }
