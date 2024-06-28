@@ -42,6 +42,7 @@ internal sealed class SendTextField {
         val label: TextReference,
         val isError: Boolean = false,
         val error: TextReference? = null,
+        val isValuePasted: Boolean,
     ) : SendTextField()
 
     data class RecipientMemo(
@@ -54,6 +55,7 @@ internal sealed class SendTextField {
         val error: TextReference? = null,
         val disabledText: TextReference,
         val isEnabled: Boolean,
+        val isValuePasted: Boolean,
     ) : SendTextField()
 
     data class CustomFee(

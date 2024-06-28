@@ -8,6 +8,7 @@ plugins {
     alias(deps.plugins.hilt.android) apply false
     alias(deps.plugins.google.services) apply false
     alias(deps.plugins.firebase.crashlytics) apply false
+    alias(deps.plugins.room) apply false
 }
 
 val clean by tasks.registering {

@@ -10,14 +10,14 @@ import kotlinx.collections.immutable.persistentListOf
 @Immutable
 internal sealed class WalletTokensListState {
 
-    object Empty : WalletTokensListState()
+    data object Empty : WalletTokensListState()
 
     sealed class ContentState : WalletTokensListState() {
 
         abstract val items: ImmutableList<TokensListItemState>
         abstract val organizeTokensButtonConfig: OrganizeTokensButtonConfig?
 
-        object Loading : ContentState() {
+        data object Loading : ContentState() {
             override val items = persistentListOf<TokensListItemState>()
             override val organizeTokensButtonConfig = null
         }
@@ -27,7 +27,7 @@ internal sealed class WalletTokensListState {
             override val organizeTokensButtonConfig: OrganizeTokensButtonConfig?,
         ) : ContentState()
 
-        object Locked : ContentState() {
+        data object Locked : ContentState() {
             override val items = persistentListOf(
                 TokensListItemState.NetworkGroupTitle(id = 42, name = TextReference.Res(id = R.string.main_tokens)),
                 TokensListItemState.Token(state = TokenItemState.Locked(id = "Locked#1")),

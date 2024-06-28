@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui.send
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.rows.SelectorRowItem
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.R
@@ -60,7 +62,11 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isClickDisabled: Boolean, o
                 titleRes = title,
                 iconRes = icon,
                 preDot = getCryptoReference(feeAmount, feeState.isFeeApproximate),
-                postDot = getFiatReference(feeAmount?.value, feeState.rate, feeState.appCurrency),
+                postDot = if (feeState.isFeeConvertibleToFiat) {
+                    getFiatReference(feeAmount?.value, feeState.rate, feeState.appCurrency)
+                } else {
+                    null
+                },
                 ellipsizeOffset = feeAmount?.currencySymbol?.length,
                 isSelected = true,
                 showDivider = false,
@@ -111,21 +117,10 @@ private fun BoxScope.FeeError(feeSelectorState: FeeSelectorState) {
 
 // region Preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun FeeBlockPreview_Light(@PreviewParameter(FeeBlockPreviewProvider::class) value: SendStates.FeeState) {
-    TangemTheme {
-        FeeBlock(
-            feeState = value,
-            isClickDisabled = true,
-            onClick = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun FeeBlockPreview_Dark(@PreviewParameter(FeeBlockPreviewProvider::class) value: SendStates.FeeState) {
-    TangemTheme(isDark = true) {
+private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) value: SendStates.FeeState) {
+    TangemThemePreview {
         FeeBlock(
             feeState = value,
             isClickDisabled = true,

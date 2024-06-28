@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.atoms
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -8,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -52,17 +54,10 @@ private fun HandSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun HandPreview_Light() {
-    TangemTheme {
-        HandSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun HandPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun HandPreview() {
+    TangemThemePreview {
         HandSample()
     }
 }

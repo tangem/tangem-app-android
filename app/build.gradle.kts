@@ -42,8 +42,8 @@ configurations.all {
 
 
 dependencies {
-    implementation(files("libs/walletconnect-1.5.6.aar"))
     implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
     implementation(projects.domain.card)
@@ -67,6 +67,8 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
+    implementation(projects.domain.staking)
+    implementation(projects.domain.walletConnect)
 
     implementation(projects.common)
     implementation(projects.core.analytics)
@@ -77,9 +79,11 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    implementation(projects.core.decompose)
     implementation(projects.core.deepLinks)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
+    implementation(projects.libs.blockchainSdk)
 
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
@@ -87,7 +91,6 @@ dependencies {
     implementation(projects.data.card)
     implementation(projects.data.common)
     implementation(projects.data.settings)
-    implementation(projects.data.source.preferences)
     implementation(projects.data.tokens)
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
@@ -98,6 +101,8 @@ dependencies {
     implementation(projects.data.onboarding)
     implementation(projects.data.feedback)
     implementation(projects.data.qrScanning)
+    implementation(projects.data.staking)
+    implementation(projects.data.walletConnect)
 
     /** Features */
     implementation(projects.features.onboarding)
@@ -121,6 +126,10 @@ dependencies {
     implementation(projects.features.send.impl)
     implementation(projects.features.qrScanning.api)
     implementation(projects.features.qrScanning.impl)
+    implementation(projects.features.staking.api)
+    implementation(projects.features.staking.impl)
+    implementation(projects.features.details.api)
+    implementation(projects.features.details.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -183,7 +192,6 @@ dependencies {
     implementation(deps.reKotlin)
     implementation(deps.zxing.qrCore)
     implementation(deps.coil)
-    implementation(deps.appsflyer)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
     implementation(deps.spongecastle.core)
@@ -216,9 +224,12 @@ dependencies {
     androidTestImplementation(deps.test.kaspresso.compose)
     androidTestImplementation(deps.test.compose.junit)
     androidTestImplementation(deps.test.hamcrest)
+    androidTestImplementation(deps.test.hilt)
+    kaptAndroidTest(deps.test.hilt.compiler)
 
     /** Chucker */
     debugImplementation(deps.chucker)
+    mockedImplementation(deps.chuckerStub)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)

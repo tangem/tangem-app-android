@@ -4,41 +4,43 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
-import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
-import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
-import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchain.common.pagination.Page
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
+import com.tangem.blockchain.common.trustlines.AssetRequirementsManager
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
+import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.datasource.asset.AssetReader
-import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
+import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
@@ -49,31 +51,22 @@ import java.util.EnumSet
 class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
-    mnemonic: Mnemonic,
-    assetReader: AssetReader,
-    moshi: Moshi,
-    configManager: ConfigManager,
-    blockchainDataStorage: BlockchainDataStorage,
-    accountCreator: AccountCreator,
-    blockchainSDKLogger: BlockchainSDKLogger,
-    feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
+    private val assetLoader: AssetLoader,
+    private val dispatchers: CoroutineDispatcherProvider,
+    blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig() }
     private val resultFactory by lazy { UpdateWalletManagerResultFactory() }
-    private val walletManagerFactory by lazy {
-        WalletManagerFactory(
-            configManager = configManager,
-            accountCreator = accountCreator,
-            blockchainDataStorage = blockchainDataStorage,
-            blockchainSDKLogger = if (feedbackManagerFeatureToggles.isLocalLogsEnabled) blockchainSDKLogger else null,
-        )
-    }
+    private val walletManagerFactory by lazy { WalletManagerFactory(blockchainSDKFactory) }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
-    private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
     private val sdkPageConverter by lazy { SdkPageConverter() }
-    private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory(mnemonic) }
+    private val cryptoCurrencyTypeConverter by lazy { CryptoCurrencyTypeConverter() }
+    private val requirementsConditionConverter by lazy { SdkRequirementsConditionConverter() }
+    private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
+
+    private val initMutex = Mutex()
 
     override suspend fun update(
         userWalletId: UserWalletId,
@@ -192,7 +185,16 @@ class DefaultWalletManagersFacade(
                 address = walletManager.wallet.address,
                 filterType = when (currency) {
                     is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
-                    is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
+                    is CryptoCurrency.Token -> {
+                        val blockchainToken = Token(
+                            name = currency.name,
+                            symbol = currency.symbol,
+                            contractAddress = currency.contractAddress,
+                            decimals = currency.decimals,
+                            id = currency.id.rawCurrencyId,
+                        )
+                        TransactionHistoryRequest.FilterType.Contract(blockchainToken)
+                    }
                 },
             )
             .let(txHistoryStateConverter::convert)
@@ -221,7 +223,16 @@ class DefaultWalletManagersFacade(
                 pageSize = pageSize,
                 filterType = when (currency) {
                     is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
-                    is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
+                    is CryptoCurrency.Token -> {
+                        val blockchainToken = Token(
+                            name = currency.name,
+                            symbol = currency.symbol,
+                            contractAddress = currency.contractAddress,
+                            decimals = currency.decimals,
+                            id = currency.id.rawCurrencyId,
+                        )
+                        TransactionHistoryRequest.FilterType.Contract(blockchainToken)
+                    }
                 },
             ),
         )
@@ -230,7 +241,8 @@ class DefaultWalletManagersFacade(
             is Result.Success -> PaginationWrapper(
                 currentPage = sdkPageConverter.convert(page),
                 nextPage = sdkPageConverter.convert(itemsResult.data.nextPage),
-                items = txHistoryItemConverter.convertList(itemsResult.data.items),
+                items = SdkTransactionHistoryItemConverter(smartContractMethods = readSmartContractMethods())
+                    .convertList(itemsResult.data.items),
             )
             is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)
         }
@@ -324,24 +336,25 @@ class DefaultWalletManagersFacade(
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager? {
-        val userWallet = getUserWallet(userWalletId)
-        var walletManager = walletManagersStore.getSyncOrNull(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = derivationPath,
-        )
-
-        if (walletManager == null) {
-            walletManager = walletManagerFactory.createWalletManager(
-                scanResponse = userWallet.scanResponse,
+        initMutex.withLock {
+            val userWallet = getUserWallet(userWalletId)
+            var walletManager = walletManagersStore.getSyncOrNull(
+                userWalletId = userWalletId,
                 blockchain = blockchain,
-                derivationPath = derivationPath?.let { DerivationPath(rawPath = it) },
-            ) ?: return null
+                derivationPath = derivationPath,
+            )
+            if (walletManager == null) {
+                walletManager = walletManagerFactory.createWalletManager(
+                    scanResponse = userWallet.scanResponse,
+                    blockchain = blockchain,
+                    derivationPath = derivationPath?.let { DerivationPath(rawPath = it) },
+                )
+                walletManager ?: return null
 
-            walletManagersStore.store(userWalletId, walletManager)
+                walletManagersStore.store(userWalletId, walletManager)
+            }
+            return walletManager
         }
-
-        return walletManager
     }
 
     @Deprecated("Will be removed in future")
@@ -442,12 +455,12 @@ class DefaultWalletManagersFacade(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<TransactionFee>? {
+    ): Result<TransactionFee>? = withContext(dispatchers.io) {
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = network,
         )
-        return (walletManager as? TransactionSender)?.getFee(
+        (walletManager as? TransactionSender)?.getFee(
             amount = amount,
             destination = destination,
         )
@@ -502,20 +515,6 @@ class DefaultWalletManagersFacade(
         )
 
         return walletManager?.createTransaction(amount, fee, destination)
-    }
-
-    @Deprecated("Will be removed in future")
-    override suspend fun sendTransaction(
-        txData: TransactionData,
-        signer: CommonSigner,
-        userWalletId: UserWalletId,
-        network: Network,
-    ): SimpleResult {
-        val walletManager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = network,
-        )
-        return (walletManager as TransactionSender).send(txData, signer)
     }
 
     override suspend fun getRecentTransactions(
@@ -573,6 +572,45 @@ class DefaultWalletManagersFacade(
         )
     }
 
+    override suspend fun getAssetRequirements(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): AssetRequirementsCondition? {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+        val currencyType = cryptoCurrencyTypeConverter.convert(currency)
+        if (walletManager !is AssetRequirementsManager || !walletManager.hasRequirements(currencyType)) return null
+
+        val condition = walletManager.requirementsCondition(currencyType) ?: return null
+        return requirementsConditionConverter.convert(condition)
+    }
+
+    override suspend fun associateAsset(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        signer: CommonSigner,
+    ): SimpleResult {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+        val currencyType = cryptoCurrencyTypeConverter.convert(currency)
+
+        if (walletManager !is AssetRequirementsManager) {
+            return SimpleResult.Failure(
+                BlockchainSdkError.CustomError("WalletManager is not implemented AssetRequirementsManager"),
+            )
+        }
+        return walletManager.fulfillRequirements(currencyType, signer)
+    }
+
+    override suspend fun checkUtxoConsolidationAvailability(userWalletId: UserWalletId, network: Network): Boolean {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: return false
+
+        return (walletManager as? UtxoBlockchainManager)?.allowConsolidation == true
+    }
+
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
         if (tokens.isEmpty()) return
 
@@ -581,5 +619,9 @@ class DefaultWalletManagersFacade(
             .filter { it !in walletManager.cardTokens }
 
         walletManager.addTokens(tokensToAdd)
+    }
+
+    private suspend fun readSmartContractMethods(): Map<String, SmartContractMethod> {
+        return assetLoader.loadMap<SmartContractMethod>(fileName = "contract_methods")
     }
 }
