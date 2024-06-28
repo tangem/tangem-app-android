@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.address.Address
 import com.tangem.crypto.NetworkType
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.UserWalletIdBuilder
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import java.util.concurrent.CopyOnWriteArrayList
 

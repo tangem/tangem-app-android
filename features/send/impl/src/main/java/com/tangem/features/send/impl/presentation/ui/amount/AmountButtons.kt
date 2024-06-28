@@ -94,19 +94,20 @@ private fun SendAmountCurrencyButton(button: SendAmountSegmentedButtonsConfig, i
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val iconModifier = Modifier.size(TangemTheme.dimens.size18)
+            .padding(horizontal = TangemTheme.dimens.spacing1)
         if (button.isFiat) {
             FiatIcon(
                 url = button.iconUrl,
                 size = TangemTheme.dimens.size18,
                 isGrayscale = !isSegmentedButtonsEnabled,
-                modifier = Modifier.size(TangemTheme.dimens.size18),
+                modifier = iconModifier,
             )
         } else if (button.iconState != null) {
             TokenIcon(
                 state = button.iconState,
                 shouldDisplayNetwork = false,
-                modifier = Modifier
-                    .size(TangemTheme.dimens.size18),
+                modifier = iconModifier,
             )
         }
         Text(
