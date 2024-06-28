@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
@@ -13,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=68%3A20&mode=design&t=WSV3AxC6zV1y0CHF-1)
@@ -44,17 +46,10 @@ fun Notifier(
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TangemNotifierPreview_Light(@PreviewParameter(NotifierProvider::class) text: String) {
-    TangemTheme(isDark = false) {
-        Notifier(text = text)
-    }
-}
-
-@Preview
-@Composable
-private fun TangemNotifierPreview_Dark(@PreviewParameter(NotifierProvider::class) text: String) {
-    TangemTheme(isDark = true) {
+private fun TangemNotifierPreview(@PreviewParameter(NotifierProvider::class) text: String) {
+    TangemThemePreview {
         Notifier(text = text)
     }
 }
