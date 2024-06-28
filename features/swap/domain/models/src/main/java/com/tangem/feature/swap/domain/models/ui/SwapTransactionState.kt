@@ -26,4 +26,6 @@ sealed class SwapTransactionState {
     data object UnknownError : SwapTransactionState()
 
     data class ExpressError(val dataError: DataError) : SwapTransactionState()
+
+    data object DemoMode : SwapTransactionState()
 }
