@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.appcurrency
 
+import android.content.res.Configuration
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -25,6 +26,7 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorState.Currency
 import com.tangem.wallet.R
@@ -302,21 +304,12 @@ private val RadioButtonColors: RadioButtonColors
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360, heightDp = 720)
+@Preview(showBackground = true, widthDp = 360, heightDp = 720, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun AppCurrencySelectorScreenPreview_Light(
+private fun AppCurrencySelectorScreenPreview(
     @PreviewParameter(AppCurrencySelectorStateProvider::class) param: AppCurrencySelectorState,
 ) {
-    TangemTheme(isDark = false) {
-        AppCurrencySelectorScreen(param)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360, heightDp = 720)
-@Composable
-private fun AppCurrencySelectorScreenPreview_Dark(
-    @PreviewParameter(AppCurrencySelectorStateProvider::class) param: AppCurrencySelectorState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         AppCurrencySelectorScreen(param)
     }
 }
