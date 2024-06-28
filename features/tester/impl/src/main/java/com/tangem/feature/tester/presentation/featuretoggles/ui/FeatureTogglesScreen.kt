@@ -1,5 +1,6 @@
 package com.tangem.feature.tester.presentation.featuretoggles.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,8 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
@@ -47,6 +50,14 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesContentState) {
             FeatureToggleItem(
                 toggle = featureToggle,
                 onCheckedChange = { isChange -> state.onToggleValueChange(featureToggle.name, isChange) },
+            )
+        }
+        item {
+            PrimaryButton(
+                text = stringResource(id = R.string.apply_changes),
+                onClick = state.onApplyChangesClick,
+                modifier = Modifier.fillMaxWidth()
+                    .padding(TangemTheme.dimens.spacing16),
             )
         }
     }
@@ -81,9 +92,10 @@ private fun FeatureToggleItem(toggle: TesterFeatureToggle, onCheckedChange: (Boo
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewFeatureTogglesScreen_InLightTheme() {
-    TangemTheme(isDark = false) {
+private fun PreviewFeatureTogglesScreen() {
+    TangemThemePreview {
         FeatureTogglesScreen(
             state = FeatureTogglesContentState(
                 featureToggles = listOf(
@@ -92,23 +104,7 @@ private fun PreviewFeatureTogglesScreen_InLightTheme() {
                 ),
                 onToggleValueChange = { _, _ -> },
                 onBackClick = {},
-            ),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewFeatureTogglesScreen_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        FeatureTogglesScreen(
-            state = FeatureTogglesContentState(
-                featureToggles = listOf(
-                    TesterFeatureToggle(name = "FEATURE_TOGGLE_1", isEnabled = true),
-                    TesterFeatureToggle(name = "FEATURE_TOGGLE_2", isEnabled = false),
-                ),
-                onToggleValueChange = { _, _ -> },
-                onBackClick = {},
+                onApplyChangesClick = {},
             ),
         )
     }

@@ -11,6 +11,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.wallet.R
 
 @Composable
@@ -29,7 +30,7 @@ internal fun SearchCurrenciesButton(onClick: () -> Unit, modifier: Modifier = Mo
 @Preview(showBackground = true, widthDp = 360)
 @Composable
 private fun SearchCurrenciesButtonPreview() {
-    TangemTheme {
+    TangemThemePreview {
         Box(
             modifier = Modifier
                 .background(color = Color.Black)

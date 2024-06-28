@@ -1,9 +1,9 @@
 package com.tangem.domain.walletmanager.utils
 
-import com.tangem.blockchain.common.txhistory.TransactionHistoryState
+import com.tangem.blockchain.transactionhistory.TransactionHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.utils.converter.Converter
-import com.tangem.blockchain.common.txhistory.TransactionHistoryState as SdkTransactionHistoryState
+import com.tangem.blockchain.transactionhistory.TransactionHistoryState as SdkTransactionHistoryState
 
 internal class SdkTransactionHistoryStateConverter : Converter<SdkTransactionHistoryState, TxHistoryState> {
 
