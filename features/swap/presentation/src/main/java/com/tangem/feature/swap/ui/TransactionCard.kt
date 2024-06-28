@@ -38,6 +38,7 @@ import coil.request.ImageRequest
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.TransactionCardType
@@ -61,7 +62,7 @@ fun TransactionCard(
     Box(
         modifier = modifier
             .background(
-                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
+                shape = RoundedCornerShape(TangemTheme.dimens.radius16),
                 color = TangemTheme.colors.background.primary,
             )
             .fillMaxSize(),
@@ -177,9 +178,9 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
             .fillMaxWidth()
             .padding(
                 bottom = TangemTheme.dimens.spacing8,
-                top = TangemTheme.dimens.spacing12,
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
+                top = TangemTheme.dimens.spacing14,
+                start = TangemTheme.dimens.spacing12,
+                end = TangemTheme.dimens.spacing12,
             ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -191,7 +192,6 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
             maxLines = 1,
             style = MaterialTheme.typography.subtitle2,
             modifier = Modifier
-                .defaultMinSize(minHeight = TangemTheme.dimens.size24)
                 .align(Alignment.CenterVertically),
         )
         SpacerW16()
@@ -202,7 +202,6 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
                     color = TangemTheme.colors.text.tertiary,
                     style = MaterialTheme.typography.body2,
                     modifier = Modifier
-                        .defaultMinSize(minHeight = TangemTheme.dimens.size24)
                         .align(Alignment.CenterVertically),
                 )
             }
@@ -228,8 +227,8 @@ private fun Content(
     Row(
         modifier = Modifier
             .padding(
-                start = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing12,
+                start = TangemTheme.dimens.spacing12,
+                bottom = TangemTheme.dimens.spacing16,
             ),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.Top,
@@ -279,7 +278,7 @@ private fun Content(
                 }
             }
 
-            SpacerH8()
+            SpacerH4()
 
             if (amountEquivalent != null) {
                 if (type is TransactionCardType.ReadOnly) {
@@ -499,7 +498,7 @@ private fun makePriceImpactBalanceWarning(value: String, priceImpactPercents: In
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCard_InLightTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreview()
     }
 }
@@ -507,7 +506,7 @@ private fun Preview_TransactionCard_InLightTheme() {
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCardWithPriceImpact_InLightTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreviewWithPriceImpact()
     }
 }
@@ -515,7 +514,7 @@ private fun Preview_TransactionCardWithPriceImpact_InLightTheme() {
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCardWithoutPriceImpact_InLightTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreviewWithoutPriceImpact()
     }
 }
@@ -523,7 +522,7 @@ private fun Preview_TransactionCardWithoutPriceImpact_InLightTheme() {
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCard_InDarkTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreview()
     }
 }
@@ -531,7 +530,7 @@ private fun Preview_TransactionCard_InDarkTheme() {
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCardWithPriceImpact_InDarkTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreviewWithPriceImpact()
     }
 }
@@ -539,7 +538,7 @@ private fun Preview_TransactionCardWithPriceImpact_InDarkTheme() {
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCardWithoutPriceImpact_InDarkTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreviewWithoutPriceImpact()
     }
 }

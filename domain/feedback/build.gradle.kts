@@ -13,4 +13,5 @@ dependencies {
     implementation(deps.jodatime)
 
     implementation(projects.core.res)
+    implementation(projects.domain.wallets.models)
 }

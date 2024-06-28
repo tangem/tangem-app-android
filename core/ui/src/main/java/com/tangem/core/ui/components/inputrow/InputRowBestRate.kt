@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.inputrow
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,6 +28,7 @@ import com.tangem.core.ui.components.currency.tokenicon.LoadingIcon
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -154,30 +156,12 @@ private fun InnerIcon(imageUrl: String) {
 
 //region preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun InputRowBestRatePreview_Light(
+private fun InputRowBestRatePreview(
     @PreviewParameter(InputRowBestRatePreviewDataProvider::class) data: InputRowBestRatePreviewData,
 ) {
-    TangemTheme {
-        InputRowBestRate(
-            imageUrl = "",
-            title = data.title,
-            titleExtra = data.titleExtra,
-            subtitle = data.subtitle,
-            showTag = data.showTag,
-            onIconClick = data.iconClick,
-            modifier = Modifier
-                .background(TangemTheme.colors.background.action),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun InputRowBestRatePreview_Dark(
-    @PreviewParameter(InputRowBestRatePreviewDataProvider::class) data: InputRowBestRatePreviewData,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         InputRowBestRate(
             imageUrl = "",
             title = data.title,
