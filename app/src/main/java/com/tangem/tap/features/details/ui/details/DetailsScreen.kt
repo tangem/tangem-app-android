@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.details
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -23,6 +24,7 @@ import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.common.ScreenTitle
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
@@ -236,19 +238,10 @@ private fun TangemAppVersion(appNameRes: Int, version: String, modifier: Modifie
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360, heightDp = 900)
+@Preview(showBackground = true, widthDp = 360, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun DetailsScreenPreview_Light(
-    @PreviewParameter(DetailsScreenStateProvider::class) param: DetailsScreenState,
-) {
-    TangemTheme(isDark = false) {
-        DetailsScreen(param, onBackClick = {})
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360, heightDp = 900)
-@Composable
-private fun DetailsScreenPreview_Dark(@PreviewParameter(DetailsScreenStateProvider::class) param: DetailsScreenState) {
-    TangemTheme(isDark = true) {
+private fun DetailsScreenPreview(@PreviewParameter(DetailsScreenStateProvider::class) param: DetailsScreenState) {
+    TangemThemePreview {
         DetailsScreen(param, onBackClick = {})
     }
 }

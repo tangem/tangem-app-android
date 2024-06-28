@@ -20,8 +20,12 @@ sealed class WalletConnectError(val error: String) : Exception() {
         override val message: String?,
     ) : WalletConnectError("ExternalApprovalError")
 
-    object WrongUserWallet : WalletConnectError("WrongUserWallet")
-    object UnsupportedMethod : WalletConnectError("UnsupportedMethod")
-    object SigningError : WalletConnectError("SigningError")
-    object ValidationError : WalletConnectError("ValidationError")
+    data class UnknownError(
+        override val message: String,
+    ) : WalletConnectError(message)
+
+    data object WrongUserWallet : WalletConnectError("WrongUserWallet")
+    data object UnsupportedMethod : WalletConnectError("UnsupportedMethod")
+    data object SigningError : WalletConnectError("SigningError")
+    data object ValidationError : WalletConnectError("ValidationError")
 }

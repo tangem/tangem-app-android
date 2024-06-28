@@ -1,8 +1,9 @@
 package com.tangem.tap.proxy.redux
 
-import com.tangem.feature.qrscanning.QrScanningRouter
+import com.tangem.core.navigation.email.EmailSender
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.tester.api.TesterRouter
@@ -23,5 +24,6 @@ sealed interface DaggerGraphAction : Action {
         val cardSdkConfigRepository: CardSdkConfigRepository,
         val sendRouter: SendRouter,
         val qrScanningRouter: QrScanningRouter,
+        val emailSender: EmailSender,
     ) : DaggerGraphAction
 }

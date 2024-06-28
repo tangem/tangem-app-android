@@ -1,5 +1,6 @@
 package com.tangem.tap.features.saveWallet.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
@@ -9,6 +10,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButton
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.saveWallet.ui.models.EnrollBiometricsDialog
 
@@ -40,17 +42,10 @@ private fun EnrollBiometricDialogContentSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun EnrollBiometricDialogContentPreview_Light() {
-    TangemTheme {
-        EnrollBiometricDialogContentSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun EnrollBiometricDialogContentPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun EnrollBiometricDialogContentPreview() {
+    TangemThemePreview {
         EnrollBiometricDialogContentSample()
     }
 }

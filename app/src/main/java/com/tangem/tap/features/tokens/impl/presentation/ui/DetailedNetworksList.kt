@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.tokens.impl.presentation.states.NetworkItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import kotlinx.collections.immutable.ImmutableCollection
@@ -135,9 +137,10 @@ private fun RowScope.NetworkTitle(model: NetworkItemState) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_DetailedNetworksList_ManageAccess_Light() {
-    TangemTheme {
+private fun Preview_DetailedNetworksList_ManageAccess() {
+    TangemThemePreview {
         DetailedNetworksList(
             isExpanded = true,
             token = TokenListPreviewData.createManageToken(),
@@ -147,33 +150,10 @@ private fun Preview_DetailedNetworksList_ManageAccess_Light() {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_DetailedNetworksList_ManageAccess_Dark() {
-    TangemTheme {
-        DetailedNetworksList(
-            isExpanded = true,
-            token = TokenListPreviewData.createManageToken(),
-            networks = TokenListPreviewData.createManageNetworksList(),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_DetailedNetworksList_ReadAccess_Light() {
-    TangemTheme {
-        DetailedNetworksList(
-            isExpanded = true,
-            token = TokenListPreviewData.createReadToken(),
-            networks = TokenListPreviewData.createReadNetworksList(),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_DetailedNetworksList_ReadAccess_Dark() {
-    TangemTheme {
+private fun Preview_DetailedNetworksList_ReadAccess() {
+    TangemThemePreview {
         DetailedNetworksList(
             isExpanded = true,
             token = TokenListPreviewData.createReadToken(),

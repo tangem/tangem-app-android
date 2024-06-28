@@ -19,6 +19,7 @@ dependencies {
     /** Project - Core */
     implementation(projects.core.res)
     implementation(projects.core.utils)
+    implementation(projects.core.decompose)
 
     /** AndroidX libraries */
     implementation(deps.androidx.fragment.ktx)
