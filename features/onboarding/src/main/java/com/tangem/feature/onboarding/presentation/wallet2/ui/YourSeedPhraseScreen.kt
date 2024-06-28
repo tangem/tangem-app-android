@@ -1,5 +1,6 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,6 +17,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.onboarding.R
 import com.tangem.feature.onboarding.presentation.wallet2.model.*
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.DescriptionSubTitleText
@@ -105,7 +107,7 @@ private fun SegmentSeedBlock(state: SegmentSeedState, modifier: Modifier = Modif
                 it.count,
             ),
             modifier = Modifier
-                .padding(vertical = TangemTheme.dimens.spacing16)
+                .padding(vertical = TangemTheme.dimens.spacing10)
                 .fillMaxWidth(),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.primary1,
@@ -163,10 +165,11 @@ private inline fun <T> VerticalGrid(
     }
 }
 
-@Preview
+@Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun YourSeedPhraseScreenPreview_Light() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview {
         YourSeedPhraseScreen(
             state = YourSeedPhraseState(
                 segmentSeedState = SegmentSeedState(

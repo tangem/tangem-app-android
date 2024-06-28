@@ -1,9 +1,9 @@
 package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.domain.common.extensions.toCoinId
 
 /**
  * Helper to apply compatibility changes for [UserTokensResponse] to support old saved tokens
