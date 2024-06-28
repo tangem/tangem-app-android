@@ -31,6 +31,7 @@ dependencies {
     /** Domain */
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
