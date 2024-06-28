@@ -15,10 +15,9 @@ import com.tangem.common.extensions.VoidCallback
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.ShareElement
 import com.tangem.core.ui.extensions.setStatusBarColor
-import com.tangem.datasource.asset.AssetReader
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.Artwork
+import com.tangem.domain.wallets.models.Artwork
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.*
@@ -35,14 +34,10 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutOnboardingContainerTopBinding
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @Suppress("LargeClass")
 @AndroidEntryPoint
 internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>() {
-
-    @Inject
-    lateinit var assetReader: AssetReader
 
     private val mainBinding by lazy { binding.vMain }
     private var previousStep: TwinCardsStep = TwinCardsStep.None
@@ -88,13 +83,13 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
 
         binding.toolbar.title = getText(R.string.twins_recreate_toolbar)
 
-        mainBinding.onboardingTopContainer.imvTwinFrontCard.load(Artwork.TWIN_CARD_1) {
+        mainBinding.onboardingTopContainer.imvTwinFrontCard.load(Artwork.TWIN_CARD_1_URL) {
             placeholder(R.drawable.card_placeholder_black)
             error(R.drawable.card_placeholder_black)
             fallback(R.drawable.card_placeholder_black)
         }
 
-        mainBinding.onboardingTopContainer.imvTwinBackCard.load(Artwork.TWIN_CARD_2) {
+        mainBinding.onboardingTopContainer.imvTwinBackCard.load(Artwork.TWIN_CARD_2_URL) {
             placeholder(R.drawable.card_placeholder_white)
             error(R.drawable.card_placeholder_white)
             fallback(R.drawable.card_placeholder_white)
@@ -260,7 +255,6 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
             store.dispatch(
                 TwinCardsAction.Wallet.LaunchFirstStep(
                     initialMessage = Message(getString(R.string.twins_recreate_title_format, twinIndexNumber)),
-                    reader = assetReader,
                 ),
             )
         }
