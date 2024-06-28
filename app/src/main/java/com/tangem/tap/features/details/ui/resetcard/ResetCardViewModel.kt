@@ -1,13 +1,55 @@
 package com.tangem.tap.features.details.ui.resetcard
 
-import com.tangem.tap.common.redux.AppState
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
+import com.tangem.domain.card.ResetCardUseCase
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.asLockable
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.features.details.redux.CardSettingsState
-import com.tangem.tap.features.details.redux.DetailsAction
+import com.tangem.tap.features.details.redux.DetailsAction.ResetToFactory
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
+import com.tangem.tap.features.details.ui.resetcard.featuretoggles.ResetCardFeatureToggles
 import com.tangem.tap.features.details.ui.utils.toResetCardDescriptionText
-import org.rekotlin.Store
+import com.tangem.tap.store
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import com.tangem.tap.features.details.redux.CardSettingsState.Dialog as CardSettingsDialog
 
-internal class ResetCardViewModel(private val store: Store<AppState>) {
+@Suppress("LongParameterList")
+@HiltViewModel
+internal class ResetCardViewModel @Inject constructor(
+    private val resetCardFeatureToggles: ResetCardFeatureToggles,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val resetCardUseCase: ResetCardUseCase,
+    private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
+    private val deleteWalletUseCase: DeleteWalletUseCase,
+    private val userWalletsListManager: UserWalletsListManager,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+) : ViewModel() {
+
+    private val firstCardScanResponse = store.state.detailsState.cardSettingsState?.scanResponse
+        ?: error("ScanResponse can't be null")
+
+    private val currentUserWalletId = createUserWalletId(firstCardScanResponse)
+
+    // TODO: move logic to separate domain entity
+    private var resetBackupCardCount = 0
 
     fun updateState(state: CardSettingsState?): ResetCardScreenState.ResetCardScreenContent {
         val descriptionText = state?.cardInfo
@@ -28,27 +70,158 @@ internal class ResetCardViewModel(private val store: Store<AppState>) {
             warningsToShow = warningsToShow,
             acceptCondition1Checked = state?.condition1Checked ?: false,
             acceptCondition2Checked = state?.condition2Checked ?: false,
-            onAcceptCondition1ToggleClick = { store.dispatch(DetailsAction.ResetToFactory.AcceptCondition1(it)) },
-            onAcceptCondition2ToggleClick = { store.dispatch(DetailsAction.ResetToFactory.AcceptCondition2(it)) },
-            onResetButtonClick = { showLastWarningDialog() },
-            lastWarningDialog = ResetCardScreenState.ResetCardScreenContent.LastWarningDialog(
-                isShown = state?.isLastWarningDialogShown ?: false,
-                onResetButtonClick = ::onLastWarningDialogResetClicked,
-                onDismiss = ::onLastWarningDialogDismiss,
-            ),
+            onAcceptCondition1ToggleClick = { store.dispatch(ResetToFactory.AcceptCondition1(it)) },
+            onAcceptCondition2ToggleClick = { store.dispatch(ResetToFactory.AcceptCondition2(it)) },
+            onResetButtonClick = { showDialog(CardSettingsDialog.StartResetDialog) },
+            dialog = state?.dialog?.let(::createDialog),
         )
     }
 
-    private fun showLastWarningDialog() {
-        store.dispatch(DetailsAction.ResetToFactory.LastWarningDialogVisibility(isShown = true))
+    private fun createDialog(dialog: CardSettingsDialog): ResetCardScreenState.ResetCardScreenContent.Dialog {
+        return when (dialog) {
+            CardSettingsDialog.StartResetDialog -> {
+                ResetCardScreenState.ResetCardScreenContent.Dialog.StartReset(
+                    onConfirmClick = ::onStartResetClick,
+                    onDismiss = ::dismissDialog,
+                )
+            }
+            CardSettingsDialog.ContinueResetDialog -> {
+                ResetCardScreenState.ResetCardScreenContent.Dialog.ContinueReset(
+                    onConfirmClick = ::onContinueResetClick,
+                    onDismiss = ::onContinueResetDialogDismiss,
+                )
+            }
+            CardSettingsDialog.InterruptedResetDialog -> {
+                ResetCardScreenState.ResetCardScreenContent.Dialog.InterruptedReset(
+                    onConfirmClick = ::onContinueResetClick,
+                    onDismiss = ::onInterruptedResetDialogDismiss,
+                )
+            }
+            CardSettingsDialog.CompletedResetDialog -> {
+                ResetCardScreenState.ResetCardScreenContent.Dialog.CompletedReset(
+                    onConfirmClick = ::dismissAndFinishFullReset,
+                )
+            }
+        }
     }
 
-    private fun onLastWarningDialogResetClicked() {
-        store.dispatch(DetailsAction.ResetToFactory.LastWarningDialogVisibility(isShown = false))
-        store.dispatch(DetailsAction.ResetToFactory.Proceed)
+    private fun onStartResetClick() {
+        dismissDialog()
+
+        if (resetCardFeatureToggles.isFullResetEnabled) {
+            makeFullReset()
+        } else {
+            store.dispatch(ResetToFactory.Proceed)
+        }
     }
 
-    private fun onLastWarningDialogDismiss() {
-        store.dispatch(DetailsAction.ResetToFactory.LastWarningDialogVisibility(isShown = false))
+    private fun makeFullReset() {
+        viewModelScope.launch {
+            resetCardUseCase(card = firstCardScanResponse.card).onRight {
+                deleteSavedAccessCodesUseCase(firstCardScanResponse.card.cardId)
+                deleteWalletUseCase(currentUserWalletId)
+
+                val newSelectedWallet = getSelectedWalletSyncUseCase().getOrNull()
+                if (newSelectedWallet != null) {
+                    store.onUserWalletSelected(newSelectedWallet)
+                }
+
+                delay(DELAY_SDK_DIALOG_CLOSE)
+
+                checkRemainingBackupCards()
+            }
+        }
+    }
+
+    private fun onContinueResetClick() {
+        dismissDialog()
+
+        viewModelScope.launch {
+            resetCardUseCase(
+                cardNumber = resetBackupCardCount + 1,
+                card = firstCardScanResponse.card,
+                userWalletId = currentUserWalletId,
+            )
+                .onRight {
+                    resetBackupCardCount++
+
+                    delay(DELAY_SDK_DIALOG_CLOSE)
+
+                    checkRemainingBackupCards()
+                }
+                .onLeft { showDialog(CardSettingsDialog.InterruptedResetDialog) }
+        }
+    }
+
+    private fun onContinueResetDialogDismiss() {
+        dismissDialog()
+
+        showDialog(CardSettingsDialog.InterruptedResetDialog)
+    }
+
+    private fun onInterruptedResetDialogDismiss() {
+        analyticsEventHandler.send(Settings.CardSettings.FactoryResetCanceled(cardsCount = resetBackupCardCount + 1))
+
+        dismissAndFinishFullReset()
+    }
+
+    private fun checkRemainingBackupCards() {
+        val backupCardsCount = firstCardScanResponse.getBackupCardsCount()
+
+        when {
+            backupCardsCount > resetBackupCardCount -> showDialog(CardSettingsDialog.ContinueResetDialog)
+            backupCardsCount == resetBackupCardCount -> {
+                analyticsEventHandler.send(
+                    event = Settings.CardSettings.FactoryResetFinished(cardsCount = resetBackupCardCount + 1),
+                )
+                showDialog(CardSettingsDialog.CompletedResetDialog)
+            }
+            else -> finishFullReset()
+        }
+    }
+
+    private fun dismissAndFinishFullReset() {
+        dismissDialog()
+
+        finishFullReset()
+    }
+
+    private fun finishFullReset() {
+        val newSelectedWallet = userWalletsListManager.selectedUserWalletSync
+
+        if (newSelectedWallet != null) {
+            store.dispatch(NavigationAction.PopBackTo(AppScreen.Wallet))
+        } else {
+            val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }.isSuccess
+            if (isLocked && userWalletsListManager.hasUserWallets) {
+                store.dispatch(NavigationAction.PopBackTo(AppScreen.Welcome))
+            } else {
+                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+            }
+        }
+    }
+
+    private fun showDialog(dialog: CardSettingsDialog) {
+        store.dispatch(ResetToFactory.ShowDialog(dialog))
+    }
+
+    private fun dismissDialog() {
+        store.dispatch(ResetToFactory.DismissDialog)
+    }
+
+    private fun ScanResponse.getBackupCardsCount(): Int {
+        if (!cardTypesResolver.isMultiwalletAllowed()) return 0
+
+        return when (val status = card.backupStatus) {
+            is CardDTO.BackupStatus.Active -> status.cardCount
+            is CardDTO.BackupStatus.CardLinked -> status.cardCount
+            is CardDTO.BackupStatus.NoBackup -> 0
+            null -> 0 // Multi-currency wallet without backup function. Example, 4.12
+        }
+    }
+
+    private fun createUserWalletId(scanResponse: ScanResponse): UserWalletId {
+        return UserWalletIdBuilder.scanResponse(scanResponse).build()
+            ?: error("UserWalletId can't be null")
     }
 }
