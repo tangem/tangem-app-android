@@ -12,6 +12,7 @@ import com.tangem.feature.wallet.impl.R
  *
 [REDACTED_AUTHOR]
  */
+// TODO: make flexible to integrate cobrands ([REDACTED_JIRA])
 internal object WalletImageResolver {
 
     private const val WALLET_WITHOUT_BACKUP_COUNT = 1
@@ -30,6 +31,8 @@ internal object WalletImageResolver {
             cardTypesResolver.isTraillantWallet() -> userWallet.resolveTraillantWallet()
             cardTypesResolver.isTronWallet() -> userWallet.resolveTronWallet()
             cardTypesResolver.isKaspaWallet() -> userWallet.resolveKaspaWallet()
+            cardTypesResolver.isKaspa2Wallet() -> userWallet.resolveKaspa2Wallet()
+            cardTypesResolver.isKaspaResellerWallet() -> userWallet.resolveKaspaResellerWallet()
             cardTypesResolver.isBadWallet() -> userWallet.resolveBadWallet()
             cardTypesResolver.isJrWallet() -> userWallet.resolveJrWallet()
             cardTypesResolver.isGrimWallet() -> userWallet.resolveGrimWallet()
@@ -37,6 +40,15 @@ internal object WalletImageResolver {
             cardTypesResolver.isBitcoinPizzaDayWallet() -> userWallet.resolveBitcoinPizzaDayWallet()
             cardTypesResolver.isVeChainWallet() -> userWallet.resolveVeChainWallet()
             cardTypesResolver.isNewWorldEliteWallet() -> userWallet.resolveNewWorldEliteWallet()
+            cardTypesResolver.isRedPandaWallet() -> userWallet.resolveRedPandaWallet()
+            cardTypesResolver.isCryptoSethWallet() -> userWallet.resolveCryptoSethWallet()
+            cardTypesResolver.isKishuInuWallet() -> userWallet.resolveKishuInuWallet()
+            cardTypesResolver.isBabyDogeWallet() -> userWallet.resolveBabyDogeWallet()
+            cardTypesResolver.isCOQWallet() -> userWallet.resolveCOQWallet()
+            cardTypesResolver.isCoinMetricaWallet() -> userWallet.resolveCoinMetricaWallet()
+            cardTypesResolver.isVoltInuWallet() -> userWallet.resolveVoltInuWallet()
+            cardTypesResolver.isVividWallet() -> userWallet.resolveVividWallet()
+            cardTypesResolver.isPastelWallet() -> userWallet.resolvePastelWallet()
             cardTypesResolver.isWallet2() -> userWallet.resolveWallet2()
             cardTypesResolver.isShibaWallet() -> userWallet.resolveShibaWallet()
             cardTypesResolver.isTangemWallet() -> userWallet.resolveWallet1()
@@ -74,6 +86,20 @@ internal object WalletImageResolver {
         return resolveWallet2(
             oneBackupResId = R.drawable.ill_kaspa_card2_120_106,
             twoBackupResId = R.drawable.ill_kaspa_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveKaspa2Wallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_kaspa2_card2_120_106,
+            twoBackupResId = R.drawable.ill_kaspa2_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveKaspaResellerWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_kaspa_reseller_card2_120_106,
+            twoBackupResId = R.drawable.ill_kaspa_reseller_card3_120_106,
         )
     }
 
@@ -151,6 +177,71 @@ internal object WalletImageResolver {
         return resolveWallet2(
             oneBackupResId = R.drawable.ill_nwe_card2_120_106,
             twoBackupResId = R.drawable.ill_nwe_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveRedPandaWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_red_panda_card2_120_106,
+            twoBackupResId = R.drawable.ill_red_panda_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveCryptoSethWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_crypto_seth_card2_120_106,
+            twoBackupResId = R.drawable.ill_crypto_seth_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveKishuInuWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_kishu_inu_card2_120_106,
+            twoBackupResId = R.drawable.ill_kishu_inu_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveBabyDogeWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_baby_doge_card2_120_106,
+            twoBackupResId = R.drawable.ill_baby_doge_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveCOQWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_coq_card2_120_106,
+            twoBackupResId = R.drawable.ill_coq_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveCoinMetricaWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_coin_metrica_card2_120_106,
+            twoBackupResId = R.drawable.ill_coin_metrica_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveVoltInuWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_volt_inu_card2_120_106,
+            twoBackupResId = R.drawable.ill_volt_inu_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveVividWallet(): Int? {
+        // for multicolored cards use image of 3 cards in all cases
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_vivid_cards3_120_106,
+            twoBackupResId = R.drawable.ill_vivid_cards3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolvePastelWallet(): Int? {
+        // for multicolored cards use image of 3 cards in all cases
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_pastel_cards3_120_106,
+            twoBackupResId = R.drawable.ill_pastel_cards3_120_106,
         )
     }
 
