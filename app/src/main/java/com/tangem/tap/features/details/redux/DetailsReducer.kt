@@ -1,13 +1,14 @@
 package com.tangem.tap.features.details.redux
 
+import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.signedHashesCount
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -26,14 +27,10 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
     val detailsState = state.detailsState
     return when (action) {
         is DetailsAction.PrepareScreen -> {
-            handlePrepareScreen(action)
+            handlePrepareScreen(action, state)
         }
         is DetailsAction.PrepareCardSettingsData -> {
-            handlePrepareCardSettingsScreen(
-                card = action.card,
-                cardTypesResolver = action.cardTypesResolver,
-                state = detailsState,
-            )
+            handlePrepareCardSettingsScreen(scanResponse = action.scanResponse, state = detailsState)
         }
         is DetailsAction.ResetCardSettingsData -> detailsState.copy(cardSettingsState = null)
         is DetailsAction.ResetToFactory -> {
@@ -68,14 +65,22 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
     }
 }
 
-private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsState {
+private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: AppState): DetailsState {
     return DetailsState(
         scanResponse = action.scanResponse,
+        // If the current screen is ResetToFactory, we must save the ResetToFactory's state
+        cardSettingsState = if (store.state.navigationState.backStack.lastOrNull() == AppScreen.ResetToFactory) {
+            state.detailsState.cardSettingsState
+        } else {
+            null
+        },
         createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         appSettingsState = AppSettingsState(
             isBiometricsAvailable = tangemSdkManager.canUseBiometry,
             saveWallets = action.shouldSaveUserWallets,
-            saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
+            saveAccessCodes = runBlocking {
+                store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+            },
             selectedAppCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = runBlocking {
                 store.inject(DaggerGraphState::appThemeModeRepository).getAppThemeMode().firstOrNull()
@@ -89,17 +94,17 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
     )
 }
 
-private fun handlePrepareCardSettingsScreen(
-    card: CardDTO,
-    cardTypesResolver: CardTypesResolver,
-    state: DetailsState,
-): DetailsState {
+private fun handlePrepareCardSettingsScreen(scanResponse: ScanResponse, state: DetailsState): DetailsState {
+    val cardTypesResolver = scanResponse.cardTypesResolver
+    val card = scanResponse.card
     val isTangemWallet = cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()
     val isShowPasswordResetRadioButton = isTangemWallet && card.backupStatus is CardDTO.BackupStatus.Active
+
     val cardSettingsState = CardSettingsState(
         cardInfo = card.toCardInfo(cardTypesResolver),
+        scanResponse = scanResponse,
         manageSecurityState = prepareSecurityOptions(card, cardTypesResolver),
-        card = card,
+        card = scanResponse.card,
         resetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver),
         resetButtonEnabled = false,
         condition1Checked = false,
@@ -114,8 +119,9 @@ private fun handlePrepareCardSettingsScreen(
             null
         },
         isShowPasswordResetRadioButton = isShowPasswordResetRadioButton,
-        isLastWarningDialogShown = false,
+        dialog = null,
     )
+
     return state.copy(cardSettingsState = cardSettingsState)
 }
 
@@ -182,14 +188,12 @@ private fun handleEraseWallet(action: DetailsAction.ResetToFactory, state: Detai
                 ),
             )
         }
-        is DetailsAction.ResetToFactory.LastWarningDialogVisibility -> {
-            state.copy(
-                cardSettingsState = cardSettingsState?.copy(
-                    isLastWarningDialogShown = action.isShown,
-                ),
-            )
+        is DetailsAction.ResetToFactory.ShowDialog -> {
+            state.copy(cardSettingsState = cardSettingsState?.copy(dialog = action.dialog))
         }
-
+        is DetailsAction.ResetToFactory.DismissDialog -> {
+            state.copy(cardSettingsState = cardSettingsState?.copy(dialog = null))
+        }
         else -> state
     }
 }

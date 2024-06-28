@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
@@ -14,6 +15,7 @@ import com.tangem.core.ui.components.getDefaultRowColors
 import com.tangem.core.ui.components.getWarningRowColors
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonConfig
@@ -49,24 +51,13 @@ private fun ActionsBottomSheetContent(actions: ImmutableList<TokenActionButtonCo
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun ActionsBottomSheetContent_Light(
     @PreviewParameter(ActionsBottomSheetContentConfigProvider::class)
     config: ActionsBottomSheetConfig,
 ) {
-    TangemTheme(isDark = false) {
-        // Use preview of content because ModalBottomSheet isn't supported in Preview mode
-        ActionsBottomSheetContent(actions = config.actions)
-    }
-}
-
-@Preview
-@Composable
-private fun ActionsBottomSheetContent_Dark(
-    @PreviewParameter(ActionsBottomSheetContentConfigProvider::class)
-    config: ActionsBottomSheetConfig,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         // Use preview of content because ModalBottomSheet isn't supported in Preview mode
         ActionsBottomSheetContent(actions = config.actions)
     }
