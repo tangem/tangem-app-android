@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -25,6 +26,7 @@ import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.features.tokendetails.impl.R
@@ -195,31 +197,12 @@ private fun ExchangeStatusItem(
 
 //region Preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ExchangeStatusItemPreview_Light(
+private fun ExchangeStatusItemPreview(
     @PreviewParameter(ExchangeStatusItemsPreviewParameterProvider::class) amount: String,
 ) {
-    TangemTheme {
-        ExchangeStatusItem(
-            providerName = "ChangeNow",
-            fromTokenIconState = TokenIconState.Loading,
-            toTokenIconState = TokenIconState.Loading,
-            fromAmount = amount,
-            fromSymbol = "USDT",
-            toSymbol = "USDT",
-            onClick = {},
-            infoIconRes = null,
-            infoIconTint = null,
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun ExchangeStatusItemPreview_Dark(
-    @PreviewParameter(ExchangeStatusItemsPreviewParameterProvider::class) amount: String,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         ExchangeStatusItem(
             providerName = "ChangeNow",
             fromTokenIconState = TokenIconState.Loading,

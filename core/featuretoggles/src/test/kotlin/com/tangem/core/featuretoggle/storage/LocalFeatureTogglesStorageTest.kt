@@ -3,12 +3,11 @@ package com.tangem.core.featuretoggle.storage
 import android.annotation.SuppressLint
 import com.google.common.truth.Truth
 import com.squareup.moshi.JsonAdapter
-import com.tangem.datasource.asset.AssetReader
-import io.mockk.coEvery
-import io.mockk.mockk
-import io.mockk.verifyAll
-import io.mockk.verifyOrder
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.tangem.datasource.asset.loader.AssetLoader
+import com.tangem.datasource.asset.reader.AssetReader
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import java.io.IOException
@@ -16,75 +15,73 @@ import java.io.IOException
 /**
 [REDACTED_AUTHOR]
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 @SuppressLint("CheckResult")
 internal class LocalFeatureTogglesStorageTest {
 
     private val assetReader = mockk<AssetReader>()
+    private val moshi = mockk<Moshi>()
     private val jsonAdapter = mockk<JsonAdapter<List<FeatureToggle>>>()
-    private val storage = LocalFeatureTogglesStorage(assetReader, jsonAdapter)
+
+    // Impossible to mockk AssetLoader because it implement inline functions
+    private val assetLoader = AssetLoader(assetReader = assetReader, moshi = moshi)
+
+    private val storage = LocalFeatureTogglesStorage(assetLoader)
 
     @Test
     fun `successfully initialize storage`() = runTest {
-        coEvery { assetReader.readJson(storage.getConfigPath()) } returns json
-        coEvery { jsonAdapter.fromJson(json) } returns featureToggles
+        everyReadingJson() returns json
+        everyCreatingMoshiAdapter() returns jsonAdapter
+        everyMappingJson() returns featureToggles
 
         storage.init()
 
-        verifyOrder {
-            assetReader.readJson(storage.getConfigPath())
+        coVerifyOrder {
+            assetReader.read(CONFIG_FILE_NAME)
             jsonAdapter.fromJson(json)
         }
 
-        Truth.assertThat(storage.getFeatureToggles()).containsExactlyElementsIn(featureToggles)
+        Truth.assertThat(storage.featureToggles).containsExactlyElementsIn(featureToggles)
     }
 
     @Test
     fun `failure initialize storage if assetReader throws exception`() = runTest {
-        coEvery { assetReader.readJson(storage.getConfigPath()) } returns json
-        coEvery { jsonAdapter.fromJson(json) } throws IOException()
+        everyReadingJson() returns json
+        everyCreatingMoshiAdapter() returns jsonAdapter
+        everyMappingJson() throws IOException()
 
         storage.init()
 
-        verifyOrder {
-            assetReader.readJson(storage.getConfigPath())
+        coVerifyOrder {
+            assetReader.read(CONFIG_FILE_NAME)
             jsonAdapter.fromJson(json)
         }
 
-        runCatching { storage.getFeatureToggles() }
-            .onSuccess { throw IllegalStateException("featureToggles shouldn't be initialized") }
-            .onFailure {
-                Truth
-                    .assertThat(it)
-                    .hasMessageThat()
-                    .contains("Property featureToggles should be initialized before get.")
-
-                Truth.assertThat(it).isInstanceOf(IllegalStateException::class.java)
-            }
+        Truth.assertThat(storage.featureToggles).containsExactlyElementsIn(emptyList<FeatureToggle>())
     }
 
     @Test
     fun `failure initialize storage if jsonAdapter throws exception`() = runTest {
-        coEvery { assetReader.readJson(storage.getConfigPath()) } throws IOException()
+        everyReadingJson() throws IOException()
 
         storage.init()
 
-        verifyOrder { assetReader.readJson(storage.getConfigPath()) }
+        coVerifyOrder { assetReader.read(CONFIG_FILE_NAME) }
         verifyAll(inverse = true) { jsonAdapter.fromJson(any<String>()) }
 
-        runCatching { storage.getFeatureToggles() }
-            .onSuccess { throw IllegalStateException("featureToggles shouldn't be initialized") }
-            .onFailure {
-                Truth
-                    .assertThat(it)
-                    .hasMessageThat()
-                    .contains("Property featureToggles should be initialized before get.")
-
-                Truth.assertThat(it).isInstanceOf(IllegalStateException::class.java)
-            }
+        Truth.assertThat(storage.featureToggles).containsExactlyElementsIn(emptyList<FeatureToggle>())
     }
 
+    private fun everyReadingJson() = coEvery { assetReader.read(CONFIG_FILE_NAME) }
+
+    private fun everyCreatingMoshiAdapter() = every {
+        val types = Types.newParameterizedType(List::class.java, FeatureToggle::class.java)
+        moshi.adapter<List<FeatureToggle>>(types)
+    }
+
+    private fun everyMappingJson() = every { jsonAdapter.fromJson(json) }
+
     private companion object {
+        const val CONFIG_FILE_NAME = "configs/feature_toggles_config.json"
 
         val json = """
             [

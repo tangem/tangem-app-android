@@ -10,7 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.utils.converter.Converter
 
 internal class SingleWalletCardStateConverter(
-    private val status: CryptoCurrencyStatus.Status,
+    private val status: CryptoCurrencyStatus.Value,
     private val selectedWallet: UserWallet,
     private val appCurrency: AppCurrency,
 ) : Converter<WalletCardState, WalletCardState> {
@@ -50,7 +50,7 @@ internal class SingleWalletCardStateConverter(
         )
     }
 
-    private fun WalletCardState.toContentState(status: CryptoCurrencyStatus.Status): WalletCardState {
+    private fun WalletCardState.toContentState(status: CryptoCurrencyStatus.Value): WalletCardState {
         return WalletCardState.Content(
             id = id,
             title = title,
@@ -66,7 +66,7 @@ internal class SingleWalletCardStateConverter(
         )
     }
 
-    private fun formatFiatAmount(status: CryptoCurrencyStatus.Status, appCurrency: AppCurrency): String {
+    private fun formatFiatAmount(status: CryptoCurrencyStatus.Value, appCurrency: AppCurrency): String {
         val fiatAmount = status.fiatAmount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
         return BigDecimalFormatter.formatFiatAmount(

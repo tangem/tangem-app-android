@@ -1,11 +1,12 @@
 package com.tangem.tap.features.customtoken.impl.presentation.ui
 
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.customtoken.impl.presentation.states.AddCustomTokenStateHolder
 
 /**
@@ -24,21 +25,12 @@ internal fun AddCustomTokenScreen(stateHolder: AddCustomTokenStateHolder, modifi
 }
 
 @Preview(showSystemUi = true)
+@Preview(showSystemUi = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_AddCustomTokenScreen_Light(
+private fun Preview_AddCustomTokenScreen(
     @PreviewParameter(AddCustomTokenScreenProvider::class) stateHolder: AddCustomTokenStateHolder,
 ) {
-    TangemTheme(isDark = false) {
-        AddCustomTokenScreen(stateHolder)
-    }
-}
-
-@Preview(showSystemUi = true)
-@Composable
-private fun Preview_AddCustomTokenScreen_Dark(
-    @PreviewParameter(AddCustomTokenScreenProvider::class) stateHolder: AddCustomTokenStateHolder,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         AddCustomTokenScreen(stateHolder)
     }
 }

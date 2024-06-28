@@ -1,5 +1,6 @@
 package com.tangem.feature.referral.ui
 
+import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.presentation.R
 
@@ -53,19 +55,10 @@ private fun annotatedAgreementString(firstPart: String): AnnotatedString {
 }
 
 @Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_AgreementText_InLightTheme() {
-    TangemTheme(isDark = false) {
-        Box(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
-            AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClick = {})
-        }
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-private fun Preview_AgreementText_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_AgreementText() {
+    TangemThemePreview {
         Box(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
             AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClick = {})
         }
