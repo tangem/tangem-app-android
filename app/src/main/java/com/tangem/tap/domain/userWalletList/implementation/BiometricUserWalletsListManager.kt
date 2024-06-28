@@ -152,19 +152,29 @@ internal class BiometricUserWalletsListManager(
             return CompletionResult.Success(Unit)
         }
 
-        changeSelectedUserWalletIdIfNeeded(idsToRemove)
+        if (idsToRemove.size == state.value.userWallets.size) {
+            return clear()
+        }
 
         return sensitiveInformationRepository.delete(idsToRemove)
             .flatMap { publicInformationRepository.delete(idsToRemove) }
             .map { keysRepository.delete(idsToRemove) }
             .map {
                 state.update { prevState ->
-                    val newUserWallets = prevState.userWallets.filter { it.walletId !in idsToRemove }
+                    val remainingWallets = prevState.userWallets.filter { it.walletId !in idsToRemove }
+
+                    val isSelectedWalletDeleted = prevState.selectedUserWalletId in idsToRemove
+                    val newSelectedUserWallet = findOrSetSelectedWallet(
+                        prevSelectedWalletId = prevState.selectedUserWalletId,
+                        userWallets = remainingWallets,
+                        ignorePrevSelectedWallet = isSelectedWalletDeleted,
+                    )
 
                     prevState.copy(
                         encryptionKeys = prevState.encryptionKeys.filter { it.walletId !in idsToRemove },
-                        userWallets = newUserWallets,
-                        isLocked = newUserWallets.any { it.isLocked },
+                        userWallets = remainingWallets,
+                        isLocked = remainingWallets.any { it.isLocked },
+                        selectedUserWalletId = newSelectedUserWallet?.walletId,
                     )
                 }
             }
@@ -173,10 +183,10 @@ internal class BiometricUserWalletsListManager(
     override suspend fun clear(): CompletionResult<Unit> {
         return sensitiveInformationRepository.clear()
             .flatMap { publicInformationRepository.clear() }
-            .map { keysRepository.clear() }
             .map {
+                keysRepository.clear()
                 selectedUserWalletRepository.set(null)
-                lock()
+                state.value = State()
             }
     }
 
@@ -301,45 +311,22 @@ internal class BiometricUserWalletsListManager(
     private fun findOrSetSelectedWallet(
         prevSelectedWalletId: UserWalletId?,
         userWallets: List<UserWallet>,
+        ignorePrevSelectedWallet: Boolean = false,
     ): UserWallet? {
-        val selectedWalletId = prevSelectedWalletId ?: selectedUserWalletRepository.get()
-        var possibleSelectedUserWallet = findSelectedUserWallet(userWallets, selectedWalletId)
+        var possibleSelectedUserWallet: UserWallet? = null
+
+        if (!ignorePrevSelectedWallet) {
+            val selectedWalletId = prevSelectedWalletId ?: selectedUserWalletRepository.get()
+            possibleSelectedUserWallet = findSelectedUserWallet(userWallets, selectedWalletId)
+        }
 
         if (possibleSelectedUserWallet == null || possibleSelectedUserWallet.isLocked) {
             possibleSelectedUserWallet = userWallets.firstOrNull { !it.isLocked } ?: userWallets.firstOrNull()
-
-            if (possibleSelectedUserWallet != null) {
-                selectedUserWalletRepository.set(possibleSelectedUserWallet.walletId)
-            }
         }
+
+        selectedUserWalletRepository.set(possibleSelectedUserWallet?.walletId)
 
         return possibleSelectedUserWallet
-    }
-
-    private fun changeSelectedUserWalletIdIfNeeded(walletsIdsToRemove: List<UserWalletId>) {
-        val remainingWallets = state.value.userWallets.filter {
-            it.walletId !in walletsIdsToRemove
-        }
-        val selectedWallet = findSelectedUserWallet()
-        when {
-            remainingWallets.isEmpty() -> {
-                state.update { prevState ->
-                    prevState.copy(
-                        selectedUserWalletId = null,
-                    )
-                }
-                selectedUserWalletRepository.set(null)
-            }
-            !remainingWallets.contains(selectedWallet) -> {
-                val newSelectedWallet = remainingWallets.firstOrNull { !it.isLocked }
-                state.update { prevState ->
-                    prevState.copy(
-                        selectedUserWalletId = newSelectedWallet?.walletId,
-                    )
-                }
-                selectedUserWalletRepository.set(newSelectedWallet?.walletId)
-            }
-        }
     }
 
     private fun findSelectedUserWallet(
