@@ -1,7 +1,7 @@
 package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
-import com.tangem.tap.common.compose.resources.C
+import com.tangem.core.ui.test.TestTags
 import com.tangem.wallet.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -11,15 +11,15 @@ import io.github.kakaocup.kakao.text.KButton
 class StoriesScreen(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<StoriesScreen>(
         semanticsProvider = semanticsProvider,
-        viewBuilderAction = { hasTestTag(C.Tag.STORIES_SCREEN) }
+        viewBuilderAction = { hasTestTag(TestTags.STORIES_SCREEN) }
     ) {
 
     val scanButton: KNode = child {
-        hasTestTag(C.Tag.STORIES_SCREEN_SCAN_BUTTON)
+        hasTestTag(TestTags.STORIES_SCREEN_SCAN_BUTTON)
     }
 
     val orderButton: KNode = child {
-        hasTestTag(C.Tag.STORIES_SCREEN_ORDER_BUTTON)
+        hasTestTag(TestTags.STORIES_SCREEN_ORDER_BUTTON)
     }
 
     val enableNFCAlert: KView = KView {

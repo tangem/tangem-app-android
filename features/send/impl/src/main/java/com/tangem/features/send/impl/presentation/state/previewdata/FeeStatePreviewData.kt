@@ -82,6 +82,7 @@ internal object FeeStatePreviewData {
         isFeeApproximate = false,
         notifications = persistentListOf(),
         isCustomSelected = false,
+        isFeeConvertibleToFiat = true,
     )
 
     val feeChoosableState = feeState.copy(

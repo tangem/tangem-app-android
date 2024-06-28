@@ -1,5 +1,6 @@
 package com.tangem.tap.features.welcome.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
@@ -12,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
@@ -97,17 +99,10 @@ private fun WelcomeScreenContentSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun WelcomeScreenContentPreview_Light() {
-    TangemTheme {
-        WelcomeScreenContentSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun WelcomeScreenContentPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun WelcomeScreenContentPreview() {
+    TangemThemePreview {
         WelcomeScreenContentSample()
     }
 }

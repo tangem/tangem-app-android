@@ -12,6 +12,7 @@ import com.tangem.core.ui.components.rows.SimpleActionRow
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.models.states.FeeItemState
 
@@ -63,13 +64,13 @@ private fun FeeItemPreview() {
         onClick = {},
     )
     Column {
-        TangemTheme(isDark = false) {
+        TangemThemePreview(isDark = false) {
             FeeItem(state = state)
         }
 
         SpacerH24()
 
-        TangemTheme(isDark = true) {
+        TangemThemePreview(isDark = true) {
             FeeItem(state = state)
         }
     }

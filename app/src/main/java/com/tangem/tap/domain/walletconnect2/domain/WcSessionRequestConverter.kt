@@ -4,6 +4,7 @@ import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.domain.mapper.mapToTransaction
 import com.tangem.tap.domain.walletconnect2.domain.models.BnbData
 import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
+import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
 import com.tangem.tap.features.details.redux.walletconnect.WcEthTransactionType
 
@@ -17,15 +18,18 @@ internal class WcSessionRequestConverter(
     suspend fun prepareRequest(
         sessionRequest: WalletConnectEvents.SessionRequest,
         userWalletId: String,
-    ): WcPreparedRequest? {
-        val networkId = blockchainHelper.chainIdToNetworkIdOrNull(sessionRequest.chainId ?: "") ?: return null
+    ): Result<WcPreparedRequest> = runCatching {
+        val networkId = requireNotNull(blockchainHelper.chainIdToNetworkIdOrNull(sessionRequest.chainId.orEmpty())) {
+            "Failed to get network ID for chain ID: ${sessionRequest.chainId}"
+        }
         val derivationPath = getDerivationPath(
             sessionsRepository = sessionsRepository,
             sessionRequest = sessionRequest,
             userWalletId = userWalletId,
             walletAddress = getWalletAddress(sessionRequest.request),
         )
-        return when (val request = sessionRequest.request) {
+
+        when (val request = sessionRequest.request) {
             is WcRequest.EthSendTransaction -> {
                 val data = sdkHelper.prepareTransactionData(
                     EthTransactionData(
@@ -38,7 +42,8 @@ internal class WcSessionRequestConverter(
                         metaName = sessionRequest.metaName,
                         metaUrl = sessionRequest.metaUrl,
                     ),
-                ) ?: return null
+                )
+
                 WcPreparedRequest.EthTransaction(
                     preparedRequestData = data,
                     topic = sessionRequest.topic,
@@ -58,7 +63,8 @@ internal class WcSessionRequestConverter(
                         metaName = sessionRequest.metaName,
                         metaUrl = sessionRequest.metaUrl,
                     ),
-                ) ?: return null
+                )
+
                 WcPreparedRequest.EthTransaction(
                     preparedRequestData = data,
                     topic = sessionRequest.topic,
@@ -122,7 +128,7 @@ internal class WcSessionRequestConverter(
                     derivationPath = derivationPath,
                 )
             }
-            else -> null
+            else -> throw WalletConnectError.UnsupportedMethod
         }
     }
 
