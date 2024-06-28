@@ -9,11 +9,11 @@ import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.userwallets.UserWalletIdBuilder
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
-import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import timber.log.Timber

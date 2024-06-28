@@ -10,8 +10,8 @@ data class ExchangeStatusResponse(
     @Json(name = "externalTxId")
     val externalTxId: String,
 
-    @Json(name = "externalTxStatus")
-    val externalStatus: ExchangeStatus,
+    @Json(name = "status")
+    val status: ExchangeStatus,
 
     @Json(name = "externalTxUrl")
     val externalTxUrl: String,
