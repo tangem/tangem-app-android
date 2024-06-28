@@ -39,6 +39,7 @@ data class AccessCodeRecoveryState(
 data class CardSettingsState(
     val cardInfo: CardInfo,
     val card: CardDTO,
+    val scanResponse: ScanResponse,
     val manageSecurityState: ManageSecurityState?,
     val resetCardAllowed: Boolean,
     val resetButtonEnabled: Boolean,
@@ -46,8 +47,16 @@ data class CardSettingsState(
     val condition2Checked: Boolean,
     val accessCodeRecovery: AccessCodeRecoveryState? = null,
     val isShowPasswordResetRadioButton: Boolean,
-    val isLastWarningDialogShown: Boolean,
-)
+    val dialog: Dialog?,
+) {
+
+    sealed interface Dialog {
+        data object StartResetDialog : Dialog
+        data object ContinueResetDialog : Dialog
+        data object InterruptedResetDialog : Dialog
+        data object CompletedResetDialog : Dialog
+    }
+}
 
 data class ManageSecurityState(
     val currentOption: SecurityOption = SecurityOption.LongTap,
