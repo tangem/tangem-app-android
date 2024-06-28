@@ -36,9 +36,17 @@ sealed class Settings(
     ) : Settings("Settings / Card Settings", event, params, error) {
 
         class ButtonFactoryReset : CardSettings("Button - Factory Reset")
-        class FactoryResetFinished(error: Throwable? = null) : CardSettings(
+        class FactoryResetFinished(cardsCount: Int? = null, error: Throwable? = null) : CardSettings(
             event = "Factory Reset Finished",
+            params = buildMap {
+                cardsCount?.let { put("Cards Count", "$it") }
+            },
             error = error,
+        )
+
+        class FactoryResetCanceled(cardsCount: Int) : CardSettings(
+            event = "Factory Reset Canceled",
+            params = mapOf("Cards Count" to "$cardsCount"),
         )
 
         class UserCodeChanged : CardSettings("User Code Changed")
