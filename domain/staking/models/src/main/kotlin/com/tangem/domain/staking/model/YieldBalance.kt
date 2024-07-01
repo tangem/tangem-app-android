@@ -35,6 +35,7 @@ data class BalanceItem(
     val amount: BigDecimal,
     val pricePerShare: BigDecimal,
     val rawCurrencyId: String?,
+    val validatorAddress: String?,
 )
 
 enum class BalanceType {
