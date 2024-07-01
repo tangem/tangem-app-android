@@ -34,6 +34,7 @@ dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
+    implementation(projects.domain.staking)
 
     /** Core modules */
     implementation(projects.core.utils)
