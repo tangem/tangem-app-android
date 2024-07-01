@@ -111,6 +111,7 @@
   <string name="common_next">Далее</string>
   <string name="common_no">Нет</string>
   <string name="common_no_address">Нет адреса</string>
+  <string name="common_now">Сейчас</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Основная карта</string>
   <string name="common_passphrase">Парольная фраза</string>
@@ -139,6 +140,7 @@
   <string name="common_support">Поддержка</string>
   <string name="common_swap">Обмен</string>
   <string name="common_terms_and_conditions">условия участия</string>
+  <string name="common_today">Сегодня</string>
   <string name="common_transaction_failed">Ошибка транзакции</string>
   <string name="common_transactions">Транзакции</string>
   <string name="common_transfer">Перевод</string>
@@ -309,6 +311,8 @@
   <string name="manage_tokens_unavailable_vote">Голосовать</string>
   <string name="manage_tokens_wallet_selector_title">Выберите кошелек</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Кошелёк не поддерживает более одной сети</string>
+  <string name="markets_token_details_links">Ссылки</string>
+  <string name="markets_token_details_metrics">Метрики</string>
   <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
   <string name="onboarding_access_code_feature_1_title">Защита</string>
   <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты</string>
@@ -681,6 +685,7 @@
   <string name="wallet_connect_sessions_title">Сессии WalletConnect</string>
   <string name="wallet_connect_subtitle">Подключение к dApps</string>
   <string name="wallet_connect_title">WalletConnect</string>
+  <string name="wallet_connect_toast_awaiting_session_proposal">Подключение может занять несколько секунд</string>
   <string name="wallet_marketplace_block_title">Рыночная цена %s</string>
   <string name="wallet_marketprice_block_update_time">за 24 часа</string>
   <string name="wallet_network_group_title">Сеть %s</string>

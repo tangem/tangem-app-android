@@ -24,6 +24,7 @@ internal fun InputRowImageBase(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         modifier = modifier,
     ) {
         InputRowAsyncImage(
@@ -32,11 +33,7 @@ internal fun InputRowImageBase(
                 .size(TangemTheme.dimens.spacing36)
                 .padding(vertical = TangemTheme.dimens.size1),
         )
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = TangemTheme.dimens.spacing12),
-        ) {
+        Column {
             Text(
                 text = subtitle.resolveReference(),
                 style = TangemTheme.typography.subtitle2,
