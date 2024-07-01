@@ -14,15 +14,15 @@ import com.tangem.tap.domain.sdk.TangemSdkManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 internal object CardDomainModule {
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetBiometricsStatusUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
     ): GetBiometricsStatusUseCase {
@@ -30,7 +30,7 @@ internal object CardDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideSetAccessCodeRequestPolicyUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
     ): SetAccessCodeRequestPolicyUseCase {
@@ -38,35 +38,35 @@ internal object CardDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideWasWalletAlreadySignedHashesConfirmedUseCase(cardRepository: CardRepository): WasCardScannedUseCase {
         return WasCardScannedUseCase(cardRepository = cardRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideSetCardWasScannedUseCase(cardRepository: CardRepository): SetCardWasScannedUseCase {
         return SetCardWasScannedUseCase(cardRepository = cardRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideIsDemoCardUseCase(): IsDemoCardUseCase = IsDemoCardUseCase(config = DemoConfig())
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideDerivePublicKeysUseCase(derivationsRepository: DerivationsRepository): DerivePublicKeysUseCase {
         return DerivePublicKeysUseCase(derivationsRepository = derivationsRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideIsNeedToBackupUseCase(userWalletsListManager: UserWalletsListManager): IsNeedToBackupUseCase {
         return IsNeedToBackupUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetExtendedPublicKeyForCurrencyUseCase(
         derivationsRepository: DerivationsRepository,
     ): GetExtendedPublicKeyForCurrencyUseCase {
@@ -74,13 +74,13 @@ internal object CardDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideDeleteSavedAccessCodesUseCase(tangemSdkManager: TangemSdkManager): DeleteSavedAccessCodesUseCase {
         return DefaultDeleteSavedAccessCodesUseCase(tangemSdkManager)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideResetCardUseCase(tangemSdkManager: TangemSdkManager): ResetCardUseCase {
         return DefaultResetCardUseCase(tangemSdkManager)
     }
