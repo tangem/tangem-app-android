@@ -25,6 +25,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
@@ -49,12 +50,9 @@ internal fun StakingNavigationButtons(uiState: StakingUiState, modifier: Modifie
 @Composable
 private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier = Modifier) {
     val hapticFeedback = LocalHapticFeedback.current
-    val confirmState = uiState.confirmStakingState
-    val isSuccess = (confirmState as? StakingStates.ConfirmStakingState.Data)?.isSuccess ?: false
-    val isStaking = (confirmState as? StakingStates.ConfirmStakingState.Data)?.isStaking ?: false
 
-    val isButtonsVisible = uiState.currentStep != StakingStep.Success
-    val isStakingState = uiState.currentStep == StakingStep.Success && !isSuccess && !isStaking
+    val isButtonsVisible = isPrevButtonVisible(uiState.currentStep)
+    val isStakingState = uiState.currentStep == StakingStep.Confirm
 
     val (buttonTextId, buttonClick) = getButtonData(
         currentState = uiState,
@@ -103,13 +101,30 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
 
 private fun getButtonData(currentState: StakingUiState): Pair<Int, () -> Unit> {
     return when (currentState.currentStep) {
-        StakingStep.InitialInfo,
+        StakingStep.InitialInfo -> {
+            val initialState = currentState.initialInfoState as? StakingStates.InitialInfoState.Data
+            if (initialState?.yieldBalance is InnerYieldBalanceState.Data) {
+                R.string.staking_stake_more to currentState.clickIntents::onNextClick
+            } else {
+                R.string.common_next to currentState.clickIntents::onNextClick
+            }
+        }
         StakingStep.Amount,
-        StakingStep.Confirm,
-        StakingStep.Success,
         -> R.string.common_next to currentState.clickIntents::onNextClick
+        StakingStep.Confirm -> R.string.common_stake to currentState.clickIntents::onNextClick
         StakingStep.Validators -> R.string.common_continue to currentState.clickIntents::onNextClick
+        StakingStep.Success -> R.string.common_close to currentState.clickIntents::onBackClick
     }
+}
+
+private fun isPrevButtonVisible(step: StakingStep): Boolean = when (step) {
+    StakingStep.InitialInfo,
+    StakingStep.Confirm,
+    StakingStep.Success,
+    -> false
+    StakingStep.Amount,
+    StakingStep.Validators,
+    -> true
 }
 
 private fun isButtonEnabled(uiState: StakingUiState): Boolean {

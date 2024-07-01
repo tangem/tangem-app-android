@@ -1,13 +1,20 @@
 package com.tangem.core.ui.components.inputrow
 
-import androidx.compose.material.Icon
+import android.content.res.Configuration
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * Input row component with selector
@@ -37,6 +44,7 @@ fun InputRowImageChevron(
         subtitleColor = subtitleColor,
         captionColor = captionColor,
     ) {
+        SpacerWMax()
         Icon(
             painter = painterResource(id = R.drawable.ic_chevron_right_24),
             tint = TangemTheme.colors.icon.informative,
@@ -44,3 +52,28 @@ fun InputRowImageChevron(
         )
     }
 }
+
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun InputRowImageChevron_Preview() {
+    TangemThemePreview {
+        InputRowImageChevron(
+            subtitle = stringReference("Binance"),
+            caption = combinedReference(
+                resourceReference(R.string.staking_details_apr),
+                annotatedReference(
+                    buildAnnotatedString {
+                        append(" ")
+                        withStyle(SpanStyle(TangemTheme.colors.text.accent)) {
+                            stringReference("3,54%")
+                        }
+                    },
+                ),
+            ),
+            imageUrl = "",
+        )
+    }
+}
+// endregion
