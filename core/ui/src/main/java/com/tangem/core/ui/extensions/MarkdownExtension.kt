@@ -54,3 +54,5 @@ fun AnnotatedString.Builder.appendMarkdown(markdownText: String, node: ASTNode):
     }
     return this
 }
+
+fun AnnotatedString.Builder.appendSpace() = append(" ")

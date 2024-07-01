@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.ui.common
+package com.tangem.core.ui.components.containers
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
@@ -18,7 +18,7 @@ import com.tangem.core.ui.res.TangemTheme
  * @param content field content
  */
 @Composable
-internal fun FooterContainer(
+fun FooterContainer(
     modifier: Modifier = Modifier,
     footer: String? = null,
     footerTopPadding: Dp = TangemTheme.dimens.spacing8,
