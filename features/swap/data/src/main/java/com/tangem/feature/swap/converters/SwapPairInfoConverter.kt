@@ -68,6 +68,7 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
         return when (type) {
             ExchangeProviderType.DEX -> ExchangeProviderTypeDomain.DEX
             ExchangeProviderType.CEX -> ExchangeProviderTypeDomain.CEX
+            ExchangeProviderType.DEX_BRIDGE -> ExchangeProviderTypeDomain.DEX_BRIDGE
         }
     }
 }
