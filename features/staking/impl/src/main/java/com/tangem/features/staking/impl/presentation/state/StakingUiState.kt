@@ -53,6 +53,7 @@ internal sealed class StakingStates {
             val warmupPeriod: String,
             val rewardSchedule: String,
             val onInfoClick: (InfoType) -> Unit,
+            val yieldBalance: InnerYieldBalanceState,
         ) : InitialInfoState()
 
         data class Empty(
