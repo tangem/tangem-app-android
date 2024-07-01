@@ -6,6 +6,7 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TotalFiatBalance
@@ -23,6 +24,7 @@ class GetWalletTotalBalanceUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
+    private val stakingRepository: StakingRepository,
 ) {
 
     suspend operator fun invoke(
@@ -72,6 +74,7 @@ class GetWalletTotalBalanceUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
         )
 
         return operations.getCurrenciesStatuses(
