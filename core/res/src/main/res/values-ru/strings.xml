@@ -225,6 +225,7 @@
   <string name="express_exchange_status_subtitle">Данные провайдера. Сумма к получению может измениться в зависимости от рыночных условий.</string>
   <string name="express_exchange_status_title">Статус обмена</string>
   <string name="express_exchange_status_verifying">Требуется верификация</string>
+  <string name="express_exchange_status_waiting_tx_hash">Ожидание хеша транзакции</string>
   <string name="express_exchange_token_list_subtitle">Список токенов в вашем кошельке</string>
   <string name="express_fetch_best_rates">Получение наилучших курсов...</string>
   <string name="express_floating_rate">Плавающая ставка</string>
