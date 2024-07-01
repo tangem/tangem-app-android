@@ -5,7 +5,7 @@ import com.squareup.moshi.Json
 data class YieldBalanceRequestBody(
     @Json(name = "addresses") val addresses: Address,
     @Json(name = "args") val args: YieldBalanceRequestArgs,
-    @Json(name = "integrationId") val integrationId: String? = null,
+    @Json(name = "integrationId") val integrationId: String,
 ) {
 
     data class YieldBalanceRequestArgs(
