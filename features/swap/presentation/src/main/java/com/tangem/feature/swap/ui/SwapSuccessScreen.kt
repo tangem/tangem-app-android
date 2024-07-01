@@ -154,7 +154,7 @@ private val state = SwapSuccessStateHolder(
     txUrl = "https://www.google.com/#q=nam",
     fee = TextReference.Str("1 000 DAI ~ 1 000 MATIC"),
     providerName = TextReference.Str("1inch"),
-    providerType = TextReference.Str(ExchangeProviderType.DEX.name),
+    providerType = TextReference.Str(ExchangeProviderType.DEX.providerName),
     showStatusButton = false,
     providerIcon = "",
     fromTokenAmount = TextReference.Str("1 000 DAI"),
