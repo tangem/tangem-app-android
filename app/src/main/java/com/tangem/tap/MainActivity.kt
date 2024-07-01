@@ -37,7 +37,7 @@ import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.data.card.sdk.CardSdkLifecycleObserver
+import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var testerRouter: TesterRouter
 
     @Inject
-    lateinit var cardSdkLifecycleObserver: CardSdkLifecycleObserver
+    lateinit var cardSdkOwner: CardSdkOwner
 
     @Inject
     lateinit var cardSdkConfigRepository: CardSdkConfigRepository
@@ -218,7 +218,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private fun installActivityDependencies() {
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
-        cardSdkLifecycleObserver.onCreate(context = this)
+        cardSdkOwner.register(activity = this)
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
         backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
@@ -327,7 +327,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     override fun onDestroy() {
         store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
         intentProcessor.removeAll()
-        cardSdkLifecycleObserver.onDestroy(this)
         super.onDestroy()
     }
 
@@ -362,12 +361,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-
-        /*
-         * FIXME: Test functionality. TangemSdk is null on some devices when HomeAction.Read is called
-         *  inside IntentHandler.
-         */
-        cardSdkLifecycleObserver.onCreate(context = this)
 
         lifecycleScope.launch {
             intentProcessor.handleIntent(intent, true)
