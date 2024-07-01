@@ -23,34 +23,43 @@ data class ExchangeStatusResponse(
 enum class ExchangeStatus {
 
     @Json(name = "new")
-    NEW,
+    New,
 
     @Json(name = "waiting")
-    WAITING,
+    Waiting,
 
     @Json(name = "confirming")
-    CONFIRMING,
+    Confirming,
 
     @Json(name = "exchanging")
-    EXCHANGING,
+    Exchanging,
 
     @Json(name = "sending")
-    SENDING,
+    Sending,
 
     @Json(name = "finished")
-    FINISHED,
+    Finished,
 
     @Json(name = "failed")
-    FAILED,
+    Failed,
 
     @Json(name = "refunded")
-    REFUNDED,
+    Refunded,
 
     @Json(name = "verifying")
-    VERIFYING,
+    Verifying,
 
     @Json(name = "expired")
-    CANCELLED,
+    Cancelled,
+
+    @Json(name = "waiting-tx-hash")
+    WaitingTxHash,
+
+    @Json(name = "tx-failed")
+    TxFailed,
+
+    @Json(name = "unknown")
+    Unknown,
 }
 
 data class ExchangeStatusError(
