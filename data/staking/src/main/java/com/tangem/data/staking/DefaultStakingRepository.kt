@@ -1,5 +1,6 @@
 package com.tangem.data.staking
 
+import arrow.core.raise.catch
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.data.staking.converters.StakingNetworkTypeConverter
@@ -29,27 +30,33 @@ import com.tangem.data.staking.converters.*
 import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.token.StakingBalanceStore
+import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.*
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.toFormattedString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
+@Suppress("LargeClass")
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingYieldsStore: StakingYieldsStore,
     private val stakingBalanceStore: StakingBalanceStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val stakingFeatureToggle: StakingFeatureToggles,
 ) : StakingRepository {
 
     private val stakingNetworkTypeConverter = StakingNetworkTypeConverter()
@@ -83,15 +90,24 @@ internal class DefaultStakingRepository(
 
     private val yieldBalanceListConverter = YieldBalanceListConverter()
 
+    private val isYieldBalanceFetching = MutableStateFlow(
+        value = emptyMap<UserWalletId, Boolean>(),
+    )
+
     override fun isStakingSupported(currencyId: String): Boolean {
-        return integrationIds.contains(currencyId)
+        return integrationIdMap.containsKey(currencyId)
     }
 
-    override suspend fun fetchEnabledYields() {
+    override suspend fun fetchEnabledYields(refresh: Boolean) {
         withContext(dispatchers.io) {
-            val stakingTokensWithYields = stakeKitApi.getMultipleYields().getOrThrow()
-
-            stakingYieldsStore.store(stakingTokensWithYields.data)
+            cacheRegistry.invokeOnExpire(
+                key = YIELDS_STORE_KEY,
+                skipCache = refresh,
+                block = {
+                    val stakingTokensWithYields = stakeKitApi.getMultipleYields().getOrThrow()
+                    stakingYieldsStore.store(stakingTokensWithYields.data)
+                },
+            )
         }
     }
 
@@ -182,24 +198,32 @@ internal class DefaultStakingRepository(
 
     override suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
-        address: String,
-        integrationId: String,
+        address: CryptoCurrencyAddress,
         refresh: Boolean,
     ) = withContext(dispatchers.io) {
+        if (!stakingFeatureToggle.isStakingEnabled) return@withContext
+
+        val cryptoCurrency = address.cryptoCurrency
+        val rawCurrencyId =
+            cryptoCurrency.id.rawCurrencyId ?: error("Staking custom tokens is not available")
+
+        val integrationId = integrationIdMap[rawCurrencyId] ?: return@withContext
+
         cacheRegistry.invokeOnExpire(
             key = getYieldBalancesKey(userWalletId),
             skipCache = refresh,
             block = {
+                val requestBody = getBalanceRequestData(address.address, integrationId)
                 val result = stakeKitApi.getSingleYieldBalance(
-                    integrationId = integrationId,
-                    body = getBalanceRequestData(address, integrationId),
+                    integrationId = requestBody.integrationId,
+                    body = requestBody,
                 ).getOrThrow()
 
                 stakingBalanceStore.store(
-                    integrationId,
+                    requestBody.integrationId,
                     YieldBalanceWrapperDTO(
                         balances = result,
-                        integrationId = integrationId,
+                        integrationId = requestBody.integrationId,
                     ),
                 )
             },
@@ -208,69 +232,156 @@ internal class DefaultStakingRepository(
 
     override fun getSingleYieldBalanceFlow(
         userWalletId: UserWalletId,
-        address: String,
-        integrationId: String,
+        address: CryptoCurrencyAddress,
     ): Flow<YieldBalance> = channelFlow {
-        launch(dispatchers.io) {
-            stakingBalanceStore.get(integrationId)
-                .collectLatest {
-                    send(
-                        yieldBalanceConverter.convert(
-                            YieldBalanceConverter.Data(
-                                balance = it,
-                                integrationId = integrationId,
+        if (!stakingFeatureToggle.isStakingEnabled) {
+            send(YieldBalance.Empty)
+        } else {
+            launch(dispatchers.io) {
+                val integrationId = integrationIdMap[address.cryptoCurrency.id.rawCurrencyId]
+                    ?: error("Could not get integrationId")
+                stakingBalanceStore.get(integrationId)
+                    .collectLatest {
+                        send(
+                            yieldBalanceConverter.convert(
+                                YieldBalanceConverter.Data(
+                                    balance = it,
+                                    integrationId = integrationId,
+                                ),
                             ),
-                        ),
-                    )
-                }
-        }
+                        )
+                    }
+            }
 
-        withContext(dispatchers.io) {
-            fetchSingleYieldBalance(
-                userWalletId,
-                address,
-                integrationId,
-            )
+            withContext(dispatchers.io) {
+                fetchSingleYieldBalance(
+                    userWalletId,
+                    address,
+                )
+            }
         }
     }.cancellable()
+
+    override suspend fun getSingleYieldBalanceSync(
+        userWalletId: UserWalletId,
+        address: CryptoCurrencyAddress,
+    ): YieldBalance = withContext(dispatchers.io) {
+        if (!stakingFeatureToggle.isStakingEnabled) {
+            YieldBalance.Empty
+        } else {
+            fetchSingleYieldBalance(userWalletId, address)
+
+            val integrationId = integrationIdMap[address.cryptoCurrency.id.rawCurrencyId]
+                ?: error("Could not get integrationId")
+            val result = stakingBalanceStore.getSyncOrNull(integrationId) ?: return@withContext YieldBalance.Error
+            yieldBalanceConverter.convert(
+                YieldBalanceConverter.Data(
+                    balance = result,
+                    integrationId = integrationId,
+                ),
+            )
+        }
+    }
 
     override suspend fun fetchMultiYieldBalance(
         userWalletId: UserWalletId,
         addresses: List<CryptoCurrencyAddress>,
-        integrationId: String,
         refresh: Boolean,
     ) = withContext(dispatchers.io) {
-        cacheRegistry.invokeOnExpire(
-            key = getYieldBalancesKey(userWalletId),
-            skipCache = refresh,
-            block = {
-                val result = stakeKitApi.getMultipleYieldBalances(
-                    addresses.map { getBalanceRequestData(it.address, integrationId) },
-                ).getOrThrow()
+        if (!stakingFeatureToggle.isStakingEnabled) return@withContext
+        try {
+            isYieldBalanceFetching.update {
+                it + (userWalletId to true)
+            }
+            cacheRegistry.invokeOnExpire(
+                key = getYieldBalancesKey(userWalletId),
+                skipCache = refresh,
+                block = {
+                    val result = stakeKitApi.getMultipleYieldBalances(
+                        addresses
+                            .mapNotNull { networkAddress ->
+                                val cryptoCurrency = networkAddress.cryptoCurrency
+                                val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: error("Currency raw id is null")
+                                val integrationId = integrationIdMap[rawCurrencyId]
 
-                stakingBalanceStore.store(result)
-            },
-        )
+                                if (integrationId != null) {
+                                    networkAddress.address to integrationId
+                                } else {
+                                    null
+                                }
+                            }
+                            .distinct()
+                            .map { getBalanceRequestData(it.first, it.second) },
+                    ).getOrThrow()
+
+                    stakingBalanceStore.store(result)
+                },
+            )
+        } finally {
+            isYieldBalanceFetching.update {
+                it - userWalletId
+            }
+        }
     }
 
     override fun getMultiYieldBalanceFlow(
         userWalletId: UserWalletId,
         addresses: List<CryptoCurrencyAddress>,
-        integrationId: String,
     ): Flow<YieldBalanceList> = channelFlow {
-        launch(dispatchers.io) {
-            stakingBalanceStore.get()
-                .collectLatest { send(yieldBalanceListConverter.convert(it)) }
-        }
+        if (!stakingFeatureToggle.isStakingEnabled) {
+            send(YieldBalanceList.Empty)
+        } else {
+            launch(dispatchers.io) {
+                stakingBalanceStore.get()
+                    .collectLatest { send(yieldBalanceListConverter.convert(it)) }
+            }
 
-        withContext(dispatchers.io) {
-            fetchMultiYieldBalance(
-                userWalletId,
-                addresses,
-                integrationId,
-            )
+            withContext(dispatchers.io) {
+                fetchMultiYieldBalance(
+                    userWalletId,
+                    addresses,
+                )
+            }
         }
     }.cancellable()
+
+    override fun getMultiYieldBalanceLce(
+        userWalletId: UserWalletId,
+        addresses: List<CryptoCurrencyAddress>,
+    ): LceFlow<Throwable, YieldBalanceList> = lceFlow {
+        if (!stakingFeatureToggle.isStakingEnabled) {
+            send(YieldBalanceList.Empty)
+        } else {
+            launch(dispatchers.io) {
+                combine(
+                    stakingBalanceStore.get(),
+                    isYieldBalanceFetching.map { it.getOrElse(userWalletId) { false } },
+                ) { result, isFetching ->
+                    val balances = yieldBalanceListConverter.convert(result)
+                    send(balances, isStillLoading = isFetching)
+                }.collect()
+            }
+            withContext(dispatchers.io) {
+                catch(
+                    block = { fetchMultiYieldBalance(userWalletId, addresses, refresh = false) },
+                    catch = { raise(it) },
+                )
+            }
+        }
+    }
+
+    override suspend fun getMultiYieldBalanceSync(
+        userWalletId: UserWalletId,
+        addresses: List<CryptoCurrencyAddress>,
+    ): YieldBalanceList = withContext(dispatchers.io) {
+        if (!stakingFeatureToggle.isStakingEnabled) {
+            YieldBalanceList.Empty
+        } else {
+            fetchMultiYieldBalance(userWalletId, addresses)
+            val result = stakingBalanceStore.getSyncOrNull() ?: return@withContext YieldBalanceList.Error
+            yieldBalanceListConverter.convert(result)
+        }
+    }
 
     private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {
         return yields.find { it.token.coinGeckoId == currencyId && it.token.symbol == symbol }
@@ -297,19 +408,33 @@ internal class DefaultStakingRepository(
 
     private fun getYieldBalancesKey(userWalletId: UserWalletId) = "yield_balance_${userWalletId.stringValue}"
 
-    companion object {
-        private val integrationIds = setOf(
-            Blockchain.Solana.toCoinId(),
-            Blockchain.Cosmos.toCoinId(),
-            Blockchain.Polkadot.toCoinId(),
-            Blockchain.Polygon.toCoinId(),
-            Blockchain.Avalanche.toCoinId(),
-            Blockchain.Tron.toCoinId(),
-            Blockchain.Cronos.toCoinId(),
-            Blockchain.Binance.toCoinId(),
-            Blockchain.Kava.toCoinId(),
-            Blockchain.Near.toCoinId(),
-            Blockchain.Tezos.toCoinId(),
+    private companion object {
+        const val YIELDS_STORE_KEY = "yields"
+
+        const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
+        const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
+        const val POLKADOT_INTEGRATION_ID = "polkadot-dot-validator-staking"
+        const val ETHEREUM_INTEGRATION_ID = "ethereum-matic-native-staking"
+        const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
+        const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
+        const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
+        const val BINANCE_INTEGRATION_ID = "binance-bnb-native-staking"
+        const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
+        const val NEAR_INTEGRATION_ID = "near-near-native-staking"
+        const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
+
+        val integrationIdMap = mapOf(
+            Blockchain.Solana.toCoinId() to SOLANA_INTEGRATION_ID,
+            Blockchain.Cosmos.toCoinId() to COSMOS_INTEGRATION_ID,
+            Blockchain.Polkadot.toCoinId() to POLKADOT_INTEGRATION_ID,
+            Blockchain.Polygon.toCoinId() to ETHEREUM_INTEGRATION_ID,
+            Blockchain.Avalanche.toCoinId() to AVALANCHE_INTEGRATION_ID,
+            Blockchain.Tron.toCoinId() to TRON_INTEGRATION_ID,
+            Blockchain.Cronos.toCoinId() to CRONOS_INTEGRATION_ID,
+            Blockchain.Binance.toCoinId() to BINANCE_INTEGRATION_ID,
+            Blockchain.Kava.toCoinId() to KAVA_INTEGRATION_ID,
+            Blockchain.Near.toCoinId() to NEAR_INTEGRATION_ID,
+            Blockchain.Tezos.toCoinId() to TEZOS_INTEGRATION_ID,
         )
     }
 }
