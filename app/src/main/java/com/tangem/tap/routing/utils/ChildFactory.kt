@@ -8,7 +8,7 @@ import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
-import com.tangem.features.disclaimer.api.DisclaimerRouter
+import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
@@ -46,6 +46,7 @@ import javax.inject.Inject
 internal class ChildFactory @Inject constructor(
     private val detailsComponentFactory: DetailsComponent.Factory,
     private val walletSettingsComponentFactory: WalletSettingsComponent.Factory,
+    private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val sendRouter: SendRouter,
     private val tokenDetailsRouter: TokenDetailsRouter,
     private val walletRouter: WalletRouter,
@@ -55,7 +56,6 @@ internal class ChildFactory @Inject constructor(
     private val detailsFeatureToggles: DetailsFeatureToggles,
     private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles,
     private val pushNotificationRouter: PushNotificationsRouter,
-    private val disclaimerRouter: DisclaimerRouter,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -106,7 +106,11 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.Disclaimer -> {
                 if (pushNotificationsFeatureToggles.isPushNotificationsEnabled) {
-                    route.asFragmentChild(Provider { disclaimerRouter.entryFragment() })
+                    route.asComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = DisclaimerComponent.Params(route.isTosAccepted),
+                        componentFactory = disclaimerComponentFactory,
+                    )
                 } else {
                     route.asFragmentChild(Provider { DisclaimerFragment() })
                 }
