@@ -1,19 +1,12 @@
 package com.tangem.core.ui.components.rows.model
 
-import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 
 @Immutable
 data class ChainRowUM(
-    val name: TextReference,
-    val type: TextReference,
-    val icon: Icon,
-) {
-
-    @Immutable
-    data class Icon(
-        @DrawableRes val resId: Int,
-        val isColored: Boolean,
-    )
-}
+    val name: String,
+    val type: String,
+    val icon: CurrencyIconState,
+    val showCustom: Boolean,
+)
