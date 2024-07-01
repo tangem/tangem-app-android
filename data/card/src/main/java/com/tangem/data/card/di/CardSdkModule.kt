@@ -1,6 +1,6 @@
 package com.tangem.data.card.di
 
-import com.tangem.data.card.sdk.CardSdkLifecycleObserver
+import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.data.card.sdk.DefaultCardSdkProvider
 import dagger.Binds
@@ -19,5 +19,5 @@ internal interface CardSdkModule {
 
     @Binds
     @Singleton
-    fun providerCardSdkLifecycleObserver(defaultCardSdkProvider: DefaultCardSdkProvider): CardSdkLifecycleObserver
+    fun providerCardSdkLifecycleObserver(defaultCardSdkProvider: DefaultCardSdkProvider): CardSdkOwner
 }
