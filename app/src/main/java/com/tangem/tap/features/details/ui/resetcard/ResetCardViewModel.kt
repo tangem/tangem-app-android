@@ -214,9 +214,10 @@ internal class ResetCardViewModel @Inject constructor(
 
         return when (val status = card.backupStatus) {
             is CardDTO.BackupStatus.Active -> status.cardCount
-            is CardDTO.BackupStatus.CardLinked -> status.cardCount
-            is CardDTO.BackupStatus.NoBackup -> 0
-            null -> 0 // Multi-currency wallet without backup function. Example, 4.12
+            is CardDTO.BackupStatus.CardLinked,
+            is CardDTO.BackupStatus.NoBackup,
+            null,
+            -> 0
         }
     }
 
