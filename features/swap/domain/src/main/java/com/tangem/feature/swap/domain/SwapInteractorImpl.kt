@@ -268,7 +268,7 @@ internal class SwapInteractorImpl @Inject constructor(
             val isBalanceWithoutFeeEnough = isBalanceEnough(fromToken, amount, null)
             val networkId = fromToken.currency.network.backendId
             when (provider.type) {
-                ExchangeProviderType.DEX -> {
+                ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                     manageDex(
                         networkId = networkId,
                         fromToken = fromToken,
@@ -342,7 +342,7 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         } else {
             provider to getQuotesState(
-                exchangeProviderType = ExchangeProviderType.DEX,
+                exchangeProviderType = provider.type,
                 quoteDataModel = quotes,
                 amount = amount,
                 fromToken = fromToken,
@@ -588,8 +588,9 @@ internal class SwapInteractorImpl @Inject constructor(
                     userWalletId = requireNotNull(getSelectedWallet()).walletId,
                 )
             }
-            ExchangeProviderType.DEX -> {
+            ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                 onSwapDex(
+                    provider = swapProvider,
                     networkId = currencyToSend.currency.network.backendId,
                     swapData = requireNotNull(swapData),
                     currencyToSendStatus = currencyToSend,
@@ -641,6 +642,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private suspend fun onSwapDex(
+        provider: SwapProvider,
         networkId: String,
         swapData: SwapDataModel,
         currencyToSendStatus: CryptoCurrencyStatus,
@@ -652,7 +654,8 @@ internal class SwapInteractorImpl @Inject constructor(
         val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
         val amount = SwapAmount(amountDecimal, currencyToSendStatus.currency.decimals)
         val derivationPath = currencyToSendStatus.currency.network.derivationPath.value
-        val dataToSign = (swapData.transaction as ExpressTransactionModel.DEX).txData
+        val dexTransaction = swapData.transaction as ExpressTransactionModel.DEX
+        val dataToSign = dexTransaction.txData
         val txData = createTransactionUseCase(
             amount = amount.value.convertToAmount(currencyToSendStatus.currency),
             fee = getFeeForTransaction(
@@ -686,6 +689,17 @@ internal class SwapInteractorImpl @Inject constructor(
                     txHash = txHash,
                     payInExtraId = swapData.transaction.txExtraId,
                 )
+                if (provider.type == ExchangeProviderType.DEX_BRIDGE) {
+                    val timestamp = System.currentTimeMillis()
+                    storeSwapTransaction(
+                        currencyToSend = currencyToSendStatus,
+                        currencyToGet = currencyToGetStatus,
+                        amount = amount,
+                        swapProvider = provider,
+                        swapDataModel = swapData,
+                        timestamp = timestamp,
+                    )
+                }
                 storeLastCryptoCurrencyId(currencyToGetStatus.currency)
                 SwapTransactionState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
@@ -702,16 +716,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     timestamp = System.currentTimeMillis(),
                 )
             },
-            ifLeft = {
-                when (it) {
-                    SendTransactionError.UserCancelledError -> SwapTransactionState.UserCancelled
-                    is SendTransactionError.BlockchainSdkError -> SwapTransactionState.BlockchainError
-                    is SendTransactionError.TangemSdkError -> SwapTransactionState.TangemSdkError
-                    is SendTransactionError.NetworkError -> SwapTransactionState.NetworkError
-                    is SendTransactionError.DemoCardError -> SwapTransactionState.DemoMode
-                    else -> SwapTransactionState.UnknownError
-                }
-            },
+            ifLeft = { handleSendTxError(it) },
         )
     }
 
@@ -783,14 +788,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val derivationPath = currencyToSend.currency.network.derivationPath.value
         return result.fold(
             ifLeft = {
-                when (it) {
-                    SendTransactionError.UserCancelledError -> SwapTransactionState.UserCancelled
-                    is SendTransactionError.BlockchainSdkError -> SwapTransactionState.BlockchainError
-                    is SendTransactionError.TangemSdkError -> SwapTransactionState.TangemSdkError
-                    is SendTransactionError.NetworkError -> SwapTransactionState.NetworkError
-                    is SendTransactionError.DemoCardError -> SwapTransactionState.DemoMode
-                    else -> SwapTransactionState.UnknownError
-                }
+                handleSendTxError(it)
             },
             ifRight = { txHash ->
                 repository.exchangeSent(
@@ -834,6 +832,17 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
             },
         )
+    }
+
+    private fun handleSendTxError(txError: SendTransactionError?): SwapTransactionState {
+        return when (txError) {
+            SendTransactionError.UserCancelledError -> SwapTransactionState.UserCancelled
+            is SendTransactionError.BlockchainSdkError -> SwapTransactionState.BlockchainError
+            is SendTransactionError.TangemSdkError -> SwapTransactionState.TangemSdkError
+            is SendTransactionError.NetworkError -> SwapTransactionState.NetworkError
+            is SendTransactionError.DemoCardError -> SwapTransactionState.DemoMode
+            else -> SwapTransactionState.UnknownError
+        }
     }
 
     private fun getFeeForTransaction(fee: TxFee, blockchain: Blockchain): Fee {
@@ -884,8 +893,8 @@ internal class SwapInteractorImpl @Inject constructor(
         swapProvider: SwapProvider,
         swapDataModel: SwapDataModel,
         timestamp: Long,
-        txExternalUrl: String,
-        txExternalId: String,
+        txExternalUrl: String? = null,
+        txExternalId: String? = null,
     ) {
         swapTransactionRepository.storeTransaction(
             userWalletId = UserWalletId(userWalletManager.getWalletId()),
@@ -1074,7 +1083,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
 
                 when (exchangeProviderType) {
-                    ExchangeProviderType.DEX -> {
+                    ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                         val state = updatePermissionState(
                             networkId = networkId,
                             fromTokenStatus = fromToken,
