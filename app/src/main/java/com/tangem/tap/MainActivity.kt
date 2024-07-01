@@ -16,6 +16,7 @@ import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.app.AppCompatDelegate.getDefaultNightMode
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -160,7 +161,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     internal val viewModel: MainViewModel by viewModels()
 
-    private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
+    private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
 
     // TODO: fixme: inject through DI
     private val intentProcessor: IntentProcessor = IntentProcessor()
@@ -172,9 +173,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val splashScreen = installSplashScreen()
-
         installAppTheme() // We need to call it before onCreate to prevent unnecessary activity recreation
+
+        val splashScreen = installSplashScreen()
 
         super.onCreate(savedInstanceState)
 
@@ -248,14 +249,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun installAppTheme() {
         appThemeModeFlow = createAppThemeModeFlow()
-        val mode = runBlocking { appThemeModeFlow.filterNotNull().first() }
+        val mode = runBlocking { appThemeModeFlow.first() }
 
         updateAppTheme(mode)
     }
 
     private fun observeAppThemeModeUpdates() {
         appThemeModeFlow
-            .filterNotNull()
             .flowWithLifecycle(lifecycle)
             .onEach(::updateAppTheme)
             .launchIn(lifecycleScope)
@@ -273,15 +273,17 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
 
-    private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode?> {
+    private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode> {
         val tangemApplication = application as TangemApplication
 
         return tangemApplication.getAppThemeModeUseCase()
+            .filterNotNull()
             .map { maybeMode ->
                 maybeMode.getOrElse { AppThemeMode.DEFAULT }
             }
+            .distinctUntilChanged()
             .shareIn(
-                scope = lifecycleScope + Dispatchers.IO,
+                scope = lifecycleScope,
                 started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
             )
     }
@@ -337,17 +339,18 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun updateAppTheme(appThemeMode: AppThemeMode) {
-        MutableAppThemeModeHolder.value = appThemeMode
-        MutableAppThemeModeHolder.isDarkThemeActive = isDarkTheme()
-
         val mode = when (appThemeMode) {
             AppThemeMode.FORCE_DARK -> AppCompatDelegate.MODE_NIGHT_YES
             AppThemeMode.FORCE_LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
             AppThemeMode.FOLLOW_SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         }
 
-        setDefaultNightMode(mode)
-        delegate.localNightMode = mode
+        if (mode != getDefaultNightMode()) {
+            setDefaultNightMode(mode)
+        }
+
+        MutableAppThemeModeHolder.value = appThemeMode
+        MutableAppThemeModeHolder.isDarkThemeActive = isDarkTheme()
     }
 
     private fun isDarkTheme(): Boolean {
