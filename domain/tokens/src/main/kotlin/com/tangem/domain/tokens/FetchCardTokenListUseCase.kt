@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -19,6 +20,7 @@ class FetchCardTokenListUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val networksRepository: NetworksRepository,
     private val quotesRepository: QuotesRepository,
+    private val stakingRepository: StakingRepository,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId, refresh: Boolean = false): Either<TokenListError, Unit> {
@@ -39,8 +41,13 @@ class FetchCardTokenListUseCase(
                         refresh = refresh,
                     )
                 }
-
-                awaitAll(fetchStatuses, fetchQuotes)
+                val yieldBalances = async {
+                    fetchYieldBalances(
+                        userWalletId = userWalletId,
+                        refresh = refresh,
+                    )
+                }
+                awaitAll(fetchStatuses, fetchQuotes, yieldBalances)
             }
         }
     }
@@ -66,6 +73,14 @@ class FetchCardTokenListUseCase(
     private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean) {
         catch(
             block = { quotesRepository.getQuotesSync(currenciesIds, refresh) },
+            catch = { /* Ignore error */ },
+        )
+    }
+
+    private suspend fun fetchYieldBalances(userWalletId: UserWalletId, refresh: Boolean) {
+        val networkAddresses = networksRepository.getNetworkAddresses(userWalletId)
+        catch(
+            block = { stakingRepository.fetchMultiYieldBalance(userWalletId, networkAddresses, refresh) },
             catch = { /* Ignore error */ },
         )
     }

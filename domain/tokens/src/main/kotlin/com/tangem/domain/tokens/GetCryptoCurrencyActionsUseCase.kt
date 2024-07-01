@@ -43,6 +43,7 @@ class GetCryptoCurrencyActionsUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
             userWalletId = userWallet.walletId,
         )
         val networkId = cryptoCurrencyStatus.currency.network.id
