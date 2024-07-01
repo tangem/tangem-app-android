@@ -24,6 +24,8 @@ dependencies {
     implementation(projects.domain.staking)
     implementation(projects.domain.wallets.models)
 
+    /** Feature Api modules */
+    implementation(projects.features.staking.api)
 
     // region DI
     implementation(deps.hilt.android)
