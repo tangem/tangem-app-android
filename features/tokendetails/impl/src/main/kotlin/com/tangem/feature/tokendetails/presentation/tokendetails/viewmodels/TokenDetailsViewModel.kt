@@ -30,7 +30,6 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
-import com.tangem.domain.staking.GetStakingYieldBalanceUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
@@ -108,7 +107,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val stakingFeatureToggles: StakingFeatureToggles,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     private val getYieldUseCase: GetYieldUseCase,
-    private val getStakingYieldBalanceUseCase: GetStakingYieldBalanceUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val quotesRepository: QuotesRepository,
@@ -135,7 +133,6 @@ internal class TokenDetailsViewModel @Inject constructor(
             ?: error("This screen can't open without `CryptoCurrency`")
 
     private val userWallet: UserWallet
-    private var stakingIntegrationId: String? = null
 
     lateinit var router: InnerTokenDetailsRouter
 
@@ -157,6 +154,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
         featureToggles = tokenDetailsFeatureToggles,
+        stakingFeatureToggles = stakingFeatureToggles,
     )
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -220,6 +218,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     private fun updateContent() {
+        subscribeOnCurrencyStatusUpdates()
         subscribeOnExchangeTransactionsUpdates()
         updateTxHistory(refresh = false, showItemsLoading = true)
 
@@ -281,36 +280,12 @@ internal class TokenDetailsViewModel @Inject constructor(
             )
                 .distinctUntilChanged()
                 .onEach { maybeCurrencyStatus ->
-                    maybeCurrencyStatus.fold(
-                        ifLeft = {
-                            internalUiState.value = stateFactory.getCurrencyLoadedBalanceState(
-                                maybeCurrencyStatus,
-                                null,
-                            )
-                        },
-                        ifRight = { status ->
-                            cryptoCurrencyStatus = status
-
-                            if (stakingIntegrationId != null) {
-                                getStakingYieldBalanceUseCase(
-                                    userWalletId = userWalletId,
-                                    address = status.value.networkAddress?.defaultAddress?.value.orEmpty(),
-                                    integrationId = stakingIntegrationId.orEmpty(),
-                                ).onEach { maybeYieldBalance ->
-                                    internalUiState.value = stateFactory.getCurrencyLoadedBalanceState(
-                                        maybeCurrencyStatus,
-                                        maybeYieldBalance,
-                                    )
-                                }.launchIn(viewModelScope)
-                            } else {
-                                internalUiState.value =
-                                    stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus, null)
-                            }
-
-                            updateButtons(currencyStatus = status)
-                            updateWarnings(status)
-                        },
-                    )
+                    internalUiState.value = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
+                    maybeCurrencyStatus.onRight { status ->
+                        cryptoCurrencyStatus = status
+                        updateButtons(currencyStatus = status)
+                        updateWarnings(status)
+                    }
                     currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
                 }
                 .flowOn(dispatchers.main)
@@ -411,12 +386,8 @@ internal class TokenDetailsViewModel @Inject constructor(
             )
             internalUiState.value = stateFactory.getStateWithUpdatedStakingAvailability(stakingAvailability)
             if (stakingAvailability is StakingAvailability.Available) {
-                stakingIntegrationId = stakingAvailability.integrationId
                 val stakingInfo = getStakingEntryInfoUseCase(stakingAvailability.integrationId)
-                subscribeOnCurrencyStatusUpdates()
                 internalUiState.value = stateFactory.getStateWithStaking(stakingInfo)
-            } else {
-                subscribeOnCurrencyStatusUpdates()
             }
         }
     }
