@@ -1,5 +1,6 @@
 package com.tangem.core.ui.screen
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -20,6 +21,18 @@ abstract class ComposeFragment : Fragment(), ComposeScreen {
         return createComposeView(inflater.context).also {
             it.isTransitionGroup = isTransitionsInflated
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        /*
+         * We need to manually dispatch configuration changes to the Compose view.
+         *
+
+         * `android:configChanges="uiMode"` is set in the manifest.
+         * */
+        view?.dispatchConfigurationChanged(newConfig)
     }
 
     /**
