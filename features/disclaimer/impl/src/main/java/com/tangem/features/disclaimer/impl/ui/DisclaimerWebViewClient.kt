@@ -1,4 +1,4 @@
-package com.tangem.features.disclaimer.impl.presentation.ui
+package com.tangem.features.disclaimer.impl.ui
 
 import android.graphics.Bitmap
 import android.webkit.*
