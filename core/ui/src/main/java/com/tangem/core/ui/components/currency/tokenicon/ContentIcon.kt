@@ -58,7 +58,7 @@ internal fun ContentIcon(
 }
 
 @Composable
-private fun CoinIcon(
+fun CoinIcon(
     url: String?,
     @DrawableRes fallbackResId: Int,
     alpha: Float,
