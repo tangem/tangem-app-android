@@ -7,6 +7,7 @@ import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.staking.model.action.EnterAction
 import com.tangem.domain.staking.model.transaction.StakingTransaction
 import java.math.BigDecimal
+import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.staking.model.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
@@ -17,7 +18,7 @@ interface StakingRepository {
 
     fun isStakingSupported(currencyId: String): Boolean
 
-    suspend fun fetchEnabledYields()
+    suspend fun fetchEnabledYields(refresh: Boolean)
 
     suspend fun getEntryInfo(integrationId: String): StakingEntryInfo
 
@@ -30,29 +31,34 @@ interface StakingRepository {
 
     suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
-        address: String,
-        integrationId: String,
+        address: CryptoCurrencyAddress,
         refresh: Boolean = false,
     )
 
-    fun getSingleYieldBalanceFlow(
-        userWalletId: UserWalletId,
-        address: String,
-        integrationId: String,
-    ): Flow<YieldBalance>
+    fun getSingleYieldBalanceFlow(userWalletId: UserWalletId, address: CryptoCurrencyAddress): Flow<YieldBalance>
+
+    suspend fun getSingleYieldBalanceSync(userWalletId: UserWalletId, address: CryptoCurrencyAddress): YieldBalance
 
     suspend fun fetchMultiYieldBalance(
         userWalletId: UserWalletId,
         addresses: List<CryptoCurrencyAddress>,
-        integrationId: String,
         refresh: Boolean = false,
     )
 
     fun getMultiYieldBalanceFlow(
         userWalletId: UserWalletId,
         addresses: List<CryptoCurrencyAddress>,
-        integrationId: String,
     ): Flow<YieldBalanceList>
+
+    fun getMultiYieldBalanceLce(
+        userWalletId: UserWalletId,
+        addresses: List<CryptoCurrencyAddress>,
+    ): LceFlow<Throwable, YieldBalanceList>
+
+    suspend fun getMultiYieldBalanceSync(
+        userWalletId: UserWalletId,
+        addresses: List<CryptoCurrencyAddress>,
+    ): YieldBalanceList
 
     suspend fun createEnterAction(
         integrationId: String,

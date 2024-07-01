@@ -6,6 +6,7 @@ import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.core.utils.toLce
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -26,6 +27,7 @@ class GetTokenListUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
+    private val stakingRepository: StakingRepository,
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -35,6 +37,7 @@ class GetTokenListUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
         )
 
         return operations.getCurrenciesStatusesFlow().transformLatest { maybeTokens ->
@@ -55,6 +58,7 @@ class GetTokenListUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
         )
 
         return operations.getCurrenciesStatuses(userWalletId).transformLatest { maybeCurrencies ->
