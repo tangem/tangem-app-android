@@ -42,6 +42,7 @@ class SwapDomainModule {
         getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
         @SwapScope sendTransactionUseCase: SendTransactionUseCase,
         @SwapScope createTransactionUseCase: CreateTransactionUseCase,
+        isDemoCardUseCase: IsDemoCardUseCase,
         quotesRepository: QuotesRepository,
         swapTransactionRepository: SwapTransactionRepository,
         appCurrencyRepository: AppCurrencyRepository,
@@ -61,6 +62,7 @@ class SwapDomainModule {
             getMultiCryptoCurrencyStatusUseCase = getCryptoCurrencyStatusUseCase,
             sendTransactionUseCase = sendTransactionUseCase,
             createTransactionUseCase = createTransactionUseCase,
+            isDemoCardUseCase = isDemoCardUseCase,
             quotesRepository = quotesRepository,
             walletManagersFacade = walletManagersFacade,
             dispatcher = coroutineDispatcherProvider,
@@ -69,7 +71,6 @@ class SwapDomainModule {
             currencyChecksRepository = currencyChecksRepository,
             currenciesRepository = currenciesRepository,
             initialToCurrencyResolver = initialToCurrencyResolver,
-            demoConfig = DemoConfig(),
             transactionRepository = transactionRepository,
         )
     }
