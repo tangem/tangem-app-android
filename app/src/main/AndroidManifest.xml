@@ -40,6 +40,7 @@
         android:fullBackupContent="false"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
+        android:resizeableActivity="@bool/resizeable_activity"
         android:label="@string/tangem_app_name"
         android:largeHeap="@bool/largeHeap"
         android:networkSecurityConfig="@xml/network_security_config"
