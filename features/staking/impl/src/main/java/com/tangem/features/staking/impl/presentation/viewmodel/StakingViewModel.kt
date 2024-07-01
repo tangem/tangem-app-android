@@ -21,9 +21,9 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
+import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
-import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountChangeStateTransformer
@@ -89,22 +89,8 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onNextClick() {
         stakingStateRouter.onNextClick()
-        when (value.currentStep) {
-            StakingStep.Confirm -> {
-                initStaking()
-            }
-            StakingStep.InitialInfo -> {
-                // TODO staking
-            }
-            StakingStep.Amount -> {
-                // TODO staking
-            }
-            StakingStep.Success -> {
-                // TODO staking
-            }
-            StakingStep.Validators -> {
-                // TODO staking
-            }
+        if (value.currentStep == StakingStep.Confirm) {
+            initStaking()
         }
     }
 
@@ -173,6 +159,15 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onValidatorSelect(validator: Yield.Validator) {
         stateController.update(ValidatorSelectChangeTransformer(validator))
+    }
+
+    override fun openRewardsValidators() {
+        stakingStateRouter.showRewardsValidators()
+    }
+
+    override fun selectRewardValidator(rewardValue: String) {
+        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, rewardValue))
+        stakingStateRouter.onNextClick()
     }
 
     fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
