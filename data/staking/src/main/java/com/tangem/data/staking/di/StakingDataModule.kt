@@ -6,6 +6,7 @@ import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -24,6 +25,7 @@ internal object StakingDataModule {
         stakingTokenStore: StakingYieldsStore,
         stakingBalanceStore: StakingBalanceStore,
         dispatchers: CoroutineDispatcherProvider,
+        stakingFeatureToggle: StakingFeatureToggles,
         cacheRegistry: CacheRegistry,
     ): StakingRepository {
         return DefaultStakingRepository(
@@ -32,6 +34,7 @@ internal object StakingDataModule {
             stakingBalanceStore = stakingBalanceStore,
             dispatchers = dispatchers,
             cacheRegistry = cacheRegistry,
+            stakingFeatureToggle = stakingFeatureToggle,
         )
     }
 }

@@ -6,9 +6,23 @@ sealed class YieldBalance {
 
     data class Data(
         val balance: YieldBalanceItem,
-    ) : YieldBalance()
+    ) : YieldBalance() {
+        fun getTotalStakingBalance(): BigDecimal {
+            return balance.items
+                .filterNot { it.type == BalanceType.REWARDS }
+                .sumOf { it.amount * it.pricePerShare }
+        }
+
+        fun getRewardStakingBalance(): BigDecimal {
+            return balance.items
+                .filter { it.type == BalanceType.REWARDS }
+                .sumOf { it.amount * it.pricePerShare }
+        }
+    }
 
     data object Empty : YieldBalance()
+
+    data object Error : YieldBalance()
 }
 
 data class YieldBalanceItem(
