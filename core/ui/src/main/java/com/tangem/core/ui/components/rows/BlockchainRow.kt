@@ -1,20 +1,22 @@
 package com.tangem.core.ui.components.rows
 
 import android.content.res.Configuration
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -32,22 +34,82 @@ fun BlockchainRow(model: BlockchainRowUM, action: @Composable BoxScope.() -> Uni
             ),
         icon = {
             RowIcon(
-                modifier = Modifier.size(TangemTheme.dimens.size22),
-                resId = model.icon.resId,
-                isColored = model.icon.isColored,
-                showAccentBadge = model.isAccented,
+                resId = model.iconResId,
+                isColored = model.isSelected,
+                showAccentBadge = model.isMainNetwork,
             )
         },
         text = {
-            RowTitleAndSubtitle(
-                title = model.name,
-                subtitle = model.type,
-                accentTitle = model.usePrimaryTextColor,
-                accentSubtitle = model.isAccented,
+            RowText(
+                mainText = model.name,
+                secondText = model.type,
+                accentMainText = model.isSelected,
+                accentSecondText = model.isMainNetwork,
             )
         },
         action = action,
     )
+}
+
+@Composable
+private fun RowIcon(
+    @DrawableRes resId: Int,
+    isColored: Boolean,
+    showAccentBadge: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.size(TangemTheme.dimens.size24),
+    ) {
+        if (isColored) {
+            Image(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(TangemTheme.dimens.size22),
+                painter = painterResource(id = resId),
+                contentDescription = null,
+            )
+        } else {
+            Icon(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .background(
+                        color = TangemTheme.colors.button.secondary,
+                        shape = CircleShape,
+                    )
+                    .size(TangemTheme.dimens.size22),
+                painter = painterResource(id = resId),
+                tint = TangemTheme.colors.icon.informative,
+                contentDescription = null,
+            )
+        }
+
+        if (showAccentBadge) {
+            Badge(modifier = Modifier.align(Alignment.TopEnd))
+        }
+    }
+}
+
+@Composable
+private fun Badge(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(TangemTheme.dimens.size8)
+            .background(
+                color = TangemTheme.colors.background.primary,
+                shape = CircleShape,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(TangemTheme.dimens.size5)
+                .background(
+                    color = TangemTheme.colors.icon.accent,
+                    shape = CircleShape,
+                ),
+        )
+    }
 }
 
 // region Preview
@@ -74,25 +136,25 @@ private fun Preview_BlockchainRow(@PreviewParameter(BlockchainRowParameterProvid
 private class BlockchainRowParameterProvider : CollectionPreviewParameterProvider<BlockchainRowUM>(
     collection = listOf(
         BlockchainRowUM(
-            name = stringReference("BNB BEACON CHAIN"),
-            type = stringReference("BEP20"),
-            icon = BlockchainRowUM.Icon(R.drawable.ic_bsc_16, isColored = false),
-            isAccented = true,
-            usePrimaryTextColor = false,
+            name = "BNB BEACON CHAIN",
+            type = "BEP20",
+            iconResId = R.drawable.img_bsc_22,
+            isMainNetwork = true,
+            isSelected = true,
         ),
         BlockchainRowUM(
-            name = stringReference("1234567890111213141516171819"),
-            type = stringReference("BEP20"),
-            icon = BlockchainRowUM.Icon(R.drawable.ic_bsc_16, isColored = false),
-            isAccented = false,
-            usePrimaryTextColor = true,
+            name = "1234567890111213141516171819",
+            type = "BEP20",
+            iconResId = R.drawable.ic_bsc_16,
+            isMainNetwork = true,
+            isSelected = false,
         ),
         BlockchainRowUM(
-            name = stringReference("BNB BEACON CHAIN"),
-            type = stringReference("1234567890111213141516171819"),
-            icon = BlockchainRowUM.Icon(R.drawable.img_bsc_22, isColored = true),
-            isAccented = false,
-            usePrimaryTextColor = false,
+            name = "BNB BEACON CHAIN",
+            type = "1234567890111213141516171819",
+            iconResId = R.drawable.ic_bsc_16,
+            isMainNetwork = false,
+            isSelected = false,
         ),
     ),
 )
