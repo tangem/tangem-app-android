@@ -19,9 +19,11 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryTransactionStateConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
@@ -32,21 +34,17 @@ internal class TokenDetailsLoadedBalanceConverter(
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
-) : Converter<TokenDetailsLoadedBalanceConverter.Data, TokenDetailsState> {
+    private val stakingFeatureToggles: StakingFeatureToggles,
+) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, TokenDetailsState> {
 
     private val txHistoryItemConverter by lazy {
         TokenDetailsTxHistoryTransactionStateConverter(symbol, decimals, clickIntents)
     }
 
-    data class Data(
-        val maybeCryptoCurrencyStatus: Either<CurrencyStatusError, CryptoCurrencyStatus>,
-        val maybeYieldBalance: Either<Throwable, YieldBalance>?,
-    )
-
-    override fun convert(value: Data): TokenDetailsState {
-        return value.maybeCryptoCurrencyStatus.fold(
+    override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): TokenDetailsState {
+        return value.fold(
             ifLeft = { convertError() },
-            ifRight = { convert(it, value.maybeYieldBalance?.getOrNull() ?: YieldBalance.Empty) },
+            ifRight = { convert(it) },
         )
     }
 
@@ -64,23 +62,17 @@ internal class TokenDetailsLoadedBalanceConverter(
         )
     }
 
-    private fun convert(status: CryptoCurrencyStatus, yieldBalance: YieldBalance): TokenDetailsState {
+    private fun convert(status: CryptoCurrencyStatus): TokenDetailsState {
         val state = currentStateProvider()
         val currencyName = state.marketPriceBlockState.currencySymbol
         val pendingTxs = status.value.pendingTransactions.map(txHistoryItemConverter::convert).toPersistentList()
-        val stakingCryptoAmount = (yieldBalance as? YieldBalance.Data)?.let {
-            yieldBalance.balance.items.sumOf { it.amount }
-        }
-        val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
 
         return state.copy(
             tokenBalanceBlockState = getBalanceState(
                 currentState = state.tokenBalanceBlockState,
                 status = status,
-                stakingCryptoAmount = stakingCryptoAmount,
-                stakingFiatAmount = stakingFiatAmount,
             ),
-            stakingBlocksState = getYieldBalance(status, yieldBalance, state),
+            stakingBlocksState = getYieldBalance(status, state),
             marketPriceBlockState = getMarketPriceState(status = status.value, currencySymbol = currencyName),
             pendingTxs = pendingTxs,
             txHistoryState = if (state.txHistoryState is TxHistoryState.NotSupported) {
@@ -94,9 +86,10 @@ internal class TokenDetailsLoadedBalanceConverter(
     private fun getBalanceState(
         currentState: TokenDetailsBalanceBlockState,
         status: CryptoCurrencyStatus,
-        stakingCryptoAmount: BigDecimal?,
-        stakingFiatAmount: BigDecimal?,
     ): TokenDetailsBalanceBlockState {
+        val stakingCryptoAmount = (status.value.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance()
+        val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
+        val isBalanceSelectorEnabled = stakingFeatureToggles.isStakingEnabled && !stakingCryptoAmount.isNullOrZero()
         return when (status.value) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
@@ -120,6 +113,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                 balanceSegmentedButtonConfig = currentState.balanceSegmentedButtonConfig,
                 onBalanceSelect = clickIntents::onBalanceSelect,
                 selectedBalanceType = currentState.selectedBalanceType,
+                isBalanceSelectorEnabled = isBalanceSelectorEnabled,
             )
             is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(
                 actionButtons = currentState.actionButtons,
@@ -137,19 +131,14 @@ internal class TokenDetailsLoadedBalanceConverter(
         }
     }
 
-    private fun getYieldBalance(
-        status: CryptoCurrencyStatus,
-        yieldBalance: YieldBalance,
-        state: TokenDetailsState,
-    ): StakingBlocksState {
-        val stakingCryptoAmount = (yieldBalance as? YieldBalance.Data)?.let {
-            yieldBalance.balance.items.sumOf { it.amount }
-        }
+    private fun getYieldBalance(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlocksState {
+        val yieldBalance = status.value.yieldBalance as? YieldBalance.Data
+
+        val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance()
+        val stakingRewardAmount = yieldBalance?.getRewardStakingBalance()
         val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
-        val stakingRewardAmount = (yieldBalance as? YieldBalance.Data)?.let {
-            yieldBalance.balance.items.sumOf { it.amount.multiply(it.pricePerShare) }
-        }
-        val stakingBalance = if (stakingCryptoAmount == null) {
+
+        val stakingBalance = if (stakingCryptoAmount.isNullOrZero()) {
             StakingBalance.Empty
         } else {
             StakingBalance.Content(
