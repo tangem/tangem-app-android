@@ -13,7 +13,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
-import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -65,6 +65,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
     private val quotesRepository: QuotesRepository,
     private val dispatcher: CoroutineDispatcherProvider,
     private val swapTransactionRepository: SwapTransactionRepository,
@@ -72,7 +73,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
-    private val demoConfig: DemoConfig,
     private val transactionRepository: TransactionRepository,
 ) : SwapInteractor {
 
@@ -568,7 +568,7 @@ internal class SwapInteractorImpl @Inject constructor(
         fee: TxFee,
     ): SwapTransactionState {
         val cardId = getSelectedWallet()?.scanResponse?.card?.cardId ?: return SwapTransactionState.UnknownError
-        if (demoConfig.isDemoCardId(cardId)) return SwapTransactionState.DemoMode
+        if (isDemoCardUseCase(cardId)) return SwapTransactionState.DemoMode
 
         return when (swapProvider.type) {
             ExchangeProviderType.CEX -> {
@@ -1409,19 +1409,25 @@ internal class SwapInteractorImpl @Inject constructor(
             swapAmount = swapAmount,
             spenderAddress = requireNotNull(spenderAddress) { "Spender address is null" },
         )
-        val feeData = try {
-            transactionManager.getFee(
-                networkId = networkId,
-                amountToSend = BigDecimal.ZERO,
-                currencyToSend = swapCurrencyConverter.convert(repository.getNativeTokenForNetwork(networkId)),
-                destinationAddress = fromToken.getContractAddress(),
-                increaseBy = INCREASE_GAS_LIMIT_BY,
-                data = transactionData,
-                derivationPath = derivationPath,
-            )
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to get fee")
-            null
+        val userWallet = getSelectedWallet()
+        val cardId = userWallet?.scanResponse?.card?.cardId
+        val feeData = if (cardId != null && isDemoCardUseCase(cardId)) {
+            getDemoFees(fromTokenStatus.currency)
+        } else {
+            try {
+                transactionManager.getFee(
+                    networkId = networkId,
+                    amountToSend = BigDecimal.ZERO,
+                    currencyToSend = swapCurrencyConverter.convert(repository.getNativeTokenForNetwork(networkId)),
+                    destinationAddress = fromToken.getContractAddress(),
+                    increaseBy = INCREASE_GAS_LIMIT_BY,
+                    data = transactionData,
+                    derivationPath = derivationPath,
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to get fee")
+                null
+            }
         }
         val feeState = feeData?.let {
             when (feeData) {
@@ -1805,10 +1811,37 @@ internal class SwapInteractorImpl @Inject constructor(
             .toMap()
     }
 
+    private fun getDemoFees(cryptoCurrency: CryptoCurrency): ProxyFees.MultipleFees {
+        val demoFee = ProxyAmount(
+            currencySymbol = cryptoCurrency.symbol,
+            value = minDemoFee,
+            decimals = cryptoCurrency.decimals,
+        )
+        return ProxyFees.MultipleFees(
+            minFee = ProxyFee.Common(
+                gasLimit = 1.toBigInteger(),
+                fee = demoFee,
+            ),
+            normalFee = ProxyFee.Common(
+                gasLimit = 1.toBigInteger(),
+                fee = demoFee.copy(value = normalDemoFee),
+
+            ),
+            priorityFee = ProxyFee.Common(
+                gasLimit = 1.toBigInteger(),
+                fee = demoFee.copy(value = priorityDemoFee),
+            ),
+        )
+    }
+
     companion object {
         @Suppress("UnusedPrivateMember")
         private const val INCREASE_GAS_LIMIT_BY = 112 // 12%
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
         private const val INFINITY_SYMBOL = "∞"
+
+        private val minDemoFee = "0.0001".toBigDecimal()
+        private val normalDemoFee = "0.0002".toBigDecimal()
+        private val priorityDemoFee = "0.0003".toBigDecimal()
     }
 }
