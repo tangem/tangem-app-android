@@ -1,18 +1,13 @@
 package com.tangem.core.ui.components.rows
 
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 
@@ -22,11 +17,12 @@ internal inline fun RowContentContainer(
     text: @Composable BoxScope.() -> Unit,
     action: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8, Alignment.Start),
+        horizontalArrangement = horizontalArrangement,
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -41,7 +37,7 @@ internal inline fun RowContentContainer(
         )
         Box(
             modifier = Modifier
-                .requiredWidthIn(max = TangemTheme.dimens.size48)
+                .requiredWidthIn(max = TangemTheme.dimens.size80)
                 .heightIn(min = TangemTheme.dimens.size24),
             contentAlignment = Alignment.CenterEnd,
             content = action,
@@ -50,90 +46,50 @@ internal inline fun RowContentContainer(
 }
 
 @Composable
-internal fun RowTitleAndSubtitle(
-    title: TextReference,
-    subtitle: TextReference,
-    accentTitle: Boolean,
-    accentSubtitle: Boolean,
+internal fun RowText(
+    mainText: String,
+    secondText: String,
+    accentMainText: Boolean,
+    accentSecondText: Boolean,
     modifier: Modifier = Modifier,
+    subtitle: TextReference? = null,
 ) {
-    Row(
+    Column(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
     ) {
-        Text(
-            modifier = Modifier.weight(weight = 10f, fill = false),
-            text = title.resolveReference(),
-            style = TangemTheme.typography.subtitle2,
-            color = if (accentTitle) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-
-        Text(
-            modifier = Modifier.weight(weight = 4f, fill = false),
-            text = subtitle.resolveReference(),
-            style = TangemTheme.typography.body2,
-            color = if (accentSubtitle) TangemTheme.colors.text.accent else TangemTheme.colors.text.secondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-@Composable
-internal fun RowIcon(
-    @DrawableRes resId: Int,
-    isColored: Boolean,
-    showAccentBadge: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Box(modifier = modifier) {
-        if (isColored) {
-            Image(
-                modifier = Modifier.matchParentSize(),
-                painter = painterResource(id = resId),
-                contentDescription = null,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        ) {
+            Text(
+                modifier = Modifier.weight(weight = 10f, fill = false),
+                text = mainText,
+                style = TangemTheme.typography.subtitle2,
+                color = if (accentMainText) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-        } else {
-            Icon(
-                modifier = Modifier
-                    .background(
-                        color = TangemTheme.colors.button.secondary,
-                        shape = CircleShape,
-                    )
-                    .matchParentSize(),
-                painter = painterResource(id = resId),
-                tint = TangemTheme.colors.icon.informative,
-                contentDescription = null,
+
+            Text(
+                modifier = Modifier.weight(weight = 4f, fill = false),
+                text = secondText,
+                style = TangemTheme.typography.body2,
+                color = if (accentSecondText) TangemTheme.colors.text.accent else TangemTheme.colors.text.secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
 
-        if (showAccentBadge) {
-            Badge(modifier = Modifier.align(Alignment.TopEnd))
+        if (!subtitle.isNullOrEmpty()) {
+            Text(
+                text = subtitle.resolveReference(),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
-    }
-}
-
-@Composable
-private fun Badge(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(TangemTheme.dimens.size6)
-            .background(
-                color = TangemTheme.colors.background.primary,
-                shape = CircleShape,
-            ),
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(all = TangemTheme.dimens.spacing1)
-                .matchParentSize()
-                .background(
-                    color = TangemTheme.colors.icon.accent,
-                    shape = CircleShape,
-                ),
-        )
     }
 }
