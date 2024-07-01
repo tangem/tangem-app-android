@@ -11,9 +11,7 @@ android {
 }
 
 dependencies {
-    /** AndroidX */
-    implementation(deps.androidx.fragment.ktx)
-    implementation(deps.androidx.appCompat)
+    /* AndroidX */
     implementation(deps.lifecycle.compose)
     implementation(deps.androidx.activity.compose)
 
@@ -31,6 +29,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.featuretoggles)
     implementation(projects.core.navigation)
+    implementation(projects.core.decompose)
     implementation(projects.common.routing)
 
     /** Domain modules */
