@@ -21,6 +21,7 @@ internal class YieldBalanceConverter : Converter<YieldBalanceConverter.Data, Yie
                             amount = item.amount,
                             pricePerShare = item.pricePerShare,
                             rawCurrencyId = item.tokenDTO.coinGeckoId,
+                            validatorAddress = item.validatorAddress,
                         )
                     },
                     integrationId = value.integrationId,
