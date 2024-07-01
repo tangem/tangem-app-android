@@ -25,6 +25,7 @@ internal sealed class TokenDetailsBalanceBlockState {
         val onBalanceSelect: (TokenBalanceSegmentedButtonConfig) -> Unit,
         val displayCryptoBalance: String,
         val displayFiatBalance: String,
+        val isBalanceSelectorEnabled: Boolean,
     ) : TokenDetailsBalanceBlockState()
 
     data class Error(

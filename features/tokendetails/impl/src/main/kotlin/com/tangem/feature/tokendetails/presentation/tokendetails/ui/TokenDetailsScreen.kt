@@ -107,7 +107,6 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                         modifier = itemModifier,
                         isBalanceHidden = state.isBalanceHidden,
                         state = state.tokenBalanceBlockState,
-                        isStakingAvailable = state.isStakingBlockShown,
                     )
                 }
                 items(

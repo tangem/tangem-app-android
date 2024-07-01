@@ -10,12 +10,20 @@ android {
 }
 
 dependencies {
-    implementation(deps.kotlin.serialization)
-    implementation(projects.domain.txhistory.models)
+    /** Project - Core */
     implementation(projects.core.analytics.models)
+
+    /** Project - Domain */
+    implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.staking.models)
+
+    /** SDK dependencies */
     implementation(deps.tangem.blockchain) {
         exclude(module = "joda-time")
     }
+
+    /** Other dependencies */
+    implementation(deps.kotlin.serialization)
     implementation(deps.jodatime)
     implementation(deps.timber)
 }
