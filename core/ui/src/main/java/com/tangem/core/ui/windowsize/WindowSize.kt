@@ -46,18 +46,18 @@ data class WindowSize(
     fun heightAtMost(value: Dp): Boolean = this.height <= value
 
     private fun getWidthWindowSizeType(windowDp: Dp): WindowSizeType = when {
-        windowDp < 300.dp -> WindowSizeType.ExtraSmall
-        windowDp < 380.dp -> WindowSizeType.Small
-        windowDp < 540.dp -> WindowSizeType.Normal
-        windowDp < 700.dp -> WindowSizeType.Large
+        windowDp <= 320.dp -> WindowSizeType.ExtraSmall
+        windowDp <= 360.dp -> WindowSizeType.Small
+        windowDp <= 540.dp -> WindowSizeType.Normal
+        windowDp <= 700.dp -> WindowSizeType.Large
         else -> WindowSizeType.ExtraLarge
     }
 
     private fun getHeightWindowSizeType(heightDp: Dp): WindowSizeType = when {
-        heightDp < 480.dp -> WindowSizeType.ExtraSmall
-        heightDp < 640.dp -> WindowSizeType.Small
-        heightDp < 860.dp -> WindowSizeType.Normal
-        heightDp < 1100.dp -> WindowSizeType.Large
+        heightDp <= 480.dp -> WindowSizeType.ExtraSmall
+        heightDp <= 640.dp -> WindowSizeType.Small
+        heightDp <= 860.dp -> WindowSizeType.Normal
+        heightDp <= 1100.dp -> WindowSizeType.Large
         else -> WindowSizeType.ExtraLarge
     }
 }
