@@ -1004,13 +1004,15 @@ internal class StateBuilder(
         val fromFiatAmount = getFormattedFiatAmount(fromCryptoCurrency.value.fiatRate?.multiply(fromAmount))
         val toFiatAmount = getFormattedFiatAmount(toCryptoCurrency.value.fiatRate?.multiply(toAmount))
 
+        val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName ||
+            providerState.type == ExchangeProviderType.DEX_BRIDGE.providerName
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = swapTransactionState.timestamp,
                 txUrl = txUrl,
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
-                showStatusButton = providerState.type == ExchangeProviderType.CEX.name,
+                showStatusButton = shouldShowStatus,
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
                 fee = stringReference("${fee.feeCryptoFormatted} (${fee.feeFiatFormatted})"),
@@ -1092,7 +1094,7 @@ internal class StateBuilder(
     ): SwapStateHolder {
         val message = when (providerType) {
             ExchangeProviderType.CEX -> resourceReference(R.string.swapping_alert_cex_description, wrappedList(token))
-            ExchangeProviderType.DEX -> {
+            ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                 val refs = buildList {
                     if (isPriceImpact) {
                         add(resourceReference(R.string.swapping_high_price_impact_description))
@@ -1548,7 +1550,7 @@ internal class StateBuilder(
             id = this.providerId,
             name = this.name,
             iconUrl = this.imageLarge,
-            type = this.type.toString(),
+            type = this.type.providerName,
             subtitle = stringReference(rateString),
             additionalBadge = badge,
             selectionType = selectionType,
@@ -1575,7 +1577,7 @@ internal class StateBuilder(
             id = this.providerId,
             name = this.name,
             iconUrl = this.imageLarge,
-            type = this.type.toString(),
+            type = this.type.providerName,
             subtitle = stringReference(rateString),
             additionalBadge = additionalBadge,
             selectionType = selectionType,
@@ -1612,7 +1614,7 @@ internal class StateBuilder(
             id = this.providerId,
             name = this.name,
             iconUrl = this.imageLarge,
-            type = this.type.toString(),
+            type = this.type.providerName,
             selectionType = selectionType,
             subtitle = alertText,
             additionalBadge = ProviderState.AdditionalBadge.Empty,
