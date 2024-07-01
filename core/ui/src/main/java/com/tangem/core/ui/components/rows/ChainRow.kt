@@ -2,10 +2,7 @@ package com.tangem.core.ui.components.rows
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -15,8 +12,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.rows.model.ChainRowUM
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -32,20 +31,24 @@ fun ChainRow(model: ChainRowUM, modifier: Modifier = Modifier, action: @Composab
                 vertical = TangemTheme.dimens.spacing12,
                 horizontal = TangemTheme.dimens.spacing14,
             ),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         icon = {
-            RowIcon(
-                modifier = Modifier.size(TangemTheme.dimens.size36),
-                resId = model.icon.resId,
-                isColored = model.icon.isColored,
-                showAccentBadge = false,
+            CurrencyIcon(
+                state = model.icon,
+                shouldDisplayNetwork = true,
             )
         },
         text = {
-            RowTitleAndSubtitle(
-                title = model.name,
-                subtitle = model.type,
-                accentTitle = true,
-                accentSubtitle = false,
+            RowText(
+                mainText = model.name,
+                secondText = model.type,
+                subtitle = if (model.showCustom) {
+                    resourceReference(R.string.common_custom)
+                } else {
+                    null
+                },
+                accentMainText = true,
+                accentSecondText = false,
             )
         },
         action = action,
@@ -81,36 +84,28 @@ private fun Preview_ChainRow(@PreviewParameter(ChainRowParameterProvider::class)
 private class ChainRowParameterProvider : CollectionPreviewParameterProvider<ChainRowUM>(
     collection = listOf(
         ChainRowUM(
-            name = stringReference("Cardano"),
-            type = stringReference("ADA"),
-            icon = ChainRowUM.Icon(
-                resId = R.drawable.img_cardano_22,
-                isColored = true,
-            ),
+            name = "Cardano",
+            type = "ADA",
+            icon = CurrencyIconState.Locked,
+            showCustom = true,
         ),
         ChainRowUM(
-            name = stringReference("Binance"),
-            type = stringReference("BNB"),
-            icon = ChainRowUM.Icon(
-                resId = R.drawable.ic_bsc_16,
-                isColored = false,
-            ),
+            name = "Binance",
+            type = "BNB",
+            icon = CurrencyIconState.Locked,
+            showCustom = false,
         ),
         ChainRowUM(
-            name = stringReference("123456789010111213141516"),
-            type = stringReference("BNB"),
-            icon = ChainRowUM.Icon(
-                resId = R.drawable.ic_bsc_16,
-                isColored = false,
-            ),
+            name = "123456789010111213141516",
+            type = "BNB",
+            icon = CurrencyIconState.Locked,
+            showCustom = true,
         ),
         ChainRowUM(
-            name = stringReference("123456789010111213141516"),
-            type = stringReference("123456789010111213141516"),
-            icon = ChainRowUM.Icon(
-                resId = R.drawable.ic_bsc_16,
-                isColored = false,
-            ),
+            name = "123456789010111213141516",
+            type = "123456789010111213141516",
+            icon = CurrencyIconState.Locked,
+            showCustom = false,
         ),
     ),
 )
