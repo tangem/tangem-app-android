@@ -18,4 +18,6 @@ dependencies {
 
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+
+    implementation(projects.features.staking.api)
 }
