@@ -112,6 +112,7 @@
   <string name="common_next">Next</string>
   <string name="common_no">No</string>
   <string name="common_no_address">No address</string>
+  <string name="common_now">Now</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Primary Card</string>
   <string name="common_passphrase">Passphrase</string>
@@ -142,6 +143,7 @@
   <string name="common_support">Support</string>
   <string name="common_swap">Swap</string>
   <string name="common_terms_and_conditions">terms and conditions</string>
+  <string name="common_today">Today</string>
   <string name="common_transaction_failed">Transaction failed</string>
   <string name="common_transactions">Transactions</string>
   <string name="common_transfer">Transfer</string>
@@ -319,6 +321,11 @@
   <string name="markets_common_title">Market</string>
   <string name="markets_select_wallet">Select wallet</string>
   <string name="markets_sort_by_title">Sort By</string>
+  <string name="markets_token_details_insights">Insights</string>
+  <string name="markets_token_details_links">Links</string>
+  <string name="markets_token_details_metrics">Metrics</string>
+  <string name="markets_token_details_price_performance">Price performance</string>
+  <string name="markets_token_details_security_score">Security score</string>
   <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your cards</string>
   <string name="onboarding_access_code_feature_1_title">Protect</string>
   <string name="onboarding_access_code_feature_2_description">You can set up an individual access code on each card later</string>
@@ -552,6 +559,8 @@
   <string name="settings_forget_wallet">Forget wallet</string>
   <string name="settings_forget_wallet_footer">This will remove the wallet from the application. The wallet itself can be added again.</string>
   <string name="settings_wallet_name_title">Name</string>
+  <string name="staking_active">Active</string>
+  <string name="staking_active_footer">To unstake your assets, click here.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_apy_info">The annual percentage return you can earn from participating in staking.</string>
@@ -577,6 +586,9 @@
   <string name="staking_notification_earn_rewards_text" formatted="false">Staking allow you to earn %1s. Your staking rewards arrive every ~%2s days.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_rewards">Rewards</string>
+  <string name="staking_stake_more">Stake more</string>
+  <string name="staking_unstaked">Unstacked</string>
+  <string name="staking_unstaked_footer">Check unstaked to claim your assets</string>
   <string name="staking_validator">Validator</string>
   <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
   <string name="story_awe_title">Revolutionary Hardware Wallet</string>
@@ -702,6 +714,7 @@
   <string name="wallet_connect_sessions_title">WalletConnect Sessions</string>
   <string name="wallet_connect_subtitle">Connect to dApps</string>
   <string name="wallet_connect_title">WalletConnect</string>
+  <string name="wallet_connect_toast_awaiting_session_proposal">Connecting may take a few seconds</string>
   <string name="wallet_marketplace_block_title">%s Market Price</string>
   <string name="wallet_marketprice_block_update_time">last 24h</string>
   <string name="wallet_network_group_title">%s network</string>
