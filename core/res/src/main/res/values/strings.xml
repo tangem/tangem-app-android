@@ -224,6 +224,7 @@
   <string name="express_exchange_status_subtitle">Provider-sourced data. Estimated amount subject to change due to market conditions.</string>
   <string name="express_exchange_status_title">Exchange status</string>
   <string name="express_exchange_status_verifying">Verification required</string>
+  <string name="express_exchange_status_waiting_tx_hash">Awaiting transaction hash</string>
   <string name="express_exchange_token_list_subtitle">List of all tokens added to your wallet</string>
   <string name="express_fetch_best_rates">Fetching best rates...</string>
   <string name="express_floating_rate">Floating rate</string>
