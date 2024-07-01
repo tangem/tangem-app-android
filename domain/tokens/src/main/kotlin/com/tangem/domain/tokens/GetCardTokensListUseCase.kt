@@ -2,6 +2,7 @@ package com.tangem.domain.tokens
 
 import arrow.core.left
 import com.tangem.domain.core.utils.EitherFlow
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -21,6 +22,7 @@ class GetCardTokensListUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
+    private val stakingRepository: StakingRepository,
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -43,6 +45,7 @@ class GetCardTokensListUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
         )
 
         return operations.getCardCurrenciesStatusesFlow()

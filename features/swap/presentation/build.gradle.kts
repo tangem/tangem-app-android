@@ -35,6 +35,7 @@ dependencies {
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
+    implementation(projects.domain.staking)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
