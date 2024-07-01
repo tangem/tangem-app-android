@@ -90,4 +90,5 @@ dependencies {
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.details.api)
     implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.markets.api)
 }
