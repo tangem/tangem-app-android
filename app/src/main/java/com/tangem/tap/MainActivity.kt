@@ -49,7 +49,6 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
-import com.tangem.features.disclaimer.api.DisclaimerRouter
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
@@ -176,9 +175,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     internal lateinit var routingComponentFactory: RoutingComponent.Factory
 
     @Inject
-    lateinit var disclaimerRouter: DisclaimerRouter
-
-    @Inject
     lateinit var pushNotificationsRouter: PushNotificationsRouter
 
     @Inject
@@ -298,7 +294,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 qrScanningRouter = qrScanningRouter,
                 emailSender = emailSender,
                 stakingRouter = stakingRouter,
-                disclaimerRouter = disclaimerRouter,
                 pushNotificationsRouter = pushNotificationsRouter,
             ),
         )
