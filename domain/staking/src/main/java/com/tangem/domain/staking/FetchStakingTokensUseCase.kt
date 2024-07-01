@@ -12,10 +12,10 @@ import com.tangem.domain.staking.repositories.StakingRepository
 class FetchStakingTokensUseCase(
     private val stakingRepository: StakingRepository,
 ) {
-    suspend operator fun invoke(): Either<Throwable, Unit> {
+    suspend operator fun invoke(isRefresh: Boolean = false): Either<Throwable, Unit> {
         return either {
             catch(
-                block = { stakingRepository.fetchEnabledYields() },
+                block = { stakingRepository.fetchEnabledYields(isRefresh) },
                 catch = { StakingTokensError.DataError(it) },
             )
         }
