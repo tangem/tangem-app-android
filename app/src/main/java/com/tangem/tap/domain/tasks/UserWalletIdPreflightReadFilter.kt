@@ -18,7 +18,7 @@ class UserWalletIdPreflightReadFilter(private val expectedUserWalletId: UserWall
     override fun onCardRead(card: Card, environment: SessionEnvironment) = Unit
 
     override fun onFullCardRead(card: Card, environment: SessionEnvironment) {
-        val actualUserWalletId = UserWalletIdBuilder.card(card = CardDTO(card)).build()
+        val actualUserWalletId = UserWalletIdBuilder.card(card = CardDTO(card)).build() ?: return
 
         if (expectedUserWalletId != actualUserWalletId) throw TangemSdkError.WalletNotFound()
     }
