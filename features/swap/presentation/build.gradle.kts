@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.ui)
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** Domain modules **/
     implementation(projects.domain.appCurrency)
