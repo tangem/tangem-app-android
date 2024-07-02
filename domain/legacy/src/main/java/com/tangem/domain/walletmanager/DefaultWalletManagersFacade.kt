@@ -87,11 +87,13 @@ class DefaultWalletManagersFacade(
             Blockchain.fromId(it.id.value) to it.derivationPath.value
         }
 
-        walletManagersStore.remove(userWalletId) { walletManager ->
-            val wallet = walletManager.wallet
-            val blockchainToDerivationPath = wallet.blockchain to wallet.publicKey.derivationPath?.rawPath
+        withContext(dispatchers.io) {
+            walletManagersStore.remove(userWalletId) { walletManager ->
+                val wallet = walletManager.wallet
+                val blockchainToDerivationPath = wallet.blockchain to wallet.publicKey.derivationPath?.rawPath
 
-            blockchainToDerivationPath in blockchainsToDerivationPaths
+                blockchainToDerivationPath in blockchainsToDerivationPaths
+            }
         }
     }
 
@@ -110,18 +112,20 @@ class DefaultWalletManagersFacade(
         network: Network,
         networkTokens: List<CryptoCurrency.Token>,
     ) {
-        val walletManager = walletManagersStore.getSyncOrNull(
-            userWalletId = userWalletId,
-            blockchain = Blockchain.fromId(network.id.value),
-            derivationPath = network.derivationPath.value,
-        ) ?: return
-        val tokensToRemove = sdkTokenConverter.convertList(networkTokens)
+        withContext(dispatchers.io) {
+            val walletManager = walletManagersStore.getSyncOrNull(
+                userWalletId = userWalletId,
+                blockchain = Blockchain.fromId(network.id.value),
+                derivationPath = network.derivationPath.value,
+            ) ?: return@withContext
+            val tokensToRemove = sdkTokenConverter.convertList(networkTokens)
 
-        tokensToRemove.forEach { token ->
-            walletManager.removeToken(token)
+            tokensToRemove.forEach { token ->
+                walletManager.removeToken(token)
+            }
+
+            walletManagersStore.store(userWalletId, walletManager)
         }
-
-        walletManagersStore.store(userWalletId, walletManager)
     }
 
     override suspend fun updatePendingTransactions(
@@ -576,12 +580,16 @@ class DefaultWalletManagersFacade(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
     ): AssetRequirementsCondition? {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
-        val currencyType = cryptoCurrencyTypeConverter.convert(currency)
-        if (walletManager !is AssetRequirementsManager || !walletManager.hasRequirements(currencyType)) return null
+        return withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+            val currencyType = cryptoCurrencyTypeConverter.convert(currency)
+            if (walletManager !is AssetRequirementsManager || !walletManager.hasRequirements(currencyType)) {
+                return@withContext null
+            }
 
-        val condition = walletManager.requirementsCondition(currencyType) ?: return null
-        return requirementsConditionConverter.convert(condition)
+            val condition = walletManager.requirementsCondition(currencyType) ?: return@withContext null
+            requirementsConditionConverter.convert(condition)
+        }
     }
 
     override suspend fun associateAsset(
@@ -589,15 +597,18 @@ class DefaultWalletManagersFacade(
         currency: CryptoCurrency,
         signer: CommonSigner,
     ): SimpleResult {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
-        val currencyType = cryptoCurrencyTypeConverter.convert(currency)
+        return withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+            val currencyType = cryptoCurrencyTypeConverter.convert(currency)
 
-        if (walletManager !is AssetRequirementsManager) {
-            return SimpleResult.Failure(
-                BlockchainSdkError.CustomError("WalletManager is not implemented AssetRequirementsManager"),
-            )
+            if (walletManager !is AssetRequirementsManager) {
+                return@withContext SimpleResult.Failure(
+                    BlockchainSdkError.CustomError("WalletManager is not implemented AssetRequirementsManager"),
+                )
+            }
+
+            walletManager.fulfillRequirements(currencyType, signer)
         }
-        return walletManager.fulfillRequirements(currencyType, signer)
     }
 
     override suspend fun checkUtxoConsolidationAvailability(userWalletId: UserWalletId, network: Network): Boolean {
