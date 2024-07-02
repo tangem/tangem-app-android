@@ -35,16 +35,19 @@ class DefaultTxHistoryRepository(
     private val sdkPageConverter by lazy { SdkPageConverter() }
 
     override suspend fun getTxHistoryItemsCount(userWalletId: UserWalletId, currency: CryptoCurrency): Int {
-        val userWallet = getUserWallet(userWalletId)
-        val state = walletManagersFacade.getTxHistoryState(
-            userWalletId = userWallet.walletId,
-            currency = currency,
-        )
-        return when (state) {
-            is TxHistoryState.Failed.FetchError -> throw TxHistoryStateError.DataError(state.exception)
-            is TxHistoryState.NotImplemented -> throw TxHistoryStateError.TxHistoryNotImplemented
-            is TxHistoryState.Success.Empty -> throw TxHistoryStateError.EmptyTxHistories
-            is TxHistoryState.Success.HasTransactions -> state.txCount
+        return withContext(dispatchers.io) {
+            val userWallet = getUserWallet(userWalletId)
+            val state = walletManagersFacade.getTxHistoryState(
+                userWalletId = userWallet.walletId,
+                currency = currency,
+            )
+
+            when (state) {
+                is TxHistoryState.Failed.FetchError -> throw TxHistoryStateError.DataError(state.exception)
+                is TxHistoryState.NotImplemented -> throw TxHistoryStateError.TxHistoryNotImplemented
+                is TxHistoryState.Success.Empty -> throw TxHistoryStateError.EmptyTxHistories
+                is TxHistoryState.Success.HasTransactions -> state.txCount
+            }
         }
     }
 
