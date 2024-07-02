@@ -1,9 +1,9 @@
 package com.tangem.feature.swap.analytics
 
+import com.tangem.common.ui.bottomsheets.state.ApproveType
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.FeeType
-import com.tangem.feature.swap.models.ApproveType
 
 private const val SWAP_CATEGORY = "Swap"
 
