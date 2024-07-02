@@ -87,8 +87,11 @@ internal object TokensDataModule {
 
     @Provides
     @Singleton
-    fun provideDefaultMarketCoinsRepository(assetsStore: AssetsStore): MarketCryptoCurrencyRepository {
-        return DefaultMarketCryptoCurrencyRepository(assetsStore)
+    fun provideDefaultMarketCoinsRepository(
+        assetsStore: AssetsStore,
+        coroutineDispatcherProvider: CoroutineDispatcherProvider,
+    ): MarketCryptoCurrencyRepository {
+        return DefaultMarketCryptoCurrencyRepository(assetsStore, coroutineDispatcherProvider)
     }
 
     @Provides
