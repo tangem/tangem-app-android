@@ -71,6 +71,7 @@
   <string name="common_allow">Allow</string>
   <string name="common_apply">Apply</string>
   <string name="common_approval">Approval</string>
+  <string name="common_approve">Approve</string>
   <string name="common_attention">Attention</string>
   <string name="common_balance">Balance: %s</string>
   <string name="common_balance_title">Balance</string>
@@ -264,6 +265,13 @@
   <string name="feedback_subject_support">Feedback</string>
   <string name="feedback_subject_support_tangem">Tangem feedback</string>
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
+  <string name="give_permission_current_transaction">Current transaction</string>
+  <string name="give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
+  <string name="give_permission_policy_type_footer">Specify the approve limit for the selected token</string>
+  <string name="give_permission_rows_amount">Amount %s</string>
+  <string name="give_permission_subtitle">To continue, grant 1inch smart contracts permission to use your %s</string>
+  <string name="give_permission_title">Give Permission</string>
+  <string name="give_permission_unlimited">Unlimited</string>
   <string name="home_button_order">Order card</string>
   <string name="home_button_scan">Scan card</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card as shown above and do not remove until the end of the operation</string>
@@ -397,6 +405,7 @@
   <string name="onboarding_title">Activating card</string>
   <string name="onboarding_title_backup_card_format">Backup card #%d</string>
   <string name="onboarding_title_no_backup_cards">No backup cards</string>
+  <string name="onboarding_title_notifications">Notifications</string>
   <string name="onboarding_title_one_backup_card">One backup card added</string>
   <string name="onboarding_title_scan_origin_card">Prepare your card</string>
   <string name="onboarding_title_two_backup_cards">Two backup cards added</string>
@@ -607,17 +616,9 @@
   <string name="swapping_approve_information_text">All decentralized exchanges require approvals to prevent smart contracts from accessing your wallet without your permission. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the 1-inch smart contract to spend them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can swap your token after giving approval.</string>
   <string name="swapping_approve_information_title">Approve</string>
   <string name="swapping_from_title">You swap</string>
-  <string name="swapping_give_permission">Give Permission</string>
   <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
   <string name="swapping_insufficient_funds">Insufficient funds</string>
-  <string name="swapping_permission_buttons_approve">Approve</string>
-  <string name="swapping_permission_current_transaction">Current transaction</string>
-  <string name="swapping_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swapping_permission_header">Give Permission</string>
-  <string name="swapping_permission_policy_type_footer">Specify the approve limit for the selected token</string>
-  <string name="swapping_permission_rows_amount">Amount %s</string>
-  <string name="swapping_permission_subheader">To continue, grant 1inch smart contracts permission to use your %s</string>
-  <string name="swapping_permission_unlimited">Unlimited</string>
   <string name="swapping_success_view_title">In progress</string>
   <string name="swapping_swap_action">Swap</string>
   <string name="swapping_to_title">You receive</string>
@@ -671,7 +672,7 @@
   <string name="unlock_wallet_description_full">Use %s or scan a card to have an access to your wallet</string>
   <string name="user_push_notification_agreement_argument_one">Stay up to date with the latest features and news</string>
   <string name="user_push_notification_agreement_argument_two">Be able to get important market notifications</string>
-  <string name="user_push_notification_agreement_header">Would you like to use Push-notifications?</string>
+  <string name="user_push_notification_agreement_header">Would you like to use\nPush-notifications?</string>
   <string name="user_wallet_list_add_button">Add new wallet</string>
   <string name="user_wallet_list_delete_prompt">Are you sure you want to delete this wallet?</string>
   <string name="user_wallet_list_error_unable_to_unlock">An error has occurred, please scan your card to log in</string>
