@@ -446,15 +446,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun navigateToInitialScreenIfNeeded(intentWhichStartedActivity: Intent?) {
-        val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
+        val backStack = store.state.navigationState.backStack
+        val isOnInitialScreen = backStack.all { it == AppScreen.Welcome || it == AppScreen.Home }
         val isNotScannedBefore = store.state.globalState.scanResponse == null
         val isOnboardingServiceNotActive = !store.state.globalState.onboardingState.onboardingStarted
 
         when {
-            !backStackIsEmpty && isNotScannedBefore && isOnboardingServiceNotActive -> {
+            !isOnInitialScreen && isNotScannedBefore && isOnboardingServiceNotActive -> {
                 navigateToInitialScreen(intentWhichStartedActivity)
             }
-            backStackIsEmpty -> {
+            backStack.isEmpty() -> {
                 navigateToInitialScreen(intentWhichStartedActivity)
             }
             else -> Unit
