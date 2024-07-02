@@ -1,15 +1,14 @@
-package com.tangem.feature.swap.models
+package com.tangem.common.ui.bottomsheets.state
 
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.feature.swap.domain.models.domain.SwapApproveType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
-sealed class SwapPermissionState {
+sealed class GiveTxPermissionState {
 
-    object InProgress : SwapPermissionState()
+    data object InProgress : GiveTxPermissionState()
 
-    object Empty : SwapPermissionState()
+    data object Empty : GiveTxPermissionState()
 
     data class ReadyForRequest(
         val currency: String,
@@ -18,22 +17,15 @@ sealed class SwapPermissionState {
         val spenderAddress: String,
         val fee: TextReference,
         val approveType: ApproveType,
-        val approveItems: ImmutableList<ApproveType> = ApproveType.values().toList().toImmutableList(),
+        val approveItems: ImmutableList<ApproveType> = ApproveType.entries.toImmutableList(),
         val approveButton: ApprovePermissionButton,
         val cancelButton: CancelPermissionButton,
         val onChangeApproveType: (ApproveType) -> Unit,
-    ) : SwapPermissionState()
+    ) : GiveTxPermissionState()
 }
 
 enum class ApproveType {
     LIMITED, UNLIMITED
-}
-
-fun ApproveType.toDomainApproveType(): SwapApproveType {
-    return when (this) {
-        ApproveType.LIMITED -> SwapApproveType.LIMITED
-        ApproveType.UNLIMITED -> SwapApproveType.UNLIMITED
-    }
 }
 
 data class ApprovePermissionButton(
