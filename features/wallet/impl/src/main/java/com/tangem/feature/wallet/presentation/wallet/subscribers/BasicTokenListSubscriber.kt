@@ -74,7 +74,9 @@ internal abstract class BasicTokenListSubscriber(
                     },
                     ifError = { e ->
                         Timber.e("Failed to load token list: $e")
-                        SetTokenListErrorTransformer(userWallet.walletId, e)
+                        stateHolder.update(
+                            SetTokenListErrorTransformer(userWalletId = userWallet.walletId, error = e),
+                        )
                         return@combine
                     },
                 )
