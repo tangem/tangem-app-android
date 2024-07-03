@@ -4,10 +4,10 @@ package com.tangem.pagination
  * Represents a result of a batch fetch request.
  * Used in [BatchListState].
  *
- * @param T type of the data.
- * @param E type of the error.
+ * @param TData type of the data.
+ * @param TError type of the error.
  */
-sealed class BatchFetchResult<out T, out E> {
+sealed class BatchFetchResult<out TData, out TError> {
 
     /**
      * Represents a successful result of a batch fetch request.
@@ -15,17 +15,17 @@ sealed class BatchFetchResult<out T, out E> {
      * @param data fetched data.
      * @param last indicates if this is the last batch for the request.
      */
-    data class Success<T>(
-        val data: T,
+    data class Success<TData>(
+        val data: TData,
         val last: Boolean = false,
-    ) : BatchFetchResult<T, Nothing>()
+    ) : BatchFetchResult<TData, Nothing>()
 
     /**
      * Represents an error result of a batch fetch request.
      *
      * @param error error that occurred during the request.
      */
-    data class Error<E>(val error: E) : BatchFetchResult<Nothing, E>()
+    data class Error<TError>(val error: TError) : BatchFetchResult<Nothing, TError>()
 
     /**
      * Represents an unknown error result of a batch fetch request.
