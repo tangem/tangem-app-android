@@ -1,4 +1,4 @@
-package com.tangem.features.disclaimer.impl.presentation.ui
+package com.tangem.features.disclaimer.impl.ui
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
@@ -33,12 +33,12 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.disclaimer.impl.R
-import com.tangem.features.disclaimer.impl.presentation.state.DisclaimerState
-import com.tangem.features.disclaimer.impl.presentation.state.DummyDisclaimer
+import com.tangem.features.disclaimer.impl.entity.DisclaimerUM
+import com.tangem.features.disclaimer.impl.entity.DummyDisclaimer
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 
 @Composable
-internal fun DisclaimerScreen(state: DisclaimerState, onBackClick: () -> Unit) {
+internal fun DisclaimerScreen(state: DisclaimerUM) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     val bottomPadding = if (state.isTosAccepted) {
         bottomBarHeight + TangemTheme.dimens.size16
@@ -61,7 +61,7 @@ internal fun DisclaimerScreen(state: DisclaimerState, onBackClick: () -> Unit) {
                 text = resourceReference(R.string.disclaimer_title),
                 startButton = AdditionalButton(
                     iconRes = R.drawable.ic_back_24,
-                    onIconClicked = onBackClick,
+                    onIconClicked = state.popBack,
                 ).takeIf { state.isTosAccepted },
                 textColor = textColor,
                 iconColor = iconColor,
@@ -134,12 +134,12 @@ private fun DisclaimerContent(url: String, isTosAccepted: Boolean) {
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun BoxScope.DisclaimerButton(onAccept: (Boolean) -> Unit) {
-    val shouldAskPushPermission = getPushPermissionOrNull()?.let { permission ->
+    val isPermissionGranted = getPushPermissionOrNull()?.let { permission ->
         rememberPermissionState(permission = permission).status.isGranted
     } ?: true
     PrimaryButton(
         text = stringResource(id = R.string.common_accept),
-        onClick = { onAccept(shouldAskPushPermission) },
+        onClick = { onAccept(!isPermissionGranted) },
         colors = TangemButtonColors(
             backgroundColor = TangemColorPalette.Light4,
             contentColor = TangemColorPalette.Dark6,
@@ -164,7 +164,7 @@ private fun BoxScope.DisclaimerButton(onAccept: (Boolean) -> Unit) {
 @Composable
 private fun DisclaimerScreen_Preview() {
     TangemThemePreview {
-        DisclaimerScreen(state = DummyDisclaimer.state, onBackClick = {})
+        DisclaimerScreen(state = DummyDisclaimer.state)
     }
 }
 // endregion
