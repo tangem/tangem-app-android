@@ -19,7 +19,7 @@ data class StakingTransactionDTO(
     @Json(name = "signedTransaction")
     val signedTransaction: String?,
     @Json(name = "unsignedTransaction")
-    val unsignedTransaction: String?,
+    val unsignedTransaction: String,
     @Json(name = "stepIndex")
     val stepIndex: Int,
     @Json(name = "error")

@@ -9,7 +9,7 @@ data class StakingTransaction(
     val type: StakingTransactionType,
     val hash: String?,
     val signedTransaction: String?,
-    val unsignedTransaction: String?,
+    val unsignedTransaction: String,
     val stepIndex: Int,
     val error: String?,
     val gasEstimate: StakingGasEstimate?,
