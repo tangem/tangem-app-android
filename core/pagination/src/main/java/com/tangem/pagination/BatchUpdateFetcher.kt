@@ -21,5 +21,5 @@ interface BatchUpdateFetcher<TKey, TData, TError, TUpdate> {
     suspend fun fetchUpdate(
         toUpdate: List<Batch<TKey, TData>>,
         updateRequest: TUpdate,
-    ): BatchFetchUpdateResult<TKey, TData, TError>
+    ): FetchUpdateResult<TKey, TData, TError>
 }
