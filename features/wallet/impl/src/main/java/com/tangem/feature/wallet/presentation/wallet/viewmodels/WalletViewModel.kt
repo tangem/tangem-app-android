@@ -216,6 +216,14 @@ internal class WalletViewModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.DeleteWallet -> deleteWallet(action)
             is WalletsUpdateActionResolver.Action.UnlockWallet -> unlockWallet(action)
             is WalletsUpdateActionResolver.Action.UpdateWalletCardCount -> {
+                // refresh loader to use actual user wallet
+                walletScreenContentLoader.load(
+                    userWallet = action.selectedWallet,
+                    clickIntents = clickIntents,
+                    isRefresh = true,
+                    coroutineScope = viewModelScope,
+                )
+
                 stateHolder.update(transformer = UpdateWalletCardsCountTransformer(action.selectedWallet))
             }
             is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
