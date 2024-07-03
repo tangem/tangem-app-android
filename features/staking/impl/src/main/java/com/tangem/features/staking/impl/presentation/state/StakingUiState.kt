@@ -19,6 +19,7 @@ internal data class StakingUiState(
     val currentStep: StakingStep,
     val initialInfoState: StakingStates.InitialInfoState,
     val amountState: AmountState,
+    val rewardsValidatorsState: StakingStates.RewardsValidatorsState,
     val confirmStakingState: StakingStates.ConfirmStakingState,
     val isBalanceHidden: Boolean,
     val bottomSheetConfig: TangemBottomSheetConfig?,
@@ -61,6 +62,18 @@ internal sealed class StakingStates {
         ) : InitialInfoState()
     }
 
+    /** Select validator to claim rewards state */
+    sealed class RewardsValidatorsState : StakingStates() {
+        data class Data(
+            override val isPrimaryButtonEnabled: Boolean,
+            val rewards: ImmutableList<BalanceState>,
+        ) : RewardsValidatorsState()
+
+        data class Empty(
+            override val isPrimaryButtonEnabled: Boolean = false,
+        ) : RewardsValidatorsState()
+    }
+
     /** Confirm state */
     sealed class ConfirmStakingState : StakingStates() {
         data class Data(
@@ -81,6 +94,7 @@ internal sealed class StakingStates {
 
 enum class StakingStep {
     InitialInfo,
+    RewardsValidators,
     Amount,
     Confirm,
     Validators,

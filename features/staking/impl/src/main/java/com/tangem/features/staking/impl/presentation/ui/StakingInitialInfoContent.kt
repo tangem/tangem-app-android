@@ -4,13 +4,18 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,12 +39,14 @@ import com.tangem.features.staking.impl.presentation.state.BalanceGroupedState
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.previewdata.InitialStakingStatePreview
+import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
+import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.Strings.DOT
 import com.tangem.utils.extensions.orZero
 
 @Composable
-internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState) {
+internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, clickIntents: StakingClickIntents) {
     if (state !is StakingStates.InitialInfoState.Data) return
 
     Column(
@@ -63,6 +70,7 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState) {
                     rewardCrypto = it.rewardsCrypto,
                     rewardFiat = it.rewardsFiat,
                     isRewardsToClaim = it.isRewardsToClaim,
+                    onRewardsClick = clickIntents::openRewardsValidators,
                 )
             }
         }
@@ -188,7 +196,12 @@ internal fun StakingDetailsRows(state: StakingStates.InitialInfoState.Data) {
 }
 
 @Composable
-private fun StakingRewardBlock(rewardCrypto: String, rewardFiat: String, isRewardsToClaim: Boolean) {
+private fun StakingRewardBlock(
+    rewardCrypto: String,
+    rewardFiat: String,
+    isRewardsToClaim: Boolean,
+    onRewardsClick: () -> Unit,
+) {
     val (text, textColor) = if (isRewardsToClaim) {
         annotatedReference(
             buildAnnotatedString {
@@ -211,37 +224,46 @@ private fun StakingRewardBlock(rewardCrypto: String, rewardFiat: String, isRewar
         textColor = textColor,
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action),
+            .background(TangemTheme.colors.background.action)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(),
+                onClick = onRewardsClick,
+            ),
     )
 }
 
 @Composable
-private fun ActiveStakingBlock(groupes: List<BalanceGroupedState>) {
+private fun ActiveStakingBlock(groups: List<BalanceGroupedState>) {
     Column(
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        groupes.forEach { group ->
-            FooterContainer(
-                footer = group.footer?.resolveReference(),
-                modifier = Modifier,
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(TangemTheme.shapes.roundedCornersXMedium)
-                        .background(TangemTheme.colors.background.action),
+        groups.forEach { group ->
+            key(group.title) {
+                FooterContainer(
+                    footer = group.footer?.resolveReference(),
+                    modifier = Modifier,
                 ) {
-                    group.items.forEachIndexed { index, balance ->
-                        InputRowImageInfo(
-                            title = group.title.takeIf { index == 0 },
-                            subtitle = stringReference(balance.validator.name),
-                            caption = stringReference(
-                                BigDecimalFormatter.formatPercent(balance.validator.apr.orZero(), true),
-                            ),
-                            infoTitle = balance.fiatAmount,
-                            infoSubtitle = balance.cryptoAmount,
-                            imageUrl = balance.validator.image.orEmpty(),
-                        )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(TangemTheme.shapes.roundedCornersXMedium)
+                            .background(TangemTheme.colors.background.action),
+                    ) {
+                        group.items.forEachIndexed { index, balance ->
+                            key(balance.validator.address) {
+                                InputRowImageInfo(
+                                    title = group.title.takeIf { index == 0 },
+                                    subtitle = stringReference(balance.validator.name),
+                                    caption = stringReference(
+                                        BigDecimalFormatter.formatPercent(balance.validator.apr.orZero(), true),
+                                    ),
+                                    infoTitle = balance.fiatAmount,
+                                    infoSubtitle = balance.cryptoAmount,
+                                    imageUrl = balance.validator.image.orEmpty(),
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -278,6 +300,7 @@ private fun StakingInitialInfoContent_Preview(
     TangemThemePreview {
         StakingInitialInfoContent(
             state = feeState,
+            clickIntents = StakingClickIntentsStub,
         )
     }
 }

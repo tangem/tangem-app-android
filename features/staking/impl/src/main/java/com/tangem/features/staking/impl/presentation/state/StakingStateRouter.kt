@@ -28,6 +28,7 @@ internal class StakingStateRouter(
     fun onNextClick() {
         when (stateController.uiState.value.currentStep) {
             StakingStep.InitialInfo -> showAmount()
+            StakingStep.RewardsValidators,
             StakingStep.Validators,
             StakingStep.Amount,
             -> showConfirm()
@@ -48,6 +49,10 @@ internal class StakingStateRouter(
 
     private fun showInitial() {
         stateController.update { it.copy(currentStep = StakingStep.InitialInfo) }
+    }
+
+    fun showRewardsValidators() {
+        stateController.update { it.copy(currentStep = StakingStep.RewardsValidators) }
     }
 
     fun showAmount() {
