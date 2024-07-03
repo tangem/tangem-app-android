@@ -1,6 +1,6 @@
 package com.tangem.pagination.fetcher
 
-import com.tangem.pagination.BatchFetchResult
+import com.tangem.pagination.FetchResult
 import com.tangem.pagination.exception.EndOfPaginationException
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class LimitOffsetBatchFetcher<TRequest : Any, TData, TError>(
     private val prefetchDistance: Int,
     private val batchSize: Int,
-    private val fetch: (request: Request<TRequest>) -> BatchFetchResult<TData, TError>,
+    private val fetch: (request: Request<TRequest>) -> FetchResult<TData, TError>,
 ) : BatchFetcher<TRequest, TData, TError> {
 
     data class Request<TRequest>(
@@ -29,7 +29,7 @@ class LimitOffsetBatchFetcher<TRequest : Any, TData, TError>(
 
     private val lastRequest = MutableStateFlow<Request<TRequest>?>(null)
 
-    override suspend fun fetchFirst(request: TRequest): BatchFetchResult<TData, TError> {
+    override suspend fun fetchFirst(request: TRequest): FetchResult<TData, TError> {
         val req = Request(
             offset = 0,
             limit = prefetchDistance,
@@ -43,14 +43,14 @@ class LimitOffsetBatchFetcher<TRequest : Any, TData, TError>(
 
     override suspend fun fetchNext(
         overrideRequest: TRequest?,
-        lastResult: BatchFetchResult<TData, TError>,
-    ): BatchFetchResult<TData, TError> {
+        lastResult: FetchResult<TData, TError>,
+    ): FetchResult<TData, TError> {
         val last = lastRequest.value
         requireNotNull(last)
 
-        val req = if (lastResult is BatchFetchResult.Success) {
+        val req = if (lastResult is FetchResult.Success) {
             if (lastResult.last && overrideRequest == null) {
-                return BatchFetchResult.UnknownError(EndOfPaginationException())
+                return FetchResult.UnknownError(EndOfPaginationException())
             }
 
             Request(
