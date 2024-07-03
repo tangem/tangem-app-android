@@ -29,9 +29,10 @@ sealed class BatchFetchResult<out TData, out TError> {
 
     /**
      * Represents an unknown error result of a batch fetch request.
-     * Used for unexpected exceptions that occurred in fetch method in [BatchFetcher].
+     * Used for unexpected exceptions that occurred in fetch method in BatchFetcher.
      *
      * @param throwable throwable that occurred during the request.
+     * @see com.tangem.pagination.fetcher.BatchFetcher
      */
     class UnknownError(val throwable: Throwable) : BatchFetchResult<Nothing, Nothing>()
 }
