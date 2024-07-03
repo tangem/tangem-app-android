@@ -550,6 +550,8 @@
   <string name="story_meet_title">Встречайте Tangem</string>
   <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и делайте вклады в более чем 100 различных децентрализованных сервисах</string>
   <string name="story_web3_title">Поддержка Web 3.0</string>
+  <string name="swap_promo_text">Обменивайте больше токенов по лучшим курсам прямо в вашем кошельке.</string>
+  <string name="swap_promo_title">Новый провайдер обмена!</string>
   <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя</string>
   <string name="swapping_alert_dex_description">В сумму включена комиссия провайдера сервиса.</string>
   <string name="swapping_alert_title">Комиссии</string>
