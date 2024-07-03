@@ -90,6 +90,7 @@ fun InputRowDefault(
                             bottom = TangemTheme.dimens.spacing10,
                         )
                         .clickable(
+                            enabled = onIconClick != null,
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(bounded = false),
                         ) { onIconClick?.invoke() },
