@@ -27,4 +27,8 @@ object StakingClickIntentsStub : StakingClickIntents {
     override fun openValidators() {}
 
     override fun onValidatorSelect(validator: Yield.Validator) {}
+
+    override fun openRewardsValidators() {}
+
+    override fun selectRewardValidator(rewardValue: String) {}
 }
