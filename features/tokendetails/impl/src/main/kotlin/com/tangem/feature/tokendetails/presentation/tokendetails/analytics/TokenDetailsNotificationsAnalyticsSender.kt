@@ -2,7 +2,9 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.analytics
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.models.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 
@@ -35,12 +37,15 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             -> TokenDetailsAnalyticsEvent.Notice.NotEnoughFee(
                 currency = cryptoCurrency,
             )
+            is TokenDetailsNotification.SwapPromo -> TokenSwapPromoAnalyticsEvent.NoticePromotionBanner(
+                programName = TokenSwapPromoAnalyticsEvent.ProgramName.OKX,
+                source = AnalyticsParam.ScreensSources.Token,
+            )
             is TokenDetailsNotification.NetworksUnreachable,
             is TokenDetailsNotification.ExistentialDeposit,
             is TokenDetailsNotification.NetworksNoAccount,
             is TokenDetailsNotification.TopUpWithoutReserve,
             is TokenDetailsNotification.RentInfo,
-            is TokenDetailsNotification.SwapPromo,
             is TokenDetailsNotification.NetworkShutdown,
             is TokenDetailsNotification.HederaAssociateWarning,
             is TokenDetailsNotification.KoinosMana,
