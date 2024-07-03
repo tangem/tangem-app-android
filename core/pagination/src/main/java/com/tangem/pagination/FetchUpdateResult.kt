@@ -8,7 +8,7 @@ package com.tangem.pagination
  * @param TData type of the data.
  * @param TError type of the error.
  */
-sealed class BatchFetchUpdateResult<out TKey, out TData, out TError> {
+sealed class FetchUpdateResult<out TKey, out TData, out TError> {
 
     /**
      * Represents a successful result of a batch update operation.
@@ -17,14 +17,14 @@ sealed class BatchFetchUpdateResult<out TKey, out TData, out TError> {
      */
     data class Success<TKey, TData>(
         val data: List<Batch<TKey, TData>>,
-    ) : BatchFetchUpdateResult<TKey, TData, Nothing>()
+    ) : FetchUpdateResult<TKey, TData, Nothing>()
 
     /**
      * Represents an error result of a batch update operation.
      *
      * @param error error that occurred during the operation.
      */
-    data class Error<TError>(val error: TError) : BatchFetchUpdateResult<Nothing, Nothing, TError>()
+    data class Error<TError>(val error: TError) : FetchUpdateResult<Nothing, Nothing, TError>()
 
     /**
      * Represents an unknown error result of a batch update operation.
@@ -32,5 +32,5 @@ sealed class BatchFetchUpdateResult<out TKey, out TData, out TError> {
      *
      * @param throwable throwable that occurred during the operation.
      */
-    class UnknownError(val throwable: Throwable) : BatchFetchUpdateResult<Nothing, Nothing, Nothing>()
+    class UnknownError(val throwable: Throwable) : FetchUpdateResult<Nothing, Nothing, Nothing>()
 }

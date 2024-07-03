@@ -34,12 +34,12 @@ sealed class PaginationStatus<out T, out E> {
     /**
      * Represents that the last batch was loaded and
      * the source is ready to load the next one or reload previous if [lastResult] is an error.
-     * For the first batch, [lastResult] is always [BatchFetchResult.Success]
+     * For the first batch, [lastResult] is always [FetchResult.Success]
      *
      * @param lastResult result of the last batch fetch.
      */
     data class Paginating<out T, out E>(
-        val lastResult: BatchFetchResult<T, E>,
+        val lastResult: FetchResult<T, E>,
     ) : PaginationStatus<T, E>()
 
     /**
