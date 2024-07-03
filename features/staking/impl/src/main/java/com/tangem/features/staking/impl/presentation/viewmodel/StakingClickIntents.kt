@@ -19,4 +19,8 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun openValidators()
 
     fun onValidatorSelect(validator: Yield.Validator)
+
+    fun openRewardsValidators()
+
+    fun selectRewardValidator(rewardValue: String)
 }
