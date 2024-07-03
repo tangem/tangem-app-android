@@ -70,6 +70,7 @@
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_apply">Применить</string>
   <string name="common_approval">Одобрение</string>
+  <string name="common_approve">Подтвердить</string>
   <string name="common_attention">Внимание</string>
   <string name="common_balance">Баланс: %s</string>
   <string name="common_balance_title">Баланс</string>
@@ -261,6 +262,13 @@
   <string name="feedback_subject_support">Обращение в поддержку</string>
   <string name="feedback_subject_support_tangem">Обращение в поддержку Tangem</string>
   <string name="feedback_subject_tx_failed">Не могу отправить транзакцию</string>
+  <string name="give_permission_current_transaction">Текущая транзакция</string>
+  <string name="give_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
+  <string name="give_permission_policy_type_footer">Укажите лимит доступа к выбранному токену</string>
+  <string name="give_permission_rows_amount">Количество %s</string>
+  <string name="give_permission_subtitle">Чтобы продолжить, вам нужно разрешить смарт-контракту 1inch использовать ваш %s</string>
+  <string name="give_permission_title">Дать разрешение</string>
+  <string name="give_permission_unlimited">Безлимитно</string>
   <string name="home_button_order">Купить</string>
   <string name="home_button_scan">Сканировать</string>
   <string name="initial_message_change_access_code_body">Чтобы изменить код доступа, приложите карту как показано выше и не убирайте до окончания операции</string>
@@ -388,6 +396,7 @@
   <string name="onboarding_title">Активация карты</string>
   <string name="onboarding_title_backup_card_format">Резервная карта #%d</string>
   <string name="onboarding_title_no_backup_cards">Нет резервных карт</string>
+  <string name="onboarding_title_notifications">Уведомления</string>
   <string name="onboarding_title_one_backup_card">Добавлена ​​одна резервная карта</string>
   <string name="onboarding_title_scan_origin_card">Подготовьте свою карту</string>
   <string name="onboarding_title_two_backup_cards">Добавлены две резервные карты</string>
@@ -581,17 +590,9 @@
   <string name="swapping_approve_information_text">Подтверждения считаются отраслевым стандартом для всех децентрализованных бирж и защищают ваш кошелек от доступа со стороны смарт-контракта без вашего разрешения. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту 1inch разрешение тратить ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете обменять свой токен.</string>
   <string name="swapping_approve_information_title">Подтвердить</string>
   <string name="swapping_from_title">Вы отправляете</string>
-  <string name="swapping_give_permission">Дать разрешение</string>
   <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
   <string name="swapping_insufficient_funds">Недостаточно средств</string>
-  <string name="swapping_permission_buttons_approve">Подтвердить</string>
-  <string name="swapping_permission_current_transaction">Текущая транзакция</string>
-  <string name="swapping_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
   <string name="swapping_permission_header">Дать разрешение</string>
-  <string name="swapping_permission_policy_type_footer">Укажите лимит доступа к выбранному токену</string>
-  <string name="swapping_permission_rows_amount">Количество %s</string>
-  <string name="swapping_permission_subheader">Чтобы продолжить, вам нужно разрешить смарт-контракту 1inch использовать ваш %s</string>
-  <string name="swapping_permission_unlimited">Безлимитно</string>
   <string name="swapping_success_view_title">В процессе</string>
   <string name="swapping_swap_action">Обменять</string>
   <string name="swapping_to_title">Вы получите</string>
