@@ -125,7 +125,7 @@ internal class StakingViewModel @Inject constructor(
         ) {
             viewModelScope.launch {
                 stakingTransaction?.let {
-                    sendStakingTransaction(TransactionData.Compiled(value = it.unsignedTransaction.hexToBytes()))
+                    sendStakingTransaction(TransactionData.Compiled(value = it.unsignedTransaction!!.hexToBytes()))
                 }
             }
         }
