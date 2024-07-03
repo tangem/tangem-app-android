@@ -32,7 +32,7 @@ interface BatchListSource<TKey, TData, TUpdate, TError> {
  */
 @Suppress("FunctionNaming")
 fun <TKey, TData, TRequest : Any, TError> BatchListSource(
-    ioDispatcher : CoroutineDispatcher = Dispatchers.IO,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     context: BatchingContext<TRequest, TKey, Nothing>,
     generateNewKey: suspend (List<TKey>) -> TKey,
     batchFetcher: BatchFetcher<TRequest, TData, TError>,
