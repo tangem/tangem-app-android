@@ -3,11 +3,11 @@ package com.tangem.pagination
 /**
  * Action that can be dispatched to [BatchListSource].
  *
- * @param R type of the request to load batches.
- * @param K type of the key of the batch.
- * @param U type of the update request.
+ * @param TRequest type of the request to load batches.
+ * @param TKey type of the key of the batch.
+ * @param TUpdate type of the update request.
  */
-sealed class BatchAction<R, K, U> {
+sealed class BatchAction<TRequest, TKey, TUpdate> {
 
     /**
      * Action to load the first batch.
