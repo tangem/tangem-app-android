@@ -3,7 +3,7 @@ package com.tangem.pagination
 /**
  * Request to fetch a batch of data.
  *
- * @param R type of the request.
+ * @param TRequest type of the request.
  *
  * @property offset offset for the request.
  * @property limit limit for the request.
@@ -11,8 +11,8 @@ package com.tangem.pagination
  *
  * @see BatchFetcher
  */
-data class BatchRequest<R>(
+data class BatchRequest<TRequest>(
     val offset: Int,
     val limit: Int,
-    val data: R,
+    val data: TRequest,
 )
