@@ -65,6 +65,7 @@ private fun SendAppBar(uiState: StakingUiState) {
     val titleRes = when (uiState.currentStep) {
         StakingStep.Amount -> stringResource(id = R.string.send_amount_label)
         StakingStep.InitialInfo,
+        StakingStep.RewardsValidators,
         StakingStep.Validators,
         StakingStep.Confirm,
         -> stringResource(id = R.string.common_stake)
@@ -78,7 +79,9 @@ private fun SendAppBar(uiState: StakingUiState) {
         -> {
             R.drawable.ic_close_24
         }
-        StakingStep.InitialInfo -> {
+        StakingStep.RewardsValidators,
+        StakingStep.InitialInfo,
+        -> {
             R.drawable.ic_back_24
         }
     }
@@ -137,7 +140,14 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
             when (state) {
                 StakingStep.InitialInfo -> StakingInitialInfoContent(
                     state = uiState.initialInfoState,
+                    clickIntents = uiState.clickIntents,
                 )
+                StakingStep.RewardsValidators -> {
+                    StakingClaimRewardsValidatorContent(
+                        state = uiState.rewardsValidatorsState,
+                        clickIntents = uiState.clickIntents,
+                    )
+                }
                 StakingStep.Amount -> AmountScreenContent(
                     amountState = uiState.amountState,
                     isBalanceHiding = uiState.isBalanceHidden,

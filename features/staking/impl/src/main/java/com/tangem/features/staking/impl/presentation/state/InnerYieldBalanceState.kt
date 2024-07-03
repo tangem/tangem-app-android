@@ -1,8 +1,8 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.staking.model.BalanceType
 import com.tangem.domain.staking.model.Yield
+import kotlinx.collections.immutable.ImmutableList
 
 sealed class InnerYieldBalanceState {
     data class Data(
@@ -16,15 +16,21 @@ sealed class InnerYieldBalanceState {
 }
 
 data class BalanceGroupedState(
-    val items: List<BalanceState>,
-    val type: BalanceType,
+    val items: ImmutableList<BalanceState>,
     val footer: TextReference?,
     val title: TextReference,
 )
 
 data class BalanceState(
     val validator: Yield.Validator,
+    val cryptoValue: String,
     val cryptoAmount: TextReference,
     val fiatAmount: TextReference,
     val rawCurrencyId: String?,
 )
+
+enum class BalanceGroupType {
+    ACTIVE,
+    UNSTAKED,
+    UNKNOWN,
+}
