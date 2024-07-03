@@ -36,13 +36,13 @@ import com.tangem.core.ui.res.TangemThemePreview
 @Suppress("LongParameterList")
 @Composable
 fun InputRowImageInfo(
-    title: TextReference?,
     subtitle: TextReference,
     caption: TextReference,
     infoTitle: TextReference,
     infoSubtitle: TextReference,
     imageUrl: String,
     modifier: Modifier = Modifier,
+    title: TextReference? = null,
     subtitleColor: Color = TangemTheme.colors.text.primary1,
     captionColor: Color = TangemTheme.colors.text.tertiary,
 ) {
