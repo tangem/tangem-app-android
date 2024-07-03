@@ -16,8 +16,9 @@ import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.app.AppCompatDelegate.getDefaultNightMode
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
+import androidx.compose.ui.graphics.toArgb
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
@@ -38,6 +39,7 @@ import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
@@ -172,8 +174,22 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        /*
+         * We need to manually change the background color of the activity when the UI mode changes to prevent
+         * flickering when navigating between fragments.
+         *
+
+         * `android:configChanges="uiMode"` is set in the manifest.
+         * */
+        updateAppBackground()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        installAppTheme() // We need to call it before onCreate to prevent unnecessary activity recreation
+        // We need to call it before onCreate to prevent unnecessary activity recreation
+        installAppTheme()
 
         val splashScreen = installSplashScreen()
 
@@ -345,12 +361,20 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             AppThemeMode.FOLLOW_SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         }
 
-        if (mode != getDefaultNightMode()) {
-            setDefaultNightMode(mode)
-        }
+        setDefaultNightMode(mode)
 
         MutableAppThemeModeHolder.value = appThemeMode
         MutableAppThemeModeHolder.isDarkThemeActive = isDarkTheme()
+    }
+
+    private fun updateAppBackground() {
+        val backgroundColor = if (isDarkTheme()) {
+            TangemColorPalette.Dark6
+        } else {
+            TangemColorPalette.White
+        }
+
+        findViewById<CoordinatorLayout>(R.id.fragment_container).setBackgroundColor(backgroundColor.toArgb())
     }
 
     private fun isDarkTheme(): Boolean {
