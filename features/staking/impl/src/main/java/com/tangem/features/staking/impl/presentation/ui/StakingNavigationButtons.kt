@@ -1,8 +1,6 @@
 package com.tangem.features.staking.impl.presentation.ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -84,22 +82,29 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
                 SpacerW12()
             }
         }
-        TangemButton(
-            text = stringResource(buttonTextId),
-            icon = buttonIcon,
-            enabled = isButtonEnabled,
-            onClick = {
-                if (isStakingState) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                buttonClick()
-            },
-            showProgress = false,
-            modifier = Modifier.fillMaxWidth(),
-            colors = TangemButtonsDefaults.primaryButtonColors,
-        )
+
+        AnimatedVisibility(
+            visible = buttonClick != null,
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            TangemButton(
+                text = stringResource(buttonTextId),
+                icon = buttonIcon,
+                enabled = isButtonEnabled && buttonClick != null,
+                onClick = {
+                    if (isStakingState) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (buttonClick != null) buttonClick()
+                },
+                showProgress = false,
+                modifier = Modifier.fillMaxWidth(),
+                colors = TangemButtonsDefaults.primaryButtonColors,
+            )
+        }
     }
 }
 
-private fun getButtonData(currentState: StakingUiState): Pair<Int, () -> Unit> {
+private fun getButtonData(currentState: StakingUiState): Pair<Int, (() -> Unit)?> {
     return when (currentState.currentStep) {
         StakingStep.InitialInfo -> {
             val initialState = currentState.initialInfoState as? StakingStates.InitialInfoState.Data
@@ -114,11 +119,13 @@ private fun getButtonData(currentState: StakingUiState): Pair<Int, () -> Unit> {
         StakingStep.Confirm -> R.string.common_stake to currentState.clickIntents::onNextClick
         StakingStep.Validators -> R.string.common_continue to currentState.clickIntents::onNextClick
         StakingStep.Success -> R.string.common_close to currentState.clickIntents::onBackClick
+        else -> R.string.common_next to null
     }
 }
 
 private fun isPrevButtonVisible(step: StakingStep): Boolean = when (step) {
     StakingStep.InitialInfo,
+    StakingStep.RewardsValidators,
     StakingStep.Confirm,
     StakingStep.Success,
     -> false
@@ -132,6 +139,7 @@ private fun isButtonEnabled(uiState: StakingUiState): Boolean {
         StakingStep.InitialInfo -> uiState.initialInfoState.isPrimaryButtonEnabled
         StakingStep.Amount -> uiState.amountState.isPrimaryButtonEnabled
         StakingStep.Confirm -> uiState.confirmStakingState.isPrimaryButtonEnabled
+        StakingStep.RewardsValidators -> uiState.rewardsValidatorsState.isPrimaryButtonEnabled
         StakingStep.Success -> true
         StakingStep.Validators -> true
     }
