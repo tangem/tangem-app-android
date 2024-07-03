@@ -61,6 +61,11 @@ internal abstract class BasicTokenListSubscriber(
                 },
             flow2 = getSelectedAppCurrencyUseCase().distinctUntilChanged(),
             transform = { maybeTokenList, maybeAppCurrency ->
+                val appCurrency = maybeAppCurrency.getOrElse { e ->
+                    Timber.e("Failed to load app currency: $e")
+                    AppCurrency.Default
+                }
+
                 val tokenList = maybeTokenList.getOrElse(
                     ifLoading = { maybeContent ->
                         val isRefreshing = stateHolder.getWalletState(userWallet.walletId)
@@ -75,16 +80,15 @@ internal abstract class BasicTokenListSubscriber(
                     ifError = { e ->
                         Timber.e("Failed to load token list: $e")
                         stateHolder.update(
-                            SetTokenListErrorTransformer(userWalletId = userWallet.walletId, error = e),
+                            SetTokenListErrorTransformer(
+                                selectedWallet = userWallet,
+                                error = e,
+                                appCurrency = appCurrency,
+                            ),
                         )
                         return@combine
                     },
                 )
-
-                val appCurrency = maybeAppCurrency.getOrElse { e ->
-                    Timber.e("Failed to load app currency: $e")
-                    AppCurrency.Default
-                }
 
                 updateContent(tokenList, appCurrency)
                 walletWithFundsChecker.check(tokenList)
