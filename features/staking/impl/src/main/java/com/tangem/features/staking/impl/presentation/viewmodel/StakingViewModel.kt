@@ -124,9 +124,9 @@ internal class StakingViewModel @Inject constructor(
             StakingStates.ConfirmStakingState.Data.InnerConfirmStakingState.CONFIRM
         ) {
             viewModelScope.launch {
-                stakingTransaction?.let {
-                    sendStakingTransaction(TransactionData.Compiled(value = it.unsignedTransaction!!.hexToBytes()))
-                }
+                stakingTransaction?.unsignedTransaction?.let {
+                    sendStakingTransaction(TransactionData.Compiled(value = it.hexToBytes()))
+                } ?: error("No unsigned transaction available")
             }
         }
     }
