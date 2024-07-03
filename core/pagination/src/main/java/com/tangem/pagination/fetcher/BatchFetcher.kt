@@ -1,6 +1,6 @@
 package com.tangem.pagination.fetcher
 
-import com.tangem.pagination.BatchFetchResult
+import com.tangem.pagination.FetchResult
 import com.tangem.pagination.BatchListState
 
 /**
@@ -20,7 +20,7 @@ interface BatchFetcher<TRequest : Any, TData, TError> {
      * @param request initial request. Will be saved to be used in [fetchNext] requests.
      * @return result of the fetch operation.
      */
-    suspend fun fetchFirst(request: TRequest): BatchFetchResult<TData, TError>
+    suspend fun fetchFirst(request: TRequest): FetchResult<TData, TError>
 
     /**
      * Fetches the next batch of data.
@@ -32,6 +32,6 @@ interface BatchFetcher<TRequest : Any, TData, TError> {
      */
     suspend fun fetchNext(
         overrideRequest: TRequest?,
-        lastResult: BatchFetchResult<TData, TError>,
-    ): BatchFetchResult<TData, TError>
+        lastResult: FetchResult<TData, TError>,
+    ): FetchResult<TData, TError>
 }
