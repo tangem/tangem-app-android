@@ -14,9 +14,9 @@ sealed class BatchAction<TRequest, TKey, TUpdate> {
      *
      * @param request request to load the first batch.
      */
-    data class Reload<R>(
-        val request: R,
-    ) : BatchAction<R, Nothing, Nothing>()
+    data class Reload<TRequest : Any>(
+        val request: TRequest,
+    ) : BatchAction<TRequest, Nothing, Nothing>()
 
     /**
      * Action to load the next batch.
@@ -25,9 +25,9 @@ sealed class BatchAction<TRequest, TKey, TUpdate> {
      * If null, the last request will be used.
      * Will be saved in the state and used for future LoadMore actions with request = null.
      */
-    data class LoadMore<R>(
-        val request: R? = null,
-    ) : BatchAction<R, Nothing, Nothing>()
+    data class LoadMore<TRequest : Any>(
+        val request: TRequest? = null,
+    ) : BatchAction<TRequest, Nothing, Nothing>()
 
     /**
      * Action to update the batch.
@@ -35,10 +35,10 @@ sealed class BatchAction<TRequest, TKey, TUpdate> {
      * @param keys keys of the batches to update.
      * @param request request to update the batches.
      */
-    class UpdateBatches<K, U>(
-        val keys: Set<K>,
-        val request: U,
-    ) : BatchAction<Nothing, K, U>()
+    class UpdateBatches<TKey, TUpdate>(
+        val keys: Set<TKey>,
+        val request: TUpdate,
+    ) : BatchAction<Nothing, TKey, TUpdate>()
 
     /**
      * Action to cancel the current batch loading.
@@ -55,7 +55,7 @@ sealed class BatchAction<TRequest, TKey, TUpdate> {
      *
      * @param predicate predicate to check if the update request should be cancelled.
      */
-    class CancelUpdates<K, U>(
-        val predicate: (UpdateBatches<K, U>) -> Boolean,
-    ) : BatchAction<Nothing, K, U>()
+    class CancelUpdates<TKey, TUpdate>(
+        val predicate: (UpdateBatches<TKey, TUpdate>) -> Boolean,
+    ) : BatchAction<Nothing, TKey, TUpdate>()
 }
