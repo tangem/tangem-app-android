@@ -1,4 +1,4 @@
-package com.tangem.common.ui.bottomsheets
+package com.tangem.common.ui.bottomsheet.permission
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.PopupProperties
 import com.tangem.common.ui.R
-import com.tangem.common.ui.bottomsheets.state.*
+import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithAdditionalButtons
 import com.tangem.core.ui.components.appbar.models.AdditionalButton
