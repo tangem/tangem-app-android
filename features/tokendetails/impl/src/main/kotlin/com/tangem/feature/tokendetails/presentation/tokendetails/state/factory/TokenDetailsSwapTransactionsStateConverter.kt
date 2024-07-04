@@ -162,6 +162,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
     private fun getStatuses(status: ExchangeStatus?, hasFailed: Boolean = false): ImmutableList<ExchangeStatusState> {
         if (status == null) return persistentListOf()
         val isWaiting = status == ExchangeStatus.New || status == ExchangeStatus.Waiting
+        val isWaitingTxHash = status == ExchangeStatus.WaitingTxHash
         val isConfirming = status == ExchangeStatus.Confirming
         val isVerifying = status == ExchangeStatus.Verifying
         val isExchanging = status == ExchangeStatus.Exchanging
@@ -174,27 +175,35 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         val isExchangingDone = !isExchanging && isConfirmingDone
         val isSendingDone = !isSending && !isVerifying && !isFailed && isExchangingDone
 
-        return if (status == ExchangeStatus.Cancelled) {
-            listOf(cancelledStep())
-        } else {
-            listOf(
-                waitStep(isWaiting, isWaitingDone),
-                confirmStep(isConfirming, isConfirmingDone),
-                exchangeStep(
-                    isExchanging = isExchanging,
-                    isExchangingDone = isExchangingDone,
-                    isRefunded = isRefunded,
-                    hasFailed = hasFailed,
-                    isVerifying = isVerifying,
-                    isFailed = isFailed,
-                ),
-                sendStep(
-                    isSending = isSending,
-                    isSendingDone = isSendingDone,
-                    isRefunded = isRefunded,
-                    hasFailed = hasFailed,
-                ),
-            )
+        return buildList {
+            when {
+                status == ExchangeStatus.Cancelled -> add(cancelledStep())
+                isWaitingTxHash -> add(waitTxStep())
+                // ExchangeStatus.Unknown is temporary added for 1inch
+                status == ExchangeStatus.Unknown -> add(unknownStateStep())
+                else -> {
+                    add(waitStep(isWaiting, isWaitingDone))
+                    add(confirmStep(isConfirming, isConfirmingDone))
+                    add(
+                        exchangeStep(
+                            isExchanging = isExchanging,
+                            isExchangingDone = isExchangingDone,
+                            isRefunded = isRefunded,
+                            hasFailed = hasFailed,
+                            isVerifying = isVerifying,
+                            isFailed = isFailed,
+                        ),
+                    )
+                    add(
+                        sendStep(
+                            isSending = isSending,
+                            isSendingDone = isSendingDone,
+                            isRefunded = isRefunded,
+                            hasFailed = hasFailed,
+                        ),
+                    )
+                }
+            }
         }.toPersistentList()
     }
 
@@ -214,6 +223,20 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         },
         isActive = isNew,
         isDone = isNewDone,
+    )
+
+    private fun waitTxStep() = ExchangeStatusState(
+        status = ExchangeStatus.Verifying,
+        text = TextReference.Res(R.string.express_exchange_status_waiting_tx_hash),
+        isActive = false,
+        isDone = false,
+    )
+
+    private fun unknownStateStep() = ExchangeStatusState(
+        status = ExchangeStatus.Failed,
+        text = TextReference.Res(R.string.express_exchange_status_failed),
+        isActive = false,
+        isDone = true,
     )
 
     private fun confirmStep(isConfirming: Boolean, isConfirmingDone: Boolean) = ExchangeStatusState(
