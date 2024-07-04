@@ -82,7 +82,6 @@ internal object ConfirmStakingStatePreviewData {
                 days = 2,
             ),
         ),
-        isStaking = false,
-        isSuccess = false,
+        innerState = StakingStates.ConfirmStakingState.Data.InnerConfirmStakingState.CONFIRM,
     )
 }
