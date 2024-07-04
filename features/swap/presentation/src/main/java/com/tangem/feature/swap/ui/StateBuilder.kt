@@ -1541,7 +1541,9 @@ internal class StateBuilder(
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
         val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
         val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
-        val badge = if (isNeedBestRateBadge && isBestRate) {
+        val badge = if (isRecommended) {
+            ProviderState.AdditionalBadge.Recommended
+        } else if (isNeedBestRateBadge && isBestRate) {
             ProviderState.AdditionalBadge.BestTrade
         } else {
             ProviderState.AdditionalBadge.Empty
@@ -1555,7 +1557,11 @@ internal class StateBuilder(
             additionalBadge = badge,
             selectionType = selectionType,
             percentLowerThenBest = PercentDifference.Empty,
-            namePrefix = ProviderState.PrefixType.PROVIDED_BY,
+            namePrefix = if (badge !is ProviderState.AdditionalBadge.Recommended) {
+                ProviderState.PrefixType.PROVIDED_BY
+            } else {
+                ProviderState.PrefixType.NONE
+            },
             onProviderClick = onProviderClick,
         )
     }
@@ -1570,6 +1576,8 @@ internal class StateBuilder(
         val rateString = toTokenInfo.tokenAmount.getFormattedCryptoAmount(toTokenInfo.cryptoCurrencyStatus.currency)
         val additionalBadge = if (state.permissionState is PermissionDataState.PermissionReadyForRequest) {
             ProviderState.AdditionalBadge.PermissionRequired
+        } else if (isRecommended) {
+            ProviderState.AdditionalBadge.Recommended
         } else {
             ProviderState.AdditionalBadge.Empty
         }
