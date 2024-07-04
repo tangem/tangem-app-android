@@ -33,6 +33,7 @@ internal object CardSDKLoggerModule {
             Log.Level.Network,
             Log.Level.Error,
             Log.Level.Biometric,
+            Log.Level.Info,
         )
 
         return TangemCardSDKLogger(
