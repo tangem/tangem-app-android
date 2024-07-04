@@ -12,6 +12,7 @@ sealed class SwapPermissionState {
     object Empty : SwapPermissionState()
 
     data class ReadyForRequest(
+        val providerName: String,
         val currency: String,
         val amount: String,
         val walletAddress: String,
