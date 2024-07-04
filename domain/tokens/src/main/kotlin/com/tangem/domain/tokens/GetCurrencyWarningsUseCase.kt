@@ -84,7 +84,7 @@ class GetCurrencyWarningsUseCase(
     ): Flow<CryptoCurrencyWarning?> {
         val currency = currencyStatus.currency
         val cryptoStatuses = operations.getCurrenciesStatusesSync()
-        val promoBanner = promoRepository.getChangellyPromoBanner()
+        val promoBanner = promoRepository.getOkxPromoBanner()
         return combine(
             showSwapPromoTokenUseCase().conflate(),
             flowOf(marketCryptoCurrencyRepository.isExchangeable(userWalletId, currency)).conflate(),
