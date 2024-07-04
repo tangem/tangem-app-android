@@ -9,6 +9,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
+import com.tangem.common.ui.bottomsheets.state.ApproveType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -73,7 +74,7 @@ internal class SwapViewModel @Inject constructor(
 ) : ViewModel(), DefaultLifecycleObserver {
 
     private val initialCryptoCurrency: CryptoCurrency = savedStateHandle.get<Bundle>(AppRoute.Swap.CURRENCY_BUNDLE_KEY)
-        ?.let { it.unbundle(CryptoCurrency.serializer()) }
+        ?.unbundle(CryptoCurrency.serializer())
         ?: error("no expected parameter CryptoCurrency found`")
 
     private lateinit var initialCryptoCurrencyStatus: CryptoCurrencyStatus
@@ -1171,6 +1172,13 @@ internal class SwapViewModel @Inject constructor(
             delayMillis = UPDATE_BALANCE_DELAY_MILLIS,
             refresh = true,
         )
+    }
+
+    private fun ApproveType.toDomainApproveType(): SwapApproveType {
+        return when (this) {
+            ApproveType.LIMITED -> SwapApproveType.LIMITED
+            ApproveType.UNLIMITED -> SwapApproveType.UNLIMITED
+        }
     }
 
     private companion object {

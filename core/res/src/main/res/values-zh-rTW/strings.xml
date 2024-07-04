@@ -277,13 +277,9 @@
   <string name="story_web3_title">兼容Web3.0</string>
   <string name="swapping_approve_information_text">批准被視為所有去中心化交易所的行業標準，並保護您的錢包在未經您許可的情況下不被智能合約訪問。按照設計，智能合約無法訪問您的代幣，除非您從您的終端批准訪問。通過“解鎖”您的代幣，您將獲得 1inch 智能合約使用您的資產的權限。網絡的礦工將獲得Gas Fee（由您支付）作為補償，以在區塊鏈上記錄此操作。一旦獲得許可，您就可以交易您的代幣。</string>
   <string name="swapping_approve_information_title">批准</string>
-  <string name="swapping_give_permission">賦予權限</string>
   <string name="swapping_high_price_impact_description">在此代幣交換的數量將對價格產生重大影響，並降低您收到的數量</string>
   <string name="swapping_insufficient_funds">餘額不足</string>
-  <string name="swapping_permission_buttons_approve">允許</string>
   <string name="swapping_permission_header">賦予權限</string>
-  <string name="swapping_permission_rows_amount">數量 %s</string>
-  <string name="swapping_permission_subheader">要繼續，您需要允許 1inch 智能合約使用您的 %s</string>
   <string name="swapping_success_view_title">進行中</string>
   <string name="swapping_swap_action">交易</string>
   <string name="swapping_token_list_title">選擇代幣</string>

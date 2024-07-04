@@ -2,6 +2,7 @@ package com.tangem.feature.swap.ui
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.common.ui.bottomsheets.state.*
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -649,7 +650,7 @@ internal class StateBuilder(
             ),
             receiveCardData = receiveCardData,
             warnings = warnings,
-            permissionState = SwapPermissionState.Empty,
+            permissionState = GiveTxPermissionState.Empty,
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 enabled = false,
@@ -906,7 +907,7 @@ internal class StateBuilder(
     }
 
     fun updateApproveType(uiState: SwapStateHolder, approveType: ApproveType): SwapStateHolder {
-        val config = uiState.bottomSheetConfig?.content as? GivePermissionBottomSheetConfig
+        val config = uiState.bottomSheetConfig?.content as? GiveTxPermissionBottomSheetConfig
         return if (config != null) {
             uiState.copy(
                 bottomSheetConfig = uiState.bottomSheetConfig.copy(
@@ -980,7 +981,7 @@ internal class StateBuilder(
             ),
         )
         return uiState.copy(
-            permissionState = SwapPermissionState.InProgress,
+            permissionState = GiveTxPermissionState.InProgress,
             warnings = warnings,
         )
     }
@@ -1140,27 +1141,27 @@ internal class StateBuilder(
     }
 
     private fun convertPermissionState(
-        lastPermissionState: SwapPermissionState,
+        lastPermissionState: GiveTxPermissionState,
         permissionDataState: PermissionDataState,
         onGivePermissionClick: () -> Unit,
         onChangeApproveType: (ApproveType) -> Unit,
-    ): SwapPermissionState {
-        val approveType = if (lastPermissionState is SwapPermissionState.ReadyForRequest) {
+    ): GiveTxPermissionState {
+        val approveType = if (lastPermissionState is GiveTxPermissionState.ReadyForRequest) {
             lastPermissionState.approveType
         } else {
             ApproveType.UNLIMITED
         }
         return when (permissionDataState) {
-            PermissionDataState.Empty -> SwapPermissionState.Empty
-            PermissionDataState.PermissionFailed -> SwapPermissionState.Empty
-            PermissionDataState.PermissionLoading -> SwapPermissionState.InProgress
+            PermissionDataState.Empty -> GiveTxPermissionState.Empty
+            PermissionDataState.PermissionFailed -> GiveTxPermissionState.Empty
+            PermissionDataState.PermissionLoading -> GiveTxPermissionState.InProgress
             is PermissionDataState.PermissionReadyForRequest -> {
                 val permissionFee = when (val fee = permissionDataState.requestApproveData.fee) {
                     TxFeeState.Empty -> error("Fee shouldn't be empty")
                     is TxFeeState.MultipleFeeState -> fee.priorityFee
                     is TxFeeState.SingleFeeState -> fee.fee
                 }
-                SwapPermissionState.ReadyForRequest(
+                GiveTxPermissionState.ReadyForRequest(
                     currency = permissionDataState.currency,
                     amount = permissionDataState.amount,
                     approveType = approveType,
@@ -1193,8 +1194,8 @@ internal class StateBuilder(
 
     fun showPermissionBottomSheet(uiState: SwapStateHolder, onDismiss: () -> Unit): SwapStateHolder {
         val permissionState = uiState.permissionState
-        if (permissionState is SwapPermissionState.ReadyForRequest) {
-            val config = GivePermissionBottomSheetConfig(
+        if (permissionState is GiveTxPermissionState.ReadyForRequest) {
+            val config = GiveTxPermissionBottomSheetConfig(
                 data = permissionState,
                 onCancel = onDismiss,
             )
@@ -1402,7 +1403,7 @@ internal class StateBuilder(
         return NotificationConfig(
             title = resourceReference(R.string.express_provider_permission_needed),
             subtitle = resourceReference(
-                id = R.string.swapping_permission_subheader,
+                id = R.string.give_permission_subtitle,
                 formatArgs = wrappedList(fromTokenSymbol),
             ),
             iconResId = R.drawable.ic_locked_24,

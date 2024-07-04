@@ -99,22 +99,8 @@ internal class StakingViewModel @Inject constructor(
     override fun onNextClick() {
         handleOnNextConfirmClick()
         stakingStateRouter.onNextClick()
-        when (value.currentStep) {
-            StakingStep.Confirm -> {
-                initStaking()
-            }
-            StakingStep.InitialInfo -> {
-                // TODO staking
-            }
-            StakingStep.Amount -> {
-                // TODO staking
-            }
-            StakingStep.Success -> {
-                // TODO staking
-            }
-            StakingStep.Validators -> {
-                // TODO staking
-            }
+        if (value.currentStep == StakingStep.Confirm) {
+            initStaking()
         }
     }
 
@@ -199,6 +185,15 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onValidatorSelect(validator: Yield.Validator) {
         stateController.update(ValidatorSelectChangeTransformer(validator))
+    }
+
+    override fun openRewardsValidators() {
+        stakingStateRouter.showRewardsValidators()
+    }
+
+    override fun selectRewardValidator(rewardValue: String) {
+        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, rewardValue))
+        stakingStateRouter.onNextClick()
     }
 
     fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
