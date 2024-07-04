@@ -1,7 +1,6 @@
 package com.tangem.feature.swap.models
 
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -74,18 +73,21 @@ data class SwapButton(
 
 sealed interface TransactionCardType {
 
-    val headerResId: Int
+    val header: TextReference
+    val isError: Boolean
 
     data class Inputtable(
         val onAmountChanged: ((String) -> Unit),
         val onFocusChanged: ((Boolean) -> Unit),
-        @StringRes override val headerResId: Int = R.string.swapping_from_title,
+        override val isError: Boolean,
+        override val header: TextReference = TextReference.Res(R.string.swapping_from_title),
     ) : TransactionCardType
 
     data class ReadOnly(
         val showWarning: Boolean = false,
         val onWarningClick: (() -> Unit)? = null,
-        @StringRes override val headerResId: Int = R.string.swapping_to_title,
+        override val isError: Boolean = false,
+        override val header: TextReference = TextReference.Res(R.string.swapping_to_title),
     ) : TransactionCardType
 }
 
@@ -102,7 +104,7 @@ data class LegalState(
 
 sealed interface SwapWarning {
     data class PermissionNeeded(val notificationConfig: NotificationConfig) : SwapWarning
-    object InsufficientFunds : SwapWarning
+    data object InsufficientFunds : SwapWarning
     data class NoAvailableTokensToSwap(val notificationConfig: NotificationConfig) : SwapWarning
     data class GenericWarning(
         val title: TextReference? = null,
