@@ -5,14 +5,13 @@ package com.tangem.pagination
  *
  * @param TKey type of the key of the batch.
  * @param TData type of the data.
- * @param TError type of the error.
  *
  * @property data list of loaded batches.
  * @property status current status of the pagination.
  *
  * @see BatchListSource
  */
-data class BatchListState<TKey, TData, TError>(
+data class BatchListState<TKey, TData>(
     val data: List<Batch<TKey, TData>>,
-    val status: PaginationStatus<TData, TError>,
+    val status: PaginationStatus<TData>,
 )
