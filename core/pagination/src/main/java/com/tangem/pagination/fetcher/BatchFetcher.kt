@@ -6,28 +6,31 @@ import com.tangem.pagination.BatchListState
 /**
  * Interface for fetching a batch of data. Used in [BatchListState].
  *
- * @param TRequest type of the request.
+ * @param TRequestParams type of the request.
  * @param TData type of the data.
  *
  * @see BatchListState
  */
-interface BatchFetcher<TRequest : Any, TData> {
+interface BatchFetcher<TRequestParams : Any, TData> {
 
     /**
      * Fetches the first batch of data.
      *
-     * @param request initial request. Will be saved to be used in [fetchNext] requests.
+     * @param requestParams initial request params. Will be saved to be used in [fetchNext] requests.
      * @return result of the fetch operation.
      */
-    suspend fun fetchFirst(request: TRequest): BatchFetchResult<TData>
+    suspend fun fetchFirst(requestParams: TRequestParams): BatchFetchResult<TData>
 
     /**
      * Fetches the next batch of data.
      *
-     * @param overrideRequest overrides current remembered request, even if that fetch fails.
+     * @param overrideRequestParams overrides current remembered request, even if that fetch fails.
      * If null, the last request should be used.
      * @param lastResult result of the last fetch operation.
      * @return result of the fetch operation.
      */
-    suspend fun fetchNext(overrideRequest: TRequest?, lastResult: BatchFetchResult<TData>): BatchFetchResult<TData>
+    suspend fun fetchNext(
+        overrideRequestParams: TRequestParams?,
+        lastResult: BatchFetchResult<TData>,
+    ): BatchFetchResult<TData>
 }
