@@ -12,7 +12,7 @@ import com.tangem.utils.transformer.Transformer
 import com.tangem.blockchain.common.Amount
 
 @Suppress("UnusedPrivateMember")
-internal class SetConfirmStateDataStateTransformer(
+internal class SetConfirmStateConfirmTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val stakingGasEstimate: StakingGasEstimate,
@@ -42,6 +42,8 @@ internal class SetConfirmStateDataStateTransformer(
                     appCurrency = appCurrencyProvider(),
                     isFeeApproximate = false,
                 ),
+                isPrimaryButtonEnabled = true,
+                innerState = StakingStates.ConfirmStakingState.Data.InnerConfirmStakingState.CONFIRM,
             )
         } else {
             return this
