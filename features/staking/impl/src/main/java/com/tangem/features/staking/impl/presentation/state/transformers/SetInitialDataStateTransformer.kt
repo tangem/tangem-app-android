@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.common.extensions.remove
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
@@ -101,6 +102,7 @@ internal class SetInitialDataStateTransformer(
     private fun createInitialConfirmationState(): StakingStates.ConfirmStakingState {
         return ConfirmStakingStatePreviewData.confirmStakingState.copy(
             validatorState = ValidatorState.Content(
+                isClickable = true,
                 chosenValidator = yield.validators.first(),
                 availableValidators = yield.validators,
             ),
@@ -116,7 +118,7 @@ internal class SetInitialDataStateTransformer(
         val formattedMinApr = BigDecimalFormatter.formatPercent(
             percent = minApr,
             useAbsoluteValue = true,
-        )
+        ).remove("%")
         val formattedMaxApr = BigDecimalFormatter.formatPercent(
             percent = maxApr,
             useAbsoluteValue = true,

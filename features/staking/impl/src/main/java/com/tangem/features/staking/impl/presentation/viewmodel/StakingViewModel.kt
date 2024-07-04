@@ -107,7 +107,7 @@ internal class StakingViewModel @Inject constructor(
     private fun handleOnNextConfirmClick() {
         if (value.currentStep == StakingStep.Confirm &&
             (value.confirmStakingState as? StakingStates.ConfirmStakingState.Data)?.innerState ==
-            StakingStates.ConfirmStakingState.Data.InnerConfirmStakingState.CONFIRM
+            InnerConfirmStakingState.CONFIRM
         ) {
             viewModelScope.launch {
                 stakingTransaction?.unsignedTransaction?.let {
@@ -196,6 +196,15 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onNextClick()
     }
 
+    override fun onExploreClick() {
+        // TODO staking
+        innerRouter.openUrl("sendState.txUrl")
+    }
+
+    override fun onShareClick() {
+        TODO("Not yet implemented")
+    }
+
     fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
         innerRouter = router
         this.stakingStateRouter = stateRouter
@@ -280,7 +289,7 @@ internal class StakingViewModel @Inject constructor(
             ifRight = {
                 val gasEstimate = stakingTransaction?.gasEstimate ?: return@fold
                 stateController.update(
-                    SetConfirmStateConfirmTransformer(
+                    SetConfirmStateSuccessTransformer(
                         appCurrencyProvider = Provider { appCurrency },
                         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                         stakingGasEstimate = gasEstimate,

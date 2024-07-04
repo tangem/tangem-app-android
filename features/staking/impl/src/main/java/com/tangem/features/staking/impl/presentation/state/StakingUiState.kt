@@ -78,19 +78,13 @@ internal sealed class StakingStates {
     sealed class ConfirmStakingState : StakingStates() {
         data class Data(
             override val isPrimaryButtonEnabled: Boolean,
+            val innerState: InnerConfirmStakingState,
             val feeState: FeeState,
             val validatorState: ValidatorState,
             val notifications: ImmutableList<StakingNotification>,
             val footerText: String,
-            val innerState: InnerConfirmStakingState,
-        ) : ConfirmStakingState() {
-
-            enum class InnerConfirmStakingState {
-                CONFIRM,
-                IN_PROGRESS,
-                SUCCESS,
-            }
-        }
+            val transactionDoneState: TransactionDoneState,
+        ) : ConfirmStakingState()
 
         data class Empty(
             override val isPrimaryButtonEnabled: Boolean = false,
@@ -104,5 +98,4 @@ enum class StakingStep {
     Amount,
     Confirm,
     Validators,
-    Success,
 }

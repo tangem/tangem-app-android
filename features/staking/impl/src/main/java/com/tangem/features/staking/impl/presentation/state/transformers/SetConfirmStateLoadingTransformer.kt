@@ -22,8 +22,10 @@ internal class SetConfirmStateLoadingTransformer(
         return prevState.copy(
             confirmStakingState = StakingStates.ConfirmStakingState.Data(
                 isPrimaryButtonEnabled = false,
+                innerState = InnerConfirmStakingState.CONFIRM,
                 feeState = FeeState.Loading,
                 validatorState = ValidatorState.Content(
+                    isClickable = false,
                     chosenValidator = chosenValidator,
                     availableValidators = yield.validators,
                 ),
@@ -34,7 +36,7 @@ internal class SetConfirmStateLoadingTransformer(
                     ),
                 ),
                 footerText = "",
-                innerState = StakingStates.ConfirmStakingState.Data.InnerConfirmStakingState.CONFIRM,
+                transactionDoneState = TransactionDoneState.Empty,
             ),
         )
     }

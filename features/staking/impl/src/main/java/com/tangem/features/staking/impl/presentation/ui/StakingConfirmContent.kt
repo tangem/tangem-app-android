@@ -14,6 +14,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.common.ui.amountScreen.ui.AmountBlock
 import com.tangem.core.ui.components.SpacerHMax
+import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -23,6 +24,8 @@ import com.tangem.features.staking.impl.presentation.ui.block.NotificationsBlock
 import com.tangem.features.staking.impl.presentation.ui.block.StakingFeeBlock
 import com.tangem.features.staking.impl.presentation.ui.block.ValidatorBlock
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
+import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 
 @Composable
 internal fun StakingConfirmContent(
@@ -40,6 +43,13 @@ internal fun StakingConfirmContent(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
+        if (state.transactionDoneState is TransactionDoneState.Content) {
+            TransactionDoneTitle(
+                titleRes = R.string.sent_transaction_sent_title,
+                date = state.transactionDoneState.timestamp,
+            )
+        }
+
         AmountBlock(
             amountState = amountState,
             isClickDisabled = true,

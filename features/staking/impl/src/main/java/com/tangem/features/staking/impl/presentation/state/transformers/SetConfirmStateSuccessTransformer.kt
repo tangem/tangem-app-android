@@ -1,19 +1,18 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.transaction.StakingGasEstimate
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.features.staking.impl.presentation.state.FeeState
+import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
-import com.tangem.blockchain.common.Amount
-import com.tangem.features.staking.impl.presentation.state.InnerConfirmStakingState
 
-@Suppress("UnusedPrivateMember")
-internal class SetConfirmStateConfirmTransformer(
+internal class SetConfirmStateSuccessTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val stakingGasEstimate: StakingGasEstimate,
@@ -30,7 +29,8 @@ internal class SetConfirmStateConfirmTransformer(
     ): StakingStates.ConfirmStakingState {
         if (this is StakingStates.ConfirmStakingState.Data) {
             return copy(
-                innerState = InnerConfirmStakingState.CONFIRM,
+                isPrimaryButtonEnabled = true,
+                innerState = InnerConfirmStakingState.SUCCESS,
                 feeState = FeeState.Content(
                     fee = Fee.Common(
                         Amount(
@@ -44,8 +44,12 @@ internal class SetConfirmStateConfirmTransformer(
                     appCurrency = appCurrencyProvider(),
                     isFeeApproximate = false,
                 ),
-                validatorState = validatorState.copySealed(isClickable = true),
-                isPrimaryButtonEnabled = true,
+                validatorState = validatorState.copySealed(
+                    isClickable = false,
+                ),
+                transactionDoneState = TransactionDoneState.Content(
+                    timestamp = System.currentTimeMillis(),
+                ),
             )
         } else {
             return this
