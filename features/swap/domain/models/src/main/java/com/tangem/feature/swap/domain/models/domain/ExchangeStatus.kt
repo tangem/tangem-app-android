@@ -11,6 +11,7 @@ data class ExchangeStatusModel(
 enum class ExchangeStatus {
     New,
     Waiting,
+    WaitingTxHash,
     Confirming,
     Verifying,
     Exchanging,
@@ -19,4 +20,5 @@ enum class ExchangeStatus {
     Finished,
     Refunded,
     Cancelled,
+    Unknown,
 }
