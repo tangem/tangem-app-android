@@ -6,7 +6,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.promo.PromoBanner
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
-import com.tangem.domain.settings.ShouldShowTravalaPromoWalletUseCase
+import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -34,7 +34,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val getTokenListUseCase: GetTokenListUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
-    private val shouldShowTravalaPromoWalletUseCase: ShouldShowTravalaPromoWalletUseCase,
+    private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
     private val promoRepository: PromoRepository,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val backupValidator: BackupValidator,
@@ -45,18 +45,18 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
-        val travalaPromoFlow = flow { emit(promoRepository.getTravalaPromoBanner()) }
+        val promoFlow = flow { emit(promoRepository.getOkxPromoBanner()) }
         return combine(
             flow = getTokenListUseCase.launch(userWallet.walletId).conflate(),
             flow2 = isReadyToShowRateAppUseCase().conflate(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId).conflate(),
-            flow4 = shouldShowTravalaPromoWalletUseCase().conflate(),
-            flow5 = travalaPromoFlow.conflate(),
-        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, shouldShowTravalaPromo, promoBanner ->
+            flow4 = shouldShowSwapPromoWalletUseCase().conflate(),
+            flow5 = promoFlow.conflate(),
+        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, shouldShowPromo, promoBanner ->
 
             readyForRateAppNotification = true
             buildList {
-                addTravalaPromoNotification(shouldShowTravalaPromo, promoBanner, clickIntents)
+                addSwapPromoNotification(shouldShowPromo, promoBanner, clickIntents)
 
                 addCriticalNotifications(userWallet)
 
@@ -69,18 +69,16 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         }
     }
 
-    private fun MutableList<WalletNotification>.addTravalaPromoNotification(
+    private fun MutableList<WalletNotification>.addSwapPromoNotification(
         shouldShowPromo: Boolean,
         promoBanner: PromoBanner?,
         clickIntents: WalletClickIntents,
     ) {
         promoBanner ?: return
-        val promoNotification = WalletNotification.TravalaPromo(
+        val promoNotification = WalletNotification.SwapPromo(
             startDateTime = promoBanner.bannerState.timeline.start,
             endDateTime = promoBanner.bannerState.timeline.end,
-            bannerLink = promoBanner.bannerState.link,
-            onBookNowButtonClick = clickIntents::onTravalaPromoClick,
-            onCloseClick = clickIntents::onCloseTravalaPromoClick,
+            onCloseClick = clickIntents::onCloseSwapPromoClick,
         )
         addIf(
             element = promoNotification,
