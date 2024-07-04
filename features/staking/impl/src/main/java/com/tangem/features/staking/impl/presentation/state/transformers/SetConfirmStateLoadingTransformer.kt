@@ -10,14 +10,14 @@ import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("UnusedPrivateMember")
-internal class SetConfirmLoadingStateTransformer(
+internal class SetConfirmStateLoadingTransformer(
     private val yield: Yield,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         val possibleConfirmStakingState = prevState.confirmStakingState as? StakingStates.ConfirmStakingState.Data
         val possibleValidatorState = possibleConfirmStakingState?.validatorState as? ValidatorState.Content
-        val chosenValidator = possibleValidatorState?.chosenValidator ?: yield.validators[0] // TODO staking add sorting
+        val chosenValidator = possibleValidatorState?.chosenValidator ?: yield.validators[0]
 
         return prevState.copy(
             confirmStakingState = StakingStates.ConfirmStakingState.Data(
@@ -34,8 +34,7 @@ internal class SetConfirmLoadingStateTransformer(
                     ),
                 ),
                 footerText = "",
-                isSuccess = false,
-                isStaking = false, // TODO staking move to enum
+                innerState = StakingStates.ConfirmStakingState.Data.InnerConfirmStakingState.CONFIRM,
             ),
         )
     }
