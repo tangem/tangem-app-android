@@ -7,7 +7,7 @@ package com.tangem.pagination
  * @param TKey type of the key of the batch.
  * @param TUpdate type of the update request.
  */
-sealed class BatchAction<TRequestParams, TKey, TUpdate> {
+sealed class BatchAction<TKey, TRequestParams, TUpdate> {
 
     /**
      * Action to load the first batch.
@@ -16,7 +16,7 @@ sealed class BatchAction<TRequestParams, TKey, TUpdate> {
      */
     data class Reload<TRequestParams : Any>(
         val requestParams: TRequestParams,
-    ) : BatchAction<TRequestParams, Nothing, Nothing>()
+    ) : BatchAction<Nothing, TRequestParams, Nothing>()
 
     /**
      * Action to load the next batch.
@@ -27,7 +27,7 @@ sealed class BatchAction<TRequestParams, TKey, TUpdate> {
      */
     data class LoadMore<TRequestParams : Any>(
         val requestParams: TRequestParams? = null,
-    ) : BatchAction<TRequestParams, Nothing, Nothing>()
+    ) : BatchAction<Nothing, TRequestParams, Nothing>()
 
     /**
      * Action to update the batch.
@@ -38,7 +38,7 @@ sealed class BatchAction<TRequestParams, TKey, TUpdate> {
     class UpdateBatches<TKey, TUpdate>(
         val keys: Set<TKey>,
         val updateRequest: TUpdate,
-    ) : BatchAction<Nothing, TKey, TUpdate>()
+    ) : BatchAction<TKey, Nothing, TUpdate>()
 
     /**
      * Action to cancel the current batch loading.
@@ -57,5 +57,5 @@ sealed class BatchAction<TRequestParams, TKey, TUpdate> {
      */
     class CancelUpdates<TKey, TUpdate>(
         val predicate: (UpdateBatches<TKey, TUpdate>) -> Boolean,
-    ) : BatchAction<Nothing, TKey, TUpdate>()
+    ) : BatchAction<TKey, Nothing, TUpdate>()
 }
