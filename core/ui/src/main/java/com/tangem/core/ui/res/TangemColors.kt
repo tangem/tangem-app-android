@@ -101,6 +101,7 @@ class TangemColors internal constructor(
             private set
         var attention by mutableStateOf(attention)
             private set
+        var constant by mutableStateOf(constant)
 
         fun update(other: Icon) {
             primary1 = other.primary1
@@ -111,6 +112,7 @@ class TangemColors internal constructor(
             accent = other.accent
             warning = other.warning
             attention = other.attention
+            constant = other.constant
         }
     }
 
