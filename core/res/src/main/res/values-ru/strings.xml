@@ -568,7 +568,7 @@
   <string name="swapping_permission_header">Дать разрешение</string>
   <string name="swapping_permission_policy_type_footer">Укажите лимит доступа к выбранному токену</string>
   <string name="swapping_permission_rows_amount">Количество %s</string>
-  <string name="swapping_permission_subheader">Чтобы продолжить, вам нужно разрешить смарт-контракту 1inch использовать ваш %s</string>
+  <string name="swapping_permission_subheader">Чтобы продолжить, вам нужно разрешить смарт-контракту %1$s использовать ваш %2$s</string>
   <string name="swapping_permission_unlimited">Безлимитно</string>
   <string name="swapping_success_view_title">В процессе</string>
   <string name="swapping_swap_action">Обменять</string>
