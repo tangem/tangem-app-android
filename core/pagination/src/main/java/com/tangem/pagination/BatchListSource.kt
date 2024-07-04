@@ -11,19 +11,18 @@ import kotlinx.coroutines.flow.*
  * @param TKey Type of the key that identifies a batch.
  * @param TData Type of the data in the batch. Generally, it' a list of items.
  * @param TUpdate Type of the update request.
- * @param TError Type of the error that can occur during fetching or updating.
  * @property state State of the paginated data.
  * @property updateResults Flow of results of update requests.
  */
-interface BatchListSource<TKey, TData, TUpdate, TError> {
-    val state: StateFlow<BatchListState<TKey, TData, TError>>
-    val updateResults: SharedFlow<Pair<TUpdate, FetchUpdateResult<TKey, TData, TError>>>
+interface BatchListSource<TKey, TData, TUpdate> {
+    val state: StateFlow<BatchListState<TKey, TData>>
+    val updateResults: SharedFlow<Pair<TUpdate, BatchUpdateResult<TKey, TData>>>
 }
 
 /**
  * Creates a new [BatchListSource] with the provided configuration.
  *
- * @param ioDispatcher Dispatcher for IO operations.
+ * @param fetchDispatcher Dispatcher for fetch operations.
  * @param context Context for batching.
  * @param generateNewKey Function to generate a new key for a batch.
  * @param batchFetcher Function to fetch a batch of data.
@@ -31,18 +30,18 @@ interface BatchListSource<TKey, TData, TUpdate, TError> {
  * @return New instance of [BatchListSource].
  */
 @Suppress("FunctionNaming")
-fun <TKey, TData, TRequest : Any, TError> BatchListSource(
-    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+fun <TKey, TData, TRequest : Any> BatchListSource(
+    fetchDispatcher: CoroutineDispatcher = Dispatchers.IO,
     context: BatchingContext<TRequest, TKey, Nothing>,
     generateNewKey: suspend (List<TKey>) -> TKey,
-    batchFetcher: BatchFetcher<TRequest, TData, TError>,
-): BatchListSource<TKey, TData, Nothing, TError> =
-    BatchListSourceImpl(ioDispatcher, context, generateNewKey, batchFetcher, null)
+    batchFetcher: BatchFetcher<TRequest, TData>,
+): BatchListSource<TKey, TData, Nothing> =
+    DefaultBatchListSource(fetchDispatcher, context, generateNewKey, batchFetcher, null)
 
 /**
  * Creates a new [BatchListSource] with the provided configuration.
  *
- * @param ioDispatcher Dispatcher for IO operations.
+ * @param fetchDispatcher Dispatcher for fetch operations.
  * @param context Context for batching.
  * @param generateNewKey Function to generate a new key for a batch.
  * @param batchFetcher Function to fetch a batch of data.
@@ -51,25 +50,25 @@ fun <TKey, TData, TRequest : Any, TError> BatchListSource(
  * @return New instance of [BatchListSource].
  */
 @Suppress("FunctionNaming")
-fun <TKey, TData, TUpdate, TRequest : Any, TError> BatchListSource(
-    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    context: BatchingContext<TRequest, TKey, TUpdate>,
+fun <TKey, TData, TUpdate, TRequestParams : Any> BatchListSource(
+    fetchDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    context: BatchingContext<TRequestParams, TKey, TUpdate>,
     generateNewKey: suspend (List<TKey>) -> TKey,
-    batchFetcher: BatchFetcher<TRequest, TData, TError>,
-    updateFetcher: BatchUpdateFetcher<TKey, TData, TError, TUpdate>,
-): BatchListSource<TKey, TData, TUpdate, TError> =
-    BatchListSourceImpl(ioDispatcher, context, generateNewKey, batchFetcher, updateFetcher)
+    batchFetcher: BatchFetcher<TRequestParams, TData>,
+    updateFetcher: BatchUpdateFetcher<TKey, TData, TUpdate>,
+): BatchListSource<TKey, TData, TUpdate> =
+    DefaultBatchListSource(fetchDispatcher, context, generateNewKey, batchFetcher, updateFetcher)
 
-private class BatchListSourceImpl<TKey, TData, TUpdate, TRequest : Any, TError>(
-    private val ioDispatcher: CoroutineDispatcher,
-    private val context: BatchingContext<TRequest, TKey, TUpdate>,
+private class DefaultBatchListSource<TKey, TData, TUpdate, TRequestParams : Any>(
+    private val fetchDispatcher: CoroutineDispatcher,
+    private val context: BatchingContext<TRequestParams, TKey, TUpdate>,
     private val generateNewKey: suspend (List<TKey>) -> TKey,
-    private val batchFetcher: BatchFetcher<TRequest, TData, TError>,
-    private val updateFetcher: BatchUpdateFetcher<TKey, TData, TError, TUpdate>? = null,
-) : BatchListSource<TKey, TData, TUpdate, TError> {
+    private val batchFetcher: BatchFetcher<TRequestParams, TData>,
+    private val updateFetcher: BatchUpdateFetcher<TKey, TData, TUpdate>? = null,
+) : BatchListSource<TKey, TData, TUpdate> {
 
-    override val state = MutableStateFlow(BatchListState<TKey, TData, TError>(emptyList(), PaginationStatus.None))
-    override val updateResults = MutableSharedFlow<Pair<TUpdate, FetchUpdateResult<TKey, TData, TError>>>(
+    override val state = MutableStateFlow(BatchListState<TKey, TData>(emptyList(), PaginationStatus.None))
+    override val updateResults = MutableSharedFlow<Pair<TUpdate, BatchUpdateResult<TKey, TData>>>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
@@ -79,7 +78,7 @@ private class BatchListSourceImpl<TKey, TData, TUpdate, TRequest : Any, TError>(
     private val waitingUpdateJobs =
         MutableStateFlow<List<Pair<BatchAction.UpdateBatches<TKey, TUpdate>, Job>>>(emptyList())
 
-    private val lastRequestResult = MutableStateFlow<FetchResult<TData, TError>?>(null)
+    private val lastRequestResult = MutableStateFlow<BatchFetchResult<TData>?>(null)
     private var reloadActionJob: Job? = null
     private var loadMoreActionJob: Job? = null
 
@@ -105,14 +104,14 @@ private class BatchListSourceImpl<TKey, TData, TUpdate, TRequest : Any, TError>(
         }
     }
 
-    private fun collectActions(action: BatchAction<TRequest, TKey, TUpdate>) {
+    private fun collectActions(action: BatchAction<TRequestParams, TKey, TUpdate>) {
         when (action) {
             is BatchAction.Reload -> {
                 // Stop all tasks
                 loadMoreActionJob?.cancel()
                 reloadActionJob?.cancel()
                 stopAllUpdates()
-                reloadActionJob = scope.launch(ioDispatcher) {
+                reloadActionJob = scope.launch(fetchDispatcher) {
                     reloadTask(action)
                 }
             }
@@ -121,7 +120,7 @@ private class BatchListSourceImpl<TKey, TData, TUpdate, TRequest : Any, TError>(
                     return
                 }
 
-                loadMoreActionJob = scope.launch(ioDispatcher) {
+                loadMoreActionJob = scope.launch(fetchDispatcher) {
                     reloadActionJob?.join()
                     loadMoreTask(action)
                 }
@@ -129,7 +128,7 @@ private class BatchListSourceImpl<TKey, TData, TUpdate, TRequest : Any, TError>(
             is BatchAction.UpdateBatches -> {
                 if (updateFetcher == null) return
 
-                scope.launch(ioDispatcher) {
+                scope.launch(fetchDispatcher) {
                     val job = launch(start = CoroutineStart.LAZY) {
                         updateBatchesTask(action)
                     }
@@ -172,60 +171,63 @@ private class BatchListSourceImpl<TKey, TData, TUpdate, TRequest : Any, TError>(
         }
     }
 
-    private suspend fun reloadTask(action: BatchAction.Reload<TRequest>) {
+    private suspend fun reloadTask(action: BatchAction.Reload<TRequestParams>) {
         state.value = BatchListState(
             data = emptyList(),
             status = PaginationStatus.InitialLoading,
         )
 
         val res = runCatching {
-            batchFetcher.fetchFirst(action.request)
-        }.getOrElse { FetchResult.UnknownError(it) }
+            batchFetcher.fetchFirst(action.requestParams)
+        }.getOrElse { BatchFetchResult.Error(it) }
 
-        state.value = if (res is FetchResult.Success) {
-            val key = generateNewKey(listOf())
-            val batch = Batch(
-                key = key,
-                data = res.data,
-            )
-            BatchListState(
-                data = listOf(batch),
-                status = if (res.last) {
-                    PaginationStatus.EndOfPagination
-                } else {
-                    PaginationStatus.Paginating(res)
-                },
-            )
-        } else {
-            BatchListState(
-                data = emptyList(),
-                status = PaginationStatus.InitialLoadingError(
-                    error = (res as? FetchResult.Error)?.error,
-                ),
-            )
+        state.value = when (res) {
+            is BatchFetchResult.Success -> {
+                val key = generateNewKey(listOf())
+                val batch = Batch(
+                    key = key,
+                    data = res.data,
+                )
+                BatchListState(
+                    data = listOf(batch),
+                    status = if (res.last) {
+                        PaginationStatus.EndOfPagination
+                    } else {
+                        PaginationStatus.Paginating(res)
+                    },
+                )
+            }
+            is BatchFetchResult.Error -> {
+                BatchListState(
+                    data = emptyList(),
+                    status = PaginationStatus.InitialLoadingError(
+                        throwable = res.throwable,
+                    ),
+                )
+            }
         }
 
         lastRequestResult.value = res
     }
 
-    private suspend fun loadMoreTask(action: BatchAction.LoadMore<TRequest>) {
+    private suspend fun loadMoreTask(action: BatchAction.LoadMore<TRequestParams>) {
         val status = state.value.status
 
         if (status !is PaginationStatus.Paginating && status !is PaginationStatus.EndOfPagination) return
-        if (status is PaginationStatus.EndOfPagination && action.request == null) return
+        if (status is PaginationStatus.EndOfPagination && action.requestParams == null) return
 
         val lastResult = lastRequestResult.value ?: return
 
         state.update { it.copy(status = PaginationStatus.NextBatchLoading) }
 
         val res = runCatching {
-            batchFetcher.fetchNext(action.request, lastResult)
-        }.getOrElse { FetchResult.UnknownError(it) }
+            batchFetcher.fetchNext(action.requestParams, lastResult)
+        }.getOrElse { BatchFetchResult.Error(it) }
 
         lastRequestResult.value = lastResult
 
         state.update { currentState ->
-            if (res is FetchResult.Success) {
+            if (res is BatchFetchResult.Success) {
                 val newBatch = Batch(
                     key = generateNewKey(currentState.data.map { it.key }),
                     data = res.data,
@@ -255,10 +257,10 @@ private class BatchListSourceImpl<TKey, TData, TUpdate, TRequest : Any, TError>(
 
         val result = updateFetcher.fetchUpdate(
             toUpdate = batchesToUpdate,
-            updateRequest = action.request,
+            updateRequest = action.updateRequest,
         )
 
-        if (result is FetchUpdateResult.Success) {
+        if (result is BatchUpdateResult.Success) {
             state.update { currentState ->
                 val resMap = result.data.associateBy { it.key }
                 currentState.copy(
@@ -269,7 +271,7 @@ private class BatchListSourceImpl<TKey, TData, TUpdate, TRequest : Any, TError>(
             }
         }
 
-        updateResults.emit(action.request to result)
+        updateResults.emit(action.updateRequest to result)
     }
 
     private fun stopAllUpdates() {
