@@ -543,6 +543,8 @@
   <string name="story_meet_title">Meet Tangem</string>
   <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
   <string name="story_web3_title">Web 3.0 Compatible</string>
+  <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
+  <string name="swap_promo_title">New Swap Provider Available!</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
   <string name="swapping_alert_dex_description">The amount includes the service provider\'s fee.</string>
   <string name="swapping_alert_title">Fees</string>
