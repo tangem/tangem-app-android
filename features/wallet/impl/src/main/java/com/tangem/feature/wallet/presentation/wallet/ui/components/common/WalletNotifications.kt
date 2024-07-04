@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.notifications.NotificationWithBackground
+import com.tangem.core.ui.components.notifications.OkxPromoNotification
 import com.tangem.core.ui.components.notifications.TravalaNotificationWithBackground
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
@@ -29,7 +29,7 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
             // TODO develop promo banner general component
             when (it) {
                 is WalletNotification.SwapPromo -> {
-                    NotificationWithBackground(
+                    OkxPromoNotification(
                         config = it.config,
                         modifier = modifier.animateItemPlacement(),
                     )
