@@ -24,7 +24,6 @@ class CreateTransactionUseCase(
         userWalletId: UserWalletId,
         network: Network,
         txExtras: TransactionExtras? = null,
-        isSwap: Boolean = false,
         hash: String? = null,
     ) = Either.catch {
         requireNotNull(
@@ -35,7 +34,6 @@ class CreateTransactionUseCase(
                 destination = destination,
                 userWalletId = userWalletId,
                 network = network,
-                isSwap = isSwap,
                 txExtras = txExtras,
                 hash = hash,
             ),
