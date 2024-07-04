@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
     private val prefetchDistance: Int,
     private val batchSize: Int,
-    private val fetch: (request: Request<TRequestParams>) -> BatchFetchResult<TData>,
+    private val fetch: suspend (request: Request<TRequestParams>) -> BatchFetchResult<TData>,
 ) : BatchFetcher<TRequestParams, TData> {
 
     data class Request<TRequest>(
@@ -28,11 +28,11 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
 
     private val lastRequest = MutableStateFlow<Request<TRequestParams>?>(null)
 
-    override suspend fun fetchFirst(request: TRequestParams): BatchFetchResult<TData> {
+    override suspend fun fetchFirst(requestParams: TRequestParams): BatchFetchResult<TData> {
         val req = Request(
             offset = 0,
             limit = prefetchDistance,
-            request = request,
+            request = requestParams,
         )
 
         val res = fetch(req)
@@ -41,21 +41,21 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
     }
 
     override suspend fun fetchNext(
-        overrideRequest: TRequestParams?,
+        overrideRequestParams: TRequestParams?,
         lastResult: BatchFetchResult<TData>,
     ): BatchFetchResult<TData> {
         val last = lastRequest.value
         requireNotNull(last)
 
         val req = if (lastResult is BatchFetchResult.Success) {
-            if (lastResult.last && overrideRequest == null) {
+            if (lastResult.last && overrideRequestParams == null) {
                 return BatchFetchResult.Error(EndOfPaginationException())
             }
 
             Request(
                 offset = last.offset + last.limit,
                 limit = batchSize,
-                request = overrideRequest ?: last.request,
+                request = overrideRequestParams ?: last.request,
             )
         } else {
             last
