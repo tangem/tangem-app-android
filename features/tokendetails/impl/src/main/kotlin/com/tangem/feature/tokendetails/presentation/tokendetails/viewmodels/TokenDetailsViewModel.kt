@@ -5,6 +5,7 @@ import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.core.ui.clipboard.ClipboardManager
@@ -709,14 +710,26 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onSwapPromoDismiss() {
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoTokenUseCase.neverToShow()
-            analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Close)
+            analyticsEventsHandler.send(
+                TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                    source = AnalyticsParam.ScreensSources.Token,
+                    programName = TokenSwapPromoAnalyticsEvent.ProgramName.OKX,
+                    action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
+                ),
+            )
         }
     }
 
     override fun onSwapPromoClick() {
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoTokenUseCase.neverToShow()
-            analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Exchange(cryptoCurrency.symbol))
+            analyticsEventsHandler.send(
+                TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                    source = AnalyticsParam.ScreensSources.Token,
+                    programName = TokenSwapPromoAnalyticsEvent.ProgramName.OKX,
+                    action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
+                ),
+            )
         }
         onSwapClick(ScenarioUnavailabilityReason.None)
     }
