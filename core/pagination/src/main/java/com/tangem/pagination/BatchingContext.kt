@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.Flow
  *
  * @see BatchListSource
  */
-class BatchingContext<TRequestParams, TKey, TUpdate>(
-    val actionsFlow: Flow<BatchAction<TRequestParams, TKey, TUpdate>>,
+class BatchingContext<TKey, TRequestParams, TUpdate>(
+    val actionsFlow: Flow<BatchAction<TKey, TRequestParams, TUpdate>>,
     val coroutineScope: CoroutineScope,
 )
