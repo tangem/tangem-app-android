@@ -561,7 +561,7 @@
   <string name="swapping_permission_header">Give Permission</string>
   <string name="swapping_permission_policy_type_footer">Specify the approve limit for the selected token</string>
   <string name="swapping_permission_rows_amount">Amount %s</string>
-  <string name="swapping_permission_subheader">To continue, grant 1inch smart contracts permission to use your %s</string>
+  <string name="swapping_permission_subheader">To continue, grant %1$s smart contracts permission to use your %2$s</string>
   <string name="swapping_permission_unlimited">Unlimited</string>
   <string name="swapping_success_view_title">In progress</string>
   <string name="swapping_swap_action">Swap</string>
