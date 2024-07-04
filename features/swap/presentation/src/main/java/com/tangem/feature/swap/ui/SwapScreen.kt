@@ -1,13 +1,14 @@
 package com.tangem.feature.swap.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.tangem.common.ui.bottomsheets.GiveTxPermissionBottomSheet
-import com.tangem.common.ui.bottomsheets.state.GiveTxPermissionBottomSheetConfig
+import com.tangem.common.ui.bottomsheet.permission.GiveTxPermissionBottomSheet
+import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
