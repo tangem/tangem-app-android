@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Context for working with [BatchListSource].
  *
- * @param TRequest type of the request.
+ * @param TRequestParams type of the request.
  * @param TKey type of the key.
  * @param TUpdate type of the update request.
  *
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.Flow
  *
  * @see BatchListSource
  */
-class BatchingContext<TRequest, TKey, TUpdate>(
-    val actionsFlow: Flow<BatchAction<TRequest, TKey, TUpdate>>,
+class BatchingContext<TRequestParams, TKey, TUpdate>(
+    val actionsFlow: Flow<BatchAction<TRequestParams, TKey, TUpdate>>,
     val coroutineScope: CoroutineScope,
 )
