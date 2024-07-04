@@ -127,6 +127,7 @@ include(":core:utils")
 include(":core:deep-links")
 include(":core:deep-links:global")
 include(":core:decompose")
+include(":core:pagination")
 // endregion Core modules
 
 // region Common modules
