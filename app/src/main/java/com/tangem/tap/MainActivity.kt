@@ -174,19 +174,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-
-        /*
-         * We need to manually change the background color of the activity when the UI mode changes to prevent
-         * flickering when navigating between fragments.
-         *
-
-         * `android:configChanges="uiMode"` is set in the manifest.
-         * */
-        updateAppBackground()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         // We need to call it before onCreate to prevent unnecessary activity recreation
         installAppTheme()
@@ -294,10 +281,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         return tangemApplication.getAppThemeModeUseCase()
             .filterNotNull()
+            .distinctUntilChanged()
             .map { maybeMode ->
                 maybeMode.getOrElse { AppThemeMode.DEFAULT }
             }
-            .distinctUntilChanged()
             .shareIn(
                 scope = lifecycleScope,
                 started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
@@ -365,6 +352,19 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         MutableAppThemeModeHolder.value = appThemeMode
         MutableAppThemeModeHolder.isDarkThemeActive = isDarkTheme()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        /*
+         * We need to manually change the background color of the activity when the UI mode changes to prevent
+         * flickering when navigating between fragments.
+         *
+
+         * `android:configChanges="uiMode"` is set in the manifest.
+         * */
+        updateAppBackground()
     }
 
     private fun updateAppBackground() {
