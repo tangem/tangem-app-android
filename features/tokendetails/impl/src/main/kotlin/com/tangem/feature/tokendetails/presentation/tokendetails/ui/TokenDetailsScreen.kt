@@ -32,7 +32,7 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBotto
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.notifications.NotificationWithBackground
+import com.tangem.core.ui.components.notifications.OkxPromoNotification
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.event.EventEffect
@@ -111,7 +111,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                     contentType = { it.config::class.java },
                     itemContent = {
                         if (it is TokenDetailsNotification.SwapPromo) {
-                            NotificationWithBackground(
+                            OkxPromoNotification(
                                 config = it.config,
                                 modifier = itemModifier.animateItemPlacement(),
                             )
