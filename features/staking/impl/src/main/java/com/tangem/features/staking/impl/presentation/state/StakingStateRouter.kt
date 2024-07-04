@@ -68,6 +68,7 @@ internal class StakingStateRouter(
     }
 
     fun showSuccess() {
-        stateController.update { it.copy(currentStep = StakingStep.Success) }
+        // stateController.update { it.copy(currentStep = StakingStep.Success) }
+// [REDACTED_TODO_COMMENT]
     }
 }

@@ -82,9 +82,15 @@ internal sealed class StakingStates {
             val validatorState: ValidatorState,
             val notifications: ImmutableList<StakingNotification>,
             val footerText: String,
-            val isSuccess: Boolean,
-            val isStaking: Boolean,
-        ) : ConfirmStakingState()
+            val innerState: InnerConfirmStakingState,
+        ) : ConfirmStakingState() {
+
+            enum class InnerConfirmStakingState {
+                CONFIRM,
+                IN_PROGRESS,
+                SUCCESS,
+            }
+        }
 
         data class Empty(
             override val isPrimaryButtonEnabled: Boolean = false,
