@@ -36,9 +36,10 @@ data class SwapProvider(
     val privacyPolicy: String?,
 )
 
-enum class ExchangeProviderType {
-    DEX,
-    CEX,
+enum class ExchangeProviderType(val providerName: String) {
+    DEX("DEX"),
+    CEX("CEX"),
+    DEX_BRIDGE("DEX/Bridge"),
 }
 
 /**
