@@ -55,6 +55,7 @@ sealed class ProviderState {
         NONE, CLICK, SELECT
     }
 
+    // Prefix will be disabled in 5.12 but mechanism is still implemented
     @Immutable
     enum class PrefixType {
         NONE, PROVIDED_BY
