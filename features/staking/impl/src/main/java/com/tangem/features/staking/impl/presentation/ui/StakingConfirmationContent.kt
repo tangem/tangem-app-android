@@ -28,7 +28,7 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 
 @Composable
-internal fun StakingConfirmContent(
+internal fun StakingConfirmationContent(
     amountState: AmountState,
     state: StakingStates.ConfirmationState,
     clickIntents: StakingClickIntents,
@@ -78,10 +78,10 @@ private fun FooterText(text: String) {
 @Preview(widthDp = 360, showBackground = true)
 @Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_StakingConfirmContent() {
+private fun Preview_StakingConfirmationContent() {
     TangemThemePreview {
         Column(Modifier.background(TangemTheme.colors.background.primary)) {
-            StakingConfirmContent(
+            StakingConfirmationContent(
                 amountState = AmountStatePreviewData.amountState,
                 state = ConfirmationStatePreviewData.assentStakingState,
                 clickIntents = StakingClickIntentsStub,

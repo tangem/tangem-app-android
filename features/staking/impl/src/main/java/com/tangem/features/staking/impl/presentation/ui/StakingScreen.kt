@@ -151,7 +151,7 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                     isBalanceHiding = uiState.isBalanceHidden,
                     clickIntents = uiState.clickIntents,
                 )
-                StakingStep.Confirmation -> StakingConfirmContent(
+                StakingStep.Confirmation -> StakingConfirmationContent(
                     amountState = uiState.amountState,
                     state = uiState.confirmationState,
                     clickIntents = uiState.clickIntents,
