@@ -131,7 +131,16 @@ private fun getButtonData(currentState: StakingUiState): Pair<Int, (() -> Unit)?
         StakingStep.Amount,
         -> R.string.common_next to currentState.clickIntents::onNextClick
         StakingStep.Confirm -> {
-            R.string.common_stake to currentState.clickIntents::onBackClick
+            val confirmStakingState = currentState.confirmStakingState
+            if (confirmStakingState is StakingStates.ConfirmStakingState.Data) {
+                if (confirmStakingState.innerState == InnerConfirmStakingState.SUCCESS) {
+                    R.string.common_close to currentState.clickIntents::onBackClick
+                } else {
+                    R.string.common_stake to currentState.clickIntents::onNextClick
+                }
+            } else {
+                R.string.common_close to currentState.clickIntents::onBackClick
+            }
         }
         StakingStep.Validators -> R.string.common_continue to currentState.clickIntents::onNextClick
         StakingStep.RewardsValidators -> R.string.common_next to null
