@@ -40,7 +40,7 @@ internal class StakingStateController @Inject constructor() {
             initialInfoState = StakingStates.InitialInfoState.Empty(),
             amountState = AmountState.Empty(),
             rewardsValidatorsState = StakingStates.RewardsValidatorsState.Empty(),
-            confirmStakingState = StakingStates.ConfirmStakingState.Empty(),
+            confirmationState = StakingStates.ConfirmationState.Empty(),
             isBalanceHidden = false,
             event = consumedEvent(),
             bottomSheetConfig = null,

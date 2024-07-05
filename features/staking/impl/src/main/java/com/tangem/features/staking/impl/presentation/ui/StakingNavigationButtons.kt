@@ -30,8 +30,8 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 
 @Composable
 internal fun StakingNavigationButtons(uiState: StakingUiState, modifier: Modifier = Modifier) {
-    val confirmInnerState = (uiState.confirmStakingState as? StakingStates.ConfirmStakingState.Data)?.innerState
-    val isSuccessState = confirmInnerState == InnerConfirmStakingState.SUCCESS
+    val confirmInnerState = (uiState.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState
+    val isSuccessState = confirmInnerState == InnerConfirmationStakingState.COMPLETED
 
     Column(
         modifier = modifier
@@ -60,11 +60,11 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
 
     val isButtonsVisible = isPrevButtonVisible(uiState.currentStep)
 
-    val innerConfirmState = (uiState.confirmStakingState as? StakingStates.ConfirmStakingState.Data)?.innerState
-    val showTangemIcon = uiState.currentStep == StakingStep.Confirm &&
+    val innerConfirmState = (uiState.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState
+    val showTangemIcon = uiState.currentStep == StakingStep.Confirmation &&
         (
-            innerConfirmState == InnerConfirmStakingState.IN_PROGRESS ||
-                innerConfirmState == InnerConfirmStakingState.CONFIRM
+            innerConfirmState == InnerConfirmationStakingState.IN_PROGRESS ||
+                innerConfirmState == InnerConfirmationStakingState.ASSENT
             )
 
     val (buttonTextId, buttonClick) = getButtonData(
@@ -130,10 +130,10 @@ private fun getButtonData(currentState: StakingUiState): Pair<Int, (() -> Unit)?
         }
         StakingStep.Amount,
         -> R.string.common_next to currentState.clickIntents::onNextClick
-        StakingStep.Confirm -> {
-            val confirmStakingState = currentState.confirmStakingState
-            if (confirmStakingState is StakingStates.ConfirmStakingState.Data) {
-                if (confirmStakingState.innerState == InnerConfirmStakingState.SUCCESS) {
+        StakingStep.Confirmation -> {
+            val confirmationState = currentState.confirmationState
+            if (confirmationState is StakingStates.ConfirmationState.Data) {
+                if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
                     R.string.common_close to currentState.clickIntents::onBackClick
                 } else {
                     R.string.common_stake to currentState.clickIntents::onNextClick
@@ -150,7 +150,7 @@ private fun getButtonData(currentState: StakingUiState): Pair<Int, (() -> Unit)?
 private fun isPrevButtonVisible(step: StakingStep): Boolean = when (step) {
     StakingStep.InitialInfo,
     StakingStep.RewardsValidators,
-    StakingStep.Confirm,
+    StakingStep.Confirmation,
     -> false
     StakingStep.Amount,
     StakingStep.Validators,
@@ -161,7 +161,7 @@ private fun isButtonEnabled(uiState: StakingUiState): Boolean {
     return when (uiState.currentStep) {
         StakingStep.InitialInfo -> uiState.initialInfoState.isPrimaryButtonEnabled
         StakingStep.Amount -> uiState.amountState.isPrimaryButtonEnabled
-        StakingStep.Confirm -> uiState.confirmStakingState.isPrimaryButtonEnabled
+        StakingStep.Confirmation -> uiState.confirmationState.isPrimaryButtonEnabled
         StakingStep.RewardsValidators -> uiState.rewardsValidatorsState.isPrimaryButtonEnabled
         StakingStep.Validators -> true
     }

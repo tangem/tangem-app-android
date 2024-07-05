@@ -10,10 +10,10 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
 import com.tangem.blockchain.common.Amount
-import com.tangem.features.staking.impl.presentation.state.InnerConfirmStakingState
+import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 
 @Suppress("UnusedPrivateMember")
-internal class SetConfirmStateConfirmTransformer(
+internal class SetConfirmationStateAssentTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val stakingGasEstimate: StakingGasEstimate,
@@ -21,16 +21,16 @@ internal class SetConfirmStateConfirmTransformer(
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         return prevState.copy(
-            confirmStakingState = prevState.confirmStakingState.copyWrapped(stakingGasEstimate),
+            confirmationState = prevState.confirmationState.copyWrapped(stakingGasEstimate),
         )
     }
 
-    private fun StakingStates.ConfirmStakingState.copyWrapped(
+    private fun StakingStates.ConfirmationState.copyWrapped(
         gasEstimate: StakingGasEstimate,
-    ): StakingStates.ConfirmStakingState {
-        if (this is StakingStates.ConfirmStakingState.Data) {
+    ): StakingStates.ConfirmationState {
+        if (this is StakingStates.ConfirmationState.Data) {
             return copy(
-                innerState = InnerConfirmStakingState.CONFIRM,
+                innerState = InnerConfirmationStakingState.ASSENT,
                 feeState = FeeState.Content(
                     fee = Fee.Common(
                         Amount(

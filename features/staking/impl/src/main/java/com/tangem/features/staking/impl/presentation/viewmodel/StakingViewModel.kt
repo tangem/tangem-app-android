@@ -97,18 +97,15 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onNextClick() {
-        handleOnNextConfirmClick()
+        handleOnNextConfirmationClick()
         stakingStateRouter.onNextClick()
-        if (value.currentStep == StakingStep.Confirm) {
+        if (isAssentState()) {
             initStaking()
         }
     }
 
-    private fun handleOnNextConfirmClick() {
-        if (value.currentStep == StakingStep.Confirm &&
-            (value.confirmStakingState as? StakingStates.ConfirmStakingState.Data)?.innerState ==
-            InnerConfirmStakingState.CONFIRM
-        ) {
+    private fun handleOnNextConfirmationClick() {
+        if (isAssentState()) {
             viewModelScope.launch {
                 stakingTransaction?.unsignedTransaction?.let {
                     sendStakingTransaction(TransactionData.Compiled(value = it.hexToBytes()))
@@ -120,7 +117,7 @@ internal class StakingViewModel @Inject constructor(
     private fun initStaking() {
         viewModelScope.launch {
             stateController.update(
-                SetConfirmStateLoadingTransformer(
+                SetConfirmationStateLoadingTransformer(
                     yield = yield,
                 ),
             )
@@ -144,7 +141,7 @@ internal class StakingViewModel @Inject constructor(
             val stakingGasEstimate = stakingTransaction.gasEstimate ?: error("Can't get fee info")
 
             stateController.update(
-                SetConfirmStateConfirmTransformer(
+                SetConfirmationStateAssentTransformer(
                     appCurrencyProvider = Provider { appCurrency },
                     cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                     stakingGasEstimate = stakingGasEstimate,
@@ -263,7 +260,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private suspend fun sendStakingTransaction(txData: TransactionData) {
-        stateController.update(SetConfirmStateInProgressTransformer())
+        stateController.update(SetConfirmationStateInProgressTransformer())
 
         sendTransactionUseCase(
             txData = txData,
@@ -274,7 +271,7 @@ internal class StakingViewModel @Inject constructor(
                 Timber.e(error.toString())
                 val gasEstimate = stakingTransaction?.gasEstimate ?: return@fold
                 stateController.update(
-                    SetConfirmStateConfirmTransformer(
+                    SetConfirmationStateAssentTransformer(
                         appCurrencyProvider = Provider { appCurrency },
                         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                         stakingGasEstimate = gasEstimate,
@@ -289,7 +286,7 @@ internal class StakingViewModel @Inject constructor(
             ifRight = {
                 val gasEstimate = stakingTransaction?.gasEstimate ?: return@fold
                 stateController.update(
-                    SetConfirmStateSuccessTransformer(
+                    SetConfirmationStateCompletedTransformer(
                         appCurrencyProvider = Provider { appCurrency },
                         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                         stakingGasEstimate = gasEstimate,
@@ -298,5 +295,11 @@ internal class StakingViewModel @Inject constructor(
                 // sendScreenAnalyticSender.sendTransaction()
             },
         )
+    }
+
+    private fun isAssentState(): Boolean {
+        return value.currentStep == StakingStep.Confirmation &&
+            (value.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState ==
+            InnerConfirmationStakingState.ASSENT
     }
 }

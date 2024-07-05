@@ -12,7 +12,7 @@ import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
 
-internal class SetConfirmStateSuccessTransformer(
+internal class SetConfirmationStateCompletedTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val stakingGasEstimate: StakingGasEstimate,
@@ -20,17 +20,17 @@ internal class SetConfirmStateSuccessTransformer(
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         return prevState.copy(
-            confirmStakingState = prevState.confirmStakingState.copyWrapped(stakingGasEstimate),
+            confirmationState = prevState.confirmationState.copyWrapped(stakingGasEstimate),
         )
     }
 
-    private fun StakingStates.ConfirmStakingState.copyWrapped(
+    private fun StakingStates.ConfirmationState.copyWrapped(
         gasEstimate: StakingGasEstimate,
-    ): StakingStates.ConfirmStakingState {
-        if (this is StakingStates.ConfirmStakingState.Data) {
+    ): StakingStates.ConfirmationState {
+        if (this is StakingStates.ConfirmationState.Data) {
             return copy(
                 isPrimaryButtonEnabled = true,
-                innerState = InnerConfirmStakingState.SUCCESS,
+                innerState = InnerConfirmationStakingState.COMPLETED,
                 feeState = FeeState.Content(
                     fee = Fee.Common(
                         Amount(

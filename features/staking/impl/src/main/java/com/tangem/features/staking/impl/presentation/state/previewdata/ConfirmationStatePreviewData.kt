@@ -12,7 +12,7 @@ import com.tangem.features.staking.impl.presentation.state.ValidatorState
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
-internal object ConfirmStakingStatePreviewData {
+internal object ConfirmationStatePreviewData {
 
     private val validatorList = listOf(
         Yield.Validator(
@@ -62,9 +62,9 @@ internal object ConfirmStakingStatePreviewData {
         ),
     )
 
-    val confirmStakingState = StakingStates.ConfirmStakingState.Data(
+    val assentStakingState = StakingStates.ConfirmationState.Data(
         isPrimaryButtonEnabled = true,
-        innerState = InnerConfirmStakingState.CONFIRM,
+        innerState = InnerConfirmationStakingState.ASSENT,
         feeState = FeeState.Content(
             fee = fee,
             rate = BigDecimal.ONE,
