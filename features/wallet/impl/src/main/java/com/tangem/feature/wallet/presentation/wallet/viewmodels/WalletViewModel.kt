@@ -4,11 +4,13 @@ import androidx.compose.runtime.MutableState
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.IsWalletsScrollPreviewEnabled
 import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
+import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -21,7 +23,6 @@ import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.DemonstrateWalletsScrollPreview.Direction
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletPullToRefreshConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
@@ -61,6 +62,7 @@ internal class WalletViewModel @Inject constructor(
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletDeepLinksHandler: WalletDeepLinksHandler,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
+    private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
 ) : ViewModel() {
 
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
@@ -178,7 +180,7 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    // We need to update the current wallet if the application was in the background for more than 10 seconds
+    // We need to update the current wallet quotes if the application was in the background for more than 10 seconds
     // and then returned to the foreground
     private fun subscribeToScreenBackgroundState() {
         screenLifecycleProvider.isBackgroundState
@@ -186,7 +188,7 @@ internal class WalletViewModel @Inject constructor(
                 refreshWalletJobHolder.cancel()
                 when {
                     isBackground -> needToRefreshTimer()
-                    needToRefreshWallet && !isBackground -> triggerRefreshWallet()
+                    needToRefreshWallet && !isBackground -> triggerRefreshWalletQuotes()
                 }
             }
             .launchIn(viewModelScope)
@@ -199,13 +201,15 @@ internal class WalletViewModel @Inject constructor(
         }.saveIn(refreshWalletJobHolder)
     }
 
-    private fun triggerRefreshWallet() {
+    private fun triggerRefreshWalletQuotes() {
         needToRefreshWallet = false
         val state = stateHolder.uiState.value
         val wallet = state.wallets.getOrNull(state.selectedWalletIndex) ?: return
-        wallet.pullToRefreshConfig.onRefresh.invoke(
-            WalletPullToRefreshConfig.ShowRefreshState(false),
-        )
+        viewModelScope.launch {
+            refreshMultiCurrencyWalletQuotesUseCase(wallet.walletCardState.id).getOrElse {
+                Timber.e("Failed to refreshMultiCurrencyWalletQuotesUseCase $it")
+            }
+        }.saveIn(refreshWalletJobHolder)
     }
 
     private suspend fun updateWallets(action: WalletsUpdateActionResolver.Action) {
