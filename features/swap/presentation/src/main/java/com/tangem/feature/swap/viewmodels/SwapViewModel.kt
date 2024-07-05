@@ -432,7 +432,9 @@ internal class SwapViewModel @Inject constructor(
             } else {
                 val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
                 val recommendedProvider = successLoadedData.keys.firstOrNull { it.isRecommended }
-                recommendedProvider ?: findBestQuoteProvider(successLoadedData) ?: consideredProviders.keys.first()
+                val bestQuotesProvider = findBestQuoteProvider(successLoadedData)
+                triggerPromoProviderEvent(recommendedProvider, bestQuotesProvider)
+                recommendedProvider ?: bestQuotesProvider ?: consideredProviders.keys.first()
             }
         } else {
             state.keys.first()
@@ -1170,11 +1172,28 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
+    private fun triggerPromoProviderEvent(recommendedProvider: SwapProvider?, bestQuotesProvider: SwapProvider?) {
+        // for now send event only for changelly
+        if (recommendedProvider == null ||
+            recommendedProvider.providerId != CHANGELLY_PROVIDER_ID ||
+            bestQuotesProvider == null
+        ) {
+            return
+        }
+        val event = if (recommendedProvider.providerId == bestQuotesProvider.providerId) {
+            SwapEvents.ChangellyActivity(SwapEvents.ChangellyActivity.PromoState.Native)
+        } else {
+            SwapEvents.ChangellyActivity(SwapEvents.ChangellyActivity.PromoState.Recommended)
+        }
+        analyticsEventHandler.send(event = event)
+    }
+
     private companion object {
         const val loggingTag = "SwapViewModel"
         const val INITIAL_AMOUNT = ""
         const val UPDATE_DELAY = 10000L
         const val DEBOUNCE_AMOUNT_DELAY = 1000L
         const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
+        const val CHANGELLY_PROVIDER_ID = "changelly"
     }
 }
