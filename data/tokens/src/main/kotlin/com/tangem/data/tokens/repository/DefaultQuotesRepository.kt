@@ -51,6 +51,19 @@ internal class DefaultQuotesRepository(
             .flowOn(dispatchers.io)
     }
 
+    override suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>) {
+        withContext(dispatchers.io) {
+            val selectedAppCurrency = requireNotNull(
+                value = appPreferencesStore.getObjectSyncOrNull<CurrenciesResponse.Currency>(
+                    key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
+                ),
+                lazyMessage = { "Unable to get selected application currency to update quotes" },
+            )
+
+            fetchExpiredQuotes(currenciesIds, selectedAppCurrency.id, true)
+        }
+    }
+
     override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Set<Quote> {
         return withContext(dispatchers.io) {
             val selectedAppCurrency = requireNotNull(
