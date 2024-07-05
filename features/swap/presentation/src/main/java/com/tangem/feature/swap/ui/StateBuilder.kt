@@ -1557,11 +1557,7 @@ internal class StateBuilder(
             additionalBadge = badge,
             selectionType = selectionType,
             percentLowerThenBest = PercentDifference.Empty,
-            namePrefix = if (badge !is ProviderState.AdditionalBadge.Recommended) {
-                ProviderState.PrefixType.PROVIDED_BY
-            } else {
-                ProviderState.PrefixType.NONE
-            },
+            namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
         )
     }
@@ -1627,11 +1623,7 @@ internal class StateBuilder(
             subtitle = alertText,
             additionalBadge = ProviderState.AdditionalBadge.Empty,
             percentLowerThenBest = PercentDifference.Empty,
-            namePrefix = if (selectionType != ProviderState.SelectionType.SELECT) {
-                ProviderState.PrefixType.PROVIDED_BY
-            } else {
-                ProviderState.PrefixType.NONE
-            },
+            namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
         )
     }
