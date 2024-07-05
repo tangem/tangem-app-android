@@ -45,6 +45,7 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
             imageLarge = exchangeProvider.imageLargeUrl,
             termsOfUse = exchangeProvider.termsOfUse,
             privacyPolicy = exchangeProvider.privacyPolicy,
+            isRecommended = exchangeProvider.isRecommended,
         )
     }
 
@@ -61,6 +62,7 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
             imageLarge = additionalProvider.imageLargeUrl,
             termsOfUse = additionalProvider.termsOfUse,
             privacyPolicy = additionalProvider.privacyPolicy,
+            isRecommended = additionalProvider.isRecommended,
         )
     }
 
