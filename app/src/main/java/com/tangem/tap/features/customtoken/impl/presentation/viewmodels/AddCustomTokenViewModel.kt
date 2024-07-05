@@ -370,6 +370,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 val tokenAddress = convertTokenAddress(selectedNetwork, address)
+                    ?: error("TokenAddress is invalid")
+
                 featureInteractor.findToken(address = tokenAddress, blockchain = selectedNetwork)
             }
                 .onSuccess { token ->
@@ -602,7 +604,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
         val contractAddress = convertTokenAddress(
             blockchain = networkSelectorValue,
             address = uiState.form.contractAddressInputField.value,
-        )
+        ) ?: return false // invalid address can't be "already added"
+
         return currentCryptoCurrencies
             .filterIsInstance<CryptoCurrency.Token>()
             .any { token ->
@@ -859,7 +862,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     val contractAddress = convertTokenAddress(
                         blockchain = blockchain,
                         address = foundToken?.network?.contractAddress ?: uiState.form.contractAddressInputField.value,
-                    )
+                    ) ?: error("Contract address is invalid") // impossible to add a token with invalid address
+
                     CustomCurrency.CustomToken(
                         token = Token(
                             name = uiState.form.tokenNameInputField.value,
@@ -897,7 +901,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
     }
 
-    private fun convertTokenAddress(blockchain: Blockchain, address: String): String {
+    /** Convert [address] to single address for specific [blockchain] or return null if invalid */
+    private fun convertTokenAddress(blockchain: Blockchain, address: String): String? {
         return when (blockchain) {
             Blockchain.Hedera, Blockchain.HederaTestnet -> hederaAddressConverter.convertToTokenId(address)
             Blockchain.Cardano -> {
