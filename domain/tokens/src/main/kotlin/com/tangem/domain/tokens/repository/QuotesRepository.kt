@@ -31,4 +31,6 @@ interface QuotesRepository {
     suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Set<Quote>
 
     suspend fun getQuoteSync(currencyId: CryptoCurrency.ID): Quote?
+
+    suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>)
 }

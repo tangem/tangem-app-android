@@ -25,6 +25,7 @@ data class CryptoCurrencySwapInfo(
  *
  * @property providerId provider id
  * @property rateTypes supported rate types
+ * @property isRecommended flag that indicates if this provider is recommended
  */
 data class SwapProvider(
     val providerId: String,
@@ -34,6 +35,7 @@ data class SwapProvider(
     val imageLarge: String,
     val termsOfUse: String?,
     val privacyPolicy: String?,
+    val isRecommended: Boolean,
 )
 
 enum class ExchangeProviderType(val providerName: String) {

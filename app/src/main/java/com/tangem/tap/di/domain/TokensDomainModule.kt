@@ -370,4 +370,16 @@ internal object TokensDomainModule {
             networksRepository = networksRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideRefreshMultiCurrencyWalletQuotesUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+    ): RefreshMultiCurrencyWalletQuotesUseCase {
+        return RefreshMultiCurrencyWalletQuotesUseCase(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+        )
+    }
 }
