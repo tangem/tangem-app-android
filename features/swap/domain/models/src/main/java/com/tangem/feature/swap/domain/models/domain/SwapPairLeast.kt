@@ -26,6 +26,9 @@ data class CryptoCurrencySwapInfo(
  * @property providerId provider id
  * @property rateTypes supported rate types
  * @property isRecommended flag that indicates if this provider is recommended
+ *
+ * Uses to store transaction data in datastore, when extends - should always add default value
+ * to support backward compatibility
  */
 data class SwapProvider(
     val providerId: String,
@@ -35,7 +38,7 @@ data class SwapProvider(
     val imageLarge: String,
     val termsOfUse: String?,
     val privacyPolicy: String?,
-    val isRecommended: Boolean,
+    val isRecommended: Boolean = false,
 )
 
 enum class ExchangeProviderType(val providerName: String) {
