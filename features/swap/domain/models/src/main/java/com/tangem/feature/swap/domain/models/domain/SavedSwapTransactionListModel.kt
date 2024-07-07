@@ -26,6 +26,7 @@ data class SavedSwapTransactionListModelInner(
     val transactions: List<SavedSwapTransactionModel>,
 )
 
+// TODO refactor to use separate models to store
 data class SavedSwapTransactionModel(
     val txId: String,
     val timestamp: Long,
