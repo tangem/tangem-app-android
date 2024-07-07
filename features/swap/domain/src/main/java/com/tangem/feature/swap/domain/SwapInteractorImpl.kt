@@ -896,8 +896,9 @@ internal class SwapInteractorImpl @Inject constructor(
         txExternalUrl: String? = null,
         txExternalId: String? = null,
     ) {
+        val selectedWallet = getSelectedWallet() ?: return
         swapTransactionRepository.storeTransaction(
-            userWalletId = UserWalletId(userWalletManager.getWalletId()),
+            userWalletId = selectedWallet.walletId,
             fromCryptoCurrency = currencyToSend.currency,
             toCryptoCurrency = currencyToGet.currency,
             transaction = SavedSwapTransactionModel(
