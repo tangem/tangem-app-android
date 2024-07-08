@@ -538,7 +538,13 @@ internal class TokenDetailsViewModel @Inject constructor(
                 ifRight = { it },
             )
             if (extendedKey.isNotBlank()) {
-                router.share(extendedKey)
+                hapticManager.vibrateMeduim()
+                clipboardManager.setText(text = extendedKey)
+                internalUiState.value = stateFactory.getStateAndTriggerEvent(
+                    state = internalUiState.value,
+                    errorMessage = resourceReference(R.string.wallet_notification_address_copied),
+                    setUiState = { internalUiState.value = it },
+                )
             }
         }
     }
