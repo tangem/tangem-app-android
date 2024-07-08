@@ -37,10 +37,10 @@
     },
     {
         "name": "DETAILS_REDESIGN_ENABLED",
-        "version": "undefined"
+        "version": "5.13.0"
     },
     {
         "name": "PUSH_NOTIFICATIONS_ENABLED",
-        "version": "undefined"
+        "version": "5.13.0"
     }
 ]
