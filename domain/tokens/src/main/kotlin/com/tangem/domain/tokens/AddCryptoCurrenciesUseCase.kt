@@ -5,7 +5,6 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.toNonEmptyListOrNull
-import com.tangem.domain.tokens.error.AddCurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -32,9 +31,9 @@ class AddCryptoCurrenciesUseCase(
      *
      * @param userWalletId The ID of the user's wallet.
      * @param currency Cryptocurrency to add.
-     * @return Either an [AddCurrencyError] or [Unit] indicating the success of the operation.
+     * @return Either an [Throwable] or [Unit] indicating the success of the operation.
      */
-    suspend operator fun invoke(userWalletId: UserWalletId, currency: CryptoCurrency): Either<AddCurrencyError, Unit> {
+    suspend operator fun invoke(userWalletId: UserWalletId, currency: CryptoCurrency): Either<Throwable, Unit> {
         return invoke(userWalletId, listOf(currency))
     }
 
@@ -47,13 +46,13 @@ class AddCryptoCurrenciesUseCase(
      * @param userWalletId The ID of the user's wallet.
      * @param cryptoCurrency Token to add.
      * @param network Network where we add
-     * @return Either an [AddCurrencyError] or [Unit] indicating the success of the operation.
+     * @return Either an [Throwable] or [Unit] indicating the success of the operation.
      */
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency.Token,
         network: Network,
-    ): Either<AddCurrencyError, Unit> = either {
+    ): Either<Throwable, Unit> = either {
         val tokenToAdd = currenciesRepository.createTokenCurrency(cryptoCurrency = cryptoCurrency, network = network)
         invoke(userWalletId = userWalletId, currencies = listOf(tokenToAdd))
     }
@@ -66,14 +65,14 @@ class AddCryptoCurrenciesUseCase(
      *
      * @param userWalletId The ID of the user's wallet.
      * @param currencies The list of cryptocurrencies to add.
-     * @return Either an [AddCurrencyError] or [Unit] indicating the success of the operation.
+     * @return Either an [Throwable] or [Unit] indicating the success of the operation.
      */
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         currencies: List<CryptoCurrency>,
-    ): Either<AddCurrencyError, Unit> = either {
+    ): Either<Throwable, Unit> = either {
         val existingCurrencies = catch({ currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId) }) {
-            raise(AddCurrencyError.DataError(it))
+            raise(it)
         }
         val currenciesToAdd = currencies
             .filterNot(existingCurrencies::contains)
@@ -81,7 +80,7 @@ class AddCryptoCurrenciesUseCase(
             ?: return@either
 
         catch({ currenciesRepository.addCurrencies(userWalletId, currenciesToAdd) }) {
-            raise(AddCurrencyError.DataError(it))
+            raise(it)
         }
 
         refreshUpdatedNetworks(userWalletId, currenciesToAdd, existingCurrencies)
@@ -91,7 +90,7 @@ class AddCryptoCurrenciesUseCase(
      * Refreshes the network statuses for tokens that have corresponding coins in the
      * [existingCurrencies] list.
      */
-    private suspend fun Raise<AddCurrencyError>.refreshUpdatedNetworks(
+    private suspend fun Raise<Throwable>.refreshUpdatedNetworks(
         userWalletId: UserWalletId,
         currenciesToAdd: List<CryptoCurrency>,
         existingCurrencies: List<CryptoCurrency>,
@@ -114,7 +113,7 @@ class AddCryptoCurrenciesUseCase(
                 )
             },
         ) {
-            raise(AddCurrencyError.DataError(it))
+            raise(it)
         }
     }
 
