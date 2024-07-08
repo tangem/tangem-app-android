@@ -886,17 +886,26 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
             analyticsSender.sendWhenAddTokenButtonClicked(currency)
 
-            viewModelScope.launch(dispatchers.io) {
-                val oldButtonState = uiState.floatingButton
+            viewModelScope.launch {
                 uiState = uiState.copySealed(
-                    floatingButton = uiState.floatingButton.copy(isEnabled = false, showProgress = true),
+                    floatingButton = uiState.floatingButton.copy(
+                        isEnabled = false,
+                        showProgress = true,
+                    ),
                 )
-                runCatching { featureInteractor.saveToken(currency) }
+
+                val result = featureInteractor.saveToken(currency)
+
+                uiState = uiState.copySealed(
+                    floatingButton = uiState.floatingButton.copy(
+                        isEnabled = true,
+                        showProgress = false,
+                    ),
+                )
+
+                result
                     .onSuccess { featureRouter.openWalletScreen() }
-                    .onFailure {
-                        uiState = uiState.copySealed(floatingButton = oldButtonState)
-                        Timber.e(it)
-                    }
+                    .onFailure { Timber.e(it, "Unable to save custom token") }
             }
         }
     }
