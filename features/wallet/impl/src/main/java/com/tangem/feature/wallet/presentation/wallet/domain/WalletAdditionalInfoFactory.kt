@@ -6,7 +6,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
@@ -106,20 +105,6 @@ internal object WalletAdditionalInfoFactory {
             }
 
             WalletAdditionalInfo(hideable = true, content = TextReference.Str(value = amount.orEmpty()))
-        }
-    }
-
-    private fun UserWallet.getCardsCount(): Int? {
-        return if (isMultiCurrency) {
-            when (val status = scanResponse.card.backupStatus) {
-                is CardDTO.BackupStatus.Active -> status.cardCount + 1
-                is CardDTO.BackupStatus.CardLinked,
-                is CardDTO.BackupStatus.NoBackup,
-                null,
-                -> 1
-            }
-        } else {
-            null
         }
     }
 }
