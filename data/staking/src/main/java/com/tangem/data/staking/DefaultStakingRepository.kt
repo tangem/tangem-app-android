@@ -12,12 +12,10 @@ import com.tangem.data.staking.converters.transaction.GasEstimateConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionStatusConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConverter
+import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
-import com.tangem.datasource.api.stakekit.models.request.Address
-import com.tangem.datasource.api.stakekit.models.request.ConstructTransactionRequestBody
-import com.tangem.datasource.api.stakekit.models.request.EnterActionRequestBody
-import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
+import com.tangem.datasource.api.stakekit.models.request.*
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
@@ -370,6 +368,15 @@ internal class DefaultStakingRepository(
             val result = stakingBalanceStore.getSyncOrNull() ?: return@withContext YieldBalanceList.Error
             yieldBalanceListConverter.convert(result)
         }
+    }
+
+    override suspend fun submitHash(transactionId: String, transactionHash: String) {
+        return stakeKitApi.submitTransactionHash(
+            transactionId = transactionId,
+            body = SubmitTransactionHashRequestBody(
+                hash = transactionHash,
+            )
+        ).getOrThrow()
     }
 
     private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {

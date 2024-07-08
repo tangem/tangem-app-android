@@ -61,4 +61,10 @@ internal object StakingDomainModule {
     fun provideCreateEnterActionUseCase(stakingRepository: StakingRepository): InitializeStakingProcessUseCase {
         return InitializeStakingProcessUseCase(stakingRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideSubmitHashUseCase(stakingRepository: StakingRepository): SubmitHashUseCase {
+        return SubmitHashUseCase(stakingRepository)
+    }
 }

@@ -15,6 +15,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.staking.InitializeStakingProcessUseCase
+import com.tangem.domain.staking.SubmitHashUseCase
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.staking.model.transaction.StakingTransaction
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
@@ -58,6 +59,7 @@ internal class StakingViewModel @Inject constructor(
     private val initializeStakingProcessUseCase: InitializeStakingProcessUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val submitHashUseCase: SubmitHashUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
 
@@ -281,12 +283,20 @@ internal class StakingViewModel @Inject constructor(
                 )
             },
             ifRight = { txHash ->
-                val gasEstimate = stakingTransaction?.gasEstimate ?: return@fold
+                val transaction = stakingTransaction ?: return@fold
+
+                submitHashUseCase.submitHash(
+                    transactionId = transaction.id,
+                    transactionHash = txHash
+                )
 
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = txHash,
                     networkId = cryptoCurrencyStatus.currency.network.id,
                 ).getOrElse { "" }
+
+                val gasEstimate = transaction.gasEstimate ?: error("No gas for transaction")
+
                 stateController.update(
                     SetConfirmationStateCompletedTransformer(
                         appCurrencyProvider = Provider { appCurrency },
