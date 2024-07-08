@@ -41,8 +41,11 @@ internal fun StakingNavigationButtons(uiState: StakingUiState, modifier: Modifie
                 bottom = TangemTheme.dimens.spacing16,
             ),
     ) {
+        val confirmationDataState = uiState.confirmationState as? StakingStates.ConfirmationState.Data
+        val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
+
         SendDoneButtons(
-            txUrl = "",
+            txUrl = transactionDoneState?.txUrl ?: "",
             onExploreClick = uiState.clickIntents::onExploreClick,
             onShareClick = uiState.clickIntents::onShareClick,
             isVisible = isSuccessState,

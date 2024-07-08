@@ -16,6 +16,7 @@ internal class SetConfirmationStateCompletedTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val stakingGasEstimate: StakingGasEstimate,
+    private val txUrl: String,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
@@ -49,6 +50,7 @@ internal class SetConfirmationStateCompletedTransformer(
                 ),
                 transactionDoneState = TransactionDoneState.Content(
                     timestamp = System.currentTimeMillis(),
+                    txUrl = txUrl,
                 ),
             )
         } else {

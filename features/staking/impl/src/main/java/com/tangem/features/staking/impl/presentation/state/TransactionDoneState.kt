@@ -7,6 +7,7 @@ internal sealed class TransactionDoneState {
 
     data class Content(
         val timestamp: Long,
+        val txUrl: String,
     ) : TransactionDoneState()
 
     data object Empty : TransactionDoneState()

@@ -21,6 +21,7 @@ import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -56,6 +57,7 @@ internal class StakingViewModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val initializeStakingProcessUseCase: InitializeStakingProcessUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
+    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
 
@@ -277,22 +279,22 @@ internal class StakingViewModel @Inject constructor(
                         stakingGasEstimate = gasEstimate,
                     ),
                 )
-                // uiState = eventStateFactory.getSendTransactionErrorState(
-                //     error = error,
-                //     onConsume = { uiState = eventStateFactory.onConsumeEventState() },
-                // )
-                // analyticsEventHandler.send(SendAnalyticEvents.TransactionError(cryptoCurrency.symbol))
             },
-            ifRight = {
+            ifRight = { txHash ->
                 val gasEstimate = stakingTransaction?.gasEstimate ?: return@fold
+
+                val txUrl = getExplorerTransactionUrlUseCase(
+                    txHash = txHash,
+                    networkId = cryptoCurrencyStatus.currency.network.id,
+                ).getOrElse { "" }
                 stateController.update(
                     SetConfirmationStateCompletedTransformer(
                         appCurrencyProvider = Provider { appCurrency },
                         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                         stakingGasEstimate = gasEstimate,
+                        txUrl = txUrl,
                     ),
                 )
-                // sendScreenAnalyticSender.sendTransaction()
             },
         )
     }
