@@ -6,6 +6,7 @@ import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.models.ApproveType
 
 private const val SWAP_CATEGORY = "Swap"
+private const val PROMO_CATEGORY = "Promo"
 
 sealed class SwapEvents(
     event: String,
@@ -17,7 +18,7 @@ sealed class SwapEvents(
         params = mapOf("Token" to token),
     )
 
-    object SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
+    data object SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
 
     data class ChooseTokenScreenOpened(val availableTokens: Boolean) : SwapEvents(
         event = "Choose Token Screen Opened",
@@ -37,7 +38,7 @@ sealed class SwapEvents(
         params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),
     )
 
-    object ButtonGivePermissionClicked : SwapEvents(event = "Button - Give permission")
+    data object ButtonGivePermissionClicked : SwapEvents(event = "Button - Give permission")
 
     data class ButtonPermissionApproveClicked(
         val sendToken: String,
@@ -52,9 +53,9 @@ sealed class SwapEvents(
         ),
     )
 
-    object ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
+    data object ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
 
-    object ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
+    data object ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
 
     data class SwapInProgressScreen(
         val provider: SwapProvider,
@@ -71,7 +72,7 @@ sealed class SwapEvents(
         ),
     )
 
-    object ProviderClicked : SwapEvents("Provider Clicked")
+    data object ProviderClicked : SwapEvents("Provider Clicked")
 
     data class ProviderChosen(val provider: SwapProvider) : SwapEvents(
         event = "Provider Chosen",
@@ -88,7 +89,7 @@ sealed class SwapEvents(
         params = mapOf("Token" to token),
     )
 
-    object NoticeNoAvailableTokensToSwap : SwapEvents("Notice - No Available Tokens To Swap")
+    data object NoticeNoAvailableTokensToSwap : SwapEvents("Notice - No Available Tokens To Swap")
 
     data class NoticeNotEnoughFee(val token: String, val blockchain: String) : SwapEvents(
         event = "Notice - Not Enough Fee",
@@ -110,4 +111,20 @@ sealed class SwapEvents(
             "Error code" to errorCode.toString(),
         ),
     )
+
+    // region Promo activity
+    data class ChangellyActivity(
+        val promoState: PromoState,
+    ) : AnalyticsEvent(
+        category = PROMO_CATEGORY,
+        event = "Changelly Activity",
+        params = mapOf(
+            "State" to promoState.name,
+        ),
+    ) {
+        sealed class PromoState(val name: String) {
+            data object Native : PromoState("Native")
+            data object Recommended : PromoState("Recommended")
+        }
+    }
 }
