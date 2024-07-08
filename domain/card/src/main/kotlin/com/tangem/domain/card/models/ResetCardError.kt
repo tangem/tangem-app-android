@@ -1,8 +1,8 @@
 package com.tangem.domain.card.models
 
-sealed interface ResetCardError {
+sealed class ResetCardError {
 
-    data object UserCanceled : ResetCardError
+    data object UserCanceled : ResetCardError()
 
-    data object AnotherSdkError : ResetCardError
+    data object SdkError : ResetCardError()
 }
