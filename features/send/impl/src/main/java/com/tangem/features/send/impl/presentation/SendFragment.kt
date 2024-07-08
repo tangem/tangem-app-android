@@ -2,6 +2,7 @@ package com.tangem.features.send.impl.presentation
 
 import android.os.Bundle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,8 +62,11 @@ internal class SendFragment : ComposeFragment() {
         SystemBarsEffect {
             setSystemBarsColor(systemBarsColor)
         }
+
         val currentState = viewModel.stateRouter.currentState.collectAsStateWithLifecycle()
-        SendScreen(viewModel.uiState, currentState.value)
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+        SendScreen(uiState, currentState.value)
     }
 
     override fun onDestroy() {
