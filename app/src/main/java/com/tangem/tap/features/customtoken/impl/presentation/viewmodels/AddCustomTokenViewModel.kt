@@ -903,16 +903,20 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
     /** Convert [address] to single address for specific [blockchain] or return null if invalid */
     private fun convertTokenAddress(blockchain: Blockchain, address: String): String? {
-        return when (blockchain) {
-            Blockchain.Hedera, Blockchain.HederaTestnet -> hederaAddressConverter.convertToTokenId(address)
-            Blockchain.Cardano -> {
-                cardanoTokenAddressConverter.convertToFingerprint(
-                    address = address,
-                    symbol = uiState.form.tokenSymbolInputField.value,
-                )
+        return runCatching {
+            when (blockchain) {
+                Blockchain.Hedera, Blockchain.HederaTestnet -> hederaAddressConverter.convertToTokenId(address)
+                Blockchain.Cardano -> {
+                    // TODO: https://tangem.atlassian.net/browse/AND-7559
+                    cardanoTokenAddressConverter.convertToFingerprint(
+                        address = address,
+                        symbol = uiState.form.tokenSymbolInputField.value,
+                    )
+                }
+                else -> address
             }
-            else -> address
         }
+            .getOrNull()
     }
 
     private inner class TestActionsHandler {
