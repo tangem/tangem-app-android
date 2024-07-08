@@ -894,13 +894,16 @@ internal class SendViewModel @Inject constructor(
     }
 
     private suspend fun sendTransaction(txData: TransactionData) {
-        sendTransactionUseCase(
+        val result = sendTransactionUseCase(
             txData = txData,
             userWallet = userWallet,
             network = cryptoCurrency.network,
-        ).fold(
+        )
+
+        uiState = stateFactory.getSendingStateUpdate(isSending = false)
+
+        result.fold(
             ifLeft = { error ->
-                uiState = stateFactory.getSendingStateUpdate(isSending = false)
                 uiState = eventStateFactory.getSendTransactionErrorState(
                     error = error,
                     onConsume = { uiState = eventStateFactory.onConsumeEventState() },
@@ -908,7 +911,6 @@ internal class SendViewModel @Inject constructor(
                 analyticsEventHandler.send(SendAnalyticEvents.TransactionError(cryptoCurrency.symbol))
             },
             ifRight = {
-                uiState = stateFactory.getSendingStateUpdate(isSending = false)
                 updateTransactionStatus(txData)
                 addTokenToWalletIfNeeded()
                 scheduleUpdates()
