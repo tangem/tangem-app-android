@@ -5,7 +5,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 
 internal fun BigInteger.toBigDecimal(decimals: Int): BigDecimal {
-    return BigDecimal(this).movePointLeft(decimals)
+    return this.toBigDecimal().movePointLeft(decimals)
 }
 
 internal fun BigInteger.toInstant(): Instant {
