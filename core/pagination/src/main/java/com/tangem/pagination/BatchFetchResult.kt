@@ -16,7 +16,7 @@ sealed class BatchFetchResult<out TData> {
      */
     data class Success<TData>(
         val data: TData,
-        val last: Boolean = false,
+        val last: Boolean,
     ) : BatchFetchResult<TData>()
 
     /**
