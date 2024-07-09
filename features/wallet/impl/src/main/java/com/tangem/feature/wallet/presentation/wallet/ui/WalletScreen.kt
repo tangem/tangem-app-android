@@ -378,6 +378,8 @@ private fun BaseScaffoldWithMarkets(
         sheetDragHandle = {
             Hand(modifier = Modifier.background(color = TangemTheme.colors.background.primary))
         },
+        sheetTonalElevation = 8.dp,
+        sheetShadowElevation = 8.dp,
         sheetContent = {
             BoxWithConstraints {
                 Box(

@@ -148,10 +148,12 @@ private fun Options(
 private fun Items(state: ListUM, modifier: Modifier = Modifier) {
     val lazyListState = rememberLazyListState()
     val scrollEnabled = state !is ListUM.Loading
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     LazyColumn(
         modifier = modifier,
         state = lazyListState,
+        contentPadding = PaddingValues(bottom = bottomBarHeight),
         userScrollEnabled = scrollEnabled,
     ) {
         when (state) {
