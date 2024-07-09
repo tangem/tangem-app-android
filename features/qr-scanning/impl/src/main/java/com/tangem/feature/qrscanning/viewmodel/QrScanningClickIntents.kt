@@ -45,12 +45,12 @@ internal class QrScanningClickIntentsImplementor @Inject constructor(
 
     override fun onQrScanned(qrCode: String) {
         if (qrCode.isNotBlank()) {
+            viewModelScope.launch(dispatcher.mainImmediate) {
+                emitQrScannedEventUseCase.invoke(source, qrCode)
+            }
             if (!isScanned) {
                 router.popBackStack()
                 isScanned = true
-            }
-            viewModelScope.launch(dispatcher.main) {
-                emitQrScannedEventUseCase.invoke(source, qrCode)
             }
         }
     }
