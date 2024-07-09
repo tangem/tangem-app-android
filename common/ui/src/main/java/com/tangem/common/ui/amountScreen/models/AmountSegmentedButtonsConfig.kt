@@ -1,7 +1,7 @@
 package com.tangem.common.ui.amountScreen.models
 
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 
 /**
@@ -15,7 +15,7 @@ import com.tangem.core.ui.extensions.TextReference
 @Immutable
 data class AmountSegmentedButtonsConfig(
     val title: TextReference,
-    val iconState: TokenIconState? = null,
+    val iconState: CurrencyIconState? = null,
     val iconUrl: String? = null,
     val isFiat: Boolean,
 )
