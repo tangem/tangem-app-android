@@ -20,5 +20,6 @@ enum class ExchangeStatus {
     Finished,
     Refunded,
     Cancelled,
+    TxFailed,
     Unknown,
 }
