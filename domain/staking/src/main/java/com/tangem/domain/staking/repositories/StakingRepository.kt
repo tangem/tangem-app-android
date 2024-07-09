@@ -22,7 +22,7 @@ interface StakingRepository {
 
     suspend fun getEntryInfo(integrationId: String): StakingEntryInfo
 
-    suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String,): Yield
+    suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield
 
     suspend fun getStakingAvailabilityForActions(
         cryptoCurrencyId: CryptoCurrency.ID,
@@ -35,9 +35,9 @@ interface StakingRepository {
         refresh: Boolean = false,
     )
 
-    fun getSingleYieldBalanceFlow(userWalletId: UserWalletId, address: CryptoCurrencyAddress,): Flow<YieldBalance>
+    fun getSingleYieldBalanceFlow(userWalletId: UserWalletId, address: CryptoCurrencyAddress): Flow<YieldBalance>
 
-    suspend fun getSingleYieldBalanceSync(userWalletId: UserWalletId, address: CryptoCurrencyAddress,): YieldBalance
+    suspend fun getSingleYieldBalanceSync(userWalletId: UserWalletId, address: CryptoCurrencyAddress): YieldBalance
 
     suspend fun fetchMultiYieldBalance(
         userWalletId: UserWalletId,
@@ -70,7 +70,7 @@ interface StakingRepository {
 
     suspend fun constructTransaction(transactionId: String): StakingTransaction
 
-    suspend fun submitHash(transactionId: String, transactionHash: String,)
+    suspend fun submitHash(transactionId: String, transactionHash: String)
 
     suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata)
 
