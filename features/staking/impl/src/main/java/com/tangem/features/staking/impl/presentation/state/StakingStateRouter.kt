@@ -1,15 +1,14 @@
 package com.tangem.features.staking.impl.presentation.state
 
-import androidx.fragment.app.FragmentManager
-import java.lang.ref.WeakReference
+import com.tangem.common.routing.AppRouter
 
 internal class StakingStateRouter(
-    private val fragmentManager: WeakReference<FragmentManager>,
+    private val appRouter: AppRouter,
     private val stateController: StakingStateController,
 ) {
 
     fun onBackClick() {
-        fragmentManager.get()?.popBackStack()
+        appRouter.pop()
         stateController.clear()
     }
 

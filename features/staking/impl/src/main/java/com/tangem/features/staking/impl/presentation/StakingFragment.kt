@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
@@ -15,7 +16,6 @@ import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
 import com.tangem.features.staking.impl.presentation.ui.StakingScreen
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import java.lang.ref.WeakReference
 import javax.inject.Inject
 
 /**
@@ -28,7 +28,10 @@ internal class StakingFragment : ComposeFragment() {
     override lateinit var uiDependencies: UiDependencies
 
     @Inject
-    lateinit var router: StakingRouter
+    lateinit var stakingRouter: StakingRouter
+
+    @Inject
+    lateinit var appRouter: AppRouter
 
     @Inject
     lateinit var stateController: StakingStateController
@@ -38,7 +41,7 @@ internal class StakingFragment : ComposeFragment() {
 
     private val viewModel by viewModels<StakingViewModel>()
     private val innerStakingRouter: InnerStakingRouter
-        get() = requireNotNull(router as? InnerStakingRouter) {
+        get() = requireNotNull(stakingRouter as? InnerStakingRouter) {
             "innerStakingRouter should be instance of InnerStakingRouter"
         }
 
@@ -49,7 +52,7 @@ internal class StakingFragment : ComposeFragment() {
         viewModel.setRouter(
             innerStakingRouter,
             StakingStateRouter(
-                fragmentManager = WeakReference(parentFragmentManager),
+                appRouter = appRouter,
                 stateController = stateController,
             ),
         )

@@ -1,5 +1,6 @@
 package com.tangem.common.ui.amountScreen.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -9,11 +10,13 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.common.ui.R
+import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
 fun SendDoneButtons(
@@ -54,3 +57,20 @@ fun SendDoneButtons(
         }
     }
 }
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SendDoneButtons_Preview() {
+    TangemThemePreview {
+        SendDoneButtons(
+            txUrl = "txUrl",
+            onShareClick = {},
+            onExploreClick = {},
+            isVisible = true,
+            modifier = Modifier
+        )
+    }
+}
+
+
