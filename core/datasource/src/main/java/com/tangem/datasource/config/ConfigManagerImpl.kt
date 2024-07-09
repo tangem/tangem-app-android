@@ -103,6 +103,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 polygonScanApiKey = configValues.polygonScanApiKey,
                 bittensorDwellirApiKey = configValues.bittensorDwellirApiKey,
                 bittensorOnfinalityApiKey = configValues.bittensorOnfinalityKey,
+                koinosProApiKey = configValues.koinosProApiKey,
             ),
             amplitudeApiKey = configValues.amplitudeApiKey,
             sprinklr = configValues.sprinklr,
