@@ -35,7 +35,10 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
             request = requestParams,
         )
 
-        val res = fetch(req)
+        val res = runCatching {
+            fetch(req)
+        }.getOrElse { BatchFetchResult.Error(it) }
+
         lastRequest.value = req
         return res
     }
@@ -61,7 +64,10 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
             last
         }
 
-        val res = fetch(req)
+        val res = runCatching {
+            fetch(req)
+        }.getOrElse { BatchFetchResult.Error(it) }
+
         lastRequest.value = req
         return res
     }
