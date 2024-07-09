@@ -317,8 +317,8 @@ internal class SwapInteractorImpl @Inject constructor(
 
         val fromTokenAddress = getTokenAddress(fromToken.currency)
         val isAllowedToSpend = quotes.fold(
-            ifRight = {
-                it.allowanceContract?.let {
+            ifRight = { quotes ->
+                quotes.allowanceContract?.let {
                     isAllowedToSpend(networkId, fromToken.currency, amount, it)
                 } ?: true
             },
@@ -870,7 +870,7 @@ internal class SwapInteractorImpl @Inject constructor(
             )
             blockchain == Blockchain.Aptos -> {
                 val gasUnitPrice = fee.feeValue.divide(
-                    BigDecimal(fee.gasLimit),
+                    fee.gasLimit.toBigDecimal(),
                     Blockchain.Aptos.decimals(),
                     RoundingMode.HALF_UP,
                 )
@@ -1970,8 +1970,7 @@ internal class SwapInteractorImpl @Inject constructor(
             normalFee = ProxyFee.Common(
                 gasLimit = 1.toBigInteger(),
                 fee = demoFee.copy(value = normalDemoFee),
-
-                ),
+            ),
             priorityFee = ProxyFee.Common(
                 gasLimit = 1.toBigInteger(),
                 fee = demoFee.copy(value = priorityDemoFee),
