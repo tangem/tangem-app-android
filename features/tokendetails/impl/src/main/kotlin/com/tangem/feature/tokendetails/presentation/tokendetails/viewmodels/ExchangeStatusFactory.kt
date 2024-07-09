@@ -156,23 +156,28 @@ internal class ExchangeStatusFactory(
         )
     }
 
-    private fun ExchangeStatus?.isTerminal() =
-        this == ExchangeStatus.Refunded || this == ExchangeStatus.Finished || this == ExchangeStatus.Cancelled
+    private fun ExchangeStatus?.isTerminal() = this == ExchangeStatus.Refunded ||
+        this == ExchangeStatus.Finished ||
+        this == ExchangeStatus.Cancelled ||
+        this == ExchangeStatus.TxFailed ||
+        this == ExchangeStatus.Unknown
 
     private fun toAnalyticStatus(status: ExchangeStatus?): ExchangeAnalyticsStatus? {
         return when (status) {
             ExchangeStatus.New,
             ExchangeStatus.Waiting,
-            ExchangeStatus.WaitingTxHash,
             ExchangeStatus.Sending,
             ExchangeStatus.Confirming,
             ExchangeStatus.Exchanging,
             -> ExchangeAnalyticsStatus.InProgress
+            ExchangeStatus.WaitingTxHash -> ExchangeAnalyticsStatus.WaitingTxHash
             ExchangeStatus.Verifying -> ExchangeAnalyticsStatus.KYC
             ExchangeStatus.Failed -> ExchangeAnalyticsStatus.Fail
+            ExchangeStatus.TxFailed -> ExchangeAnalyticsStatus.FailTx
             ExchangeStatus.Finished -> ExchangeAnalyticsStatus.Done
             ExchangeStatus.Refunded -> ExchangeAnalyticsStatus.Refunded
             ExchangeStatus.Cancelled -> ExchangeAnalyticsStatus.Cancelled
+            ExchangeStatus.Unknown -> ExchangeAnalyticsStatus.Unknown
             else -> null
         }
     }
