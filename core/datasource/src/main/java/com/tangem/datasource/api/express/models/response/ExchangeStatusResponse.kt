@@ -7,14 +7,14 @@ data class ExchangeStatusResponse(
     @Json(name = "providerId")
     val providerId: String,
 
-    @Json(name = "externalTxId")
-    val externalTxId: String,
-
     @Json(name = "status")
     val status: ExchangeStatus,
 
+    @Json(name = "externalTxId")
+    val externalTxId: String?,
+
     @Json(name = "externalTxUrl")
-    val externalTxUrl: String,
+    val externalTxUrl: String?,
 
     @Json(name = "error")
     val error: ExchangeStatusError?,
