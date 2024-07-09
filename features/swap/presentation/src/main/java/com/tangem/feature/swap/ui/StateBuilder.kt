@@ -676,6 +676,7 @@ internal class StateBuilder(
         return when (dataError) {
             is DataError.ExchangeTooSmallAmountError -> {
                 swapProvider.convertToAvailableFromProviderState(
+                    swapProvider = swapProvider,
                     alertText = resourceReference(
                         R.string.express_provider_min_amount,
                         wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
@@ -686,6 +687,7 @@ internal class StateBuilder(
             }
             is DataError.ExchangeTooBigAmountError -> {
                 swapProvider.convertToAvailableFromProviderState(
+                    swapProvider = swapProvider,
                     alertText = resourceReference(
                         R.string.express_provider_max_amount,
                         wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
@@ -1610,10 +1612,16 @@ internal class StateBuilder(
     }
 
     private fun SwapProvider.convertToAvailableFromProviderState(
+        swapProvider: SwapProvider,
         alertText: TextReference,
         selectionType: ProviderState.SelectionType,
         onProviderClick: (String) -> Unit,
     ): ProviderState {
+        val additionalBadge = if (swapProvider.isRecommended) {
+            ProviderState.AdditionalBadge.Recommended
+        } else {
+            ProviderState.AdditionalBadge.Empty
+        }
         return ProviderState.Content(
             id = this.providerId,
             name = this.name,
@@ -1621,7 +1629,7 @@ internal class StateBuilder(
             type = this.type.providerName,
             selectionType = selectionType,
             subtitle = alertText,
-            additionalBadge = ProviderState.AdditionalBadge.Empty,
+            additionalBadge = additionalBadge,
             percentLowerThenBest = PercentDifference.Empty,
             namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
