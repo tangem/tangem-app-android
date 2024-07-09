@@ -196,12 +196,17 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onExploreClick() {
-        // TODO staking
-        innerRouter.openUrl("sendState.txUrl")
+        val confirmationDataState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
+        val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
+        val txUrl = transactionDoneState?.txUrl
+
+        if (txUrl != null) {
+            innerRouter.openUrl(txUrl)
+        }
     }
 
     override fun onShareClick() {
-        TODO("Not yet implemented")
+        // TODO staking analytics event
     }
 
     fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
