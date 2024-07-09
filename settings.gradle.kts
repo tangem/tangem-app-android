@@ -127,6 +127,7 @@ include(":core:utils")
 include(":core:deep-links")
 include(":core:deep-links:global")
 include(":core:decompose")
+include(":core:pagination")
 // endregion Core modules
 
 // region Common modules
@@ -223,6 +224,8 @@ include(":domain:qr-scanning:models")
 include(":domain:staking")
 include(":domain:staking:models")
 include(":domain:wallet-connect")
+include(":domain:markets")
+include(":domain:markets:models")
 // endregion Domain modules
 
 // region Data modules
@@ -244,4 +247,5 @@ include(":data:feedback")
 include(":data:qr-scanning")
 include(":data:staking")
 include(":data:wallet-connect")
+include(":data:markets")
 // endregion Data modules

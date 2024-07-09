@@ -4,7 +4,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.ui.bottomsheets.state.*
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter

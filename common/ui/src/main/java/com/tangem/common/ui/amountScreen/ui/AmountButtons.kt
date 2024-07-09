@@ -19,7 +19,7 @@ import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.currency.fiaticon.FiatIcon
-import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.PersistentList
@@ -105,7 +105,7 @@ private fun AmountCurrencyButton(button: AmountSegmentedButtonsConfig, isSegment
                 modifier = iconModifier,
             )
         } else if (button.iconState != null) {
-            TokenIcon(
+            CurrencyIcon(
                 state = button.iconState,
                 shouldDisplayNetwork = false,
                 modifier = iconModifier,

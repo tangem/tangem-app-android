@@ -1,7 +1,7 @@
 package com.tangem.common.ui.amountScreen.models
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.PersistentList
 
@@ -26,7 +26,7 @@ sealed class AmountState {
         override val isPrimaryButtonEnabled: Boolean,
         val walletName: String,
         val walletBalance: TextReference,
-        val tokenIconState: TokenIconState,
+        val tokenIconState: CurrencyIconState,
         val segmentedButtonConfig: PersistentList<AmountSegmentedButtonsConfig>,
         val selectedButton: Int,
         val isSegmentedButtonsEnabled: Boolean,
