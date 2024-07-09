@@ -1348,7 +1348,7 @@ internal class SwapInteractorImpl @Inject constructor(
         } catch (e: IllegalStateException) {
             transactionManager.getFeeForGas(
                 networkId = networkId,
-                gas = transaction.gas,
+                gas = transaction.gas.multiply(INCREASE_GAS_LIMIT_BY.toBigInteger()).divide(100.toBigInteger()),
                 derivationPath = fromToken.network.derivationPath.value,
             )
         }
@@ -1971,7 +1971,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 gasLimit = 1.toBigInteger(),
                 fee = demoFee.copy(value = normalDemoFee),
 
-            ),
+                ),
             priorityFee = ProxyFee.Common(
                 gasLimit = 1.toBigInteger(),
                 fee = demoFee.copy(value = priorityDemoFee),

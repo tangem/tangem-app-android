@@ -1027,8 +1027,7 @@ internal class StateBuilder(
         val fromFiatAmount = getFormattedFiatAmount(fromCryptoCurrency.value.fiatRate?.multiply(fromAmount))
         val toFiatAmount = getFormattedFiatAmount(toCryptoCurrency.value.fiatRate?.multiply(toAmount))
 
-        val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName ||
-            providerState.type == ExchangeProviderType.DEX_BRIDGE.providerName
+        val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = swapTransactionState.timestamp,
