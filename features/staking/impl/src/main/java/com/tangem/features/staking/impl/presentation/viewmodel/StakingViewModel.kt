@@ -15,6 +15,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.staking.InitializeStakingProcessUseCase
+import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
 import com.tangem.domain.staking.SubmitHashUseCase
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.staking.model.transaction.StakingTransaction
@@ -59,6 +60,7 @@ internal class StakingViewModel @Inject constructor(
     private val initializeStakingProcessUseCase: InitializeStakingProcessUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
     private val submitHashUseCase: SubmitHashUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
@@ -285,10 +287,7 @@ internal class StakingViewModel @Inject constructor(
             ifRight = { txHash ->
                 val transaction = stakingTransaction ?: return@fold
 
-                submitHashUseCase.submitHash(
-                    transactionId = transaction.id,
-                    transactionHash = txHash
-                )
+               submitHash(transaction.id, txHash)
 
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = txHash,
@@ -307,6 +306,22 @@ internal class StakingViewModel @Inject constructor(
                 )
             },
         )
+    }
+
+    private suspend fun submitHash(transactionId: String, transactionHash: String) {
+        submitHashUseCase.submitHash(
+            transactionId = transactionId,
+            transactionHash = transactionHash
+        )
+            .onLeft {
+                saveUnsubmittedHashUseCase.invoke(
+                    transactionId = transactionId,
+                    transactionHash = transactionHash,
+                )
+            }.onRight {
+                Timber.d("Successful hash submission")
+            }
+
     }
 
     private fun isAssentState(): Boolean {

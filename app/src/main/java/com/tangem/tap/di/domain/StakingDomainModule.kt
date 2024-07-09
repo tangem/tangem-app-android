@@ -67,4 +67,16 @@ internal object StakingDomainModule {
     fun provideSubmitHashUseCase(stakingRepository: StakingRepository): SubmitHashUseCase {
         return SubmitHashUseCase(stakingRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideSaveUnsubmittedHashUseCase(stakingRepository: StakingRepository): SaveUnsubmittedHashUseCase {
+        return SaveUnsubmittedHashUseCase(stakingRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSendUnsubmittedHashesUseCase(stakingRepository: StakingRepository): SendUnsubmittedHashesUseCase {
+        return SendUnsubmittedHashesUseCase(stakingRepository)
+    }
 }

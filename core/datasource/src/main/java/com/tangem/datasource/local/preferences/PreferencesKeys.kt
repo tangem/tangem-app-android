@@ -93,6 +93,8 @@ object PreferencesKeys {
 
     val IS_WALLET_NAMES_MIGRATION_DONE_KEY by lazy { booleanPreferencesKey(name = "isWalletNamesMigrationDone") }
 
+    val UNSUBMITTED_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "unsubmittedTransactions") }
+
     fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
 
     // region Permission

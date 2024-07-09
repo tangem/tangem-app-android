@@ -12,7 +12,7 @@ class SubmitHashUseCase(private val stakingRepository: StakingRepository) {
         return Either.catch {
             stakingRepository.submitHash(
                 transactionId = transactionId,
-                transactionHash = transactionHash
+                transactionHash = transactionHash,
             )
         }
     }
