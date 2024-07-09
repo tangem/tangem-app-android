@@ -177,9 +177,9 @@ class WalletConnectSdkHelper {
             is Result.Success -> gasLimitResult.data.toBigDecimal().multiply(BigDecimal("1.2"))
             is Result.Failure -> {
                 (gasLimitResult.error as? Throwable)?.let { Timber.e(it, "getGasLimit failed") }
-                BigDecimal(DEFAULT_MAX_GASLIMIT) // Set high gasLimit if not provided
+                DEFAULT_MAX_GASLIMIT.toBigDecimal() // Set high gasLimit if not provided
             }
-            else -> BigDecimal(DEFAULT_MAX_GASLIMIT) // Set high gasLimit if not provided
+            else -> DEFAULT_MAX_GASLIMIT.toBigDecimal() // Set high gasLimit if not provided
         }
     }
 
