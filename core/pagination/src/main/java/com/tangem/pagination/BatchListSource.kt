@@ -269,10 +269,14 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         val batches = state.value.data
         val batchesToUpdate = batches.filter { action.keys.contains(it.key) }
 
-        val result = updateFetcher.fetchUpdate(
-            toUpdate = batchesToUpdate,
-            updateRequest = action.updateRequest,
-        )
+        val result = try {
+            updateFetcher.fetchUpdate(
+                toUpdate = batchesToUpdate,
+                updateRequest = action.updateRequest,
+            )
+        } catch (t: Throwable) {
+            BatchUpdateResult.Error(t)
+        }
 
         if (result is BatchUpdateResult.Success) {
             state.update { currentState ->
