@@ -68,9 +68,6 @@ private fun SendDoneButtons_Preview() {
             onShareClick = {},
             onExploreClick = {},
             isVisible = true,
-            modifier = Modifier
         )
     }
 }
-
-
