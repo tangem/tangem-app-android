@@ -4,6 +4,7 @@ import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.GetCardTokensListUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -11,8 +12,7 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.TransactionRepository
-import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
-import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -42,16 +42,16 @@ class SwapDomainModule {
         getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
         @SwapScope sendTransactionUseCase: SendTransactionUseCase,
         @SwapScope createTransactionUseCase: CreateTransactionUseCase,
+        createTransactionDataExtrasUseCase: CreateTransactionDataExtrasUseCase,
         isDemoCardUseCase: IsDemoCardUseCase,
         quotesRepository: QuotesRepository,
         swapTransactionRepository: SwapTransactionRepository,
         appCurrencyRepository: AppCurrencyRepository,
         currencyChecksRepository: CurrencyChecksRepository,
-        walletManagersFacade: WalletManagersFacade,
-        coroutineDispatcherProvider: CoroutineDispatcherProvider,
         initialToCurrencyResolver: InitialToCurrencyResolver,
         currenciesRepository: CurrenciesRepository,
-        transactionRepository: TransactionRepository,
+        validateTransactionUseCase: ValidateTransactionUseCase,
+        estimateFeeUseCase: EstimateFeeUseCase,
     ): SwapInteractor {
         return SwapInteractorImpl(
             transactionManager = transactionManager,
@@ -62,16 +62,17 @@ class SwapDomainModule {
             getMultiCryptoCurrencyStatusUseCase = getCryptoCurrencyStatusUseCase,
             sendTransactionUseCase = sendTransactionUseCase,
             createTransactionUseCase = createTransactionUseCase,
+            createTransactionExtrasUseCase = createTransactionDataExtrasUseCase,
             isDemoCardUseCase = isDemoCardUseCase,
             quotesRepository = quotesRepository,
-            walletManagersFacade = walletManagersFacade,
-            dispatcher = coroutineDispatcherProvider,
             swapTransactionRepository = swapTransactionRepository,
             appCurrencyRepository = appCurrencyRepository,
             currencyChecksRepository = currencyChecksRepository,
             currenciesRepository = currenciesRepository,
             initialToCurrencyResolver = initialToCurrencyResolver,
-            transactionRepository = transactionRepository,
+            demoConfig = DemoConfig(),
+            validateTransactionUseCase = validateTransactionUseCase,
+            estimateFeeUseCase = estimateFeeUseCase,
         )
     }
 
@@ -96,12 +97,14 @@ class SwapDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyStatusesSyncUseCase {
         return GetCryptoCurrencyStatusesSyncUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
             dispatchers = dispatchers,
         )
     }
@@ -113,11 +116,13 @@ class SwapDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
     ): GetCardTokensListUseCase {
         return GetCardTokensListUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
         )
     }
 

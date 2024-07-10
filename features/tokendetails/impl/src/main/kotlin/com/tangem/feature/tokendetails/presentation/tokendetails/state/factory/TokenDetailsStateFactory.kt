@@ -24,15 +24,14 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter.TokenDetailsLoadingTxHistoryModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
@@ -44,9 +43,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
+    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
+    stakingFeatureToggles: StakingFeatureToggles,
     symbol: String,
     decimals: Int,
 ) {
@@ -55,7 +55,6 @@ internal class TokenDetailsStateFactory(
         TokenDetailsSkeletonStateConverter(
             clickIntents = clickIntents,
             featureToggles = featureToggles,
-            stakingAvailabilityProvider = stakingAvailabilityProvider,
         )
     }
 
@@ -70,6 +69,7 @@ internal class TokenDetailsStateFactory(
             symbol = symbol,
             decimals = decimals,
             clickIntents = clickIntents,
+            stakingFeatureToggles = stakingFeatureToggles,
         )
     }
 
@@ -105,6 +105,15 @@ internal class TokenDetailsStateFactory(
     private val stakingStateConverter by lazy {
         TokenStakingStateConverter(
             currentStateProvider = currentStateProvider,
+            clickIntents = clickIntents,
+        )
+    }
+
+    private val balanceSelectStateConverter by lazy {
+        TokenDetailsBalanceSelectStateConverter(
+            currentStateProvider = currentStateProvider,
+            appCurrencyProvider = appCurrencyProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
 
@@ -212,9 +221,15 @@ internal class TokenDetailsStateFactory(
         )
     }
 
+    fun getStateWithUpdatedStakingAvailability(stakingAvailability: StakingAvailability): TokenDetailsState {
+        return currentStateProvider().copy(
+            isStakingBlockShown = stakingAvailability != StakingAvailability.Unavailable,
+        )
+    }
+
     fun getStateWithStaking(stakingEither: Either<Throwable, StakingEntryInfo>): TokenDetailsState {
         return currentStateProvider().copy(
-            stakingBlockState = stakingStateConverter.convert(stakingEither),
+            stakingBlocksState = stakingStateConverter.convert(stakingEither),
         )
     }
 
@@ -344,6 +359,12 @@ internal class TokenDetailsStateFactory(
         }
     }
 
+    fun getStateWithUpdatedBalanceSegmentedButtonConfig(
+        buttonConfig: TokenBalanceSegmentedButtonConfig,
+    ): TokenDetailsState {
+        return balanceSelectStateConverter.convert(buttonConfig)
+    }
+
     private fun TokenDetailsAppBarMenuConfig.updateMenu(
         cardTypesResolver: CardTypesResolver,
         isBitcoin: Boolean,
@@ -370,6 +391,12 @@ internal class TokenDetailsStateFactory(
 
     private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason): TextReference {
         return when (unavailabilityReason) {
+            is ScenarioUnavailabilityReason.StakingUnavailable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_staking_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
             is ScenarioUnavailabilityReason.PendingTransaction -> {
                 when (unavailabilityReason.withdrawalScenario) {
                     ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
