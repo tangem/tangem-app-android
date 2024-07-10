@@ -33,7 +33,7 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.arrow.core)
-    implementation(deps.googlePlay.core)
+    implementation(deps.googlePlay.review)
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.reKotlin)
