@@ -4,6 +4,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 // [REDACTED_TODO_COMMENT]
 // [REDACTED_JIRA]
@@ -13,6 +14,9 @@ internal class RuntimeUserWalletsStore(
 
     override val selectedUserWalletOrNull: UserWallet?
         get() = userWalletsListManager.selectedUserWalletSync
+
+    override val userWallets: Flow<List<UserWallet>>
+        get() = userWalletsListManager.userWallets
 
     override suspend fun getSyncOrNull(key: UserWalletId): UserWallet? {
         return userWalletsListManager

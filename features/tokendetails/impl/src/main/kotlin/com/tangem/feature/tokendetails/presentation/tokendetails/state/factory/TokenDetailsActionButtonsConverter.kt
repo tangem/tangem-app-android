@@ -38,6 +38,12 @@ internal class TokenDetailsActionButtonsConverter(
                             onLongClick = clickIntents::onCopyAddress,
                         )
                     }
+                    is TokenActionsState.ActionState.Stake -> {
+                        TokenDetailsActionButton.Stake(
+                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
+                            onClick = { clickIntents.onStakeClick(action.unavailabilityReason) },
+                        )
+                    }
                     is TokenActionsState.ActionState.Sell -> {
                         TokenDetailsActionButton.Sell(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,

@@ -45,7 +45,7 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
 
-@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
+@Suppress("LargeClass", "TooManyFunctions")
 // [REDACTED_TODO_COMMENT]
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
 class DefaultWalletManagersFacade(
@@ -474,7 +474,7 @@ class DefaultWalletManagersFacade(
         amount: Amount,
         userWalletId: UserWalletId,
         network: Network,
-    ): Result<TransactionFee>? {
+    ): Result<TransactionFee>? = withContext(dispatchers.io) {
         val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -484,7 +484,7 @@ class DefaultWalletManagersFacade(
 
         val destination = estimationFeeAddressFactory.makeAddress(blockchain)
 
-        return (walletManager as? TransactionSender)?.estimateFee(
+        (walletManager as? TransactionSender)?.estimateFee(
             amount = amount,
             destination = destination,
         )
