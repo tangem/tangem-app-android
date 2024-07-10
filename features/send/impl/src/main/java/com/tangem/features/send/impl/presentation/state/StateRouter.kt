@@ -1,15 +1,14 @@
 package com.tangem.features.send.impl.presentation.state
 
-import androidx.fragment.app.FragmentManager
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import java.lang.ref.WeakReference
 
 internal class StateRouter(
-    private val fragmentManager: WeakReference<FragmentManager>,
+    private val appRouter: AppRouter,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val isEditingDisabled: Boolean,
 ) {
@@ -26,7 +25,7 @@ internal class StateRouter(
     }
 
     fun popBackStack() {
-        fragmentManager.get()?.popBackStack()
+        appRouter.pop()
     }
 
     fun onBackClick(isSuccess: Boolean = false) {
