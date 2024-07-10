@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens
 
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
@@ -26,6 +27,7 @@ class GetCurrencyWarningsUseCase(
     private val networksRepository: NetworksRepository,
     private val swapRepository: SwapRepository,
     private val marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
+    private val stakingRepository: StakingRepository,
     private val promoRepository: PromoRepository,
     private val showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -43,6 +45,7 @@ class GetCurrencyWarningsUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
             userWalletId = userWalletId,
         )
         return combine(
