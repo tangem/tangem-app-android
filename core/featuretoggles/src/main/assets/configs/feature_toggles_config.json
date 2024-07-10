@@ -4,10 +4,6 @@
         "version": "undefined"
     },
     {
-        "name": "REDESIGNED_MANAGE_TOKENS_SCREEN_ENABLED",
-        "version": "undefined"
-    },
-    {
         "name": "REDESIGNED_SEND_SCREEN_ENABLED",
         "version": "5.10.0"
     },
@@ -41,6 +37,10 @@
     },
     {
         "name": "DETAILS_REDESIGN_ENABLED",
-        "version": "undefined"
+        "version": "5.13.0"
+    },
+    {
+        "name": "PUSH_NOTIFICATIONS_ENABLED",
+        "version": "5.13.0"
     }
 ]
