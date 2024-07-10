@@ -16,6 +16,7 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.repository.MockCurrenciesRepository
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.domain.tokens.repository.MockQuotesRepository
+import com.tangem.domain.tokens.repository.MockStakingRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.delay
@@ -316,5 +317,6 @@ internal class GetTokenListUseCaseTest {
         ),
         quotesRepository = MockQuotesRepository(quotes),
         networksRepository = MockNetworksRepository(statuses),
+        stakingRepository = MockStakingRepository(),
     )
 }
