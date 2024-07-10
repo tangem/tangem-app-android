@@ -25,8 +25,8 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.appbar.AppBarWithAdditionalButtons
-import com.tangem.core.ui.components.appbar.models.AdditionalButton
+import com.tangem.core.ui.components.appbar.TangemTopAppBar
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.buttons.common.TangemButtonColors
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemColorPalette
@@ -57,14 +57,14 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
             .statusBarsPadding(),
     ) {
         Column(modifier = Modifier.padding(bottom = bottomPadding)) {
-            AppBarWithAdditionalButtons(
-                text = resourceReference(R.string.disclaimer_title),
-                startButton = AdditionalButton(
+            TangemTopAppBar(
+                title = resourceReference(R.string.disclaimer_title),
+                startButton = TopAppBarButtonUM(
                     iconRes = R.drawable.ic_back_24,
                     onIconClicked = state.popBack,
                 ).takeIf { state.isTosAccepted },
                 textColor = textColor,
-                iconColor = iconColor,
+                iconTint = iconColor,
             )
             DisclaimerContent(state.url, state.isTosAccepted)
         }
