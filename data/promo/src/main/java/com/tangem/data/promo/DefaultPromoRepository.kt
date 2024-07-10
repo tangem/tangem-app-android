@@ -33,17 +33,19 @@ internal class DefaultPromoRepository(
     }
 
     override suspend fun getOkxPromoBanner(): PromoBanner? {
-        return runCatching(dispatchers.io) {
-            promoResponseConverter.convert(
-                tangemApi.getPromotionInfo(OKX)
-                    .getOrThrow(),
-            )
-        }.getOrNull()
+        // TODO disabled for 5.12, enable for 5.12.1
+        return null
+        // return runCatching(dispatchers.io) {
+        //     promoResponseConverter.convert(
+        //         tangemApi.getPromotionInfo(OKX)
+        //             .getOrThrow(),
+        //     )
+        // }.getOrNull()
     }
 
     private companion object {
         private const val CHANGELLY_NAME = "changelly"
         private const val TRAVALA = "travala"
-        private const val OKX = "okx"
+        // private const val OKX = "okx"
     }
 }
