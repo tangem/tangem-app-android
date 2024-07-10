@@ -6,10 +6,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.components.SystemBarsEffect
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
@@ -17,7 +17,6 @@ import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.ui.SendScreen
 import com.tangem.features.send.impl.presentation.viewmodel.SendViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import java.lang.ref.WeakReference
 import javax.inject.Inject
 
 /**
@@ -33,6 +32,9 @@ internal class SendFragment : ComposeFragment() {
     lateinit var router: SendRouter
 
     @Inject
+    lateinit var appRouter: AppRouter
+
+    @Inject
     lateinit var analyticsEventsHandler: AnalyticsEventHandler
 
     private val viewModel by viewModels<SendViewModel>()
@@ -45,11 +47,11 @@ internal class SendFragment : ComposeFragment() {
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(viewModel)
 
-        val isEditingDisabled = arguments?.getString(SendRouter.TRANSACTION_ID_KEY) != null
+        val isEditingDisabled = arguments?.getString(AppRoute.Send.TRANSACTION_ID_KEY) != null
         viewModel.setRouter(
             innerSendRouter,
             StateRouter(
-                fragmentManager = WeakReference(parentFragmentManager),
+                appRouter = appRouter,
                 isEditingDisabled = isEditingDisabled,
                 analyticsEventsHandler = analyticsEventsHandler,
             ),
@@ -58,11 +60,6 @@ internal class SendFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        val systemBarsColor = TangemTheme.colors.background.tertiary
-        SystemBarsEffect {
-            setSystemBarsColor(systemBarsColor)
-        }
-
         val currentState = viewModel.stateRouter.currentState.collectAsStateWithLifecycle()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
