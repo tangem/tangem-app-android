@@ -1,13 +1,17 @@
 package com.tangem.tap.features.details.ui.appsettings
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -32,6 +36,7 @@ internal fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () ->
         },
         titleRes = R.string.app_settings_title,
         onBackClick = onBackClick,
+        addBottomInsets = false,
     )
 }
 
@@ -44,7 +49,11 @@ private fun AppSettings(state: AppSettingsScreenState.Content) {
         null -> Unit
     }
 
-    LazyColumn {
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+
+    LazyColumn(
+        contentPadding = PaddingValues(bottom = bottomBarHeight),
+    ) {
         items(
             items = state.items,
             key = Item::id,
