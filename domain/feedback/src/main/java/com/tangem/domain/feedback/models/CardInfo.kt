@@ -1,6 +1,9 @@
 package com.tangem.domain.feedback.models
 
+import com.tangem.domain.wallets.models.UserWalletId
+
 data class CardInfo(
+    val userWalletId: UserWalletId?,
     val cardId: String,
     val firmwareVersion: String,
     val cardBlockchain: String?,
