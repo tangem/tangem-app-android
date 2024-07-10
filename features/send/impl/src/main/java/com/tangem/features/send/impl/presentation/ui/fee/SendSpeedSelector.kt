@@ -63,7 +63,7 @@ internal fun SendSpeedSelector(
                 onSelect = { clickIntents.onFeeSelectorClick(FeeType.Fast) },
             )
             SendSpeedSelectorItem(
-                titleRes = R.string.common_fee_selector_option_custom,
+                titleRes = R.string.common_custom,
                 iconRes = R.drawable.ic_edit_24,
                 feeType = FeeType.Custom,
                 state = state,
