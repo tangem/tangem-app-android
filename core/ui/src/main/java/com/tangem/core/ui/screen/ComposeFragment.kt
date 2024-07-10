@@ -18,7 +18,7 @@ abstract class ComposeFragment : Fragment(), ComposeScreen {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val isTransitionsInflated = TransitionInflater.from(requireContext()).inflateTransitions()
 
-        return createComposeView(inflater.context).also {
+        return createComposeView(inflater.context, requireActivity()).also {
             it.isTransitionGroup = isTransitionsInflated
         }
     }
