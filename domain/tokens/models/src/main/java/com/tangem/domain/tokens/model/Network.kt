@@ -1,7 +1,6 @@
 package com.tangem.domain.tokens.model
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
 /**
  * Represents a blockchain network, identified by a unique ID, a human-readable name, and its standard type.
@@ -20,7 +19,7 @@ import kotlinx.parcelize.Parcelize
  * that cannot be represented in a fiat currency.
  * (For those blockchains that have FeeResource instead of a standard type of fee)
  */
-@Parcelize
+@Serializable
 data class Network(
     val id: ID,
     val backendId: String,
@@ -30,7 +29,7 @@ data class Network(
     val isTestnet: Boolean,
     val standardType: StandardType,
     val hasFiatFeeRate: Boolean,
-) : Parcelable {
+) {
 
     init {
         require(name.isNotBlank()) { "Network name must not be blank" }
@@ -42,8 +41,8 @@ data class Network(
      * @property value The string representation of the network ID.
      */
     @JvmInline
-    @Parcelize
-    value class ID(val value: String) : Parcelable {
+    @Serializable
+    value class ID(val value: String) {
 
         init {
             require(value.isNotBlank()) { "Network ID must not be blank" }
@@ -56,8 +55,8 @@ data class Network(
      * This class represents such paths in a generic manner, allowing for predefined card-based paths,
      * custom paths, or even no derivation path at all.
      */
-    @Parcelize
-    sealed class DerivationPath : Parcelable {
+    @Serializable
+    sealed class DerivationPath {
 
         /** The actual derivation path value, if any. */
         abstract val value: String?
@@ -67,6 +66,7 @@ data class Network(
          *
          * @property value The derivation path string.
          */
+        @Serializable
         data class Card(override val value: String) : DerivationPath()
 
         /**
@@ -74,12 +74,14 @@ data class Network(
          *
          * @property value The derivation path string.
          */
+        @Serializable
         data class Custom(override val value: String) : DerivationPath()
 
         /**
          * Represents a lack of derivation path.
          */
-        object None : DerivationPath() {
+        @Serializable
+        data object None : DerivationPath() {
             override val value: String? get() = null
         }
     }
@@ -93,31 +95,36 @@ data class Network(
      *
      * @property name The human-readable name of the standard type.
      */
-    @Parcelize
-    sealed class StandardType : Parcelable {
+    @Serializable
+    sealed class StandardType {
         abstract val name: String
 
         /** Represents the ERC20 token standard, common on the Ethereum network. */
-        object ERC20 : StandardType() {
+        @Serializable
+        data object ERC20 : StandardType() {
             override val name: String get() = "ERC20"
         }
 
         /** Represents the TRC20 token standard, common on the TRON network. */
-        object TRC20 : StandardType() {
+        @Serializable
+        data object TRC20 : StandardType() {
             override val name: String get() = "TRC20"
         }
 
         /** Represents the BEP20 token standard, common on the Binance Smart Chain network. */
-        object BEP20 : StandardType() {
+        @Serializable
+        data object BEP20 : StandardType() {
             override val name: String get() = "BEP20"
         }
 
         /** Represents the BEP2 token standard, common on the Binance Chain network. */
-        object BEP2 : StandardType() {
+        @Serializable
+        data object BEP2 : StandardType() {
             override val name: String get() = "BEP2"
         }
 
         /** Represents a network that does not adhere to a predefined standard type. */
+        @Serializable
         data class Unspecified(override val name: String) : StandardType()
     }
 }
