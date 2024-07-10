@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
@@ -65,5 +66,30 @@ interface NetworksRepository {
     /**
      * Returns list of addresses and crypto currency info of added currencies of [network] in selected wallet [userWalletId]
      */
+    fun getNetworkAddressesFlow(userWalletId: UserWalletId, network: Network): Flow<List<CryptoCurrencyAddress>>
+
+    /**
+     * Returns list of addresses and crypto currency info of added currencies of [network] in selected wallet [userWalletId]
+     */
     suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network): List<CryptoCurrencyAddress>
+
+    /**
+     * Returns address of [cryptoCurrency] in selected wallet [userWalletId]
+     */
+    suspend fun getNetworkAddress(userWalletId: UserWalletId, currency: CryptoCurrency): CryptoCurrencyAddress
+
+    /**
+     * Returns address of [cryptoCurrency] in selected wallet [userWalletId]
+     */
+    fun getNetworkAddressFlow(userWalletId: UserWalletId, currency: CryptoCurrency): Flow<CryptoCurrencyAddress>
+
+    /**
+     * Returns list of addresses and crypto currency info in selected wallet [userWalletId]
+     */
+    fun getNetworkAddressesFlow(userWalletId: UserWalletId): Flow<List<CryptoCurrencyAddress>>
+
+    /**
+     * Returns list of addresses and crypto currency info in selected wallet [userWalletId]
+     */
+    suspend fun getNetworkAddresses(userWalletId: UserWalletId): List<CryptoCurrencyAddress>
 }
