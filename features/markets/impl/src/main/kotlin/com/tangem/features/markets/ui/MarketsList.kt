@@ -85,8 +85,9 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
 }
 
 @Composable
-fun Title() {
+private fun Title(modifier: Modifier = Modifier) {
     Text(
+        modifier = modifier,
         text = stringResource(id = R.string.markets_common_title),
         style = TangemTheme.typography.h3,
         color = TangemTheme.colors.text.primary1,
@@ -99,9 +100,10 @@ private fun Options(
     trendInterval: MarketsListUM.TrendInterval,
     onSortByClick: () -> Unit,
     onIntervalClick: (MarketsListUM.TrendInterval) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .height(IntrinsicSize.Max)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -163,6 +165,7 @@ private fun Items(state: ListUM, modifier: Modifier = Modifier) {
                 }
             }
             ListUM.SearchNothingFound -> {
+                // TODO
             }
             is ListUM.Content -> {
                 items(
