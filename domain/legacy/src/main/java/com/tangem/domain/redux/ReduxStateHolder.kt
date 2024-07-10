@@ -11,5 +11,5 @@ interface ReduxStateHolder {
 
     suspend fun onUserWalletSelected(userWallet: UserWallet)
 
-    fun sendFeedbackEmail()
+    fun dispatchDialogShow(dialog: StateDialog)
 }
