@@ -375,25 +375,29 @@ internal class DefaultStakingRepository(
     }
 
     override suspend fun submitHash(transactionId: String, transactionHash: String) {
-        stakeKitApi.submitTransactionHash(
-            transactionId = transactionId,
-            body = SubmitTransactionHashRequestBody(
-                hash = transactionHash,
-            ),
-        )
+        withContext(dispatchers.io) {
+            stakeKitApi.submitTransactionHash(
+                transactionId = transactionId,
+                body = SubmitTransactionHashRequestBody(
+                    hash = transactionHash,
+                ),
+            )
+        }
     }
 
     override suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata) {
-        appPreferencesStore.editData { preferences ->
-            val savedTransactions = preferences.getObjectListOrDefault<UnsubmittedTransactionMetadata>(
-                key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
-                default = emptyList(),
-            )
+        withContext(dispatchers.io) {
+            appPreferencesStore.editData { preferences ->
+                val savedTransactions = preferences.getObjectListOrDefault<UnsubmittedTransactionMetadata>(
+                    key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
+                    default = emptyList(),
+                )
 
-            preferences.setObjectList(
-                key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
-                value = savedTransactions + unsubmittedTransactionMetadata,
-            )
+                preferences.setObjectList(
+                    key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
+                    value = savedTransactions + unsubmittedTransactionMetadata,
+                )
+            }
         }
     }
 

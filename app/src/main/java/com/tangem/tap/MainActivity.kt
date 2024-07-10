@@ -223,6 +223,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         observeStateUpdates()
         observePolkadotAccountHealthCheck()
+        sendStakingUnsubmittedHashes()
 
         if (intent != null) {
             deepLinksRegistry.launch(intent)
@@ -563,6 +564,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                     )
                 }
         }
+    }
+
+    private fun sendStakingUnsubmittedHashes() {
         lifecycleScope.launch {
             sendUnsubmittedHashesUseCase.invoke()
                 .onRight { Timber.d("Submitting hashes succeeded") }
