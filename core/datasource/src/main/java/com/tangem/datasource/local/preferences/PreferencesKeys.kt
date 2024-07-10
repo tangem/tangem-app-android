@@ -94,6 +94,22 @@ object PreferencesKeys {
     }
 
     fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
+
+    // region Permission
+    fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
+
+    fun getShouldShowInitialPermissionScreen(permission: String) =
+        booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")
+
+    fun getIsFirstTimeAskingPermission(permission: String) =
+        booleanPreferencesKey("shouldAskInitialPushPermission_$permission")
+
+    fun getPermissionLaunchCount(permission: String) = intPreferencesKey("pushPermissionLaunchCount_$permission")
+
+    fun getPermissionDaysCount(permission: String) = longPreferencesKey("pushPermissionDaysCount_$permission")
+    // endregion
+
+    fun getUserTokensKey(userWalletId: String) = stringPreferencesKey(name = "user_tokens_$userWalletId")
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */
