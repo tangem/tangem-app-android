@@ -16,6 +16,7 @@ dependencies {
     // endregion
 
     // region Domain modules
+    api(projects.domain.core)
     implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.models)
@@ -27,10 +28,5 @@ dependencies {
     // region Tangem libraries
     implementation(deps.tangem.blockchain) // android-library
     implementation(deps.tangem.card.core)
-    // endregion
-
-    // region Other libraries
-    implementation(deps.arrow.core)
-    implementation(deps.kotlin.coroutines)
     // endregion
 }
