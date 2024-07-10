@@ -46,8 +46,8 @@ coroutine = "1.7.2"
 desugarJdkLibs = "1.1.5"
 firebase = "26.0.0"
 googleMaterialComponent = "1.6.1"
-googlePlayCore = "1.10.3"
-googlePlayCoreKtx = "1.8.1"
+googlePlayReview = "2.0.1"
+googlePlayReviewKtx = "2.0.1"
 googlePlayServicesWallet = "19.1.0"
 hilt = "2.46"
 hilt-navigation = "1.0.0"
@@ -212,8 +212,8 @@ kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", 
 kotlin-coroutines-rx2 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-rx2", version.ref = "coroutine" }
 kotlin-immutable-collections = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlin-immutable-collections" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
-googlePlay-core = { module = "com.google.android.play:core", version.ref = "googlePlayCore" }
-googlePlay-core-ktx = { module = "com.google.android.play:core-ktx", version.ref = "googlePlayCoreKtx" }
+googlePlay-review = { module = "com.google.android.play:review", version.ref = "googlePlayReview" }
+googlePlay-review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "googlePlayReviewKtx" }
 googlePlay-services-wallet = { module = "com.google.android.gms:play-services-wallet", version.ref = "googlePlayServicesWallet" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-core = { module = "com.google.dagger:hilt-core", version.ref = "hilt" }
