@@ -37,7 +37,7 @@ Build a signed release APK
 [bundle exec] fastlane android build
 ```
 
-Build internal and release APKs
+Build external and release APKs
 
 ### android beta
 
@@ -46,6 +46,16 @@ Build internal and release APKs
 ```
 
 Submit a new Beta Build to Firebase App Distribution
+
+### android publishToFirebase
+
+```sh
+[bundle exec] fastlane android publishToFirebase
+```
+
+Publish internal and external builds to Firebase App Distribution
+
+
 
 ----
 
