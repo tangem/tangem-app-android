@@ -2,9 +2,9 @@ package com.tangem.tap.features.details.ui.resetcard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.common.util.cardTypesResolver
@@ -16,6 +16,7 @@ import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.features.details.redux.CardSettingsState
@@ -190,13 +191,13 @@ internal class ResetCardViewModel @Inject constructor(
         val newSelectedWallet = userWalletsListManager.selectedUserWalletSync
 
         if (newSelectedWallet != null) {
-            store.dispatch(NavigationAction.PopBackTo(AppScreen.Wallet))
+            store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
         } else {
             val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }.isSuccess
             if (isLocked && userWalletsListManager.hasUserWallets) {
-                store.dispatch(NavigationAction.PopBackTo(AppScreen.Welcome))
+                store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
             } else {
-                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                store.dispatchNavigationAction { popTo<AppRoute.Home>() }
             }
         }
     }
