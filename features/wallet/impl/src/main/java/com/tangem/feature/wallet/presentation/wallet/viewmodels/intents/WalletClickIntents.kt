@@ -32,6 +32,7 @@ internal class WalletClickIntents @Inject constructor(
     private val currencyActionsClickIntentsImplementor: WalletCurrencyActionsClickIntentsImplementor,
     private val contentClickIntentsImplementor: WalletContentClickIntentsImplementor,
     private val visaWalletIntentsImplementor: VisaWalletIntentsImplementor,
+    private val pushPermissionClickIntentsImplementor: WalletPushPermissionClickIntentsImplementor,
     private val stateHolder: WalletStateController,
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
@@ -48,7 +49,8 @@ internal class WalletClickIntents @Inject constructor(
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
     WalletCurrencyActionsClickIntents by currencyActionsClickIntentsImplementor,
     WalletContentClickIntents by contentClickIntentsImplementor,
-    VisaWalletIntents by visaWalletIntentsImplementor {
+    VisaWalletIntents by visaWalletIntentsImplementor,
+    WalletPushPermissionClickIntents by pushPermissionClickIntentsImplementor {
 
     override fun initialize(router: InnerWalletRouter, coroutineScope: CoroutineScope) {
         super.initialize(router, coroutineScope)
@@ -58,6 +60,7 @@ internal class WalletClickIntents @Inject constructor(
         currencyActionsClickIntentsImplementor.initialize(router, coroutineScope)
         contentClickIntentsImplementor.initialize(router, coroutineScope)
         visaWalletIntentsImplementor.initialize(router, coroutineScope)
+        pushPermissionClickIntentsImplementor.initialize(router, coroutineScope)
     }
 
     fun onWalletChange(index: Int) {
