@@ -21,10 +21,10 @@ internal class VisaCurrencyFactory {
 
         return VisaCurrency(
             symbol = contractInfo.token.symbol,
-            networkName = VisaConfig.NETWORK_NAME,
+            networkName = VisaConstants.NETWORK_NAME,
             decimals = contractInfo.token.decimals,
             fiatRate = fiatRate,
-            fiatCurrency = VisaConfig.fiatCurrency,
+            fiatCurrency = VisaConstants.fiatCurrency,
             balances = with(contractInfo) {
                 VisaCurrency.Balances(
                     total = balances.total,
