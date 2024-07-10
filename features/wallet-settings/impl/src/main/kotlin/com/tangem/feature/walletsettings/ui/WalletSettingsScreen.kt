@@ -6,22 +6,20 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.appbar.models.TopAppBarMedium
+import com.tangem.core.ui.components.appbar.TangemTopAppBar
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.BlockItem
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -30,7 +28,6 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WalletSettingsScreen(
     state: WalletSettingsUM,
@@ -38,12 +35,11 @@ internal fun WalletSettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor = TangemTheme.colors.background.secondary
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     BackHandler(onBack = state.popBack)
 
     Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = modifier,
         containerColor = backgroundColor,
         snackbarHost = {
             TangemSnackbarHost(
@@ -52,10 +48,9 @@ internal fun WalletSettingsScreen(
             )
         },
         topBar = {
-            TopAppBarMedium(
-                title = resourceReference(R.string.wallet_settings_title),
-                scrollBehavior = scrollBehavior,
-                onBackClick = state.popBack,
+            TangemTopAppBar(
+                modifier = Modifier.statusBarsPadding(),
+                startButton = TopAppBarButtonUM.Back(state.popBack),
             )
         },
         content = { paddingValues ->
@@ -79,11 +74,21 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
             bottom = TangemTheme.dimens.spacing16,
         ),
     ) {
+        item {
+            Text(
+                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                text = stringResource(id = R.string.wallet_settings_title),
+                style = TangemTheme.typography.h1,
+                color = TangemTheme.colors.text.primary1,
+            )
+        }
         items(
             items = state.items,
             key = WalletSettingsItemUM::id,
         ) { item ->
-            val itemModifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16)
+            val itemModifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.spacing16)
+                .fillMaxWidth()
 
             when (item) {
                 is WalletSettingsItemUM.WithItems -> ItemsBlock(
@@ -117,7 +122,10 @@ private fun ItemsBlock(model: WalletSettingsItemUM.WithItems, modifier: Modifier
             verticalArrangement = Arrangement.Top,
         ) {
             model.blocks.forEach { block ->
-                BlockItem(model = block)
+                BlockItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    model = block,
+                )
             }
         }
 
