@@ -17,7 +17,7 @@ private fun internalReduce(action: Action, state: AppState): DisclaimerState {
             disclaimer = action.disclaimer,
         )
         is DisclaimerAction.Show -> disclaimerState.copy(
-            showedFromScreen = action.fromScreen,
+            showedFrom = action.from,
             callback = action.callback,
         )
         is DisclaimerAction.AcceptDisclaimer, is DisclaimerAction.OnBackPressed -> disclaimerState.copy(

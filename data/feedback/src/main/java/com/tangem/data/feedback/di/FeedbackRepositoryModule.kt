@@ -3,9 +3,10 @@ package com.tangem.data.feedback.di
 import android.content.Context
 import com.tangem.data.feedback.DefaultFeedbackRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.feedback.repository.FeedbackRepository
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,10 +22,17 @@ internal object FeedbackRepositoryModule {
     @Singleton
     fun provideFeedbackRepository(
         appPreferencesStore: AppPreferencesStore,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListManager: UserWalletsListManager,
         walletManagersStore: WalletManagersStore,
         @ApplicationContext context: Context,
+        dispatchers: CoroutineDispatcherProvider,
     ): FeedbackRepository {
-        return DefaultFeedbackRepository(appPreferencesStore, userWalletsStore, walletManagersStore, context)
+        return DefaultFeedbackRepository(
+            appPreferencesStore = appPreferencesStore,
+            userWalletsListManager = userWalletsListManager,
+            walletManagersStore = walletManagersStore,
+            context = context,
+            dispatchers = dispatchers,
+        )
     }
 }
