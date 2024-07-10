@@ -96,6 +96,8 @@ sealed class DetailsAction : Action {
         data class ChangeAppCurrency(
             val currency: AppCurrency,
         ) : AppSettings()
+
+        data class Prepare(val state: AppSettingsState) : AppSettings()
     }
 
     data class ChangeAppCurrency(val currency: AppCurrency) : DetailsAction()
