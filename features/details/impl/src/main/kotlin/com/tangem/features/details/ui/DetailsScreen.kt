@@ -9,18 +9,21 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.appbar.models.TopAppBarMedium
+import com.tangem.core.ui.components.appbar.TangemTopAppBar
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockItem
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -30,7 +33,6 @@ import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.impl.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DetailsScreen(
     state: DetailsUM,
@@ -38,12 +40,11 @@ internal fun DetailsScreen(
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor = TangemTheme.colors.background.secondary
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     BackHandler(onBack = state.popBack)
 
     Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = modifier,
         containerColor = backgroundColor,
         snackbarHost = {
             TangemSnackbarHost(
@@ -52,10 +53,9 @@ internal fun DetailsScreen(
             )
         },
         topBar = {
-            TopAppBarMedium(
-                title = resourceReference(R.string.details_title),
-                scrollBehavior = scrollBehavior,
-                onBackClick = state.popBack,
+            TangemTopAppBar(
+                modifier = Modifier.statusBarsPadding(),
+                startButton = TopAppBarButtonUM.Back(state.popBack),
             )
         },
     ) { paddingValues ->
@@ -77,10 +77,18 @@ private fun Content(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         contentPadding = PaddingValues(
-            top = TangemTheme.dimens.spacing16,
+            top = TangemTheme.dimens.spacing12,
             bottom = TangemTheme.dimens.spacing16,
         ),
     ) {
+        item {
+            Text(
+                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                text = stringResource(R.string.details_title),
+                style = TangemTheme.typography.h1,
+                color = TangemTheme.colors.text.primary1,
+            )
+        }
         items(
             items = state.items,
             key = DetailsItemUM::id,
