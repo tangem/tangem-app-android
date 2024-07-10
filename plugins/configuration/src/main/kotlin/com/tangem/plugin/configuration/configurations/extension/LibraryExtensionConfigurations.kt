@@ -39,7 +39,7 @@ private fun LibraryExtension.configureBuildTypes() {
 }
 
 private fun LibraryExtension.configurePackagingOptions() {
-    packagingOptions {
+    packaging {
         resources {
             excludes += "lib/x86_64/darwin/libscrypt.dylib"
             excludes += "lib/x86_64/freebsd/libscrypt.so"
