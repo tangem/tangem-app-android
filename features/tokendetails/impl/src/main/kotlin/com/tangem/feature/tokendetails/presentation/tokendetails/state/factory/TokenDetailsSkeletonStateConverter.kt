@@ -7,7 +7,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
@@ -17,7 +16,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.Toke
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
-import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -27,7 +25,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class TokenDetailsSkeletonStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
-    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
 ) : Converter<CryptoCurrency, TokenDetailsState> {
 
     private val iconStateConverter by lazy { TokenDetailsIconStateConverter() }
@@ -51,9 +48,16 @@ internal class TokenDetailsSkeletonStateConverter(
                     )
                 },
             ),
-            tokenBalanceBlockState = TokenDetailsBalanceBlockState.Loading(actionButtons = createButtons()),
+            tokenBalanceBlockState = TokenDetailsBalanceBlockState.Loading(
+                actionButtons = createButtons(),
+                balanceSegmentedButtonConfig = createBalanceSegmentedButtonConfig(),
+                selectedBalanceType = BalanceType.ALL,
+            ),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
-            stakingBlockState = StakingBlockState.Loading(iconState = iconState),
+            stakingBlocksState = StakingBlocksState(
+                stakingAvailable = StakingAvailable.Loading(iconState),
+                stakingBalance = StakingBalance.Empty,
+            ),
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
             swapTxs = persistentListOf(),
@@ -67,7 +71,7 @@ internal class TokenDetailsSkeletonStateConverter(
             bottomSheetConfig = null,
             isBalanceHidden = true,
             isMarketPriceAvailable = value.id.rawCurrencyId != null,
-            isStakingAvailable = stakingAvailabilityProvider.invoke() is StakingAvailability.Available,
+            isStakingBlockShown = false,
             event = consumedEvent(),
         )
     }
@@ -99,6 +103,19 @@ internal class TokenDetailsSkeletonStateConverter(
             TokenDetailsActionButton.Receive(onClick = {}, onLongClick = null),
             TokenDetailsActionButton.Sell(dimContent = false, onClick = {}),
             TokenDetailsActionButton.Swap(dimContent = false, onClick = {}),
+        )
+    }
+
+    private fun createBalanceSegmentedButtonConfig(): ImmutableList<TokenBalanceSegmentedButtonConfig> {
+        return persistentListOf(
+            TokenBalanceSegmentedButtonConfig(
+                title = resourceReference(R.string.common_all),
+                type = BalanceType.ALL,
+            ),
+            TokenBalanceSegmentedButtonConfig(
+                title = resourceReference(R.string.staking_details_available),
+                type = BalanceType.AVAILABLE,
+            ),
         )
     }
 

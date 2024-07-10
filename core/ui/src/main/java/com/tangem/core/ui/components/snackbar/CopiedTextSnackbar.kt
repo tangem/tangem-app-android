@@ -19,6 +19,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * Snackbar to inform the user about copying text to the clipboard
@@ -100,7 +101,7 @@ private fun MessageText(text: TextReference, modifier: Modifier = Modifier) {
 private fun Preview_CopiedTextSnackbar(
     @PreviewParameter(CopiedTextSnackbarDataProvider::class) message: TextReference,
 ) {
-    TangemTheme(isDark = false) {
+    TangemThemePreview {
         CopiedTextSnackbar(message = message)
     }
 }
