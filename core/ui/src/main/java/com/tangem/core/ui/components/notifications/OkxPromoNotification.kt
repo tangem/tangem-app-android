@@ -58,7 +58,7 @@ private fun Content(config: NotificationConfig) {
                 .align(Alignment.CenterVertically),
         )
         Column(
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
             modifier = Modifier
                 .weight(1f)
                 .padding(TangemTheme.dimens.spacing12),
