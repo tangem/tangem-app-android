@@ -1,8 +1,8 @@
 package com.tangem.tap.common.extensions
 
-import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.navigation.StateDialog
+import com.tangem.common.routing.AppRouter
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -82,12 +82,16 @@ suspend fun dispatchOnMain(vararg actions: Action) {
     withMainContext { actions.forEach { store.dispatch(it) } }
 }
 
-fun Store<*>.dispatchOpenUrl(url: String) {
-    dispatch(NavigationAction.OpenUrl(url))
+fun Store<AppState>.dispatchOpenUrl(url: String) {
+    inject(DaggerGraphState::urlOpener).openUrl(url)
 }
 
-fun Store<*>.dispatchShare(url: String) {
-    dispatch(NavigationAction.Share(url))
+fun Store<AppState>.dispatchShare(url: String) {
+    inject(DaggerGraphState::shareManager).shareText(url)
+}
+
+fun Store<AppState>.dispatchNavigationAction(action: AppRouter.() -> Unit) {
+    inject(DaggerGraphState::appRouter).action()
 }
 
 inline fun <reified T> Store<AppState>.inject(getDependency: DaggerGraphState.() -> T?): T {
