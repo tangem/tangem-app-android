@@ -16,11 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,6 +27,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
@@ -36,6 +36,7 @@ import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.DraggableNetworkGroupItem
@@ -57,8 +58,12 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopBar(state.header, tokensListState)
+            TopBar(
+                config = state.header,
+                tokensListState = tokensListState,
+            )
         },
+        contentWindowInsets = WindowInsetsZero,
         content = { paddingValues ->
             TokenList(
                 modifier = Modifier
@@ -72,7 +77,9 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier
         },
         floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
-            Actions(state.actions)
+            Box(modifier = Modifier.navigationBarsPadding()) {
+                Actions(state.actions)
+            }
         },
         containerColor = TangemTheme.colors.background.secondary,
     )
@@ -104,9 +111,11 @@ private fun TokenList(
             onDragEnd = onDragEnd,
         )
 
+        val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+
         val listContentPadding = PaddingValues(
             top = TangemTheme.dimens.spacing4,
-            bottom = TangemTheme.dimens.spacing92,
+            bottom = TangemTheme.dimens.spacing92 + bottomBarHeight,
             start = TangemTheme.dimens.spacing16,
             end = TangemTheme.dimens.spacing16,
         )
@@ -140,7 +149,7 @@ private fun TokenList(
             }
         }
 
-        BottomGradient(modifier = Modifier.align(Alignment.BottomCenter))
+        BottomFade(modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 
@@ -192,23 +201,6 @@ private fun LazyItemScope.DraggableItem(
 }
 
 @Composable
-private fun BottomGradient(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(TangemTheme.dimens.size116)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        TangemTheme.colors.background.secondary,
-                    ),
-                ),
-            ),
-    )
-}
-
-@Composable
 private fun TopBar(
     config: OrganizeTokensState.HeaderConfig,
     tokensListState: LazyListState,
@@ -228,6 +220,7 @@ private fun TopBar(
         modifier = modifier
             .shadow(elevation)
             .background(TangemTheme.colors.background.secondary)
+            .statusBarsPadding()
             .padding(horizontal = TangemTheme.dimens.spacing16)
             .fillMaxWidth(),
     ) {
