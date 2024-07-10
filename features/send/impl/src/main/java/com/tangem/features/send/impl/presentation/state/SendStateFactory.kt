@@ -1,18 +1,18 @@
 package com.tangem.features.send.impl.presentation.state
 
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
+import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
 import com.tangem.features.send.impl.presentation.state.common.SendSyncEditConverter
 import com.tangem.features.send.impl.presentation.state.confirm.SendConfirmStateConverter
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
 import com.tangem.features.send.impl.presentation.state.fee.checkFeeCoverage
-import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientStateConverter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
@@ -33,20 +33,12 @@ internal class SendStateFactory(
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
-    private val amountFieldConverter by lazy(LazyThreadSafetyMode.NONE) {
-        SendAmountFieldConverter(
-            clickIntents = clickIntents,
-            stateRouterProvider = stateRouterProvider,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
-            appCurrencyProvider = appCurrencyProvider,
-        )
-    }
     private val amountStateConverter by lazy(LazyThreadSafetyMode.NONE) {
-        SendAmountStateConverter(
+        AmountStateConverter(
+            clickIntents = clickIntents,
             appCurrencyProvider = appCurrencyProvider,
             iconStateConverter = iconStateConverter,
             userWalletProvider = userWalletProvider,
-            sendAmountFieldConverter = amountFieldConverter,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
@@ -79,12 +71,19 @@ internal class SendStateFactory(
         isBalanceHidden = false,
         cryptoCurrencyName = "",
         isSubtracted = false,
+        amountState = AmountState.Empty(false),
+        editAmountState = AmountState.Empty(false),
     )
 
     fun getReadyState(): SendUiState {
         val state = currentStateProvider()
+        val amountState = if (state.amountState is AmountState.Empty) {
+            amountStateConverter.convert("")
+        } else {
+            state.amountState
+        }
         return state.copy(
-            amountState = state.amountState ?: amountStateConverter.convert(""),
+            amountState = amountState,
             recipientState = state.recipientState
                 ?: recipientStateConverter.convert(SendRecipientStateConverter.Data("", null)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
@@ -95,8 +94,13 @@ internal class SendStateFactory(
 
     fun getReadyState(amount: String, destinationAddress: String, memo: String?): SendUiState {
         val state = currentStateProvider()
+        val amountState = if (state.amountState is AmountState.Empty) {
+            amountStateConverter.convert(amount)
+        } else {
+            state.amountState
+        }
         return state.copy(
-            amountState = state.amountState ?: amountStateConverter.convert(amount),
+            amountState = amountState,
             recipientState = state.recipientState
                 ?: recipientStateConverter.convert(SendRecipientStateConverter.Data(destinationAddress, memo)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
@@ -117,7 +121,7 @@ internal class SendStateFactory(
     fun getIsAmountSubtractedState(isAmountSubtractAvailable: Boolean): SendUiState {
         val state = currentStateProvider()
         val balance = cryptoCurrencyStatusProvider().value.amount ?: return state
-        val amountState = state.getAmountState(stateRouterProvider().isEditState) ?: return state
+        val amountState = state.getAmountState(stateRouterProvider().isEditState) as? AmountState.Data ?: return state
         val feeState = state.getFeeState(stateRouterProvider().isEditState) ?: return state
         val amountValue = amountState.amountTextField.cryptoAmount.value ?: return state
         val feeValue = feeState.fee?.amount?.value ?: BigDecimal.ZERO
@@ -146,7 +150,7 @@ internal class SendStateFactory(
         )
     }
 
-    fun getTransactionSendState(txData: TransactionData, txUrl: String): SendUiState {
+    fun getTransactionSendState(txData: TransactionData.Uncompiled, txUrl: String): SendUiState {
         val state = currentStateProvider()
         val sendState = state.sendState ?: return state
         return state.copy(

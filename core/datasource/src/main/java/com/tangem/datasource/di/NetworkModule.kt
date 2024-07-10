@@ -5,6 +5,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.express.TangemExpressApi
+import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApiV2
@@ -124,6 +125,23 @@ class NetworkModule {
             appVersionProvider = appVersionProvider,
             baseUrl = PROD_V1_TANGEM_TECH_BASE_URL,
             timeoutSeconds = TANGEM_TECH_SERVICE_TIMEOUT_SECONDS,
+            requestHeaders = listOf(AppVersionPlatformHeaders(appVersionProvider)),
+        )
+    }
+
+    @Provides
+    @DevTangemApi
+    @Singleton
+    fun provideCoinMarketsApi(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        appVersionProvider: AppVersionProvider,
+    ): TangemTechMarketsApi {
+        return provideTangemTechApiInternal(
+            moshi = moshi,
+            context = context,
+            appVersionProvider = appVersionProvider,
+            baseUrl = DEV_V1_TANGEM_TECH_BASE_URL,
             requestHeaders = listOf(AppVersionPlatformHeaders(appVersionProvider)),
         )
     }
