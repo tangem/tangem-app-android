@@ -184,8 +184,8 @@ dependencies {
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
-    implementation(deps.googlePlay.core)
-    implementation(deps.googlePlay.core.ktx)
+    implementation(deps.googlePlay.review)
+    implementation(deps.googlePlay.review.ktx)
     implementation(deps.googlePlay.services.wallet)
     coreLibraryDesugaring(deps.desugar)
     implementation(deps.timber)
