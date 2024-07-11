@@ -235,6 +235,7 @@
   <string name="express_exchange_status_subtitle">Данные провайдера. Сумма к получению может измениться в зависимости от рыночных условий.</string>
   <string name="express_exchange_status_title">Статус обмена</string>
   <string name="express_exchange_status_verifying">Требуется верификация</string>
+  <string name="express_exchange_status_waiting_tx_hash">Ожидание хеша транзакции</string>
   <string name="express_exchange_token_list_subtitle">Список токенов в вашем кошельке</string>
   <string name="express_fetch_best_rates">Получение наилучших курсов...</string>
   <string name="express_floating_rate">Плавающая ставка</string>
@@ -248,6 +249,7 @@
   <string name="express_provider_min_amount">Доступно с %s</string>
   <string name="express_provider_not_available">Недоступно для этой пары</string>
   <string name="express_provider_permission_needed">Требуется разрешение</string>
+  <string name="express_provider_recommended">Рекомендовано</string>
   <string name="express_terms_of_use">Условиями использования</string>
   <string name="express_token_list_empty_search">Токены не найдены. Пожалуйста, попробуйте другой запрос</string>
   <string name="express_transaction_id">ID: %s</string>
@@ -584,6 +586,8 @@
   <string name="story_meet_title">Встречайте Tangem</string>
   <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и делайте вклады в более чем 100 различных децентрализованных сервисах</string>
   <string name="story_web3_title">Поддержка Web 3.0</string>
+  <string name="swap_promo_text">Обменивайте больше токенов по лучшим курсам прямо в вашем кошельке.</string>
+  <string name="swap_promo_title">Новый провайдер обмена!</string>
   <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя</string>
   <string name="swapping_alert_dex_description">В сумму включена комиссия провайдера сервиса.</string>
   <string name="swapping_alert_title">Комиссии</string>

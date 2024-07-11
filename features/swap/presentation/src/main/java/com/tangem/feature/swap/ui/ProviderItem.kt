@@ -87,6 +87,7 @@ fun ProviderItem(state: ProviderState, modifier: Modifier = Modifier, isSelected
     }
 }
 
+// Be careful when will replace with InputRowBestRate, because RecommendedBadge was added
 @Deprecated("Replace with InputRowBestRate")
 @Suppress("LongMethod")
 @Composable
@@ -142,16 +143,12 @@ private fun ProviderContentState(
                             modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
                         )
                     }
+                    val badgeModifier = Modifier.padding(start = TangemTheme.dimens.spacing4)
                     when (state.additionalBadge) {
-                        ProviderState.AdditionalBadge.BestTrade -> BestTradeItem(
-                            Modifier.padding(start = TangemTheme.dimens.spacing4),
-                        )
-                        ProviderState.AdditionalBadge.PermissionRequired -> PermissionBadgeItem(
-                            Modifier.padding(start = TangemTheme.dimens.spacing4),
-                        )
-                        ProviderState.AdditionalBadge.Empty -> {
-                            // no-op
-                        }
+                        ProviderState.AdditionalBadge.BestTrade -> BestTradeItem(badgeModifier)
+                        ProviderState.AdditionalBadge.PermissionRequired -> PermissionBadgeItem(badgeModifier)
+                        ProviderState.AdditionalBadge.Recommended -> RecommendedItem(badgeModifier)
+                        ProviderState.AdditionalBadge.Empty -> Unit
                     }
                 }
                 Row(
@@ -380,6 +377,23 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
             text = stringResource(id = R.string.express_provider_permission_needed),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+        )
+    }
+}
+
+@Composable
+private fun RecommendedItem(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
+            shape = TangemTheme.shapes.roundedCornersLarge,
+        ),
+    ) {
+        Text(
+            text = stringResource(id = R.string.express_provider_recommended),
+            style = TangemTheme.typography.caption1,
+            color = TangemTheme.colors.icon.accent,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
         )
     }

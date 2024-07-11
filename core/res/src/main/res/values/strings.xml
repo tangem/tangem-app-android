@@ -238,6 +238,7 @@
   <string name="express_exchange_status_subtitle">Provider-sourced data. Estimated amount subject to change due to market conditions.</string>
   <string name="express_exchange_status_title">Exchange status</string>
   <string name="express_exchange_status_verifying">Verification required</string>
+  <string name="express_exchange_status_waiting_tx_hash">Awaiting transaction hash</string>
   <string name="express_exchange_token_list_subtitle">List of all tokens added to your wallet</string>
   <string name="express_fetch_best_rates">Fetching best rates...</string>
   <string name="express_floating_rate">Floating rate</string>
@@ -251,6 +252,7 @@
   <string name="express_provider_min_amount">Available from %s</string>
   <string name="express_provider_not_available">Unavailable for this pair</string>
   <string name="express_provider_permission_needed">Permission Required</string>
+  <string name="express_provider_recommended">Recommended</string>
   <string name="express_terms_of_use">Terms of Use</string>
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
   <string name="express_transaction_id">ID: %s</string>
@@ -610,6 +612,8 @@
   <string name="story_meet_title">Meet Tangem</string>
   <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
   <string name="story_web3_title">Web 3.0 Compatible</string>
+  <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
+  <string name="swap_promo_title">New Swap Provider Available!</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
   <string name="swapping_alert_dex_description">The amount includes the service provider\'s fee.</string>
   <string name="swapping_alert_title">Fees</string>
