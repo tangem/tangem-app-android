@@ -40,15 +40,7 @@ inline fun <reified M : Model, reified P : Any> AppComponentContext.getOrCreateM
         val hiltComponent = hiltComponentBuilder
             .router(router)
             .uiMessageSender(messageSender)
-            .let { builder ->
-                if (params != null) {
-                    val container = MutableParamsContainer(params)
-
-                    builder.paramsContainer(container)
-                } else {
-                    builder
-                }
-            }
+            .paramsContainer(MutableParamsContainer(params ?: Unit))
             .build()
 
         EntryPoints.get(hiltComponent, ModelsEntryPoint::class.java)
