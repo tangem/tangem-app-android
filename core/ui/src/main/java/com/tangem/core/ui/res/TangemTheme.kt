@@ -7,9 +7,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tangem.core.ui.components.TangemShimmer
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.haptic.MockHapticManager
 import com.tangem.core.ui.windowsize.WindowSize
+import com.valentinilk.shimmer.Shimmer
 
 @Composable
 fun TangemTheme(
@@ -49,10 +51,14 @@ fun TangemTheme(
             LocalSnackbarHostState provides snackbarHostState,
             LocalWindowSize provides windowSize,
         ) {
-            ProvideTextStyle(
-                value = TangemTheme.typography.body1,
-                content = content,
-            )
+            CompositionLocalProvider(
+                LocalTangemShimmer provides TangemShimmer,
+            ) {
+                ProvideTextStyle(
+                    value = TangemTheme.typography.body1,
+                    content = content,
+                )
+            }
         }
     }
 }
@@ -227,4 +233,8 @@ val LocalSnackbarHostState = staticCompositionLocalOf<SnackbarHostState> {
 
 val LocalWindowSize = staticCompositionLocalOf<WindowSize> {
     error("No WindowSize provided")
+}
+
+val LocalTangemShimmer = staticCompositionLocalOf<Shimmer> {
+    error("No TangemShimmer provided")
 }
