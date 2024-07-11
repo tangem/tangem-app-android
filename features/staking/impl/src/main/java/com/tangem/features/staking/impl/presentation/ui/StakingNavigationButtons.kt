@@ -45,7 +45,7 @@ internal fun StakingNavigationButtons(uiState: StakingUiState, modifier: Modifie
         val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
 
         SendDoneButtons(
-            txUrl = transactionDoneState?.txUrl ?: "",
+            txUrl = transactionDoneState?.txUrl.orEmpty(),
             onExploreClick = uiState.clickIntents::onExploreClick,
             onShareClick = uiState.clickIntents::onShareClick,
             isVisible = isSuccessState,
@@ -64,11 +64,11 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
     val isButtonsVisible = isPrevButtonVisible(uiState.currentStep)
 
     val innerConfirmState = (uiState.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState
+    val isInProgressInnerState = innerConfirmState == InnerConfirmationStakingState.IN_PROGRESS
+    val isInAssentInnerState = innerConfirmState == InnerConfirmationStakingState.ASSENT
+
     val showTangemIcon = uiState.currentStep == StakingStep.Confirmation &&
-        (
-            innerConfirmState == InnerConfirmationStakingState.IN_PROGRESS ||
-                innerConfirmState == InnerConfirmationStakingState.ASSENT
-            )
+        (isInProgressInnerState || isInAssentInnerState)
 
     val (buttonTextId, buttonClick) = getButtonData(
         currentState = uiState,
