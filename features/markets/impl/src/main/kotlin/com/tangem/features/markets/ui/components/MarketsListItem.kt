@@ -1,4 +1,4 @@
-package com.tangem.features.markets.ui
+package com.tangem.features.markets.ui.components
 
 import android.content.res.Configuration
 import androidx.compose.animation.Animatable
@@ -45,7 +45,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.windowsize.WindowSizeType
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.ui.models.MarketsListItemModel
+import com.tangem.features.markets.ui.entity.MarketsListItemUM
 import com.tangem.features.markets.ui.preview.MarketChartListItemPreviewDataProvider
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -63,7 +63,7 @@ const val SWIPE_VELOCITY_THRESHOLD = 20f
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MarketsListItem(
-    model: MarketsListItemModel,
+    model: MarketsListItemUM,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     onSwipeToAction: () -> Unit = {},
@@ -184,7 +184,7 @@ fun MarketsListItem(
 }
 
 @Composable
-private fun MarketsListItemContent(model: MarketsListItemModel, modifier: Modifier = Modifier) {
+private fun MarketsListItemContent(model: MarketsListItemUM, modifier: Modifier = Modifier) {
     val windowSize = LocalWindowSize.current
 
     Row(
@@ -303,7 +303,7 @@ private fun RowScope.TokenRatingPlace(ratingPosition: String?) {
                 color = TangemTheme.colors.field.primary,
                 shape = TangemTheme.shapes.roundedCornersSmall2,
             )
-            .padding(horizontal = TangemTheme.dimens.size5), // TODO check
+            .padding(horizontal = TangemTheme.dimens.spacing5),
     ) {
         Text(
             text = ratingPosition ?: "-",
@@ -379,8 +379,9 @@ private fun Chart(chartType: MarketChartLook.Type, chartRawData: MarketChartRawD
             RectangleShimmer(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(TangemTheme.dimens.size15) // TODO check
+                    .height(TangemTheme.dimens.size12)
                     .align(Alignment.Center),
+                radius = TangemTheme.dimens.radius3,
             )
         }
     }
@@ -391,7 +392,7 @@ private fun Chart(chartType: MarketChartLook.Type, chartRawData: MarketChartRawD
 @Preview(showBackground = true, widthDp = 360, name = "normal night", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(showBackground = true, widthDp = 320, name = "small width")
 @Composable
-private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::class) state: MarketsListItemModel) {
+private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::class) state: MarketsListItemUM) {
     TangemThemePreview {
         var state1 by remember { mutableStateOf(state) }
         var state2 by remember { mutableStateOf(state) }
@@ -435,13 +436,13 @@ private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::cl
                             }
                         }
                         state1 = state1.copy(
-                            price = MarketsListItemModel.Price(
+                            price = MarketsListItemUM.Price(
                                 text = "0.${prices[0].first}023 $",
                                 changeType = prices[0].second,
                             ),
                         )
                         state2 = state2.copy(
-                            price = MarketsListItemModel.Price(
+                            price = MarketsListItemUM.Price(
                                 text = "0.${prices[1].first}023 $",
                                 changeType = prices[1].second,
                             ),
