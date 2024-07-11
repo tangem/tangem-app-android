@@ -367,6 +367,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                 Log.Level.Network,
                 Log.Level.Error,
                 Log.Level.Biometric,
+                Log.Level.Info,
             )
             return TangemLogCollector(logLevels, LogFormat.StairsFormatter())
         }
