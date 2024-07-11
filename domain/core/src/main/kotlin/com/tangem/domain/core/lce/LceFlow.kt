@@ -5,11 +5,11 @@ import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.ProducerScope
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.launch
 import kotlin.experimental.ExperimentalTypeInference
 
 /**
@@ -25,34 +25,42 @@ typealias LceFlow<E, C> = Flow<Lce<E, C>>
  * It provides methods to handle [Lce] instances and raise errors within a [Flow].
  *
  * @property raise The [LceRaise] instance that this class wraps.
- * @property scope The [ProducerScope] that this class operates within.
+ * @property producerScope The [ProducerScope] instance that this class wraps.
  * @property ifLoading The function to call if a loading state is raised.
  */
 class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
     private val raise: LceRaise<E>,
-    private val scope: ProducerScope<Lce<E, C>>,
+    private val producerScope: ProducerScope<Lce<E, C>>,
     private val ifLoading: suspend LceFlowScope<E, C>.(C?) -> Unit,
-) : Raise<E>, CoroutineScope by scope {
+) : Raise<E>, CoroutineScope by producerScope {
 
     /**
-     * Raises an [Lce] instance within the [ProducerScope].
-     * It closes the [ProducerScope] after raise.
+     * Sends a error of type [E] within the [ProducerScope] and then closes it for send.
+     * All subsequent sends will be ignored.
      *
-     * @param r The [Lce] instance to raise.
+     * This method blocks the coroutine until a error is handled by the receiver.
+     *
+     * If the [ProducerScope] is already closed for send (e.g. after rising another error), it just raises [r]
+     * without closing.
+     *
+     * @param r Error to raise.
      */
     override fun raise(r: E): Nothing {
-        scope.launch(NonCancellable) {
-            scope.send(r.lceError())
-            scope.close()
-        }
+        producerScope.trySendBlocking(r.lceError())
+        producerScope.close()
 
         raise.raise(r.lceError())
     }
 
     /**
-     * Sends a content value within the [ProducerScope].
+     * Sends a [content] value within the [ProducerScope].
+     *
      * If the content is still loading, it calls [ifLoading] lambda to retrieve a state.
      * Otherwise, it wraps the content in a [Lce.Content] state.
+     *
+     * This method suspends until the [Lce] instance is handled by the receiver.
+     *
+     * If the [ProducerScope] is closed for send (e.g. after rising a error), it does nothing.
      *
      * @param content The content value to send.
      * @param isStillLoading A flag indicating whether the content is still loading.
@@ -65,11 +73,23 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
             content.lceContent()
         }
 
-        scope.send(value)
+        send(value)
     }
 
+    /**
+     * Sends an [Lce] instance within the [ProducerScope].
+     *
+     * This method suspends until the [Lce] instance is handled by the receiver.
+     *
+     * If the [ProducerScope] is closed for send (e.g. after rising a error), it does nothing.
+     *
+     * @param value The [Lce] instance to send.
+     */
+    @OptIn(DelicateCoroutinesApi::class)
     suspend fun send(value: Lce<E, C>) {
-        scope.send(value)
+        if (producerScope.isClosedForSend) return
+
+        producerScope.send(value)
     }
 }
 
@@ -94,7 +114,7 @@ fun <E : Any, C : Any> lceFlow(
         lce {
             val scope = LceFlowScope(
                 raise = this@lce,
-                scope = this@channelFlow,
+                producerScope = this@channelFlow,
                 ifLoading = ifLoading,
             )
 
