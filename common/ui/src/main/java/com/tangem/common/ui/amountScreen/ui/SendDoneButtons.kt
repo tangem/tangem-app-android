@@ -58,8 +58,8 @@ fun SendDoneButtons(
     }
 }
 
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, widthDp = 328)
+@Preview(showBackground = true, widthDp = 328, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun SendDoneButtons_Preview() {
     TangemThemePreview {
