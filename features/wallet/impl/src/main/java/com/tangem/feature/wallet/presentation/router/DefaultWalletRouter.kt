@@ -25,6 +25,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScree
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
+import com.tangem.features.markets.component.MarketsListComponent
 import kotlin.properties.Delegates
 
 /** Default implementation of wallet feature router */
@@ -40,7 +41,7 @@ internal class DefaultWalletRouter(
     override fun getEntryFragment(): Fragment = WalletFragment.create()
 
     @Composable
-    override fun Initialize(onFinish: () -> Unit) {
+    override fun Initialize(onFinish: () -> Unit, marketsListComponent: MarketsListComponent?) {
         this.onFinish = onFinish
 
         NavHost(
@@ -55,6 +56,7 @@ internal class DefaultWalletRouter(
 
                 WalletScreen(
                     state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                    marketsListComponent = marketsListComponent,
                 )
             }
 
