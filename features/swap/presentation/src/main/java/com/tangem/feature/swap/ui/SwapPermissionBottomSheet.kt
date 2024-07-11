@@ -304,7 +304,7 @@ private fun Preview_AgreementBottomSheet() {
 
 private val previewData = GivePermissionBottomSheetConfig(
     data = SwapPermissionState.ReadyForRequest(
-        providerName = "1icnh",
+        providerName = "1inch",
         currency = "DAI",
         amount = "∞",
         walletAddress = "",
