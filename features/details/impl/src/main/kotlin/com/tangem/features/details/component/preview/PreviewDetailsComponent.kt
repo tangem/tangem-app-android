@@ -33,7 +33,6 @@ internal class PreviewDetailsComponent : DetailsComponent {
     )
 
     @Composable
-    @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
     override fun Content(modifier: Modifier) {
         DetailsScreen(
             modifier = modifier,
