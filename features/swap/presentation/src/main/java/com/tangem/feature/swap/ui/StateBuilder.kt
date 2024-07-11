@@ -1407,7 +1407,7 @@ internal class StateBuilder(
         return NotificationConfig(
             title = resourceReference(R.string.express_provider_permission_needed),
             subtitle = resourceReference(
-                id = R.string.give_permission_subtitle,
+                id = R.string.give_permission_swap_subtitle,
                 formatArgs = wrappedList(fromTokenSymbol),
             ),
             iconResId = R.drawable.ic_locked_24,
