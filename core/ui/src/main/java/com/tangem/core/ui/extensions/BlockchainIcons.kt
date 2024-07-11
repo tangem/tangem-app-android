@@ -59,7 +59,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "pls", "pls/test" -> R.drawable.img_pls_22
         "zkSyncEra", "zkSyncEra/test" -> R.drawable.img_zksync_22
         "moonbeam", "moonbeam/test" -> R.drawable.img_moonbeam_22
-        "manta", "manta/test" -> R.drawable.img_manta_22
+        "manta-pacific", "manta/test" -> R.drawable.img_manta_22
         "polygonZkEVM", "polygonZkEVM/test" -> R.drawable.img_polygon_22
         "moonriver", "moonriver/test" -> R.drawable.img_moonriver_22
         "mantle", "mantle/test" -> R.drawable.img_mantle_22
@@ -269,7 +269,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "pls", "pls/test" -> R.drawable.ic_pls_22
         "zkSyncEra", "zkSyncEra/test" -> R.drawable.ic_zksync_22
         "moonbeam", "moonbeam/test" -> R.drawable.ic_moonbeam_22
-        "manta", "manta/test" -> R.drawable.ic_manta_22
+        "manta-pacific", "manta/test" -> R.drawable.ic_manta_22
         "polygonZkEVM", "polygonZkEVM/test" -> R.drawable.ic_polygon_22
         "moonriver", "moonriver/test" -> R.drawable.ic_moonriver_22
         "mantle", "mantle/test" -> R.drawable.ic_mantle_22
