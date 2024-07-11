@@ -9,14 +9,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,7 +26,8 @@ import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.TangemSwitch
-import com.tangem.core.ui.components.appbar.models.TangemTopAppBarColors
+import com.tangem.core.ui.components.appbar.TangemTopAppBar
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.fields.SearchBar
@@ -45,21 +48,22 @@ import kotlinx.collections.immutable.ImmutableList
 private const val CHEVRON_ROTATION_EXPANDED = 180f
 private const val CHEVRON_ROTATION_COLLAPSED = 0f
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modifier) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-
     BackHandler(onBack = state.popBack)
 
     Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = modifier,
         containerColor = TangemTheme.colors.background.primary,
         topBar = {
-            TopBar(
-                scrollBehavior = scrollBehavior,
-                onAddCustomToken = state.onAddCustomToken,
-                onPopBack = state.popBack,
+            TangemTopAppBar(
+                modifier = Modifier.statusBarsPadding(),
+                title = stringResource(id = R.string.main_manage_tokens),
+                startButton = TopAppBarButtonUM.Back(state.popBack),
+                endButton = TopAppBarButtonUM(
+                    iconRes = R.drawable.ic_plus_24,
+                    onIconClicked = state.onAddCustomToken,
+                ),
             )
         },
         content = { innerPadding ->
@@ -79,55 +83,6 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
                 isVisible = state.hasChanges,
                 onClick = state.onSaveClick,
             )
-        },
-    )
-}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun TopBar(
-    scrollBehavior: TopAppBarScrollBehavior,
-    onPopBack: () -> Unit,
-    onAddCustomToken: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    TopAppBar(
-        modifier = modifier,
-        scrollBehavior = scrollBehavior,
-        colors = TangemTopAppBarColors.copy(
-            containerColor = TangemTheme.colors.background.primary,
-            scrolledContainerColor = TangemTheme.colors.background.primary,
-        ),
-        navigationIcon = {
-            IconButton(
-                modifier = Modifier.size(TangemTheme.dimens.size32),
-                onClick = onPopBack,
-            ) {
-                Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
-                    painter = painterResource(id = R.drawable.ic_back_24),
-                    contentDescription = null,
-                )
-            }
-        },
-        title = {
-            Text(
-                text = stringResource(id = R.string.main_manage_tokens),
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
-            )
-        },
-        actions = {
-            IconButton(
-                modifier = Modifier.size(TangemTheme.dimens.size32),
-                onClick = onAddCustomToken,
-            ) {
-                Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
-                    painter = painterResource(id = R.drawable.ic_plus_24),
-                    contentDescription = null,
-                )
-            }
         },
     )
 }
