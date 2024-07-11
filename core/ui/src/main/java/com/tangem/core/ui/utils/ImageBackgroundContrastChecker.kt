@@ -39,6 +39,6 @@ class ImageBackgroundContrastChecker(
 
     private companion object {
         // https://www.w3.org/TR/2008/REC-WCAG20-20081211/#contrast-ratiodef
-        private const val LOW_CONTRAST_RATIO = 1.5f
+        private const val LOW_CONTRAST_RATIO = 1.1f
     }
 }
