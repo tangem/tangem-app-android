@@ -32,7 +32,7 @@ private const val HIDE_PROGRESS_DELAY = 400L
 object HomeMiddleware {
     val handler = homeMiddleware
 
-    const val NEW_BUY_WALLET_URL = "https://buy.tangem.com/"
+    const val NEW_BUY_WALLET_URL = "https://buy.tangem.com/?utm_source=tangem&utm_medium=app"
 }
 
 private val homeMiddleware: Middleware<AppState> = { _, _ ->
