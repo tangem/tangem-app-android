@@ -54,10 +54,7 @@ internal class TokenDetailsSkeletonStateConverter(
                 selectedBalanceType = BalanceType.ALL,
             ),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
-            stakingBlocksState = StakingBlocksState(
-                stakingAvailable = StakingAvailable.Loading(iconState),
-                stakingBalance = StakingBalance.Empty,
-            ),
+            stakingBlocksState = StakingBlockUM.Loading(iconState),
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
             swapTxs = persistentListOf(),

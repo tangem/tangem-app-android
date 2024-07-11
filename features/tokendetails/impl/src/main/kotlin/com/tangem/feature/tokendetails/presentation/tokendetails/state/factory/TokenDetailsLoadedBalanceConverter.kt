@@ -14,7 +14,10 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.BalanceType
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryTransactionStateConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
@@ -131,17 +134,17 @@ internal class TokenDetailsLoadedBalanceConverter(
         }
     }
 
-    private fun getYieldBalance(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlocksState {
+    private fun getYieldBalance(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM {
         val yieldBalance = status.value.yieldBalance as? YieldBalance.Data
 
         val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance()
         val stakingRewardAmount = yieldBalance?.getRewardStakingBalance()
         val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
 
-        val stakingBalance = if (stakingCryptoAmount.isNullOrZero()) {
-            StakingBalance.Empty
+        return if (stakingCryptoAmount.isNullOrZero()) {
+            StakingBlockUM.Loading(state.tokenInfoBlockState.iconState)
         } else {
-            StakingBalance.Content(
+            StakingBlockUM.Staked(
                 cryptoAmount = stakingCryptoAmount,
                 fiatAmount = stakingFiatAmount,
                 cryptoValue = stringReference(
@@ -167,10 +170,6 @@ internal class TokenDetailsLoadedBalanceConverter(
                 onStakeClicked = clickIntents::onStakeBannerClick,
             )
         }
-        return state.stakingBlocksState.copy(
-            stakingAvailable = state.stakingBlocksState.stakingAvailable,
-            stakingBalance = stakingBalance,
-        )
     }
 
     private fun getMarketPriceState(
