@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
@@ -29,6 +30,7 @@ import com.arkivanov.essenty.lifecycle.asEssentyLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
@@ -38,7 +40,8 @@ import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.data.card.sdk.CardSdkLifecycleObserver
+import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
@@ -114,7 +117,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var testerRouter: TesterRouter
 
     @Inject
-    lateinit var cardSdkLifecycleObserver: CardSdkLifecycleObserver
+    lateinit var cardSdkOwner: CardSdkOwner
 
     @Inject
     lateinit var cardSdkConfigRepository: CardSdkConfigRepository
@@ -175,6 +178,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     internal lateinit var routingComponentFactory: RoutingComponent.Factory
 
     @Inject
+    internal lateinit var appRouter: AppRouter
+
+    @Inject
     lateinit var pushNotificationsRouter: PushNotificationsRouter
 
     @Inject
@@ -182,7 +188,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     internal val viewModel: MainViewModel by viewModels()
 
-    private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
+    private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
 
     // TODO: fixme: inject through DI
     private val intentProcessor: IntentProcessor = IntentProcessor()
@@ -194,9 +200,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val splashScreen = installSplashScreen()
+        // We need to call it before onCreate to prevent unnecessary activity recreation
+        installAppTheme()
 
-        installAppTheme() // We need to call it before onCreate to prevent unnecessary activity recreation
+        val splashScreen = installSplashScreen()
 
         enableEdgeToEdge(
             navigationBarStyle = SystemBarStyle.auto(
@@ -270,7 +277,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun installActivityDependencies() {
-        cardSdkLifecycleObserver.onCreate(context = this)
+        cardSdkOwner.register(activity = this)
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
         backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
@@ -301,14 +308,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun installAppTheme() {
         appThemeModeFlow = createAppThemeModeFlow()
-        val mode = runBlocking { appThemeModeFlow.filterNotNull().first() }
+        val mode = runBlocking { appThemeModeFlow.first() }
 
         updateAppTheme(mode)
     }
 
     private fun observeAppThemeModeUpdates() {
         appThemeModeFlow
-            .filterNotNull()
             .flowWithLifecycle(lifecycle)
             .onEach(::updateAppTheme)
             .launchIn(lifecycleScope)
@@ -324,15 +330,17 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
 
-    private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode?> {
+    private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode> {
         val tangemApplication = application as TangemApplication
 
         return tangemApplication.getAppThemeModeUseCase()
+            .filterNotNull()
+            .distinctUntilChanged()
             .map { maybeMode ->
                 maybeMode.getOrElse { AppThemeMode.DEFAULT }
             }
             .shareIn(
-                scope = lifecycleScope + Dispatchers.IO,
+                scope = lifecycleScope,
                 started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
             )
     }
@@ -382,7 +390,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onDestroy() {
         intentProcessor.removeAll()
-        cardSdkLifecycleObserver.onDestroy(this)
         super.onDestroy()
     }
 
@@ -393,9 +400,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun updateAppTheme(appThemeMode: AppThemeMode) {
-        MutableAppThemeModeHolder.value = appThemeMode
-        MutableAppThemeModeHolder.isDarkThemeActive = isDarkTheme()
-
         val mode = when (appThemeMode) {
             AppThemeMode.FORCE_DARK -> AppCompatDelegate.MODE_NIGHT_YES
             AppThemeMode.FORCE_LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
@@ -403,7 +407,32 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
 
         setDefaultNightMode(mode)
-        delegate.localNightMode = mode
+
+        MutableAppThemeModeHolder.value = appThemeMode
+        MutableAppThemeModeHolder.isDarkThemeActive = isDarkTheme()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        /*
+         * We need to manually change the background color of the activity when the UI mode changes to prevent
+         * flickering when navigating between fragments.
+         *
+
+         * `android:configChanges="uiMode"` is set in the manifest.
+         * */
+        updateAppBackground()
+    }
+
+    private fun updateAppBackground() {
+        val backgroundColor = if (isDarkTheme()) {
+            TangemColorPalette.Dark6
+        } else {
+            TangemColorPalette.White
+        }
+
+        findViewById<CoordinatorLayout>(R.id.fragment_container).setBackgroundColor(backgroundColor.toArgb())
     }
 
     private fun isDarkTheme(): Boolean {
@@ -417,12 +446,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-
-        /*
-         * FIXME: Test functionality. TangemSdk is null on some devices when HomeAction.Read is called
-         *  inside IntentHandler.
-         */
-        cardSdkLifecycleObserver.onCreate(context = this)
 
         lifecycleScope.launch {
             intentProcessor.handleIntent(intent, true)
@@ -505,15 +528,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun navigateToInitialScreenIfNeeded(intentWhichStartedActivity: Intent?) {
-        val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
+        val backStack = appRouter.stack
+        val isOnInitialScreen = backStack.all { it is AppRoute.Welcome || it is AppRoute.Home }
         val isNotScannedBefore = store.state.globalState.scanResponse == null
         val isOnboardingServiceNotActive = !store.state.globalState.onboardingState.onboardingStarted
 
         when {
-            !backStackIsEmpty && isNotScannedBefore && isOnboardingServiceNotActive -> {
+            !isOnInitialScreen && isNotScannedBefore && isOnboardingServiceNotActive -> {
                 navigateToInitialScreen(intentWhichStartedActivity)
             }
-            backStackIsEmpty -> {
+            backStack.isEmpty() -> {
                 navigateToInitialScreen(intentWhichStartedActivity)
             }
             else -> Unit
