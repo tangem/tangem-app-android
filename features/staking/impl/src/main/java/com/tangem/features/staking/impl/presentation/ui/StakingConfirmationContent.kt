@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -43,13 +44,16 @@ internal fun StakingConfirmationContent(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
-        if (state.transactionDoneState is TransactionDoneState.Content) {
+        AnimatedVisibility(
+            visible = state.transactionDoneState is TransactionDoneState.Content,
+            modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
+        ) {
+            val transactionDoneStateContent = state.transactionDoneState as TransactionDoneState.Content
             TransactionDoneTitle(
                 titleRes = R.string.sent_transaction_sent_title,
-                date = state.transactionDoneState.timestamp,
+                date = transactionDoneStateContent.timestamp,
             )
         }
-
         AmountBlock(
             amountState = amountState,
             isClickDisabled = true,

@@ -72,8 +72,8 @@ fun InputRowImageSelector(
 }
 
 //region preview
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(widthDp = 328)
+@Preview(widthDp = 328, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun InputRowImageSelectorPreview(
     @PreviewParameter(InputRowImageSelectorPreviewDataProvider::class) data: InputRowImageSelectorPreviewData,
