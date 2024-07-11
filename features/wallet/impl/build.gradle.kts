@@ -55,6 +55,7 @@ dependencies {
     implementation(projects.common.routing)
     implementation(projects.core.deepLinks)
     implementation(projects.core.deepLinks.global)
+    implementation(projects.core.decompose)
 
     implementation(projects.libs.crypto)
 
