@@ -72,6 +72,14 @@ internal class TangemCardTypesResolver(
 
     override fun isVoltInuWallet(): Boolean = card.batchId == VOLT_INU_WALLET_BATCH_ID
 
+    override fun isVividWallet(): Boolean = card.batchId == VIVID_LEMON_WALLET_BATCH_ID ||
+        card.batchId == VIVID_AQUA_WALLET_BATCH_ID ||
+        card.batchId == VIVID_GRAPEFRUIT_WALLET_BATCH_ID
+
+    override fun isPastelWallet(): Boolean = card.batchId == PASTEL_PEACH_WALLET_BATCH_ID ||
+        card.batchId == PASTEL_GRASS_WALLET_BATCH_ID ||
+        card.batchId == PASTEL_AIR_WALLET_BATCH_ID
+
     override fun isWhiteWallet(): Boolean {
         return walletData == null && card.firmwareVersion <= FirmwareVersion.HDWalletAvailable
     }
@@ -190,5 +198,13 @@ internal class TangemCardTypesResolver(
         const val COQ_WALLET_BATCH_ID = "AF28"
         const val COIN_METRICA_WALLET_BATCH_ID = "AF27"
         const val VOLT_INU_WALLET_BATCH_ID = "AF35"
+        // VIVID WALLETS
+        const val VIVID_LEMON_WALLET_BATCH_ID = "AF40"
+        const val VIVID_AQUA_WALLET_BATCH_ID = "AF41"
+        const val VIVID_GRAPEFRUIT_WALLET_BATCH_ID = "AF42"
+        // PASTEL WALLETS
+        const val PASTEL_PEACH_WALLET_BATCH_ID = "AF43"
+        const val PASTEL_AIR_WALLET_BATCH_ID = "AF44"
+        const val PASTEL_GRASS_WALLET_BATCH_ID = "AF45"
     }
 }
