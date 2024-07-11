@@ -4,13 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.utils.popTo
-
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.ResetCardUseCase
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.asLockable
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
 import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction.ResetToFactory
@@ -25,6 +32,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.tangem.tap.features.details.redux.CardSettingsState.Dialog as CardSettingsDialog
 
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class ResetCardViewModel @Inject constructor(
     private val resetCardFeatureToggles: ResetCardFeatureToggles,
@@ -32,14 +40,17 @@ internal class ResetCardViewModel @Inject constructor(
     private val resetCardUseCase: ResetCardUseCase,
     private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
+    private val userWalletsListManager: UserWalletsListManager,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
-    private val currentUserWallet = getSelectedWalletSyncUseCase().getOrNull()
-        ?: error("Selected user wallet can't be null")
+    private val firstCardScanResponse = store.state.detailsState.cardSettingsState?.scanResponse
+        ?: error("ScanResponse can't be null")
+
+    private val currentUserWalletId = createUserWalletId(firstCardScanResponse)
 
     // TODO: move logic to separate domain entity
-    private val backupCardsCount = (currentUserWallet.getCardsCount() ?: 0) - 1
-    private var resetCardsCount = 0
+    private var resetBackupCardCount = 0
 
     fun updateState(state: CardSettingsState?): ResetCardScreenState.ResetCardScreenContent {
         val descriptionText = state?.cardInfo
@@ -84,7 +95,7 @@ internal class ResetCardViewModel @Inject constructor(
             CardSettingsDialog.InterruptedResetDialog -> {
                 ResetCardScreenState.ResetCardScreenContent.Dialog.InterruptedReset(
                     onConfirmClick = ::onContinueResetClick,
-                    onDismiss = ::dismissAndFinishFullReset,
+                    onDismiss = ::onInterruptedResetDialogDismiss,
                 )
             }
             CardSettingsDialog.CompletedResetDialog -> {
@@ -107,9 +118,9 @@ internal class ResetCardViewModel @Inject constructor(
 
     private fun makeFullReset() {
         viewModelScope.launch {
-            resetCardUseCase(card = currentUserWallet.scanResponse.card).onRight {
-                deleteSavedAccessCodesUseCase(currentUserWallet.cardId)
-                deleteWalletUseCase(currentUserWallet.walletId)
+            resetCardUseCase(card = firstCardScanResponse.card).onRight {
+                deleteSavedAccessCodesUseCase(firstCardScanResponse.card.cardId)
+                deleteWalletUseCase(currentUserWalletId)
 
                 val newSelectedWallet = getSelectedWalletSyncUseCase().getOrNull()
                 if (newSelectedWallet != null) {
@@ -128,12 +139,12 @@ internal class ResetCardViewModel @Inject constructor(
 
         viewModelScope.launch {
             resetCardUseCase(
-                cardNumber = resetCardsCount + 1,
-                card = currentUserWallet.scanResponse.card,
-                userWalletId = currentUserWallet.walletId,
+                cardNumber = resetBackupCardCount + 1,
+                card = firstCardScanResponse.card,
+                userWalletId = currentUserWalletId,
             )
                 .onRight {
-                    resetCardsCount++
+                    resetBackupCardCount++
 
                     delay(DELAY_SDK_DIALOG_CLOSE)
 
@@ -149,10 +160,23 @@ internal class ResetCardViewModel @Inject constructor(
         showDialog(CardSettingsDialog.InterruptedResetDialog)
     }
 
+    private fun onInterruptedResetDialogDismiss() {
+        analyticsEventHandler.send(Settings.CardSettings.FactoryResetCanceled(cardsCount = resetBackupCardCount + 1))
+
+        dismissAndFinishFullReset()
+    }
+
     private fun checkRemainingBackupCards() {
+        val backupCardsCount = firstCardScanResponse.getBackupCardsCount()
+
         when {
-            backupCardsCount > resetCardsCount -> showDialog(CardSettingsDialog.ContinueResetDialog)
-            backupCardsCount == resetCardsCount -> showDialog(CardSettingsDialog.CompletedResetDialog)
+            backupCardsCount > resetBackupCardCount -> showDialog(CardSettingsDialog.ContinueResetDialog)
+            backupCardsCount == resetBackupCardCount -> {
+                analyticsEventHandler.send(
+                    event = Settings.CardSettings.FactoryResetFinished(cardsCount = resetBackupCardCount + 1),
+                )
+                showDialog(CardSettingsDialog.CompletedResetDialog)
+            }
             else -> finishFullReset()
         }
     }
@@ -164,12 +188,17 @@ internal class ResetCardViewModel @Inject constructor(
     }
 
     private fun finishFullReset() {
-        val newSelectedWallet = getSelectedWalletSyncUseCase().getOrNull()
+        val newSelectedWallet = userWalletsListManager.selectedUserWalletSync
 
         if (newSelectedWallet != null) {
             store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
         } else {
-            store.dispatchNavigationAction { popTo<AppRoute.Home>() }
+            val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }.isSuccess
+            if (isLocked && userWalletsListManager.hasUserWallets) {
+                store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
+            } else {
+                store.dispatchNavigationAction { popTo<AppRoute.Home>() }
+            }
         }
     }
 
@@ -179,5 +208,22 @@ internal class ResetCardViewModel @Inject constructor(
 
     private fun dismissDialog() {
         store.dispatch(ResetToFactory.DismissDialog)
+    }
+
+    private fun ScanResponse.getBackupCardsCount(): Int {
+        if (!cardTypesResolver.isMultiwalletAllowed()) return 0
+
+        return when (val status = card.backupStatus) {
+            is CardDTO.BackupStatus.Active -> status.cardCount
+            is CardDTO.BackupStatus.CardLinked,
+            is CardDTO.BackupStatus.NoBackup,
+            null,
+            -> 0
+        }
+    }
+
+    private fun createUserWalletId(scanResponse: ScanResponse): UserWalletId {
+        return UserWalletIdBuilder.scanResponse(scanResponse).build()
+            ?: error("UserWalletId can't be null")
     }
 }
