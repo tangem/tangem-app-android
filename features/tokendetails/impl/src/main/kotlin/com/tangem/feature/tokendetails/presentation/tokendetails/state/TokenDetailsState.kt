@@ -17,7 +17,7 @@ internal data class TokenDetailsState(
     val tokenInfoBlockState: TokenInfoBlockState,
     val tokenBalanceBlockState: TokenDetailsBalanceBlockState,
     val marketPriceBlockState: MarketPriceBlockState,
-    val stakingBlocksState: StakingBlocksState,
+    val stakingBlocksState: StakingBlockUM,
     val notifications: ImmutableList<TokenDetailsNotification>,
     val pendingTxs: PersistentList<TransactionState>,
     val swapTxs: PersistentList<SwapTransactionsState>,
