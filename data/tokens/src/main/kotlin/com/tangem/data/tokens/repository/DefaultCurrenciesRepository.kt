@@ -314,26 +314,28 @@ internal class DefaultCurrenciesRepository(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency.Coin {
-        val userWallet = getUserWallet(userWalletId)
-        ensureIsCorrectUserWallet(userWallet = userWallet, isMultiCurrencyWalletExpected = true)
+        return withContext(dispatchers.io) {
+            val userWallet = getUserWallet(userWalletId)
+            ensureIsCorrectUserWallet(userWallet = userWallet, isMultiCurrencyWalletExpected = true)
 
-        fetchTokensIfCacheExpired(userWallet = userWallet, refresh = false)
+            fetchTokensIfCacheExpired(userWallet = userWallet, refresh = false)
 
-        val storedTokens = requireNotNull(userTokensStore.getSyncOrNull(userWallet.walletId)) {
-            "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+            val storedTokens = requireNotNull(userTokensStore.getSyncOrNull(userWallet.walletId)) {
+                "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+            }
+            val blockchain = Blockchain.fromId(networkId.value)
+            val blockchainNetworkId = blockchain.toNetworkId()
+            val coinId = blockchain.toCoinId()
+
+            val storedCoin = storedTokens.tokens
+                .find {
+                    it.networkId == blockchainNetworkId && it.id == coinId && it.derivationPath == derivationPath.value
+                } ?: error("Coin in this network $networkId not found")
+
+            val coin = responseCurrenciesFactory.createCurrency(storedCoin, userWallet.scanResponse)
+
+            coin as? CryptoCurrency.Coin ?: error("Unable to create currency")
         }
-        val blockchain = Blockchain.fromId(networkId.value)
-        val blockchainNetworkId = blockchain.toNetworkId()
-        val coinId = blockchain.toCoinId()
-
-        val storedCoin = storedTokens.tokens
-            .find {
-                it.networkId == blockchainNetworkId && it.id == coinId && it.derivationPath == derivationPath.value
-            } ?: error("Coin in this network $networkId not found")
-
-        val coin = responseCurrenciesFactory.createCurrency(storedCoin, userWallet.scanResponse)
-
-        return coin as? CryptoCurrency.Coin ?: error("Unable to create currency")
     }
 
     override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean> {
@@ -395,29 +397,31 @@ internal class DefaultCurrenciesRepository(
     }
 
     override suspend fun getFeePaidCurrency(userWalletId: UserWalletId, currency: CryptoCurrency): FeePaidCurrency {
-        val blockchain = Blockchain.fromId(currency.network.id.value)
-        return when (val feePaidCurrency = blockchain.feePaidCurrency()) {
-            FeePaidSdkCurrency.Coin -> FeePaidCurrency.Coin
-            FeePaidSdkCurrency.SameCurrency -> FeePaidCurrency.SameCurrency
-            is FeePaidSdkCurrency.Token -> {
-                val balance = walletManagersFacade.tokenBalance(
-                    userWalletId = userWalletId,
-                    network = currency.network,
-                    name = feePaidCurrency.token.name,
-                    symbol = feePaidCurrency.token.symbol,
-                    contractAddress = feePaidCurrency.token.contractAddress,
-                    decimals = feePaidCurrency.token.decimals,
-                    id = feePaidCurrency.token.id,
-                )
-                FeePaidCurrency.Token(
-                    tokenId = getTokenId(network = currency.network, sdkToken = feePaidCurrency.token),
-                    name = feePaidCurrency.token.name,
-                    symbol = feePaidCurrency.token.symbol,
-                    contractAddress = feePaidCurrency.token.contractAddress,
-                    balance = balance,
-                )
+        return withContext(dispatchers.io) {
+            val blockchain = Blockchain.fromId(currency.network.id.value)
+            when (val feePaidCurrency = blockchain.feePaidCurrency()) {
+                FeePaidSdkCurrency.Coin -> FeePaidCurrency.Coin
+                FeePaidSdkCurrency.SameCurrency -> FeePaidCurrency.SameCurrency
+                is FeePaidSdkCurrency.Token -> {
+                    val balance = walletManagersFacade.tokenBalance(
+                        userWalletId = userWalletId,
+                        network = currency.network,
+                        name = feePaidCurrency.token.name,
+                        symbol = feePaidCurrency.token.symbol,
+                        contractAddress = feePaidCurrency.token.contractAddress,
+                        decimals = feePaidCurrency.token.decimals,
+                        id = feePaidCurrency.token.id,
+                    )
+                    FeePaidCurrency.Token(
+                        tokenId = getTokenId(network = currency.network, sdkToken = feePaidCurrency.token),
+                        name = feePaidCurrency.token.name,
+                        symbol = feePaidCurrency.token.symbol,
+                        contractAddress = feePaidCurrency.token.contractAddress,
+                        balance = balance,
+                    )
+                }
+                is FeePaidSdkCurrency.FeeResource -> FeePaidCurrency.FeeResource(currency = feePaidCurrency.currency)
             }
-            is FeePaidSdkCurrency.FeeResource -> FeePaidCurrency.FeeResource(currency = feePaidCurrency.currency)
         }
     }
 

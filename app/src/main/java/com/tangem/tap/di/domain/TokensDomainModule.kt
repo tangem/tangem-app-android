@@ -398,4 +398,16 @@ internal object TokensDomainModule {
             stakingRepository = stakingRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideRefreshMultiCurrencyWalletQuotesUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+    ): RefreshMultiCurrencyWalletQuotesUseCase {
+        return RefreshMultiCurrencyWalletQuotesUseCase(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+        )
+    }
 }
