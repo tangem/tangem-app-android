@@ -2,7 +2,7 @@ package com.tangem.core.ui.components.fields
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -37,7 +37,7 @@ fun SearchBar(state: SearchBarUM, modifier: Modifier = Modifier, colors: TextFie
     TextField(
         modifier = modifier
             .fillMaxWidth()
-            .height(TangemTheme.dimens.size48)
+            .heightIn(min = TangemTheme.dimens.size48)
             .onFocusChanged {
                 if (it.isFocused) {
                     state.onActiveChange(true)
