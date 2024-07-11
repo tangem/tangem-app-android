@@ -14,6 +14,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -36,6 +37,7 @@ internal class WalletStateController @Inject constructor() {
     }
 
     fun update(transformer: WalletScreenStateTransformer) {
+        Timber.d("Applying: ${transformer::class.simpleName}")
         mutableUiState.update(function = transformer::transform)
     }
 

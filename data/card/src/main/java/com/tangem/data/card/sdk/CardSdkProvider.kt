@@ -7,7 +7,7 @@ import com.tangem.TangemSdk
  *
 [REDACTED_AUTHOR]
  */
-internal interface CardSdkProvider {
+interface CardSdkProvider {
 
     /** CardSDK instance */
     val sdk: TangemSdk

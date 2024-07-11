@@ -2,7 +2,10 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.componen
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.networkIconResId
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.features.tokendetails.impl.R
@@ -45,16 +48,9 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         val onCloseClick: () -> Unit,
     ) : TokenDetailsNotification(
         config = NotificationConfig(
-            title = resourceReference(
-                id = R.string.token_swap_changelly_promotion_title,
-                formatArgs = wrappedList("0%"),
-            ),
-            subtitle = resourceReference(
-                id = R.string.token_swap_changelly_promotion_message,
-                formatArgs = wrappedList("0%", startDateTime.dayOfMonth, endDateTime.dayOfMonth),
-            ),
-            iconResId = R.drawable.img_swap_promo,
-            backgroundResId = R.drawable.img_swap_promo_green_banner_background,
+            title = resourceReference(id = R.string.swap_promo_title),
+            subtitle = resourceReference(id = R.string.swap_promo_text),
+            iconResId = R.drawable.img_okx_dex_logo,
             onCloseClick = onCloseClick,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = resourceReference(id = com.tangem.core.ui.R.string.token_swap_promotion_button),

@@ -53,14 +53,6 @@ object PreferencesKeys {
 
     val LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY by lazy { stringPreferencesKey(name = "lastSwappedCryptoCurrency") }
 
-    val IS_WALLET_SWAP_PROMO_CHANGELLY_SHOW_KEY by lazy {
-        booleanPreferencesKey(name = "isWalletSwapPromoChangellyShown")
-    }
-
-    val IS_TOKEN_SWAP_PROMO_CHANGELLY_SHOW_KEY by lazy {
-        booleanPreferencesKey(name = "isTokenSwapPromoChangellyShown")
-    }
-
     val IS_WALLET_TRAVALA_PROMO_SHOWN_KEY by lazy {
         booleanPreferencesKey(name = "isWalletTravalaPromoShown")
     }
@@ -92,6 +84,14 @@ object PreferencesKeys {
     val SHOULD_SAVE_ACCESS_CODES_KEY by lazy { booleanPreferencesKey(name = "saveAccessCodes") }
 
     val IS_WALLET_NAMES_MIGRATION_DONE_KEY by lazy { booleanPreferencesKey(name = "isWalletNamesMigrationDone") }
+
+    val IS_WALLET_SWAP_PROMO_OKX_SHOW_KEY by lazy {
+        booleanPreferencesKey(name = "isWalletSwapPromoOkxShown")
+    }
+
+    val IS_TOKEN_SWAP_PROMO_OKX_SHOW_KEY by lazy {
+        booleanPreferencesKey(name = "isTokenSwapPromoOkxShown")
+    }
 
     fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
 

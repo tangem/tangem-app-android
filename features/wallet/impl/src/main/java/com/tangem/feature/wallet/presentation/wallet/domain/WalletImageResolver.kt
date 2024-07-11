@@ -47,6 +47,8 @@ internal object WalletImageResolver {
             cardTypesResolver.isCOQWallet() -> userWallet.resolveCOQWallet()
             cardTypesResolver.isCoinMetricaWallet() -> userWallet.resolveCoinMetricaWallet()
             cardTypesResolver.isVoltInuWallet() -> userWallet.resolveVoltInuWallet()
+            cardTypesResolver.isVividWallet() -> userWallet.resolveVividWallet()
+            cardTypesResolver.isPastelWallet() -> userWallet.resolvePastelWallet()
             cardTypesResolver.isWallet2() -> userWallet.resolveWallet2()
             cardTypesResolver.isShibaWallet() -> userWallet.resolveShibaWallet()
             cardTypesResolver.isTangemWallet() -> userWallet.resolveWallet1()
@@ -224,6 +226,22 @@ internal object WalletImageResolver {
         return resolveWallet2(
             oneBackupResId = R.drawable.ill_volt_inu_card2_120_106,
             twoBackupResId = R.drawable.ill_volt_inu_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveVividWallet(): Int? {
+        // for multicolored cards use image of 3 cards in all cases
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_vivid_cards3_120_106,
+            twoBackupResId = R.drawable.ill_vivid_cards3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolvePastelWallet(): Int? {
+        // for multicolored cards use image of 3 cards in all cases
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_pastel_cards3_120_106,
+            twoBackupResId = R.drawable.ill_pastel_cards3_120_106,
         )
     }
 
