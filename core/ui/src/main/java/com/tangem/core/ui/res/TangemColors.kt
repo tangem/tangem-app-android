@@ -83,6 +83,7 @@ class TangemColors internal constructor(
         warning: Color,
         attention: Color,
         accent: Color = TangemColorPalette.Azure,
+        constant: Color = TangemColorPalette.White,
     ) {
         var primary1 by mutableStateOf(primary1)
             private set
@@ -100,6 +101,7 @@ class TangemColors internal constructor(
             private set
         var attention by mutableStateOf(attention)
             private set
+        var constant by mutableStateOf(constant)
 
         fun update(other: Icon) {
             primary1 = other.primary1
@@ -110,6 +112,7 @@ class TangemColors internal constructor(
             accent = other.accent
             warning = other.warning
             attention = other.attention
+            constant = other.constant
         }
     }
 

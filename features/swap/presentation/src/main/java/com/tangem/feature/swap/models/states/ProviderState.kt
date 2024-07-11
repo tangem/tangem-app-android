@@ -44,9 +44,10 @@ sealed class ProviderState {
 
     @Immutable
     sealed class AdditionalBadge {
-        object BestTrade : AdditionalBadge()
-        object Empty : AdditionalBadge()
-        object PermissionRequired : AdditionalBadge()
+        data object BestTrade : AdditionalBadge()
+        data object Empty : AdditionalBadge()
+        data object PermissionRequired : AdditionalBadge()
+        data object Recommended : AdditionalBadge()
     }
 
     @Immutable
@@ -54,6 +55,7 @@ sealed class ProviderState {
         NONE, CLICK, SELECT
     }
 
+    // Prefix will be disabled in 5.12 but mechanism is still implemented
     @Immutable
     enum class PrefixType {
         NONE, PROVIDED_BY

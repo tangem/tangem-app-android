@@ -23,6 +23,9 @@ data class ExchangeProvider(
 
     @Json(name = "privacyPolicy")
     val privacyPolicy: String?,
+
+    @Json(name = "recommended")
+    val isRecommended: Boolean = false,
 )
 
 enum class ExchangeProviderType {
@@ -31,4 +34,7 @@ enum class ExchangeProviderType {
 
     @Json(name = "cex")
     CEX,
+
+    @Json(name = "dex-bridge")
+    DEX_BRIDGE,
 }
