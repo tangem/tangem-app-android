@@ -142,6 +142,8 @@ dependencies {
     implementation(projects.features.pushNotifications.impl)
     implementation(projects.features.walletSettings.api)
     implementation(projects.features.walletSettings.impl)
+    implementation(projects.features.markets.api)
+    implementation(projects.features.markets.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
