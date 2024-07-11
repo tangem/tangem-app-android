@@ -9,6 +9,5 @@ interface ComposableDialogComponent {
     val doOnDismiss: () -> Unit
 
     @Composable
-    @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
     fun Dialog()
 }
