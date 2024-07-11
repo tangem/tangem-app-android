@@ -677,6 +677,7 @@ internal class StateBuilder(
         return when (dataError) {
             is DataError.ExchangeTooSmallAmountError -> {
                 swapProvider.convertToAvailableFromProviderState(
+                    swapProvider = swapProvider,
                     alertText = resourceReference(
                         R.string.express_provider_min_amount,
                         wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
@@ -687,6 +688,7 @@ internal class StateBuilder(
             }
             is DataError.ExchangeTooBigAmountError -> {
                 swapProvider.convertToAvailableFromProviderState(
+                    swapProvider = swapProvider,
                     alertText = resourceReference(
                         R.string.express_provider_max_amount,
                         wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
@@ -1005,13 +1007,15 @@ internal class StateBuilder(
         val fromFiatAmount = getFormattedFiatAmount(fromCryptoCurrency.value.fiatRate?.multiply(fromAmount))
         val toFiatAmount = getFormattedFiatAmount(toCryptoCurrency.value.fiatRate?.multiply(toAmount))
 
+        val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName ||
+            providerState.type == ExchangeProviderType.DEX_BRIDGE.providerName
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = swapTransactionState.timestamp,
                 txUrl = txUrl,
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
-                showStatusButton = providerState.type == ExchangeProviderType.CEX.name,
+                showStatusButton = shouldShowStatus,
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
                 fee = stringReference("${fee.feeCryptoFormatted} (${fee.feeFiatFormatted})"),
@@ -1093,7 +1097,7 @@ internal class StateBuilder(
     ): SwapStateHolder {
         val message = when (providerType) {
             ExchangeProviderType.CEX -> resourceReference(R.string.swapping_alert_cex_description, wrappedList(token))
-            ExchangeProviderType.DEX -> {
+            ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                 val refs = buildList {
                     if (isPriceImpact) {
                         add(resourceReference(R.string.swapping_high_price_impact_description))
@@ -1540,7 +1544,9 @@ internal class StateBuilder(
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
         val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
         val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
-        val badge = if (isNeedBestRateBadge && isBestRate) {
+        val badge = if (isRecommended) {
+            ProviderState.AdditionalBadge.Recommended
+        } else if (isNeedBestRateBadge && isBestRate) {
             ProviderState.AdditionalBadge.BestTrade
         } else {
             ProviderState.AdditionalBadge.Empty
@@ -1549,12 +1555,12 @@ internal class StateBuilder(
             id = this.providerId,
             name = this.name,
             iconUrl = this.imageLarge,
-            type = this.type.toString(),
+            type = this.type.providerName,
             subtitle = stringReference(rateString),
             additionalBadge = badge,
             selectionType = selectionType,
             percentLowerThenBest = PercentDifference.Empty,
-            namePrefix = ProviderState.PrefixType.PROVIDED_BY,
+            namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
         )
     }
@@ -1569,6 +1575,8 @@ internal class StateBuilder(
         val rateString = toTokenInfo.tokenAmount.getFormattedCryptoAmount(toTokenInfo.cryptoCurrencyStatus.currency)
         val additionalBadge = if (state.permissionState is PermissionDataState.PermissionReadyForRequest) {
             ProviderState.AdditionalBadge.PermissionRequired
+        } else if (isRecommended) {
+            ProviderState.AdditionalBadge.Recommended
         } else {
             ProviderState.AdditionalBadge.Empty
         }
@@ -1576,7 +1584,7 @@ internal class StateBuilder(
             id = this.providerId,
             name = this.name,
             iconUrl = this.imageLarge,
-            type = this.type.toString(),
+            type = this.type.providerName,
             subtitle = stringReference(rateString),
             additionalBadge = additionalBadge,
             selectionType = selectionType,
@@ -1605,24 +1613,26 @@ internal class StateBuilder(
     }
 
     private fun SwapProvider.convertToAvailableFromProviderState(
+        swapProvider: SwapProvider,
         alertText: TextReference,
         selectionType: ProviderState.SelectionType,
         onProviderClick: (String) -> Unit,
     ): ProviderState {
+        val additionalBadge = if (swapProvider.isRecommended) {
+            ProviderState.AdditionalBadge.Recommended
+        } else {
+            ProviderState.AdditionalBadge.Empty
+        }
         return ProviderState.Content(
             id = this.providerId,
             name = this.name,
             iconUrl = this.imageLarge,
-            type = this.type.toString(),
+            type = this.type.providerName,
             selectionType = selectionType,
             subtitle = alertText,
-            additionalBadge = ProviderState.AdditionalBadge.Empty,
+            additionalBadge = additionalBadge,
             percentLowerThenBest = PercentDifference.Empty,
-            namePrefix = if (selectionType != ProviderState.SelectionType.SELECT) {
-                ProviderState.PrefixType.PROVIDED_BY
-            } else {
-                ProviderState.PrefixType.NONE
-            },
+            namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
         )
     }
