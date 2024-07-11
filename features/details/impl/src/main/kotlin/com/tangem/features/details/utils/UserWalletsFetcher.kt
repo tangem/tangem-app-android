@@ -23,44 +23,43 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.details.entity.UserWalletListUM.UserWalletUM
 import com.tangem.features.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.transformLatest
 import javax.inject.Inject
 
 @ComponentScoped
 internal class UserWalletsFetcher @Inject constructor(
-    private val getWalletsUseCase: GetWalletsUseCase,
+    getWalletsUseCase: GetWalletsUseCase,
     private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val router: Router,
     private val messageSender: UiMessageSender,
 ) {
 
-    val userWallets: Flow<ImmutableList<UserWalletUM>> = getWalletsUseCase()
-        .distinctUntilChanged()
-        .transform { wallets ->
-            if (wallets.isEmpty()) {
-                error("Wallets must not be empty")
-            } else {
-                emit(wallets.toUiModels(onClick = ::navigateToWalletSettings))
-            }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val userWallets: Flow<ImmutableList<UserWalletUM>> = getWalletsUseCase().transformLatest { wallets ->
+        emit(wallets.toUiModels(onClick = ::navigateToWalletSettings))
 
-            combine(
-                getSelectedAppCurrencyUseCase(),
-                getWalletTotalBalanceUseCase(wallets.map(UserWallet::walletId)),
-            ) { maybeAppCurrency, maybeBalances ->
-                val models = createUiModels(wallets, maybeAppCurrency, maybeBalances).getOrElse(
-                    ifLoading = { return@combine },
-                    ifError = {
-                        val message = resourceReference(R.string.common_unknown_error)
-                        messageSender.send(SnackbarMessage(message))
+        combine(
+            getSelectedAppCurrencyUseCase(),
+            getWalletTotalBalanceUseCase(wallets.map(UserWallet::walletId)),
+        ) { maybeAppCurrency, maybeBalances ->
+            val models = createUiModels(wallets, maybeAppCurrency, maybeBalances).getOrElse(
+                ifLoading = { return@combine },
+                ifError = {
+                    val message = resourceReference(R.string.common_unknown_error)
+                    messageSender.send(SnackbarMessage(message))
 
-                        return@combine
-                    },
-                )
+                    return@combine
+                },
+            )
 
-                emit(models)
-            }.collect()
-        }
+            emit(models)
+        }.collect()
+    }
 
     private fun createUiModels(
         wallets: List<UserWallet>,
