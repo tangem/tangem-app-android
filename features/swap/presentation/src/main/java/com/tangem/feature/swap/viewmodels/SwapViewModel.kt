@@ -576,15 +576,17 @@ internal class SwapViewModel @Inject constructor(
     private fun sendSuccessEvent() {
         val provider = dataState.selectedProvider ?: return
         val fee = dataState.selectedFee?.feeType ?: return
-        val sendToken = dataState.fromCryptoCurrency?.currency?.symbol ?: return
-        val toToken = dataState.toCryptoCurrency?.currency?.symbol ?: return
+        val fromCurrency = dataState.fromCryptoCurrency?.currency ?: return
+        val toCurrency = dataState.toCryptoCurrency?.currency ?: return
 
         analyticsEventHandler.send(
             SwapEvents.SwapInProgressScreen(
                 provider = provider,
                 commission = fee,
-                sendToken = sendToken,
-                receiveToken = toToken,
+                sendBlockchain = fromCurrency.network.name,
+                receiveBlockchain = toCurrency.network.name,
+                sendToken = fromCurrency.symbol,
+                receiveToken = toCurrency.symbol,
             ),
         )
     }
