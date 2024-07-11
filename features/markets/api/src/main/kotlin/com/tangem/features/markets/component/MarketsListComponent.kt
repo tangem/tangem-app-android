@@ -5,7 +5,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import com.tangem.core.decompose.factory.ComponentFactoryNoParams
+import com.tangem.core.decompose.context.AppComponentContext
 
 @Stable
 interface MarketsListComponent {
@@ -17,5 +17,7 @@ interface MarketsListComponent {
         modifier: Modifier,
     )
 
-    interface Factory : ComponentFactoryNoParams<MarketsListComponent>
+    interface Factory {
+        fun create(context: AppComponentContext): MarketsListComponent
+    }
 }
