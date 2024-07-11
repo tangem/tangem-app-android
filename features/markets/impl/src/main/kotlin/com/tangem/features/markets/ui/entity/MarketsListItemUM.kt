@@ -1,4 +1,4 @@
-package com.tangem.features.markets.ui.models
+package com.tangem.features.markets.ui.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.charts.state.MarketChartLook
@@ -6,7 +6,7 @@ import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 
 @Immutable
-data class MarketsListItemModel(
+data class MarketsListItemUM(
     val id: String,
     val name: String,
     val currencySymbol: String,
