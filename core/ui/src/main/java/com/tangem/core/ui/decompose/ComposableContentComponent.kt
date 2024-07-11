@@ -8,6 +8,5 @@ import androidx.compose.ui.Modifier
 fun interface ComposableContentComponent {
 
     @Composable
-    @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
     fun Content(modifier: Modifier)
 }
