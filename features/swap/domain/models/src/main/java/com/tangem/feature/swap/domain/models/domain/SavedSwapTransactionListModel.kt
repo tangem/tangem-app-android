@@ -25,7 +25,7 @@ data class SavedSwapTransactionListModelInner(
     val toTokensResponse: UserTokensResponse.Token? = null,
     val transactions: List<SavedSwapTransactionModel>,
 )
-
+// [REDACTED_TODO_COMMENT]
 data class SavedSwapTransactionModel(
     val txId: String,
     val timestamp: Long,
