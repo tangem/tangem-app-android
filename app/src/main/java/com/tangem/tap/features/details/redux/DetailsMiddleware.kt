@@ -15,7 +15,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
@@ -148,7 +147,7 @@ class DetailsMiddleware {
                             }
                             .doOnFailure { error ->
                                 if (error is TangemSdkError && error !is TangemSdkError.UserCancelled) {
-                                    Analytics.send(Settings.CardSettings.FactoryResetFinished(error))
+                                    Analytics.send(Settings.CardSettings.FactoryResetFinished(error = error))
                                 }
                             }
                             .doOnResult {
@@ -474,10 +473,7 @@ class DetailsMiddleware {
 
                 if (isSameWallet) {
                     store.dispatchOnMain(
-                        DetailsAction.PrepareCardSettingsData(
-                            scanResponse.card,
-                            scanResponse.cardTypesResolver,
-                        ),
+                        DetailsAction.PrepareCardSettingsData(scanResponse = scanResponse),
                     )
                 } else {
                     store.dispatchDialogShow(
