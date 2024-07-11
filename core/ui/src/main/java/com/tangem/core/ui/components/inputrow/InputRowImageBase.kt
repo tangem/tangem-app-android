@@ -31,7 +31,6 @@ internal fun InputRowImageBase(
             imageUrl = imageUrl,
             modifier = Modifier
                 .size(TangemTheme.dimens.spacing36)
-                .padding(vertical = TangemTheme.dimens.size1),
         )
         Column {
             Text(
