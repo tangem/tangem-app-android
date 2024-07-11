@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.core.ui.clipboard.ClipboardManager
@@ -565,7 +566,13 @@ internal class TokenDetailsViewModel @Inject constructor(
                 ifRight = { it },
             )
             if (extendedKey.isNotBlank()) {
-                router.share(extendedKey)
+                hapticManager.vibrateMeduim()
+                clipboardManager.setText(text = extendedKey)
+                internalUiState.value = stateFactory.getStateAndTriggerEvent(
+                    state = internalUiState.value,
+                    errorMessage = resourceReference(R.string.wallet_notification_address_copied),
+                    setUiState = { internalUiState.value = it },
+                )
             }
         }
     }
@@ -737,14 +744,26 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onSwapPromoDismiss() {
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoTokenUseCase.neverToShow()
-            analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Close)
+            analyticsEventsHandler.send(
+                TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                    source = AnalyticsParam.ScreensSources.Token,
+                    programName = TokenSwapPromoAnalyticsEvent.ProgramName.OKX,
+                    action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
+                ),
+            )
         }
     }
 
     override fun onSwapPromoClick() {
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoTokenUseCase.neverToShow()
-            analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Exchange(cryptoCurrency.symbol))
+            analyticsEventsHandler.send(
+                TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                    source = AnalyticsParam.ScreensSources.Token,
+                    programName = TokenSwapPromoAnalyticsEvent.ProgramName.OKX,
+                    action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
+                ),
+            )
         }
         onSwapClick(ScenarioUnavailabilityReason.None)
     }
