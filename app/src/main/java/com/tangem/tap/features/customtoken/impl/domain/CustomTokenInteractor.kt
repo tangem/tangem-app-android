@@ -17,5 +17,5 @@ interface CustomTokenInteractor {
 
     /** Save token [customCurrency] */
     @Throws(TangemError::class)
-    suspend fun saveToken(customCurrency: CustomCurrency)
+    suspend fun saveToken(customCurrency: CustomCurrency): Result<Unit>
 }
