@@ -70,7 +70,7 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
         )
         Text(
             text = stringResource(
-                id = R.string.give_permission_subtitle,
+                id = R.string.give_permission_swap_subtitle,
                 data.currency,
             ),
             color = TangemTheme.colors.text.secondary,
