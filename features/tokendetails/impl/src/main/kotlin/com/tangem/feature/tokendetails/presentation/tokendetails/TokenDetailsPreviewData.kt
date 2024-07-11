@@ -139,16 +139,24 @@ internal object TokenDetailsPreviewData {
 
     private val marketPriceLoading = MarketPriceBlockState.Loading(currencySymbol = "USDT")
 
-    private val stakingLoading = StakingBlocksState(
-        stakingAvailable = StakingAvailable.Loading(iconState),
-        stakingBalance = StakingBalance.Content(
-            cryptoValue = stringReference("5 SOL"),
-            fiatValue = stringReference("456.34 $"),
-            rewardValue = resourceReference(R.string.staking_details_no_rewards_to_claim, wrappedList("0.43 $")),
-            cryptoAmount = BigDecimal.ZERO,
-            fiatAmount = BigDecimal.ZERO,
-            onStakeClicked = {},
-        ),
+    val stakingLoadingBlock = StakingBlockUM.Loading(iconState)
+    val stakingErrorBlock = StakingBlockUM.Error(iconState)
+
+    val stakingAvailableBlock = StakingBlockUM.StakeAvailable(
+        interestRate = "7.38",
+        periodInDays = 4,
+        tokenSymbol = "XLM",
+        iconState = iconState,
+        onStakeClicked = {},
+    )
+
+    val stakedBlock = StakingBlockUM.Staked(
+        cryptoValue = stringReference("5 SOL"),
+        fiatValue = stringReference("456.34 $"),
+        rewardValue = resourceReference(R.string.staking_details_no_rewards_to_claim, wrappedList("0.43 $")),
+        cryptoAmount = BigDecimal.ZERO,
+        fiatAmount = BigDecimal.ZERO,
+        onStakeClicked = {},
     )
 
     private val pullToRefreshConfig = TokenDetailsPullToRefreshConfig(
@@ -285,7 +293,7 @@ internal object TokenDetailsPreviewData {
         tokenInfoBlockState = tokenInfoBlockState,
         tokenBalanceBlockState = balanceLoading,
         marketPriceBlockState = marketPriceLoading,
-        stakingBlocksState = stakingLoading,
+        stakingBlocksState = stakingLoadingBlock,
         notifications = persistentListOf(),
         txHistoryState = TxHistoryState.Content(
             contentItems = MutableStateFlow(
@@ -317,23 +325,7 @@ internal object TokenDetailsPreviewData {
                 type = PriceChangeType.UP,
             ),
         ),
-        stakingBlocksState = StakingBlocksState(
-            stakingAvailable = StakingAvailable.Content(
-                interestRate = "7.38",
-                periodInDays = 4,
-                tokenSymbol = "XLM",
-                iconState = iconState,
-                onStakeClicked = {},
-            ),
-            stakingBalance = StakingBalance.Content(
-                cryptoValue = stringReference("5 SOL"),
-                fiatValue = stringReference("456.34 $"),
-                rewardValue = resourceReference(R.string.staking_details_no_rewards_to_claim, wrappedList("0.43 $")),
-                cryptoAmount = BigDecimal.ZERO,
-                fiatAmount = BigDecimal.ZERO,
-                onStakeClicked = {},
-            ),
-        ),
+        stakingBlocksState = stakingAvailableBlock,
         notifications = persistentListOf(),
         txHistoryState = TxHistoryState.NotSupported(
             onExploreClick = {},
@@ -356,5 +348,6 @@ internal object TokenDetailsPreviewData {
                 value = PagingData.from(txHistoryItems),
             ),
         ),
+        stakingBlocksState = stakedBlock,
     )
 }
