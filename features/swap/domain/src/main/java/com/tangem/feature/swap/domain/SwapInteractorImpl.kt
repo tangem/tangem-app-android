@@ -1529,7 +1529,7 @@ internal class SwapInteractorImpl @Inject constructor(
             amount = priorityFeeValue,
             decimals = normalFee.fee.decimals,
         )
-        //
+        // endregion
         // region fees include otherNativeFee
         val feesFiatWithNative = getFormattedFiatFees(
             fromToken = fromToken,
@@ -1548,7 +1548,7 @@ internal class SwapInteractorImpl @Inject constructor(
             amount = priorityFeeValue + otherNativeFeeValue,
             decimals = normalFee.fee.decimals,
         )
-        //
+        // endregion
         return TxFeeState.MultipleFeeState(
             normalFee = TxFee(
                 feeValue = normalFeeValue,
@@ -1602,7 +1602,7 @@ internal class SwapInteractorImpl @Inject constructor(
             amount = normalFeeValue + otherNativeFeeValue,
             decimals = singleFee.fee.decimals,
         )
-        //
+        // endregion
         return TxFeeState.SingleFeeState(
             fee = TxFee(
                 feeValue = normalFeeValue,
@@ -1645,7 +1645,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
                 // region otherNativeFee
                 val normalFeeWithOtherNative = feeNormal + otherNativeFeeValue
-                val priorityFeeWithOtherNative = feeNormal + otherNativeFeeValue
+                val priorityFeeWithOtherNative = feePriority + otherNativeFeeValue
                 val normalFiatValueWithNative = getFormattedFiatFees(fromToken, normalFeeWithOtherNative)[0]
                 val priorityFiatValueWithNative = getFormattedFiatFees(fromToken, priorityFeeWithOtherNative)[0]
 
@@ -1657,7 +1657,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     amount = priorityFeeWithOtherNative,
                     decimals = priorityFee.amount.decimals,
                 )
-                //
+                // endregion
                 TxFeeState.MultipleFeeState(
                     normalFee = TxFee(
                         feeValue = feeNormal,
@@ -1700,7 +1700,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     amount = normalFeeWithOtherNative,
                     decimals = this.normal.amount.decimals,
                 )
-                //
+                // endregion
                 TxFeeState.SingleFeeState(
                     fee = TxFee(
                         feeValue = this.normal.amount.value ?: BigDecimal.ZERO,
