@@ -26,7 +26,6 @@ sealed interface SwapState {
         val permissionState: PermissionDataState = PermissionDataState.Empty,
         val swapDataModel: SwapDataModel? = null,
         val txFee: TxFeeState,
-        // val txFeeIncludeOtherNativeFee: TxFeeState,
         val warnings: List<Warning> = emptyList(),
         val swapProvider: SwapProvider,
     ) : SwapState
