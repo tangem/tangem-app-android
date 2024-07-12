@@ -20,7 +20,7 @@ internal data class StakingUiState(
     val initialInfoState: StakingStates.InitialInfoState,
     val amountState: AmountState,
     val rewardsValidatorsState: StakingStates.RewardsValidatorsState,
-    val confirmStakingState: StakingStates.ConfirmStakingState,
+    val confirmationState: StakingStates.ConfirmationState,
     val isBalanceHidden: Boolean,
     val bottomSheetConfig: TangemBottomSheetConfig?,
     val event: StateEvent<StakingEvent>,
@@ -29,11 +29,11 @@ internal data class StakingUiState(
     fun copyWrapped(
         initialInfoState: StakingStates.InitialInfoState = this.initialInfoState,
         amountState: AmountState = this.amountState,
-        confirmStakingState: StakingStates.ConfirmStakingState = this.confirmStakingState,
+        confirmationState: StakingStates.ConfirmationState = this.confirmationState,
     ): StakingUiState = copy(
         initialInfoState = initialInfoState,
         amountState = amountState,
-        confirmStakingState = confirmStakingState,
+        confirmationState = confirmationState,
     )
 }
 
@@ -74,27 +74,21 @@ internal sealed class StakingStates {
         ) : RewardsValidatorsState()
     }
 
-    /** Confirm state */
-    sealed class ConfirmStakingState : StakingStates() {
+    /** Confirmation state */
+    sealed class ConfirmationState : StakingStates() {
         data class Data(
             override val isPrimaryButtonEnabled: Boolean,
+            val innerState: InnerConfirmationStakingState,
             val feeState: FeeState,
             val validatorState: ValidatorState,
             val notifications: ImmutableList<StakingNotification>,
             val footerText: String,
-            val innerState: InnerConfirmStakingState,
-        ) : ConfirmStakingState() {
-
-            enum class InnerConfirmStakingState {
-                CONFIRM,
-                IN_PROGRESS,
-                SUCCESS,
-            }
-        }
+            val transactionDoneState: TransactionDoneState,
+        ) : ConfirmationState()
 
         data class Empty(
             override val isPrimaryButtonEnabled: Boolean = false,
-        ) : ConfirmStakingState()
+        ) : ConfirmationState()
     }
 }
 
@@ -102,7 +96,6 @@ enum class StakingStep {
     InitialInfo,
     RewardsValidators,
     Amount,
-    Confirm,
+    Confirmation,
     Validators,
-    Success,
 }
