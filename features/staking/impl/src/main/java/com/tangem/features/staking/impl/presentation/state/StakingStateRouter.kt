@@ -1,28 +1,15 @@
 package com.tangem.features.staking.impl.presentation.state
 
-import androidx.fragment.app.FragmentManager
-import java.lang.ref.WeakReference
+import com.tangem.common.routing.AppRouter
 
 internal class StakingStateRouter(
-    private val fragmentManager: WeakReference<FragmentManager>,
+    private val appRouter: AppRouter,
     private val stateController: StakingStateController,
 ) {
 
-    private fun closeStaking() {
-        fragmentManager.get()?.popBackStack()
+    fun onBackClick() {
+        appRouter.pop()
         stateController.clear()
-    }
-
-    fun onBackClick(isSuccess: Boolean = false) {
-        val type = stateController.uiState.value.currentStep
-        when {
-            isSuccess -> closeStaking()
-            else -> when (type) {
-                StakingStep.Amount -> showInitial()
-                StakingStep.Confirm -> showAmount()
-                else -> closeStaking()
-            }
-        }
     }
 
     fun onNextClick() {
@@ -31,19 +18,20 @@ internal class StakingStateRouter(
             StakingStep.RewardsValidators,
             StakingStep.Validators,
             StakingStep.Amount,
-            -> showConfirm()
-            StakingStep.Confirm -> showSuccess()
-            StakingStep.Success -> closeStaking()
+            -> showConfirmation()
+            StakingStep.Confirmation -> {
+                // TODO staking handle
+            }
         }
     }
 
     fun onPrevClick() {
         when (stateController.uiState.value.currentStep) {
+            StakingStep.InitialInfo -> onBackClick()
             StakingStep.Amount -> showInitial()
-            StakingStep.Confirm -> showAmount()
-            StakingStep.Success -> closeStaking()
-            StakingStep.Validators -> showConfirm()
-            else -> closeStaking()
+            StakingStep.Confirmation -> showAmount()
+            StakingStep.Validators -> showConfirmation()
+            StakingStep.RewardsValidators -> showInitial()
         }
     }
 
@@ -63,12 +51,7 @@ internal class StakingStateRouter(
         stateController.update { it.copy(currentStep = StakingStep.Validators) }
     }
 
-    fun showConfirm() {
-        stateController.update { it.copy(currentStep = StakingStep.Confirm) }
-    }
-
-    fun showSuccess() {
-        // stateController.update { it.copy(currentStep = StakingStep.Success) }
-        // TODO staking [REDACTED_TASK_KEY]
+    fun showConfirmation() {
+        stateController.update { it.copy(currentStep = StakingStep.Confirmation) }
     }
 }
