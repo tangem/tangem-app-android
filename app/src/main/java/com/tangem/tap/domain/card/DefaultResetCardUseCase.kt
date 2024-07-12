@@ -1,9 +1,12 @@
 package com.tangem.tap.domain.card
 
 import arrow.core.Either
+import arrow.core.raise.Raise
 import arrow.core.raise.either
-import arrow.core.right
-import com.tangem.common.*
+import arrow.fx.coroutines.ResourceScope
+import arrow.fx.coroutines.resourceScope
+import com.tangem.common.CompletionResult
+import com.tangem.common.UserCodeType
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.core.UserCodeRequestPolicy
@@ -17,14 +20,14 @@ internal class DefaultResetCardUseCase(
     private val tangemSdkManager: TangemSdkManager,
 ) : ResetCardUseCase {
 
-    override suspend fun invoke(card: CardDTO): Either<ResetCardError, Unit> = either {
-        enterRequiredAccessCode(card) {
+    override suspend fun invoke(card: CardDTO): Either<ResetCardError, Unit> = resourceScope {
+        either {
+            withUserCodeRequestPolicy(card)
+
             tangemSdkManager.resetToFactorySettings(
                 cardId = card.cardId,
                 allowsRequestAccessCodeFromRepository = true,
-            )
-                .doOnSuccess { Unit.right() }
-                .doOnFailure { raise(it.mapToDomainError()) }
+            ).bind(raise = this)
         }
     }
 
@@ -32,23 +35,29 @@ internal class DefaultResetCardUseCase(
         cardNumber: Int,
         card: CardDTO,
         userWalletId: UserWalletId,
-    ): Either<ResetCardError, Unit> = either {
-        enterRequiredAccessCode(card) {
-            tangemSdkManager.resetBackupCard(cardNumber, userWalletId)
-                .doOnSuccess { Unit.right() }
-                .doOnFailure { raise(it.mapToDomainError()) }
+    ): Either<ResetCardError, Unit> = resourceScope {
+        either {
+            withUserCodeRequestPolicy(card)
+
+            tangemSdkManager.resetBackupCard(
+                cardNumber = cardNumber,
+                userWalletId = userWalletId,
+            ).bind(raise = this)
         }
     }
 
-    private suspend fun enterRequiredAccessCode(
-        card: CardDTO,
-        task: suspend TangemSdkManager.() -> CompletionResult<*>,
-    ) {
-        val policyBeforeReset = tangemSdkManager.userCodeRequestPolicy
-        requestMandatoryAccessCodeEntry(card)
+    private suspend fun ResourceScope.withUserCodeRequestPolicy(card: CardDTO) {
+        install(
+            acquire = {
+                val policyBeforeReset = tangemSdkManager.userCodeRequestPolicy
+                requestMandatoryAccessCodeEntry(card)
 
-        tangemSdkManager.task()
-            .doOnResult { tangemSdkManager.setUserCodeRequestPolicy(policyBeforeReset) }
+                policyBeforeReset
+            },
+            release = { prevPolicy, _ ->
+                tangemSdkManager.setUserCodeRequestPolicy(prevPolicy)
+            },
+        )
     }
 
     private fun requestMandatoryAccessCodeEntry(card: CardDTO) {
@@ -65,7 +74,19 @@ internal class DefaultResetCardUseCase(
         }
     }
 
+    private fun CompletionResult<*>.bind(raise: Raise<ResetCardError>) {
+        return when (this) {
+            is CompletionResult.Failure -> {
+                val domainError = error.mapToDomainError()
+
+                raise.raise(domainError)
+            }
+            is CompletionResult.Success -> { /* no-op */
+            }
+        }
+    }
+
     private fun TangemError.mapToDomainError(): ResetCardError {
-        return if (this is TangemSdkError.UserCancelled) ResetCardError.UserCanceled else ResetCardError.AnotherSdkError
+        return if (this is TangemSdkError.UserCancelled) ResetCardError.UserCanceled else ResetCardError.SdkError
     }
 }

@@ -26,8 +26,8 @@ object ContractAddressValidator {
             Blockchain.Unknown,
             Blockchain.Binance,
             Blockchain.BinanceTestnet,
-            Blockchain.Cardano,
             -> SuccessAddressValidator.validate(address)
+            Blockchain.Cardano -> blockchain.validateContractAddress(address)
             else -> blockchain.validateAddress(address)
         }
     }

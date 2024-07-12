@@ -2,7 +2,10 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.feature.wallet.impl.R
 import org.joda.time.DateTime
@@ -205,16 +208,9 @@ sealed class WalletNotification(val config: NotificationConfig) {
         val onCloseClick: () -> Unit,
     ) : WalletNotification(
         config = NotificationConfig(
-            title = resourceReference(
-                id = R.string.main_swap_changelly_promotion_title,
-                formatArgs = wrappedList("0%"),
-            ),
-            subtitle = resourceReference(
-                id = R.string.main_swap_changelly_promotion_message,
-                formatArgs = wrappedList("0%", startDateTime.dayOfMonth, endDateTime.dayOfMonth),
-            ),
-            iconResId = R.drawable.img_swap_promo,
-            backgroundResId = R.drawable.img_swap_promo_green_banner_background,
+            title = resourceReference(id = R.string.swap_promo_title),
+            subtitle = resourceReference(id = R.string.swap_promo_text),
+            iconResId = R.drawable.img_okx_dex_logo,
             onCloseClick = onCloseClick,
         ),
     )

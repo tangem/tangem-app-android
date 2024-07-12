@@ -14,13 +14,13 @@ import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
 import com.tangem.domain.settings.ShouldShowTravalaPromoWalletUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.models.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletClickHandler
@@ -222,6 +222,13 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onCloseSwapPromoClick() {
+        analyticsEventHandler.send(
+            TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                source = AnalyticsParam.ScreensSources.Main,
+                programName = TokenSwapPromoAnalyticsEvent.ProgramName.OKX,
+                action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
+            ),
+        )
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoWalletUseCase.neverToShow()
         }
@@ -229,10 +236,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     override fun onTravalaPromoClick(link: String?) {
         analyticsEventHandler.send(
-            WalletScreenAnalyticsEvent.Promotion.PromotionBannerClicked(
+            TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
                 source = AnalyticsParam.ScreensSources.Main,
-                programName = "Travala",
-                action = WalletScreenAnalyticsEvent.Promotion.PromotionBannerClicked.BannerAction.Clicked,
+                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Travala,
+                action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
             ),
         )
         link?.let {
@@ -244,10 +251,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     override fun onCloseTravalaPromoClick() {
         analyticsEventHandler.send(
-            WalletScreenAnalyticsEvent.Promotion.PromotionBannerClicked(
+            TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
                 source = AnalyticsParam.ScreensSources.Main,
-                programName = "Travala",
-                action = WalletScreenAnalyticsEvent.Promotion.PromotionBannerClicked.BannerAction.Closed,
+                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Travala,
+                action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
             ),
         )
         viewModelScope.launch(dispatchers.main) {

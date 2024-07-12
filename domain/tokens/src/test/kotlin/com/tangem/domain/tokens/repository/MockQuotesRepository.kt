@@ -25,4 +25,6 @@ internal class MockQuotesRepository(
         return quotes.map { it.getOrElse { e -> throw e } }.first()
             .first { it.rawCurrencyId == currencyId.rawCurrencyId }
     }
+
+    override suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>) {}
 }
