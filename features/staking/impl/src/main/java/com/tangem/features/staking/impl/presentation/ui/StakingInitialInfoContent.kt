@@ -42,7 +42,8 @@ import com.tangem.features.staking.impl.presentation.state.previewdata.InitialSt
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
-import com.tangem.utils.Strings.DOT
+import com.tangem.utils.StringsSigns.DOT
+import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.extensions.orZero
 
 @Composable
@@ -205,7 +206,7 @@ private fun StakingRewardBlock(
     val (text, textColor) = if (isRewardsToClaim) {
         annotatedReference(
             buildAnnotatedString {
-                append("+")
+                append(PLUS)
                 appendSpace()
                 append(rewardFiat)
                 appendSpace()
