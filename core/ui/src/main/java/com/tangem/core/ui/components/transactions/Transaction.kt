@@ -34,7 +34,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.utils.Strings
+import com.tangem.utils.StringsSigns
 import java.util.UUID
 
 /**
@@ -258,7 +258,7 @@ private fun Amount(state: TransactionState, isBalanceHidden: Boolean, modifier: 
     when (state) {
         is TransactionState.Content -> {
             Text(
-                text = if (isBalanceHidden) Strings.STARS else state.amount,
+                text = if (isBalanceHidden) StringsSigns.STARS else state.amount,
                 modifier = modifier,
                 textAlign = TextAlign.End,
                 color = when (state.status) {
