@@ -23,4 +23,8 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun openRewardsValidators()
 
     fun selectRewardValidator(rewardValue: String)
+
+    fun onExploreClick()
+
+    fun onShareClick()
 }
