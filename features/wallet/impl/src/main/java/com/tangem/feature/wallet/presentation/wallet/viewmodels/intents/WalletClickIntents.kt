@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.tokens.FetchCardTokenListUseCase
@@ -38,6 +40,7 @@ internal class WalletClickIntents @Inject constructor(
     private val fetchTokenListUseCase: FetchTokenListUseCase,
     private val fetchCardTokenListUseCase: FetchCardTokenListUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val neverToShowWalletsScrollPreview: NeverToShowWalletsScrollPreview,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -118,7 +121,13 @@ internal class WalletClickIntents @Inject constructor(
             }
 
             maybeFetchResult.onLeft {
-                stateHolder.update(SetTokenListErrorTransformer(userWalletId = userWallet.walletId, error = it))
+                stateHolder.update(
+                    SetTokenListErrorTransformer(
+                        selectedWallet = userWallet,
+                        error = it,
+                        appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
+                    ),
+                )
             }
 
             stateHolder.update(

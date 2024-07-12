@@ -163,6 +163,7 @@ internal class ExchangeStatusFactory(
         return when (status) {
             ExchangeStatus.New,
             ExchangeStatus.Waiting,
+            ExchangeStatus.WaitingTxHash,
             ExchangeStatus.Sending,
             ExchangeStatus.Confirming,
             ExchangeStatus.Exchanging,

@@ -5,6 +5,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.signedHashesCount
@@ -29,11 +30,7 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
             handlePrepareScreen(action, state)
         }
         is DetailsAction.PrepareCardSettingsData -> {
-            handlePrepareCardSettingsScreen(
-                card = action.card,
-                cardTypesResolver = action.cardTypesResolver,
-                state = detailsState,
-            )
+            handlePrepareCardSettingsScreen(scanResponse = action.scanResponse, state = detailsState)
         }
         is DetailsAction.ResetCardSettingsData -> detailsState.copy(cardSettingsState = null)
         is DetailsAction.ResetToFactory -> {
@@ -99,17 +96,17 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: AppS
     )
 }
 
-private fun handlePrepareCardSettingsScreen(
-    card: CardDTO,
-    cardTypesResolver: CardTypesResolver,
-    state: DetailsState,
-): DetailsState {
+private fun handlePrepareCardSettingsScreen(scanResponse: ScanResponse, state: DetailsState): DetailsState {
+    val cardTypesResolver = scanResponse.cardTypesResolver
+    val card = scanResponse.card
     val isTangemWallet = cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()
     val isShowPasswordResetRadioButton = isTangemWallet && card.backupStatus is CardDTO.BackupStatus.Active
+
     val cardSettingsState = CardSettingsState(
         cardInfo = card.toCardInfo(cardTypesResolver),
+        scanResponse = scanResponse,
         manageSecurityState = prepareSecurityOptions(card, cardTypesResolver),
-        card = card,
+        card = scanResponse.card,
         resetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver),
         resetButtonEnabled = false,
         condition1Checked = false,
@@ -126,6 +123,7 @@ private fun handlePrepareCardSettingsScreen(
         isShowPasswordResetRadioButton = isShowPasswordResetRadioButton,
         dialog = null,
     )
+
     return state.copy(cardSettingsState = cardSettingsState)
 }
 

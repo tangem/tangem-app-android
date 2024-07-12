@@ -14,6 +14,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -35,7 +36,10 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
-import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.SwapStateHolder
+import com.tangem.feature.swap.models.SwapWarning
+import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
@@ -435,8 +439,11 @@ internal class SwapViewModel @Inject constructor(
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
                 currentSelected
             } else {
-                findBestQuoteProvider(consideredProviders.getLastLoadedSuccessStates())
-                    ?: consideredProviders.keys.first()
+                val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
+                val recommendedProvider = successLoadedData.keys.firstOrNull { it.isRecommended }
+                val bestQuotesProvider = findBestQuoteProvider(successLoadedData)
+                triggerPromoProviderEvent(recommendedProvider, bestQuotesProvider)
+                recommendedProvider ?: bestQuotesProvider ?: consideredProviders.keys.first()
             }
         } else {
             state.keys.first()
@@ -490,9 +497,9 @@ internal class SwapViewModel @Inject constructor(
         }
         val fromCurrency = requireNotNull(dataState.fromCryptoCurrency)
         val fee = dataState.selectedFee
-        // TODO: unexpected crash for some users, this workaround to prevent app crash and follow to support
+
         if (fee == null) {
-            makeDefaultAlert(TextReference.Str("Fee estimation error. Please send feedback to support."))
+            makeDefaultAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
             return
         }
         viewModelScope.launch(dispatchers.main) {
@@ -584,55 +591,61 @@ internal class SwapViewModel @Inject constructor(
 
     private fun givePermissionsToSwap() {
         viewModelScope.launch(dispatchers.main) {
-            val fromToken = requireNotNull(dataState.fromCryptoCurrency?.currency) {
-                "dataState.fromCurrency might not be null"
-            }
-            val feeForPermission = when (val fee = dataState.approveDataModel?.fee) {
-                TxFeeState.Empty -> error("Fee should not be Empty")
-                is TxFeeState.MultipleFeeState -> fee.priorityFee
-                is TxFeeState.SingleFeeState -> fee.fee
-                null -> error("Fee should not be null")
-            }
-            val approveType = requireNotNull(dataState.approveType) {
-                "uiState.permissionState should not be null"
-            }.toDomainApproveType()
-            runCatching(dispatchers.io) {
-                swapInteractor.givePermissionToSwap(
-                    networkId = fromToken.network.backendId,
-                    permissionOptions = PermissionOptions(
-                        approveData = requireNotNull(dataState.approveDataModel) {
-                            "dataState.approveDataModel might not be null"
-                        },
-                        forTokenContractAddress = (dataState.fromCryptoCurrency?.currency as? CryptoCurrency.Token)
-                            ?.contractAddress ?: "",
-                        fromToken = fromToken,
-                        approveType = approveType,
-                        txFee = feeForPermission,
-                        spenderAddress = requireNotNull(dataState.approveDataModel?.spenderAddress) {
-                            "dataState.approveDataModel.spenderAddress shouldn't be null"
-                        },
-                    ),
-                )
-            }.onSuccess {
-                when (it) {
-                    is SwapTransactionState.TxSent -> {
-                        sendApproveSuccessEvent(fromToken, feeForPermission.feeType, approveType)
-                        updateWalletBalance()
-                        uiState = stateBuilder.loadingPermissionState(uiState)
-                        uiState = stateBuilder.dismissBottomSheet(uiState)
-                        startLoadingQuotesFromLastState(isSilent = true)
+            runCatching {
+                val fromToken = requireNotNull(dataState.fromCryptoCurrency?.currency) {
+                    "dataState.fromCurrency might not be null"
+                }
+                val approveDataModel = requireNotNull(dataState.approveDataModel) {
+                    "dataState.approveDataModel.spenderAddress shouldn't be null"
+                }
+                val approveType = requireNotNull(dataState.approveType?.toDomainApproveType()) {
+                    "uiState.permissionState should not be null"
+                }
+                val feeForPermission = when (val fee = approveDataModel.fee) {
+                    TxFeeState.Empty -> {
+                        makeDefaultAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+                        Timber.e("Fee should not be Empty")
+                        return@runCatching
                     }
-                    is SwapTransactionState.UserCancelled -> Unit
-                    else -> {
-                        uiState = stateBuilder.createErrorTransaction(uiState, it) {
-                            uiState = stateBuilder.clearAlert(uiState)
+                    is TxFeeState.MultipleFeeState -> fee.priorityFee
+                    is TxFeeState.SingleFeeState -> fee.fee
+                }
+                runCatching(dispatchers.io) {
+                    swapInteractor.givePermissionToSwap(
+                        networkId = fromToken.network.backendId,
+                        permissionOptions = PermissionOptions(
+                            approveData = approveDataModel,
+                            forTokenContractAddress = (fromToken as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
+                            fromToken = fromToken,
+                            approveType = approveType,
+                            txFee = feeForPermission,
+                            spenderAddress = approveDataModel.spenderAddress,
+                        ),
+                    )
+                }.onSuccess {
+                    when (it) {
+                        is SwapTransactionState.TxSent -> {
+                            sendApproveSuccessEvent(fromToken, feeForPermission.feeType, approveType)
+                            updateWalletBalance()
+                            uiState = stateBuilder.loadingPermissionState(uiState)
+                            uiState = stateBuilder.dismissBottomSheet(uiState)
+                            startLoadingQuotesFromLastState(isSilent = true)
+                        }
+                        is SwapTransactionState.UserCancelled -> Unit
+                        else -> {
+                            uiState = stateBuilder.createErrorTransaction(uiState, it) {
+                                uiState = stateBuilder.clearAlert(uiState)
+                            }
                         }
                     }
-                }
-            }.onFailure {
-                makeDefaultAlert()
-            }
+                }.onFailure { makeDefaultAlert() }
+            }.onFailure { showGenericError(it.message.orEmpty()) }
         }
+    }
+
+    private fun showGenericError(message: String) {
+        makeDefaultAlert(resourceReference(R.string.common_unknown_error))
+        Timber.e(message)
     }
 
     private fun onSearchEntered(searchQuery: String) {
@@ -1181,11 +1194,28 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
+    private fun triggerPromoProviderEvent(recommendedProvider: SwapProvider?, bestQuotesProvider: SwapProvider?) {
+        // for now send event only for changelly
+        if (recommendedProvider == null ||
+            recommendedProvider.providerId != CHANGELLY_PROVIDER_ID ||
+            bestQuotesProvider == null
+        ) {
+            return
+        }
+        val event = if (recommendedProvider.providerId == bestQuotesProvider.providerId) {
+            SwapEvents.ChangellyActivity(SwapEvents.ChangellyActivity.PromoState.Native)
+        } else {
+            SwapEvents.ChangellyActivity(SwapEvents.ChangellyActivity.PromoState.Recommended)
+        }
+        analyticsEventHandler.send(event = event)
+    }
+
     private companion object {
         const val loggingTag = "SwapViewModel"
         const val INITIAL_AMOUNT = ""
         const val UPDATE_DELAY = 10000L
         const val DEBOUNCE_AMOUNT_DELAY = 1000L
         const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
+        const val CHANGELLY_PROVIDER_ID = "changelly"
     }
 }

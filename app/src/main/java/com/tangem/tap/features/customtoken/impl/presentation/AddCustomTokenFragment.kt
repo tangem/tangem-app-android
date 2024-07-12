@@ -3,9 +3,11 @@ package com.tangem.tap.features.customtoken.impl.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
@@ -30,11 +32,13 @@ internal class AddCustomTokenFragment : ComposeFragment() {
         val viewModel = hiltViewModel<AddCustomTokenViewModel>().apply {
             LocalLifecycleOwner.current.lifecycle.addObserver(this)
         }
+        val state by viewModel.uiState.collectAsStateWithLifecycle()
+
         AddCustomTokenScreen(
             modifier = Modifier
                 .background(TangemTheme.colors.background.primary)
                 .systemBarsPadding(),
-            stateHolder = viewModel.uiState,
+            stateHolder = state,
         )
     }
 }

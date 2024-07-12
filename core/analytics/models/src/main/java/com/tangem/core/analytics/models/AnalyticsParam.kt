@@ -64,6 +64,7 @@ sealed class AnalyticsParam {
         data object Send : ScreensSources("Send")
         data object Intro : ScreensSources("Introduction")
         data object MyWallets : ScreensSources("My Wallets")
+        data object Token : ScreensSources("Token")
     }
 
     sealed class TxSentFrom(val value: String) {
