@@ -47,6 +47,7 @@ import com.tangem.core.ui.windowsize.WindowSizeType
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.ui.entity.MarketsListItemUM
 import com.tangem.features.markets.ui.preview.MarketChartListItemPreviewDataProvider
+import com.tangem.utils.StringsSigns.MINUS
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -306,7 +307,7 @@ private fun RowScope.TokenRatingPlace(ratingPosition: String?) {
             .padding(horizontal = TangemTheme.dimens.spacing5),
     ) {
         Text(
-            text = ratingPosition ?: "-",
+            text = ratingPosition ?: MINUS,
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.caption1,
             maxLines = 1,
