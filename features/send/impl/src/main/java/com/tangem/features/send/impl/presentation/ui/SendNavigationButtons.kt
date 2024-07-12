@@ -16,17 +16,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.ui.SendDoneButtons
 import com.tangem.common.ui.amountScreen.utils.getCryptoReference
 import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.Keyboard
-import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
@@ -215,46 +214,6 @@ private fun SendingText(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(TangemTheme.dimens.spacing12),
-            )
-        }
-    }
-}
-
-@Composable
-private fun SendDoneButtons(
-    txUrl: String,
-    onExploreClick: () -> Unit,
-    onShareClick: () -> Unit,
-    isVisible: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    val hapticFeedback = LocalHapticFeedback.current
-    val context = LocalContext.current
-
-    AnimatedVisibility(
-        visible = isVisible && txUrl.isNotBlank(),
-        modifier = modifier,
-        enter = slideInVertically().plus(fadeIn()),
-        exit = slideOutVertically().plus(fadeOut()),
-        label = "Animate show sent state buttons",
-    ) {
-        Row(modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12)) {
-            SecondaryButtonIconStart(
-                text = stringResource(id = R.string.common_explore),
-                iconResId = R.drawable.ic_web_24,
-                onClick = onExploreClick,
-                modifier = Modifier.weight(1f),
-            )
-            SpacerW12()
-            SecondaryButtonIconStart(
-                text = stringResource(id = R.string.common_share),
-                iconResId = R.drawable.ic_share_24,
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    context.shareText(txUrl)
-                    onShareClick()
-                },
-                modifier = Modifier.weight(1f),
             )
         }
     }
