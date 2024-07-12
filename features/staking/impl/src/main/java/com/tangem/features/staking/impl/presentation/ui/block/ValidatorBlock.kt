@@ -35,6 +35,7 @@ internal fun ValidatorBlock(validatorState: ValidatorState, onClick: () -> Unit)
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .clickable(
+                enabled = validatorState.isClickable,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(),
                 onClick = onClick,
@@ -63,6 +64,7 @@ internal fun ValidatorBlock(validatorState: ValidatorState, onClick: () -> Unit)
                     ),
                 ),
                 imageUrl = validatorState.chosenValidator.image.orEmpty(),
+                showChevron = validatorState.isClickable,
             )
         }
     }

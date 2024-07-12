@@ -10,20 +10,22 @@ import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("UnusedPrivateMember")
-internal class SetConfirmStateLoadingTransformer(
+internal class SetConfirmationStateLoadingTransformer(
     private val yield: Yield,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
-        val possibleConfirmStakingState = prevState.confirmStakingState as? StakingStates.ConfirmStakingState.Data
-        val possibleValidatorState = possibleConfirmStakingState?.validatorState as? ValidatorState.Content
+        val possibleConfirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
+        val possibleValidatorState = possibleConfirmationState?.validatorState as? ValidatorState.Content
         val chosenValidator = possibleValidatorState?.chosenValidator ?: yield.validators[0]
 
         return prevState.copy(
-            confirmStakingState = StakingStates.ConfirmStakingState.Data(
+            confirmationState = StakingStates.ConfirmationState.Data(
                 isPrimaryButtonEnabled = false,
+                innerState = InnerConfirmationStakingState.ASSENT,
                 feeState = FeeState.Loading,
                 validatorState = ValidatorState.Content(
+                    isClickable = false,
                     chosenValidator = chosenValidator,
                     availableValidators = yield.validators,
                 ),
@@ -34,7 +36,7 @@ internal class SetConfirmStateLoadingTransformer(
                     ),
                 ),
                 footerText = "",
-                innerState = StakingStates.ConfirmStakingState.Data.InnerConfirmStakingState.CONFIRM,
+                transactionDoneState = TransactionDoneState.Empty,
             ),
         )
     }

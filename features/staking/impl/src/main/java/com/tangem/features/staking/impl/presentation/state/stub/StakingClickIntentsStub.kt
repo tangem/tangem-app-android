@@ -31,4 +31,8 @@ object StakingClickIntentsStub : StakingClickIntents {
     override fun openRewardsValidators() {}
 
     override fun selectRewardValidator(rewardValue: String) {}
+
+    override fun onExploreClick() {}
+
+    override fun onShareClick() {}
 }
