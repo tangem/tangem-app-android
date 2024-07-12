@@ -18,7 +18,7 @@ import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.CryptoPriceState as TokenPriceChangeState
 
 @Composable
@@ -33,7 +33,7 @@ internal fun TokenPrice(state: TokenPriceChangeState?, modifier: Modifier = Modi
             )
         }
         is TokenPriceChangeState.Unknown -> {
-            PriceText(text = TokenItemState.UNKNOWN_AMOUNT_SIGN, modifier = modifier)
+            PriceText(text = DASH_SIGN, modifier = modifier)
         }
         is TokenPriceChangeState.Loading -> {
             RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
@@ -104,7 +104,7 @@ private fun PriceChangeIcon(type: PriceChangeType) {
 private fun PriceChangeText(type: PriceChangeType?, text: String?, modifier: Modifier = Modifier) {
     AnimatedContent(targetState = text, modifier = modifier, label = "Update the price change's text") { animatedText ->
         Text(
-            text = animatedText ?: TokenItemState.UNKNOWN_AMOUNT_SIGN,
+            text = animatedText ?: DASH_SIGN,
             color = when (type) {
                 PriceChangeType.UP -> TangemTheme.colors.text.accent
                 PriceChangeType.DOWN -> TangemTheme.colors.text.warning

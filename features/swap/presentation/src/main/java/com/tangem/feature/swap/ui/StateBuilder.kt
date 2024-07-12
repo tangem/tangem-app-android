@@ -22,6 +22,8 @@ import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.viewmodels.SwapProcessDataState
 import com.tangem.utils.Provider
+import com.tangem.utils.StringsSigns.DASH_SIGN
+import com.tangem.utils.StringsSigns.TILDE_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -243,7 +245,11 @@ internal class StateBuilder(
                     showWarning = true,
                     actions.onReceiveCardWarningClick,
                 ),
-                amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
+                amountTextFieldValue = TextFieldValue(
+                    quoteModel.toTokenInfo.tokenAmount
+                        .formatToUIRepresentation()
+                        .appendApproximateSign(),
+                ),
                 amountEquivalent = getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
                 token = toCurrencyStatus,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
@@ -793,7 +799,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
-                balance = toTokenStatus?.getFormattedAmount(isNeedSymbol = false) ?: UNKNOWN_AMOUNT_SIGN,
+                balance = toTokenStatus?.getFormattedAmount(isNeedSymbol = false) ?: DASH_SIGN,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             warnings = emptyList(),
@@ -1648,14 +1654,14 @@ internal class StateBuilder(
     }
 
     private fun CryptoCurrencyStatus.getFormattedAmount(isNeedSymbol: Boolean): String {
-        val amount = value.amount ?: return UNKNOWN_AMOUNT_SIGN
+        val amount = value.amount ?: return DASH_SIGN
         val symbol = if (isNeedSymbol) currency.symbol else ""
         return BigDecimalFormatter.formatCryptoAmount(amount, symbol, currency.decimals)
     }
 
     @Suppress("UnusedPrivateMember")
     private fun CryptoCurrencyStatus.getFormattedFiatAmount(): String {
-        val fiatAmount = value.fiatAmount ?: return UNKNOWN_AMOUNT_SIGN
+        val fiatAmount = value.fiatAmount ?: return DASH_SIGN
         val appCurrency = appCurrencyProvider()
 
         return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
@@ -1687,6 +1693,10 @@ internal class StateBuilder(
         }
     }
 
+    private fun String.appendApproximateSign(): String {
+        return "$TILDE_SIGN $this"
+    }
+
     private companion object {
         private const val RU_LOCALE = "ru"
         private const val EN_LOCALE = "en"
@@ -1694,7 +1704,6 @@ internal class StateBuilder(
         const val ADDRESS_FIRST_PART_LENGTH = 7
         const val ADDRESS_SECOND_PART_LENGTH = 4
         private const val PRICE_IMPACT_THRESHOLD = 0.1
-        private const val UNKNOWN_AMOUNT_SIGN = "—"
         private const val MAX_DECIMALS_TO_SHOW = 8
         private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
         private const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
