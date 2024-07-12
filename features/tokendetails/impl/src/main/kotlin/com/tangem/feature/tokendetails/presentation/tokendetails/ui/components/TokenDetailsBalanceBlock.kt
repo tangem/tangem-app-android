@@ -22,7 +22,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPre
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.utils.Strings.STARS
+import com.tangem.utils.StringsSigns.STARS
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
