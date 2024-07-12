@@ -84,4 +84,10 @@ internal object CardDomainModule {
     fun provideResetCardUseCase(tangemSdkManager: TangemSdkManager): ResetCardUseCase {
         return DefaultResetCardUseCase(tangemSdkManager)
     }
+
+    @Provides
+    @Singleton
+    fun provideNetworkHasDerivationUseCase(): NetworkHasDerivationUseCase {
+        return NetworkHasDerivationUseCase()
+    }
 }

@@ -25,6 +25,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.GetExtendedPublicKeyForCurrencyUseCase
+import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
@@ -108,6 +109,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val stakingFeatureToggles: StakingFeatureToggles,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     private val getYieldUseCase: GetYieldUseCase,
+    private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val quotesRepository: QuotesRepository,
@@ -118,8 +120,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val hapticManager: HapticManager,
     private val clipboardManager: ClipboardManager,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     tokenDetailsFeatureToggles: TokenDetailsFeatureToggles,
-    getUserWalletUseCase: GetUserWalletUseCase,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
@@ -156,6 +158,9 @@ internal class TokenDetailsViewModel @Inject constructor(
         decimals = cryptoCurrency.decimals,
         featureToggles = tokenDetailsFeatureToggles,
         stakingFeatureToggles = stakingFeatureToggles,
+        userWalletId = userWalletId,
+        networkHasDerivationUseCase = networkHasDerivationUseCase,
+        getUserWalletUseCase = getUserWalletUseCase,
     )
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -395,8 +400,11 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateTopBarMenu() {
         viewModelScope.launch(dispatchers.main) {
+            val hasDerivations =
+                networkHasDerivationUseCase(userWallet.scanResponse, cryptoCurrency.network).getOrElse { false }
             internalUiState.value = stateFactory.getStateWithUpdatedMenu(
                 cardTypesResolver = userWallet.scanResponse.cardTypesResolver,
+                hasDerivations = hasDerivations,
                 isBitcoin = isBitcoin(cryptoCurrency.network.id.value),
             )
         }
