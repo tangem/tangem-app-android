@@ -27,7 +27,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.ValidatorState
-import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmStakingStatePreviewData
+import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import java.math.BigDecimal
@@ -124,6 +124,6 @@ private fun StakingValidatorListContent_Preview(
 
 private class StakingValidatorListContentPreviewProvider : PreviewParameterProvider<ValidatorState> {
     override val values: Sequence<ValidatorState>
-        get() = sequenceOf(ConfirmStakingStatePreviewData.confirmStakingState.validatorState)
+        get() = sequenceOf(ConfirmationStatePreviewData.assentStakingState.validatorState)
 }
 // endregion
