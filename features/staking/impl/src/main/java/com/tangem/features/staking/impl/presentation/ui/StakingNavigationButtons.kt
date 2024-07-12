@@ -17,19 +17,22 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.tangem.common.ui.amountScreen.ui.SendDoneButtons
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
+import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 
 @Composable
 internal fun StakingNavigationButtons(uiState: StakingUiState, modifier: Modifier = Modifier) {
+    val confirmInnerState = (uiState.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState
+    val isSuccessState = confirmInnerState == InnerConfirmationStakingState.COMPLETED
+
     Column(
         modifier = modifier
             .padding(
@@ -38,6 +41,15 @@ internal fun StakingNavigationButtons(uiState: StakingUiState, modifier: Modifie
                 bottom = TangemTheme.dimens.spacing16,
             ),
     ) {
+        val confirmationDataState = uiState.confirmationState as? StakingStates.ConfirmationState.Data
+        val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
+
+        SendDoneButtons(
+            txUrl = transactionDoneState?.txUrl.orEmpty(),
+            onExploreClick = uiState.clickIntents::onExploreClick,
+            onShareClick = uiState.clickIntents::onShareClick,
+            isVisible = isSuccessState,
+        )
         StakingNavigationButton(
             uiState = uiState,
             modifier = Modifier,
@@ -50,13 +62,19 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
     val hapticFeedback = LocalHapticFeedback.current
 
     val isButtonsVisible = isPrevButtonVisible(uiState.currentStep)
-    val isStakingState = uiState.currentStep == StakingStep.Confirm
+
+    val innerConfirmState = (uiState.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState
+    val isInProgressInnerState = innerConfirmState == InnerConfirmationStakingState.IN_PROGRESS
+    val isInAssentInnerState = innerConfirmState == InnerConfirmationStakingState.ASSENT
+
+    val showTangemIcon = uiState.currentStep == StakingStep.Confirmation &&
+        (isInProgressInnerState || isInAssentInnerState)
 
     val (buttonTextId, buttonClick) = getButtonData(
         currentState = uiState,
     )
     val isButtonEnabled = isButtonEnabled(uiState)
-    val buttonIcon = if (isStakingState) {
+    val buttonIcon = if (showTangemIcon) {
         TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
     } else {
         TangemButtonIconPosition.None
@@ -82,7 +100,6 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
                 SpacerW12()
             }
         }
-
         AnimatedVisibility(
             visible = buttonClick != null,
             enter = fadeIn(),
@@ -93,7 +110,7 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
                 icon = buttonIcon,
                 enabled = isButtonEnabled && buttonClick != null,
                 onClick = {
-                    if (isStakingState) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (showTangemIcon) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     if (buttonClick != null) buttonClick()
                 },
                 showProgress = false,
@@ -116,18 +133,27 @@ private fun getButtonData(currentState: StakingUiState): Pair<Int, (() -> Unit)?
         }
         StakingStep.Amount,
         -> R.string.common_next to currentState.clickIntents::onNextClick
-        StakingStep.Confirm -> R.string.common_stake to currentState.clickIntents::onNextClick
+        StakingStep.Confirmation -> {
+            val confirmationState = currentState.confirmationState
+            if (confirmationState is StakingStates.ConfirmationState.Data) {
+                if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
+                    R.string.common_close to currentState.clickIntents::onBackClick
+                } else {
+                    R.string.common_stake to currentState.clickIntents::onNextClick
+                }
+            } else {
+                R.string.common_close to currentState.clickIntents::onBackClick
+            }
+        }
         StakingStep.Validators -> R.string.common_continue to currentState.clickIntents::onNextClick
-        StakingStep.Success -> R.string.common_close to currentState.clickIntents::onBackClick
-        else -> R.string.common_next to null
+        StakingStep.RewardsValidators -> R.string.common_next to null
     }
 }
 
 private fun isPrevButtonVisible(step: StakingStep): Boolean = when (step) {
     StakingStep.InitialInfo,
     StakingStep.RewardsValidators,
-    StakingStep.Confirm,
-    StakingStep.Success,
+    StakingStep.Confirmation,
     -> false
     StakingStep.Amount,
     StakingStep.Validators,
@@ -138,9 +164,8 @@ private fun isButtonEnabled(uiState: StakingUiState): Boolean {
     return when (uiState.currentStep) {
         StakingStep.InitialInfo -> uiState.initialInfoState.isPrimaryButtonEnabled
         StakingStep.Amount -> uiState.amountState.isPrimaryButtonEnabled
-        StakingStep.Confirm -> uiState.confirmStakingState.isPrimaryButtonEnabled
+        StakingStep.Confirmation -> uiState.confirmationState.isPrimaryButtonEnabled
         StakingStep.RewardsValidators -> uiState.rewardsValidatorsState.isPrimaryButtonEnabled
-        StakingStep.Success -> true
         StakingStep.Validators -> true
     }
 }
