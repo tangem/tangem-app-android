@@ -32,7 +32,7 @@ import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenToSelectState
 import com.tangem.feature.swap.presentation.R
-import com.tangem.utils.Strings
+import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -254,7 +254,7 @@ private fun TokenItem(
                     text = if (token.addedTokenBalanceData.isBalanceHidden &&
                         !token.addedTokenBalanceData.amountEquivalent.isNullOrEmpty()
                     ) {
-                        Strings.STARS
+                        StringsSigns.STARS
                     } else {
                         token.addedTokenBalanceData.amountEquivalent.orEmpty()
                     },
@@ -270,7 +270,7 @@ private fun TokenItem(
                     text = if (token.addedTokenBalanceData.isBalanceHidden &&
                         !token.addedTokenBalanceData.amount.isNullOrEmpty()
                     ) {
-                        Strings.STARS
+                        StringsSigns.STARS
                     } else {
                         token.addedTokenBalanceData.amount.orEmpty()
                     },

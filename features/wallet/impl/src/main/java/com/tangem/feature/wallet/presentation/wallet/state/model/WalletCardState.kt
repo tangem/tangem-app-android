@@ -4,7 +4,8 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.Strings
+import com.tangem.utils.StringsSigns
+import com.tangem.utils.StringsSigns.DASH_SIGN
 
 /** Wallet card state */
 @Immutable
@@ -123,7 +124,7 @@ internal sealed interface WalletCardState {
     }
 
     companion object {
-        val HIDDEN_BALANCE_TEXT by lazy { TextReference.Str(value = Strings.STARS) }
-        val EMPTY_BALANCE_TEXT by lazy { TextReference.Str(value = "—") }
+        val HIDDEN_BALANCE_TEXT by lazy { TextReference.Str(value = StringsSigns.STARS) }
+        val EMPTY_BALANCE_TEXT by lazy { TextReference.Str(value = DASH_SIGN) }
     }
 }

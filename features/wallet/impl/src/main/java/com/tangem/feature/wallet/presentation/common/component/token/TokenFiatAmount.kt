@@ -9,7 +9,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.utils.Strings
+import com.tangem.utils.StringsSigns
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.FiatAmountState as TokenFiatAmountState
 
 @Composable
@@ -17,7 +17,7 @@ internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Bool
     when (state) {
         is TokenFiatAmountState.Content -> {
             FiatAmountText(
-                text = if (isBalanceHidden) Strings.STARS else state.text,
+                text = if (isBalanceHidden) StringsSigns.STARS else state.text,
                 modifier,
             )
         }

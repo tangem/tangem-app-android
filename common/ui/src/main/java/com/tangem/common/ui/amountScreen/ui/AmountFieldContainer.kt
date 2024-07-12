@@ -16,7 +16,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.utils.Strings.STARS
+import com.tangem.utils.StringsSigns.STARS
 
 private const val AMOUNT_FIELD_KEY = "amountFieldKey"
 
