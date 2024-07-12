@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.utils.Provider
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
@@ -64,7 +65,7 @@ internal class TokenItemStateConverter(
 
     private fun CryptoCurrencyStatus.getFormattedAmount(): String {
         val yieldBalance = (value.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero()
-        val amount = value.amount?.plus(yieldBalance) ?: return TokenItemState.UNKNOWN_AMOUNT_SIGN
+        val amount = value.amount?.plus(yieldBalance) ?: return DASH_SIGN
 
         return BigDecimalFormatter.formatCryptoAmount(amount, currency.symbol, currency.decimals)
     }
@@ -72,7 +73,7 @@ internal class TokenItemStateConverter(
     private fun CryptoCurrencyStatus.getFormattedFiatAmount(): String {
         val yieldBalance = (value.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero()
         val fiatYieldBalance = value.fiatRate?.times(yieldBalance).orZero()
-        val fiatAmount = value.fiatAmount?.plus(fiatYieldBalance) ?: return TokenItemState.UNKNOWN_AMOUNT_SIGN
+        val fiatAmount = value.fiatAmount?.plus(fiatYieldBalance) ?: return DASH_SIGN
         val appCurrency = appCurrencyProvider()
 
         return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
