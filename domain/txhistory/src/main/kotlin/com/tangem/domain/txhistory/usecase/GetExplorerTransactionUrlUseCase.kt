@@ -11,7 +11,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 class GetExplorerTransactionUrlUseCase(
     private val repository: TxHistoryRepository,
 ) {
-    @Deprecated("Replace with invoke [UserWalletId, Network]")
     operator fun invoke(txHash: String, networkId: Network.ID): Either<TxStatusError, String> {
         return either {
             catch(
