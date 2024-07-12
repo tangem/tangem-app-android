@@ -1,6 +1,8 @@
 package com.tangem.core.ui.utils
 
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.utils.StringsSigns.DASH_SIGN
+import com.tangem.utils.StringsSigns.LOWER_SIGN
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -11,8 +13,8 @@ import java.util.Locale
 
 object BigDecimalFormatter {
 
-    const val EMPTY_BALANCE_SIGN = "—"
-    const val CAN_BE_LOWER_SIGN = "<"
+    const val EMPTY_BALANCE_SIGN = DASH_SIGN
+    const val CAN_BE_LOWER_SIGN = LOWER_SIGN
     private val FORMAT_THRESHOLD = BigDecimal("0.01")
 
     private const val TEMP_CURRENCY_CODE = "USD"
