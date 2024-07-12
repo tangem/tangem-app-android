@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val appPreferencesStore: AppPreferencesStore,

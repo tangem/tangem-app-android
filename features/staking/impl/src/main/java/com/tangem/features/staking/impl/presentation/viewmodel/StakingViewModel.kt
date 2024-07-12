@@ -292,7 +292,7 @@ internal class StakingViewModel @Inject constructor(
             ifRight = { txHash ->
                 val transaction = stakingTransaction ?: return@fold
 
-               submitHash(transaction.id, txHash)
+                submitHash(transaction.id, txHash)
 
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = txHash,
@@ -316,7 +316,7 @@ internal class StakingViewModel @Inject constructor(
     private suspend fun submitHash(transactionId: String, transactionHash: String) {
         submitHashUseCase.submitHash(
             transactionId = transactionId,
-            transactionHash = transactionHash
+            transactionHash = transactionHash,
         )
             .onLeft {
                 saveUnsubmittedHashUseCase.invoke(
@@ -326,7 +326,6 @@ internal class StakingViewModel @Inject constructor(
             }.onRight {
                 Timber.d("Successful hash submission")
             }
-
     }
 
     private fun isAssentState(): Boolean {
