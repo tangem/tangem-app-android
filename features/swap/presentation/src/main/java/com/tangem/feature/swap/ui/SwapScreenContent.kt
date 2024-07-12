@@ -38,7 +38,7 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
-import com.tangem.utils.Strings.STARS
+import com.tangem.utils.StringsSigns.STARS
 
 @Suppress("LongMethod")
 @Composable

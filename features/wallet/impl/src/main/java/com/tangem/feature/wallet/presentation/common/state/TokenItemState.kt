@@ -161,8 +161,4 @@ internal sealed class TokenItemState {
 
         object Locked : CryptoPriceState()
     }
-
-    companion object {
-        const val UNKNOWN_AMOUNT_SIGN = "—"
-    }
 }
