@@ -13,7 +13,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.utils.Provider
-import com.tangem.utils.Strings.PLUS
+import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.collections.immutable.toPersistentList
