@@ -10,11 +10,11 @@ internal class ValidatorSelectChangeTransformer(
     private val selectedValidator: Yield.Validator,
 ) : Transformer<StakingUiState> {
     override fun transform(prevState: StakingUiState): StakingUiState {
-        val confirmState = prevState.confirmStakingState as? StakingStates.ConfirmStakingState.Data ?: return prevState
-        val validatorState = confirmState.validatorState as? ValidatorState.Content ?: return prevState
+        val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data ?: return prevState
+        val validatorState = confirmationState.validatorState as? ValidatorState.Content ?: return prevState
 
         return prevState.copy(
-            confirmStakingState = confirmState.copy(
+            confirmationState = confirmationState.copy(
                 validatorState = validatorState.copy(
                     chosenValidator = selectedValidator,
                 ),
