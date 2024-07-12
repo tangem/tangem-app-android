@@ -218,6 +218,7 @@ internal class StateBuilder(
             quoteModel = quoteModel,
             fromToken = fromToken,
             selectedFeeType = selectedFeeType,
+            providerName = swapProvider.name,
         )
         val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
@@ -258,6 +259,7 @@ internal class StateBuilder(
             permissionState = convertPermissionState(
                 lastPermissionState = uiStateHolder.permissionState,
                 permissionDataState = quoteModel.permissionState,
+                providerName = swapProvider.name,
                 onGivePermissionClick = actions.onGivePermissionClick,
                 onChangeApproveType = actions.onChangeApproveType,
             ),
@@ -317,11 +319,12 @@ internal class StateBuilder(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
         selectedFeeType: FeeType,
+        providerName: String,
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
         maybeAddDomainWarnings(quoteModel, warnings)
         maybeAddNeedReserveToCreateAccountWarning(quoteModel, warnings)
-        maybeAddPermissionNeededWarning(quoteModel, warnings, fromToken)
+        maybeAddPermissionNeededWarning(quoteModel, warnings, fromToken, providerName)
         maybeAddNetworkFeeCoverageWarning(quoteModel, warnings, selectedFeeType)
         maybeAddUnableCoverFeeWarning(quoteModel, fromToken, warnings)
         maybeAddInsufficientFundsWarning(quoteModel, warnings)
@@ -469,6 +472,7 @@ internal class StateBuilder(
         quoteModel: SwapState.QuotesLoadedState,
         warnings: MutableList<SwapWarning>,
         fromToken: CryptoCurrency,
+        providerName: String,
     ) {
         if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
             quoteModel.preparedSwapConfigState.feeState is SwapFeeState.Enough &&
@@ -476,7 +480,7 @@ internal class StateBuilder(
         ) {
             warnings.add(
                 SwapWarning.PermissionNeeded(
-                    createPermissionNotificationConfig(fromToken.symbol),
+                    createPermissionNotificationConfig(providerName, fromToken.symbol),
                 ),
             )
         }
@@ -1147,6 +1151,7 @@ internal class StateBuilder(
     private fun convertPermissionState(
         lastPermissionState: GiveTxPermissionState,
         permissionDataState: PermissionDataState,
+        providerName: String,
         onGivePermissionClick: () -> Unit,
         onChangeApproveType: (ApproveType) -> Unit,
     ): GiveTxPermissionState {
@@ -1180,6 +1185,11 @@ internal class StateBuilder(
                         enabled = true,
                     ),
                     onChangeApproveType = onChangeApproveType,
+                    subtitle = resourceReference(
+                        id = R.string.give_permission_swap_subtitle,
+                        formatArgs = wrappedList(providerName, permissionDataState.currency),
+                    ),
+                    dialogText = resourceReference(R.string.swapping_approve_information_text),
                 )
             }
         }
@@ -1403,12 +1413,12 @@ internal class StateBuilder(
     }
 
     // region warnings
-    private fun createPermissionNotificationConfig(fromTokenSymbol: String): NotificationConfig {
+    private fun createPermissionNotificationConfig(providerName: String, fromTokenSymbol: String): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.express_provider_permission_needed),
             subtitle = resourceReference(
                 id = R.string.give_permission_swap_subtitle,
-                formatArgs = wrappedList(fromTokenSymbol),
+                formatArgs = wrappedList(providerName, fromTokenSymbol),
             ),
             iconResId = R.drawable.ic_locked_24,
         )
