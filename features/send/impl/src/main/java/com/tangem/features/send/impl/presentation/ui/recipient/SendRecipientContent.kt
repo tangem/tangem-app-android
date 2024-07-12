@@ -34,7 +34,7 @@ import com.tangem.features.send.impl.presentation.state.previewdata.RecipientSta
 import com.tangem.features.send.impl.presentation.state.previewdata.SendClickIntentsStub
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
-import com.tangem.utils.Strings.STARS
+import com.tangem.utils.StringsSigns.STARS
 import kotlinx.collections.immutable.ImmutableList
 
 private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
