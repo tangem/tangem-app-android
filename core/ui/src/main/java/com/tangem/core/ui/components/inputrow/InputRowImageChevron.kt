@@ -35,6 +35,7 @@ fun InputRowImageChevron(
     modifier: Modifier = Modifier,
     subtitleColor: Color = TangemTheme.colors.text.primary1,
     captionColor: Color = TangemTheme.colors.text.tertiary,
+    showChevron: Boolean = true,
 ) {
     InputRowImageBase(
         subtitle = subtitle,
@@ -45,11 +46,13 @@ fun InputRowImageChevron(
         captionColor = captionColor,
     ) {
         SpacerWMax()
-        Icon(
-            painter = painterResource(id = R.drawable.ic_chevron_right_24),
-            tint = TangemTheme.colors.icon.informative,
-            contentDescription = null,
-        )
+        if (showChevron) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_chevron_right_24),
+                tint = TangemTheme.colors.icon.informative,
+                contentDescription = null,
+            )
+        }
     }
 }
 
