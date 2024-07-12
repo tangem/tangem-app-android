@@ -10,7 +10,7 @@ import com.tangem.tap.features.send.redux.states.AmountState
 import com.tangem.tap.features.send.redux.states.InputViewValue
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.utils.Strings.STARS
+import com.tangem.utils.StringsSigns.STARS
 import java.math.BigDecimal
 
 /**
