@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.common.extensions.remove
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -20,7 +21,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.ValidatorState
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
-import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmStakingStatePreviewData
+import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
@@ -61,7 +62,7 @@ internal class SetInitialDataStateTransformer(
             currentStep = StakingStep.InitialInfo,
             initialInfoState = createInitialInfoState(),
             amountState = createInitialAmountState(),
-            confirmStakingState = createInitialConfirmationState(),
+            confirmationState = createInitialConfirmationState(),
             rewardsValidatorsState = rewardsValidatorStateConverter.convert(Unit),
             bottomSheetConfig = null,
         )
@@ -98,9 +99,10 @@ internal class SetInitialDataStateTransformer(
         return amountStateConverter.convert("")
     }
 
-    private fun createInitialConfirmationState(): StakingStates.ConfirmStakingState {
-        return ConfirmStakingStatePreviewData.confirmStakingState.copy(
+    private fun createInitialConfirmationState(): StakingStates.ConfirmationState {
+        return ConfirmationStatePreviewData.assentStakingState.copy(
             validatorState = ValidatorState.Content(
+                isClickable = true,
                 chosenValidator = yield.validators.first(),
                 availableValidators = yield.validators,
             ),
@@ -116,7 +118,7 @@ internal class SetInitialDataStateTransformer(
         val formattedMinApr = BigDecimalFormatter.formatPercent(
             percent = minApr,
             useAbsoluteValue = true,
-        )
+        ).remove("%")
         val formattedMaxApr = BigDecimalFormatter.formatPercent(
             percent = maxApr,
             useAbsoluteValue = true,
