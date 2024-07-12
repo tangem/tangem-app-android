@@ -332,6 +332,7 @@
   <string name="markets_available_networks">Available networks</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
+  <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you need to attach a Tangem card</string>
   <string name="markets_select_network">Select network</string>
   <string name="markets_select_wallet">Select wallet</string>
   <string name="markets_selector_interval_1m_title">1m</string>
