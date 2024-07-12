@@ -15,6 +15,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
@@ -24,6 +25,11 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
@@ -46,6 +52,9 @@ internal class TokenDetailsStateFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
+    private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val userWalletId: UserWalletId,
     stakingFeatureToggles: StakingFeatureToggles,
     symbol: String,
     decimals: Int,
@@ -55,6 +64,9 @@ internal class TokenDetailsStateFactory(
         TokenDetailsSkeletonStateConverter(
             clickIntents = clickIntents,
             featureToggles = featureToggles,
+            networkHasDerivationUseCase = networkHasDerivationUseCase,
+            getUserWalletUseCase = getUserWalletUseCase,
+            userWalletId = userWalletId,
         )
     }
 
@@ -348,12 +360,16 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getStateWithUpdatedMenu(cardTypesResolver: CardTypesResolver, isBitcoin: Boolean): TokenDetailsState {
+    fun getStateWithUpdatedMenu(
+        cardTypesResolver: CardTypesResolver,
+        hasDerivations: Boolean,
+        isBitcoin: Boolean,
+    ): TokenDetailsState {
         return with(currentStateProvider()) {
             copy(
                 topAppBarConfig = topAppBarConfig.copy(
                     tokenDetailsAppBarMenuConfig = topAppBarConfig.tokenDetailsAppBarMenuConfig
-                        ?.updateMenu(cardTypesResolver, isBitcoin),
+                        ?.updateMenu(cardTypesResolver, hasDerivations, isBitcoin),
                 ),
             )
         }
@@ -367,13 +383,14 @@ internal class TokenDetailsStateFactory(
 
     private fun TokenDetailsAppBarMenuConfig.updateMenu(
         cardTypesResolver: CardTypesResolver,
+        hasDerivations: Boolean,
         isBitcoin: Boolean,
     ): TokenDetailsAppBarMenuConfig? {
         if (cardTypesResolver.isSingleWalletWithToken()) return null
         val showGenerateExtendedKey = featureToggles.isGenerateXPubEnabled() && isBitcoin
         return copy(
             items = buildList {
-                if (showGenerateExtendedKey) {
+                if (showGenerateExtendedKey && hasDerivations) {
                     TokenDetailsAppBarMenuConfig.MenuItem(
                         title = resourceReference(R.string.token_details_generate_xpub),
                         textColorProvider = { TangemTheme.colors.text.primary1 },
