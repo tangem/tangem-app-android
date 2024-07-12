@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.atoms.radiobutton.TangemRadioButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.annotatedReference
@@ -65,13 +66,14 @@ fun InputRowImageSelector(
             )
             .padding(TangemTheme.dimens.spacing12),
     ) {
+        SpacerWMax()
         TangemRadioButton(isSelected = isSelected, isEnabled = false, onClick = onSelect)
     }
 }
 
 //region preview
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(widthDp = 328)
+@Preview(widthDp = 328, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun InputRowImageSelectorPreview(
     @PreviewParameter(InputRowImageSelectorPreviewDataProvider::class) data: InputRowImageSelectorPreviewData,
