@@ -4,5 +4,5 @@ import com.tangem.features.staking.api.navigation.StakingRouter
 
 interface InnerStakingRouter : StakingRouter {
 
-    // TODO staking
+    fun openUrl(url: String)
 }
