@@ -53,7 +53,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
-import com.tangem.utils.Strings
+import com.tangem.utils.StringsSigns
 
 private const val HALF_OF_ITEM_WIDTH = 0.5
 
@@ -291,7 +291,7 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
         when (walletCardState) {
             is WalletCardState.Content -> {
                 ResizableText(
-                    text = if (isBalanceHidden) Strings.STARS else walletCardState.balance,
+                    text = if (isBalanceHidden) StringsSigns.STARS else walletCardState.balance,
                     fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
                     modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
                     color = TangemTheme.colors.text.primary1,
