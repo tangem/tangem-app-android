@@ -24,7 +24,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakedBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.utils.Strings
+import com.tangem.utils.StringsSigns
 
 @Composable
 internal fun StakingBalanceBlock(state: StakingBlockUM.Staked, modifier: Modifier = Modifier) {
@@ -58,7 +58,7 @@ internal fun StakingBalanceBlock(state: StakingBlockUM.Staked, modifier: Modifie
                     color = TangemTheme.colors.text.primary1,
                 )
                 Text(
-                    text = Strings.DOT,
+                    text = StringsSigns.DOT,
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.primary1,
                 )
