@@ -8,10 +8,12 @@ import com.tangem.data.staking.converters.*
 import com.tangem.data.staking.converters.action.ActionStatusConverter
 import com.tangem.data.staking.converters.action.EnterActionResponseConverter
 import com.tangem.data.staking.converters.action.StakingActionTypeConverter
+import com.tangem.data.staking.converters.error.StakeKitErrorConverter
 import com.tangem.data.staking.converters.transaction.GasEstimateConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionStatusConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConverter
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.*
@@ -48,6 +50,7 @@ internal class DefaultStakingRepository(
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
     private val stakingFeatureToggle: StakingFeatureToggles,
+    private val stakeKitErrorConverter: StakeKitErrorConverter,
 ) : StakingRepository {
 
     private val stakingNetworkTypeConverter = StakingNetworkTypeConverter()
@@ -447,6 +450,14 @@ internal class DefaultStakingRepository(
     }
 
     private fun getYieldBalancesKey(userWalletId: UserWalletId) = "yield_balance_${userWalletId.stringValue}"
+
+    private fun getDataError(ex: Exception): StakingError {
+        return if (ex is ApiResponseError.HttpException) {
+            stakeKitErrorConverter.convert(ex.errorBody ?: "")
+        } else {
+            StakingError.UnknownError
+        }
+    }
 
     private companion object {
         const val YIELDS_STORE_KEY = "yields"

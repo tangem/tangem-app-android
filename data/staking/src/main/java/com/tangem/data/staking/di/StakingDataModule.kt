@@ -33,6 +33,7 @@ internal object StakingDataModule {
         dispatchers: CoroutineDispatcherProvider,
         stakingFeatureToggle: StakingFeatureToggles,
         cacheRegistry: CacheRegistry,
+        stakeKitErrorConverter: StakeKitErrorConverter,
     ): StakingRepository {
         return DefaultStakingRepository(
             stakeKitApi = stakeKitApi,
@@ -42,6 +43,7 @@ internal object StakingDataModule {
             dispatchers = dispatchers,
             cacheRegistry = cacheRegistry,
             stakingFeatureToggle = stakingFeatureToggle,
+            stakeKitErrorConverter = stakeKitErrorConverter,
         )
     }
 

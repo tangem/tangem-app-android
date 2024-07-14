@@ -3,7 +3,7 @@ package com.tangem.domain.staking
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import com.tangem.domain.staking.error.StakingTokensError
+import com.tangem.domain.staking.model.StakingError
 import com.tangem.domain.staking.repositories.StakingRepository
 
 /**
@@ -16,7 +16,7 @@ class FetchStakingTokensUseCase(
         return either {
             catch(
                 block = { stakingRepository.fetchEnabledYields(isRefresh) },
-                catch = { StakingTokensError.DataError(it) },
+                catch = { StakingError.DataError(it) },
             )
         }
     }
