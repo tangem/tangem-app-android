@@ -1,8 +1,12 @@
 package com.tangem.data.staking.di
 
+import com.squareup.moshi.Moshi
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.staking.DefaultStakingRepository
+import com.tangem.data.staking.converters.error.StakeKitErrorConverter
 import com.tangem.datasource.api.stakekit.StakeKitApi
+import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorResponse
+import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
@@ -39,5 +43,12 @@ internal object StakingDataModule {
             cacheRegistry = cacheRegistry,
             stakingFeatureToggle = stakingFeatureToggle,
         )
+    }
+
+    @Provides
+    @Singleton
+    internal fun provideErrorConverter(@NetworkMoshi moshi: Moshi): StakeKitErrorConverter {
+        val jsonAdapter = moshi.adapter(StakeKitErrorResponse::class.java)
+        return StakeKitErrorConverter(jsonAdapter)
     }
 }
