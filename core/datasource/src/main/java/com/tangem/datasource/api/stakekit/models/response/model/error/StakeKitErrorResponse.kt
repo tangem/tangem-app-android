@@ -1,7 +1,6 @@
 package com.tangem.datasource.api.stakekit.models.response.model.error
 
 import com.squareup.moshi.Json
-import java.math.BigDecimal
 
 class StakeKitErrorResponse(
     @Json(name = "details")
@@ -141,5 +140,4 @@ enum class StakeKitErrorMessageDTO {
 
     @Json(name = "GRTStakingDisabledLedgerLiveError")
     GRT_STAKING_DISABLED_LEDGER_LIVE_ERROR,
-
 }

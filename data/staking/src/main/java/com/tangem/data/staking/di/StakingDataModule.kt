@@ -52,8 +52,7 @@ internal object StakingDataModule {
     internal fun provideStakingErrorResolver(@NetworkMoshi moshi: Moshi): StakingErrorResolver {
         val jsonAdapter = moshi.adapter(StakeKitErrorResponse::class.java)
         return DefaultStakingErrorResolver(
-            stakeKitErrorConverter = StakeKitErrorConverter(jsonAdapter)
+            stakeKitErrorConverter = StakeKitErrorConverter(jsonAdapter),
         )
     }
-
 }

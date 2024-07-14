@@ -2,7 +2,6 @@ package com.tangem.domain.staking
 
 import arrow.core.Either
 import arrow.core.raise.catch
-import arrow.core.raise.either
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver

@@ -89,5 +89,4 @@ sealed class StakingError {
     data class DataError(val cause: Throwable) : StakingError()
 
     data object UnknownError : StakingError()
-
 }

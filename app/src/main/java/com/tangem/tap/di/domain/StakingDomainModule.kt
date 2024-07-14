@@ -1,7 +1,6 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.staking.*
-import com.tangem.domain.staking.model.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 import dagger.Module
@@ -70,7 +69,7 @@ internal object StakingDomainModule {
     ): FetchStakingYieldBalanceUseCase {
         return FetchStakingYieldBalanceUseCase(
             stakingRepository = stakingRepository,
-            stakingErrorResolver = stakingErrorResolver
+            stakingErrorResolver = stakingErrorResolver,
         )
     }
 
@@ -80,7 +79,10 @@ internal object StakingDomainModule {
         stakingRepository: StakingRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): GetStakingYieldBalanceUseCase {
-        return GetStakingYieldBalanceUseCase(stakingRepository = stakingRepository)
+        return GetStakingYieldBalanceUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
     }
 
     @Provides
@@ -91,7 +93,7 @@ internal object StakingDomainModule {
     ): InitializeStakingProcessUseCase {
         return InitializeStakingProcessUseCase(
             stakingRepository = stakingRepository,
-            stakingErrorResolver = stakingErrorResolver
+            stakingErrorResolver = stakingErrorResolver,
         )
     }
 
@@ -103,7 +105,7 @@ internal object StakingDomainModule {
     ): SubmitHashUseCase {
         return SubmitHashUseCase(
             stakingRepository = stakingRepository,
-            stakingErrorResolver = stakingErrorResolver
+            stakingErrorResolver = stakingErrorResolver,
         )
     }
 
@@ -115,7 +117,7 @@ internal object StakingDomainModule {
     ): SaveUnsubmittedHashUseCase {
         return SaveUnsubmittedHashUseCase(
             stakingRepository = stakingRepository,
-            stakingErrorResolver = stakingErrorResolver
+            stakingErrorResolver = stakingErrorResolver,
         )
     }
 
@@ -127,7 +129,7 @@ internal object StakingDomainModule {
     ): SendUnsubmittedHashesUseCase {
         return SendUnsubmittedHashesUseCase(
             stakingRepository = stakingRepository,
-            stakingErrorResolver = stakingErrorResolver
+            stakingErrorResolver = stakingErrorResolver,
         )
     }
 }

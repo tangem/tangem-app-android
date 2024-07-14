@@ -14,10 +14,7 @@ class SaveUnsubmittedHashUseCase(
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
-    suspend operator fun invoke(
-        transactionId: String,
-        transactionHash: String,
-    ): Either<StakingError, Unit> {
+    suspend operator fun invoke(transactionId: String, transactionHash: String): Either<StakingError, Unit> {
         return Either.catch {
             stakingRepository.storeUnsubmittedHash(
                 unsubmittedTransactionMetadata = UnsubmittedTransactionMetadata(

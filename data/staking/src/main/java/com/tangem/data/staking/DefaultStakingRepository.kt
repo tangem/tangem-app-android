@@ -8,12 +8,10 @@ import com.tangem.data.staking.converters.*
 import com.tangem.data.staking.converters.action.ActionStatusConverter
 import com.tangem.data.staking.converters.action.EnterActionResponseConverter
 import com.tangem.data.staking.converters.action.StakingActionTypeConverter
-import com.tangem.data.staking.converters.error.StakeKitErrorConverter
 import com.tangem.data.staking.converters.transaction.GasEstimateConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionStatusConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConverter
-import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.*
