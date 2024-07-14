@@ -1,6 +1,7 @@
 package com.tangem.domain.staking
 
 import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 
@@ -9,6 +10,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
  */
 class GetStakingAvailabilityUseCase(
     private val stakingRepository: StakingRepository,
+    private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
     suspend operator fun invoke(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingAvailability {

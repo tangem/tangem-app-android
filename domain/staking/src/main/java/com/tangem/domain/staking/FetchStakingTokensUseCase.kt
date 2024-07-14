@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.staking.model.StakingError
+import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 
 /**
@@ -11,12 +12,13 @@ import com.tangem.domain.staking.repositories.StakingRepository
  */
 class FetchStakingTokensUseCase(
     private val stakingRepository: StakingRepository,
+    private val stakingErrorResolver: StakingErrorResolver,
 ) {
-    suspend operator fun invoke(isRefresh: Boolean = false): Either<Throwable, Unit> {
+    suspend operator fun invoke(isRefresh: Boolean = false): Either<StakingError, Unit> {
         return either {
             catch(
                 block = { stakingRepository.fetchEnabledYields(isRefresh) },
-                catch = { StakingError.DataError(it) },
+                catch = { stakingErrorResolver.resolve(it) },
             )
         }
     }
