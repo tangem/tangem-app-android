@@ -15,7 +15,8 @@ class GetStakingEntryInfoUseCase(
 ) {
 
     suspend operator fun invoke(integrationId: String): Either<StakingError, StakingEntryInfo> {
-        return Either.catch { stakingRepository.getEntryInfo(integrationId) }
+        return Either
+            .catch { stakingRepository.getEntryInfo(integrationId) }
             .mapLeft { stakingErrorResolver.resolve(it) }
     }
 }

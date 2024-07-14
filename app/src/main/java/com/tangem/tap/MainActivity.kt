@@ -594,7 +594,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         lifecycleScope.launch {
             sendUnsubmittedHashesUseCase.invoke()
                 .onRight { Timber.d("Submitting hashes succeeded") }
-                .onLeft { Timber.e(it) }
+                .onLeft { Timber.e(it.toString()) }
         }
     }
 }

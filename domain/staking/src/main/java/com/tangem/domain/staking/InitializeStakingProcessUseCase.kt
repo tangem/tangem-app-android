@@ -1,9 +1,11 @@
 package com.tangem.domain.staking
 
 import arrow.core.Either
+import com.tangem.domain.staking.model.StakingError
 import com.tangem.domain.staking.model.Token
 import com.tangem.domain.staking.model.action.EnterAction
 import com.tangem.domain.staking.model.transaction.StakingTransaction
+import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 import kotlinx.coroutines.delay
 import java.math.BigDecimal
@@ -11,7 +13,10 @@ import java.math.BigDecimal
 /**
  * Use case for creating enter action
  */
-class InitializeStakingProcessUseCase(private val stakingRepository: StakingRepository) {
+class InitializeStakingProcessUseCase(
+    private val stakingRepository: StakingRepository,
+    private val stakingErrorResolver: StakingErrorResolver,
+) {
 
     suspend operator fun invoke(
         integrationId: String,
@@ -19,7 +24,7 @@ class InitializeStakingProcessUseCase(private val stakingRepository: StakingRepo
         address: String,
         validatorAddress: String,
         token: Token,
-    ): Either<Throwable, Pair<EnterAction, StakingTransaction>> {
+    ): Either<StakingError, Pair<EnterAction, StakingTransaction>> {
         return Either.catch {
             val createAction = stakingRepository.createEnterAction(
                 integrationId = integrationId,
@@ -36,6 +41,8 @@ class InitializeStakingProcessUseCase(private val stakingRepository: StakingRepo
             val patchedTransaction = stakingRepository.constructTransaction(createdTransaction.id)
 
             createAction to patchedTransaction
+        }.mapLeft {
+            stakingErrorResolver.resolve(it)
         }
     }
 

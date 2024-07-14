@@ -17,7 +17,8 @@ class GetYieldUseCase(
 ) {
 
     suspend operator fun invoke(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Either<StakingError, Yield> {
-        return Either.catch { stakingRepository.getYield(cryptoCurrencyId, symbol) }
+        return Either
+            .catch { stakingRepository.getYield(cryptoCurrencyId, symbol) }
             .mapLeft { stakingErrorResolver.resolve(it) }
     }
 }

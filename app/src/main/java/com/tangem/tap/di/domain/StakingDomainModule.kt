@@ -76,31 +76,58 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetStakingYieldBalanceUseCase(stakingRepository: StakingRepository): GetStakingYieldBalanceUseCase {
+    fun provideGetStakingYieldBalanceUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): GetStakingYieldBalanceUseCase {
         return GetStakingYieldBalanceUseCase(stakingRepository = stakingRepository)
     }
 
     @Provides
     @Singleton
-    fun provideCreateEnterActionUseCase(stakingRepository: StakingRepository): InitializeStakingProcessUseCase {
-        return InitializeStakingProcessUseCase(stakingRepository)
+    fun provideCreateEnterActionUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): InitializeStakingProcessUseCase {
+        return InitializeStakingProcessUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver
+        )
     }
 
     @Provides
     @Singleton
-    fun provideSubmitHashUseCase(stakingRepository: StakingRepository): SubmitHashUseCase {
-        return SubmitHashUseCase(stakingRepository)
+    fun provideSubmitHashUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): SubmitHashUseCase {
+        return SubmitHashUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver
+        )
     }
 
     @Provides
     @Singleton
-    fun provideSaveUnsubmittedHashUseCase(stakingRepository: StakingRepository): SaveUnsubmittedHashUseCase {
-        return SaveUnsubmittedHashUseCase(stakingRepository)
+    fun provideSaveUnsubmittedHashUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): SaveUnsubmittedHashUseCase {
+        return SaveUnsubmittedHashUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver
+        )
     }
 
     @Provides
     @Singleton
-    fun provideSendUnsubmittedHashesUseCase(stakingRepository: StakingRepository): SendUnsubmittedHashesUseCase {
-        return SendUnsubmittedHashesUseCase(stakingRepository)
+    fun provideSendUnsubmittedHashesUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): SendUnsubmittedHashesUseCase {
+        return SendUnsubmittedHashesUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver
+        )
     }
 }

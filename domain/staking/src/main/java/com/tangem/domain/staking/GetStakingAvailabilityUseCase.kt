@@ -1,6 +1,10 @@
 package com.tangem.domain.staking
 
+import arrow.core.Either
+import arrow.core.raise.catch
+import arrow.core.raise.either
 import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -13,7 +17,12 @@ class GetStakingAvailabilityUseCase(
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
-    suspend operator fun invoke(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingAvailability {
-        return stakingRepository.getStakingAvailabilityForActions(cryptoCurrencyId, symbol)
+    suspend operator fun invoke(
+        cryptoCurrencyId: CryptoCurrency.ID,
+        symbol: String,
+    ): Either<StakingError, StakingAvailability> {
+        return Either
+            .catch { stakingRepository.getStakingAvailabilityForActions(cryptoCurrencyId, symbol) }
+            .mapLeft { stakingErrorResolver.resolve(it) }
     }
 }
