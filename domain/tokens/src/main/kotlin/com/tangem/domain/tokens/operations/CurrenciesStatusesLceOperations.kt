@@ -33,7 +33,7 @@ internal class CurrenciesStatusesLceOperations(
         return transformToCurrenciesStatuses(
             userWalletId = userWalletId,
             flow = if (isSingleCurrencyWalletsAllowed) {
-                getWalletCurrenies(userWalletId)
+                getWalletCurrencies(userWalletId)
             } else {
                 getMultiCurrencyWalletCurrencies(userWalletId)
             },
@@ -105,7 +105,7 @@ internal class CurrenciesStatusesLceOperations(
         return statuses
     }
 
-    private fun getWalletCurrenies(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrency>> {
+    private fun getWalletCurrencies(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrency>> {
         return currenciesRepository.getWalletCurrenciesUpdates(userWalletId)
             .map { maybeCurrencies ->
                 maybeCurrencies.mapError { TokenListError.DataError(it) }
