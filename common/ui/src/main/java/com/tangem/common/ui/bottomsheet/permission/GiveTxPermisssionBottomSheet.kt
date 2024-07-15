@@ -1,4 +1,4 @@
-package com.tangem.common.ui.bottomsheets
+package com.tangem.common.ui.bottomsheet.permission
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -25,10 +25,9 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.PopupProperties
 import com.tangem.common.ui.R
-import com.tangem.common.ui.bottomsheets.state.*
+import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.appbar.AppBarWithAdditionalButtons
-import com.tangem.core.ui.components.appbar.models.AdditionalButton
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -42,17 +41,33 @@ import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 fun GiveTxPermissionBottomSheet(config: TangemBottomSheetConfig) {
+    var isPermissionAlertShow by remember { mutableStateOf(false) }
+
     TangemBottomSheet(
         config = config,
         containerColor = TangemTheme.colors.background.secondary,
-    ) { content: GiveTxPermissionBottomSheetConfig ->
-        GiveTxPermissionBottomSheetContent(content = content)
-    }
+        titleText = resourceReference(R.string.give_permission_title),
+        titleAction = TopAppBarButtonUM(
+            iconRes = R.drawable.ic_information_24,
+            onIconClicked = { isPermissionAlertShow = true },
+        ),
+        content = { content: GiveTxPermissionBottomSheetConfig ->
+            GiveTxPermissionBottomSheetContent(content = content)
+
+            if (isPermissionAlertShow) {
+                BasicDialog(
+                    message = content.data.dialogText.resolveReference(),
+                    title = stringResource(id = R.string.common_approve),
+                    confirmButton = DialogButton { isPermissionAlertShow = false },
+                    onDismissDialog = {},
+                )
+            }
+        },
+    )
 }
 
 @Composable
 private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSheetConfig) {
-    var isPermissionAlertShow by remember { mutableStateOf(false) }
     val data = content.data
     Column(
         modifier = Modifier
@@ -60,14 +75,6 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AppBarWithAdditionalButtons(
-            text = resourceReference(id = R.string.give_permission_title),
-            iconColor = TangemTheme.colors.text.tertiary,
-            endButton = AdditionalButton(
-                iconRes = R.drawable.ic_information_24,
-                onIconClicked = { isPermissionAlertShow = true },
-            ),
-        )
         Text(
             text = content.data.subtitle.resolveReference(),
             color = TangemTheme.colors.text.secondary,
@@ -102,16 +109,6 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
         )
 
         SpacerH16()
-
-        // region dialog
-        if (isPermissionAlertShow) {
-            BasicDialog(
-                message = content.data.dialogText.resolveReference(),
-                title = stringResource(id = R.string.common_approve),
-                confirmButton = DialogButton { isPermissionAlertShow = false },
-                onDismissDialog = {},
-            )
-        }
     }
 }
 
@@ -303,12 +300,18 @@ private fun DropdownSelector(
 }
 
 // region preview
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_AgreementBottomSheet() {
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun Preview_GiveTxPermissionBottomSheet() {
     TangemThemePreview {
-        GiveTxPermissionBottomSheetContent(content = previewData)
+        GiveTxPermissionBottomSheet(
+            config = TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = {},
+                content = previewData,
+            ),
+        )
     }
 }
 
