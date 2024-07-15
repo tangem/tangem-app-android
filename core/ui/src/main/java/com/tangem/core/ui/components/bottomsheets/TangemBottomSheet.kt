@@ -141,6 +141,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
     val model = config.content as? T ?: return
 
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.statusBars.getTop(this).toDp() }
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     ModalBottomSheet(
         // FIXME temporary solution to fix height of the bottom sheet
@@ -155,7 +156,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
         Column(
             modifier = Modifier.let {
                 if (addBottomInsets) {
-                    it.navigationBarsPadding()
+                    it.padding(bottom = bottomBarHeight)
                 } else {
                     it
                 }
