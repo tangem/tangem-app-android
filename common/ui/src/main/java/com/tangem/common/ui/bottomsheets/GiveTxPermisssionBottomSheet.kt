@@ -69,10 +69,7 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
             ),
         )
         Text(
-            text = stringResource(
-                id = R.string.give_permission_swap_subtitle,
-                data.currency,
-            ),
+            text = content.data.subtitle.resolveReference(),
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body2,
             textAlign = TextAlign.Center,
@@ -109,8 +106,8 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
         // region dialog
         if (isPermissionAlertShow) {
             BasicDialog(
-                message = stringResource(id = R.string.swapping_approve_information_text),
-                title = stringResource(id = R.string.swapping_approve_information_title),
+                message = content.data.dialogText.resolveReference(),
+                title = stringResource(id = R.string.common_approve),
                 confirmButton = DialogButton { isPermissionAlertShow = false },
                 onDismissDialog = {},
             )
@@ -210,26 +207,17 @@ private fun AmountItem(
                 style = TangemTheme.typography.subtitle1,
                 maxLines = 1,
             )
-            when (approveType) {
-                ApproveType.LIMITED -> {
-                    Text(
-                        text = stringResource(id = R.string.give_permission_current_transaction),
-                        color = TangemTheme.colors.text.tertiary,
-                        style = TangemTheme.typography.body1,
-                        maxLines = 1,
-                    )
-                }
-                ApproveType.UNLIMITED -> {
-                    Icon(
-                        painter = rememberVectorPainter(
-                            image = ImageVector.vectorResource(id = R.drawable.ic_infinity_24),
-                        ),
-                        tint = TangemTheme.colors.text.tertiary,
-                        contentDescription = null,
-                        modifier = Modifier.size(TangemTheme.dimens.size20),
-                    )
-                }
-            }
+            Text(
+                text = stringResource(
+                    when (approveType) {
+                        ApproveType.LIMITED -> R.string.give_permission_current_transaction
+                        ApproveType.UNLIMITED -> R.string.give_permission_unlimited
+                    },
+                ),
+                color = TangemTheme.colors.text.tertiary,
+                style = TangemTheme.typography.body1,
+                maxLines = 1,
+            )
         }
         DropdownSelector(
             isExpanded = isExpandSelector,
@@ -335,6 +323,8 @@ private val previewData = GiveTxPermissionBottomSheetConfig(
         approveButton = ApprovePermissionButton(true) {},
         cancelButton = CancelPermissionButton(true),
         onChangeApproveType = { ApproveType.UNLIMITED },
+        subtitle = resourceReference(R.string.give_permission_staking_subtitle),
+        dialogText = resourceReference(R.string.give_permission_staking_footer),
     ),
     onCancel = {},
 )
