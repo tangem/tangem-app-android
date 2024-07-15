@@ -85,6 +85,8 @@ object PreferencesKeys {
 
     val IS_WALLET_NAMES_MIGRATION_DONE_KEY by lazy { booleanPreferencesKey(name = "isWalletNamesMigrationDone") }
 
+    val UNSUBMITTED_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "unsubmittedTransactions") }
+
     val IS_WALLET_SWAP_PROMO_OKX_SHOW_KEY by lazy {
         booleanPreferencesKey(name = "isWalletSwapPromoOkxShown")
     }
