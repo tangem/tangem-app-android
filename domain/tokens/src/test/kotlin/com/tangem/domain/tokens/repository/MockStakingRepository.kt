@@ -202,14 +202,11 @@ class MockStakingRepository : StakingRepository {
     )
 
     override suspend fun submitHash(transactionId: String, transactionHash: String) {
-
     }
 
     override suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata) {
-
     }
 
     override suspend fun sendUnsubmittedHashes() {
-
     }
 }
