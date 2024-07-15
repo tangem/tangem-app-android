@@ -25,6 +25,7 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.*
 import com.tangem.domain.staking.model.action.EnterAction
+import com.tangem.domain.staking.model.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -161,18 +162,37 @@ internal class DefaultStakingRepository(
         token: Token,
     ): EnterAction {
         return withContext(dispatchers.io) {
-            val body = EnterActionRequestBody(
+            val body = composeCreateActionRequestBody(
                 integrationId = integrationId,
-                addresses = Address(address),
-                args = EnterActionRequestBody.EnterActionRequestBodyArgs(
-                    amount = amount.toFormattedString(token.decimals),
-                    inputToken = tokenConverter.convertBack(token),
-                    validatorAddress = validatorAddress,
-                ),
+                amount = amount,
+                address = address,
+                validatorAddress = validatorAddress,
+                token = token,
             )
             val response = stakeKitApi.createEnterAction(body)
 
             enterActionResponseConverter.convert(response.getOrThrow())
+        }
+    }
+
+    override suspend fun estimateGas(
+        integrationId: String,
+        amount: BigDecimal,
+        address: String,
+        validatorAddress: String,
+        token: Token,
+    ): StakingGasEstimate {
+        return withContext(dispatchers.io) {
+            val body = composeCreateActionRequestBody(
+                integrationId = integrationId,
+                amount = amount,
+                address = address,
+                validatorAddress = validatorAddress,
+                token = token,
+            )
+            val gasEstimateDTO = stakeKitApi.estimateGas(body)
+
+            gasEstimateConverter.convert(gasEstimateDTO.getOrThrow())
         }
     }
 
@@ -421,6 +441,24 @@ internal class DefaultStakingRepository(
                 )
             }
         }
+    }
+
+    private fun composeCreateActionRequestBody(
+        integrationId: String,
+        amount: BigDecimal,
+        address: String,
+        validatorAddress: String,
+        token: Token,
+    ): EnterActionRequestBody {
+        return EnterActionRequestBody(
+            integrationId = integrationId,
+            addresses = Address(address),
+            args = EnterActionRequestBody.EnterActionRequestBodyArgs(
+                amount = amount.toFormattedString(token.decimals),
+                inputToken = tokenConverter.convertBack(token),
+                validatorAddress = validatorAddress,
+            ),
+        )
     }
 
     private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {

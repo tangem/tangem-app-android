@@ -9,6 +9,7 @@ import com.tangem.domain.staking.model.transaction.StakingTransaction
 import java.math.BigDecimal
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.staking.model.*
+import com.tangem.domain.staking.model.transaction.StakingGasEstimate
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.wallets.models.UserWalletId
@@ -67,6 +68,14 @@ interface StakingRepository {
         validatorAddress: String,
         token: Token,
     ): EnterAction
+
+    suspend fun estimateGas(
+        integrationId: String,
+        amount: BigDecimal,
+        address: String,
+        validatorAddress: String,
+        token: Token,
+    ): StakingGasEstimate
 
     suspend fun constructTransaction(transactionId: String): StakingTransaction
 
