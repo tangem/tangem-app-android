@@ -132,4 +132,5 @@ internal object StakingDomainModule {
             stakingErrorResolver = stakingErrorResolver,
         )
     }
+
 }
