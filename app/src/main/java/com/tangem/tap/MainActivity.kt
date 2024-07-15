@@ -47,6 +47,7 @@ import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -88,6 +89,7 @@ import com.tangem.wallet.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
@@ -148,6 +150,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var sendUnsubmittedHashesUseCase: SendUnsubmittedHashesUseCase
 
     @Inject
     lateinit var getPolkadotCheckHasResetUseCase: GetPolkadotCheckHasResetUseCase
@@ -225,6 +230,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         observeStateUpdates()
         observePolkadotAccountHealthCheck()
+        sendStakingUnsubmittedHashes()
 
         if (intent != null) {
             deepLinksRegistry.launch(intent)
@@ -581,6 +587,14 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                         WalletScreenAnalyticsEvent.Token.PolkadotImmortalTransactions(it.second),
                     )
                 }
+        }
+    }
+
+    private fun sendStakingUnsubmittedHashes() {
+        lifecycleScope.launch {
+            sendUnsubmittedHashesUseCase.invoke()
+                .onRight { Timber.d("Submitting hashes succeeded") }
+                .onLeft { Timber.e(it) }
         }
     }
 }
