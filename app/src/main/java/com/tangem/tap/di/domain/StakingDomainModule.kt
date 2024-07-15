@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.staking.*
+import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 import dagger.Module
 import dagger.Provides
@@ -14,69 +15,121 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetStakingAvailabilityUseCase(stakingRepository: StakingRepository): GetStakingAvailabilityUseCase {
+    fun provideGetStakingAvailabilityUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): GetStakingAvailabilityUseCase {
         return GetStakingAvailabilityUseCase(
             stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
         )
     }
 
     @Provides
     @Singleton
-    fun provideGetStakingEntryInfoUseCase(stakingRepository: StakingRepository): GetStakingEntryInfoUseCase {
+    fun provideGetStakingEntryInfoUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): GetStakingEntryInfoUseCase {
         return GetStakingEntryInfoUseCase(
             stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
         )
     }
 
     @Provides
     @Singleton
-    fun provideGetYieldUseCase(stakingRepository: StakingRepository): GetYieldUseCase {
+    fun provideGetYieldUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): GetYieldUseCase {
         return GetYieldUseCase(
             stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
         )
     }
 
     @Provides
     @Singleton
-    fun provideGetStakingTokensUseCase(stakingRepository: StakingRepository): FetchStakingTokensUseCase {
+    fun provideGetStakingTokensUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): FetchStakingTokensUseCase {
         return FetchStakingTokensUseCase(
             stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
         )
     }
 
     @Provides
     @Singleton
-    fun provideFetchStakingYieldBalanceUseCase(stakingRepository: StakingRepository): FetchStakingYieldBalanceUseCase {
-        return FetchStakingYieldBalanceUseCase(stakingRepository = stakingRepository)
+    fun provideFetchStakingYieldBalanceUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): FetchStakingYieldBalanceUseCase {
+        return FetchStakingYieldBalanceUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
     }
 
     @Provides
     @Singleton
-    fun provideGetStakingYieldBalanceUseCase(stakingRepository: StakingRepository): GetStakingYieldBalanceUseCase {
-        return GetStakingYieldBalanceUseCase(stakingRepository = stakingRepository)
+    fun provideGetStakingYieldBalanceUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): GetStakingYieldBalanceUseCase {
+        return GetStakingYieldBalanceUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
     }
 
     @Provides
     @Singleton
-    fun provideCreateEnterActionUseCase(stakingRepository: StakingRepository): InitializeStakingProcessUseCase {
-        return InitializeStakingProcessUseCase(stakingRepository)
+    fun provideCreateEnterActionUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): InitializeStakingProcessUseCase {
+        return InitializeStakingProcessUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
     }
 
     @Provides
     @Singleton
-    fun provideSubmitHashUseCase(stakingRepository: StakingRepository): SubmitHashUseCase {
-        return SubmitHashUseCase(stakingRepository)
+    fun provideSubmitHashUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): SubmitHashUseCase {
+        return SubmitHashUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
     }
 
     @Provides
     @Singleton
-    fun provideSaveUnsubmittedHashUseCase(stakingRepository: StakingRepository): SaveUnsubmittedHashUseCase {
-        return SaveUnsubmittedHashUseCase(stakingRepository)
+    fun provideSaveUnsubmittedHashUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): SaveUnsubmittedHashUseCase {
+        return SaveUnsubmittedHashUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
     }
 
     @Provides
     @Singleton
-    fun provideSendUnsubmittedHashesUseCase(stakingRepository: StakingRepository): SendUnsubmittedHashesUseCase {
-        return SendUnsubmittedHashesUseCase(stakingRepository)
+    fun provideSendUnsubmittedHashesUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): SendUnsubmittedHashesUseCase {
+        return SendUnsubmittedHashesUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
     }
 }
