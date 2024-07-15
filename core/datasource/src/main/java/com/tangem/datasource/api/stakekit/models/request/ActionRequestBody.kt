@@ -15,7 +15,7 @@ data class ActionRequestBody(
     @Json(name = "referralCode")
     val referralCode: String? = null,
     @Json(name = "gasArgs")
-    val gasArgs: GasArgs? = null, // used only in actions/enter/estimate_gas request
+    val gasArgs: GasArgs? = null, // used only in estimate_gas request
 ) {
 
     data class EnterActionRequestBodyArgs(
