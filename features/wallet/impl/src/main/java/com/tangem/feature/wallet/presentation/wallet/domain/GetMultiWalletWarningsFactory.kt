@@ -46,7 +46,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
         val promoFlow = flow { emit(promoRepository.getOkxPromoBanner()) }
         return combine(
-            flow = getTokenListUseCase.launchLce(userWallet.walletId),
+            flow = getTokenListUseCase.launch(userWallet.walletId),
             flow2 = isReadyToShowRateAppUseCase(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId),
             flow4 = shouldShowSwapPromoWalletUseCase(),
