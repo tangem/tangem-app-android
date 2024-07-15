@@ -1,12 +1,11 @@
 package com.tangem.feature.swap.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -15,12 +14,12 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -35,6 +34,7 @@ fun ChooseFeeBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet(
         config = config,
         containerColor = TangemTheme.colors.background.tertiary,
+        titleText = resourceReference(R.string.common_fee_selector_title),
     ) { content: ChooseFeeBottomSheetConfig ->
         ChooseFeeBottomSheetContent(content = content)
     }
@@ -47,14 +47,6 @@ private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
             .background(TangemTheme.colors.background.tertiary)
             .padding(bottom = TangemTheme.dimens.spacing8),
     ) {
-        Text(
-            text = stringResource(R.string.common_fee_selector_title),
-            style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
-            modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing10)
-                .align(Alignment.CenterHorizontally),
-        )
         Column(
             modifier = Modifier
                 .padding(TangemTheme.dimens.spacing16)
@@ -145,9 +137,11 @@ private fun FeeItemsBlock(content: ChooseFeeBottomSheetConfig) {
     }
 }
 
-@Preview
+// region Preview
 @Composable
-private fun ChooseFeeBottomSheetContent_Preview() {
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun Preview_ChooseFeeBottomSheet() {
     val feeItems = listOf(
         FeeItemState.Content(
             feeType = FeeType.NORMAL,
@@ -168,33 +162,23 @@ private fun ChooseFeeBottomSheetContent_Preview() {
             onClick = {},
         ),
     ).toImmutableList()
-    Column {
-        TangemThemePreview(isDark = true) {
-            ChooseFeeBottomSheetContent(
-                ChooseFeeBottomSheetConfig(
-                    selectedFee = FeeType.NORMAL,
-                    onSelectFeeType = {},
-                    feeItems = feeItems,
-                    readMore = stringReference("Read more"),
-                    readMoreUrl = "",
-                    onReadMoreClick = {},
-                ),
-            )
-        }
+    val content = ChooseFeeBottomSheetConfig(
+        selectedFee = FeeType.NORMAL,
+        onSelectFeeType = {},
+        feeItems = feeItems,
+        readMore = stringReference("Read more"),
+        readMoreUrl = "",
+        onReadMoreClick = {},
+    )
 
-        SpacerH24()
-
-        TangemThemePreview(isDark = false) {
-            ChooseFeeBottomSheetContent(
-                ChooseFeeBottomSheetConfig(
-                    selectedFee = FeeType.NORMAL,
-                    onSelectFeeType = {},
-                    feeItems = feeItems,
-                    readMore = stringReference("Read more"),
-                    readMoreUrl = "",
-                    onReadMoreClick = {},
-                ),
-            )
-        }
+    TangemThemePreview {
+        ChooseFeeBottomSheet(
+            config = TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = {},
+                content = content,
+            ),
+        )
     }
 }
+// endregion Preview

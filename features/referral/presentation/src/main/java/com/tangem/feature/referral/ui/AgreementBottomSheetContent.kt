@@ -13,7 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
-import com.tangem.core.ui.components.appbar.AppBarWithAdditionalButtons
+import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.presentation.R
@@ -32,7 +32,7 @@ internal fun AgreementBottomSheetContent(url: String) {
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
-        AppBarWithAdditionalButtons(text = stringResource(id = R.string.details_referral_title))
+        TangemTopAppBar(title = stringResource(id = R.string.details_referral_title))
         AgreementHtmlView(url = url)
         Spacer(modifier = Modifier.height(bottomBarHeight))
     }

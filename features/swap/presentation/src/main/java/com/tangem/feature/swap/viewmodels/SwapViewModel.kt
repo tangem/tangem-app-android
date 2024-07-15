@@ -9,7 +9,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
-import com.tangem.common.ui.bottomsheets.state.ApproveType
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic

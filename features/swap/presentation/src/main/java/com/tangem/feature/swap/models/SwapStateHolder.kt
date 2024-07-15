@@ -3,7 +3,7 @@ package com.tangem.feature.swap.models
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.ui.text.input.TextFieldValue
-import com.tangem.common.ui.bottomsheets.state.GiveTxPermissionState
+import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
