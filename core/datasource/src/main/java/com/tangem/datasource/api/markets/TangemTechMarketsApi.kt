@@ -34,7 +34,7 @@ interface TangemTechMarketsApi {
 
     @GET("coins/history_preview")
     suspend fun getCoinsListCharts(
-        @Query("coin_ids") coinIds: List<String>,
+        @Query("coin_ids") coinIds: String,
         @Query("currency") currency: String,
         @Query("interval") interval: String,
     ): ApiResponse<TokenMarketChartListResponse>

@@ -3,6 +3,7 @@ package com.tangem.data.markets.converters
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenQuotes
+import java.math.BigDecimal
 
 class TokenQuotesConverter {
 
@@ -15,15 +16,9 @@ class TokenQuotesConverter {
                 "Price is not found in the QuotesResponse. This shouldn't have happened."
             },
             priceChanges = mapOf(
-                PriceChangeInterval.H24 to requireNotNull(quote.priceChange1w) {
-                    "priceChange1w is not found in the QuotesResponse. This shouldn't have happened."
-                },
-                PriceChangeInterval.WEEK to requireNotNull(quote.priceChange1w) {
-                    "priceChange1w is not found in the QuotesResponse. This shouldn't have happened."
-                },
-                PriceChangeInterval.MONTH to requireNotNull(quote.priceChange30d) {
-                    "priceChange30d is not found in the QuotesResponse. This shouldn't have happened."
-                },
+                PriceChangeInterval.H24 to (quote.priceChange24h ?: BigDecimal.ZERO).movePointLeft(2),
+                PriceChangeInterval.WEEK to (quote.priceChange1w ?: BigDecimal.ZERO).movePointLeft(2),
+                PriceChangeInterval.MONTH to (quote.priceChange30d ?: BigDecimal.ZERO).movePointLeft(2),
             ),
         )
     }
