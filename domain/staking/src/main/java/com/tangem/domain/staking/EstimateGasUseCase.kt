@@ -9,7 +9,7 @@ import com.tangem.domain.staking.repositories.StakingRepository
 import java.math.BigDecimal
 
 /**
- * Use case for creating enter action
+ * Use case for staking gas estimation.
  */
 class EstimateGasUseCase(
     private val stakingRepository: StakingRepository,
