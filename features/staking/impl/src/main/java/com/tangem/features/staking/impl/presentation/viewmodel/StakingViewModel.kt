@@ -19,6 +19,8 @@ import com.tangem.domain.staking.EstimateGasUseCase
 import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
 import com.tangem.domain.staking.SubmitHashUseCase
 import com.tangem.domain.staking.model.Yield
+import com.tangem.domain.staking.model.action.StakingActionCommonType
+import com.tangem.domain.staking.model.transaction.ActionParams
 import com.tangem.domain.staking.model.transaction.StakingGasEstimate
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -116,13 +118,16 @@ internal class StakingViewModel @Inject constructor(
                 stateController.update(SetConfirmationStateInProgressTransformer())
 
                 val stakingTransaction = getStakingTransactionUseCase(
-                    integrationId = yield.id,
-                    amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
-                        ?: error("No amount provided"),
-                    address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-                        ?: error("No available address"),
-                    validatorAddress = yield.validators.getOrNull(0)?.address ?: error("No available validator"),
-                    token = yield.token,
+                    params = ActionParams(
+                        actionCommonType = StakingActionCommonType.ENTER,
+                        integrationId = yield.id,
+                        amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                            ?: error("No amount provided"),
+                        address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                            ?: error("No available address"),
+                        validatorAddress = yield.validators.getOrNull(0)?.address ?: error("No available validator"),
+                        token = yield.token,
+                    ),
                 ).getOrElse {
                     error(it)
                 }
@@ -147,13 +152,16 @@ internal class StakingViewModel @Inject constructor(
             )
 
             val stakingGasEstimate = estimateGasUseCase(
-                integrationId = yield.id,
-                amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
-                    ?: error("No amount provided"),
-                address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-                    ?: error("No available address"),
-                validatorAddress = yield.validators.getOrNull(0)?.address ?: error("No available validator"),
-                token = yield.token,
+                params = ActionParams(
+                    actionCommonType = StakingActionCommonType.ENTER,
+                    integrationId = yield.id,
+                    amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                        ?: error("No amount provided"),
+                    address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                        ?: error("No available address"),
+                    validatorAddress = yield.validators.getOrNull(0)?.address ?: error("No available validator"),
+                    token = yield.token,
+                ),
             ).getOrElse { error("Can't get fee info") }
 
             stateController.update(

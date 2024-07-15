@@ -2,12 +2,11 @@ package com.tangem.domain.staking
 
 import arrow.core.Either
 import com.tangem.domain.staking.model.StakingError
-import com.tangem.domain.staking.model.Token
+import com.tangem.domain.staking.model.transaction.ActionParams
 import com.tangem.domain.staking.model.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 import kotlinx.coroutines.delay
-import java.math.BigDecimal
 
 /**
  * Use case for creating enter action
@@ -17,21 +16,9 @@ class GetStakingTransactionUseCase(
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
-    suspend operator fun invoke(
-        integrationId: String,
-        amount: BigDecimal,
-        address: String,
-        validatorAddress: String,
-        token: Token,
-    ): Either<StakingError, StakingTransaction> {
+    suspend operator fun invoke(params: ActionParams): Either<StakingError, StakingTransaction> {
         return Either.catch {
-            val createAction = stakingRepository.createEnterAction(
-                integrationId = integrationId,
-                amount = amount,
-                address = address,
-                validatorAddress = validatorAddress,
-                token = token,
-            )
+            val createAction = stakingRepository.createEnterAction(params)
 
             // workaround, sometimes transaction is not created immediately after actions/enter
             delay(PATCH_TRANSACTION_REQUEST_DELAY)

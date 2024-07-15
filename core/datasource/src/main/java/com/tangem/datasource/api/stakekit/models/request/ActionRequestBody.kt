@@ -5,7 +5,7 @@ import com.tangem.datasource.api.stakekit.models.request.ConstructTransactionReq
 import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
 
-data class EnterActionRequestBody(
+data class ActionRequestBody(
     @Json(name = "integrationId")
     val integrationId: String,
     @Json(name = "addresses")

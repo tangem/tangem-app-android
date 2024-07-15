@@ -46,10 +46,13 @@ interface StakeKitApi {
     suspend fun getTokens(): ApiResponse<List<TokenWithYieldDTO>>
 
     @POST("actions/enter")
-    suspend fun createEnterAction(@Body body: EnterActionRequestBody): ApiResponse<EnterActionResponse>
+    suspend fun createEnterAction(@Body body: ActionRequestBody): ApiResponse<EnterActionResponse>
 
     @POST("actions/enter/estimate-gas")
-    suspend fun estimateGas(@Body body: EnterActionRequestBody): ApiResponse<StakingGasEstimateDTO>
+    suspend fun estimateGasOnEnter(@Body body: ActionRequestBody): ApiResponse<StakingGasEstimateDTO>
+
+    @POST("actions/exit/estimate-gas")
+    suspend fun estimateGasOnExit(@Body body: ActionRequestBody): ApiResponse<StakingGasEstimateDTO>
 
     @PATCH("transactions/{transactionId}")
     suspend fun constructTransaction(

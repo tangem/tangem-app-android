@@ -25,7 +25,9 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.*
 import com.tangem.domain.staking.model.action.EnterAction
+import com.tangem.domain.staking.model.action.StakingActionCommonType
 import com.tangem.domain.staking.model.transaction.StakingGasEstimate
+import com.tangem.domain.staking.model.transaction.ActionParams
 import com.tangem.domain.staking.model.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -38,7 +40,6 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.math.BigDecimal
 
 @Suppress("LargeClass", "LongParameterList")
 internal class DefaultStakingRepository(
@@ -154,43 +155,23 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun createEnterAction(
-        integrationId: String,
-        amount: BigDecimal,
-        address: String,
-        validatorAddress: String,
-        token: Token,
-    ): EnterAction {
+    override suspend fun createEnterAction(params: ActionParams): EnterAction {
         return withContext(dispatchers.io) {
-            val body = composeCreateActionRequestBody(
-                integrationId = integrationId,
-                amount = amount,
-                address = address,
-                validatorAddress = validatorAddress,
-                token = token,
-            )
+            val body = createActionRequestBody(params)
             val response = stakeKitApi.createEnterAction(body)
 
             enterActionResponseConverter.convert(response.getOrThrow())
         }
     }
 
-    override suspend fun estimateGas(
-        integrationId: String,
-        amount: BigDecimal,
-        address: String,
-        validatorAddress: String,
-        token: Token,
-    ): StakingGasEstimate {
+    override suspend fun estimateGas(params: ActionParams): StakingGasEstimate {
         return withContext(dispatchers.io) {
-            val body = composeCreateActionRequestBody(
-                integrationId = integrationId,
-                amount = amount,
-                address = address,
-                validatorAddress = validatorAddress,
-                token = token,
-            )
-            val gasEstimateDTO = stakeKitApi.estimateGas(body)
+            val body = createActionRequestBody(params)
+
+            val gasEstimateDTO = when (params.actionCommonType) {
+                StakingActionCommonType.ENTER -> stakeKitApi.estimateGasOnEnter(body)
+                StakingActionCommonType.EXIT -> stakeKitApi.estimateGasOnExit(body)
+            }
 
             gasEstimateConverter.convert(gasEstimateDTO.getOrThrow())
         }
@@ -443,20 +424,14 @@ internal class DefaultStakingRepository(
         }
     }
 
-    private fun composeCreateActionRequestBody(
-        integrationId: String,
-        amount: BigDecimal,
-        address: String,
-        validatorAddress: String,
-        token: Token,
-    ): EnterActionRequestBody {
-        return EnterActionRequestBody(
-            integrationId = integrationId,
-            addresses = Address(address),
-            args = EnterActionRequestBody.EnterActionRequestBodyArgs(
-                amount = amount.toFormattedString(token.decimals),
-                inputToken = tokenConverter.convertBack(token),
-                validatorAddress = validatorAddress,
+    private fun createActionRequestBody(params: ActionParams): ActionRequestBody {
+        return ActionRequestBody(
+            integrationId = params.integrationId,
+            addresses = Address(params.address),
+            args = ActionRequestBody.EnterActionRequestBodyArgs(
+                amount = params.amount.toFormattedString(params.token.decimals),
+                inputToken = tokenConverter.convertBack(params.token),
+                validatorAddress = params.validatorAddress,
             ),
         )
     }
