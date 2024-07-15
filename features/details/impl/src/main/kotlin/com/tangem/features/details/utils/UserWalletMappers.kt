@@ -1,9 +1,6 @@
 package com.tangem.features.details.utils
 
-import androidx.annotation.DrawableRes
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.scan.CardDTO
@@ -12,6 +9,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.details.entity.UserWalletListUM.UserWalletUM
 import com.tangem.features.details.impl.R
+import com.tangem.utils.Strings.STARS
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -19,11 +17,15 @@ internal fun List<UserWallet>.toUiModels(
     onClick: (UserWalletId) -> Unit,
     appCurrency: AppCurrency? = null,
     balances: Map<UserWalletId, TotalFiatBalance> = emptyMap(),
+    isLoading: Boolean = true,
+    isBalancesHidden: Boolean = false,
 ): ImmutableList<UserWalletUM> = this.map { model ->
     val balance = balances[model.walletId]
     model.mapToUiModel(
         balance = balance,
         appCurrency = appCurrency,
+        isLoading = isLoading,
+        isBalanceHidden = isBalancesHidden,
         onClick = { onClick(model.walletId) },
     )
 }.toImmutableList()
@@ -31,22 +33,52 @@ internal fun List<UserWallet>.toUiModels(
 private fun UserWallet.mapToUiModel(
     balance: TotalFiatBalance?,
     appCurrency: AppCurrency?,
+    isLoading: Boolean,
+    isBalanceHidden: Boolean,
     onClick: () -> Unit,
 ): UserWalletUM = UserWalletUM(
     id = walletId,
-    name = name,
-    information = getInfo(appCurrency, balance),
-    imageResId = resolveImage(),
+    name = stringReference(name),
+    information = getInfo(
+        appCurrency = appCurrency,
+        balance = balance,
+        isBalanceHidden = isBalanceHidden,
+        isLoading = isLoading,
+    ),
+    imageUrl = artworkUrl,
+    isEnabled = !isLocked,
     onClick = onClick,
 )
 
-private fun UserWallet.getInfo(appCurrency: AppCurrency?, balance: TotalFiatBalance?): TextReference {
+private fun UserWallet.getInfo(
+    appCurrency: AppCurrency?,
+    balance: TotalFiatBalance?,
+    isBalanceHidden: Boolean,
+    isLoading: Boolean,
+): TextReference {
+    val dividerRef = stringReference(value = " • ")
+
     val cardCount = getCardCount()
     val cardCountRef = TextReference.PluralRes(
         id = R.plurals.card_label_card_count,
         count = cardCount,
         formatArgs = wrappedList(cardCount),
     )
+
+    return when {
+        isLocked -> combinedReference(cardCountRef, dividerRef, resourceReference(R.string.common_locked))
+        isLoading -> cardCountRef
+        isBalanceHidden -> combinedReference(cardCountRef, dividerRef, stringReference(STARS))
+        else -> getBalanceInfo(balance, appCurrency, cardCountRef, dividerRef)
+    }
+}
+
+private fun getBalanceInfo(
+    balance: TotalFiatBalance?,
+    appCurrency: AppCurrency?,
+    cardCountRef: TextReference,
+    dividerRef: TextReference,
+): TextReference {
     val amount = when (balance) {
         is TotalFiatBalance.Loaded -> balance.amount.takeIf { balance.isAllAmountsSummarized }
         is TotalFiatBalance.Failed,
@@ -56,16 +88,15 @@ private fun UserWallet.getInfo(appCurrency: AppCurrency?, balance: TotalFiatBala
     }
 
     return if (amount != null && appCurrency != null) {
-        val divider = stringReference(value = " • ")
         val formattedAmount = BigDecimalFormatter.formatFiatAmount(
             fiatAmount = amount,
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
         )
         val amountRef = stringReference(formattedAmount)
-        TextReference.Combined(wrappedList(cardCountRef, divider, amountRef))
+        combinedReference(cardCountRef, dividerRef, amountRef)
     } else {
-        cardCountRef
+        combinedReference(cardCountRef, dividerRef, stringReference(BigDecimalFormatter.EMPTY_BALANCE_SIGN))
     }
 }
 
@@ -75,10 +106,4 @@ private fun UserWallet.getCardCount() = when (val status = scanResponse.card.bac
     is CardDTO.BackupStatus.NoBackup,
     null,
     -> 1
-}
-
-@DrawableRes
-private fun UserWallet.resolveImage(): Int {
-// [REDACTED_TODO_COMMENT]
-    return R.drawable.ill_card_wallet_2_211_343
 }
