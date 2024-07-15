@@ -3,6 +3,7 @@ package com.tangem.feature.referral.ui
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -24,6 +25,7 @@ internal fun ReferralBottomSheet(
     config: ReferralStateHolder.ReferralInfoState,
 ) {
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.statusBars.getTop(this).toDp() }
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     if (isVisible) {
         ModalBottomSheet(
@@ -43,6 +45,7 @@ internal fun ReferralBottomSheet(
                     is ReferralStateHolder.ReferralInfoState.ParticipantContent -> config.url
                     is ReferralStateHolder.ReferralInfoState.Loading -> ""
                 },
+                bottomBarHeight = bottomBarHeight,
             )
         }
     }
