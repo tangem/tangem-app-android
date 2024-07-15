@@ -113,7 +113,7 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
                     if (showTangemIcon) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     if (buttonClick != null) buttonClick()
                 },
-                showProgress = false,
+                showProgress = isInProgressInnerState,
                 modifier = Modifier.fillMaxWidth(),
                 colors = TangemButtonsDefaults.primaryButtonColors,
             )
