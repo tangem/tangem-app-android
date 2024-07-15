@@ -442,21 +442,23 @@ internal class DefaultCurrenciesRepository(
     }
 
     private suspend fun fetchTokensIfCacheExpired(userWallet: UserWallet, refresh: Boolean) {
-        try {
-            isMultiCurrencyWalletCurrenciesFetching.update {
-                it + (userWallet.walletId to true)
-            }
+        cacheRegistry.invokeOnExpire(
+            key = getTokensCacheKey(userWallet.walletId),
+            skipCache = refresh,
+            block = {
+                isMultiCurrencyWalletCurrenciesFetching.update {
+                    it + (userWallet.walletId to true)
+                }
 
-            cacheRegistry.invokeOnExpire(
-                key = getTokensCacheKey(userWallet.walletId),
-                skipCache = refresh,
-                block = { fetchTokens(userWallet) },
-            )
-        } finally {
-            isMultiCurrencyWalletCurrenciesFetching.update {
-                it - userWallet.walletId
-            }
-        }
+                try {
+                    fetchTokens(userWallet)
+                } finally {
+                    isMultiCurrencyWalletCurrenciesFetching.update {
+                        it - userWallet.walletId
+                    }
+                }
+            },
+        )
     }
 
     private suspend fun fetchTokens(userWallet: UserWallet) {
