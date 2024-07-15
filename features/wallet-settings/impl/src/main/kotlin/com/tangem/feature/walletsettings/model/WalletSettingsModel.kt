@@ -31,12 +31,12 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 @ComponentScoped
 internal class WalletSettingsModel @Inject constructor(
+    getWalletUseCase: GetUserWalletUseCase,
+    paramsContainer: ParamsContainer,
     private val router: Router,
     private val messageSender: UiMessageSender,
-    private val getWalletUseCase: GetUserWalletUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
     private val itemsBuilder: ItemsBuilder,
-    private val paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
