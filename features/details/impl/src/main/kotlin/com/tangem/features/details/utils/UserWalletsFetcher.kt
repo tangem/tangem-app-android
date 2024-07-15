@@ -10,6 +10,8 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.error.SelectedAppCurrencyError
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.BalanceHidingSettings
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.utils.getOrElse
@@ -24,10 +26,7 @@ import com.tangem.features.details.entity.UserWalletListUM.UserWalletUM
 import com.tangem.features.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @ComponentScoped
@@ -35,6 +34,7 @@ internal class UserWalletsFetcher @Inject constructor(
     getWalletsUseCase: GetWalletsUseCase,
     private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val router: Router,
     private val messageSender: UiMessageSender,
 ) {
@@ -44,10 +44,16 @@ internal class UserWalletsFetcher @Inject constructor(
         emit(wallets.toUiModels(onClick = ::navigateToWalletSettings))
 
         combine(
-            getSelectedAppCurrencyUseCase(),
-            getWalletTotalBalanceUseCase(wallets.map(UserWallet::walletId)),
-        ) { maybeAppCurrency, maybeBalances ->
-            val models = createUiModels(wallets, maybeAppCurrency, maybeBalances).getOrElse(
+            getSelectedAppCurrencyUseCase().distinctUntilChanged(),
+            getBalanceHidingSettingsUseCase().distinctUntilChanged(),
+            getWalletTotalBalanceUseCase(wallets.map(UserWallet::walletId)).distinctUntilChanged(),
+        ) { maybeAppCurrency, balanceHidingSettings, maybeBalances ->
+            val models = createUiModels(
+                wallets = wallets,
+                maybeAppCurrency = maybeAppCurrency,
+                maybeBalances = maybeBalances,
+                balanceHidingSettings = balanceHidingSettings,
+            ).getOrElse(
                 ifLoading = { return@combine },
                 ifError = {
                     val message = resourceReference(R.string.common_unknown_error)
@@ -65,10 +71,11 @@ internal class UserWalletsFetcher @Inject constructor(
         wallets: List<UserWallet>,
         maybeAppCurrency: Either<SelectedAppCurrencyError, AppCurrency>,
         maybeBalances: Lce<TokenListError, Map<UserWalletId, TotalFiatBalance>>,
+        balanceHidingSettings: BalanceHidingSettings,
     ): Lce<Error, ImmutableList<UserWalletUM>> = lce {
         val balances = withError(
             transform = { Error.UnableToGetBalances },
-            block = { maybeBalances.bind() },
+            block = { maybeBalances.bindOrNull().orEmpty() },
         )
         val appCurrency = withError(
             transform = { Error.UnableToGetAppCurrency },
@@ -79,6 +86,8 @@ internal class UserWalletsFetcher @Inject constructor(
             appCurrency = appCurrency,
             balances = balances,
             onClick = ::navigateToWalletSettings,
+            isBalancesHidden = balanceHidingSettings.isBalanceHidden,
+            isLoading = maybeBalances.isLoading(),
         )
     }
 
