@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.viewmodels
 
-import com.tangem.common.ui.bottomsheets.state.ApproveType
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
