@@ -125,7 +125,7 @@ internal class MainViewModel @Inject constructor(
     private fun fetchStakingTokens() {
         viewModelScope.launch(dispatchers.main) {
             fetchStakingTokensUseCase()
-                .onLeft { Timber.e(it, "Unable to fetch the staking tokens list") }
+                .onLeft { Timber.e(it.toString(), "Unable to fetch the staking tokens list") }
                 .onRight { Timber.d("Staking token list was fetched successfully") }
         }
     }
