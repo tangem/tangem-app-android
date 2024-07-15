@@ -261,7 +261,7 @@ internal class DefaultCurrenciesRepository(
 
         launch(dispatchers.io) {
             combine(
-                getMultiCurrencyWalletCurrencies(userWallet).distinctUntilChanged(),
+                getMultiCurrencyWalletCurrencies(userWallet),
                 isMultiCurrencyWalletCurrenciesFetching.map { it.getOrElse(userWallet.walletId) { false } },
             ) { currencies, isFetching ->
                 send(currencies, isStillLoading = isFetching)
