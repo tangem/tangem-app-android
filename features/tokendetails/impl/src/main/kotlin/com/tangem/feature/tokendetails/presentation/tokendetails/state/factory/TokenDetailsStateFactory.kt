@@ -19,6 +19,7 @@ import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.StakingError
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -239,7 +240,7 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getStateWithStaking(stakingEither: Either<Throwable, StakingEntryInfo>): TokenDetailsState {
+    fun getStateWithStaking(stakingEither: Either<StakingError, StakingEntryInfo>): TokenDetailsState {
         return currentStateProvider().copy(
             stakingBlocksState = stakingStateConverter.convert(stakingEither),
         )
