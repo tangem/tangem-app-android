@@ -17,11 +17,11 @@ internal class TokenDetailsBalanceSelectStateConverter(
 
     override fun convert(value: TokenBalanceSegmentedButtonConfig): TokenDetailsState {
         return with(currentStateProvider()) {
-            if (stakingBlocksState.stakingBalance !is StakingBalance.Content) return this
+            if (stakingBlocksState !is StakingBlockUM.Staked) return this
             val cryptoCurrencyStatus = cryptoCurrencyStatusProvider() ?: return this
 
-            val stakingCryptoAmount = stakingBlocksState.stakingBalance.cryptoAmount
-            val stakingFiatAmount = stakingBlocksState.stakingBalance.fiatAmount
+            val stakingCryptoAmount = stakingBlocksState.cryptoAmount
+            val stakingFiatAmount = stakingBlocksState.fiatAmount
 
             copy(
                 tokenBalanceBlockState = if (tokenBalanceBlockState is TokenDetailsBalanceBlockState.Content) {
