@@ -69,4 +69,10 @@ interface StakingRepository {
     ): EnterAction
 
     suspend fun constructTransaction(transactionId: String): StakingTransaction
+
+    suspend fun submitHash(transactionId: String, transactionHash: String)
+
+    suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata)
+
+    suspend fun sendUnsubmittedHashes()
 }
