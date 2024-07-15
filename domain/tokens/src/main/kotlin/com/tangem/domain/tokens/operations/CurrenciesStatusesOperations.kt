@@ -24,52 +24,6 @@ internal class CurrenciesStatusesOperations(
     private val userWalletId: UserWalletId,
 ) {
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun getCurrenciesStatusesFlow(): EitherFlow<Error, List<CryptoCurrencyStatus>> {
-        return getMultiCurrencyWalletCurrencies().transformLatest { maybeCurrencies ->
-            val nonEmptyCurrencies = maybeCurrencies.fold(
-                ifLeft = { error ->
-                    emit(error.left())
-                    return@transformLatest
-                },
-                ifRight = List<CryptoCurrency>::toNonEmptyListOrNull,
-            )
-
-            if (nonEmptyCurrencies == null) {
-                val emptyCurrenciesStatuses = emptyList<CryptoCurrencyStatus>()
-
-                emit(emptyCurrenciesStatuses.right())
-                return@transformLatest
-            }
-
-            val maybeLoadingCurrenciesStatuses = createCurrenciesStatuses(
-                currencies = nonEmptyCurrencies,
-                maybeNetworkStatuses = null,
-                maybeQuotes = null,
-                maybeYieldBalances = null,
-            )
-
-            emit(maybeLoadingCurrenciesStatuses)
-
-            val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
-
-            val currenciesFlow = combine(
-                getQuotes(currenciesIds),
-                getNetworksStatuses(networks),
-                getYieldBalances(),
-            ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances ->
-                createCurrenciesStatuses(
-                    currencies = nonEmptyCurrencies,
-                    maybeQuotes = maybeQuotes,
-                    maybeNetworkStatuses = maybeNetworksStatuses,
-                    maybeYieldBalances = maybeYieldBalances,
-                )
-            }
-
-            emitAll(currenciesFlow)
-        }
-    }
-
     suspend fun getCurrenciesStatusesSync(): Either<Error, List<CryptoCurrencyStatus>> {
         return either {
             catch(
@@ -358,13 +312,6 @@ internal class CurrenciesStatusesOperations(
         )
 
         return currencyStatusOperations.createTokenStatus()
-    }
-
-    private fun getMultiCurrencyWalletCurrencies(): Flow<Either<Error, List<CryptoCurrency>>> {
-        return currenciesRepository.getMultiCurrencyWalletCurrenciesUpdates(userWalletId)
-            .map<List<CryptoCurrency>, Either<Error, List<CryptoCurrency>>> { it.right() }
-            .catch { emit(Error.DataError(it).left()) }
-            .onEmpty { emit(Error.EmptyCurrencies.left()) }
     }
 
     private suspend fun Raise<Error>.getMultiCurrencyWalletCurrency(currencyId: CryptoCurrency.ID): CryptoCurrency {
