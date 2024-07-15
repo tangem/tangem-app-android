@@ -23,7 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
-import com.tangem.common.ui.bottomsheets.state.GiveTxPermissionState
+import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
