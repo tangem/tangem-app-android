@@ -14,13 +14,12 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.staking.InitializeStakingProcessUseCase
+import com.tangem.domain.staking.GetStakingTransactionUseCase
 import com.tangem.domain.staking.EstimateGasUseCase
 import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
 import com.tangem.domain.staking.SubmitHashUseCase
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.staking.model.transaction.StakingGasEstimate
-import com.tangem.domain.staking.model.transaction.StakingTransaction
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -59,7 +58,7 @@ internal class StakingViewModel @Inject constructor(
     private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val initializeStakingProcessUseCase: InitializeStakingProcessUseCase,
+    private val getStakingTransactionUseCase: GetStakingTransactionUseCase,
     private val estimateGasUseCase: EstimateGasUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -116,7 +115,7 @@ internal class StakingViewModel @Inject constructor(
             viewModelScope.launch {
                 stateController.update(SetConfirmationStateInProgressTransformer())
 
-                val actionWithTransaction = initializeStakingProcessUseCase(
+                val stakingTransaction = getStakingTransactionUseCase(
                     integrationId = yield.id,
                     amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
                         ?: error("No amount provided"),
@@ -124,9 +123,7 @@ internal class StakingViewModel @Inject constructor(
                         ?: error("No available address"),
                     validatorAddress = yield.validators.getOrNull(0)?.address ?: error("No available validator"),
                     token = yield.token,
-                )
-
-                val (enterAction, stakingTransaction) = actionWithTransaction.getOrElse {
+                ).getOrElse {
                     error(it)
                 }
 

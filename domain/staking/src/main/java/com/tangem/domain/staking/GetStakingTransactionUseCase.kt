@@ -3,7 +3,6 @@ package com.tangem.domain.staking
 import arrow.core.Either
 import com.tangem.domain.staking.model.StakingError
 import com.tangem.domain.staking.model.Token
-import com.tangem.domain.staking.model.action.EnterAction
 import com.tangem.domain.staking.model.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -13,7 +12,7 @@ import java.math.BigDecimal
 /**
  * Use case for creating enter action
  */
-class InitializeStakingProcessUseCase(
+class GetStakingTransactionUseCase(
     private val stakingRepository: StakingRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
@@ -24,7 +23,7 @@ class InitializeStakingProcessUseCase(
         address: String,
         validatorAddress: String,
         token: Token,
-    ): Either<StakingError, Pair<EnterAction, StakingTransaction>> {
+    ): Either<StakingError, StakingTransaction> {
         return Either.catch {
             val createAction = stakingRepository.createEnterAction(
                 integrationId = integrationId,
@@ -40,7 +39,7 @@ class InitializeStakingProcessUseCase(
             val createdTransaction = createAction.transactions?.get(0) ?: error("No available transaction to patch")
             val patchedTransaction = stakingRepository.constructTransaction(createdTransaction.id)
 
-            createAction to patchedTransaction
+            patchedTransaction
         }.mapLeft {
             stakingErrorResolver.resolve(it)
         }

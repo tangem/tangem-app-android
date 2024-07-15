@@ -90,8 +90,8 @@ internal object StakingDomainModule {
     fun provideInitializeStakingProcessUseCase(
         stakingRepository: StakingRepository,
         stakingErrorResolver: StakingErrorResolver,
-    ): InitializeStakingProcessUseCase {
-        return InitializeStakingProcessUseCase(
+    ): GetStakingTransactionUseCase {
+        return GetStakingTransactionUseCase(
             stakingRepository = stakingRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
