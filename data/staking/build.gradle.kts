@@ -11,7 +11,6 @@ android {
 }
 
 dependencies {
-
     /** Core modules */
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
@@ -33,14 +32,17 @@ dependencies {
     // endregion
 
     // region Others dependencies
+    implementation(deps.androidx.datastore)
     implementation(deps.jodatime)
     implementation(deps.kotlin.coroutines)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
 
+
     implementation(projects.libs.blockchainSdk)
     implementation(deps.tangem.blockchain) {
         exclude(module = "joda-time")
     }
+
     // endregion
 }
