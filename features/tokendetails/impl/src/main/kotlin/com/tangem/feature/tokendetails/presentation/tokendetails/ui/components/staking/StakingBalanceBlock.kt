@@ -21,13 +21,13 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBalance
+import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakedBlock
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Strings
 
 @Composable
-fun StakingBalanceBlock(state: StakingBalance.Content, modifier: Modifier = Modifier) {
+internal fun StakingBalanceBlock(state: StakingBlockUM.Staked, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -87,21 +87,18 @@ fun StakingBalanceBlock(state: StakingBalance.Content, modifier: Modifier = Modi
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun StakingBalanceBlock_Preview(
-    @PreviewParameter(StakingBalanceBlockPreviewProvider::class) data: StakingBalance,
+    @PreviewParameter(StakingBalanceBlockPreviewProvider::class) data: StakingBlockUM.Staked,
 ) {
     TangemThemePreview {
         StakingBalanceBlock(
-            state = data as StakingBalance.Content,
+            state = data,
             modifier = Modifier.padding(TangemTheme.dimens.spacing16),
         )
     }
 }
 
-private class StakingBalanceBlockPreviewProvider : PreviewParameterProvider<StakingBalance> {
-    override val values: Sequence<StakingBalance>
-        get() = sequenceOf(
-            TokenDetailsPreviewData.tokenDetailsState_1.stakingBlocksState.stakingBalance,
-            TokenDetailsPreviewData.tokenDetailsState_2.stakingBlocksState.stakingBalance,
-        )
+private class StakingBalanceBlockPreviewProvider : PreviewParameterProvider<StakingBlockUM.Staked> {
+    override val values: Sequence<StakingBlockUM.Staked>
+        get() = sequenceOf(stakedBlock)
 }
 // endregion
