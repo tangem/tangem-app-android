@@ -14,11 +14,11 @@ import com.tangem.data.staking.converters.transaction.StakingTransactionStatusCo
 import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
-import com.tangem.datasource.api.stakekit.models.request.Address
-import com.tangem.datasource.api.stakekit.models.request.ConstructTransactionRequestBody
-import com.tangem.datasource.api.stakekit.models.request.EnterActionRequestBody
-import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
+import com.tangem.datasource.api.stakekit.models.request.*
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.core.lce.LceFlow
@@ -33,14 +33,16 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.toFormattedString
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
+    private val appPreferencesStore: AppPreferencesStore,
     private val stakingYieldsStore: StakingYieldsStore,
     private val stakingBalanceStore: StakingBalanceStore,
     private val cacheRegistry: CacheRegistry,
@@ -369,6 +371,55 @@ internal class DefaultStakingRepository(
             fetchMultiYieldBalance(userWalletId, addresses)
             val result = stakingBalanceStore.getSyncOrNull() ?: return@withContext YieldBalanceList.Error
             yieldBalanceListConverter.convert(result)
+        }
+    }
+
+    override suspend fun submitHash(transactionId: String, transactionHash: String) {
+        withContext(dispatchers.io) {
+            stakeKitApi.submitTransactionHash(
+                transactionId = transactionId,
+                body = SubmitTransactionHashRequestBody(
+                    hash = transactionHash,
+                ),
+            )
+        }
+    }
+
+    override suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata) {
+        withContext(dispatchers.io) {
+            appPreferencesStore.editData { preferences ->
+                val savedTransactions = preferences.getObjectListOrDefault<UnsubmittedTransactionMetadata>(
+                    key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
+                    default = emptyList(),
+                )
+
+                preferences.setObjectList(
+                    key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
+                    value = savedTransactions + unsubmittedTransactionMetadata,
+                )
+            }
+        }
+    }
+
+    override suspend fun sendUnsubmittedHashes() {
+        withContext(NonCancellable) {
+            val savedTransactions = appPreferencesStore.getObjectListSync<UnsubmittedTransactionMetadata>(
+                key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
+            )
+
+            savedTransactions.forEach {
+                stakeKitApi.submitTransactionHash(
+                    transactionId = it.transactionId,
+                    body = SubmitTransactionHashRequestBody(hash = it.transactionHash),
+                )
+            }
+
+            appPreferencesStore.editData { mutablePreferences ->
+                mutablePreferences.setObjectList<UnsubmittedTransactionMetadata>(
+                    key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
+                    value = emptyList(),
+                )
+            }
         }
     }
 
