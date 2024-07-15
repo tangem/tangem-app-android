@@ -13,26 +13,21 @@ import com.tangem.features.details.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @ComponentScoped
 internal class UserWalletListModel @Inject constructor(
-    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
+    userWalletsFetcher: UserWalletsFetcher,
+    shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val userWalletSaver: UserWalletSaver,
-    private val userWalletsFetcher: UserWalletsFetcher,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
     private val isWalletSavingInProgress: MutableStateFlow<Boolean> = MutableStateFlow(value = false)
-
-    private val userWallets: SharedFlow<ImmutableList<UserWalletUM>> = userWalletsFetcher
-        .userWallets
-        .share()
-
-    private val shouldSaveUserWallets: SharedFlow<Boolean> = shouldSaveUserWalletsUseCase()
-        .distinctUntilChanged()
-        .share()
 
     val state: MutableStateFlow<UserWalletListUM> = MutableStateFlow(
         value = UserWalletListUM(
@@ -45,14 +40,14 @@ internal class UserWalletListModel @Inject constructor(
 
     init {
         combine(
-            userWallets,
-            shouldSaveUserWallets,
+            userWalletsFetcher.userWallets,
+            shouldSaveUserWalletsUseCase(),
             isWalletSavingInProgress,
             transform = ::updateState,
         ).launchIn(modelScope)
     }
 
-    private suspend fun updateState(
+    private fun updateState(
         userWallets: ImmutableList<UserWalletUM>,
         shouldSaveUserWallets: Boolean,
         isWalletSavingInProgress: Boolean,
