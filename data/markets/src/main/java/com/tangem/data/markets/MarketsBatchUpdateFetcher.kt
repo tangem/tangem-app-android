@@ -7,6 +7,7 @@ import com.tangem.data.markets.converters.toRequestParam
 import com.tangem.data.markets.utils.retryOnError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
+import com.tangem.datasource.api.markets.models.response.TokenMarketChartListResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketUpdateRequest
@@ -46,29 +47,18 @@ internal class MarketsBatchUpdateFetcher(
                 }
 
                 updateTasks.forEachIndexed { index, deferred ->
-                    val res = deferred.await()
-                    val batchToUpdate = toUpdate[index]
+                    launch {
+                        val res = deferred.await()
+                        val batchToUpdate = toUpdate[index]
 
-                    update {
-                        val resBatch = this.mapNotNull { resultBatch ->
-                            if (batchToUpdate.key != resultBatch.key) return@mapNotNull null
-
-                            Batch(
-                                key = batchToUpdate.key,
-                                data = batchToUpdate.data.map {
-                                    it.copy(
-                                        tokenCharts = tokenListChartsConverter.convert(
-                                            chartsToCopy = it.tokenCharts,
-                                            tokenId = it.id,
-                                            interval = updateRequest.interval,
-                                            value = res,
-                                        ),
-                                    )
-                                },
+                        update {
+                            val resBatch = changeChartsInBatches(
+                                updateRequest = updateRequest,
+                                batchToUpdate = batchToUpdate,
+                                update = res,
                             )
+                            BatchUpdateResult.Success(resBatch)
                         }
-
-                        BatchUpdateResult.Success(resBatch)
                     }
                 }
             }
@@ -92,6 +82,28 @@ internal class MarketsBatchUpdateFetcher(
                 }
             }
         }
+    }
+
+    private fun List<Batch<Int, List<TokenMarket>>>.changeChartsInBatches(
+        updateRequest: TokenMarketUpdateRequest.UpdateChart,
+        batchToUpdate: Batch<Int, List<TokenMarket>>,
+        update: TokenMarketChartListResponse,
+    ): List<Batch<Int, List<TokenMarket>>> = mapNotNull { resultBatch ->
+        if (batchToUpdate.key != resultBatch.key) return@mapNotNull null
+
+        Batch(
+            key = batchToUpdate.key,
+            data = batchToUpdate.data.map {
+                it.copy(
+                    tokenCharts = tokenListChartsConverter.convert(
+                        chartsToCopy = it.tokenCharts,
+                        tokenId = it.id,
+                        interval = updateRequest.interval,
+                        value = update,
+                    ),
+                )
+            },
+        )
     }
 
     companion object {

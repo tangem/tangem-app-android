@@ -170,17 +170,17 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
     }
 
     private fun collectSyncUpdateAction(action: BatchAction.UpdateBatches<TKey, TUpdate>) {
+        // Lazily start a job so we can avoid batch update collisions
+        // by waiting for other tasks with the same keys to complete
+        val job = scope.launch(fetchDispatcher, start = CoroutineStart.LAZY) {
+            updateBatchesTask(action)
+        }
+
+        val actionJob = action to job
+
+        waitingUpdateJobs.update { it + actionJob }
+
         scope.launch(fetchDispatcher) {
-            // Lazily start a job so we can avoid batch update collisions
-            // by waiting for other tasks with the same keys to complete
-            val job = launch(start = CoroutineStart.LAZY) {
-                updateBatchesTask(action)
-            }
-
-            val actionJob = action to job
-
-            waitingUpdateJobs.update { it + actionJob }
-
             // Wait for other update tasks that mutate batches with the same keys
             updateJobs.first { workingJobs ->
                 action.keys.intersect(workingJobs.map { it.first.keys }.flatten().toSet()).isEmpty()
