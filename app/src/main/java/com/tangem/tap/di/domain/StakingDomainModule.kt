@@ -144,4 +144,10 @@ internal object StakingDomainModule {
             stakingErrorResolver = stakingErrorResolver,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideIsStakeMoreAvailableUseCase(stakingRepository: StakingRepository): IsStakeMoreAvailableUseCase {
+        return IsStakeMoreAvailableUseCase(stakingRepository = stakingRepository)
+    }
 }

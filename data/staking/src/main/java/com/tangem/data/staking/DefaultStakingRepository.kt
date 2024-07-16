@@ -24,14 +24,15 @@ import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.*
-import com.tangem.domain.staking.model.action.EnterAction
+import com.tangem.domain.staking.model.action.StakingAction
 import com.tangem.domain.staking.model.action.StakingActionCommonType
-import com.tangem.domain.staking.model.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.transaction.ActionParams
+import com.tangem.domain.staking.model.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -155,10 +156,13 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun createEnterAction(params: ActionParams): EnterAction {
+    override suspend fun createAction(params: ActionParams): StakingAction {
         return withContext(dispatchers.io) {
             val body = createActionRequestBody(params)
-            val response = stakeKitApi.createEnterAction(body)
+            val response = when (params.actionCommonType) {
+                StakingActionCommonType.ENTER -> stakeKitApi.createEnterAction(body)
+                StakingActionCommonType.EXIT -> stakeKitApi.createExitAction(body)
+            }
 
             enterActionResponseConverter.convert(response.getOrThrow())
         }
@@ -434,6 +438,14 @@ internal class DefaultStakingRepository(
                 validatorAddress = params.validatorAddress,
             ),
         )
+    }
+
+    override fun isStakeMoreAvailable(networkId: Network.ID): Boolean {
+        val blockchain = Blockchain.fromId(networkId.value)
+        return when (blockchain) {
+            Blockchain.Solana -> false
+            else -> true
+        }
     }
 
     private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {
