@@ -2,10 +2,7 @@ package com.tangem.features.staking.impl.presentation.state.previewdata
 
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.staking.model.Yield
-import com.tangem.features.staking.impl.presentation.state.BalanceGroupedState
-import com.tangem.features.staking.impl.presentation.state.BalanceState
-import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
-import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.*
 import kotlinx.collections.immutable.persistentListOf
 
 internal object InitialStakingStatePreview {
@@ -21,6 +18,7 @@ internal object InitialStakingStatePreview {
         rewardSchedule = "Block",
         onInfoClick = {},
         yieldBalance = InnerYieldBalanceState.Empty,
+        isStakeMoreAvailable = true,
     )
 
     val stateWithYield = defaultState.copy(
@@ -32,10 +30,12 @@ internal object InitialStakingStatePreview {
                 BalanceGroupedState(
                     title = stringReference("Staked"),
                     footer = null,
+                    type = BalanceGroupType.ACTIVE,
                     items = persistentListOf(
                         BalanceState(
                             cryptoValue = "100",
                             cryptoAmount = stringReference("100 SOL"),
+                            cryptoDecimal = "100".toBigDecimal(),
                             fiatAmount = stringReference("100 $"),
                             rawCurrencyId = null,
                             validator = Yield.Validator(
@@ -50,6 +50,7 @@ internal object InitialStakingStatePreview {
                                 votingPower = null,
                                 preferred = false,
                             ),
+                            unbondingPeriod = stringReference("3 days"),
                         ),
                     ),
                 ),

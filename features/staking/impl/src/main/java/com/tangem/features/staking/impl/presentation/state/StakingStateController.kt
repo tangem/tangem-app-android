@@ -44,6 +44,7 @@ internal class StakingStateController @Inject constructor() {
             isBalanceHidden = false,
             event = consumedEvent(),
             bottomSheetConfig = null,
+            routeType = RouteType.STAKE,
         )
     }
 }
