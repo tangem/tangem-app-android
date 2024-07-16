@@ -6,9 +6,7 @@ import com.tangem.domain.staking.model.*
 import com.tangem.domain.staking.model.action.EnterAction
 import com.tangem.domain.staking.model.action.StakingActionStatus
 import com.tangem.domain.staking.model.action.StakingActionType
-import com.tangem.domain.staking.model.transaction.StakingTransaction
-import com.tangem.domain.staking.model.transaction.StakingTransactionStatus
-import com.tangem.domain.staking.model.transaction.StakingTransactionType
+import com.tangem.domain.staking.model.transaction.*
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
@@ -21,7 +19,8 @@ import java.math.BigDecimal
 class MockStakingRepository : StakingRepository {
     override fun isStakingSupported(currencyId: String): Boolean = true
 
-    override suspend fun fetchEnabledYields(refresh: Boolean) { /* no-op */
+    override suspend fun fetchEnabledYields(refresh: Boolean) {
+        /* no-op */
     }
 
     override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo = StakingEntryInfo(
@@ -165,24 +164,37 @@ class MockStakingRepository : StakingRepository {
         balances = listOf(YieldBalance.Error),
     )
 
-    override suspend fun createEnterAction(
-        integrationId: String,
-        amount: BigDecimal,
-        address: String,
-        validatorAddress: String,
-        token: Token,
-    ): EnterAction = EnterAction(
-        id = "quis",
-        integrationId = "persequeris",
-        status = StakingActionStatus.PROCESSING,
-        type = StakingActionType.CLAIM_REWARDS,
-        currentStepIndex = 8701,
-        amount = BigDecimal.ZERO,
-        validatorAddress = null,
-        validatorAddresses = listOf(),
-        transactions = listOf(),
-        createdAt = DateTime.now(),
-    )
+    override suspend fun createEnterAction(params: ActionParams): EnterAction {
+        return EnterAction(
+            id = "quis",
+            integrationId = "persequeris",
+            status = StakingActionStatus.PROCESSING,
+            type = StakingActionType.CLAIM_REWARDS,
+            currentStepIndex = 8701,
+            amount = BigDecimal.ZERO,
+            validatorAddress = null,
+            validatorAddresses = listOf(),
+            transactions = listOf(),
+            createdAt = DateTime.now(),
+        )
+    }
+
+    override suspend fun estimateGas(params: ActionParams): StakingGasEstimate {
+        return StakingGasEstimate(
+            amount = BigDecimal(0.0001),
+            token = Token(
+                name = "Solana",
+                network = NetworkType.SOLANA,
+                symbol = "SOL",
+                decimals = 18,
+                address = null,
+                coinGeckoId = "solana",
+                logoURI = null,
+                isPoints = null,
+            ),
+            gasLimit = null,
+        )
+    }
 
     override suspend fun constructTransaction(transactionId: String): StakingTransaction = StakingTransaction(
         id = "id",
@@ -202,11 +214,14 @@ class MockStakingRepository : StakingRepository {
     )
 
     override suspend fun submitHash(transactionId: String, transactionHash: String) {
+        /* no-op */
     }
 
     override suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata) {
+        /* no-op */
     }
 
     override suspend fun sendUnsubmittedHashes() {
+        /* no-op */
     }
 }
