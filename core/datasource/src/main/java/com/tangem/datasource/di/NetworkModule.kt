@@ -164,14 +164,18 @@ class NetworkModule {
         val client = OkHttpClient.Builder()
             .let { builder ->
                 var b = builder
-                if (timeouts.callTimeoutSeconds != null)
+                if (timeouts.callTimeoutSeconds != null) {
                     b = b.callTimeout(timeouts.callTimeoutSeconds, TimeUnit.SECONDS)
-                if (timeouts.connectTimeoutSeconds != null)
+                }
+                if (timeouts.connectTimeoutSeconds != null) {
                     b = b.connectTimeout(timeouts.connectTimeoutSeconds, TimeUnit.SECONDS)
-                if (timeouts.readTimeoutSeconds != null)
+                }
+                if (timeouts.readTimeoutSeconds != null) {
                     b = b.readTimeout(timeouts.readTimeoutSeconds, TimeUnit.SECONDS)
-                if (timeouts.writeTimeoutSeconds != null)
+                }
+                if (timeouts.writeTimeoutSeconds != null) {
                     b = b.writeTimeout(timeouts.writeTimeoutSeconds, TimeUnit.SECONDS)
+                }
                 b
             }
             .addHeaders(
