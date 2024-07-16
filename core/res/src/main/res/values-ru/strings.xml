@@ -86,6 +86,12 @@
   <string name="common_copy_address">Скопировать адрес</string>
   <string name="common_create">Создать</string>
   <string name="common_custom">Свое</string>
+  <plurals name="common_days">
+    <item quantity="one">%d день</item>
+    <item quantity="few">%d дня</item>
+    <item quantity="many">%d дней</item>
+    <item quantity="other">%d дней</item>
+  </plurals>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
   <string name="common_done">Готово</string>
