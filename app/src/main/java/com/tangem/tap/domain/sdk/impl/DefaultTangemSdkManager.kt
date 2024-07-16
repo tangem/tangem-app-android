@@ -3,9 +3,11 @@ package com.tangem.tap.domain.sdk.impl
 import android.content.res.Resources
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import com.tangem.Log
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.common.*
+import com.tangem.common.authentication.AuthenticationManager
 import com.tangem.common.authentication.keystore.KeystoreManager
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.*
@@ -38,15 +40,20 @@ import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class DefaultTangemSdkManager(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val resources: Resources,
 ) : TangemSdkManager {
+
+    private val awaitInitializationMutex = Mutex()
 
     private val tangemSdk: TangemSdk
         get() = cardSdkConfigRepository.sdk
@@ -72,6 +79,42 @@ class DefaultTangemSdkManager(
 
     override val userCodeRequestPolicy: UserCodeRequestPolicy
         get() = tangemSdk.config.userCodeRequestPolicy
+
+    override suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean): Boolean {
+        return try {
+            needEnrollBiometrics
+        } catch (e: TangemSdkError.AuthenticationNotInitialized) {
+            Log.error {
+                "Trying to access `needEnrollBiometrics` flag when authentication manager is not initialized: " +
+                    if (awaitInitialization) "awaiting initialization" else "failing"
+            }
+
+            if (awaitInitialization) {
+                awaitAuthenticationManagerInitialization().needEnrollBiometrics
+            } else {
+                throw e
+            }
+        }
+    }
+
+    override suspend fun checkCanUseBiometry(awaitInitialization: Boolean): Boolean {
+        return try {
+            canUseBiometry
+        } catch (e: TangemSdkError.AuthenticationNotInitialized) {
+            Log.error {
+                "Trying to access `canUseBiometry` flag when authentication manager is not initialized: " +
+                    if (awaitInitialization) "awaiting initialization" else "failing"
+            }
+
+            if (awaitInitialization) {
+                val manager = awaitAuthenticationManagerInitialization()
+
+                manager.canAuthenticate || manager.needEnrollBiometrics
+            } else {
+                throw e
+            }
+        }
+    }
 
     override suspend fun scanProduct(
         cardId: String?,
@@ -288,6 +331,26 @@ class DefaultTangemSdkManager(
         tangemSdk.config.userCodeRequestPolicy = policy
     }
 
+    private suspend fun awaitAuthenticationManagerInitialization(): AuthenticationManager {
+        return awaitInitializationMutex.withLock {
+            var attemps = 0
+
+            do {
+                if (tangemSdk.authenticationManager.isInitialized) {
+                    break
+                } else {
+                    if (attemps++ >= MAX_INITIALIZE_ATTEMPTS) {
+                        error("Can't initialize authentication manager after $MAX_INITIALIZE_ATTEMPTS attempts")
+                    } else {
+                        delay(timeMillis = 200)
+                    }
+                }
+            } while (true)
+
+            tangemSdk.authenticationManager
+        }
+    }
+
     // region Twin-specific
 
     override suspend fun createFirstTwinWallet(
@@ -335,6 +398,8 @@ class DefaultTangemSdkManager(
     // endregion
 
     companion object {
+        private const val MAX_INITIALIZE_ATTEMPTS = 10
+
         @Deprecated("Use [DefaultCardSdkProvider] instead")
         val config = Config(
             linkedTerminal = true,
