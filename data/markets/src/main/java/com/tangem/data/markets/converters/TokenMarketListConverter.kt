@@ -20,9 +20,9 @@ class TokenMarketListConverter : Converter<TokenMarketListResponse, List<TokenMa
                 tokenQuotes = TokenQuotes(
                     currentPrice = token.currentPrice,
                     priceChanges = mapOf(
-                        PriceChangeInterval.H24 to token.priceChangePercentage.h24,
-                        PriceChangeInterval.WEEK to token.priceChangePercentage.week1,
-                        PriceChangeInterval.MONTH to token.priceChangePercentage.day30,
+                        PriceChangeInterval.H24 to token.priceChangePercentage.h24.movePointLeft(2),
+                        PriceChangeInterval.WEEK to token.priceChangePercentage.week1.movePointLeft(2),
+                        PriceChangeInterval.MONTH to token.priceChangePercentage.day30.movePointLeft(2),
                     ),
                 ),
                 tokenCharts = TokenMarket.Charts(null, null, null),
