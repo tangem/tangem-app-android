@@ -52,19 +52,23 @@ internal class CoinsPagingSource(
                         suffix = CryptoCurrency.ID.Suffix.RawID(coin.id),
                     )
                 }
-                val quotes = quotesRepository.getQuotesSync(currenciesIds = coinsIds.toSet(), refresh = false)
 
-                LoadResult.Page(
-                    data = CoinsResponseConverter.convert(
-                        CoinsData(
-                            response.coins,
-                            response.imageHost,
-                            quotes,
+                try {
+                    val quotes = quotesRepository.getQuotesSync(currenciesIds = coinsIds.toSet(), refresh = false)
+                    LoadResult.Page(
+                        data = CoinsResponseConverter.convert(
+                            CoinsData(
+                                response.coins,
+                                response.imageHost,
+                                quotes,
+                            ),
                         ),
-                    ),
-                    prevKey = if (page == 0) null else page.minus(other = 1),
-                    nextKey = if (response.coins.isEmpty()) null else page.plus(other = 1),
-                )
+                        prevKey = if (page == 0) null else page.minus(other = 1),
+                        nextKey = if (response.coins.isEmpty()) null else page.plus(other = 1),
+                    )
+                } catch (t: Throwable) {
+                    LoadResult.Error(t)
+                }
             },
             onFailure = { LoadResult.Error(it) },
         )
