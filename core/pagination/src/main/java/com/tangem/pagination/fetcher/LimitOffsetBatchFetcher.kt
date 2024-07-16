@@ -2,6 +2,8 @@ package com.tangem.pagination.fetcher
 
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.exception.EndOfPaginationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
@@ -12,19 +14,26 @@ import kotlinx.coroutines.flow.MutableStateFlow
  *
  * @property prefetchDistance number of items to fetch for the first batch.
  * @property batchSize size of the batch.
- * @property fetch function that fetches the data.
+ * @property subFetcher function that fetches the data.
  */
 class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
     private val prefetchDistance: Int,
     private val batchSize: Int,
-    private val fetch: suspend (request: Request<TRequestParams>) -> BatchFetchResult<TData>,
+    private val subFetcher: SubFetcher<TRequestParams, TData>,
 ) : BatchFetcher<TRequestParams, TData> {
 
-    data class Request<TRequest>(
+    data class Request<TRequestParams>(
         val limit: Int,
         val offset: Int,
-        val request: TRequest,
+        val params: TRequestParams,
     )
+
+    fun interface SubFetcher<TRequestParams : Any, TData> {
+        suspend fun fetch(
+            request: Request<TRequestParams>,
+            lastResult: BatchFetchResult<TData>?,
+        ): BatchFetchResult<TData>
+    }
 
     private val lastRequest = MutableStateFlow<Request<TRequestParams>?>(null)
 
@@ -32,12 +41,15 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
         val req = Request(
             offset = 0,
             limit = prefetchDistance,
-            request = requestParams,
+            params = requestParams,
         )
 
         val res = runCatching {
-            fetch(req)
-        }.getOrElse { BatchFetchResult.Error(it) }
+            subFetcher.fetch(req, null)
+        }.getOrElse {
+            currentCoroutineContext().ensureActive()
+            BatchFetchResult.Error(it)
+        }
 
         lastRequest.value = req
         return res
@@ -58,15 +70,18 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
             Request(
                 offset = last.offset + last.limit,
                 limit = batchSize,
-                request = overrideRequestParams ?: last.request,
+                params = overrideRequestParams ?: last.params,
             )
         } else {
             last
         }
 
         val res = runCatching {
-            fetch(req)
-        }.getOrElse { BatchFetchResult.Error(it) }
+            subFetcher.fetch(req, lastResult)
+        }.getOrElse {
+            currentCoroutineContext().ensureActive()
+            BatchFetchResult.Error(it)
+        }
 
         lastRequest.value = req
         return res
