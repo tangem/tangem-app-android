@@ -132,7 +132,7 @@ class NetworkModule {
     @Provides
     @DevTangemApi
     @Singleton
-    fun provideCoinMarketsApi(
+    fun provideTangemTechMarketsApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appVersionProvider: AppVersionProvider,
