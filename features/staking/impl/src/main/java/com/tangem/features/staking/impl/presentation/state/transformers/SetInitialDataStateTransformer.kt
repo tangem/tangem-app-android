@@ -31,6 +31,7 @@ import java.math.BigDecimal
 internal class SetInitialDataStateTransformer(
     private val clickIntents: StakingClickIntents,
     private val yield: Yield,
+    private val isStakeMoreAvailable: Boolean,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -92,6 +93,7 @@ internal class SetInitialDataStateTransformer(
             rewardSchedule = yield.metadata.rewardSchedule,
             onInfoClick = clickIntents::onInfoClick,
             yieldBalance = yieldBalancesConverter.convert(Unit),
+            isStakeMoreAvailable = isStakeMoreAvailable,
         )
     }
 
