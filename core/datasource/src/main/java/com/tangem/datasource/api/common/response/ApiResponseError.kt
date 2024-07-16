@@ -73,10 +73,16 @@ sealed class ApiResponseError : Exception() {
     }
 
     /** Represents a network error, typically when there's no connectivity. */
-    data object NetworkException : ApiResponseError()
+    @Suppress("UnusedPrivateMember")
+    data object NetworkException : ApiResponseError() {
+        private fun readResolve(): Any = NetworkException
+    }
 
     /** Represents a timeout error, typically when the server takes too long to respond. */
-    data object TimeoutException : ApiResponseError()
+    @Suppress("UnusedPrivateMember")
+    data object TimeoutException : ApiResponseError() {
+        private fun readResolve(): Any = TimeoutException
+    }
 
     /**
      * Represents an unexpected exception that doesn't fall into one of the other categories.
