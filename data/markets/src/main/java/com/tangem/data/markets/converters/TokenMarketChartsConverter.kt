@@ -14,7 +14,7 @@ class TokenMarketChartsConverter(
         interval: PriceChangeInterval,
         value: TokenMarketChartListResponse,
     ): TokenMarket.Charts {
-        val prices = requireNotNull(value.tokens[tokenId]) {
+        val prices = requireNotNull(value[tokenId]) {
             "$tokenId is not found in the response. This shouldn't have happened."
         }
         return when (interval) {
