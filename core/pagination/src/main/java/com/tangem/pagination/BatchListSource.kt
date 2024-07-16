@@ -75,6 +75,8 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
     private val scope = context.coroutineScope
     private val updateJobs = MutableStateFlow<List<Pair<BatchAction.UpdateBatches<TKey, TUpdate>, Job>>>(emptyList())
+    private val updateAsyncJobs =
+        MutableStateFlow<List<Pair<BatchAction.UpdateBatches<TKey, TUpdate>, Job>>>(emptyList())
     private val waitingUpdateJobs =
         MutableStateFlow<List<Pair<BatchAction.UpdateBatches<TKey, TUpdate>, Job>>>(emptyList())
 
@@ -127,38 +129,13 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
             }
             is BatchAction.UpdateBatches -> {
                 if (updateFetcher == null) return
+                // If the request with the same operationId is in progress, skip the request
+                if (updateInProgressExists(action.operationId)) return
 
-                scope.launch(fetchDispatcher) {
-                    // Lazily start a job so we can avoid batch update collisions
-                    // by waiting for other tasks with the same keys to complete
-                    val job = launch(start = CoroutineStart.LAZY) {
-                        updateBatchesTask(action)
-                    }
-
-                    val actionJob = action to job
-
-                    waitingUpdateJobs.update { it + actionJob }
-
-                    // Wait for other update tasks that mutate batches with the same keys
-                    updateJobs.first { workingJobs ->
-                        action.keys.intersect(workingJobs.map { it.first.keys }.flatten().toSet()).isEmpty()
-                    }
-
-                    waitingUpdateJobs.update { it - actionJob }
-
-                    // No other task are mutating batches with the same keys, so we can start a job
-                    val started = job.start()
-
-                    if (started) {
-                        updateJobs.update { it + actionJob }
-
-                        job.invokeOnCompletion { cause ->
-                            // If the job was cancelled it is up to a canceller to remove job from the updateJobs list
-                            if (cause !is CancellationException) {
-                                updateJobs.update { it - actionJob }
-                            }
-                        }
-                    }
+                if (action.async) {
+                    collectAsyncUpdateAction(action)
+                } else {
+                    collectSyncUpdateAction(action)
                 }
             }
             BatchAction.CancelAllUpdates -> {
@@ -176,6 +153,57 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         }
     }
 
+    private fun collectAsyncUpdateAction(action: BatchAction.UpdateBatches<TKey, TUpdate>) {
+        val job = scope.launch(fetchDispatcher) {
+            updateBatchesAsyncTask(action)
+        }
+        val actionJob = action to job
+
+        updateAsyncJobs.update { it + actionJob }
+
+        job.invokeOnCompletion { cause ->
+            // If the job was cancelled it is up to a canceller to remove job from the updateJobs list
+            if (cause !is CancellationException) {
+                updateAsyncJobs.update { it - actionJob }
+            }
+        }
+    }
+
+    private fun collectSyncUpdateAction(action: BatchAction.UpdateBatches<TKey, TUpdate>) {
+        // Lazily start a job so we can avoid batch update collisions
+        // by waiting for other tasks with the same keys to complete
+        val job = scope.launch(fetchDispatcher, start = CoroutineStart.LAZY) {
+            updateBatchesTask(action)
+        }
+
+        val actionJob = action to job
+
+        waitingUpdateJobs.update { it + actionJob }
+
+        scope.launch(fetchDispatcher) {
+            // Wait for other update tasks that mutate batches with the same keys
+            updateJobs.first { workingJobs ->
+                action.keys.intersect(workingJobs.map { it.first.keys }.flatten().toSet()).isEmpty()
+            }
+
+            waitingUpdateJobs.update { it - actionJob }
+
+            // No other task are mutating batches with the same keys, so we can start a job
+            val started = job.start()
+
+            if (started) {
+                updateJobs.update { it + actionJob }
+
+                job.invokeOnCompletion { cause ->
+                    // If the job was cancelled it is up to a canceller to remove job from the updateJobs list
+                    if (cause !is CancellationException) {
+                        updateJobs.update { it - actionJob }
+                    }
+                }
+            }
+        }
+    }
+
     private suspend fun reloadTask(action: BatchAction.Reload<TRequestParams>) {
         state.value = BatchListState(
             data = emptyList(),
@@ -184,7 +212,10 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
         val res = runCatching {
             batchFetcher.fetchFirst(action.requestParams)
-        }.getOrElse { BatchFetchResult.Error(it) }
+        }.getOrElse {
+            currentCoroutineContext().ensureActive()
+            BatchFetchResult.Error(it)
+        }
 
         state.value = when (res) {
             is BatchFetchResult.Success -> {
@@ -275,6 +306,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                 updateRequest = action.updateRequest,
             )
         } catch (t: Throwable) {
+            currentCoroutineContext().ensureActive()
             BatchUpdateResult.Error(t)
         }
 
@@ -292,7 +324,64 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         updateResults.emit(action.updateRequest to result)
     }
 
+    private suspend fun updateBatchesAsyncTask(action: BatchAction.UpdateBatches<TKey, TUpdate>) {
+        if (updateFetcher == null) return
+
+        val batches = state.value.data
+        val batchesToUpdate = batches.filter { action.keys.contains(it.key) }
+
+        val updateContext = UpdateContext(request = action.updateRequest, action.keys)
+
+        with(updateFetcher) {
+            updateContext.fetchUpdateAsync(batchesToUpdate, action.updateRequest)
+        }
+    }
+
+    @Suppress("FunctionNaming")
+    private fun UpdateContext(request: TUpdate, keysToUpdate: Set<TKey>) =
+        object : BatchUpdateFetcher.UpdateContext<TKey, TData> {
+
+            override suspend fun update(update: List<Batch<TKey, TData>>.() -> BatchUpdateResult<TKey, TData>) {
+                val stateToFetchUpdateBasedOn = state.value.data.filter {
+                    keysToUpdate.contains(it.key)
+                }
+
+                val result = runCatching {
+                    stateToFetchUpdateBasedOn.update()
+                }.getOrElse {
+                    currentCoroutineContext().ensureActive()
+                    BatchUpdateResult.Error(it)
+                }
+
+                if (result is BatchUpdateResult.Success) {
+                    state.update { currentState ->
+                        val resMap = result.data.associateBy { it.key }
+                        currentState.copy(
+                            data = currentState.data.map {
+                                resMap[it.key] ?: it
+                            },
+                        )
+                    }
+                }
+
+                updateResults.emit(request to result)
+            }
+        }
+
+    private fun updateInProgressExists(operationId: String): Boolean {
+        return updateAsyncJobs.value.any { it.first.operationId == operationId } ||
+            updateJobs.value.any { it.first.operationId == operationId } ||
+            waitingUpdateJobs.value.any { it.first.operationId == operationId }
+    }
+
     private fun stopAllUpdates() {
+        updateAsyncJobs.update { actionAsyncJobs ->
+            actionAsyncJobs.forEach {
+                it.second.cancel()
+            }
+            emptyList()
+        }
+
         updateJobs.update { actionJobs ->
             waitingUpdateJobs.update { waitingActionJobs ->
                 waitingActionJobs.forEach {
@@ -308,6 +397,18 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
     }
 
     private fun stopUpdates(predicate: (BatchAction.UpdateBatches<TKey, TUpdate>) -> Boolean) {
+        updateAsyncJobs.update { actionAsyncJobs ->
+            actionAsyncJobs.mapNotNull {
+                if (predicate(it.first)) {
+                    it.second.cancel()
+                    null
+                } else {
+                    it
+                }
+            }
+            emptyList()
+        }
+
         updateJobs.update { actionJobs ->
             waitingUpdateJobs.update { waitingActionJobs ->
                 waitingActionJobs.mapNotNull {
