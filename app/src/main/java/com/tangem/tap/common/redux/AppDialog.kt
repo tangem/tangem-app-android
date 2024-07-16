@@ -43,6 +43,7 @@ sealed class AppDialog : StateDialog {
     data class TokensAreLinkedDialog(
         val currencyTitle: String,
         val currencySymbol: String,
+        val networkName: String,
     ) : AppDialog() {
         val messageRes: Int = R.string.token_details_unable_hide_alert_message
         val titleRes: Int = R.string.token_details_unable_hide_alert_title
