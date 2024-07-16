@@ -21,13 +21,13 @@ data class TokenMarket(
 
     // 25x25
     val imageUrlThumb =
-        "$imageHost/:thumb/:$id.png"
+        "${imageHost}thumb/$id.png"
 
     // 50x50
     val imageUrlSmall =
-        "$imageHost/:small/:$id.png"
+        "${imageHost}small/$id.png"
 
     // 250x250
     val imageUrlLarge =
-        "$imageHost/:large/:$id.png"
+        "${imageHost}large/$id.png"
 }
