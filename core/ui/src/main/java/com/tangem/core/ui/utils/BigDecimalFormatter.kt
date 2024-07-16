@@ -219,7 +219,11 @@ object BigDecimalFormatter {
             }
     }
 
-    fun formatStringAmount(
+    /**
+     * Adds a proper currency sign for the provided [amount]
+     * ex. '10.0" -> "$10.0"
+     */
+    fun addCurrencySymbolToStringAmount(
         amount: String,
         fiatCurrencyCode: String,
         fiatCurrencySymbol: String,

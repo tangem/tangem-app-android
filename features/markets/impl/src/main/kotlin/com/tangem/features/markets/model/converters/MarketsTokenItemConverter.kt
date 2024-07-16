@@ -91,7 +91,7 @@ internal class MarketsTokenItemConverter(
         }
 
         return BigDecimalFormatter
-            .formatStringAmount(
+            .addCurrencySymbolToStringAmount(
                 formatted,
                 fiatCurrencyCode = appCurrency.code,
                 fiatCurrencySymbol = appCurrency.symbol,

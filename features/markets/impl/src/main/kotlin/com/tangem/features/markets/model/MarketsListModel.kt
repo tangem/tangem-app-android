@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val UPDATE_QUOTES_TIMER_MILLIS = 60000L
+
 @ComponentScoped
 @Stable
 internal class MarketsListModel @Inject constructor(
@@ -30,7 +32,7 @@ internal class MarketsListModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) : Model() {
 
-    private val currentCurrency = getSelectedAppCurrencyUseCase()
+    private val currentAppCurrency = getSelectedAppCurrencyUseCase()
         .map { maybeAppCurrency ->
             maybeAppCurrency.getOrElse { AppCurrency.Default }
         }.stateIn(
@@ -49,7 +51,7 @@ internal class MarketsListModel @Inject constructor(
     private val marketsListManager = MarketsListUiItemsManager(
         logTag = "main",
         getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
-        currentAppCurrency = Provider { currentCurrency.value },
+        currentAppCurrency = Provider { currentAppCurrency.value },
         currentTrendInterval = Provider { marketsListUMStateManager.selectedInterval },
         modelScope = modelScope,
         dispatchers = dispatchers,
@@ -57,7 +59,7 @@ internal class MarketsListModel @Inject constructor(
     private val searchMarketsListManager = MarketsListUiItemsManager(
         logTag = "search",
         getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
-        currentAppCurrency = Provider { currentCurrency.value },
+        currentAppCurrency = Provider { currentAppCurrency.value },
         currentTrendInterval = Provider { marketsListUMStateManager.selectedInterval },
         modelScope = modelScope,
         dispatchers = dispatchers,
@@ -81,8 +83,8 @@ internal class MarketsListModel @Inject constructor(
             }
         }.launchIn(modelScope)
 
-        // update all lists when user's currency changed
-        currentCurrency
+        // update all lists when user's currency has changed
+        currentAppCurrency
             .drop(1)
             .onEach {
                 marketsListManager.reload(
@@ -102,7 +104,7 @@ internal class MarketsListModel @Inject constructor(
         marketsListManager.onLastBatchLoadedSuccess
             .onEach {
                 marketsListManager.loadCharts(setOf(it), marketsListUMStateManager.selectedInterval)
-                modelScope.loadQuotesWithTimer()
+                modelScope.loadQuotesWithTimer(timeMillis = UPDATE_QUOTES_TIMER_MILLIS)
             }
             .launchIn(modelScope)
 
@@ -159,10 +161,10 @@ internal class MarketsListModel @Inject constructor(
     }
 
     private var updateQuotesJob = JobHolder()
-    private fun CoroutineScope.loadQuotesWithTimer() {
+    private fun CoroutineScope.loadQuotesWithTimer(timeMillis: Long) {
         launch {
             while (true) {
-                delay(timeMillis = 60000)
+                delay(timeMillis)
                 // Update quotes only when the container bottom sheet is in the expanded state
                 containerBottomSheetState.first { it == BottomSheetState.EXPANDED }
                 activeListManager.updateQuotes()
