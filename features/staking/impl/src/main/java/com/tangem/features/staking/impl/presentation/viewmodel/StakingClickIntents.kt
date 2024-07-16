@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.viewmodel
 
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.domain.staking.model.Yield
+import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
 
 internal interface StakingClickIntents : AmountScreenClickIntents {
@@ -23,6 +24,8 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun openRewardsValidators()
 
     fun selectRewardValidator(rewardValue: String)
+
+    fun onActiveStake(activeStake: BalanceState)
 
     fun onExploreClick()
 
