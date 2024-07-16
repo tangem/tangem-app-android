@@ -3,6 +3,7 @@ package com.tangem.data.markets.di
 import com.tangem.data.markets.DefaultMarketsTokenRepository
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.di.DevTangemApi
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -18,8 +19,8 @@ internal object MarketsDataModule {
     @Provides
     @Singleton
     fun provideMarketsRepository(
-        marketsApi: TangemTechMarketsApi,
-        tangemTechApi: TangemTechApi,
+        @DevTangemApi marketsApi: TangemTechMarketsApi,
+        @DevTangemApi tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
     ): MarketsTokenRepository {
         return DefaultMarketsTokenRepository(
