@@ -23,6 +23,7 @@ internal data class StakingUiState(
     val confirmationState: StakingStates.ConfirmationState,
     val isBalanceHidden: Boolean,
     val bottomSheetConfig: TangemBottomSheetConfig?,
+    val routeType: RouteType,
     val event: StateEvent<StakingEvent>,
 ) {
 
@@ -55,6 +56,7 @@ internal sealed class StakingStates {
             val rewardSchedule: String,
             val onInfoClick: (InfoType) -> Unit,
             val yieldBalance: InnerYieldBalanceState,
+            val isStakeMoreAvailable: Boolean,
         ) : InitialInfoState()
 
         data class Empty(
@@ -98,4 +100,10 @@ enum class StakingStep {
     Amount,
     Confirmation,
     Validators,
+}
+
+enum class RouteType {
+    STAKE,
+    UNSTAKE,
+    CLAIM,
 }
