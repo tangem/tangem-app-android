@@ -126,7 +126,12 @@ private fun getButtonData(currentState: StakingUiState): Pair<Int, (() -> Unit)?
         StakingStep.InitialInfo -> {
             val initialState = currentState.initialInfoState as? StakingStates.InitialInfoState.Data
             if (initialState?.yieldBalance is InnerYieldBalanceState.Data) {
-                R.string.staking_stake_more to currentState.clickIntents::onNextClick
+                val click = if (initialState.isStakeMoreAvailable) {
+                    currentState.clickIntents::onNextClick
+                } else {
+                    null
+                }
+                R.string.staking_stake_more to click
             } else {
                 R.string.common_next to currentState.clickIntents::onNextClick
             }

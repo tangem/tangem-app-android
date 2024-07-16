@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.presentation.state
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.staking.model.Yield
 import kotlinx.collections.immutable.ImmutableList
+import java.math.BigDecimal
 
 sealed class InnerYieldBalanceState {
     data class Data(
@@ -19,14 +20,17 @@ data class BalanceGroupedState(
     val items: ImmutableList<BalanceState>,
     val footer: TextReference?,
     val title: TextReference,
+    val type: BalanceGroupType,
 )
 
 data class BalanceState(
     val validator: Yield.Validator,
     val cryptoValue: String,
+    val cryptoDecimal: BigDecimal,
     val cryptoAmount: TextReference,
     val fiatAmount: TextReference,
     val rawCurrencyId: String?,
+    val unbondingPeriod: TextReference,
 )
 
 enum class BalanceGroupType {

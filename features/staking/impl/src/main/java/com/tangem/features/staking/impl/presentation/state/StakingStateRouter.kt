@@ -13,8 +13,12 @@ internal class StakingStateRouter(
     }
 
     fun onNextClick() {
-        when (stateController.uiState.value.currentStep) {
-            StakingStep.InitialInfo -> showAmount()
+        when (stateController.value.currentStep) {
+            StakingStep.InitialInfo -> when (stateController.value.routeType) {
+                RouteType.STAKING -> showAmount()
+                RouteType.UNSTAKING -> showConfirmation()
+                RouteType.CLAIMING -> showRewardsValidators()
+            }
             StakingStep.RewardsValidators,
             StakingStep.Validators,
             StakingStep.Amount,
