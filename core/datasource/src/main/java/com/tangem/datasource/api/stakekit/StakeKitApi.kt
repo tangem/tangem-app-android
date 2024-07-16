@@ -9,6 +9,7 @@ import com.tangem.datasource.api.stakekit.models.response.model.transaction.Stak
 import com.tangem.datasource.api.stakekit.models.response.model.TokenWithYieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingGasEstimateDTO
 import retrofit2.http.*
 
 @Suppress("LongParameterList")
@@ -45,7 +46,13 @@ interface StakeKitApi {
     suspend fun getTokens(): ApiResponse<List<TokenWithYieldDTO>>
 
     @POST("actions/enter")
-    suspend fun createEnterAction(@Body body: EnterActionRequestBody): ApiResponse<EnterActionResponse>
+    suspend fun createEnterAction(@Body body: ActionRequestBody): ApiResponse<EnterActionResponse>
+
+    @POST("actions/enter/estimate-gas")
+    suspend fun estimateGasOnEnter(@Body body: ActionRequestBody): ApiResponse<StakingGasEstimateDTO>
+
+    @POST("actions/exit/estimate-gas")
+    suspend fun estimateGasOnExit(@Body body: ActionRequestBody): ApiResponse<StakingGasEstimateDTO>
 
     @PATCH("transactions/{transactionId}")
     suspend fun constructTransaction(
