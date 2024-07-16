@@ -1,10 +1,11 @@
 package com.tangem.datasource.api.stakekit.models.request
 
 import com.squareup.moshi.Json
+import com.tangem.datasource.api.stakekit.models.request.ConstructTransactionRequestBody.GasArgs
 import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
 
-data class EnterActionRequestBody(
+data class ActionRequestBody(
     @Json(name = "integrationId")
     val integrationId: String,
     @Json(name = "addresses")
@@ -13,6 +14,8 @@ data class EnterActionRequestBody(
     val args: EnterActionRequestBodyArgs,
     @Json(name = "referralCode")
     val referralCode: String? = null,
+    @Json(name = "gasArgs")
+    val gasArgs: GasArgs? = null, // used only in estimate_gas request
 ) {
 
     data class EnterActionRequestBodyArgs(
