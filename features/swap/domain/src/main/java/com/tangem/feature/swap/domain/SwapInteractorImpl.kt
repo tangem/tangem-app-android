@@ -1003,10 +1003,10 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
         return coroutineScope {
-            val txFeeResult = getSelectedWalletSyncUseCase().getOrNull()?.walletId?.let { userWalletId ->
+            val txFeeResult = getSelectedWalletSyncUseCase().getOrNull()?.let { userWallet ->
                 getUnhandledFee(
                     amount = amount.value,
-                    userWalletId = userWalletId,
+                    userWallet = userWallet,
                     cryptoCurrency = fromToken,
                 )
             }
@@ -1263,15 +1263,21 @@ internal class SwapInteractorImpl @Inject constructor(
             toAddress = toToken.value.networkAddress?.defaultAddress?.value.orEmpty(),
         ).fold(
             ifRight = { swapData ->
-                val feeData = transactionManager.getFee(
-                    networkId = networkId,
-                    amountToSend = amount.value,
-                    currencyToSend = swapCurrencyConverter.convert(fromToken.currency),
-                    destinationAddress = swapData.transaction.txTo,
-                    increaseBy = INCREASE_GAS_LIMIT_BY,
-                    data = (swapData.transaction as ExpressTransactionModel.DEX).txData,
-                    derivationPath = fromToken.currency.network.derivationPath.value,
-                )
+                val userWallet = getSelectedWallet()
+                val cardId = userWallet?.scanResponse?.card?.cardId
+                val feeData = if (cardId != null && isDemoCardUseCase(cardId)) {
+                    getDemoFees(fromToken.currency)
+                } else {
+                    transactionManager.getFee(
+                        networkId = networkId,
+                        amountToSend = amount.value,
+                        currencyToSend = swapCurrencyConverter.convert(fromToken.currency),
+                        destinationAddress = swapData.transaction.txTo,
+                        increaseBy = INCREASE_GAS_LIMIT_BY,
+                        data = (swapData.transaction as ExpressTransactionModel.DEX).txData,
+                        derivationPath = fromToken.currency.network.derivationPath.value,
+                    )
+                }
                 val txFeeState = when (feeData) {
                     is ProxyFees.MultipleFees -> feeData.proxyFeesToFeeState(fromToken.currency)
                     is ProxyFees.SingleFee -> feeData.proxyFeesToFeeState(fromToken.currency)
@@ -1380,12 +1386,12 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private suspend fun getUnhandledFee(
         amount: BigDecimal,
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
     ): Either<GetFeeError, TransactionFee>? {
         return estimateFeeUseCase(
             amount = amount,
-            userWalletId = userWalletId,
+            userWallet = userWallet,
             cryptoCurrency = cryptoCurrency,
         ).firstOrNull()
     }
