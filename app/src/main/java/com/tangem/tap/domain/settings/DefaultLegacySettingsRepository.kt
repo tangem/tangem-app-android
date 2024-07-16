@@ -7,5 +7,5 @@ internal class DefaultLegacySettingsRepository(
     private val tangemSdkManager: TangemSdkManager,
 ) : LegacySettingsRepository {
 
-    override fun canUseBiometry(): Boolean = tangemSdkManager.canUseBiometry
+    override suspend fun canUseBiometry(): Boolean = tangemSdkManager.checkCanUseBiometry()
 }
