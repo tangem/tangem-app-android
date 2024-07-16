@@ -20,6 +20,7 @@ internal fun InputRowImageBase(
     modifier: Modifier = Modifier,
     subtitleColor: Color = TangemTheme.colors.text.primary1,
     captionColor: Color = TangemTheme.colors.text.tertiary,
+    isGrayscaleImage: Boolean = false,
     extraContent: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -29,6 +30,7 @@ internal fun InputRowImageBase(
     ) {
         InputRowAsyncImage(
             imageUrl = imageUrl,
+            isGrayscale = isGrayscaleImage,
             modifier = Modifier
                 .size(TangemTheme.dimens.spacing36),
         )
