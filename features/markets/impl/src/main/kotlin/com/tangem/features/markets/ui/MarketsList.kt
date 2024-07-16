@@ -1,6 +1,5 @@
 package com.tangem.features.markets.ui
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -158,7 +157,6 @@ private fun Options(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Items(state: ListUM, modifier: Modifier = Modifier) {
     val lazyListState = rememberLazyListState()

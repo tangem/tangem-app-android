@@ -162,7 +162,7 @@ internal class MarketsListModel @Inject constructor(
     private fun CoroutineScope.loadQuotesWithTimer() {
         launch {
             while (true) {
-                delay(timeMillis = 5000)
+                delay(timeMillis = 60000)
                 // Update quotes only when the container bottom sheet is in the expanded state
                 containerBottomSheetState.first { it == BottomSheetState.EXPANDED }
                 activeListManager.updateQuotes()

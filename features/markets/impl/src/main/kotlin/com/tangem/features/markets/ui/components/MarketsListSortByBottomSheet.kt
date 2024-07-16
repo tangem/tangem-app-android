@@ -27,7 +27,7 @@ fun MarketsListSortByBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet<SortByBottomSheetContentUM>(
         config = config,
         titleText = resourceReference(R.string.markets_sort_by_title),
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors.background.tertiary,
         content = { Content(it) },
     )
 }
