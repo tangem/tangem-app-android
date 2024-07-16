@@ -1,7 +1,9 @@
 package com.tangem.features.staking.impl.presentation.state.converters
 
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -14,7 +16,6 @@ import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.toPersistentList
 
@@ -54,13 +55,7 @@ internal class YieldBalancesConverter(
     }
 
     private fun getGroupedBalance(balance: YieldBalanceItem) = balance.items
-// [REDACTED_TODO_COMMENT]
-        .addOrReplace(
-            item = balance.items.first().copy(
-                type = BalanceType.REWARDS,
-            ),
-            predicate = { true },
-        )
+        .sortedBy { it.type }
         .groupBy { it.type.toGroup() }
         .mapNotNull { item ->
             val (title, footer) = getGroupTitle(item.key)
@@ -69,6 +64,7 @@ internal class YieldBalancesConverter(
                     items = item.value.mapBalances().toPersistentList(),
                     footer = footer,
                     title = it,
+                    type = item.key,
                 )
             }
         }
@@ -83,11 +79,12 @@ internal class YieldBalancesConverter(
             }
             val cryptoAmount = balance.amount * balance.pricePerShare
             val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
-
+            val unbondingPeriod = yield.metadata.cooldownPeriod.days
             validator?.let {
                 BalanceState(
                     validator = validator,
                     cryptoValue = cryptoAmount.parseBigDecimal(cryptoCurrency.decimals),
+                    cryptoDecimal = cryptoAmount,
                     cryptoAmount = stringReference(
                         BigDecimalFormatter.formatCryptoAmount(
                             cryptoAmount = cryptoAmount,
@@ -102,6 +99,11 @@ internal class YieldBalancesConverter(
                         ),
                     ),
                     rawCurrencyId = balance.rawCurrencyId,
+                    unbondingPeriod = pluralReference(
+                        id = R.plurals.common_days,
+                        count = unbondingPeriod,
+                        formatArgs = wrappedList(unbondingPeriod),
+                    ),
                 )
             }
         }
