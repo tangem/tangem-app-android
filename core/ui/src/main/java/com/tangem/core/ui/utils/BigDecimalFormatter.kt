@@ -220,8 +220,8 @@ object BigDecimalFormatter {
     }
 
     /**
-     * Adds a proper currency sign for the provided [amount]
-     * ex. '10.0" -> "$10.0"
+     * Adds a proper currency sign for the provided formatted [amount]
+     * ex. '10.0k" -> "$10.0k", "string" -> "$string"
      */
     fun addCurrencySymbolToStringAmount(
         amount: String,
