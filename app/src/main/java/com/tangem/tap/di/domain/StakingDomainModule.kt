@@ -87,11 +87,23 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideCreateEnterActionUseCase(
+    fun provideInitializeStakingProcessUseCase(
         stakingRepository: StakingRepository,
         stakingErrorResolver: StakingErrorResolver,
-    ): InitializeStakingProcessUseCase {
-        return InitializeStakingProcessUseCase(
+    ): GetStakingTransactionUseCase {
+        return GetStakingTransactionUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGasEstimateUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): EstimateGasUseCase {
+        return EstimateGasUseCase(
             stakingRepository = stakingRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
