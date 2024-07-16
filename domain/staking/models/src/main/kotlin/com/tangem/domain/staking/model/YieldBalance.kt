@@ -1,5 +1,6 @@
 package com.tangem.domain.staking.model
 
+import com.tangem.domain.staking.model.action.StakingActionType
 import java.math.BigDecimal
 
 sealed class YieldBalance {
@@ -36,7 +37,40 @@ data class BalanceItem(
     val pricePerShare: BigDecimal,
     val rawCurrencyId: String?,
     val validatorAddress: String?,
+    val pendingActions: List<PendingAction>,
 )
+
+data class PendingAction(
+    val type: StakingActionType,
+    val passthrough: String,
+    val args: PendingActionArgs?,
+) {
+    data class PendingActionArgs(
+        val amount: Amount?,
+        val duration: Duration?,
+        val validatorAddress: Boolean?,
+        val validatorAddresses: Boolean?,
+        val tronResource: TronResource?,
+        val signatureVerification: Boolean?,
+    ) {
+        data class Amount(
+            val required: Boolean,
+            val minimum: BigDecimal?,
+            val maximum: BigDecimal?,
+        )
+
+        data class Duration(
+            val required: Boolean,
+            val minimum: Int?,
+            val maximum: Int?,
+        )
+
+        data class TronResource(
+            val required: Boolean,
+            val options: List<String>,
+        )
+    }
+}
 
 enum class BalanceType {
     AVAILABLE,
