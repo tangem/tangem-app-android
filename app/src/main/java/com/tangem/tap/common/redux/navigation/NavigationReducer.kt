@@ -30,7 +30,7 @@ private fun internalReduce(action: Action, state: AppState): NavigationState {
             when {
                 // Destroy the activity if it invoked for the same activity. Prevents overwriting to null if there is a
                 // new scan from the background [REDACTED_TASK_KEY]
-                navState.activity?.get() == navigationAction.activity.get() -> navState.copy(activity = null)
+                navState.activity?.get() == navigationAction.activity.get() -> NavigationState()
                 else -> navState
             }
         }
