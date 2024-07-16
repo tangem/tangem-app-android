@@ -365,6 +365,7 @@ internal class TokensListViewModel @Inject constructor(
                     router.openUnableHideMainTokenAlert(
                         tokenName = blockchain.name,
                         tokenSymbol = blockchain.currency,
+                        networkName = blockchain.fullName,
                     )
                 } else if (isAddedOnMainScreen) {
                     router.openRemoveWalletAlert(
