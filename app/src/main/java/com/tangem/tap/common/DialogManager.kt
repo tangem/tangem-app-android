@@ -139,8 +139,9 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
                 message = context.getString(
                     state.dialog.messageRes,
-                    state.dialog.currencySymbol,
                     state.dialog.currencyTitle,
+                    state.dialog.currencySymbol,
+                    state.dialog.networkName,
                 ),
                 context = context,
             )
