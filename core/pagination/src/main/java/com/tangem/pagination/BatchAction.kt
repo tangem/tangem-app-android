@@ -1,5 +1,7 @@
 package com.tangem.pagination
 
+import java.util.UUID
+
 /**
  * Action that can be dispatched to [BatchListSource].
  *
@@ -7,7 +9,7 @@ package com.tangem.pagination
  * @param TKey type of the key of the batch.
  * @param TUpdate type of the update request.
  */
-sealed class BatchAction<TKey, TRequestParams, TUpdate> {
+sealed class BatchAction<out TKey, out TRequestParams, out TUpdate> {
 
     /**
      * Action to load the first batch.
@@ -34,10 +36,18 @@ sealed class BatchAction<TKey, TRequestParams, TUpdate> {
      *
      * @param keys keys of the batches to update.
      * @param updateRequest request to update the batches.
+     * @param async true if the request doesn't require to synchronize on specific batches in order to fetch update
+     * data, this request will be delegated to fetchAsync method in [BatchUpdateFetcher],
+     * false if request requires to hold the current batches data until fetch + update is completed
+     * @param operationId the unique identifier of the request.
+     * Only one request with the same hash can be executed at a time,
+     * the rest of the requests will be canceled as long as there is a request with this hash in progress.
      */
     class UpdateBatches<TKey, TUpdate>(
         val keys: Set<TKey>,
         val updateRequest: TUpdate,
+        val async: Boolean = false,
+        val operationId: String = UUID.randomUUID().toString(),
     ) : BatchAction<TKey, Nothing, TUpdate>()
 
     /**
