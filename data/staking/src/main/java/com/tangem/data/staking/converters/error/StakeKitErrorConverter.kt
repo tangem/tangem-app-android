@@ -18,7 +18,7 @@ internal class StakeKitErrorConverter(
 
             if (stakeKitErrorResponse.type == AccessDeniedErrorTypeDTO.GEO_LOCATION) {
                 StakingError.UnavailableDueToGeolocationError(
-                    tags = stakeKitErrorResponse.tags ?: emptyList()
+                    tags = stakeKitErrorResponse.tags ?: emptyList(),
                 )
             }
 

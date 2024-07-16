@@ -85,7 +85,7 @@ sealed class StakingError {
     data object GRTStakingDisabledLedgerLiveError : StakingError()
 
     data class UnavailableDueToGeolocationError(
-        val tags: List<String>
+        val tags: List<String>,
     ) : StakingError()
 
     // endregion
