@@ -75,7 +75,10 @@ internal object TransactionDomainModule {
     @Provides
     @Singleton
     fun provideEstimateFeeUseCase(walletManagersFacade: WalletManagersFacade): EstimateFeeUseCase {
-        return EstimateFeeUseCase(walletManagersFacade)
+        return EstimateFeeUseCase(
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig(),
+        )
     }
 
     @Provides
