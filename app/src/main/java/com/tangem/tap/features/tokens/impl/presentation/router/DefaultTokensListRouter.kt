@@ -29,9 +29,13 @@ internal class DefaultTokensListRouter : TokensListRouter {
         store.dispatchNotification(R.string.contract_address_copied_message)
     }
 
-    override fun openUnableHideMainTokenAlert(tokenName: String, tokenSymbol: String) {
+    override fun openUnableHideMainTokenAlert(tokenName: String, tokenSymbol: String, networkName: String) {
         store.dispatchDialogShow(
-            dialog = AppDialog.TokensAreLinkedDialog(currencyTitle = tokenName, currencySymbol = tokenSymbol),
+            dialog = AppDialog.TokensAreLinkedDialog(
+                currencyTitle = tokenName,
+                currencySymbol = tokenSymbol,
+                networkName = networkName,
+            ),
         )
     }
 
