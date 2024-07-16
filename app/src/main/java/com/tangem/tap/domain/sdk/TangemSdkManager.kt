@@ -33,6 +33,10 @@ interface TangemSdkManager {
 
     val userCodeRequestPolicy: UserCodeRequestPolicy
 
+    suspend fun checkCanUseBiometry(awaitInitialization: Boolean = true): Boolean
+
+    suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean = true): Boolean
+
     suspend fun scanProduct(
         cardId: String? = null,
         messageRes: Int? = null,
