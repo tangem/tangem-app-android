@@ -155,6 +155,7 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                     amountState = uiState.amountState,
                     state = uiState.confirmationState,
                     clickIntents = uiState.clickIntents,
+                    type = uiState.routeType,
                 )
                 StakingStep.Validators -> {
                     val confirmState = uiState.confirmationState
