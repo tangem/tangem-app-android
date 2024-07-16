@@ -51,11 +51,17 @@ interface StakeKitApi {
     @POST("actions/exit")
     suspend fun createExitAction(@Body body: ActionRequestBody): ApiResponse<EnterActionResponse>
 
+    @POST("actions/pending")
+    suspend fun createPendingAction(@Body body: PendingActionRequestBody): ApiResponse<EnterActionResponse>
+
     @POST("actions/enter/estimate-gas")
     suspend fun estimateGasOnEnter(@Body body: ActionRequestBody): ApiResponse<StakingGasEstimateDTO>
 
     @POST("actions/exit/estimate-gas")
     suspend fun estimateGasOnExit(@Body body: ActionRequestBody): ApiResponse<StakingGasEstimateDTO>
+
+    @POST("actions/pending/estimate-gas")
+    suspend fun estimateGasOnPending(@Body body: PendingActionRequestBody): ApiResponse<StakingGasEstimateDTO>
 
     @PATCH("transactions/{transactionId}")
     suspend fun constructTransaction(
