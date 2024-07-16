@@ -39,6 +39,7 @@
   <string name="biometric_lockout_warning_title">Too many attempts</string>
   <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
   <string name="button_start_backup_process">Start backup process</string>
+  <string name="buy_token_description">From your fiat card or bank account</string>
   <plurals name="card_label_card_count">
     <item quantity="one">%d card</item>
     <item quantity="other">%d cards</item>
@@ -87,6 +88,10 @@
   <string name="common_copy_address">Copy address</string>
   <string name="common_create">Create</string>
   <string name="common_custom">Custom</string>
+  <plurals name="common_days">
+    <item quantity="one">%d day</item>
+    <item quantity="other">%d days</item>
+  </plurals>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
   <string name="common_done">Done</string>
@@ -257,6 +262,7 @@
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>
+  <string name="exсhange_token_description">From another currency in your wallet</string>
   <string name="feedback_data_collection_message">The following information is optional. You can erase it if you don\'t want to share it.</string>
   <string name="feedback_preface_rate_negative">Tell us what functions you are missing, and we will try to help you.</string>
   <string name="feedback_preface_scan_failed">Please tell us what card do you have</string>
@@ -329,10 +335,12 @@
   <string name="markets_add_to_my_portfolio_description">To start buying, exchanging or receiving this asset, add this token to at least 1 network</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is not available</string>
   <string name="markets_add_to_portfolio_button">Add to portfolio</string>
+  <string name="markets_add_token">Add token</string>
   <string name="markets_available_networks">Available networks</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
   <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you need to attach a Tangem card</string>
+  <string name="markets_quick_actions">Quick actions</string>
   <string name="markets_select_network">Select network</string>
   <string name="markets_select_wallet">Select wallet</string>
   <string name="markets_selector_interval_1m_title">1m</string>
@@ -348,6 +356,7 @@
   <string name="markets_sort_by_top_gainers_title">Top Gainers</string>
   <string name="markets_sort_by_top_losers_title">Top losers</string>
   <string name="markets_sort_by_trending_title">Trending</string>
+  <string name="markets_token_details_about_token_title">About %s</string>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="one">Based on %d rating</item>
     <item quantity="other">Based on %d ratings</item>
@@ -486,6 +495,7 @@
   <string name="qr_scanner_camera_denied_title">Camera access denied</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message_full">Send only %s to this address. Sending any other currency will result in its irreversible loss.</string>
+  <string name="receive_token_description">Show QR-code or share your address</string>
   <string name="referral_button_participate">Participate</string>
   <string name="referral_error_failed_to_load_info">Failed to load the information about the referral program. Please try again later.</string>
   <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Error code: %s. Please try again later.</string>
