@@ -1,16 +1,14 @@
 package com.tangem.domain.staking.repositories
 
-import com.tangem.domain.staking.model.StakingAvailability
-import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.Yield
-import com.tangem.domain.staking.model.action.EnterAction
-import com.tangem.domain.staking.model.transaction.StakingTransaction
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.staking.model.*
-import com.tangem.domain.staking.model.transaction.StakingGasEstimate
+import com.tangem.domain.staking.model.action.StakingAction
 import com.tangem.domain.staking.model.transaction.ActionParams
+import com.tangem.domain.staking.model.transaction.StakingGasEstimate
+import com.tangem.domain.staking.model.transaction.StakingTransaction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -60,7 +58,7 @@ interface StakingRepository {
         addresses: List<CryptoCurrencyAddress>,
     ): YieldBalanceList
 
-    suspend fun createEnterAction(params: ActionParams): EnterAction
+    suspend fun createAction(params: ActionParams): StakingAction
 
     suspend fun estimateGas(params: ActionParams): StakingGasEstimate
 
@@ -71,4 +69,7 @@ interface StakingRepository {
     suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata)
 
     suspend fun sendUnsubmittedHashes()
+
+    /** Returns whether additional staking is possible if there is already active staking */
+    fun isStakeMoreAvailable(networkId: Network.ID): Boolean
 }

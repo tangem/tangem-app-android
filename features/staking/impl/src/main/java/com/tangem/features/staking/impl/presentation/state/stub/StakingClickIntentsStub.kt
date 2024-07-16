@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state.stub
 
 import com.tangem.domain.staking.model.Yield
+import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 
@@ -35,4 +36,6 @@ object StakingClickIntentsStub : StakingClickIntents {
     override fun onExploreClick() {}
 
     override fun onShareClick() {}
+
+    override fun onActiveStake(activeStake: BalanceState) {}
 }
