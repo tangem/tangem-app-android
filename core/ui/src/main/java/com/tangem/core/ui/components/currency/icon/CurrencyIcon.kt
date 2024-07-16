@@ -12,9 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
-import com.tangem.core.ui.utils.GrayscaleColorFilter
-import com.tangem.core.ui.utils.NORMAL_ALPHA
+import com.tangem.core.ui.utils.getGreyScaleColorFilter
 
 /**
  * Cryptocurrency icon with network badge
@@ -76,11 +74,7 @@ private fun BoxScope.ContentIconContainer(
 ) {
     val networkBadgeOffset = TangemTheme.dimens.spacing4
     val (alpha, colorFilter) = remember(icon.isGrayscale) {
-        if (icon.isGrayscale) {
-            GRAY_SCALE_ALPHA to GrayscaleColorFilter
-        } else {
-            NORMAL_ALPHA to null
-        }
+        getGreyScaleColorFilter(icon.isGrayscale)
     }
 
     ContentIcon(
