@@ -219,5 +219,28 @@ object BigDecimalFormatter {
             }
     }
 
+    fun formatStringAmount(
+        amount: String,
+        fiatCurrencyCode: String,
+        fiatCurrencySymbol: String,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        val sampleAmount = BigDecimal.TEN
+        val currency = getCurrency(fiatCurrencyCode)
+        val formatterCurrency = getCurrency(fiatCurrencyCode)
+
+        val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+            maximumFractionDigits = 0
+            minimumFractionDigits = 0
+            this.currency = currency
+        }
+
+        val formatted = formatter.format(sampleAmount)
+            .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+            .replace(sampleAmount.toString(), amount)
+
+        return formatted
+    }
+
     private fun BigDecimal.isLessThanThreshold() = this > BigDecimal.ZERO && this < FIAT_FORMAT_THRESHOLD
 }

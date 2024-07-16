@@ -142,6 +142,7 @@ class NetworkModule {
             context = context,
             appVersionProvider = appVersionProvider,
             baseUrl = DEV_V1_TANGEM_TECH_BASE_URL,
+            extendedTimeoutSeconds = TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS,
             requestHeaders = listOf(AppVersionPlatformHeaders(appVersionProvider)),
         )
     }
@@ -152,12 +153,22 @@ class NetworkModule {
         appVersionProvider: AppVersionProvider,
         baseUrl: String,
         timeoutSeconds: Long? = null,
+        extendedTimeoutSeconds: Long? = null,
         requestHeaders: List<RequestHeader> = listOf(CacheControlHeader, AppVersionPlatformHeaders(appVersionProvider)),
     ): T {
         val client = OkHttpClient.Builder()
             .let { builder ->
-                if (timeoutSeconds != null) {
+                if (timeoutSeconds != null && extendedTimeoutSeconds == null) {
                     builder.callTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                } else {
+                    builder
+                }
+            }
+            .let { builder ->
+                if (extendedTimeoutSeconds != null) {
+                    builder.callTimeout(extendedTimeoutSeconds, TimeUnit.SECONDS)
+                    builder.connectTimeout(extendedTimeoutSeconds, TimeUnit.SECONDS)
+                    builder.readTimeout(extendedTimeoutSeconds, TimeUnit.SECONDS)
                 } else {
                     builder
                 }
@@ -191,5 +202,6 @@ class NetworkModule {
         const val PROD_V2_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v2/"
 
         const val TANGEM_TECH_SERVICE_TIMEOUT_SECONDS = 5L
+        const val TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS = 60L
     }
 }
