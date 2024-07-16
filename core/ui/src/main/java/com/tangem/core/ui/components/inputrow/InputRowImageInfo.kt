@@ -32,6 +32,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param imageUrl icon to load
  * @param subtitleColor subtitle text color
  * @param captionColor caption text color
+ * @param isGrayscaleImage whether to display grayscale image
  */
 @Suppress("LongParameterList")
 @Composable
@@ -45,6 +46,7 @@ fun InputRowImageInfo(
     title: TextReference? = null,
     subtitleColor: Color = TangemTheme.colors.text.primary1,
     captionColor: Color = TangemTheme.colors.text.tertiary,
+    isGrayscaleImage: Boolean = false,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
@@ -64,6 +66,7 @@ fun InputRowImageInfo(
             imageUrl = imageUrl,
             subtitleColor = subtitleColor,
             captionColor = captionColor,
+            isGrayscaleImage = isGrayscaleImage,
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
