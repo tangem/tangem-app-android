@@ -1,11 +1,8 @@
 package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
-import arrow.core.left
 import arrow.core.raise.either
-import arrow.core.right
-import com.tangem.common.doOnFailure
-import com.tangem.common.doOnSuccess
+import com.tangem.common.CompletionResult
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UpdateWalletError
 import com.tangem.domain.wallets.models.UserWallet
@@ -23,13 +20,10 @@ class UpdateWalletUseCase(private val userWalletsListManager: UserWalletsListMan
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         update: suspend (UserWallet) -> UserWallet,
-    ): Either<UpdateWalletError, UserWallet> {
-        return either {
-            userWalletsListManager.update(userWalletId, update)
-                .doOnSuccess { return it.right() }
-                .doOnFailure { return UpdateWalletError.DataError.left() }
-
-            return UpdateWalletError.DataError.left()
+    ): Either<UpdateWalletError, UserWallet> = either {
+        when (val result = userWalletsListManager.update(userWalletId, update)) {
+            is CompletionResult.Failure -> raise(UpdateWalletError.DataError(result.error))
+            is CompletionResult.Success -> result.data
         }
     }
 }

@@ -15,7 +15,7 @@ internal class PreviewRenameWalletComponent : RenameWalletComponent {
         onConfirm = {},
     )
 
-    override val doOnDismiss: () -> Unit = {}
+    override fun dismiss() {}
 
     @Composable
     override fun Dialog() {
