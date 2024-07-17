@@ -1,5 +1,6 @@
 package com.tangem.pagination
 
+import com.tangem.pagination.exception.OperationWIthTheSameIdInProgress
 import com.tangem.pagination.fetcher.BatchFetcher
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
@@ -59,6 +60,7 @@ fun <TKey, TData, TRequestParams : Any, TUpdate> BatchListSource(
 ): BatchListSource<TKey, TData, TUpdate> =
     DefaultBatchListSource(fetchDispatcher, context, generateNewKey, batchFetcher, updateFetcher)
 
+@Suppress("LargeClass")
 private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>(
     private val fetchDispatcher: CoroutineDispatcher,
     private val context: BatchingContext<TKey, TRequestParams, TUpdate>,
@@ -90,19 +92,21 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                 awaitCancellation()
             } finally {
                 withContext(NonCancellable) {
+                    stopAllUpdates()
                     loadMoreActionJob = null
                     loadMoreActionJob = null
                     lastRequestResult.value = null
-                    stopAllUpdates()
                     state.value = BatchListState(emptyList(), PaginationStatus.None)
                 }
             }
         }
 
         scope.launch {
-            context.actionsFlow.collect { action ->
-                collectActions(action)
-            }
+            context.actionsFlow
+                .conflate()
+                .collect { action ->
+                    collectActions(action)
+                }
         }
     }
 
@@ -113,7 +117,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                 loadMoreActionJob?.cancel()
                 reloadActionJob?.cancel()
                 stopAllUpdates()
-                reloadActionJob = scope.launch(fetchDispatcher) {
+                reloadActionJob = scope.launchFetch {
                     reloadTask(action)
                 }
             }
@@ -122,15 +126,25 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                     return
                 }
 
-                loadMoreActionJob = scope.launch(fetchDispatcher) {
+                loadMoreActionJob = scope.launchFetch {
                     reloadActionJob?.join()
                     loadMoreTask(action)
                 }
             }
             is BatchAction.UpdateBatches -> {
+                if (reloadActionJob?.isActive == true) {
+                    return
+                }
+
                 if (updateFetcher == null) return
                 // If the request with the same operationId is in progress, skip the request
-                if (updateInProgressExists(action.operationId)) return
+                if (updateInProgressExists(action.operationId)) {
+                    updateResults.tryEmit(
+                        action.updateRequest to BatchUpdateResult.Error(
+                            OperationWIthTheSameIdInProgress(action.operationId),
+                        ),
+                    )
+                }
 
                 if (action.async) {
                     collectAsyncUpdateAction(action)
@@ -140,6 +154,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
             }
             BatchAction.CancelAllUpdates -> {
                 if (updateFetcher == null) return
+
                 stopAllUpdates()
             }
             is BatchAction.CancelUpdates -> {
@@ -154,9 +169,10 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
     }
 
     private fun collectAsyncUpdateAction(action: BatchAction.UpdateBatches<TKey, TUpdate>) {
-        val job = scope.launch(fetchDispatcher) {
+        val job = scope.launchFetch {
             updateBatchesAsyncTask(action)
         }
+
         val actionJob = action to job
 
         updateAsyncJobs.update { it + actionJob }
@@ -172,7 +188,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
     private fun collectSyncUpdateAction(action: BatchAction.UpdateBatches<TKey, TUpdate>) {
         // Lazily start a job so we can avoid batch update collisions
         // by waiting for other tasks with the same keys to complete
-        val job = scope.launch(fetchDispatcher, start = CoroutineStart.LAZY) {
+        val job = scope.launchFetch(start = CoroutineStart.LAZY) {
             updateBatchesTask(action)
         }
 
@@ -180,7 +196,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
         waitingUpdateJobs.update { it + actionJob }
 
-        scope.launch(fetchDispatcher) {
+        scope.launchFetch {
             // Wait for other update tasks that mutate batches with the same keys
             updateJobs.first { workingJobs ->
                 action.keys.intersect(workingJobs.map { it.first.keys }.flatten().toSet()).isEmpty()
@@ -216,6 +232,8 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
             currentCoroutineContext().ensureActive()
             BatchFetchResult.Error(it)
         }
+
+        currentCoroutineContext().ensureActive()
 
         state.value = when (res) {
             is BatchFetchResult.Success -> {
@@ -306,9 +324,10 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                 updateRequest = action.updateRequest,
             )
         } catch (t: Throwable) {
-            currentCoroutineContext().ensureActive()
             BatchUpdateResult.Error(t)
         }
+
+        currentCoroutineContext().ensureActive()
 
         if (result is BatchUpdateResult.Success) {
             state.update { currentState ->
@@ -333,7 +352,13 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         val updateContext = UpdateContext(request = action.updateRequest, action.keys)
 
         with(updateFetcher) {
-            updateContext.fetchUpdateAsync(batchesToUpdate, action.updateRequest)
+            runCatching {
+                updateContext.fetchUpdateAsync(batchesToUpdate, action.updateRequest).also {
+                    currentCoroutineContext().ensureActive()
+                }
+            }.getOrElse {
+                updateResults.emit(action.updateRequest to BatchUpdateResult.Error(it))
+            }
         }
     }
 
@@ -342,6 +367,8 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         object : BatchUpdateFetcher.UpdateContext<TKey, TData> {
 
             override suspend fun update(update: List<Batch<TKey, TData>>.() -> BatchUpdateResult<TKey, TData>) {
+                currentCoroutineContext().ensureActive()
+
                 val stateToFetchUpdateBasedOn = state.value.data.filter {
                     keysToUpdate.contains(it.key)
                 }
@@ -349,7 +376,6 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                 val result = runCatching {
                     stateToFetchUpdateBasedOn.update()
                 }.getOrElse {
-                    currentCoroutineContext().ensureActive()
                     BatchUpdateResult.Error(it)
                 }
 
@@ -429,5 +455,12 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                 }
             }
         }
+    }
+
+    private fun CoroutineScope.launchFetch(
+        start: CoroutineStart = CoroutineStart.DEFAULT,
+        block: suspend CoroutineScope.() -> Unit,
+    ): Job {
+        return launch(context = fetchDispatcher + SupervisorJob(), start = start, block = block)
     }
 }
