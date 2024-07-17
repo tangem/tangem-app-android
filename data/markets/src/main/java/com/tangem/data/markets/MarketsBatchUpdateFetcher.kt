@@ -63,11 +63,13 @@ internal class MarketsBatchUpdateFetcher(
                 }
             }
             is TokenMarketUpdateRequest.UpdateQuotes -> {
-                val quotesRes = tangemTechApi.getQuotes(
-                    currencyId = updateRequest.currencyId,
-                    coinIds = idsToUpdate.joinToString(separator = ","),
-                    fields = quoteFields.joinToString(separator = ","),
-                ).getOrThrow()
+                val quotesRes = retryOnError {
+                    tangemTechApi.getQuotes(
+                        currencyId = updateRequest.currencyId,
+                        coinIds = idsToUpdate.map { it.second }.flatten().joinToString(separator = ","),
+                        fields = quoteFields.joinToString(separator = ","),
+                    ).getOrThrow()
+                }
 
                 update {
                     val res = toUpdate.map { batch ->
