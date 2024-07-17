@@ -1,6 +1,7 @@
 package com.tangem.features.markets.ui.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -11,6 +12,7 @@ internal data class MarketsListUM(
     val list: ListUM,
     val searchBar: SearchBarUM,
     val selectedSortBy: SortByTypeUM,
+    val sortByBottomSheet: TangemBottomSheetConfig,
     val selectedInterval: TrendInterval,
     val onIntervalClick: (TrendInterval) -> Unit,
     val onSortByButtonClick: () -> Unit,
@@ -35,6 +37,8 @@ sealed class ListUM {
 
     data class Content(
         val items: ImmutableList<MarketsListItemUM>,
+        val loadMore: () -> Unit,
+        val visibleIdsChanged: (List<String>) -> Unit,
     ) : ListUM()
 
     data object Loading : ListUM()
