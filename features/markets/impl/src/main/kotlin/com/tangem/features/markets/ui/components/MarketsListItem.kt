@@ -48,9 +48,6 @@ import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.ui.entity.MarketsListItemUM
 import com.tangem.features.markets.ui.preview.MarketChartListItemPreviewDataProvider
 import com.tangem.utils.StringsSigns.MINUS
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -335,22 +332,18 @@ private fun TokenPriceText(price: String, modifier: Modifier = Modifier, priceCh
 
     val color = remember { Animatable(generalColor) }
 
-    LaunchedEffect(price, growColor, fallColor, generalColor) {
-        snapshotFlow { price }
-            .drop(1)
-            .distinctUntilChanged()
-            .collectLatest {
-                val nextColor = when (priceChangeType) {
-                    PriceChangeType.NEUTRAL,
-                    PriceChangeType.UP,
-                    -> growColor
-                    PriceChangeType.DOWN -> fallColor
-                    null -> generalColor
-                }
-
-                color.animateTo(nextColor, snap())
-                color.animateTo(generalColor, tween(durationMillis = 500))
+    LaunchedEffect(price) {
+        if (priceChangeType != null) {
+            val nextColor = when (priceChangeType) {
+                PriceChangeType.UP,
+                -> growColor
+                PriceChangeType.DOWN -> fallColor
+                PriceChangeType.NEUTRAL -> return@LaunchedEffect
             }
+
+            color.animateTo(nextColor, snap())
+            color.animateTo(generalColor, tween(durationMillis = 500))
+        }
     }
 
     Text(
@@ -369,7 +362,7 @@ private fun Chart(chartType: MarketChartLook.Type, chartRawData: MarketChartRawD
     Box(
         modifier = Modifier
             .padding(vertical = TangemTheme.dimens.spacing2)
-            .size(height = TangemTheme.dimens.size32, width = chartWidth),
+            .size(height = TangemTheme.dimens.size24, width = chartWidth),
     ) {
         if (chartRawData != null) {
             MarketChartMini(
