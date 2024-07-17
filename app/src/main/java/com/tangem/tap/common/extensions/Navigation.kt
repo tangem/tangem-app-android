@@ -8,6 +8,15 @@ import com.tangem.wallet.R
 import timber.log.Timber
 
 fun FragmentManager.showFragmentAllowingStateLoss(name: String, fragmentProvider: Provider<Fragment>) {
+    if (backStackEntryCount > 0) {
+        val currentFragmentName = getBackStackEntryAt(backStackEntryCount - 1).name
+
+        if (name == currentFragmentName) {
+            Timber.d("Fragment $name is already at the top of the stack")
+            return
+        }
+    }
+
     Timber.d("Showing $name route")
 
     val isPoppedBack = popBackStackImmediate(name, 0)
