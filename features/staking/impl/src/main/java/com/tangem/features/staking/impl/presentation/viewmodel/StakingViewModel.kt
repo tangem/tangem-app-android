@@ -217,6 +217,10 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onNextClick()
     }
 
+    override fun onActiveStake(activeStake: BalanceState) {
+        // todo unstake
+    }
+
     override fun onExploreClick() {
         val confirmationDataState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
         val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content

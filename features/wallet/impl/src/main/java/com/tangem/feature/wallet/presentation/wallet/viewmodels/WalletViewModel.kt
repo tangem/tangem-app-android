@@ -7,8 +7,8 @@ import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.settings.*
+import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -29,6 +29,7 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
+import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -151,7 +152,8 @@ internal class WalletViewModel @Inject constructor(
         viewModelScope.launch {
             val isPushToggled = pushNotificationsFeatureToggles.isPushNotificationsEnabled
             val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
-            if (!isPushToggled || !shouldRequestPush) return@launch
+            val isPushPermissionAvailable = getPushPermissionOrNull() != null
+            if (!isPushToggled || !shouldRequestPush || !isPushPermissionAvailable) return@launch
 
             delay(timeMillis = 1_800)
 
