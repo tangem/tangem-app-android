@@ -1,11 +1,16 @@
 package com.tangem.feature.referral.viewmodels
 
+import android.os.Bundle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.referral.analytics.ReferralEvents
 import com.tangem.feature.referral.domain.ReferralInteractor
 import com.tangem.feature.referral.domain.models.DiscountType
@@ -29,14 +34,19 @@ internal class ReferralViewModel @Inject constructor(
     private val referralInteractor: ReferralInteractor,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    var uiState: ReferralStateHolder by mutableStateOf(createInitiallyUiState())
-        private set
+    private val userWalletId = savedStateHandle.get<Bundle>(AppRoute.ReferralProgram.USER_WALLET_ID_KEY)
+        ?.unbundle(UserWalletId.serializer())
+        ?: error("User wallet ID is required for Referral screen")
 
     private var referralRouter: ReferralRouter by Delegates.notNull()
 
     private var lastReferralData: ReferralData? = null
+
+    var uiState: ReferralStateHolder by mutableStateOf(createInitiallyUiState())
+        private set
 
     init {
         loadReferralData()
@@ -66,7 +76,7 @@ internal class ReferralViewModel @Inject constructor(
         uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
-                referralInteractor.getReferralStatus().apply {
+                referralInteractor.getReferralStatus(userWalletId).apply {
                     lastReferralData = this
                 }
             }
@@ -82,7 +92,7 @@ internal class ReferralViewModel @Inject constructor(
             analyticsEventHandler.send(ReferralEvents.ClickParticipate)
             uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
             viewModelScope.launch(dispatchers.main) {
-                runCatching(dispatchers.io) { referralInteractor.startReferral() }
+                runCatching(dispatchers.io) { referralInteractor.startReferral(userWalletId) }
                     .onSuccess(::showContent)
                     .onFailure { throwable ->
                         if (throwable is UserCancelledException) {
