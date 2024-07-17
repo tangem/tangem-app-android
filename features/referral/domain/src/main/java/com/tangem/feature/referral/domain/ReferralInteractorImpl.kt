@@ -3,7 +3,8 @@ package com.tangem.feature.referral.domain
 import arrow.core.getOrElse
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.TokenData
 import com.tangem.lib.crypto.UserWalletManager
@@ -14,7 +15,7 @@ internal class ReferralInteractorImpl(
     private val repository: ReferralRepository,
     private val userWalletManager: UserWalletManager,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
-    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
 ) : ReferralInteractor {
 
@@ -22,20 +23,20 @@ internal class ReferralInteractorImpl(
 
     override val isDemoMode: Boolean get() = repository.isDemoMode
 
-    override suspend fun getReferralStatus(): ReferralData {
-        val referralData = repository.getReferralData(userWalletManager.getWalletId())
+    override suspend fun getReferralStatus(userWalletId: UserWalletId): ReferralData {
+        val referralData = repository.getReferralData(userWalletId.stringValue)
 
         saveReferralTokens(referralData.tokens)
 
         return referralData
     }
 
-    override suspend fun startReferral(): ReferralData {
+    override suspend fun startReferral(userWalletId: UserWalletId): ReferralData {
         if (tokensForReferral.isEmpty()) error("Tokens for ref is empty")
 
         val tokenData = tokensForReferral.first()
-        val userWallet = getSelectedWalletSyncUseCase().getOrElse {
-            error("Failed to get selected wallet: $it")
+        val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
+            error("Failed to get user wallet $userWalletId: $it")
         }
 
         val cryptoCurrency = repository.getCryptoCurrency(userWalletId = userWallet.walletId, tokenData = tokenData)
