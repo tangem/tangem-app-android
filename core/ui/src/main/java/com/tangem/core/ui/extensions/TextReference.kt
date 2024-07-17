@@ -9,6 +9,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.AnnotatedString.Builder
 import androidx.compose.ui.text.buildAnnotatedString
 import org.intellij.markdown.MarkdownElementTypes
 import kotlin.contracts.ExperimentalContracts
@@ -98,6 +99,17 @@ fun stringReference(value: String): TextReference {
  */
 fun annotatedReference(value: AnnotatedString): TextReference {
     return TextReference.Annotated(value)
+}
+
+/**
+ * Creates a [TextReference] using an annotated string value.
+ *
+ * @param onAnnotated The annotated string builder.
+ * @return A [TextReference] representing the provided annotated string value.
+ */
+@Composable
+inline fun annotatedReference(onAnnotated: Builder.() -> Unit): TextReference {
+    return TextReference.Annotated(buildAnnotatedString { onAnnotated() })
 }
 
 /**

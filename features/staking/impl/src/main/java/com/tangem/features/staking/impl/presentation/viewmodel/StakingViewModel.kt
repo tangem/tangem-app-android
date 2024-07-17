@@ -14,10 +14,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.staking.GetStakingTransactionUseCase
-import com.tangem.domain.staking.EstimateGasUseCase
-import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
-import com.tangem.domain.staking.SubmitHashUseCase
+import com.tangem.domain.staking.*
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.staking.model.action.StakingActionCommonType
 import com.tangem.domain.staking.model.transaction.ActionParams
@@ -32,10 +29,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.*
-import com.tangem.features.staking.impl.presentation.state.StakingStateController
-import com.tangem.features.staking.impl.presentation.state.StakingStateRouter
-import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountChangeStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountCurrencyChangeStateTransformer
@@ -66,6 +59,7 @@ internal class StakingViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
     private val submitHashUseCase: SubmitHashUseCase,
+    private val isStakeMoreAvailableUseCase: IsStakeMoreAvailableUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
 
@@ -117,15 +111,26 @@ internal class StakingViewModel @Inject constructor(
             viewModelScope.launch {
                 stateController.update(SetConfirmationStateInProgressTransformer())
 
+                val confirmationState =
+                    value.confirmationState as? StakingStates.ConfirmationState.Data ?: error("No confirmation state")
+                val validatorState = confirmationState.validatorState as? ValidatorState.Content
+                    ?: error("No validator provided")
+
+                val actionType = when (value.routeType) {
+                    RouteType.STAKE -> StakingActionCommonType.ENTER
+                    RouteType.UNSTAKE -> StakingActionCommonType.EXIT
+                    RouteType.CLAIM -> TODO()
+                }
+
                 val stakingTransaction = getStakingTransactionUseCase(
                     params = ActionParams(
-                        actionCommonType = StakingActionCommonType.ENTER,
+                        actionCommonType = actionType,
                         integrationId = yield.id,
                         amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
                             ?: error("No amount provided"),
                         address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
                             ?: error("No available address"),
-                        validatorAddress = yield.validators.getOrNull(0)?.address ?: error("No available validator"),
+                        validatorAddress = validatorState.chosenValidator.address,
                         token = yield.token,
                     ),
                 ).getOrElse {
@@ -151,9 +156,15 @@ internal class StakingViewModel @Inject constructor(
                 ),
             )
 
+            val actionType = when (value.routeType) {
+                RouteType.STAKE -> StakingActionCommonType.ENTER
+                RouteType.UNSTAKE -> StakingActionCommonType.EXIT
+                RouteType.CLAIM -> TODO()
+            }
+
             val stakingGasEstimate = estimateGasUseCase(
                 params = ActionParams(
-                    actionCommonType = StakingActionCommonType.ENTER,
+                    actionCommonType = actionType,
                     integrationId = yield.id,
                     amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
                         ?: error("No amount provided"),
@@ -209,16 +220,19 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun openRewardsValidators() {
-        stakingStateRouter.showRewardsValidators()
+        stateController.update { it.copy(routeType = RouteType.CLAIM) }
+        onNextClick()
     }
 
     override fun selectRewardValidator(rewardValue: String) {
         stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, rewardValue))
-        stakingStateRouter.onNextClick()
+        onNextClick()
     }
 
     override fun onActiveStake(activeStake: BalanceState) {
-// [REDACTED_TODO_COMMENT]
+        stateController.update { it.copy(routeType = RouteType.UNSTAKE) }
+        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, activeStake.cryptoValue))
+        onNextClick()
     }
 
     override fun onExploreClick() {
@@ -253,10 +267,14 @@ internal class StakingViewModel @Inject constructor(
             getCryptoCurrencyStatusSyncUseCase(userWalletId, cryptoCurrencyId).fold(
                 ifRight = {
                     cryptoCurrencyStatus = it
+
+                    val networkId = cryptoCurrencyStatus.currency.network.id
+                    val isStakeMoreAvailable = isStakeMoreAvailableUseCase(networkId)
                     stateController.update(
                         transformer = SetInitialDataStateTransformer(
                             clickIntents = this@StakingViewModel,
                             yield = yield,
+                            isStakeMoreAvailable = isStakeMoreAvailable.getOrElse { false },
                             cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                             userWalletProvider = Provider { userWallet },
                             appCurrencyProvider = Provider { appCurrency },
