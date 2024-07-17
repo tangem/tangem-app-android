@@ -1,5 +1,7 @@
 package com.tangem.core.ui.res
 
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
@@ -50,6 +52,7 @@ fun TangemTheme(
             LocalHapticManager provides hapticManager,
             LocalSnackbarHostState provides snackbarHostState,
             LocalWindowSize provides windowSize,
+            LocalTextSelectionColors provides TangemTextSelectionColors,
         ) {
             CompositionLocalProvider(
                 LocalTangemShimmer provides TangemShimmer,
@@ -204,6 +207,12 @@ private fun darkThemeColors(): TangemColors {
         ),
     )
 }
+
+@Stable
+private val TangemTextSelectionColors = TextSelectionColors(
+    handleColor = TangemColorPalette.Azure,
+    backgroundColor = TangemColorPalette.Azure.copy(alpha = 0.4f),
+)
 
 private val LocalTangemColors = staticCompositionLocalOf<TangemColors> {
     error("No TangemColors provided")
