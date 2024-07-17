@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptyListOf
-import com.tangem.domain.staking.model.YieldBalance
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkAddress

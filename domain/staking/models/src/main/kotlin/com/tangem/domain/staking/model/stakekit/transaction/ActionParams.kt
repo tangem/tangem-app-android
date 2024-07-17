@@ -1,7 +1,7 @@
-package com.tangem.domain.staking.model.transaction
+package com.tangem.domain.staking.model.stakekit.transaction
 
-import com.tangem.domain.staking.model.Token
-import com.tangem.domain.staking.model.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.Token
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import java.math.BigDecimal
 
 data class ActionParams(

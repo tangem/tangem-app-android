@@ -3,7 +3,7 @@ package com.tangem.data.staking.converters.error
 import com.squareup.moshi.JsonAdapter
 import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorMessageDTO
 import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorResponse
-import com.tangem.domain.staking.model.StakingError
+import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.utils.converter.Converter
 
 internal class StakeKitErrorConverter(

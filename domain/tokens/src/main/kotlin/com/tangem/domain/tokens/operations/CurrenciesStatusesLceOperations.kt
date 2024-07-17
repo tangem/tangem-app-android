@@ -7,8 +7,8 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
-import com.tangem.domain.staking.model.YieldBalance
-import com.tangem.domain.staking.model.YieldBalanceList
+import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.*

@@ -1,4 +1,4 @@
-package com.tangem.domain.staking.model.transaction
+package com.tangem.domain.staking.model.stakekit.transaction
 
 enum class StakingTransactionStatus {
     NOT_FOUND,

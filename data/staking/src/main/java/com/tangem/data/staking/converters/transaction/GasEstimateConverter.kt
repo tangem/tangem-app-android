@@ -2,7 +2,7 @@ package com.tangem.data.staking.converters.transaction
 
 import com.tangem.data.staking.converters.TokenConverter
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingGasEstimateDTO
-import com.tangem.domain.staking.model.transaction.StakingGasEstimate
+import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.utils.converter.Converter
 
 class GasEstimateConverter(

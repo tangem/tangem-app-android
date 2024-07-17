@@ -15,10 +15,10 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.staking.*
-import com.tangem.domain.staking.model.Yield
-import com.tangem.domain.staking.model.action.StakingActionCommonType
-import com.tangem.domain.staking.model.transaction.ActionParams
-import com.tangem.domain.staking.model.transaction.StakingGasEstimate
+import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
+import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
