@@ -1,6 +1,7 @@
 package com.tangem.features.markets.component.impl
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -29,6 +30,10 @@ internal class DefaultMarketsListComponent @AssistedInject constructor(
         modifier: Modifier,
     ) {
         val state by model.state.collectAsStateWithLifecycle()
+
+        LaunchedEffect(bottomSheetState.value) {
+            model.containerBottomSheetState.value = bottomSheetState.value
+        }
 
         MarketsList(
             onHeaderSizeChange = onHeaderSizeChange,
