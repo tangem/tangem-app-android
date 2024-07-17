@@ -88,6 +88,10 @@
   <string name="common_copy_address">Copy address</string>
   <string name="common_create">Create</string>
   <string name="common_custom">Custom</string>
+  <plurals name="common_days">
+    <item quantity="one">%d day</item>
+    <item quantity="other">%d days</item>
+  </plurals>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
   <string name="common_done">Done</string>
