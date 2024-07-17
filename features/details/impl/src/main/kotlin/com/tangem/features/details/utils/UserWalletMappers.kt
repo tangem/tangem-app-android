@@ -9,7 +9,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.details.entity.UserWalletListUM.UserWalletUM
 import com.tangem.features.details.impl.R
-import com.tangem.utils.Strings.STARS
+import com.tangem.utils.StringsSigns.STARS
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
