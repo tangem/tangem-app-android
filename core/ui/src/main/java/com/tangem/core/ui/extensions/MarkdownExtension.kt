@@ -2,6 +2,7 @@ package com.tangem.core.ui.extensions
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -56,3 +57,7 @@ fun AnnotatedString.Builder.appendMarkdown(markdownText: String, node: ASTNode):
 }
 
 fun AnnotatedString.Builder.appendSpace() = append(" ")
+
+fun AnnotatedString.Builder.appendColored(text: String, color: Color) = withStyle(SpanStyle(color = color)) {
+    append(text)
+}
