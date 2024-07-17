@@ -6,6 +6,7 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Types
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 
@@ -20,7 +21,7 @@ inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String
                 null
             }
         }
-    }
+    }.distinctUntilChanged()
 }
 
 /**
@@ -38,7 +39,7 @@ inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String
         } catch (e: JsonDataException) {
             default
         }
-    }
+    }.distinctUntilChanged()
 }
 
 /**
@@ -100,7 +101,7 @@ suspend inline fun <reified T> AppPreferencesStore.storeObjectList(key: Preferen
 /** Get flow of list of data [T] by string [key]. If data is not found, it returns `null` */
 inline fun <reified T> AppPreferencesStore.getObjectList(key: Preferences.Key<String>): Flow<List<T>?> {
     val adapter = moshi.adapter<List<T>>(Types.newParameterizedType(List::class.java, T::class.java))
-    return data.map { it[key]?.let(adapter::fromJson) }
+    return data.map { it[key]?.let(adapter::fromJson) }.distinctUntilChanged()
 }
 
 /** Get list of data [T] by string [key], or empty if data is not found */
