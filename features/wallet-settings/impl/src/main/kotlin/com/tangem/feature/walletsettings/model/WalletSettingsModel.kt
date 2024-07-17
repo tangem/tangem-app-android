@@ -1,5 +1,6 @@
 package com.tangem.feature.walletsettings.model
 
+import androidx.compose.ui.res.stringResource
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -9,11 +10,13 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.components.BasicDialog
+import com.tangem.core.ui.components.DialogButton
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.ContentMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
@@ -27,6 +30,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -55,15 +59,7 @@ internal class WalletSettingsModel @Inject constructor(
         getWalletUseCase.invokeFlow(params.userWalletId)
             .distinctUntilChanged()
             .onEach { maybeWallet ->
-                val wallet = maybeWallet.getOrElse { error ->
-                    error(
-                        """
-                        Failed to get user wallet
-                        |- User wallet ID: $params
-                        |- Cause: $error
-                        """.trimIndent(),
-                    )
-                }
+                val wallet = maybeWallet.getOrNull() ?: return@onEach
 
                 state.update { value ->
                     value.copy(items = buildItems(wallet, dialogNavigation))
@@ -80,7 +76,28 @@ internal class WalletSettingsModel @Inject constructor(
         userWalletName = userWallet.name,
         isReferralAvailable = userWallet.cardTypesResolver.isTangemWallet(),
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
-        forgetWallet = { forgetWallet(userWallet.walletId) },
+        forgetWallet = {
+            messageSender.send(
+                ContentMessage { onDismiss ->
+                    BasicDialog(
+                        message = stringResource(R.string.user_wallet_list_delete_prompt),
+                        onDismissDialog = onDismiss,
+                        confirmButton = DialogButton(
+                            title = stringResource(R.string.common_delete),
+                            warning = true,
+                            onClick = {
+                                forgetWallet()
+                                onDismiss()
+                            },
+                        ),
+                        dismissButton = DialogButton(
+                            title = stringResource(R.string.common_cancel),
+                            onClick = onDismiss,
+                        ),
+                    )
+                },
+            )
+        },
     )
 
     private fun openRenameWalletDialog(userWallet: UserWallet, dialogNavigation: SlotNavigation<DialogConfig>) {
@@ -92,8 +109,10 @@ internal class WalletSettingsModel @Inject constructor(
         dialogNavigation.activate(config)
     }
 
-    private fun forgetWallet(userWalletId: UserWalletId) = modelScope.launch {
-        val hasUserWallets = deleteWalletUseCase(userWalletId).getOrElse {
+    private fun forgetWallet() = modelScope.launch {
+        val hasUserWallets = deleteWalletUseCase(params.userWalletId).getOrElse {
+            Timber.e("Unable to delete wallet: $it")
+
             messageSender.send(
                 message = SnackbarMessage(resourceReference(R.string.common_unknown_error)),
             )
