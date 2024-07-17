@@ -28,6 +28,6 @@ data class MarketsListItemUM(
     @Immutable
     data class Price(
         val text: String,
-        val changeType: PriceChangeType = PriceChangeType.NEUTRAL,
+        val changeType: PriceChangeType? = null,
     )
 }
