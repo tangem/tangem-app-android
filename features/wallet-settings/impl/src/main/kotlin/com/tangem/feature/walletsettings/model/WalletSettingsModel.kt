@@ -11,6 +11,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
@@ -75,7 +76,9 @@ internal class WalletSettingsModel @Inject constructor(
         userWallet: UserWallet,
         dialogNavigation: SlotNavigation<DialogConfig>,
     ): PersistentList<WalletSettingsItemUM> = itemsBuilder.buildItems(
-        walletName = userWallet.name,
+        userWalletId = userWallet.walletId,
+        userWalletName = userWallet.name,
+        isReferralAvailable = userWallet.cardTypesResolver.isTangemWallet(),
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
         forgetWallet = { forgetWallet(userWallet.walletId) },
     )
