@@ -6,7 +6,7 @@ import androidx.compose.runtime.Stable
 @Stable
 interface ComposableDialogComponent {
 
-    val doOnDismiss: () -> Unit
+    fun dismiss()
 
     @Composable
     fun Dialog()
