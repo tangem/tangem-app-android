@@ -117,19 +117,55 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/details/${userWalletId.stringValue}")
 
     @Serializable
-    data object DetailsSecurity : AppRoute(path = "/details/security")
+    data class DetailsSecurity(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/details/security"), RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
+
+        companion object {
+            const val USER_WALLET_ID_KEY = "userWalletId"
+        }
+    }
 
     @Serializable
-    data object CardSettings : AppRoute(path = "/card_settings")
+    data class CardSettings(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/card_settings/${userWalletId.stringValue}"), RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
+
+        companion object {
+            const val USER_WALLET_ID_KEY = "userWalletId"
+        }
+    }
 
     @Serializable
     data object AppSettings : AppRoute(path = "/app_settings")
 
     @Serializable
-    data object ResetToFactory : AppRoute(path = "/reset_to_factory")
+    data class ResetToFactory(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/reset_to_factory/${userWalletId.stringValue}"), RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
+
+        companion object {
+            const val USER_WALLET_ID = "userWalletId"
+        }
+    }
 
     @Serializable
-    data object AccessCodeRecovery : AppRoute(path = "/access_code_recovery")
+    data class AccessCodeRecovery(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/access_code_recovery/${userWalletId.stringValue}"), RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
+
+        companion object {
+            const val USER_WALLET_ID_KEY = "userWalletId"
+        }
+    }
 
     @Serializable
     data object ManageTokens : AppRoute(path = "/manage_tokens")
