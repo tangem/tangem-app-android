@@ -18,21 +18,23 @@ import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.state.RouteType
 import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.ui.block.NotificationsBlock
 import com.tangem.features.staking.impl.presentation.ui.block.StakingFeeBlock
 import com.tangem.features.staking.impl.presentation.ui.block.ValidatorBlock
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
-import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 
 @Composable
 internal fun StakingConfirmationContent(
     amountState: AmountState,
     state: StakingStates.ConfirmationState,
     clickIntents: StakingClickIntents,
+    type: RouteType,
 ) {
     if (state !is StakingStates.ConfirmationState.Data) return
 
@@ -60,7 +62,9 @@ internal fun StakingConfirmationContent(
             isEditingDisabled = true,
             onClick = {},
         )
-        ValidatorBlock(validatorState = state.validatorState, onClick = clickIntents::openValidators)
+        if (type == RouteType.STAKE) {
+            ValidatorBlock(validatorState = state.validatorState, onClick = clickIntents::openValidators)
+        }
         StakingFeeBlock(feeState = state.feeState)
         NotificationsBlock(notifications = state.notifications)
         SpacerHMax()
@@ -89,6 +93,7 @@ private fun Preview_StakingConfirmationContent() {
                 amountState = AmountStatePreviewData.amountState,
                 state = ConfirmationStatePreviewData.assentStakingState,
                 clickIntents = StakingClickIntentsStub,
+                type = RouteType.STAKE,
             )
         }
     }

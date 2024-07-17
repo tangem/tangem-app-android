@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -35,9 +34,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.BalanceGroupedState
-import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
-import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.previewdata.InitialStakingStatePreview
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
@@ -77,7 +74,7 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
         }
         AnimatedContent(targetState = state.yieldBalance, label = "Rewards block visibility animation") {
             if (it is InnerYieldBalanceState.Data) {
-                ActiveStakingBlock(it.balance)
+                ActiveStakingBlock(it.balance, clickIntents::onActiveStake)
             }
         }
     }
@@ -204,17 +201,15 @@ private fun StakingRewardBlock(
     onRewardsClick: () -> Unit,
 ) {
     val (text, textColor) = if (isRewardsToClaim) {
-        annotatedReference(
-            buildAnnotatedString {
-                append(PLUS)
-                appendSpace()
-                append(rewardFiat)
-                appendSpace()
-                append(DOT)
-                appendSpace()
-                append(rewardCrypto)
-            },
-        ) to TangemTheme.colors.text.primary1
+        annotatedReference {
+            append(PLUS)
+            appendSpace()
+            append(rewardFiat)
+            appendSpace()
+            append(DOT)
+            appendSpace()
+            append(rewardCrypto)
+        } to TangemTheme.colors.text.primary1
     } else {
         resourceReference(R.string.staking_details_no_rewards_to_claim) to TangemTheme.colors.text.tertiary
     }
@@ -235,7 +230,7 @@ private fun StakingRewardBlock(
 }
 
 @Composable
-private fun ActiveStakingBlock(groups: List<BalanceGroupedState>) {
+private fun ActiveStakingBlock(groups: List<BalanceGroupedState>, onClick: (BalanceState) -> Unit) {
     Column(
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
@@ -253,15 +248,43 @@ private fun ActiveStakingBlock(groups: List<BalanceGroupedState>) {
                     ) {
                         group.items.forEachIndexed { index, balance ->
                             key(balance.validator.address) {
+                                val caption = combinedReference(
+                                    if (group.type == BalanceGroupType.UNSTAKED) {
+                                        resourceReference(R.string.staking_details_unbonding_period)
+                                        annotatedReference {
+                                            appendSpace()
+                                            appendColored(
+                                                text = balance.unbondingPeriod.resolveReference(),
+                                                color = TangemTheme.colors.text.accent,
+                                            )
+                                        }
+                                    } else {
+                                        resourceReference(R.string.app_name)
+                                        annotatedReference {
+                                            appendSpace()
+                                            appendColored(
+                                                text = BigDecimalFormatter.formatPercent(
+                                                    percent = balance.validator.apr.orZero(),
+                                                    useAbsoluteValue = true,
+                                                ),
+                                                color = TangemTheme.colors.text.accent,
+                                            )
+                                        }
+                                    },
+                                )
                                 InputRowImageInfo(
                                     title = group.title.takeIf { index == 0 },
                                     subtitle = stringReference(balance.validator.name),
-                                    caption = stringReference(
-                                        BigDecimalFormatter.formatPercent(balance.validator.apr.orZero(), true),
-                                    ),
+                                    caption = caption,
+                                    isGrayscaleImage = group.type == BalanceGroupType.UNSTAKED,
                                     infoTitle = balance.fiatAmount,
                                     infoSubtitle = balance.cryptoAmount,
                                     imageUrl = balance.validator.image.orEmpty(),
+                                    modifier = Modifier.clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = rememberRipple(),
+                                        onClick = { onClick(balance) },
+                                    ),
                                 )
                             }
                         }
