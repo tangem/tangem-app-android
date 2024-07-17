@@ -39,7 +39,7 @@ internal class UserWalletSaver @Inject constructor(
 
     suspend fun scanAndSaveUserWallet() = recover(
         block = {
-            val response = scanCard()
+            val response = scanCard() ?: return@recover
             val userWallet = createUserWallet(response)
 
             saveWallet(userWallet)
@@ -61,7 +61,7 @@ internal class UserWalletSaver @Inject constructor(
                 is SaveWalletError.WalletAlreadySaved -> selectUserWallet(userWallet)
                 is SaveWalletError.DataError -> {
                     val messageRef = ensureNotNull(error.messageId?.let(::resourceReference)) {
-                        Error.Unkonwn
+                        Error.Unknown
                     }
 
                     raise(Error.Message(messageRef))
@@ -73,7 +73,7 @@ internal class UserWalletSaver @Inject constructor(
     }
 
     private suspend fun Raise<Error>.selectUserWallet(userWallet: UserWallet) {
-        withError({ Error.Unkonwn }) {
+        withError({ Error.Unknown }) {
             selectWalletUseCase(userWallet.walletId).bind()
         }
 
@@ -83,20 +83,19 @@ internal class UserWalletSaver @Inject constructor(
     private suspend fun Raise<Error>.createUserWallet(response: ScanResponse): UserWallet {
         val userWallet = UserWalletBuilder(response, generateWalletNameUseCase).build()
 
-        return ensureNotNull(userWallet) { Error.Unkonwn }
+        return ensureNotNull(userWallet) { Error.Unknown }
     }
 
-    private suspend fun Raise<Error>.scanCard(): ScanResponse {
+    private suspend fun Raise<Error>.scanCard(): ScanResponse? {
         var response: ScanResponse? = null
 
         scanCardProcessor.scan(
             analyticsSource = AnalyticsParam.ScreensSources.Settings,
             onWalletNotCreated = {
-                raise(Error.WalletNotCreated)
+                /* no-op */
             },
             disclaimerWillShow = {
                 router.pop()
-                raise(Error.DisclaimerWillShow)
             },
             onSuccess = {
                 response = it
@@ -116,22 +115,18 @@ internal class UserWalletSaver @Inject constructor(
             },
         )
 
-        return response!!
+        return response
     }
 
     sealed class Error {
 
         open val message: TextReference? = null
 
-        data object WalletNotCreated : Error()
-
-        data object DisclaimerWillShow : Error()
-
         data object Silent : Error()
 
         data class Message(override val message: TextReference) : Error()
 
-        data object Unkonwn : Error() {
+        data object Unknown : Error() {
 
             override val message: TextReference = resourceReference(R.string.common_unknown_error)
         }
