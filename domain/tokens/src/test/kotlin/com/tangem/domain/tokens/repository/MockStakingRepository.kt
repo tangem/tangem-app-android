@@ -3,13 +3,14 @@ package com.tangem.domain.tokens.repository
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.*
-import com.tangem.domain.staking.model.action.EnterAction
+import com.tangem.domain.staking.model.action.StakingAction
 import com.tangem.domain.staking.model.action.StakingActionStatus
 import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.transaction.*
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -164,8 +165,8 @@ class MockStakingRepository : StakingRepository {
         balances = listOf(YieldBalance.Error),
     )
 
-    override suspend fun createEnterAction(params: ActionParams): EnterAction {
-        return EnterAction(
+    override suspend fun createAction(params: ActionParams): StakingAction {
+        return StakingAction(
             id = "quis",
             integrationId = "persequeris",
             status = StakingActionStatus.PROCESSING,
@@ -224,4 +225,6 @@ class MockStakingRepository : StakingRepository {
     override suspend fun sendUnsubmittedHashes() {
         /* no-op */
     }
+
+    override fun isStakeMoreAvailable(networkId: Network.ID): Boolean = true
 }
