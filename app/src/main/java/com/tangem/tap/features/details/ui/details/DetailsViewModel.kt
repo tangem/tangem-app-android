@@ -39,7 +39,6 @@ import kotlinx.coroutines.flow.onEach
 import org.rekotlin.Store
 import timber.log.Timber
 
-// TODO: change to Android ViewModel [REDACTED_JIRA]
 internal class DetailsViewModel(
     private val store: Store<AppState>,
     private val walletsRepository: WalletsRepository,
@@ -90,10 +89,6 @@ internal class DetailsViewModel(
             SettingsItem.AppSettings(::navigateToAppSettings)
                 .let(::add)
 
-            // removed chat in task [REDACTED_TASK_KEY]
-            // SettingsItem.Chat(::navigateToChat)
-            //     .let(::add)
-
             SettingsItem.SendFeedback(::sendFeedback)
                 .let(::add)
 
@@ -137,7 +132,10 @@ internal class DetailsViewModel(
     }
 
     private fun navigateToReferralProgram() {
-        store.dispatchNavigationAction { push(AppRoute.ReferralProgram) }
+        val userWallet = userWalletsListManager.selectedUserWalletSync
+            ?: error("Selected wallet must be not null")
+
+        store.dispatchNavigationAction { push(AppRoute.ReferralProgram(userWallet.walletId)) }
     }
 
     private fun sendFeedback() {
@@ -157,8 +155,10 @@ internal class DetailsViewModel(
     }
 
     private fun navigateToCardSettings() {
+        val userWalletId = userWalletsListManager.selectedUserWalletSync?.walletId
+            ?: error("UserWalletId must be not null")
         Analytics.send(Settings.ButtonCardSettings())
-        store.dispatchNavigationAction { push(AppRoute.CardSettings) }
+        store.dispatchNavigationAction { push(AppRoute.CardSettings(userWalletId)) }
     }
 
     private fun linkMoreCards() {
