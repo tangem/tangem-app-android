@@ -124,7 +124,9 @@ class NetworkModule {
             context = context,
             appVersionProvider = appVersionProvider,
             baseUrl = PROD_V1_TANGEM_TECH_BASE_URL,
-            timeoutSeconds = TANGEM_TECH_SERVICE_TIMEOUT_SECONDS,
+            timeouts = Timeouts(
+                callTimeoutSeconds = TANGEM_TECH_SERVICE_TIMEOUT_SECONDS,
+            ),
             requestHeaders = listOf(AppVersionPlatformHeaders(appVersionProvider)),
         )
     }
@@ -142,6 +144,11 @@ class NetworkModule {
             context = context,
             appVersionProvider = appVersionProvider,
             baseUrl = DEV_V1_TANGEM_TECH_BASE_URL,
+            timeouts = Timeouts(
+                callTimeoutSeconds = TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS,
+                connectTimeoutSeconds = TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS,
+                readTimeoutSeconds = TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS,
+            ),
             requestHeaders = listOf(AppVersionPlatformHeaders(appVersionProvider)),
         )
     }
@@ -151,16 +158,25 @@ class NetworkModule {
         context: Context,
         appVersionProvider: AppVersionProvider,
         baseUrl: String,
-        timeoutSeconds: Long? = null,
+        timeouts: Timeouts = Timeouts(),
         requestHeaders: List<RequestHeader> = listOf(CacheControlHeader, AppVersionPlatformHeaders(appVersionProvider)),
     ): T {
         val client = OkHttpClient.Builder()
             .let { builder ->
-                if (timeoutSeconds != null) {
-                    builder.callTimeout(timeoutSeconds, TimeUnit.SECONDS)
-                } else {
-                    builder
+                var b = builder
+                if (timeouts.callTimeoutSeconds != null) {
+                    b = b.callTimeout(timeouts.callTimeoutSeconds, TimeUnit.SECONDS)
                 }
+                if (timeouts.connectTimeoutSeconds != null) {
+                    b = b.connectTimeout(timeouts.connectTimeoutSeconds, TimeUnit.SECONDS)
+                }
+                if (timeouts.readTimeoutSeconds != null) {
+                    b = b.readTimeout(timeouts.readTimeoutSeconds, TimeUnit.SECONDS)
+                }
+                if (timeouts.writeTimeoutSeconds != null) {
+                    b = b.writeTimeout(timeouts.writeTimeoutSeconds, TimeUnit.SECONDS)
+                }
+                b
             }
             .addHeaders(
                 *requestHeaders.toTypedArray(),
@@ -179,6 +195,13 @@ class NetworkModule {
             .create(T::class.java)
     }
 
+    private data class Timeouts(
+        val callTimeoutSeconds: Long? = null,
+        val connectTimeoutSeconds: Long? = null,
+        val readTimeoutSeconds: Long? = null,
+        val writeTimeoutSeconds: Long? = null,
+    )
+
     private companion object {
         const val STAKEKIT_BASE_URL = "https://api.stakek.it/v1/"
         const val PROD_EXPRESS_BASE_URL = "[REDACTED_ENV_URL]"
@@ -191,5 +214,6 @@ class NetworkModule {
         const val PROD_V2_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v2/"
 
         const val TANGEM_TECH_SERVICE_TIMEOUT_SECONDS = 5L
+        const val TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS = 60L
     }
 }
