@@ -21,17 +21,15 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 internal class DefaultRenameWalletComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted params: RenameWalletComponent.Params,
+    @Assisted private val params: RenameWalletComponent.Params,
     private val renameWalletUseCase: RenameWalletUseCase,
 ) : RenameWalletComponent, AppComponentContext by context {
 
-    private val userWalletId = params.userWalletId
     private val currentWalletName = params.currentName
-
-    override val doOnDismiss: () -> Unit = params.onDismiss
 
     private val stateFlow: MutableStateFlow<RenameWalletUM> = MutableStateFlow(
         value = RenameWalletUM(
@@ -42,13 +40,17 @@ internal class DefaultRenameWalletComponent @AssistedInject constructor(
         ),
     )
 
+    override fun dismiss() {
+        params.onDismiss()
+    }
+
     @Composable
     override fun Dialog() {
         val model by stateFlow.collectAsStateWithLifecycle()
 
         RenameWalletDialog(
             model = model,
-            onDismiss = doOnDismiss,
+            onDismiss = ::dismiss,
         )
     }
 
@@ -66,11 +68,13 @@ internal class DefaultRenameWalletComponent @AssistedInject constructor(
         val maybeError = renameWalletUseCase(userWalletId, newName.text).leftOrNull()
 
         if (maybeError != null) {
+            Timber.e("Unable to rename wallet: $maybeError")
+
             val message = when (maybeError) {
-                UpdateWalletError.DataError -> resourceReference(
+                is UpdateWalletError.DataError -> resourceReference(
                     id = R.string.common_unknown_error,
                 )
-                UpdateWalletError.NameAlreadyExists -> resourceReference(
+                is UpdateWalletError.NameAlreadyExists -> resourceReference(
                     id = R.string.user_wallet_list_rename_popup_error_already_exists,
                     formatArgs = wrappedList(newName),
                 )
@@ -79,7 +83,7 @@ internal class DefaultRenameWalletComponent @AssistedInject constructor(
             messageSender.send(message = SnackbarMessage(message))
         }
 
-        doOnDismiss()
+        dismiss()
     }
 
     @AssistedFactory
