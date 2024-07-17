@@ -1,5 +1,7 @@
 package com.tangem.core.ui.utils
 
+import android.icu.text.CompactDecimalFormat
+import android.os.Build
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.LOWER_SIGN
@@ -231,7 +233,6 @@ object BigDecimalFormatter {
     ): String {
         val sampleAmount = BigDecimal.TEN
         val currency = getCurrency(fiatCurrencyCode)
-        val formatterCurrency = getCurrency(fiatCurrencyCode)
 
         val formatter = NumberFormat.getCurrencyInstance(locale).apply {
             maximumFractionDigits = 0
@@ -240,10 +241,56 @@ object BigDecimalFormatter {
         }
 
         val formatted = formatter.format(sampleAmount)
-            .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+            .replace(currency.getSymbol(locale), fiatCurrencySymbol)
             .replace(sampleAmount.toString(), amount)
 
         return formatted
+    }
+
+    /**
+     * "123456.6" -> "$123.457K"
+     * "12345.6" -> "$123.046K"
+     */
+    @Suppress("MagicNumber")
+    fun formatCompactAmount(
+        amount: BigDecimal,
+        fiatCurrencyCode: String,
+        fiatCurrencySymbol: String,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            return BigDecimalFormatterCompat.formatCompactAmountNoLocaleContext(
+                amount = amount,
+                fiatCurrencyCode = fiatCurrencyCode,
+                fiatCurrencySymbol = fiatCurrencySymbol,
+                locale = locale,
+            )
+        }
+
+        val scaledAmount = amount.setScale(0, RoundingMode.HALF_UP)
+        val digitsCount = scaledAmount.longValueExact().toString().count()
+        val digitsToFormat = 6 - when (digitsCount % 3) {
+            0 -> 0
+            1 -> 2
+            else -> 1
+        }
+
+        val formatter = CompactDecimalFormat.getInstance(
+            locale,
+            CompactDecimalFormat.CompactStyle.SHORT,
+        ).apply {
+            minimumSignificantDigits = 4
+            maximumSignificantDigits = digitsToFormat
+        }
+
+        val rawAmount = formatter.format(amount.setScale(0, RoundingMode.HALF_UP))
+
+        return addCurrencySymbolToStringAmount(
+            amount = rawAmount,
+            fiatCurrencyCode = fiatCurrencyCode,
+            fiatCurrencySymbol = fiatCurrencySymbol,
+            locale = locale,
+        )
     }
 
     private fun BigDecimal.isLessThanThreshold() = this > BigDecimal.ZERO && this < FIAT_FORMAT_THRESHOLD

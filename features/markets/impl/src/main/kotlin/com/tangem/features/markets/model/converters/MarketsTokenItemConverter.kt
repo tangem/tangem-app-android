@@ -63,39 +63,14 @@ internal class MarketsTokenItemConverter(
         return if (force || prev != new) change(new) else prevR
     }
 
-    @Suppress("UnnecessaryParentheses", "MagicNumber")
     private fun TokenMarket.getMarketCap(): String? {
-        val value = marketCap?.setScale(0, RoundingMode.HALF_UP)?.toLong() ?: return null
+        val value = marketCap?.takeIf { marketCap != BigDecimal.ZERO } ?: return null
 
-        val formatted = when {
-            value > 1_000_000_000_000L -> {
-                val trillion = value / 1_000_000_000_000
-                val billion = (value % 1_000_000_000_000) / 1_000_000_000
-                "$trillion.${billion}T"
-            }
-            value > 1_000_000_000L -> {
-                val billion = value / 1_000_000_000
-                val million = (value % 1_000_000_000) / 1_000_000
-                "$billion.${million}B"
-            }
-            value > 1_000_000L -> {
-                val million = value / 1_000_000
-                val thousand = (value % 1_000_000) / 1_000
-                "$million.${thousand}M"
-            }
-            value > 1_000L -> {
-                val thousand = value / 1_000
-                "${thousand}K"
-            }
-            else -> return value.toString()
-        }
-
-        return BigDecimalFormatter
-            .addCurrencySymbolToStringAmount(
-                formatted,
-                fiatCurrencyCode = appCurrency.code,
-                fiatCurrencySymbol = appCurrency.symbol,
-            )
+        return BigDecimalFormatter.formatCompactAmount(
+            value,
+            fiatCurrencyCode = appCurrency.code,
+            fiatCurrencySymbol = appCurrency.symbol,
+        )
     }
 
     private fun TokenMarket.getCurrentPrice(prev: TokenMarket? = null): MarketsListItemUM.Price {
