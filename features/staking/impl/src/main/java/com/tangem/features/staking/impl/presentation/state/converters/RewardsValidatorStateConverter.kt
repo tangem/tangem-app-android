@@ -1,7 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.converters
 
-import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -10,12 +9,12 @@ import com.tangem.domain.staking.model.BalanceType
 import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.staking.model.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.extensions.addOrReplace
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
@@ -33,13 +32,6 @@ internal class RewardsValidatorStateConverter(
             StakingStates.RewardsValidatorsState.Data(
                 isPrimaryButtonEnabled = true,
                 rewards = balances
-                    // todo remove when real data is available
-                    .addOrReplace(
-                        item = balances.first().copy(
-                            type = BalanceType.REWARDS,
-                        ),
-                        predicate = { true },
-                    )
                     .filter { it.type == BalanceType.REWARDS }
                     .mapRewardBalances(cryptoCurrencyStatus)
                     .toPersistentList(),
@@ -56,11 +48,16 @@ internal class RewardsValidatorStateConverter(
             }
             val cryptoValue = balance.amount.times(balance.pricePerShare)
             val fiatValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoValue)
-
+            val unbondingPeriod = yield.metadata.cooldownPeriod.days
             validator?.toBalanceState(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 cryptoValue = cryptoValue,
                 fiatValue = fiatValue,
+                unbondingPeriod = pluralReference(
+                    id = R.plurals.common_days,
+                    count = unbondingPeriod,
+                    formatArgs = wrappedList(unbondingPeriod),
+                ),
             )
         }
 
@@ -68,6 +65,7 @@ internal class RewardsValidatorStateConverter(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         cryptoValue: BigDecimal,
         fiatValue: BigDecimal?,
+        unbondingPeriod: TextReference,
     ): BalanceState {
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
@@ -92,9 +90,11 @@ internal class RewardsValidatorStateConverter(
         return BalanceState(
             validator = this,
             cryptoValue = cryptoValue.parseBigDecimal(cryptoCurrency.decimals),
+            cryptoDecimal = cryptoValue,
             cryptoAmount = cryptoAmount,
             fiatAmount = fiatAmount,
             rawCurrencyId = cryptoCurrency.id.rawCurrencyId,
+            unbondingPeriod = unbondingPeriod,
         )
     }
 }
