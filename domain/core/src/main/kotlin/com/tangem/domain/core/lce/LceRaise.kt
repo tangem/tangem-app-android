@@ -46,7 +46,7 @@ class LceRaise<E : Any> @PublishedApi internal constructor(
      * */
     @RaiseDSL
     @OptIn(ExperimentalTypeInference::class)
-    inline fun <OtherError : Any, C : Any> withError(
+    inline fun <OtherError : Any, C> withError(
         transform: (OtherError) -> E,
         @BuilderInference block: LceRaise<OtherError>.() -> C,
     ): C = recover(
