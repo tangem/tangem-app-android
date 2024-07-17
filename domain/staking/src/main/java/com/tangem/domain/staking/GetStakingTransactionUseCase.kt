@@ -18,7 +18,7 @@ class GetStakingTransactionUseCase(
 
     suspend operator fun invoke(params: ActionParams): Either<StakingError, StakingTransaction> {
         return Either.catch {
-            val createAction = stakingRepository.createEnterAction(params)
+            val createAction = stakingRepository.createAction(params)
 
             // workaround, sometimes transaction is not created immediately after actions/enter
             delay(PATCH_TRANSACTION_REQUEST_DELAY)
