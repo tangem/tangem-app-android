@@ -4,7 +4,7 @@ import com.tangem.domain.staking.model.transaction.StakingTransaction
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
-data class EnterAction(
+data class StakingAction(
     val id: String,
     val integrationId: String,
     val status: StakingActionStatus,
