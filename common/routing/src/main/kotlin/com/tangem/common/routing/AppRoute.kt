@@ -191,7 +191,16 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data object ReferralProgram : AppRoute(path = "/referral_program")
+    data class ReferralProgram(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/referral_program"), RouteBundleParams {
+
+        override fun getBundle(): Bundle = bundle(serializer())
+
+        companion object {
+            const val USER_WALLET_ID_KEY = "userWalletId"
+        }
+    }
 
     @Serializable
     data class Swap(
