@@ -15,6 +15,11 @@ dependencies {
     /* Project - API */
     api(projects.features.markets.api)
 
+    /* Domain */
+    implementation(projects.domain.markets)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+
     /* Compose */
     implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
