@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
+import arrow.core.getOrElse
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
@@ -7,9 +8,11 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsPullToRefreshConfig
@@ -17,7 +20,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.Toke
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
-import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -27,7 +29,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class TokenDetailsSkeletonStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
-    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
+    private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val userWalletId: UserWalletId,
 ) : Converter<CryptoCurrency, TokenDetailsState> {
 
     private val iconStateConverter by lazy { TokenDetailsIconStateConverter() }
@@ -51,9 +55,13 @@ internal class TokenDetailsSkeletonStateConverter(
                     )
                 },
             ),
-            tokenBalanceBlockState = TokenDetailsBalanceBlockState.Loading(actionButtons = createButtons()),
+            tokenBalanceBlockState = TokenDetailsBalanceBlockState.Loading(
+                actionButtons = createButtons(),
+                balanceSegmentedButtonConfig = createBalanceSegmentedButtonConfig(),
+                selectedBalanceType = BalanceType.ALL,
+            ),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
-            stakingBlockState = StakingBlockState.Loading(iconState = iconState),
+            stakingBlocksState = StakingBlockUM.Loading(iconState),
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
             swapTxs = persistentListOf(),
@@ -67,7 +75,7 @@ internal class TokenDetailsSkeletonStateConverter(
             bottomSheetConfig = null,
             isBalanceHidden = true,
             isMarketPriceAvailable = value.id.rawCurrencyId != null,
-            isStakingAvailable = stakingAvailabilityProvider.invoke() is StakingAvailability.Available,
+            isStakingBlockShown = false,
             event = consumedEvent(),
         )
     }
@@ -77,13 +85,7 @@ internal class TokenDetailsSkeletonStateConverter(
 
     private fun createMenu(cryptoCurrency: CryptoCurrency): TokenDetailsAppBarMenuConfig = TokenDetailsAppBarMenuConfig(
         items = buildList {
-            if (featureToggles.isGenerateXPubEnabled() && isBitcoin(cryptoCurrency.network.id.value)) {
-                TokenDetailsAppBarMenuConfig.MenuItem(
-                    title = resourceReference(R.string.token_details_generate_xpub),
-                    textColorProvider = { TangemTheme.colors.text.primary1 },
-                    onClick = clickIntents::onGenerateExtendedKey,
-                ).let(::add)
-            }
+            addGenerateXPubMenuItem(cryptoCurrency)
             TokenDetailsAppBarMenuConfig.MenuItem(
                 title = TextReference.Res(id = R.string.token_details_hide_token),
                 textColorProvider = { TangemTheme.colors.text.warning },
@@ -92,6 +94,26 @@ internal class TokenDetailsSkeletonStateConverter(
         }.toImmutableList(),
     )
 
+    private fun MutableList<TokenDetailsAppBarMenuConfig.MenuItem>.addGenerateXPubMenuItem(
+        cryptoCurrency: CryptoCurrency,
+    ) {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return
+        val isGenerateXPubEnabled = featureToggles.isGenerateXPubEnabled()
+        val isBitcoin = isBitcoin(cryptoCurrency.network.id.value)
+        val hasDerivations =
+            networkHasDerivationUseCase(userWallet.scanResponse, cryptoCurrency.network).getOrElse { false }
+
+        if (isGenerateXPubEnabled && isBitcoin && hasDerivations) {
+            add(
+                TokenDetailsAppBarMenuConfig.MenuItem(
+                    title = resourceReference(R.string.token_details_generate_xpub),
+                    textColorProvider = { TangemTheme.colors.text.primary1 },
+                    onClick = clickIntents::onGenerateExtendedKey,
+                ),
+            )
+        }
+    }
+
     private fun createButtons(): ImmutableList<TokenDetailsActionButton> {
         return persistentListOf(
             TokenDetailsActionButton.Buy(dimContent = false, onClick = {}),
@@ -99,6 +121,19 @@ internal class TokenDetailsSkeletonStateConverter(
             TokenDetailsActionButton.Receive(onClick = {}, onLongClick = null),
             TokenDetailsActionButton.Sell(dimContent = false, onClick = {}),
             TokenDetailsActionButton.Swap(dimContent = false, onClick = {}),
+        )
+    }
+
+    private fun createBalanceSegmentedButtonConfig(): ImmutableList<TokenBalanceSegmentedButtonConfig> {
+        return persistentListOf(
+            TokenBalanceSegmentedButtonConfig(
+                title = resourceReference(R.string.common_all),
+                type = BalanceType.ALL,
+            ),
+            TokenBalanceSegmentedButtonConfig(
+                title = resourceReference(R.string.staking_details_available),
+                type = BalanceType.AVAILABLE,
+            ),
         )
     }
 

@@ -36,6 +36,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemColorPalette.White
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * Travala notification with image background
@@ -192,7 +193,7 @@ private fun formatSubtitle(subtitle: String): AnnotatedString {
 @Preview
 @Composable
 private fun TravalaNotificationWithBackgroundPreview() {
-    TangemTheme {
+    TangemThemePreview {
         TravalaNotificationWithBackground(
             config = NotificationConfig(
                 title = resourceReference(
