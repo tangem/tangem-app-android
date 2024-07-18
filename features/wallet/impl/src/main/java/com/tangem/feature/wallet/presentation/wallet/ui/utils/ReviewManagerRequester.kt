@@ -3,10 +3,10 @@ package com.tangem.feature.wallet.presentation.wallet.ui.utils
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
-import com.google.android.play.core.tasks.Task
 import timber.log.Timber
 
 internal object ReviewManagerRequester {
