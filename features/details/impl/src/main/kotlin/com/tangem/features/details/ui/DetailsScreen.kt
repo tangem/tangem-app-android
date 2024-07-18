@@ -9,17 +9,22 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.components.appbar.TangemTopAppBar
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.components.block.BlockItem
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
+import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.details.component.preview.PreviewDetailsComponent
@@ -28,96 +33,62 @@ import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.impl.R
 
-private const val COLLAPSED_APP_BAR_THRESHOLD = 0.4f
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DetailsScreen(state: DetailsUM, snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {
+internal fun DetailsScreen(
+    state: DetailsUM,
+    userWalletListBlockContent: ComposableContentComponent,
+    modifier: Modifier = Modifier,
+) {
     val backgroundColor = TangemTheme.colors.background.secondary
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
-    SystemBarsEffect {
-        setSystemBarsColor(backgroundColor)
-    }
 
     BackHandler(onBack = state.popBack)
 
     Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = modifier,
         containerColor = backgroundColor,
         snackbarHost = {
             TangemSnackbarHost(
                 modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
-                hostState = snackbarHostState,
+                hostState = LocalSnackbarHostState.current,
             )
         },
-        topBar = { TopBar(state, scrollBehavior) },
+        topBar = {
+            TangemTopAppBar(
+                modifier = Modifier.statusBarsPadding(),
+                startButton = TopAppBarButtonUM.Back(state.popBack),
+            )
+        },
     ) { paddingValues ->
         Content(
             modifier = Modifier.padding(paddingValues),
             state = state,
+            userWalletListBlockContent = userWalletListBlockContent,
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopBar(state: DetailsUM, scrollBehavior: TopAppBarScrollBehavior, modifier: Modifier = Modifier) {
-    MediumTopAppBar(
-        modifier = modifier,
-        scrollBehavior = scrollBehavior,
-        colors = TopAppBarColors(
-            containerColor = TangemTheme.colors.background.secondary,
-            scrolledContainerColor = TangemTheme.colors.background.secondary,
-            navigationIconContentColor = TangemTheme.colors.icon.primary1,
-            titleContentColor = TangemTheme.colors.text.primary1,
-            actionIconContentColor = TangemTheme.colors.icon.primary1,
-        ),
-        title = {
-            val collapsedStyle = TangemTheme.typography.subtitle1
-            val expandedStyle = TangemTheme.typography.h1
-            val style by remember(scrollBehavior.state.collapsedFraction) {
-                derivedStateOf {
-                    if (scrollBehavior.state.collapsedFraction >= COLLAPSED_APP_BAR_THRESHOLD) {
-                        collapsedStyle
-                    } else {
-                        expandedStyle
-                    }
-                }
-            }
-
-            Text(
-                text = stringResource(id = R.string.details_title),
-                style = style,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        navigationIcon = {
-            IconButton(
-                modifier = Modifier.size(TangemTheme.dimens.size32),
-                onClick = state.popBack,
-            ) {
-                Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
-                    painter = painterResource(id = R.drawable.ic_back_24),
-                    contentDescription = null,
-                )
-            }
-        },
-    )
-}
-
-@Composable
-private fun Content(state: DetailsUM, modifier: Modifier = Modifier) {
+private fun Content(
+    state: DetailsUM,
+    userWalletListBlockContent: ComposableContentComponent,
+    modifier: Modifier = Modifier,
+) {
     LazyColumn(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         contentPadding = PaddingValues(
-            top = TangemTheme.dimens.spacing16,
+            top = TangemTheme.dimens.spacing12,
             bottom = TangemTheme.dimens.spacing16,
         ),
     ) {
+        item {
+            Text(
+                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                text = stringResource(R.string.details_title),
+                style = TangemTheme.typography.h1,
+                color = TangemTheme.colors.text.primary1,
+            )
+        }
         items(
             items = state.items,
             key = DetailsItemUM::id,
@@ -125,6 +96,7 @@ private fun Content(state: DetailsUM, modifier: Modifier = Modifier) {
             Block(
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
                 model = block,
+                userWalletListBlockContent = userWalletListBlockContent,
             )
         }
 
@@ -138,7 +110,11 @@ private fun Content(state: DetailsUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Block(model: DetailsItemUM, modifier: Modifier = Modifier) {
+private fun Block(
+    model: DetailsItemUM,
+    userWalletListBlockContent: ComposableContentComponent,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -149,21 +125,27 @@ private fun Block(model: DetailsItemUM, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top,
     ) {
+        val itemModifier = Modifier.fillMaxWidth()
+
         when (model) {
             is DetailsItemUM.Basic -> {
                 model.items.forEach { item ->
                     key(item.id) {
                         BlockItem(
-                            modifier = Modifier.fillMaxWidth(),
-                            model = item,
+                            modifier = itemModifier,
+                            model = item.block,
                         )
                     }
                 }
             }
-            is DetailsItemUM.Component -> {
-                model.content(
-                    modifier = Modifier.fillMaxWidth(),
+            is DetailsItemUM.WalletConnect -> {
+                WalletConnectBlock(
+                    modifier = itemModifier,
+                    onClick = model.onClick,
                 )
+            }
+            is DetailsItemUM.UserWalletList -> {
+                userWalletListBlockContent.Content(modifier = itemModifier)
             }
         }
     }
@@ -222,7 +204,7 @@ private fun Footer(model: DetailsFooterUM, modifier: Modifier = Modifier) {
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun Preview_DetailsScreen() {
     TangemThemePreview {
-        PreviewDetailsComponent().View(modifier = Modifier.fillMaxSize())
+        PreviewDetailsComponent().Content(modifier = Modifier.fillMaxSize())
     }
 }
 // endregion Preview
