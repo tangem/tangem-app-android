@@ -22,5 +22,6 @@ internal class AndroidAppFinisher(
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         appContext.startActivity(intent)
+        Runtime.getRuntime().exit(0)
     }
 }
