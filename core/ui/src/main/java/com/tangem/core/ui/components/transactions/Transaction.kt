@@ -22,7 +22,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.tangem.common.Strings
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
@@ -35,6 +34,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.utils.StringsSigns
 import java.util.UUID
 
 /**
@@ -258,7 +258,7 @@ private fun Amount(state: TransactionState, isBalanceHidden: Boolean, modifier: 
     when (state) {
         is TransactionState.Content -> {
             Text(
-                text = if (isBalanceHidden) Strings.STARS else state.amount,
+                text = if (isBalanceHidden) StringsSigns.STARS else state.amount,
                 modifier = modifier,
                 textAlign = TextAlign.End,
                 color = when (state.status) {
