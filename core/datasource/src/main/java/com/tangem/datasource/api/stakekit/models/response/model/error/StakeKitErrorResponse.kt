@@ -9,6 +9,18 @@ class StakeKitErrorResponse(
     val message: StakeKitErrorMessageDTO? = null,
     @Json(name = "level")
     val level: String? = null, // unused
+
+    // 403
+    @Json(name = "type")
+    val type: AccessDeniedErrorTypeDTO? = null,
+    @Json(name = "code")
+    val code: String? = null,
+    @Json(name = "countryCode")
+    val countryCode: String,
+    @Json(name = "regionCode")
+    val regionCode: String? = null,
+    @Json(name = "tags")
+    val tags: List<String>? = null,
 )
 
 data class StakeKitErrorDetailsDTO(
@@ -19,6 +31,11 @@ data class StakeKitErrorDetailsDTO(
     @Json(name = "yieldId")
     val yieldId: String? = null,
 )
+
+enum class AccessDeniedErrorTypeDTO {
+    @Json(name = "GEO_LOCATION")
+    GEO_LOCATION,
+}
 
 enum class StakeKitErrorMessageDTO {
     @Json(name = "MissingArgumentsError")
