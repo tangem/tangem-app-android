@@ -10,7 +10,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -18,18 +18,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.common.Strings
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.SpacerW2
 import com.tangem.core.ui.components.appbar.ExpandableSearchView
-import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
+import com.tangem.feature.swap.models.TokenBalanceData
+import com.tangem.feature.swap.models.TokenToSelectState
 import com.tangem.feature.swap.presentation.R
+import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -212,7 +215,7 @@ private fun TokenItem(
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TokenIcon(
+        CurrencyIcon(
             state = token.tokenIcon,
             shouldDisplayNetwork = true,
         )
@@ -251,7 +254,7 @@ private fun TokenItem(
                     text = if (token.addedTokenBalanceData.isBalanceHidden &&
                         !token.addedTokenBalanceData.amountEquivalent.isNullOrEmpty()
                     ) {
-                        Strings.STARS
+                        StringsSigns.STARS
                     } else {
                         token.addedTokenBalanceData.amountEquivalent.orEmpty()
                     },
@@ -267,7 +270,7 @@ private fun TokenItem(
                     text = if (token.addedTokenBalanceData.isBalanceHidden &&
                         !token.addedTokenBalanceData.amount.isNullOrEmpty()
                     ) {
-                        Strings.STARS
+                        StringsSigns.STARS
                     } else {
                         token.addedTokenBalanceData.amount.orEmpty()
                     },
@@ -280,7 +283,7 @@ private fun TokenItem(
 }
 
 private val token = TokenToSelectState.TokenToSelect(
-    tokenIcon = TokenIconState.CoinIcon(
+    tokenIcon = CurrencyIconState.CoinIcon(
         url = "",
         fallbackResId = 0,
         isGrayscale = false,
