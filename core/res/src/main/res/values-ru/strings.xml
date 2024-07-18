@@ -657,6 +657,9 @@
   <string name="twins_recreate_warning">Это действие необратимо. У вас не будет доступа к старому кошельку.</string>
   <string name="twins_scan_twin_with_number">Приложите twin-карту с номером %s и не убирайте до окончания операции</string>
   <string name="unlock_wallet_description_full">Используйте %s или отсканируйте карту, чтобы получить доступ к своему кошельку</string>
+  <string name="user_push_notification_agreement_argument_one">Будьте в курсе новых функций и новостей</string>
+  <string name="user_push_notification_agreement_argument_two">Узнавайте первым о новых акциях</string>
+  <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
   <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
   <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите удалить этот кошелек?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Произошла ошибка, пожалуйста, отсканируйте свою карту для входа</string>
