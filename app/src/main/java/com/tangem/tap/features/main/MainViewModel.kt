@@ -3,11 +3,10 @@ package com.tangem.tap.features.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.navigation.ReduxNavController
 import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -16,9 +15,11 @@ import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
+import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
+import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.features.main.model.MainScreenState
 import com.tangem.tap.store
@@ -34,7 +35,7 @@ import javax.inject.Inject
 internal class MainViewModel @Inject constructor(
     private val updateBalanceHidingSettingsUseCase: UpdateBalanceHidingSettingsUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
-    private val reduxNavController: ReduxNavController,
+    private val router: AppRouter,
     private val fetchAppCurrenciesUseCase: FetchAppCurrenciesUseCase,
     private val deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
     private val incrementAppLaunchCounterUseCase: IncrementAppLaunchCounterUseCase,
@@ -44,6 +45,8 @@ internal class MainViewModel @Inject constructor(
     private val sendFeatureToggles: SendFeatureToggles,
     private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val stakingFeatureToggles: StakingFeatureToggles,
+    private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
 
@@ -69,6 +72,10 @@ internal class MainViewModel @Inject constructor(
         observeFlips()
         displayBalancesHidingStatusToast()
         displayHiddenBalancesModalNotification()
+
+        if (stakingFeatureToggles.isStakingEnabled) {
+            fetchStakingTokens()
+        }
 
         viewModelScope.launch(dispatchers.main) {
             deleteDeprecatedLogsUseCase()
@@ -115,6 +122,14 @@ internal class MainViewModel @Inject constructor(
         }
     }
 
+    private fun fetchStakingTokens() {
+        viewModelScope.launch(dispatchers.main) {
+            fetchStakingTokensUseCase()
+                .onLeft { Timber.e(it.toString(), "Unable to fetch the staking tokens list") }
+                .onRight { Timber.d("Staking token list was fetched successfully") }
+        }
+    }
+
     private fun updateSendFeatureToggle() {
         viewModelScope.launch(dispatchers.main) {
             sendFeatureToggles.fetchNewSendEnabled()
@@ -136,7 +151,7 @@ internal class MainViewModel @Inject constructor(
                 if (state.value.modalNotification?.isShow != true && !it.isUpdateFromToast) {
                     listenToFlipsUseCase.changeUpdateEnabled(false)
                     stateHolder.updateWithHiddenBalancesNotification()
-                    reduxNavController.navigate(NavigationAction.NavigateTo(AppScreen.ModalNotification))
+                    router.push(AppRoute.ModalNotification)
                 }
             }
             .launchIn(viewModelScope)
