@@ -4,8 +4,8 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.isZero
-import com.tangem.core.navigation.StateDialog
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.common.entities.IndeterminateProgressButton
