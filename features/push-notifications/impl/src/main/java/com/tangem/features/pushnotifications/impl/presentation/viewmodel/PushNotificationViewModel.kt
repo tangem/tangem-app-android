@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.domain.settings.DelayPermissionRequestUseCase
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
+import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.SetFirstTimeAskingPermissionUseCase
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.impl.navigation.DefaultPushNotificationsRouter
@@ -12,11 +13,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class PushNotificationViewModel @Inject constructor(
     private val setFirstTimeAskingPermissionUseCase: SetFirstTimeAskingPermissionUseCase,
     private val delayPermissionRequestUseCase: DelayPermissionRequestUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
+    private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
     private val router: DefaultPushNotificationsRouter,
     private val settingsManager: SettingsManager,
 ) : ViewModel(), PushNotificationsClickIntents {
@@ -25,6 +28,7 @@ internal class PushNotificationViewModel @Inject constructor(
         viewModelScope.launch {
             delayPermissionRequestUseCase(PUSH_PERMISSION)
             setFirstTimeAskingPermissionUseCase(PUSH_PERMISSION)
+            neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
         }
         router.openHome()
     }
@@ -38,6 +42,7 @@ internal class PushNotificationViewModel @Inject constructor(
     override fun onAllowedPermission() {
         viewModelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
+            neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
         }
         router.openHome()
     }
