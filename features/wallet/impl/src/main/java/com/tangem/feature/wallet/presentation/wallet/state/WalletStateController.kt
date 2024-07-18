@@ -65,12 +65,19 @@ internal class WalletStateController @Inject constructor() {
         return with(value) { wallets[selectedWalletIndex].walletCardState.id }
     }
 
-    fun showBottomSheet(content: TangemBottomSheetConfigContent, userWalletId: UserWalletId = getSelectedWalletId()) {
+    fun showBottomSheet(
+        content: TangemBottomSheetConfigContent,
+        userWalletId: UserWalletId = getSelectedWalletId(),
+        onDismiss: (() -> Unit)? = null,
+    ) {
         update(
             OpenBottomSheetTransformer(
                 userWalletId = userWalletId,
                 content = content,
-                onDismissBottomSheet = { update(CloseBottomSheetTransformer(userWalletId)) },
+                onDismissBottomSheet = {
+                    onDismiss?.invoke()
+                    update(CloseBottomSheetTransformer(userWalletId))
+                },
             ),
         )
     }
