@@ -9,6 +9,11 @@ interface PermissionRepository {
     suspend fun shouldInitiallyShowPermissionScreen(permission: String): Boolean
 
     /**
+     * Sets value indicating that screen for [permission] was shown in initial app launch
+     */
+    suspend fun neverInitiallyShowPermissionScreen(permission: String)
+
+    /**
      * Indicates which time [permission] was asked via platform dialog.
      * NOTE: Use this method to indicate either reroute to settings or display platform dialog.
      */
