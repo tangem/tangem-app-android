@@ -176,6 +176,8 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
+    // It's okay here because we need to be able to observe the selected wallet changes
+    @Suppress("DEPRECATION")
     private fun subscribeOnSelectedWalletFlow() {
         getSelectedWalletUseCase().onRight {
             it
