@@ -15,7 +15,7 @@ import com.tangem.datasource.api.express.models.request.AssetsRequestBody
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.local.token.AssetsStore
+import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -46,7 +46,7 @@ internal class DefaultCurrenciesRepository(
     private val userTokensStore: UserTokensStore,
     private val userWalletsStore: UserWalletsStore,
     private val walletManagersFacade: WalletManagersFacade,
-    private val assetsStore: AssetsStore,
+    private val expressAssetsStore: ExpressAssetsStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CurrenciesRepository {
@@ -60,6 +60,18 @@ internal class DefaultCurrenciesRepository(
 
     private val isMultiCurrencyWalletCurrenciesFetching = MutableStateFlow(
         value = emptyMap<UserWalletId, Boolean>(),
+    )
+    private val parallelTransactionsEnabledBlockchains = setOf(
+        Blockchain.Ethereum,
+        Blockchain.EthereumTestnet,
+        Blockchain.Polygon,
+        Blockchain.PolygonTestnet,
+        Blockchain.Arbitrum,
+        Blockchain.ArbitrumTestnet,
+        Blockchain.Binance,
+        Blockchain.BinanceTestnet,
+        Blockchain.Tron,
+        Blockchain.TronTestnet,
     )
 
     override suspend fun saveTokens(
@@ -249,7 +261,7 @@ internal class DefaultCurrenciesRepository(
 
         launch(dispatchers.io) {
             combine(
-                getMultiCurrencyWalletCurrencies(userWallet).distinctUntilChanged(),
+                getMultiCurrencyWalletCurrencies(userWallet),
                 isMultiCurrencyWalletCurrenciesFetching.map { it.getOrElse(userWallet.walletId) { false } },
             ) { currencies, isFetching ->
                 send(currencies, isStillLoading = isFetching)
@@ -368,18 +380,19 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    override fun hasPendingTransactions(
+    override fun isSendBlockedByPendingTransactions(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
     ): Boolean {
         val blockchain = Blockchain.fromId(cryptoCurrencyStatus.currency.network.id.value)
         val isBitcoinBlockchain = blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
-
-        return if (cryptoCurrencyStatus.currency is CryptoCurrency.Coin && isBitcoinBlockchain) {
-            val outgoingTransactions = cryptoCurrencyStatus.value.pendingTransactions.filter { it.isOutgoing }
-            outgoingTransactions.isNotEmpty()
-        } else {
-            coinStatus?.value?.hasCurrentNetworkTransactions == true
+        return when {
+            cryptoCurrencyStatus.currency is CryptoCurrency.Coin && isBitcoinBlockchain -> {
+                val outgoingTransactions = cryptoCurrencyStatus.value.pendingTransactions.filter { it.isOutgoing }
+                outgoingTransactions.isNotEmpty()
+            }
+            parallelTransactionsEnabledBlockchains.contains(blockchain) -> false
+            else -> coinStatus?.value?.hasCurrentNetworkTransactions == true
         }
     }
 
@@ -429,21 +442,23 @@ internal class DefaultCurrenciesRepository(
     }
 
     private suspend fun fetchTokensIfCacheExpired(userWallet: UserWallet, refresh: Boolean) {
-        try {
-            isMultiCurrencyWalletCurrenciesFetching.update {
-                it + (userWallet.walletId to true)
-            }
+        cacheRegistry.invokeOnExpire(
+            key = getTokensCacheKey(userWallet.walletId),
+            skipCache = refresh,
+            block = {
+                isMultiCurrencyWalletCurrenciesFetching.update {
+                    it + (userWallet.walletId to true)
+                }
 
-            cacheRegistry.invokeOnExpire(
-                key = getTokensCacheKey(userWallet.walletId),
-                skipCache = refresh,
-                block = { fetchTokens(userWallet) },
-            )
-        } finally {
-            isMultiCurrencyWalletCurrenciesFetching.update {
-                it - userWallet.walletId
-            }
-        }
+                try {
+                    fetchTokens(userWallet)
+                } finally {
+                    isMultiCurrencyWalletCurrenciesFetching.update {
+                        it - userWallet.walletId
+                    }
+                }
+            },
+        )
     }
 
     private suspend fun fetchTokens(userWallet: UserWallet) {
@@ -497,7 +512,7 @@ internal class DefaultCurrenciesRepository(
                     ),
                 )
 
-                assetsStore.store(userWalletId, response.getOrThrow())
+                expressAssetsStore.store(userWalletId, response.getOrThrow())
             }
         } catch (e: Throwable) {
             Timber.e(e, "Unable to fetch assets for: ${userWalletId.stringValue}")
