@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.common.routing)
 
     /* Project - Domain */
+    implementation(projects.domain.legacy)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
 
