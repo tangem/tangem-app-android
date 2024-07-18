@@ -14,7 +14,9 @@ internal interface WalletPushPermissionClickIntents {
 
     fun onDelayAskPushPermission()
 
-    fun onNeverAskPushPermission()
+    fun onDenyPushPermission()
+
+    fun onAllowPushPermission()
 }
 
 @ViewModelScoped
@@ -36,7 +38,13 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onNeverAskPushPermission() {
+    override fun onDenyPushPermission() {
+        viewModelScope.launch {
+            neverRequestPermissionUseCase(PUSH_PERMISSION)
+        }
+    }
+
+    override fun onAllowPushPermission() {
         viewModelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
         }
