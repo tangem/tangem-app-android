@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.staking.model.Yield
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.NetworkAddress
@@ -56,6 +57,11 @@ object TradeCryptoMiddleware {
             is TradeCryptoAction.Buy -> proceedBuyAction(state, action)
             is TradeCryptoAction.Sell -> proceedSellAction(action)
             is TradeCryptoAction.Swap -> openSwap(currency = action.cryptoCurrency)
+            is TradeCryptoAction.Stake -> openStaking(
+                userWalletId = action.userWalletId,
+                cryptoCurrencyId = action.cryptoCurrencyId,
+                yield = action.yield,
+            )
             is TradeCryptoAction.SendToken -> {
                 if (isSendRedesignedEnabled) {
                     handleNewSendToken(action = action)
@@ -157,6 +163,18 @@ object TradeCryptoMiddleware {
 
     private fun openSwap(currency: CryptoCurrency) {
         store.dispatchNavigationAction { push(AppRoute.Swap(currency = currency)) }
+    }
+
+    private fun openStaking(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID, yield: Yield) {
+        store.dispatchNavigationAction {
+            push(
+                AppRoute.Staking(
+                    userWalletId = userWalletId,
+                    cryptoCurrencyId = cryptoCurrencyId,
+                    yield = yield,
+                ),
+            )
+        }
     }
 
     private fun handleSendToken(action: TradeCryptoAction.SendToken) {
