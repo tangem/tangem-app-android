@@ -136,9 +136,10 @@ private fun Currencies(items: ImmutableList<CurrencyItemUM>, search: SearchBarUM
                 modifier = Modifier
                     .background(TangemTheme.colors.background.primary)
                     .padding(
-                        vertical = TangemTheme.dimens.spacing12,
-                        horizontal = TangemTheme.dimens.spacing16,
+                        top = TangemTheme.dimens.spacing16,
+                        bottom = TangemTheme.dimens.spacing12,
                     )
+                    .padding(horizontal = TangemTheme.dimens.spacing16)
                     .fillMaxWidth(),
             ) {
                 SearchBar(state = search)
