@@ -172,7 +172,7 @@ private class NotificationWithBackgroundPreviewProvider : PreviewParameterProvid
                 title = resourceReference(id = R.string.main_swap_changelly_promotion_title),
                 subtitle = resourceReference(
                     id = R.string.main_swap_changelly_promotion_message,
-                    formatArgs = wrappedList("1", "2"),
+                    formatArgs = wrappedList("1", "2", "3"),
                 ),
                 iconResId = R.drawable.img_swap_promo,
                 backgroundResId = R.drawable.img_swap_promo_blue_banner_background,
@@ -180,7 +180,7 @@ private class NotificationWithBackgroundPreviewProvider : PreviewParameterProvid
             NotificationConfig(
                 title = resourceReference(
                     id = R.string.token_swap_changelly_promotion_title,
-                    formatArgs = wrappedList("1", "2"),
+                    formatArgs = wrappedList("1"),
                 ),
                 subtitle = stringReference(
                     "Swap multiple currencies between any chains you wish. Swap multiple " +

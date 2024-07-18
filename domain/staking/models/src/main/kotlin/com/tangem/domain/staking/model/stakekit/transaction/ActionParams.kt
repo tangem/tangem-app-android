@@ -2,6 +2,7 @@ package com.tangem.domain.staking.model.stakekit.transaction
 
 import com.tangem.domain.staking.model.stakekit.Token
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import java.math.BigDecimal
 
 data class ActionParams(
@@ -11,4 +12,6 @@ data class ActionParams(
     val address: String,
     val validatorAddress: String,
     val token: Token,
+    val passthrough: String? = null,
+    val type: StakingActionType? = null,
 )

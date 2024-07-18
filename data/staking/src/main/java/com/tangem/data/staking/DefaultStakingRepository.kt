@@ -29,6 +29,7 @@ import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
@@ -161,10 +162,12 @@ internal class DefaultStakingRepository(
 
     override suspend fun createAction(params: ActionParams): StakingAction {
         return withContext(dispatchers.io) {
-            val body = createActionRequestBody(params)
             val response = when (params.actionCommonType) {
-                StakingActionCommonType.ENTER -> stakeKitApi.createEnterAction(body)
-                StakingActionCommonType.EXIT -> stakeKitApi.createExitAction(body)
+                StakingActionCommonType.ENTER -> stakeKitApi.createEnterAction(createActionRequestBody(params))
+                StakingActionCommonType.EXIT -> stakeKitApi.createExitAction(createActionRequestBody(params))
+                StakingActionCommonType.PENDING -> stakeKitApi.createPendingAction(
+                    createPendingActionRequestBody(params),
+                )
             }
 
             enterActionResponseConverter.convert(response.getOrThrow())
@@ -173,11 +176,12 @@ internal class DefaultStakingRepository(
 
     override suspend fun estimateGas(params: ActionParams): StakingGasEstimate {
         return withContext(dispatchers.io) {
-            val body = createActionRequestBody(params)
-
             val gasEstimateDTO = when (params.actionCommonType) {
-                StakingActionCommonType.ENTER -> stakeKitApi.estimateGasOnEnter(body)
-                StakingActionCommonType.EXIT -> stakeKitApi.estimateGasOnExit(body)
+                StakingActionCommonType.ENTER -> stakeKitApi.estimateGasOnEnter(createActionRequestBody(params))
+                StakingActionCommonType.EXIT -> stakeKitApi.estimateGasOnExit(createActionRequestBody(params))
+                StakingActionCommonType.PENDING -> stakeKitApi.estimateGasOnPending(
+                    createPendingActionRequestBody(params),
+                )
             }
 
             gasEstimateConverter.convert(gasEstimateDTO.getOrThrow())
@@ -435,9 +439,21 @@ internal class DefaultStakingRepository(
         return ActionRequestBody(
             integrationId = params.integrationId,
             addresses = Address(params.address),
-            args = ActionRequestBody.EnterActionRequestBodyArgs(
+            args = ActionRequestBodyArgs(
                 amount = params.amount.toFormattedString(params.token.decimals),
                 inputToken = tokenConverter.convertBack(params.token),
+                validatorAddress = params.validatorAddress,
+            ),
+        )
+    }
+
+    private fun createPendingActionRequestBody(params: ActionParams): PendingActionRequestBody {
+        return PendingActionRequestBody(
+            integrationId = params.integrationId,
+            type = params.type ?: StakingActionType.UNKNOWN,
+            passthrough = params.passthrough.orEmpty(),
+            args = ActionRequestBodyArgs(
+                amount = params.amount.toFormattedString(params.token.decimals),
                 validatorAddress = params.validatorAddress,
             ),
         )

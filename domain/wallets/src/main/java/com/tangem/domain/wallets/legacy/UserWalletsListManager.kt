@@ -16,12 +16,14 @@ interface UserWalletsListManager {
     val userWallets: Flow<List<UserWallet>>
 
     /** [Flow] with selected [UserWallet] updates */
+    @Deprecated("You should provide the selected wallet via routing parameters due to the scalability of the features")
     val selectedUserWallet: Flow<UserWallet>
 
     /** [List] with all saved [UserWallet]s updates */
     val userWalletsSync: List<UserWallet>
 
     /** Selected [UserWallet] */
+    @Deprecated("You should provide the selected wallet via routing parameters due to the scalability of the features")
     val selectedUserWalletSync: UserWallet?
 
     /** Indicates that the [UserWalletsListManager] contains at least one saved [UserWallet] */

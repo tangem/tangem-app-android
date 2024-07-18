@@ -20,24 +20,19 @@ import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
-import com.tangem.tap.features.details.ui.resetcard.ResetCardScreenState.ResetCardScreenContent.Dialog as ResetCardDialog
+import com.tangem.tap.features.details.ui.resetcard.ResetCardScreenState.Dialog as ResetCardDialog
 
 @Composable
 internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     SettingsScreensScaffold(
         modifier = modifier,
         content = {
-            when (state) {
-                is ResetCardScreenState.ResetCardScreenContent -> ResetCardView(state = state)
-                ResetCardScreenState.InitialState -> {
-                    // do nothing for now, just white screen
-                }
-            }
+            ResetCardView(state = state)
         },
         onBackClick = onBackClick,
     )
 
-    when (val dialog = (state as? ResetCardScreenState.ResetCardScreenContent)?.dialog) {
+    when (val dialog = state.dialog) {
         is ResetCardDialog.StartReset,
         is ResetCardDialog.ContinueReset,
         is ResetCardDialog.InterruptedReset,
@@ -48,7 +43,7 @@ internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Uni
 }
 
 @Composable
-private fun ResetCardView(state: ResetCardScreenState.ResetCardScreenContent) {
+private fun ResetCardView(state: ResetCardScreenState) {
     val scrollState = rememberScrollState()
 
     Column(
@@ -110,7 +105,7 @@ private fun Description(text: TextReference) {
 }
 
 @Composable
-private fun Conditions(state: ResetCardScreenState.ResetCardScreenContent) {
+private fun Conditions(state: ResetCardScreenState) {
     state.warningsToShow.forEach {
         when (it) {
             ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS -> {
@@ -120,7 +115,6 @@ private fun Conditions(state: ResetCardScreenState.ResetCardScreenContent) {
                     description = TextReference.Res(R.string.reset_card_to_factory_condition_1),
                 )
             }
-
             ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE -> {
                 ConditionCheckBox(
                     checkedState = state.acceptCondition2Checked,
@@ -192,7 +186,7 @@ private fun ResetButton(enabled: Boolean, onResetButtonClick: () -> Unit) {
 }
 
 @Composable
-private fun CommonResetDialog(dialog: ResetCardScreenState.ResetCardScreenContent.Dialog) {
+private fun CommonResetDialog(dialog: ResetCardScreenState.Dialog) {
     BasicDialog(
         title = stringResource(dialog.titleResId),
         message = stringResource(dialog.messageResId),
@@ -231,10 +225,13 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
             .background(TangemTheme.colors.background.secondary),
     ) {
         ResetCardScreen(
-            state = ResetCardScreenState.ResetCardScreenContent(
-                accepted = true,
+            state = ResetCardScreenState(
+                resetButtonEnabled = true,
+                showResetPasswordButton = false,
                 warningsToShow = listOf(ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS),
                 descriptionText = TextReference.Res(R.string.reset_card_with_backup_to_factory_message),
+                acceptCondition1Checked = false,
+                acceptCondition2Checked = false,
                 onAcceptCondition1ToggleClick = {},
                 onAcceptCondition2ToggleClick = {},
                 onResetButtonClick = {},
