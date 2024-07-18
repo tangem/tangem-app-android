@@ -3,8 +3,7 @@ package com.tangem.feature.qrscanning.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tangem.feature.qrscanning.QrScanningRouter.Companion.NETWORK_KEY
-import com.tangem.feature.qrscanning.QrScanningRouter.Companion.SOURCE_KEY
+import com.tangem.common.routing.AppRoute
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.navigation.QrScanningInnerRouter
 import com.tangem.feature.qrscanning.presentation.QrScanningState
@@ -24,8 +23,10 @@ internal class QrScanningViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val source: SourceType = savedStateHandle[SOURCE_KEY] ?: error("Source is mandatory")
-    private val network: String? = savedStateHandle[NETWORK_KEY]
+    private val source: SourceType = savedStateHandle.get<Int>(AppRoute.QrScanning.SOURCE_KEY)
+        ?.let { SourceType.entries[it] }
+        ?: error("Source is mandatory")
+    private val network: String? = savedStateHandle[AppRoute.QrScanning.NETWORK_KEY]
 
     val uiState: StateFlow<QrScanningState> = stateHolder.uiState
     val launchGalleryEvent: SharedFlow<GalleryRequest> = clickIntents.launchGallery
