@@ -1,10 +1,10 @@
 package com.tangem.feature.swap.di
 
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
-import com.tangem.feature.swap.domain.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -23,11 +23,13 @@ class SwapPresentationModule {
         dispatcherProvider: CoroutineDispatcherProvider,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
     ): GetCryptoCurrencyStatusSyncUseCase {
         return GetCryptoCurrencyStatusSyncUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
             dispatchers = dispatcherProvider,
         )
     }
