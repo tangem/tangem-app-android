@@ -104,6 +104,7 @@ internal class YieldBalancesConverter(
                         count = unbondingPeriod,
                         formatArgs = wrappedList(unbondingPeriod),
                     ),
+                    pendingActions = balance.pendingActions.toPersistentList(),
                 )
             }
         }
