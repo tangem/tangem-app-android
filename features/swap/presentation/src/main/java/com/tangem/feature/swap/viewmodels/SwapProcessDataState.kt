@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.viewmodels
 
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -7,7 +8,6 @@ import com.tangem.feature.swap.domain.models.ui.RequestApproveStateData
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokensDataStateExpress
 import com.tangem.feature.swap.domain.models.ui.TxFee
-import com.tangem.feature.swap.models.ApproveType
 
 data class SwapProcessDataState(
     // Initial network id

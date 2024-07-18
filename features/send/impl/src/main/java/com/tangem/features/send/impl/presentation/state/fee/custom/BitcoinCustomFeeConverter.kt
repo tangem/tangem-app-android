@@ -5,6 +5,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
@@ -14,7 +15,6 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.checkExceedBalance
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
-import com.tangem.features.send.impl.presentation.utils.getFiatReference
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.Provider
