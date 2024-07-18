@@ -19,7 +19,8 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.utils)
     implementation(projects.core.ui)
-    implementation(projects.common)
+    implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** Domain modules **/
     implementation(projects.domain.appCurrency)
@@ -35,6 +36,7 @@ dependencies {
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
+    implementation(projects.domain.staking)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
