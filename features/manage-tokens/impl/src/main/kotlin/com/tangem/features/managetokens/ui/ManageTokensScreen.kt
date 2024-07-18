@@ -217,7 +217,10 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, modifier: Modifier = M
         )
 
         NetworksList(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+            modifier = Modifier.padding(
+                start = TangemTheme.dimens.spacing10,
+                end = TangemTheme.dimens.spacing8,
+            ),
             networks = item.networks,
             currencyId = item.id,
         )
