@@ -43,6 +43,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
@@ -51,6 +52,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tester.api.TesterRouter
@@ -187,6 +189,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     lateinit var cardRepository: CardRepository
+
+    @Inject
+    lateinit var shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase
 
     internal val viewModel: MainViewModel by viewModels()
 
@@ -530,8 +535,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         } else {
             lifecycleScope.launch {
                 val toggles = store.inject(getDependency = DaggerGraphState::pushNotificationsFeatureToggles)
-                val isEnabled = toggles.isPushNotificationsEnabled && !cardRepository.isTangemTOSAccepted()
-                val route = if (isEnabled) AppRoute.Disclaimer(isTosAccepted = false) else AppRoute.Home
+                val isPushPermissionEnabled = toggles.isPushNotificationsEnabled
+                val shouldShowTos = !cardRepository.isTangemTOSAccepted() && isPushPermissionEnabled
+                val wasPushInitiallyAsked = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { false }
+                val shouldShowInitialPush = wasPushInitiallyAsked && isPushPermissionEnabled
+
+                val route = when {
+                    shouldShowTos -> AppRoute.Disclaimer(isTosAccepted = false)
+                    shouldShowInitialPush -> AppRoute.PushNotification
+                    else -> AppRoute.Home
+                }
 
                 store.dispatchNavigationAction { replaceAll(route) }
                 intentProcessor.handleIntent(intentWhichStartedActivity, false)
