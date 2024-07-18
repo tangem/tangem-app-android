@@ -24,7 +24,6 @@ internal fun BaseExtension.configureCompose(project: Project) {
             contains(":features:onboarding") || // TODO: divide on api/impl after migrating all onboarding to module
             contains(Regex(pattern = ":presentation\$")) ||
             contains(Regex(pattern = ":app\$")) || // TODO: [REDACTED_JIRA]
-            contains(Regex(pattern = ":features:manage-tokens:api\$")) || // provides Composable function
             contains(Regex(pattern = ":features:markets:api\$")) || // provides Composable function
             contains(Regex(pattern = ":impl\$"))
     }
