@@ -30,6 +30,7 @@ internal class MarketsTokenItemConverter(
             trendPercentText = value.getTrendPercent(),
             trendType = value.getTrendType(),
             chardData = value.getChartData(),
+            showUnder100kMarketCap = value.isUnder100kMarketCap(),
         )
     }
 
@@ -140,5 +141,13 @@ internal class MarketsTokenItemConverter(
             percent = percent,
             useAbsoluteValue = true,
         )
+    }
+
+    private fun TokenMarket.isUnder100kMarketCap(): Boolean {
+        return tokenQuotes.currentPrice.compareTo(k100) == -1
+    }
+
+    private companion object {
+        val k100 = BigDecimal.valueOf(100_000)
     }
 }
