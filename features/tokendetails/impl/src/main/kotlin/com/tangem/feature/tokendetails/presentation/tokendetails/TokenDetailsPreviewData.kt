@@ -9,7 +9,9 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
@@ -17,7 +19,9 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.math.BigDecimal
 
+@Suppress("LargeClass")
 internal object TokenDetailsPreviewData {
 
     val tokenDetailsTopAppBarConfig = TokenDetailsTopAppBarConfig(
@@ -100,17 +104,60 @@ internal object TokenDetailsPreviewData {
         TokenDetailsActionButton.Swap(dimContent = false, onClick = {}),
     )
 
-    val balanceLoading = TokenDetailsBalanceBlockState.Loading(actionButtons = actionButtons)
+    private val balanceSegmentedButtonConfig = persistentListOf(
+        TokenBalanceSegmentedButtonConfig(
+            title = resourceReference(R.string.common_all),
+            type = BalanceType.ALL,
+        ),
+        TokenBalanceSegmentedButtonConfig(
+            title = resourceReference(R.string.staking_details_available),
+            type = BalanceType.AVAILABLE,
+        ),
+    )
+
+    val balanceLoading = TokenDetailsBalanceBlockState.Loading(
+        actionButtons = actionButtons,
+        balanceSegmentedButtonConfig = balanceSegmentedButtonConfig,
+        selectedBalanceType = BalanceType.ALL,
+    )
     val balanceContent = TokenDetailsBalanceBlockState.Content(
         actionButtons = actionButtons,
-        fiatBalance = "91,50$",
-        cryptoBalance = "966,96 XLM",
+        fiatBalance = BigDecimal.ZERO,
+        cryptoBalance = BigDecimal.ZERO,
+        balanceSegmentedButtonConfig = balanceSegmentedButtonConfig,
+        selectedBalanceType = BalanceType.ALL,
+        onBalanceSelect = {},
+        displayCryptoBalance = "966,96 XLM",
+        displayFiatBalance = "91,50$",
+        isBalanceSelectorEnabled = false,
     )
-    val balanceError = TokenDetailsBalanceBlockState.Error(actionButtons = actionButtons)
+    val balanceError = TokenDetailsBalanceBlockState.Error(
+        actionButtons = actionButtons,
+        balanceSegmentedButtonConfig = balanceSegmentedButtonConfig,
+        selectedBalanceType = BalanceType.ALL,
+    )
 
     private val marketPriceLoading = MarketPriceBlockState.Loading(currencySymbol = "USDT")
 
-    private val stakingLoading = StakingBlockState.Loading(iconState = iconState)
+    val stakingLoadingBlock = StakingBlockUM.Loading(iconState)
+    val stakingErrorBlock = StakingBlockUM.Error(iconState)
+
+    val stakingAvailableBlock = StakingBlockUM.StakeAvailable(
+        interestRate = "7.38",
+        periodInDays = 4,
+        tokenSymbol = "XLM",
+        iconState = iconState,
+        onStakeClicked = {},
+    )
+
+    val stakedBlock = StakingBlockUM.Staked(
+        cryptoValue = stringReference("5 SOL"),
+        fiatValue = stringReference("456.34 $"),
+        rewardValue = resourceReference(R.string.staking_details_no_rewards_to_claim, wrappedList("0.43 $")),
+        cryptoAmount = BigDecimal.ZERO,
+        fiatAmount = BigDecimal.ZERO,
+        onStakeClicked = {},
+    )
 
     private val pullToRefreshConfig = TokenDetailsPullToRefreshConfig(
         isRefreshing = false,
@@ -246,7 +293,7 @@ internal object TokenDetailsPreviewData {
         tokenInfoBlockState = tokenInfoBlockState,
         tokenBalanceBlockState = balanceLoading,
         marketPriceBlockState = marketPriceLoading,
-        stakingBlockState = stakingLoading,
+        stakingBlocksState = stakingLoadingBlock,
         notifications = persistentListOf(),
         txHistoryState = TxHistoryState.Content(
             contentItems = MutableStateFlow(
@@ -260,7 +307,7 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
-        isStakingAvailable = false,
+        isStakingBlockShown = false,
         event = consumedEvent(),
     )
 
@@ -278,12 +325,7 @@ internal object TokenDetailsPreviewData {
                 type = PriceChangeType.UP,
             ),
         ),
-        stakingBlockState = StakingBlockState.Content(
-            interestRate = "7.38",
-            periodInDays = 4,
-            tokenSymbol = "XLM",
-            iconState = iconState,
-        ),
+        stakingBlocksState = stakingAvailableBlock,
         notifications = persistentListOf(),
         txHistoryState = TxHistoryState.NotSupported(
             onExploreClick = {},
@@ -296,7 +338,7 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = true,
-        isStakingAvailable = true,
+        isStakingBlockShown = true,
         event = consumedEvent(),
     )
 
@@ -306,5 +348,6 @@ internal object TokenDetailsPreviewData {
                 value = PagingData.from(txHistoryItems),
             ),
         ),
+        stakingBlocksState = stakedBlock,
     )
 }
