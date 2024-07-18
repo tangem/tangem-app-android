@@ -2,16 +2,17 @@ package com.tangem.core.ui.components.rows
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.rows.model.ChainRowUM
@@ -27,9 +28,10 @@ fun ChainRow(model: ChainRowUM, modifier: Modifier = Modifier, action: @Composab
     RowContentContainer(
         modifier = modifier
             .heightIn(min = TangemTheme.dimens.size68)
+            .padding(vertical = TangemTheme.dimens.spacing8)
             .padding(
-                vertical = TangemTheme.dimens.spacing12,
-                horizontal = TangemTheme.dimens.spacing14,
+                start = TangemTheme.dimens.spacing8,
+                end = TangemTheme.dimens.spacing12,
             ),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         icon = {
@@ -65,17 +67,7 @@ private fun Preview_ChainRow(@PreviewParameter(ChainRowParameterProvider::class)
             modifier = Modifier.background(TangemTheme.colors.background.primary),
             model = state,
             action = {
-                IconButton(
-                    modifier = Modifier.size(TangemTheme.dimens.size32),
-                    onClick = { /* [REDACTED_TODO_COMMENT]*/ },
-                ) {
-                    Icon(
-                        modifier = Modifier.size(TangemTheme.dimens.size24),
-                        tint = TangemTheme.colors.icon.informative,
-                        painter = painterResource(id = R.drawable.ic_chevron_24),
-                        contentDescription = null,
-                    )
-                }
+                TangemSwitch(onCheckedChange = {}, checked = false)
             },
         )
     }
