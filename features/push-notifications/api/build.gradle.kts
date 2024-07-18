@@ -12,4 +12,7 @@ dependencies {
 
     /** AndroidX */
     implementation(deps.androidx.fragment.ktx)
+
+    /** Core */
+    implementation(projects.core.analytics.models)
 }
