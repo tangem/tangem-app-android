@@ -7,7 +7,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.quote.QuotesStore
-import com.tangem.datasource.local.token.AssetsStore
+import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.tokens.repository.*
@@ -31,7 +31,7 @@ internal object TokensDataModule {
         userTokensStore: UserTokensStore,
         userWalletsStore: UserWalletsStore,
         walletManagersFacade: WalletManagersFacade,
-        assetsStore: AssetsStore,
+        expressAssetsStore: ExpressAssetsStore,
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
     ): CurrenciesRepository {
@@ -41,7 +41,7 @@ internal object TokensDataModule {
             userTokensStore = userTokensStore,
             walletManagersFacade = walletManagersFacade,
             userWalletsStore = userWalletsStore,
-            assetsStore = assetsStore,
+            expressAssetsStore = expressAssetsStore,
             cacheRegistry = cacheRegistry,
             dispatchers = dispatchers,
         )
@@ -88,10 +88,10 @@ internal object TokensDataModule {
     @Provides
     @Singleton
     fun provideDefaultMarketCoinsRepository(
-        assetsStore: AssetsStore,
+        expressAssetsStore: ExpressAssetsStore,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): MarketCryptoCurrencyRepository {
-        return DefaultMarketCryptoCurrencyRepository(assetsStore, coroutineDispatcherProvider)
+        return DefaultMarketCryptoCurrencyRepository(expressAssetsStore, coroutineDispatcherProvider)
     }
 
     @Provides
