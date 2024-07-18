@@ -2,8 +2,9 @@ package com.tangem.feature.swap.ui
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -21,6 +22,8 @@ import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.viewmodels.SwapProcessDataState
 import com.tangem.utils.Provider
+import com.tangem.utils.StringsSigns.DASH_SIGN
+import com.tangem.utils.StringsSigns.TILDE_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -217,6 +220,7 @@ internal class StateBuilder(
             quoteModel = quoteModel,
             fromToken = fromToken,
             selectedFeeType = selectedFeeType,
+            providerName = swapProvider.name,
         )
         val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
@@ -241,7 +245,11 @@ internal class StateBuilder(
                     showWarning = true,
                     actions.onReceiveCardWarningClick,
                 ),
-                amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
+                amountTextFieldValue = TextFieldValue(
+                    quoteModel.toTokenInfo.tokenAmount
+                        .formatToUIRepresentation()
+                        .appendApproximateSign(),
+                ),
                 amountEquivalent = getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
                 token = toCurrencyStatus,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
@@ -257,6 +265,7 @@ internal class StateBuilder(
             permissionState = convertPermissionState(
                 lastPermissionState = uiStateHolder.permissionState,
                 permissionDataState = quoteModel.permissionState,
+                providerName = swapProvider.name,
                 onGivePermissionClick = actions.onGivePermissionClick,
                 onChangeApproveType = actions.onChangeApproveType,
             ),
@@ -316,11 +325,12 @@ internal class StateBuilder(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
         selectedFeeType: FeeType,
+        providerName: String,
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
         maybeAddDomainWarnings(quoteModel, warnings)
         maybeAddNeedReserveToCreateAccountWarning(quoteModel, warnings)
-        maybeAddPermissionNeededWarning(quoteModel, warnings, fromToken)
+        maybeAddPermissionNeededWarning(quoteModel, warnings, fromToken, providerName)
         maybeAddNetworkFeeCoverageWarning(quoteModel, warnings, selectedFeeType)
         maybeAddUnableCoverFeeWarning(quoteModel, fromToken, warnings)
         maybeAddInsufficientFundsWarning(quoteModel, warnings)
@@ -468,6 +478,7 @@ internal class StateBuilder(
         quoteModel: SwapState.QuotesLoadedState,
         warnings: MutableList<SwapWarning>,
         fromToken: CryptoCurrency,
+        providerName: String,
     ) {
         if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
             quoteModel.preparedSwapConfigState.feeState is SwapFeeState.Enough &&
@@ -475,7 +486,7 @@ internal class StateBuilder(
         ) {
             warnings.add(
                 SwapWarning.PermissionNeeded(
-                    createPermissionNotificationConfig(fromToken.symbol),
+                    createPermissionNotificationConfig(providerName, fromToken.symbol),
                 ),
             )
         }
@@ -649,7 +660,7 @@ internal class StateBuilder(
             ),
             receiveCardData = receiveCardData,
             warnings = warnings,
-            permissionState = SwapPermissionState.Empty,
+            permissionState = GiveTxPermissionState.Empty,
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 enabled = false,
@@ -788,7 +799,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
-                balance = toTokenStatus?.getFormattedAmount(isNeedSymbol = false) ?: UNKNOWN_AMOUNT_SIGN,
+                balance = toTokenStatus?.getFormattedAmount(isNeedSymbol = false) ?: DASH_SIGN,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             warnings = emptyList(),
@@ -908,7 +919,7 @@ internal class StateBuilder(
     }
 
     fun updateApproveType(uiState: SwapStateHolder, approveType: ApproveType): SwapStateHolder {
-        val config = uiState.bottomSheetConfig?.content as? GivePermissionBottomSheetConfig
+        val config = uiState.bottomSheetConfig?.content as? GiveTxPermissionBottomSheetConfig
         return if (config != null) {
             uiState.copy(
                 bottomSheetConfig = uiState.bottomSheetConfig.copy(
@@ -982,7 +993,7 @@ internal class StateBuilder(
             ),
         )
         return uiState.copy(
-            permissionState = SwapPermissionState.InProgress,
+            permissionState = GiveTxPermissionState.InProgress,
             warnings = warnings,
         )
     }
@@ -1144,27 +1155,28 @@ internal class StateBuilder(
     }
 
     private fun convertPermissionState(
-        lastPermissionState: SwapPermissionState,
+        lastPermissionState: GiveTxPermissionState,
         permissionDataState: PermissionDataState,
+        providerName: String,
         onGivePermissionClick: () -> Unit,
         onChangeApproveType: (ApproveType) -> Unit,
-    ): SwapPermissionState {
-        val approveType = if (lastPermissionState is SwapPermissionState.ReadyForRequest) {
+    ): GiveTxPermissionState {
+        val approveType = if (lastPermissionState is GiveTxPermissionState.ReadyForRequest) {
             lastPermissionState.approveType
         } else {
             ApproveType.UNLIMITED
         }
         return when (permissionDataState) {
-            PermissionDataState.Empty -> SwapPermissionState.Empty
-            PermissionDataState.PermissionFailed -> SwapPermissionState.Empty
-            PermissionDataState.PermissionLoading -> SwapPermissionState.InProgress
+            PermissionDataState.Empty -> GiveTxPermissionState.Empty
+            PermissionDataState.PermissionFailed -> GiveTxPermissionState.Empty
+            PermissionDataState.PermissionLoading -> GiveTxPermissionState.InProgress
             is PermissionDataState.PermissionReadyForRequest -> {
                 val permissionFee = when (val fee = permissionDataState.requestApproveData.fee) {
                     TxFeeState.Empty -> error("Fee shouldn't be empty")
                     is TxFeeState.MultipleFeeState -> fee.priorityFee
                     is TxFeeState.SingleFeeState -> fee.fee
                 }
-                SwapPermissionState.ReadyForRequest(
+                GiveTxPermissionState.ReadyForRequest(
                     currency = permissionDataState.currency,
                     amount = permissionDataState.amount,
                     approveType = approveType,
@@ -1179,6 +1191,11 @@ internal class StateBuilder(
                         enabled = true,
                     ),
                     onChangeApproveType = onChangeApproveType,
+                    subtitle = resourceReference(
+                        id = R.string.give_permission_swap_subtitle,
+                        formatArgs = wrappedList(providerName, permissionDataState.currency),
+                    ),
+                    dialogText = resourceReference(R.string.swapping_approve_information_text),
                 )
             }
         }
@@ -1197,8 +1214,8 @@ internal class StateBuilder(
 
     fun showPermissionBottomSheet(uiState: SwapStateHolder, onDismiss: () -> Unit): SwapStateHolder {
         val permissionState = uiState.permissionState
-        if (permissionState is SwapPermissionState.ReadyForRequest) {
-            val config = GivePermissionBottomSheetConfig(
+        if (permissionState is GiveTxPermissionState.ReadyForRequest) {
+            val config = GiveTxPermissionBottomSheetConfig(
                 data = permissionState,
                 onCancel = onDismiss,
             )
@@ -1402,12 +1419,12 @@ internal class StateBuilder(
     }
 
     // region warnings
-    private fun createPermissionNotificationConfig(fromTokenSymbol: String): NotificationConfig {
+    private fun createPermissionNotificationConfig(providerName: String, fromTokenSymbol: String): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.express_provider_permission_needed),
             subtitle = resourceReference(
-                id = R.string.swapping_permission_subheader,
-                formatArgs = wrappedList(fromTokenSymbol),
+                id = R.string.give_permission_swap_subtitle,
+                formatArgs = wrappedList(providerName, fromTokenSymbol),
             ),
             iconResId = R.drawable.ic_locked_24,
         )
@@ -1637,14 +1654,14 @@ internal class StateBuilder(
     }
 
     private fun CryptoCurrencyStatus.getFormattedAmount(isNeedSymbol: Boolean): String {
-        val amount = value.amount ?: return UNKNOWN_AMOUNT_SIGN
+        val amount = value.amount ?: return DASH_SIGN
         val symbol = if (isNeedSymbol) currency.symbol else ""
         return BigDecimalFormatter.formatCryptoAmount(amount, symbol, currency.decimals)
     }
 
     @Suppress("UnusedPrivateMember")
     private fun CryptoCurrencyStatus.getFormattedFiatAmount(): String {
-        val fiatAmount = value.fiatAmount ?: return UNKNOWN_AMOUNT_SIGN
+        val fiatAmount = value.fiatAmount ?: return DASH_SIGN
         val appCurrency = appCurrencyProvider()
 
         return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
@@ -1676,6 +1693,10 @@ internal class StateBuilder(
         }
     }
 
+    private fun String.appendApproximateSign(): String {
+        return "$TILDE_SIGN $this"
+    }
+
     private companion object {
         private const val RU_LOCALE = "ru"
         private const val EN_LOCALE = "en"
@@ -1683,7 +1704,6 @@ internal class StateBuilder(
         const val ADDRESS_FIRST_PART_LENGTH = 7
         const val ADDRESS_SECOND_PART_LENGTH = 4
         private const val PRICE_IMPACT_THRESHOLD = 0.1
-        private const val UNKNOWN_AMOUNT_SIGN = "—"
         private const val MAX_DECIMALS_TO_SHOW = 8
         private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
         private const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
