@@ -31,6 +31,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
 
     /** Domain */
+    implementation(projects.domain.wallets.models)
     implementation(projects.features.referral.domain)
 
     /** Other libraries */
