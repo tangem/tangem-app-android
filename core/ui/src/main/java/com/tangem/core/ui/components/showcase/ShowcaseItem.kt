@@ -2,6 +2,7 @@ package com.tangem.core.ui.components.showcase
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -24,7 +25,9 @@ internal fun ShowcaseItem(@DrawableRes iconRes: Int, text: TextReference) {
             text = text.resolveReference(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.secondary,
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing20),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = TangemTheme.dimens.spacing20),
         )
     }
 }
