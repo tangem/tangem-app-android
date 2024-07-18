@@ -36,9 +36,8 @@ internal fun SendSpeedSelectorItem(
     val content = feeSelectorState as? FeeSelectorState.Content
     val amount = content?.getAmount(feeType)
     val (showDivider, isVisible) = content.getDividerAndVisibility(feeType)
-    val hasCustomValues = !content?.customValues.isNullOrEmpty()
     AnimatedVisibility(
-        visible = isVisible || hasCustomValues,
+        visible = isVisible,
         label = "Fee Selector Visibility Animation",
         enter = expandVertically().plus(fadeIn()),
         exit = shrinkVertically().plus(fadeOut()),
@@ -135,7 +134,7 @@ private fun FeeSelectorState.Content?.getDividerAndVisibility(feeType: FeeType):
     val isNotSingle = this?.fees !is TransactionFee.Single
     return when (feeType) {
         FeeType.Slow -> true to isNotSingle
-        FeeType.Market -> isNotSingle to true
+        FeeType.Market -> (isNotSingle || hasCustomValues) to true
         FeeType.Fast -> hasCustomValues to isNotSingle
         FeeType.Custom -> false to hasCustomValues
     }

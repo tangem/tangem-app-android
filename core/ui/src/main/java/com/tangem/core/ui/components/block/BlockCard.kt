@@ -32,6 +32,6 @@ val TangemBlockCardColors: CardColors
     get() = CardColors(
         containerColor = TangemTheme.colors.background.primary,
         contentColor = TangemTheme.colors.text.primary1,
-        disabledContainerColor = TangemTheme.colors.button.disabled,
-        disabledContentColor = TangemTheme.colors.text.disabled,
+        disabledContainerColor = TangemTheme.colors.background.primary,
+        disabledContentColor = TangemTheme.colors.text.primary1,
     )

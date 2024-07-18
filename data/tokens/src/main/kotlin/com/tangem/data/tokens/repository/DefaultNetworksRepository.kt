@@ -183,24 +183,22 @@ internal class DefaultNetworksRepository(
         networks: Set<Network>,
         refresh: Boolean,
     ) {
-        try {
-            isNetworkStatusesFetching.update {
-                it + (userWalletId to true)
-            }
+        val currencies = getCurrencies(userWalletId, networks)
+        val networksDeferred = networks.mapNotNull { network ->
+            fetchNetworkStatusIfCacheExpired(userWalletId, network, currencies, refresh)
+        }
 
-            val currencies = getCurrencies(userWalletId, networks)
-            coroutineScope {
-                networks
-                    .map { network ->
-                        async {
-                            fetchNetworkStatusIfCacheExpired(userWalletId, network, currencies, refresh)
-                        }
-                    }
-                    .awaitAll()
-            }
-        } finally {
-            isNetworkStatusesFetching.update {
-                it - userWalletId
+        if (networksDeferred.isNotEmpty()) {
+            try {
+                isNetworkStatusesFetching.update {
+                    it + (userWalletId to true)
+                }
+
+                networksDeferred.awaitAll()
+            } finally {
+                isNetworkStatusesFetching.update {
+                    it - userWalletId
+                }
             }
         }
     }
@@ -226,12 +224,19 @@ internal class DefaultNetworksRepository(
         network: Network,
         currencies: Sequence<CryptoCurrency>,
         refresh: Boolean,
-    ) {
-        cacheRegistry.invokeOnExpire(
-            key = getNetworksStatusesCacheKey(userWalletId, network),
-            skipCache = refresh,
-            block = { fetchNetworkStatus(userWalletId, network, currencies) },
-        )
+    ): Deferred<Unit>? = coroutineScope {
+        val key = getNetworksStatusesCacheKey(userWalletId, network)
+        if (refresh || cacheRegistry.isExpired(key)) {
+            async {
+                cacheRegistry.invokeOnExpire(
+                    key = key,
+                    skipCache = refresh,
+                    block = { fetchNetworkStatus(userWalletId, network, currencies) },
+                )
+            }
+        } else {
+            null
+        }
     }
 
     private suspend fun fetchNetworkStatus(

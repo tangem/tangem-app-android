@@ -37,11 +37,15 @@ dependencies {
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.walletConnect)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.legacy)
 
     /* SDK */
     // TODO: For TangemError model, should be removed after card domain scanning refactoring
     implementation(deps.tangem.card.core)
+    // For image resolving
+    implementation(deps.tangem.blockchain)
 
     /* AndroidX */
     implementation(deps.androidx.fragment.ktx)
@@ -55,6 +59,7 @@ dependencies {
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.shimmer)
+    implementation(deps.compose.coil)
 
     /* DI */
     implementation(deps.hilt.android)

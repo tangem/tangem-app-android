@@ -74,6 +74,7 @@ dependencies {
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.staking)
     implementation(projects.domain.walletConnect)
+    implementation(projects.domain.markets)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -109,6 +110,7 @@ dependencies {
     implementation(projects.data.qrScanning)
     implementation(projects.data.staking)
     implementation(projects.data.walletConnect)
+    implementation(projects.data.markets)
 
     /** Features */
     implementation(projects.features.onboarding)

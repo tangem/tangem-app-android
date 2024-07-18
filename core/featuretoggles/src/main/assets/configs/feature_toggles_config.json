@@ -20,10 +20,6 @@
         "version": "undefined"
     },
     {
-        "name": "TOKEN_LIST_LCE_ENABLED",
-        "version": "5.12.0"
-    },
-    {
         "name": "CARDANO_TOKENS_SUPPORT_ENABLED",
         "version": "5.12.0"
     },
