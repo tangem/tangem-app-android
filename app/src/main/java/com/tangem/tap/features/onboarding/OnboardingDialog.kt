@@ -1,7 +1,7 @@
 package com.tangem.tap.features.onboarding
 
 import com.tangem.common.extensions.VoidCallback
-import com.tangem.core.navigation.StateDialog
+import com.tangem.domain.redux.StateDialog
 
 /**
 [REDACTED_AUTHOR]
