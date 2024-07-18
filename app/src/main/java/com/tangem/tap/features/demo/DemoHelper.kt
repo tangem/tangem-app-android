@@ -4,7 +4,6 @@ import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.store
@@ -21,7 +20,6 @@ object DemoHelper {
     private val disabledActionFeatures = listOf(
         WalletConnectAction.StartWalletConnect::class.java,
         BackupAction.StartBackup::class.java,
-        DetailsAction.ResetToFactory.Start::class.java,
     )
 
     fun isDemoCard(scanResponse: ScanResponse): Boolean = isDemoCardId(scanResponse.card.cardId)
