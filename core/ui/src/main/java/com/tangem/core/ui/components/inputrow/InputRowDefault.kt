@@ -4,12 +4,16 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -20,8 +24,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * [InputRowDefault](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-807&mode=design&t=86eKp9izWxUvmoCq-4)
@@ -64,7 +68,7 @@ fun InputRowDefault(
             ) {
                 Text(
                     text = title.resolveReference(),
-                    style = TangemTheme.typography.caption2,
+                    style = TangemTheme.typography.subtitle2,
                     color = titleColor,
                 )
                 Text(
@@ -80,11 +84,13 @@ fun InputRowDefault(
                     contentDescription = null,
                     tint = iconTint,
                     modifier = Modifier
+                        .align(CenterVertically)
                         .padding(
                             top = TangemTheme.dimens.spacing10,
                             bottom = TangemTheme.dimens.spacing10,
                         )
                         .clickable(
+                            enabled = onIconClick != null,
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(bounded = false),
                         ) { onIconClick?.invoke() },

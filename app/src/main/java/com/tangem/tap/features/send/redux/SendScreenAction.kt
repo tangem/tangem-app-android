@@ -7,7 +7,8 @@ import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.core.TangemSdkError
-import com.tangem.core.navigation.StateDialog
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.analytics.events.Token.Send.AddressEntered
 import com.tangem.tap.common.redux.ToastNotificationAction
@@ -185,12 +186,16 @@ sealed class SendAction : SendScreenAction {
         ) : Dialog()
 
         sealed class SendTransactionFails : Dialog() {
-            data class CardSdkError(val error: TangemSdkError) : Dialog()
-            data class BlockchainSdkError(val error: com.tangem.blockchain.common.BlockchainSdkError) : Dialog()
+            data class CardSdkError(val error: TangemSdkError, val scanResponse: ScanResponse) : Dialog()
+            data class BlockchainSdkError(
+                val error: com.tangem.blockchain.common.BlockchainSdkError,
+                val scanResponse: ScanResponse,
+            ) : Dialog()
         }
 
         data class RequestFeeError(
             val error: com.tangem.blockchain.common.BlockchainSdkError,
+            val scanResponse: ScanResponse,
             val onRetry: () -> Unit,
         ) : Dialog()
 
