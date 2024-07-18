@@ -28,9 +28,11 @@ class MockTangemSdkManager(
     private val resources: Resources,
 ) : TangemSdkManager {
 
-    override val canUseBiometry = false
+    private var userCodeRequestPolicyInternal: UserCodeRequestPolicy = UserCodeRequestPolicy.Default
 
-    override val needEnrollBiometrics = false
+    override val canUseBiometry: Boolean = false
+
+    override val needEnrollBiometrics: Boolean = false
 
     override val keystoreManager = DummyKeystoreManager()
 
@@ -39,7 +41,9 @@ class MockTangemSdkManager(
     override val userCodeRequestPolicy: UserCodeRequestPolicy
         get() = userCodeRequestPolicyInternal
 
-    private var userCodeRequestPolicyInternal: UserCodeRequestPolicy = UserCodeRequestPolicy.Default
+    override suspend fun checkCanUseBiometry(awaitInitialization: Boolean): Boolean = canUseBiometry
+
+    override suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean): Boolean = needEnrollBiometrics
 
     override suspend fun scanProduct(
         cardId: String?,
