@@ -4,12 +4,12 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.models.Config
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.SendAction
@@ -69,7 +69,10 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             }
         }
         is GlobalAction.SendEmail -> {
-            store.state.globalState.feedbackManager?.sendEmail(action.feedbackData)
+            store.state.globalState.feedbackManager?.sendEmail(
+                feedbackData = action.feedbackData,
+                scanResponse = action.scanResponse,
+            )
         }
         is GlobalAction.OpenChat -> {
             val globalState = store.state.globalState
