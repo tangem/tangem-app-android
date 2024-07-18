@@ -3,19 +3,24 @@ package com.tangem.core.ui.res
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tangem.core.ui.components.TangemShimmer
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.haptic.MockHapticManager
-
-// TODO: use isSystemInDarkTheme() for automatic color detection
-internal const val IS_SYSTEM_IN_DARK_THEME: Boolean = false
+import com.tangem.core.ui.windowsize.WindowSize
+import com.valentinilk.shimmer.Shimmer
 
 @Composable
 fun TangemTheme(
     isDark: Boolean = false,
+    windowSize: WindowSize,
     typography: TangemTypography = TangemTheme.typography,
     dimens: TangemDimens = TangemTheme.dimens,
     hapticManager: HapticManager = MockHapticManager,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     content: @Composable () -> Unit,
 ) {
     val themeColors = if (isDark) darkThemeColors() else lightThemeColors()
@@ -23,6 +28,16 @@ fun TangemTheme(
         .also { it.update(themeColors) }
 
     val shapes = remember { TangemShapes(dimens) }
+    val systemUiController = rememberSystemUiController()
+
+    SideEffect {
+        systemUiController.setSystemBarsColor(
+            color = Color.Transparent,
+            darkIcons = !isDark,
+            isNavigationBarContrastEnforced = false,
+        )
+    }
+
     MaterialTheme(
         colors = materialThemeColors(colors = themeColors, isDark = isDark),
     ) {
@@ -33,11 +48,17 @@ fun TangemTheme(
             LocalTangemShapes provides shapes,
             LocalIsInDarkTheme provides isDark,
             LocalHapticManager provides hapticManager,
+            LocalSnackbarHostState provides snackbarHostState,
+            LocalWindowSize provides windowSize,
         ) {
-            ProvideTextStyle(
-                value = TangemTheme.typography.body1,
-                content = content,
-            )
+            CompositionLocalProvider(
+                LocalTangemShimmer provides TangemShimmer,
+            ) {
+                ProvideTextStyle(
+                    value = TangemTheme.typography.body1,
+                    content = content,
+                )
+            }
         }
     }
 }
@@ -124,7 +145,7 @@ private fun lightThemeColors(): TangemColors {
         ),
         stroke = TangemColors.Stroke(
             primary = TangemColorPalette.Light2,
-            secondary = TangemColorPalette.Dark5,
+            secondary = TangemColorPalette.Light5,
             transparency = TangemColorPalette.White,
         ),
         field = TangemColors.Field(
@@ -204,4 +225,16 @@ val LocalIsInDarkTheme = staticCompositionLocalOf { false }
 
 val LocalHapticManager = staticCompositionLocalOf<HapticManager> {
     error("No HapticManager provided")
+}
+
+val LocalSnackbarHostState = staticCompositionLocalOf<SnackbarHostState> {
+    error("No SnackbarHostState provided")
+}
+
+val LocalWindowSize = staticCompositionLocalOf<WindowSize> {
+    error("No WindowSize provided")
+}
+
+val LocalTangemShimmer = staticCompositionLocalOf<Shimmer> {
+    error("No TangemShimmer provided")
 }
