@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -54,8 +55,14 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
     ): GetTokenListUseCase {
-        return GetTokenListUseCase(currenciesRepository, quotesRepository, networksRepository)
+        return GetTokenListUseCase(
+            currenciesRepository,
+            quotesRepository,
+            networksRepository,
+            stakingRepository,
+        )
     }
 
     @Provides
@@ -64,8 +71,9 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
     ): GetCardTokensListUseCase {
-        return GetCardTokensListUseCase(currenciesRepository, quotesRepository, networksRepository)
+        return GetCardTokensListUseCase(currenciesRepository, quotesRepository, networksRepository, stakingRepository)
     }
 
     @Provides
@@ -83,9 +91,16 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCurrencyStatusUpdatesUseCase {
-        return GetCurrencyStatusUpdatesUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
+        return GetCurrencyStatusUpdatesUseCase(
+            currenciesRepository,
+            quotesRepository,
+            networksRepository,
+            stakingRepository,
+            dispatchers,
+        )
     }
 
     @Provides
@@ -100,6 +115,7 @@ internal object TokensDomainModule {
         currencyChecksRepository: CurrencyChecksRepository,
         showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
         promoRepository: PromoRepository,
+        stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCurrencyWarningsUseCase {
         return GetCurrencyWarningsUseCase(
@@ -112,6 +128,7 @@ internal object TokensDomainModule {
             swapRepository = swapRepository,
             showSwapPromoTokenUseCase = showSwapPromoTokenUseCase,
             promoRepository = promoRepository,
+            stakingRepository = stakingRepository,
             dispatchers = dispatchers,
         )
     }
@@ -122,12 +139,14 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetPrimaryCurrencyStatusUpdatesUseCase {
         return GetPrimaryCurrencyStatusUpdatesUseCase(
             currenciesRepository,
             quotesRepository,
             networksRepository,
+            stakingRepository,
             dispatchers,
         )
     }
@@ -148,8 +167,9 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
     ): FetchCardTokenListUseCase {
-        return FetchCardTokenListUseCase(currenciesRepository, networksRepository, quotesRepository)
+        return FetchCardTokenListUseCase(currenciesRepository, networksRepository, quotesRepository, stakingRepository)
     }
 
     @Provides
@@ -190,6 +210,7 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyActionsUseCase {
         return GetCryptoCurrencyActionsUseCase(
@@ -199,6 +220,7 @@ internal object TokensDomainModule {
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
             dispatchers = dispatchers,
         )
     }
@@ -209,12 +231,14 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetNetworkCoinStatusUseCase {
         return GetNetworkCoinStatusUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
             dispatchers = dispatchers,
         )
     }
@@ -225,12 +249,14 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetFeePaidCryptoCurrencyStatusSyncUseCase {
         return GetFeePaidCryptoCurrencyStatusSyncUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
             dispatchers = dispatchers,
         )
     }
@@ -363,11 +389,13 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
     ): GetWalletTotalBalanceUseCase {
         return GetWalletTotalBalanceUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
         )
     }
 

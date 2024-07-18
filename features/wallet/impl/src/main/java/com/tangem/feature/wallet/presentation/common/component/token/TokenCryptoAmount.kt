@@ -8,10 +8,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import com.tangem.common.Strings
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
+import com.tangem.utils.StringsSigns
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.CryptoAmountState as TokenCryptoAmountState
 
 @Composable
@@ -23,7 +23,7 @@ internal fun TokenCryptoAmount(
     when (state) {
         is TokenCryptoAmountState.Content -> {
             CryptoAmountText(
-                amount = if (isBalanceHidden) Strings.STARS else state.text,
+                amount = if (isBalanceHidden) StringsSigns.STARS else state.text,
                 modifier = modifier,
             )
         }

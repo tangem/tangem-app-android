@@ -4,7 +4,9 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.transaction.models.TransactionType
 import com.tangem.domain.wallets.models.UserWalletId
+import java.math.BigInteger
 
 interface TransactionRepository {
 
@@ -19,7 +21,7 @@ interface TransactionRepository {
         isSwap: Boolean,
         txExtras: TransactionExtras?,
         hash: String?,
-    ): TransactionData?
+    ): TransactionData.Uncompiled?
 
     @Suppress("LongParameterList")
     suspend fun validateTransaction(
@@ -40,4 +42,12 @@ interface TransactionRepository {
         userWalletId: UserWalletId,
         network: Network,
     ): com.tangem.blockchain.extensions.Result<TransactionSendResult>
+
+    fun createTransactionDataExtras(
+        data: String,
+        network: Network,
+        transactionType: TransactionType,
+        nonce: BigInteger?,
+        gasLimit: BigInteger?,
+    ): TransactionExtras
 }
