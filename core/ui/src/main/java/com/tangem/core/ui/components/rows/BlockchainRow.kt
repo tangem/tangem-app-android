@@ -29,7 +29,7 @@ fun BlockchainRow(model: BlockchainRowUM, action: @Composable BoxScope.() -> Uni
         modifier = modifier
             .heightIn(min = TangemTheme.dimens.size52)
             .padding(
-                vertical = TangemTheme.dimens.spacing16,
+                vertical = TangemTheme.dimens.spacing8,
                 horizontal = TangemTheme.dimens.spacing8,
             ),
         icon = {
