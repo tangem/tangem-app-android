@@ -5,6 +5,7 @@ import okio.Timeout
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import timber.log.Timber
 
 internal class ApiResponseCallDelegate<T : Any>(
     private val wrappedCall: Call<T>,
@@ -20,7 +21,9 @@ internal class ApiResponseCallDelegate<T : Any>(
     override fun timeout(): Timeout = wrappedCall.timeout()
     override fun isExecuted(): Boolean = wrappedCall.isExecuted
     override fun isCanceled(): Boolean = wrappedCall.isCanceled
-    override fun cancel() { wrappedCall.cancel() }
+    override fun cancel() {
+        wrappedCall.cancel()
+    }
 
     private inner class ApiResponseCallback(
         private val responseCallback: Callback<ApiResponse<T>>,
@@ -33,7 +36,15 @@ internal class ApiResponseCallDelegate<T : Any>(
         }
 
         override fun onFailure(call: Call<T>, t: Throwable) {
-            val error = t.toApiError()
+            val error = try {
+                t.toApiError()
+            } catch (e: ApiResponseError) {
+                Timber.e(e, "error map toApiError")
+                e
+            } catch (e: Exception) {
+                Timber.e(e, "onFailure UnknownException")
+                ApiResponseError.UnknownException(e)
+            }
             val safeResponse = apiError<T>(error)
 
             responseCallback.onResponse(this@ApiResponseCallDelegate, Response.success(safeResponse))
