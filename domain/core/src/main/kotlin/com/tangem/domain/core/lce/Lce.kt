@@ -96,4 +96,54 @@ sealed class Lce<out E : Any, out C : Any> {
         ifContent = ::identity,
         ifError = { null },
     )
+
+    /**
+     * Returns the error of this [Lce] if it's a [Lce.Error], `null` otherwise.
+     *
+     * @return The error of this [Lce] or `null`.
+     */
+    fun errorOrNull(): E? = fold(
+        ifLoading = { null },
+        ifContent = { null },
+        ifError = ::identity,
+    )
+
+    /**
+     * Returns `true` if this [Lce] is a [Lce.Loading] state and the given predicate is `true`.
+     *
+     * @param predicate The predicate to apply to the partial content.
+     * By default, the predicate is `true` for any partial content.
+     * @return `true` if this [Lce] is a [Lce.Loading] state and the given predicate is `true`, `false` otherwise.
+     */
+    fun isLoading(predicate: (maybeContent: C?) -> Boolean = { true }): Boolean = fold(
+        ifLoading = { predicate(it) },
+        ifContent = { false },
+        ifError = { false },
+    )
+
+    /**
+     * Returns `true` if this [Lce] is a [Lce.Error] state and the given predicate is `true`.
+     *
+     * @param predicate The predicate to apply to the error.
+     * By default, the predicate is `true` for any error.
+     * @return `true` if this [Lce] is a [Lce.Error] state and the given predicate is `true`, `false` otherwise.
+     */
+    fun isError(predicate: (error: E) -> Boolean = { true }): Boolean = fold(
+        ifLoading = { false },
+        ifContent = { false },
+        ifError = { predicate(it) },
+    )
+
+    /**
+     * Returns `true` if this [Lce] is a [Lce.Content] state and the given predicate is `true`.
+     *
+     * @param predicate The predicate to apply to the content.
+     * By default, the predicate is `true` for any content.
+     * @return `true` if this [Lce] is a [Lce.Content] state and the given predicate is `true`, `false` otherwise.
+     */
+    fun isContent(predicate: (content: C) -> Boolean = { true }): Boolean = fold(
+        ifLoading = { false },
+        ifContent = { predicate(it) },
+        ifError = { false },
+    )
 }

@@ -9,12 +9,14 @@ import com.tangem.data.feedback.converters.CardInfoConverter
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMap
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.repository.FeedbackRepository
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runCatching
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
@@ -25,43 +27,47 @@ import java.io.StringWriter
 /**
  * Implementation of [FeedbackRepository]
  *
- * @property appPreferencesStore application preferences store
- * @property userWalletsStore    user wallets store
- * @property walletManagersStore wallet managers store
- * @property context             context for getting app version
+ * @property appPreferencesStore    application preferences store
+ * @property userWalletsListManager user wallets list manager
+ * @property walletManagersStore    wallet managers store
+ * @property context                context for getting app version
+ * @property dispatchers            coroutine dispatchers provider
  *
 * [REDACTED_AUTHOR]
  */
 internal class DefaultFeedbackRepository(
     private val appPreferencesStore: AppPreferencesStore,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListManager: UserWalletsListManager,
     private val walletManagersStore: WalletManagersStore,
     private val context: Context,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : FeedbackRepository {
 
     private val blockchainsErrors = MutableStateFlow<Map<UserWalletId, BlockchainErrorInfo>>(emptyMap())
 
-    override suspend fun getUserWalletsInfo(): UserWalletsInfo {
+    override suspend fun getCardInfo(scanResponse: ScanResponse) = CardInfoConverter.convert(value = scanResponse)
+
+    override suspend fun getUserWalletsInfo(userWalletId: UserWalletId?): UserWalletsInfo {
         return UserWalletsInfo(
-            selectedUserWalletId = getSelectedUserWallet().walletId.stringValue,
-            totalUserWallets = userWalletsStore.getAllSyncOrNull()?.size ?: error("No user wallets found"),
+            selectedUserWalletId = userWalletId?.stringValue ?: "card isn't activated",
+            totalUserWallets = userWalletsListManager.walletsCount,
         )
     }
 
-    override suspend fun getCardInfo(): CardInfo {
-        return CardInfoConverter.convert(value = getSelectedUserWallet())
-    }
-
-    override suspend fun getBlockchainInfoList(): List<BlockchainInfo> {
+    override suspend fun getBlockchainInfoList(userWalletId: UserWalletId): List<BlockchainInfo> {
         return walletManagersStore
-            .getAllSync(userWalletId = getSelectedUserWallet().walletId)
+            .getAllSync(userWalletId = userWalletId)
             .map(BlockchainInfoConverter::convert)
     }
 
-    override suspend fun getBlockchainInfo(blockchainId: String, derivationPath: String?): BlockchainInfo? {
+    override suspend fun getBlockchainInfo(
+        userWalletId: UserWalletId,
+        blockchainId: String,
+        derivationPath: String?,
+    ): BlockchainInfo? {
         return walletManagersStore
             .getSyncOrNull(
-                userWalletId = getSelectedUserWallet().walletId,
+                userWalletId = userWalletId,
                 blockchain = Blockchain.fromId(blockchainId),
                 derivationPath = derivationPath,
             )
@@ -77,18 +83,18 @@ internal class DefaultFeedbackRepository(
     }
 
     override fun saveBlockchainErrorInfo(error: BlockchainErrorInfo) {
+        val userWallet = userWalletsListManager.selectedUserWalletSync ?: error("UserWallet is not selected")
+
         blockchainsErrors.update {
             it.toMutableMap().apply {
-                put(getSelectedUserWallet().walletId, error)
+                put(userWallet.walletId, error)
             }
         }
     }
 
-    override suspend fun getBlockchainErrorInfo(): BlockchainErrorInfo? {
-        return blockchainsErrors.value[getSelectedUserWallet().walletId].also {
-            if (it == null) {
-                Timber.e("Blockchain error info is null for ${getSelectedUserWallet().walletId}")
-            }
+    override suspend fun getBlockchainErrorInfo(userWalletId: UserWalletId): BlockchainErrorInfo? {
+        return blockchainsErrors.value[userWalletId].also {
+            if (it == null) Timber.e("Blockchain error info is null for $userWalletId")
         }
     }
 
@@ -99,7 +105,7 @@ internal class DefaultFeedbackRepository(
     }
 
     override suspend fun createLogFile(logs: String): File? {
-        return try {
+        return runCatching(dispatchers.io) {
             val file = File(context.filesDir, LOGS_FILE)
             file.delete()
             file.createNewFile()
@@ -113,8 +119,8 @@ internal class DefaultFeedbackRepository(
             fileWriter.close()
 
             file
-        } catch (ex: Exception) {
-            Timber.e(ex, "Logs file isn't created")
+        }.getOrElse {
+            Timber.e(it, "Logs file isn't created")
             null
         }
     }
@@ -128,11 +134,6 @@ internal class DefaultFeedbackRepository(
                     "x.y.z"
                 },
             )
-    }
-
-    private fun getSelectedUserWallet(): UserWallet {
-        return userWalletsStore.selectedUserWalletOrNull
-            ?: error("UserWallet is not selected")
     }
 
     private companion object {

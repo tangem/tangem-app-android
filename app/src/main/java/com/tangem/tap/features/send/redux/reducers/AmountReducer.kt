@@ -1,6 +1,5 @@
 package com.tangem.tap.features.send.redux.reducers
 
-import com.tangem.common.Strings.STARS
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.AmountAction
@@ -11,6 +10,7 @@ import com.tangem.tap.features.send.redux.states.AmountState
 import com.tangem.tap.features.send.redux.states.InputViewValue
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.utils.StringsSigns.STARS
 import java.math.BigDecimal
 
 /**

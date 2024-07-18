@@ -3,29 +3,22 @@ package com.tangem.tap.features.saveWallet.redux
 import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchWithMain
-import com.tangem.tap.common.extensions.inject
-import com.tangem.tap.common.extensions.onUserWalletSelected
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
-import org.rekotlin.Store
 import timber.log.Timber
 
 internal class SaveWalletMiddleware {
@@ -83,12 +76,12 @@ internal class SaveWalletMiddleware {
                     Timber.e(error, "Unable to save user wallet")
                 }
                 .doOnSuccess { mainScope.launch { store.onUserWalletSelected(userWallet) } }
-                .doOnResult { store.navigateToWallet() }
+                .doOnResult { navigateToWallet() }
         }
     }
 
     private fun enrollBiometrics() {
-        store.dispatchOnMain(NavigationAction.OpenBiometricsSettings)
+        activityResultCaller.openSystemBiometrySettings()
     }
 
     private fun allowToUseBiometrics(state: SaveWalletState) = scope.launch {
@@ -131,7 +124,7 @@ internal class SaveWalletMiddleware {
         )
 
         store.dispatchWithMain(SaveWalletAction.AllowToUseBiometrics.Success)
-        store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+        store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
     }
 
     private fun dismiss(state: SaveWalletState) {
@@ -160,13 +153,9 @@ internal class SaveWalletMiddleware {
         }
     }
 
-    private suspend fun Store<AppState>.navigateToWallet() {
-        dispatchWithMain(
-            if (store.state.navigationState.backStack.contains(AppScreen.Wallet)) {
-                NavigationAction.PopBackTo(AppScreen.Wallet)
-            } else {
-                NavigationAction.NavigateTo(AppScreen.Wallet)
-            },
-        )
+    private fun navigateToWallet() {
+        store.dispatchNavigationAction {
+            replaceAll(AppRoute.Wallet)
+        }
     }
 }

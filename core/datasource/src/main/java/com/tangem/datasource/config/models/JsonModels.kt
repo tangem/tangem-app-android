@@ -45,6 +45,7 @@ class ConfigValueModel(
     val stakeKitApiKey: String?,
     @Json(name = "bittensorDwellirKey") val bittensorDwellirApiKey: String?,
     @Json(name = "bittensorOnfinalityKey") val bittensorOnfinalityKey: String?,
+    @Json(name = "koinosProApiKey") val koinosProApiKey: String?,
 )
 
 @JsonClass(generateAdapter = true)

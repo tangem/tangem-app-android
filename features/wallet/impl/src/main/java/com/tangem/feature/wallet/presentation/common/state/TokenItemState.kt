@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.common.state
 
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 
 /** Token item state */
@@ -10,7 +10,7 @@ internal sealed class TokenItemState {
 
     abstract val id: String
 
-    abstract val iconState: TokenIconState
+    abstract val iconState: CurrencyIconState
 
     abstract val titleState: TitleState
 
@@ -23,7 +23,7 @@ internal sealed class TokenItemState {
     /** Loading token state */
     data class Loading(
         override val id: String,
-        override val iconState: TokenIconState,
+        override val iconState: CurrencyIconState,
         override val titleState: TitleState.Content,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState = FiatAmountState.Loading
@@ -33,7 +33,7 @@ internal sealed class TokenItemState {
 
     /** Locked token state */
     data class Locked(override val id: String) : TokenItemState() {
-        override val iconState: TokenIconState = TokenIconState.Locked
+        override val iconState: CurrencyIconState = CurrencyIconState.Locked
         override val titleState: TitleState = TitleState.Locked
         override val fiatAmountState: FiatAmountState = FiatAmountState.Locked
         override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Locked
@@ -51,7 +51,7 @@ internal sealed class TokenItemState {
      */
     data class Content(
         override val id: String,
-        override val iconState: TokenIconState,
+        override val iconState: CurrencyIconState,
         override val titleState: TitleState,
         override val fiatAmountState: FiatAmountState,
         override val cryptoAmountState: CryptoAmountState.Content,
@@ -69,7 +69,7 @@ internal sealed class TokenItemState {
      */
     data class Draggable(
         override val id: String,
-        override val iconState: TokenIconState,
+        override val iconState: CurrencyIconState,
         override val titleState: TitleState,
         override val cryptoAmountState: CryptoAmountState,
     ) : TokenItemState() {
@@ -88,7 +88,7 @@ internal sealed class TokenItemState {
      */
     data class Unreachable(
         override val id: String,
-        override val iconState: TokenIconState,
+        override val iconState: CurrencyIconState,
         override val titleState: TitleState,
         val onItemClick: () -> Unit,
         val onItemLongClick: () -> Unit,
@@ -108,7 +108,7 @@ internal sealed class TokenItemState {
      */
     data class NoAddress(
         override val id: String,
-        override val iconState: TokenIconState,
+        override val iconState: CurrencyIconState,
         override val titleState: TitleState,
         val onItemLongClick: () -> Unit,
     ) : TokenItemState() {
@@ -160,9 +160,5 @@ internal sealed class TokenItemState {
         object Loading : CryptoPriceState()
 
         object Locked : CryptoPriceState()
-    }
-
-    companion object {
-        const val UNKNOWN_AMOUNT_SIGN = "—"
     }
 }

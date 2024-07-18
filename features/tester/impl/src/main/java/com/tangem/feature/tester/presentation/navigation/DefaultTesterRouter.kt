@@ -22,10 +22,8 @@ internal class DefaultTesterRouter @Inject constructor(
 
     private var navController: NavController? = null
 
-    override fun startTesterScreen() {
-        context.startActivity(
-            Intent(context, TesterActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-        )
+    override fun getEntryIntent(): Intent {
+        return Intent(context, TesterActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
     override fun setNavController(navController: NavController) {

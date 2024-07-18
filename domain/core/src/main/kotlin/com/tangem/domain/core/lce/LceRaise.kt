@@ -2,8 +2,10 @@ package com.tangem.domain.core.lce
 
 import arrow.atomic.Atomic
 import arrow.core.raise.Raise
+import arrow.core.raise.RaiseDSL
 import arrow.core.raise.recover
 import com.tangem.domain.core.utils.lceContent
+import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import kotlin.experimental.ExperimentalTypeInference
 
@@ -18,7 +20,45 @@ class LceRaise<E : Any> @PublishedApi internal constructor(
     private val raise: Raise<Lce<E, Nothing>>,
 ) : Raise<Lce<E, Nothing>> by raise {
 
+    /**
+     * An [Atomic] boolean flag indicating whether a loading operation is in progress.
+     */
     val isLoading: Atomic<Boolean> = Atomic(false)
+
+    /**
+     * Helper function to raise an [Lce.Error] state with the given error object.
+     * */
+    @RaiseDSL
+    @JvmName(name = "raiseError")
+    fun raise(r: E): Nothing = raise(r = r.lceError())
+
+    /**
+     * Helper function to raise an [Lce.Loading] state.
+     */
+    @RaiseDSL
+    fun raiseLoading(): Nothing = raise(r = lceLoading())
+
+    /**
+     * Execute the [Raise] context function resulting in [C] or any _logical error_ of type [OtherError],
+     * and transform any raised [OtherError] into [E], which is raised to the outer [Raise].
+     *
+     * @see arrow.core.raise.withError
+     * */
+    @RaiseDSL
+    @OptIn(ExperimentalTypeInference::class)
+    inline fun <OtherError : Any, C> withError(
+        transform: (OtherError) -> E,
+        @BuilderInference block: LceRaise<OtherError>.() -> C,
+    ): C = recover(
+        block = { block(LceRaise(raise = this@recover)) },
+        recover = { error ->
+            error.fold<Nothing>(
+                ifLoading = { raiseLoading() },
+                ifError = { raise(transform(it)) },
+                ifContent = { it },
+            )
+        },
+    )
 
     /**
      * Binds the content of this [Lce] instance and handles its state.
@@ -26,10 +66,9 @@ class LceRaise<E : Any> @PublishedApi internal constructor(
      * If this is a [Lce.Content] state, returns the content.
      * If this is a [Lce.Error] state, raises the error.
      *
-     * @param ifLoading The function to call if this is a [Lce.Loading] state.
-     * By default, it raises a new [Lce.Loading] state.
      * @return The content of this [Lce] instance.
      */
+    @RaiseDSL
     fun <C : Any> Lce<E, C>.bind(): C = when (this) {
         is Lce.Loading -> {
             isLoading.set(true)
@@ -48,6 +87,7 @@ class LceRaise<E : Any> @PublishedApi internal constructor(
      *
      * @return The content of this [Lce] instance.
      */
+    @RaiseDSL
     fun <C : Any> Lce<E, C>.bindOrNull(): C? = when (this) {
         is Lce.Loading -> {
             isLoading.set(true)

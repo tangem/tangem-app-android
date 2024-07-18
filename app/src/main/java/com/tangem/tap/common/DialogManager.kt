@@ -2,7 +2,7 @@ package com.tangem.tap.common
 
 import android.app.Dialog
 import android.content.Context
-import com.tangem.core.navigation.StateDialog
+import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.ui.*
@@ -46,7 +46,11 @@ class DialogManager : StoreSubscriber<GlobalState> {
 
         dialog = when (state.dialog) {
             is AppDialog.SimpleOkDialogRes -> SimpleOkDialog.create(state.dialog, context)
-            is StateDialog.ScanFailsDialog -> ScanFailsDialog.create(context, state.dialog.source)
+            is StateDialog.ScanFailsDialog -> ScanFailsDialog.create(
+                context = context,
+                source = state.dialog.source,
+                onTryAgain = state.dialog.onTryAgain,
+            )
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
             is AppDialog.RussianCardholdersWarningDialog -> RussianCardholdersWarningBottomSheetDialog(
