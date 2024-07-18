@@ -119,11 +119,15 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
             ),
             showCustom = false,
         ),
-        networks = CurrencyItemUM.Basic.NetworksUM.Collapsed,
+        networks = if (index == 2) {
+            CurrencyItemUM.Basic.NetworksUM.Expanded(getCurrencyNetworks(index))
+        } else {
+            CurrencyItemUM.Basic.NetworksUM.Collapsed
+        },
         onExpandClick = { toggleCurrency(index) },
     )
 
-    private fun getCurrencyNetworks(currencyIndex: Int) = List(size = 5) { networkIndex ->
+    private fun getCurrencyNetworks(currencyIndex: Int) = List(size = 3) { networkIndex ->
         CurrencyNetworkUM(
             id = networkIndex.toString(),
             model = BlockchainRowUM(
