@@ -43,7 +43,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @HiltViewModel
 internal class WalletViewModel @Inject constructor(
     private val stateHolder: WalletStateController,
@@ -157,21 +157,23 @@ internal class WalletViewModel @Inject constructor(
 
             delay(timeMillis = 1_800)
 
-            val isFirstTimeAsking = isFirstTimeAskingPermissionUseCase(PUSH_PERMISSION).getOrElse { true }
+            val isFirstTimeRequested = isFirstTimeAskingPermissionUseCase(PUSH_PERMISSION).getOrElse { true }
             val wasInitiallyAsk = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { true }
             val onDenyClick: () -> Unit = if (wasInitiallyAsk) {
                 clickIntents::onDelayAskPushPermission
             } else {
-                clickIntents::onNeverAskPushPermission
+                clickIntents::onDenyPushPermission
             }
             stateHolder.showBottomSheet(
-                PushNotificationsBottomSheetConfig(
-                    isFirstTimeAsking = isFirstTimeAsking,
+                content = PushNotificationsBottomSheetConfig(
+                    isFirstTimeRequested = isFirstTimeRequested,
+                    wasInitiallyAsk = wasInitiallyAsk,
                     onRequest = clickIntents::onRequestPushPermission,
-                    onAllow = clickIntents::onNeverAskPushPermission,
+                    onAllow = clickIntents::onAllowPushPermission,
                     onDeny = onDenyClick,
                     openSettings = settingsManager::openSettings,
                 ),
+                onDismiss = onDenyClick,
             )
         }
     }
