@@ -178,6 +178,14 @@ internal object SettingsDomainModule {
 
     @Provides
     @Singleton
+    fun provideNeverToInitiallyAskPermissionUseCase(
+        permissionRepository: PermissionRepository,
+    ): NeverToInitiallyAskPermissionUseCase {
+        return NeverToInitiallyAskPermissionUseCase(repository = permissionRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideIsFirstTimeAskingPermissionUseCase(
         permissionRepository: PermissionRepository,
     ): IsFirstTimeAskingPermissionUseCase {
