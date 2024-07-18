@@ -48,7 +48,6 @@ dependencies {
     implementation(deps.tangem.blockchain)
 
     /* AndroidX */
-    implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.activity.compose)
     implementation(deps.lifecycle.compose)
 
