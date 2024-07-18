@@ -30,7 +30,7 @@ internal class WelcomeViewModel @Inject constructor(
     DefaultLifecycleObserver {
 
     private val initialIntent: SerializableIntent? = savedStateHandle.get<Bundle>(AppRoute.Welcome.INITIAL_INTENT_KEY)
-        ?.let { it.unbundle(SerializableIntent.serializer()) }
+        ?.unbundle(SerializableIntent.serializer())
 
     private val stateInternal = MutableStateFlow(WelcomeScreenState())
     val state: StateFlow<WelcomeScreenState> = stateInternal

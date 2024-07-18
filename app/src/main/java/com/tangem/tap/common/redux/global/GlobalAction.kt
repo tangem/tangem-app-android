@@ -16,7 +16,6 @@ import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
-import com.tangem.tap.features.details.redux.SecurityOption
 import org.rekotlin.Action
 
 sealed class GlobalAction : Action {
@@ -75,7 +74,6 @@ sealed class GlobalAction : Action {
     ) : GlobalAction()
 
     data class HideWarningMessage(val warning: WarningMessage) : GlobalAction()
-    data class UpdateSecurityOptions(val securityOption: SecurityOption) : GlobalAction()
 
     data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
     data class SetWarningManager(val warningManager: WarningMessagesManager) : GlobalAction()
