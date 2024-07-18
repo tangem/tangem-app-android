@@ -2,9 +2,10 @@ package com.tangem.domain.wallets.models
 
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
-import java.io.Serializable
+import kotlinx.serialization.Serializable
 
-data class UserWalletId(val stringValue: String) : Serializable {
+@Serializable
+data class UserWalletId(val stringValue: String) {
 
     val value = stringValue.hexToBytes()
 
