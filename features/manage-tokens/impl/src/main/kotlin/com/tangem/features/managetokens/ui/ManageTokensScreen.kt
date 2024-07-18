@@ -6,12 +6,12 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -190,30 +190,26 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, modifier: Modifier = M
 
     Column(modifier = modifier) {
         ChainRow(
+            modifier = Modifier.clickable(onClick = item.onExpandClick),
             model = item.model,
             action = {
-                IconButton(
-                    modifier = Modifier.size(TangemTheme.dimens.size32),
-                    onClick = item.onExpandClick,
-                ) {
-                    val rotation by animateFloatAsState(
-                        targetValue = if (isExpanded) {
-                            CHEVRON_ROTATION_EXPANDED
-                        } else {
-                            CHEVRON_ROTATION_COLLAPSED
-                        },
-                        label = "chevron_rotation",
-                    )
+                val rotation by animateFloatAsState(
+                    targetValue = if (isExpanded) {
+                        CHEVRON_ROTATION_EXPANDED
+                    } else {
+                        CHEVRON_ROTATION_COLLAPSED
+                    },
+                    label = "chevron_rotation",
+                )
 
-                    Icon(
-                        modifier = Modifier
-                            .rotate(rotation)
-                            .size(TangemTheme.dimens.size24),
-                        painter = painterResource(id = R.drawable.ic_chevron_24),
-                        tint = TangemTheme.colors.icon.informative,
-                        contentDescription = null,
-                    )
-                }
+                Icon(
+                    modifier = Modifier
+                        .rotate(rotation)
+                        .size(TangemTheme.dimens.size24),
+                    painter = painterResource(id = R.drawable.ic_chevron_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
             },
         )
 
