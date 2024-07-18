@@ -19,23 +19,26 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
         userWallets = persistentListOf(
             UserWalletListUM.UserWalletUM(
                 id = UserWalletId("user_wallet_1".encodeToByteArray()),
-                name = "My Wallet",
+                name = stringReference("My Wallet"),
                 information = getInformation(3, "4 496,75 $"),
-                imageResId = R.drawable.ill_card_wallet_2_211_343,
+                imageUrl = "",
+                isEnabled = true,
                 onClick = {},
             ),
             UserWalletListUM.UserWalletUM(
                 id = UserWalletId("user_wallet_2".encodeToByteArray()),
-                name = "Old wallet",
+                name = stringReference("Old wallet"),
                 information = getInformation(3, "4 496,75 $"),
-                imageResId = R.drawable.ill_card_note_eth_211_343,
+                imageUrl = "",
+                isEnabled = true,
                 onClick = {},
             ),
             UserWalletListUM.UserWalletUM(
                 id = UserWalletId("user_wallet_3".encodeToByteArray()),
-                name = "Multi Card",
+                name = stringReference("Multi Card"),
                 information = getInformation(3, "4 496,75 $"),
-                imageResId = R.drawable.ill_card_note_bnb_211_343,
+                imageUrl = "",
+                isEnabled = false,
                 onClick = {},
             ),
         ),
@@ -45,8 +48,7 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
     )
 
     @Composable
-    @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
-    override fun View(modifier: Modifier) {
+    override fun Content(modifier: Modifier) {
         UserWalletListBlock(state = previewState, modifier = modifier)
     }
 
