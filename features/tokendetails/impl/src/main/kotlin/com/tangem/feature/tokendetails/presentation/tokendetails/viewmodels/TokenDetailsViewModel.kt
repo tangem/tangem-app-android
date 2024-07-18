@@ -453,12 +453,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onStakeBannerClick() {
-        viewModelScope.launch {
-            val yield = getYieldUseCase.invoke(cryptoCurrency.id, cryptoCurrency.symbol).getOrNull()
-            yield ?: error("Staking is unavailable")
-
-            router.openStaking(userWalletId, cryptoCurrency, yield)
-        }
+        openStaking()
     }
 
     override fun onReloadClick() {
@@ -559,7 +554,9 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onStakeClick(unavailabilityReason: ScenarioUnavailabilityReason) {
-        Timber.e("Not implemented yet")
+        if (handleUnavailabilityReason(unavailabilityReason)) return
+
+        openStaking()
     }
 
     override fun onGenerateExtendedKey() {
@@ -833,6 +830,19 @@ internal class TokenDetailsViewModel @Inject constructor(
         internalUiState.value = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason)
 
         return true
+    }
+
+    private fun openStaking() {
+        viewModelScope.launch {
+            val yield = getYieldUseCase.invoke(
+                cryptoCurrencyId = cryptoCurrency.id,
+                symbol = cryptoCurrency.symbol,
+            ).getOrElse {
+                error("Staking is unavailable for ${cryptoCurrency.name}")
+            }
+
+            router.openStaking(userWalletId, cryptoCurrency, yield)
+        }
     }
 
     private companion object {
