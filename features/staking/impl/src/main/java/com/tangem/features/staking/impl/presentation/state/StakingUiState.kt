@@ -5,6 +5,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import kotlinx.collections.immutable.ImmutableList
@@ -83,6 +84,7 @@ internal sealed class StakingStates {
             val innerState: InnerConfirmationStakingState,
             val feeState: FeeState,
             val validatorState: ValidatorState,
+            val pendingActions: ImmutableList<PendingAction>,
             val notifications: ImmutableList<StakingNotification>,
             val footerText: String,
             val transactionDoneState: TransactionDoneState,
@@ -106,4 +108,5 @@ enum class RouteType {
     STAKE,
     UNSTAKE,
     CLAIM,
+    OTHER,
 }
