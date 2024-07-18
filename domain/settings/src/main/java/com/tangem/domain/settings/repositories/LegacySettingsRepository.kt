@@ -2,5 +2,5 @@ package com.tangem.domain.settings.repositories
 
 interface LegacySettingsRepository {
 
-    fun canUseBiometry(): Boolean
+    suspend fun canUseBiometry(): Boolean
 }
