@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
-import com.tangem.common.Strings
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
@@ -54,6 +53,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
+import com.tangem.utils.StringsSigns
 
 private const val HALF_OF_ITEM_WIDTH = 0.5
 
@@ -291,7 +291,7 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
         when (walletCardState) {
             is WalletCardState.Content -> {
                 ResizableText(
-                    text = if (isBalanceHidden) Strings.STARS else walletCardState.balance,
+                    text = if (isBalanceHidden) StringsSigns.STARS else walletCardState.balance,
                     fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
                     modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
                     color = TangemTheme.colors.text.primary1,

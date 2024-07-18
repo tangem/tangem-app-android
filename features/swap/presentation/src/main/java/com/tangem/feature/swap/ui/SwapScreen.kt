@@ -1,17 +1,20 @@
 package com.tangem.feature.swap.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.tangem.common.ui.bottomsheet.permission.GiveTxPermissionBottomSheet
+import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.states.ChooseFeeBottomSheetConfig
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
-import com.tangem.feature.swap.models.states.GivePermissionBottomSheetConfig
 import com.tangem.feature.swap.models.states.WebViewBottomSheetConfig
 import com.tangem.feature.swap.presentation.R
 
@@ -28,7 +31,7 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                 iconRes = R.drawable.ic_close_24,
             )
         },
-        contentWindowInsets = WindowInsets(left = 0, top = 0, right = 0, bottom = 0),
+        contentWindowInsets = WindowInsetsZero,
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
 
@@ -39,8 +42,8 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
 
         stateHolder.bottomSheetConfig?.let { config ->
             when (config.content) {
-                is GivePermissionBottomSheetConfig -> {
-                    SwapPermissionBottomSheet(config = config)
+                is GiveTxPermissionBottomSheetConfig -> {
+                    GiveTxPermissionBottomSheet(config = config)
                 }
                 is ChooseProviderBottomSheetConfig -> {
                     ChooseProviderBottomSheet(config = config)
