@@ -1,13 +1,17 @@
 package com.tangem.core.ui.components.fields
 
 import android.content.res.Configuration
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.onFocusChanged
@@ -18,6 +22,7 @@ import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -33,8 +38,9 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun SearchBar(state: SearchBarUM, modifier: Modifier = Modifier, colors: TextFieldColors = TangemSearchBarColors) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    val interactionSource = remember { MutableInteractionSource() }
 
-    TextField(
+    BasicTextField(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = TangemTheme.dimens.size48)
@@ -47,6 +53,7 @@ fun SearchBar(state: SearchBarUM, modifier: Modifier = Modifier, colors: TextFie
             },
         value = state.query,
         onValueChange = state.onQueryChange,
+        interactionSource = interactionSource,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Search,
@@ -59,7 +66,43 @@ fun SearchBar(state: SearchBarUM, modifier: Modifier = Modifier, colors: TextFie
         ),
         singleLine = true,
         maxLines = 1,
-        textStyle = TangemTheme.typography.body2,
+        textStyle = TangemTheme.typography.body2.copy(
+            color = TangemTheme.colors.text.primary1,
+        ),
+        decorationBox = @Composable { innerTextField ->
+            DecorationBox(
+                state = state,
+                innerTextField = innerTextField,
+                interactionSource = interactionSource,
+                colors = colors,
+                focusManager = focusManager,
+                keyboardController = keyboardController,
+            )
+        },
+    )
+}
+
+@Suppress("LongParameterList")
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun DecorationBox(
+    state: SearchBarUM,
+    innerTextField: @Composable () -> Unit,
+    interactionSource: MutableInteractionSource,
+    colors: TextFieldColors,
+    focusManager: FocusManager,
+    keyboardController: SoftwareKeyboardController?,
+) {
+    TextFieldDefaults.DecorationBox(
+        value = state.query,
+        innerTextField = innerTextField,
+        enabled = true,
+        singleLine = true,
+        visualTransformation = VisualTransformation.None,
+        interactionSource = interactionSource,
+        shape = TangemTheme.shapes.roundedCornersXLarge,
+        colors = colors,
+        contentPadding = PaddingValues(all = TangemTheme.dimens.spacing12),
         leadingIcon = {
             Icon(
                 modifier = Modifier.size(TangemTheme.dimens.size20),
@@ -84,8 +127,6 @@ fun SearchBar(state: SearchBarUM, modifier: Modifier = Modifier, colors: TextFie
                 overflow = TextOverflow.Ellipsis,
             )
         },
-        shape = TangemTheme.shapes.roundedCornersXLarge,
-        colors = colors,
     )
 }
 
