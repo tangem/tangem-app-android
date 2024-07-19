@@ -22,7 +22,7 @@ data class Address(
 
         // solana-specific
         @Json(name = "stakeAccounts")
-        val stakeAccounts: List<String>? = null,
+        val stakeAccounts: List<String>? = null, // legacy in StakeKit, isn't used in Solana
         @Json(name = "lidoStakeAccounts")
         val lidoStakeAccounts: List<String>? = null,
 
