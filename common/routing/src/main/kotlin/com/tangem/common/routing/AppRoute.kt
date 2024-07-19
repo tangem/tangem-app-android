@@ -6,7 +6,7 @@ import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.qrscanning.models.SourceType
-import com.tangem.domain.staking.model.Yield
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
