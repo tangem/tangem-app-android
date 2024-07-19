@@ -3,7 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 import arrow.core.Either
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.StakingError
+import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
