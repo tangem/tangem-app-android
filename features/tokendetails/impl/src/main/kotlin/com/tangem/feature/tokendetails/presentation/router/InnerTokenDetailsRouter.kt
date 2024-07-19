@@ -1,6 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.router
 
-import com.tangem.domain.staking.model.Yield
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter

@@ -1,6 +1,6 @@
-package com.tangem.domain.staking.model.transaction
+package com.tangem.domain.staking.model.stakekit.transaction
 
-import com.tangem.domain.staking.model.NetworkType
+import com.tangem.domain.staking.model.stakekit.NetworkType
 
 data class StakingTransaction(
     val id: String,

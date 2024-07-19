@@ -1,4 +1,4 @@
-package com.tangem.domain.staking.model.action
+package com.tangem.domain.staking.model.stakekit.action
 
 enum class StakingActionCommonType {
     ENTER,
