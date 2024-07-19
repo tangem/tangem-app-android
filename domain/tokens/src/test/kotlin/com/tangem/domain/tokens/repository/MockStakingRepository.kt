@@ -25,7 +25,7 @@ class MockStakingRepository : StakingRepository {
         /* no-op */
     }
 
-    override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo = StakingEntryInfo(
+    override suspend fun getEntryInfo(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingEntryInfo = StakingEntryInfo(
         interestRate = 1.toBigDecimal(),
         periodInDays = 2,
         tokenSymbol = "SOL",

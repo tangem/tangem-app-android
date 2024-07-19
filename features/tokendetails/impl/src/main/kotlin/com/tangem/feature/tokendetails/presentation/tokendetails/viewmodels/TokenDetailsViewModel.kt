@@ -393,7 +393,10 @@ internal class TokenDetailsViewModel @Inject constructor(
 
             internalUiState.value = stateFactory.getStateWithUpdatedStakingAvailability(stakingAvailability)
             if (stakingAvailability is StakingAvailability.Available) {
-                val stakingInfo = getStakingEntryInfoUseCase(stakingAvailability.integrationId)
+                val stakingInfo = getStakingEntryInfoUseCase(
+                    cryptoCurrencyId = cryptoCurrency.id,
+                    symbol = cryptoCurrency.symbol,
+                )
                 internalUiState.value = stateFactory.getStateWithStaking(stakingInfo)
             }
         }
