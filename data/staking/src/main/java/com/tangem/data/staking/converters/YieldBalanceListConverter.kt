@@ -1,7 +1,7 @@
 package com.tangem.data.staking.converters
 
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
-import com.tangem.domain.staking.model.YieldBalanceList
+import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.utils.converter.Converter
 
 internal class YieldBalanceListConverter : Converter<List<YieldBalanceWrapperDTO>, YieldBalanceList> {
