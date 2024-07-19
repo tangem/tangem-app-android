@@ -2,7 +2,7 @@ package com.tangem.data.staking.converters.transaction
 
 import com.tangem.data.staking.converters.StakingNetworkTypeConverter
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionDTO
-import com.tangem.domain.staking.model.transaction.StakingTransaction
+import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.utils.converter.Converter
 
 class StakingTransactionConverter(
