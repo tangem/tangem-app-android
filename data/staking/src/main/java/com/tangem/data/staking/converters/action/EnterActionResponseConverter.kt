@@ -2,7 +2,7 @@ package com.tangem.data.staking.converters.action
 
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
 import com.tangem.datasource.api.stakekit.models.response.EnterActionResponse
-import com.tangem.domain.staking.model.action.StakingAction
+import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.utils.converter.Converter
 
 class EnterActionResponseConverter(
