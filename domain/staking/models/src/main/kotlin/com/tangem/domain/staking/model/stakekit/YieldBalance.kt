@@ -1,6 +1,6 @@
-package com.tangem.domain.staking.model
+package com.tangem.domain.staking.model.stakekit
 
-import com.tangem.domain.staking.model.action.StakingActionType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import java.math.BigDecimal
 
 sealed class YieldBalance {
