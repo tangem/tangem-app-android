@@ -87,7 +87,11 @@ internal class SetInitialDataStateTransformer(
             ),
             aprRange = getAprRange(),
             unbondingPeriod = yield.metadata.cooldownPeriod.days.toString(),
-            minimumRequirement = yield.metadata.minimumStake.toString(),
+            minimumRequirement = BigDecimalFormatter.formatCryptoAmount(
+                cryptoAmount = yield.args.enter.args[KEY_AMOUNT]?.minimum?.toBigDecimal(),
+                cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
+                decimals = cryptoCurrencyStatus.currency.decimals,
+            ),
             rewardClaiming = yield.metadata.rewardClaiming,
             warmupPeriod = yield.metadata.warmupPeriod.days.toString(),
             rewardSchedule = yield.metadata.rewardSchedule,
@@ -134,5 +138,6 @@ internal class SetInitialDataStateTransformer(
 
     companion object {
         private val EQUALITY_THRESHOLD = BigDecimal(1E-10)
+        private val KEY_AMOUNT = "amount"
     }
 }
