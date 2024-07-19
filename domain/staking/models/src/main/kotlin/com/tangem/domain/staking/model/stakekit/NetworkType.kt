@@ -1,4 +1,4 @@
-package com.tangem.domain.staking.model
+package com.tangem.domain.staking.model.stakekit
 
 enum class NetworkType {
     AVALANCHE_C,

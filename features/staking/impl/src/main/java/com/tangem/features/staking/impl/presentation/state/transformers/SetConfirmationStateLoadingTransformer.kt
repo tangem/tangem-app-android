@@ -1,6 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
-import com.tangem.domain.staking.model.Yield
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
