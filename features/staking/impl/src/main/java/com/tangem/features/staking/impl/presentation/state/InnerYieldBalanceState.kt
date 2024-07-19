@@ -1,7 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.staking.model.Yield
+import com.tangem.domain.staking.model.stakekit.Yield
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 
