@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens.operations
 
 import arrow.core.NonEmptyList
-import com.tangem.domain.staking.model.YieldBalance
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.utils.extensions.orZero
