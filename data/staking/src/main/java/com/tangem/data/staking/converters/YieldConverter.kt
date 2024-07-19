@@ -2,7 +2,8 @@ package com.tangem.data.staking.converters
 
 import com.tangem.datasource.api.stakekit.models.response.model.AddressArgumentDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
-import com.tangem.domain.staking.model.*
+import com.tangem.domain.staking.model.stakekit.AddressArgument
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.utils.converter.Converter
 
 class YieldConverter(

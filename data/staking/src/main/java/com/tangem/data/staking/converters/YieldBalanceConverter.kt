@@ -2,10 +2,10 @@ package com.tangem.data.staking.converters
 
 import com.tangem.data.staking.converters.action.PendingActionConverter
 import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
-import com.tangem.domain.staking.model.BalanceItem
-import com.tangem.domain.staking.model.BalanceType
-import com.tangem.domain.staking.model.YieldBalance
-import com.tangem.domain.staking.model.YieldBalanceItem
+import com.tangem.domain.staking.model.stakekit.BalanceItem
+import com.tangem.domain.staking.model.stakekit.BalanceType
+import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.model.stakekit.YieldBalanceItem
 import com.tangem.utils.converter.Converter
 
 internal class YieldBalanceConverter : Converter<YieldBalanceConverter.Data, YieldBalance> {

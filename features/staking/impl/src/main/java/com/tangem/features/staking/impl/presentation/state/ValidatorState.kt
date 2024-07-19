@@ -1,7 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import androidx.compose.runtime.Immutable
-import com.tangem.domain.staking.model.Yield
+import com.tangem.domain.staking.model.stakekit.Yield
 
 @Immutable
 internal sealed class ValidatorState {

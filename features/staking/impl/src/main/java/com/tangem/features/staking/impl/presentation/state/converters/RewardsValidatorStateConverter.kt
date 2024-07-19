@@ -4,10 +4,10 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.staking.model.BalanceItem
-import com.tangem.domain.staking.model.BalanceType
-import com.tangem.domain.staking.model.Yield
-import com.tangem.domain.staking.model.YieldBalance
+import com.tangem.domain.staking.model.stakekit.BalanceItem
+import com.tangem.domain.staking.model.stakekit.BalanceType
+import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState

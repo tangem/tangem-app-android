@@ -1,7 +1,7 @@
 package com.tangem.data.staking.converters.action
 
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
-import com.tangem.domain.staking.model.action.StakingActionStatus
+import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.utils.converter.Converter
 
 class ActionStatusConverter : Converter<StakingActionStatusDTO, StakingActionStatus> {
