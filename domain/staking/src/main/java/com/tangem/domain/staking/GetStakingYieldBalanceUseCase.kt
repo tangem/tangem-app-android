@@ -4,8 +4,8 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.core.utils.EitherFlow
-import com.tangem.domain.staking.model.StakingError
-import com.tangem.domain.staking.model.YieldBalance
+import com.tangem.domain.staking.model.stakekit.StakingError
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
