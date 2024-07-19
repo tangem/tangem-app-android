@@ -1,9 +1,9 @@
 package com.tangem.domain.staking
 
 import arrow.core.Either
-import com.tangem.domain.staking.model.StakingError
-import com.tangem.domain.staking.model.transaction.ActionParams
-import com.tangem.domain.staking.model.transaction.StakingGasEstimate
+import com.tangem.domain.staking.model.stakekit.StakingError
+import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
+import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 
