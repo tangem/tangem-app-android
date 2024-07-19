@@ -1,6 +1,6 @@
 package com.tangem.domain.staking.repositories
 
-import com.tangem.domain.staking.model.*
+import com.tangem.domain.staking.model.stakekit.StakingError
 
 interface StakingErrorResolver {
 
