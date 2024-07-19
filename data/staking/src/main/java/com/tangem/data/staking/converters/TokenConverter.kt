@@ -1,7 +1,7 @@
 package com.tangem.data.staking.converters
 
 import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
-import com.tangem.domain.staking.model.Token
+import com.tangem.domain.staking.model.stakekit.Token
 import com.tangem.utils.converter.TwoWayConverter
 
 class TokenConverter(
