@@ -5,7 +5,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.staking.model.Yield
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.tokendetails.presentation.TokenDetailsFragment
