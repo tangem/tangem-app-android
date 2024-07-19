@@ -3,10 +3,11 @@ package com.tangem.domain.tokens.repository
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.*
-import com.tangem.domain.staking.model.action.StakingAction
-import com.tangem.domain.staking.model.action.StakingActionStatus
-import com.tangem.domain.staking.model.action.StakingActionType
-import com.tangem.domain.staking.model.transaction.*
+import com.tangem.domain.staking.model.stakekit.action.StakingAction
+import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.staking.model.stakekit.transaction.*
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
