@@ -138,6 +138,6 @@ internal class SetInitialDataStateTransformer(
 
     companion object {
         private val EQUALITY_THRESHOLD = BigDecimal(1E-10)
-        private val KEY_AMOUNT = "amount"
+        private const val KEY_AMOUNT = "amount"
     }
 }
