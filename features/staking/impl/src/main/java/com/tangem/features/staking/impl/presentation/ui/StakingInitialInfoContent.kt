@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
@@ -144,52 +145,71 @@ private fun MetricsBlock(state: StakingStates.InitialInfoState.Data) {
 
 @Composable
 internal fun StakingDetailsRows(state: StakingStates.InitialInfoState.Data) {
-    Column {
-        InitialInfoContentRow(
+    val rows = listOf(
+        InitialInfoContentRowData(
             startText = stringResource(id = R.string.staking_details_available),
             endText = state.available,
             cornersToRound = CornersToRound.TOP_2,
-        )
-        InitialInfoContentRow(
+        ),
+        InitialInfoContentRowData(
             startText = stringResource(id = R.string.staking_details_on_stake),
             endText = state.onStake,
             cornersToRound = CornersToRound.ZERO,
-        )
-        InitialInfoContentRow(
+        ),
+        InitialInfoContentRowData(
             startText = stringResource(id = R.string.staking_details_apy),
             endText = state.aprRange.resolveReference(),
             cornersToRound = CornersToRound.ZERO,
             iconClick = { state.onInfoClick(InfoType.APY) },
-        )
-        InitialInfoContentRow(
+        ),
+        InitialInfoContentRowData(
             startText = stringResource(id = R.string.staking_details_unbonding_period),
             endText = state.unbondingPeriod,
             cornersToRound = CornersToRound.ZERO,
             iconClick = { state.onInfoClick(InfoType.UNBOUNDING_PERIOD) },
-        )
-        InitialInfoContentRow(
+        ),
+        InitialInfoContentRowData(
             startText = stringResource(id = R.string.staking_details_minimum_requirement),
             endText = state.minimumRequirement,
             cornersToRound = CornersToRound.ZERO,
-        )
-        InitialInfoContentRow(
+        ),
+        InitialInfoContentRowData(
             startText = stringResource(id = R.string.staking_details_reward_claiming),
             endText = state.rewardClaiming,
             cornersToRound = CornersToRound.ZERO,
             iconClick = { state.onInfoClick(InfoType.REWARD_CLAIMING) },
-        )
-        InitialInfoContentRow(
+        ),
+        InitialInfoContentRowData(
             startText = stringResource(id = R.string.staking_details_warmup_period),
             endText = state.warmupPeriod,
             cornersToRound = CornersToRound.ZERO,
             iconClick = { state.onInfoClick(InfoType.WARMUP_PERIOD) },
-        )
-        InitialInfoContentRow(
+        ),
+        InitialInfoContentRowData(
             startText = stringResource(id = R.string.staking_details_reward_schedule),
             endText = state.rewardSchedule,
             cornersToRound = CornersToRound.BOTTOM_2,
             iconClick = { state.onInfoClick(InfoType.REWARD_SCHEDULE) },
-        )
+        ),
+    )
+
+    UniversalListWithDividers(rows)
+}
+
+@Composable
+private fun UniversalListWithDividers(rows: List<InitialInfoContentRowData>) {
+    Column {
+        rows.forEachIndexed { index, row ->
+            InitialInfoContentRow(
+                startText = row.startText,
+                endText = row.endText,
+                cornersToRound = row.cornersToRound,
+                iconClick = row.iconClick,
+            )
+            if (index < rows.size - 1) {
+                DividerWithPadding()
+            }
+        }
     }
 }
 
@@ -314,6 +334,33 @@ private fun InitialInfoContentRow(
         iconClick = iconClick,
     )
 }
+
+@Composable
+fun DividerWithPadding() {
+    Row(
+        modifier = Modifier
+            .background(color = TangemTheme.colors.background.primary)
+            .fillMaxWidth()
+            .height(TangemTheme.dimens.size0_5),
+    ) {
+        Spacer(modifier = Modifier.width(16.dp))
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(TangemTheme.dimens.size0_5)
+                .background(TangemTheme.colors.background.tertiary),
+        )
+    }
+}
+
+private data class InitialInfoContentRowData(
+    val startText: String,
+    val endText: String,
+    val cornersToRound: CornersToRound,
+    val iconClick: (() -> Unit)? = null,
+)
+
+// region preview
 
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
