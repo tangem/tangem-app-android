@@ -2,10 +2,13 @@ package com.tangem.domain.staking.repositories
 
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.staking.model.*
-import com.tangem.domain.staking.model.action.StakingAction
-import com.tangem.domain.staking.model.transaction.ActionParams
-import com.tangem.domain.staking.model.transaction.StakingGasEstimate
-import com.tangem.domain.staking.model.transaction.StakingTransaction
+import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.model.stakekit.YieldBalanceList
+import com.tangem.domain.staking.model.stakekit.action.StakingAction
+import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
+import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
+import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.Network
