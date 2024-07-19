@@ -28,7 +28,16 @@ internal class PushNotificationViewModel @Inject constructor(
     private val analyticHandler: AnalyticsEventHandler,
 ) : ViewModel(), PushNotificationsClickIntents {
 
-    override fun onAskLater() {
+    override fun onRequest() {
+        analyticHandler.send(
+            PushNotificationAnalyticEvents.ButtonAllow(AnalyticsParam.ScreensSources.Stories),
+        )
+        viewModelScope.launch {
+            setFirstTimeAskingPermissionUseCase(PUSH_PERMISSION)
+        }
+    }
+
+    override fun onRequestLater() {
         analyticHandler.send(
             PushNotificationAnalyticEvents.ButtonLater(AnalyticsParam.ScreensSources.Stories),
         )
@@ -36,25 +45,30 @@ internal class PushNotificationViewModel @Inject constructor(
             delayPermissionRequestUseCase(PUSH_PERMISSION)
             setFirstTimeAskingPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
+            router.openHome()
         }
-        router.openHome()
     }
 
     override fun onAllowPermission() {
-        viewModelScope.launch {
-            setFirstTimeAskingPermissionUseCase(PUSH_PERMISSION)
-        }
-    }
-
-    override fun onAllowedPermission() {
         analyticHandler.send(
-            PushNotificationAnalyticEvents.ButtonAllow(AnalyticsParam.ScreensSources.Stories),
+            PushNotificationAnalyticEvents.PermissionStatus(isAllowed = true),
         )
         viewModelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
+            router.openHome()
         }
-        router.openHome()
+    }
+
+    override fun onDenyPermission() {
+        analyticHandler.send(
+            PushNotificationAnalyticEvents.PermissionStatus(isAllowed = false),
+        )
+        viewModelScope.launch {
+            delayPermissionRequestUseCase(PUSH_PERMISSION)
+            neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
+            router.openHome()
+        }
     }
 
     override fun openSettings() = settingsManager.openSettings()
