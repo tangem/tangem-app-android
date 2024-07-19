@@ -3,8 +3,8 @@ package com.tangem.domain.tokens.operations
 import arrow.core.*
 import arrow.core.raise.*
 import com.tangem.domain.core.utils.EitherFlow
-import com.tangem.domain.staking.model.YieldBalance
-import com.tangem.domain.staking.model.YieldBalanceList
+import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.repository.CurrenciesRepository
