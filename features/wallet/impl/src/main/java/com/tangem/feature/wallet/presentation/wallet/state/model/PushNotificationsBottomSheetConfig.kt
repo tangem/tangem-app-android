@@ -6,6 +6,7 @@ data class PushNotificationsBottomSheetConfig(
     val isFirstTimeRequested: Boolean,
     val wasInitiallyAsk: Boolean,
     val onRequest: () -> Unit,
+    val onRequestLater: () -> Unit,
     val onAllow: () -> Unit,
     val onDeny: () -> Unit,
     val openSettings: () -> Unit,
