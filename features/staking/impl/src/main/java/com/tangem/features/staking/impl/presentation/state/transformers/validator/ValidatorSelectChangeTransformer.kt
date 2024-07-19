@@ -1,6 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers.validator
 
-import com.tangem.domain.staking.model.Yield
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.ValidatorState
