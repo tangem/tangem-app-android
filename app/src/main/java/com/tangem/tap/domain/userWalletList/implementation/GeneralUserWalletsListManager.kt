@@ -48,21 +48,33 @@ internal class GeneralUserWalletsListManager(
         get() = requireImplementation.isLockable
 
     override val userWallets: Flow<List<UserWallet>>
-        get() = implementation.transformLatest { impl ->
-            if (impl != null && impl.hasUserWallets) {
-                emitAll(impl.userWallets)
+        get() = implementation
+            .transformLatest { impl ->
+                if (impl != null) {
+                    emitAll(impl.userWallets)
+                }
             }
-        }
+            // To avoid returning empty flow to subscriber while implementation and userWallets are null
+            // Flow is called first time when implementation is null and then when its assigned with implementation
+            // that may have not user wallets (null or empty).
+            // As a result subscription occurs on empty flow, than will not change if user wallets are available
+            .filter { requireImplementation.hasUserWallets }
 
     override val userWalletsSync: List<UserWallet>
         get() = requireImplementation.userWalletsSync
 
     override val selectedUserWallet: Flow<UserWallet>
-        get() = implementation.transformLatest { impl ->
-            if (impl != null && impl.hasUserWallets) {
-                emitAll(impl.selectedUserWallet)
+        get() = implementation
+            .transformLatest { impl ->
+                if (impl != null) {
+                    emitAll(impl.selectedUserWallet)
+                }
             }
-        }
+            // To avoid returning empty flow to subscriber while implementation and userWallets are null
+            // Flow is called first time when implementation is null and then when its assigned with implementation
+            // that may have not user wallets (null or empty).
+            // As a result subscription occurs on empty flow, than will not change if user wallets are available
+            .filter { requireImplementation.hasUserWallets }
 
     override val selectedUserWalletSync: UserWallet?
         get() = requireImplementation.selectedUserWalletSync
