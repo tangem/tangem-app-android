@@ -12,6 +12,7 @@ import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.Flow
@@ -47,7 +48,7 @@ class EstimateFeeUseCase(
 
             val maybeFee = when (result) {
                 is Result.Success -> result.data.right()
-                is Result.Failure -> GetFeeError.DataError(result.error).left()
+                is Result.Failure -> result.mapToFeeError().left()
                 null -> GetFeeError.UnknownError.left()
             }
             emit(maybeFee)
