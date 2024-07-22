@@ -102,6 +102,6 @@ internal object FeeStatePreviewData {
     )
 
     val errorFeeState = feeState.copy(
-        feeSelectorState = FeeSelectorState.Error,
+        feeSelectorState = FeeSelectorState.Error.NetworkError,
     )
 }

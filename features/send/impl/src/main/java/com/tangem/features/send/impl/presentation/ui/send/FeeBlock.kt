@@ -105,7 +105,7 @@ private fun BoxScope.FeeError(feeSelectorState: FeeSelectorState) {
         label = "Fee Error State Change",
         modifier = Modifier.align(Alignment.CenterEnd),
     ) {
-        if (it == FeeSelectorState.Error) {
+        if (it is FeeSelectorState.Error) {
             Text(
                 text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
                 color = TangemTheme.colors.text.primary1,
