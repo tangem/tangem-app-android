@@ -70,12 +70,12 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balances
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import com.tangem.features.markets.component.BottomSheetState
-import com.tangem.features.markets.component.MarketsListComponent
+import com.tangem.features.markets.component.MarketsEntryComponent
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun WalletScreen(state: WalletScreenState, marketsListComponent: MarketsListComponent?) {
+internal fun WalletScreen(state: WalletScreenState, marketsEntryComponent: MarketsEntryComponent?) {
     BackHandler(onBack = state.onBackClick)
 
     // It means that screen is still initializing
@@ -98,7 +98,7 @@ internal fun WalletScreen(state: WalletScreenState, marketsListComponent: Market
         snackbarHostState = snackbarHostState,
         isAutoScroll = isAutoScroll,
         onAutoScrollReset = { isAutoScroll.value = false },
-        marketsListComponent = marketsListComponent,
+        marketsEntryComponent = marketsEntryComponent,
         alertConfig = alertConfig,
     )
 
@@ -119,7 +119,7 @@ private fun WalletContent(
     walletsListState: LazyListState,
     snackbarHostState: SnackbarHostState,
     isAutoScroll: State<Boolean>,
-    marketsListComponent: MarketsListComponent?,
+    marketsEntryComponent: MarketsEntryComponent?,
     alertConfig: WalletAlertState?,
     onAutoScrollReset: () -> Unit,
 ) {
@@ -216,7 +216,7 @@ private fun WalletContent(
         )
     }
 
-    if (marketsListComponent != null) {
+    if (marketsEntryComponent != null) {
         val bottomSheetState = remember {
             mutableStateOf(BottomSheetState.COLLAPSED)
         }
@@ -232,7 +232,7 @@ private fun WalletContent(
             alertConfig = alertConfig,
             onBottomSheetStateChange = { bottomSheetState.value = it },
             bottomSheetContent = {
-                marketsListComponent.BottomSheetContent(
+                marketsEntryComponent.BottomSheetContent(
                     bottomSheetState = bottomSheetState,
                     onHeaderSizeChange = { headerSize = it },
                     modifier = Modifier,
@@ -638,7 +638,7 @@ private fun WalletScreen_Preview(@PreviewParameter(WalletScreenPreviewProvider::
     TangemThemePreview {
         WalletScreen(
             state = data,
-            marketsListComponent = null,
+            marketsEntryComponent = null,
         )
     }
 }
