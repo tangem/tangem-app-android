@@ -98,7 +98,7 @@ private fun FeeError(feeSelectorState: FeeSelectorState) {
     Row {
         SpacerWMax()
         AnimatedVisibility(
-            visible = feeSelectorState == FeeSelectorState.Error,
+            visible = feeSelectorState is FeeSelectorState.Error,
             label = "Fee Error State Change",
             modifier = Modifier.align(Alignment.CenterVertically),
         ) {
