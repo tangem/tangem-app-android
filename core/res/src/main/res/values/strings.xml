@@ -627,6 +627,7 @@
   <string name="send_total_subtitle_fiat_format">≈ %1$s (inc. fee: %2$s)</string>
   <string name="send_total_subtitle_format">%s will be sent</string>
   <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
+  <string name="send_tron_account_activation_error">%1$s is an asset in the Tron network. To calculate the fee and make a transaction you need to deposit some Tron(TRX) in your account.</string>
   <string name="send_validation_invalid_address">Invalid address</string>
   <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
