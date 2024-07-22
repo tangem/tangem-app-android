@@ -1,18 +1,21 @@
 package com.tangem.core.ui.components.list
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.rows.CornersToRound
 import com.tangem.core.ui.components.rows.RoundableCornersRow
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun RoundedListWithDividers(rows: List<RoundedListWithDividersItemData>) {
@@ -28,7 +31,7 @@ fun RoundedListWithDividers(rows: List<RoundedListWithDividersItemData>) {
                 iconClick = row.iconClick,
             )
             if (index < rows.lastIndex) {
-                DividerWithPadding()
+                RoundedListDivider()
             }
         }
     }
@@ -55,14 +58,18 @@ private fun InitialInfoContentRow(
 }
 
 @Composable
-fun DividerWithPadding() {
+fun RoundedListDivider() {
     Row(
         modifier = Modifier
-            .background(color = TangemTheme.colors.background.primary)
             .fillMaxWidth()
             .height(TangemTheme.dimens.size0_5),
     ) {
-        Spacer(modifier = Modifier.width(16.dp))
+        Box(
+            modifier = Modifier
+                .width(TangemTheme.dimens.size16)
+                .height(TangemTheme.dimens.size0_5)
+                .background(TangemTheme.colors.background.primary),
+        )
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -86,3 +93,31 @@ data class RoundedListWithDividersItemData(
     val endText: TextReference,
     val iconClick: (() -> Unit)? = null,
 )
+
+@Composable
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun Preview_StakingInfoBottomSheet() {
+    TangemThemePreview {
+        RoundedListWithDividers(
+            rows = persistentListOf(
+                RoundedListWithDividersItemData(
+                    id = 1,
+                    startText = TextReference.Str("Key 1"),
+                    endText = TextReference.Str("Value 1"),
+                ),
+                RoundedListWithDividersItemData(
+                    id = 2,
+                    startText = TextReference.Str("Key 2"),
+                    endText = TextReference.Str("Value 2"),
+                ),
+                RoundedListWithDividersItemData(
+                    id = 3,
+                    startText = TextReference.Str("Key 3"),
+                    endText = TextReference.Str("Value 3"),
+                    iconClick = {},
+                ),
+            ),
+        )
+    }
+}
