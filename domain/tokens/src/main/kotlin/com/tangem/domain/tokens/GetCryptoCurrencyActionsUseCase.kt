@@ -12,6 +12,7 @@ import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,6 +32,7 @@ class GetCryptoCurrencyActionsUseCase(
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
+    private val stakingFeatureToggles: StakingFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -126,14 +128,16 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // staking
-        if (isStakingAvailable(cryptoCurrency)) {
-            activeList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.None))
-        } else {
-            disabledList.add(
-                TokenActionsState.ActionState.Stake(
-                    unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(cryptoCurrency.name),
-                ),
-            )
+        if (stakingFeatureToggles.isStakingEnabled) {
+            if (isStakingAvailable(cryptoCurrency)) {
+                activeList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.None))
+            } else {
+                disabledList.add(
+                    TokenActionsState.ActionState.Stake(
+                        unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(cryptoCurrency.name),
+                    ),
+                )
+            }
         }
 
         // send
@@ -240,7 +244,6 @@ class GetCryptoCurrencyActionsUseCase(
         actionsList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.Unreachable))
         actionsList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.Unreachable))
         actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.Unreachable))
-
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
             val scenario = if (needAssociateAsset) {
                 ScenarioUnavailabilityReason.UnassociatedAsset
@@ -249,8 +252,11 @@ class GetCryptoCurrencyActionsUseCase(
             }
             actionsList.add(TokenActionsState.ActionState.Receive(scenario))
         }
-        actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable))
+        if (stakingFeatureToggles.isStakingEnabled) {
+            actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable))
+        }
         actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
+
         return actionsList
     }
 
