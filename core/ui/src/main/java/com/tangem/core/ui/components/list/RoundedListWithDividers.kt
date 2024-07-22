@@ -19,7 +19,7 @@ fun RoundedListWithDividers(rows: List<RoundedListWithDividersItemData>) {
     LazyColumn {
         itemsIndexed(
             items = rows,
-            key = { _, item -> item.id }
+            key = { _, item -> item.id },
         ) { index, row ->
             InitialInfoContentRow(
                 startText = row.startText.resolveReference(),

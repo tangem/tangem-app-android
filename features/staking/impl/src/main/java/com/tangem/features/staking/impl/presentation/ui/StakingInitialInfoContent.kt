@@ -7,9 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -28,7 +26,6 @@ import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.components.list.RoundedListWithDividers
-import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -37,7 +34,6 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.previewdata.InitialStakingStatePreview
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
-import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.PLUS
@@ -55,7 +51,7 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
                 start = TangemTheme.dimens.spacing16,
                 end = TangemTheme.dimens.spacing16,
                 bottom = TangemTheme.dimens.spacing16,
-            )
+            ),
     ) {
         AnimatedVisibility(state.yieldBalance == InnerYieldBalanceState.Empty) {
             MetricsBlock(state)
@@ -139,59 +135,6 @@ private fun MetricsBlock(state: StakingStates.InitialInfoState.Data) {
             }
         }
     }
-}
-
-@Composable
-internal fun StakingDetailsRows(state: StakingStates.InitialInfoState.Data) {
-    // val rows = listOf(
-        // RoundedListWithDividersItemData(
-        //     id = stringResource(id = R.string.staking_details_available),
-        //     startText = stringResource(id = R.string.staking_details_available),
-        //     endText = state.available,
-        // ),
-        // RoundedListWithDividersItemData(
-        //     id = stringResource(id = R.string.staking_details_on_stake),
-        //     startText = stringResource(id = R.string.staking_details_on_stake),
-        //     endText = state.onStake,
-        // ),
-        // RoundedListWithDividersItemData(
-        //     id = stringResource(id = R.string.staking_details_apy),
-        //     startText = stringResource(id = R.string.staking_details_apy),
-        //     endText = state.aprRange.resolveReference(),
-        //     iconClick = { state.onInfoClick(InfoType.APY) },
-        // ),
-        // RoundedListWithDividersItemData(
-        //     id = stringResource(id = R.string.staking_details_unbonding_period),
-        //     startText = stringResource(id = R.string.staking_details_unbonding_period),
-        //     endText = state.unbondingPeriod,
-        //     iconClick = { state.onInfoClick(InfoType.UNBOUNDING_PERIOD) },
-        // ),
-        // RoundedListWithDividersItemData(
-        //     id = stringResource(id = R.string.staking_details_minimum_requirement),
-        //     startText = stringResource(id = R.string.staking_details_minimum_requirement),
-        //     endText = state.minimumRequirement,
-        // ),
-        // RoundedListWithDividersItemData(
-        //     id = stringResource(id = R.string.staking_details_reward_claiming),
-        //     startText = stringResource(id = R.string.staking_details_reward_claiming),
-        //     endText = state.rewardClaiming,
-        //     iconClick = { state.onInfoClick(InfoType.REWARD_CLAIMING) },
-        // ),
-        // RoundedListWithDividersItemData(
-        //     id = stringResource(id = R.string.staking_details_warmup_period),
-        //     startText = stringResource(id = R.string.staking_details_warmup_period),
-        //     endText = state.warmupPeriod,
-        //     iconClick = { state.onInfoClick(InfoType.WARMUP_PERIOD) },
-        // ),
-        // RoundedListWithDividersItemData(
-        //     id = stringResource(id = R.string.staking_details_reward_schedule),
-        //     startText = stringResource(id = R.string.staking_details_reward_schedule),
-        //     endText = state.rewardSchedule,
-        //     iconClick = { state.onInfoClick(InfoType.REWARD_SCHEDULE) },
-        // ),
-    // )
-
-
 }
 
 @Composable

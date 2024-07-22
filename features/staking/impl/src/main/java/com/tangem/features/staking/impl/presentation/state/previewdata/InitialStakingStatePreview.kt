@@ -16,7 +16,7 @@ internal object InitialStakingStatePreview {
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_available,
                 startText = TextReference.Res(R.string.staking_details_available),
-                endText = TextReference.Str("15 SOL")
+                endText = TextReference.Str("15 SOL"),
             ),
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_apy,
@@ -31,27 +31,27 @@ internal object InitialStakingStatePreview {
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_unbonding_period,
                 startText = TextReference.Res(R.string.staking_details_unbonding_period),
-                endText =  TextReference.Str("3d"),
+                endText = TextReference.Str("3d"),
             ),
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_minimum_requirement,
                 startText = TextReference.Res(R.string.staking_details_minimum_requirement),
-                endText =  TextReference.Str("12 SOL"),
+                endText = TextReference.Str("12 SOL"),
             ),
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_reward_claiming,
                 startText = TextReference.Res(R.string.staking_details_reward_claiming),
-                endText =  TextReference.Str("Auto"),
+                endText = TextReference.Str("Auto"),
             ),
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_warmup_period,
                 startText = TextReference.Res(R.string.staking_details_warmup_period),
-                endText =  TextReference.Str(  "Days"),
+                endText = TextReference.Str("Days"),
             ),
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_reward_schedule,
                 startText = TextReference.Res(R.string.staking_details_reward_schedule),
-                endText =  TextReference.Str("Block"),
+                endText = TextReference.Str("Block"),
             ),
         ),
         onInfoClick = {},
