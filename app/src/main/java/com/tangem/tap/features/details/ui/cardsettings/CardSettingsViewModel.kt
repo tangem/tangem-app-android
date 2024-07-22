@@ -130,14 +130,20 @@ internal class CardSettingsViewModel @Inject constructor(
             }
             is CardInfo.ResetToFactorySettings -> {
                 Analytics.send(Settings.CardSettings.ButtonFactoryReset())
-                store.dispatchNavigationAction { AppRoute.ResetToFactory(userWalletId) }
+                store.dispatchNavigationAction {
+                    push(route = AppRoute.ResetToFactory(userWalletId))
+                }
             }
             is CardInfo.SecurityMode -> {
                 Analytics.send(Settings.CardSettings.ButtonChangeSecurityMode())
-                store.dispatchNavigationAction { AppRoute.DetailsSecurity(userWalletId) }
+                store.dispatchNavigationAction {
+                    push(route = AppRoute.DetailsSecurity(userWalletId))
+                }
             }
             is CardInfo.AccessCodeRecovery -> {
-                store.dispatchNavigationAction { AppRoute.AccessCodeRecovery(userWalletId) }
+                store.dispatchNavigationAction {
+                    push(route = AppRoute.AccessCodeRecovery(userWalletId))
+                }
             }
             else -> {}
         }
