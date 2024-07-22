@@ -9,18 +9,18 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.domain.models.*
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
+import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.Stack
 
 @Suppress("LargeClass", "LongParameterList")
 class WalletConnectInteractor(
@@ -35,17 +35,26 @@ class WalletConnectInteractor(
     val blockchainHelper: WcBlockchainHelper,
 ) {
 
+    var isWalletConnectReadyForDeepLinks = false
+
     private val getSelectedWalletUseCase by lazy(LazyThreadSafetyMode.NONE) {
         GetSelectedWalletUseCase(userWalletsListManager)
     }
 
     private val wcScope = CoroutineScope(
-        Job() + dispatchers.io + FeatureCoroutineExceptionHandler.create("wcScope"),
+        SupervisorJob() + dispatchers.io + CoroutineExceptionHandler { _, throwable ->
+            Timber.e("CoroutineException: from: LISTENER SCOPE, exception: $throwable")
+        },
     )
 
     private val listenerScope = CoroutineScope(
-        Job() + dispatchers.io + FeatureCoroutineExceptionHandler.create("listenScope"),
+        SupervisorJob() + dispatchers.io + CoroutineExceptionHandler { _, throwable ->
+            Timber.e("CoroutineException: from: LISTENER SCOPE, exception: $throwable")
+        },
     )
+
+    /** Stack of deeplinks to handle if user wallet is not selected or cryptocurrency statuses are not available */
+    private val deeplinkStack: Stack<String> = Stack()
 
     private val events = walletConnectRepository.events
     private val sessions = walletConnectRepository.activeSessions
@@ -96,6 +105,7 @@ class WalletConnectInteractor(
             networks = currencies.map { it.network },
         )
         setUserChains(accounts)
+        handleDeeplinkStack(accounts)
     }
 
     private suspend fun startListeningWc(userWalletId: String, cardId: String?) {
@@ -116,6 +126,17 @@ class WalletConnectInteractor(
                     ?.let { NetworkNamespace(it) }
             }.filterNotNull()
         walletConnectRepository.setUserNamespaces(userNamespaces)
+    }
+
+    private fun handleDeeplinkStack(accounts: List<Account>) {
+        runCatching {
+            if (accounts.isEmpty()) return
+            isWalletConnectReadyForDeepLinks = true
+            val lastDeeplink = deeplinkStack.pop()
+            store.dispatchOnMain(WalletConnectAction.OpenSession(lastDeeplink))
+        }.onFailure {
+            Timber.e("WC deeplink handling failed. $it")
+        }
     }
 
     private suspend fun subscribeToEvents() {
@@ -166,6 +187,9 @@ class WalletConnectInteractor(
                     }
                     is WalletConnectEvents.SessionRequest -> {
                         handleRequest(wcEvent)
+                    }
+                    is WalletConnectEvents.PairConnectError -> {
+                        handler.onPairConnectError(wcEvent.error)
                     }
                 }
             }
@@ -327,6 +351,21 @@ class WalletConnectInteractor(
 
     fun isWalletConnectUri(uri: String): Boolean {
         return uri.lowercase().startsWith(WC_SCHEME)
+    }
+
+    /**
+     * Handles Wallet Connect deep links.
+     * If wallet connect is able to handle the deeplink, session is started with deeplink.
+     * Otherwise, deeplink is stored until wallet connect is ready to handle it.
+     *
+     * @param deeplink deeplink to handle
+     */
+    fun addDeeplink(deeplink: String) {
+        if (isWalletConnectReadyForDeepLinks) {
+            store.dispatchOnMain(WalletConnectAction.OpenSession(deeplink))
+        } else {
+            deeplinkStack.push(deeplink)
+        }
     }
 
     private fun getCardId(userWallet: UserWallet): String? {
