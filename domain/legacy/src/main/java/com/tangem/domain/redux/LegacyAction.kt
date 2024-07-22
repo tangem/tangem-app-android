@@ -8,7 +8,9 @@ import java.math.BigDecimal
 
 sealed interface LegacyAction : Action {
 
-    object SendEmailRateCanBeBetter : LegacyAction
+    data object SendEmailSupport : LegacyAction
+
+    data object SendEmailRateCanBeBetter : LegacyAction
 
     /**
      * Initiate an onboarding process.
