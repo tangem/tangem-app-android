@@ -10,6 +10,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.rows.CornersToRound
 import com.tangem.core.ui.components.rows.RoundableCornersRow
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -20,8 +22,8 @@ fun RoundedListWithDividers(rows: List<RoundedListWithDividersItemData>) {
             key = { _, item -> item.id }
         ) { index, row ->
             InitialInfoContentRow(
-                startText = row.startText,
-                endText = row.endText,
+                startText = row.startText.resolveReference(),
+                endText = row.endText.resolveReference(),
                 cornersToRound = getCornersToRound(index, rows.size),
                 iconClick = row.iconClick,
             )
@@ -79,8 +81,8 @@ private fun getCornersToRound(currentIndex: Int, listSize: Int): CornersToRound 
 }
 
 data class RoundedListWithDividersItemData(
-    val id: String,
-    val startText: String,
-    val endText: String,
+    val id: Int,
+    val startText: TextReference,
+    val endText: TextReference,
     val iconClick: (() -> Unit)? = null,
 )

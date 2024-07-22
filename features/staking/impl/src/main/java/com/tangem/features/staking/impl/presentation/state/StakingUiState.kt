@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.presentation.state
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
@@ -46,6 +47,14 @@ internal sealed class StakingStates {
     sealed class InitialInfoState : StakingStates() {
         data class Data(
             override val isPrimaryButtonEnabled: Boolean,
+            val infoItems: ImmutableList<RoundedListWithDividersItemData>,
+            val aprRange: TextReference,
+            val onInfoClick: (InfoType) -> Unit,
+            val yieldBalance: InnerYieldBalanceState,
+            val isStakeMoreAvailable: Boolean,
+        ) : InitialInfoState()
+
+        data class InitialInfoItems(
             val available: String,
             val onStake: String,
             val aprRange: TextReference,
@@ -54,10 +63,7 @@ internal sealed class StakingStates {
             val rewardClaiming: String,
             val warmupPeriod: String,
             val rewardSchedule: String,
-            val onInfoClick: (InfoType) -> Unit,
-            val yieldBalance: InnerYieldBalanceState,
-            val isStakeMoreAvailable: Boolean,
-        ) : InitialInfoState()
+        )
 
         data class Empty(
             override val isPrimaryButtonEnabled: Boolean = false,

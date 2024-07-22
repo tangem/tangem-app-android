@@ -60,7 +60,7 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
         AnimatedVisibility(state.yieldBalance == InnerYieldBalanceState.Empty) {
             MetricsBlock(state)
         }
-        StakingDetailsRows(state)
+        RoundedListWithDividers(state.infoItems)
         AnimatedContent(targetState = state.yieldBalance, label = "Rewards block visibility animation") {
             if (it is InnerYieldBalanceState.Data) {
                 StakingRewardBlock(
@@ -143,55 +143,55 @@ private fun MetricsBlock(state: StakingStates.InitialInfoState.Data) {
 
 @Composable
 internal fun StakingDetailsRows(state: StakingStates.InitialInfoState.Data) {
-    val rows = listOf(
-        RoundedListWithDividersItemData(
-            id = stringResource(id = R.string.staking_details_available),
-            startText = stringResource(id = R.string.staking_details_available),
-            endText = state.available,
-        ),
-        RoundedListWithDividersItemData(
-            id = stringResource(id = R.string.staking_details_on_stake),
-            startText = stringResource(id = R.string.staking_details_on_stake),
-            endText = state.onStake,
-        ),
-        RoundedListWithDividersItemData(
-            id = stringResource(id = R.string.staking_details_apy),
-            startText = stringResource(id = R.string.staking_details_apy),
-            endText = state.aprRange.resolveReference(),
-            iconClick = { state.onInfoClick(InfoType.APY) },
-        ),
-        RoundedListWithDividersItemData(
-            id = stringResource(id = R.string.staking_details_unbonding_period),
-            startText = stringResource(id = R.string.staking_details_unbonding_period),
-            endText = state.unbondingPeriod,
-            iconClick = { state.onInfoClick(InfoType.UNBOUNDING_PERIOD) },
-        ),
-        RoundedListWithDividersItemData(
-            id = stringResource(id = R.string.staking_details_minimum_requirement),
-            startText = stringResource(id = R.string.staking_details_minimum_requirement),
-            endText = state.minimumRequirement,
-        ),
-        RoundedListWithDividersItemData(
-            id = stringResource(id = R.string.staking_details_reward_claiming),
-            startText = stringResource(id = R.string.staking_details_reward_claiming),
-            endText = state.rewardClaiming,
-            iconClick = { state.onInfoClick(InfoType.REWARD_CLAIMING) },
-        ),
-        RoundedListWithDividersItemData(
-            id = stringResource(id = R.string.staking_details_warmup_period),
-            startText = stringResource(id = R.string.staking_details_warmup_period),
-            endText = state.warmupPeriod,
-            iconClick = { state.onInfoClick(InfoType.WARMUP_PERIOD) },
-        ),
-        RoundedListWithDividersItemData(
-            id = stringResource(id = R.string.staking_details_reward_schedule),
-            startText = stringResource(id = R.string.staking_details_reward_schedule),
-            endText = state.rewardSchedule,
-            iconClick = { state.onInfoClick(InfoType.REWARD_SCHEDULE) },
-        ),
-    )
+    // val rows = listOf(
+        // RoundedListWithDividersItemData(
+        //     id = stringResource(id = R.string.staking_details_available),
+        //     startText = stringResource(id = R.string.staking_details_available),
+        //     endText = state.available,
+        // ),
+        // RoundedListWithDividersItemData(
+        //     id = stringResource(id = R.string.staking_details_on_stake),
+        //     startText = stringResource(id = R.string.staking_details_on_stake),
+        //     endText = state.onStake,
+        // ),
+        // RoundedListWithDividersItemData(
+        //     id = stringResource(id = R.string.staking_details_apy),
+        //     startText = stringResource(id = R.string.staking_details_apy),
+        //     endText = state.aprRange.resolveReference(),
+        //     iconClick = { state.onInfoClick(InfoType.APY) },
+        // ),
+        // RoundedListWithDividersItemData(
+        //     id = stringResource(id = R.string.staking_details_unbonding_period),
+        //     startText = stringResource(id = R.string.staking_details_unbonding_period),
+        //     endText = state.unbondingPeriod,
+        //     iconClick = { state.onInfoClick(InfoType.UNBOUNDING_PERIOD) },
+        // ),
+        // RoundedListWithDividersItemData(
+        //     id = stringResource(id = R.string.staking_details_minimum_requirement),
+        //     startText = stringResource(id = R.string.staking_details_minimum_requirement),
+        //     endText = state.minimumRequirement,
+        // ),
+        // RoundedListWithDividersItemData(
+        //     id = stringResource(id = R.string.staking_details_reward_claiming),
+        //     startText = stringResource(id = R.string.staking_details_reward_claiming),
+        //     endText = state.rewardClaiming,
+        //     iconClick = { state.onInfoClick(InfoType.REWARD_CLAIMING) },
+        // ),
+        // RoundedListWithDividersItemData(
+        //     id = stringResource(id = R.string.staking_details_warmup_period),
+        //     startText = stringResource(id = R.string.staking_details_warmup_period),
+        //     endText = state.warmupPeriod,
+        //     iconClick = { state.onInfoClick(InfoType.WARMUP_PERIOD) },
+        // ),
+        // RoundedListWithDividersItemData(
+        //     id = stringResource(id = R.string.staking_details_reward_schedule),
+        //     startText = stringResource(id = R.string.staking_details_reward_schedule),
+        //     endText = state.rewardSchedule,
+        //     iconClick = { state.onInfoClick(InfoType.REWARD_SCHEDULE) },
+        // ),
+    // )
 
-    RoundedListWithDividers(rows)
+
 }
 
 @Composable
