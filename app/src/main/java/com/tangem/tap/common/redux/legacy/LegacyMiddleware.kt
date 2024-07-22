@@ -3,6 +3,7 @@ package com.tangem.tap.common.redux.legacy
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.RateCanBeBetterEmail
 import com.tangem.tap.common.feedback.SendTransactionFailedEmail
 import com.tangem.tap.common.redux.AppState
@@ -20,6 +21,9 @@ internal object LegacyMiddleware {
                 when (action) {
                     is LegacyAction.SendEmailRateCanBeBetter -> {
                         store.state.globalState.feedbackManager?.sendEmail(RateCanBeBetterEmail())
+                    }
+                    is LegacyAction.SendEmailSupport -> {
+                        store.state.globalState.feedbackManager?.sendEmail(FeedbackEmail())
                     }
                     is LegacyAction.StartOnboardingProcess -> {
                         store.dispatch(
