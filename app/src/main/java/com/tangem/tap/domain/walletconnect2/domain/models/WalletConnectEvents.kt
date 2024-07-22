@@ -26,4 +26,6 @@ sealed interface WalletConnectEvents {
         val metaUrl: String,
         val method: String,
     ) : WalletConnectEvents
+
+    data class PairConnectError(val error: Throwable) : WalletConnectEvents
 }
