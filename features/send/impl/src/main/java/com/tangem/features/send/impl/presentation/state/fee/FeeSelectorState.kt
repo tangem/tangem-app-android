@@ -17,7 +17,10 @@ internal sealed class FeeSelectorState {
 
     data object Loading : FeeSelectorState()
 
-    data object Error : FeeSelectorState()
+    sealed class Error : FeeSelectorState() {
+        data object NetworkError : Error()
+        data class TronAccountActivationError(val tokenName: String) : Error()
+    }
 }
 
 enum class FeeType {

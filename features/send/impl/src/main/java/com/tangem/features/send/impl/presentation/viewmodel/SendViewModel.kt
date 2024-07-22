@@ -45,6 +45,7 @@ import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.analytics.SendScreenSource
 import com.tangem.features.send.impl.presentation.analytics.utils.SendScreenAnalyticSender
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
+import com.tangem.features.send.impl.presentation.errors.FeeErrorStateMapper
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactory
 import com.tangem.features.send.impl.presentation.state.confirm.SendNotificationFactory
@@ -119,6 +120,8 @@ internal class SendViewModel @Inject constructor(
     private var innerRouter: InnerSendRouter by Delegates.notNull()
     var stateRouter: StateRouter by Delegates.notNull()
         private set
+
+    private val feeErrorHandler = FeeErrorStateMapper()
 
     private val stateFactory = SendStateFactory(
         clickIntents = this,
@@ -711,20 +714,24 @@ internal class SendViewModel @Inject constructor(
                     uiState.value = feeStateFactory.onFeeOnLoadedState(it)
                     sendIdleTimer = SystemClock.elapsedRealtime()
                 },
-                ifLeft = {
-                    onFeeLoadFailed(isShowStatus)
+                ifLeft = { loadFeeError ->
+                    onFeeLoadFailed(isShowStatus, loadFeeError)
                 },
             )
             if (result == null) {
-                onFeeLoadFailed(isShowStatus)
+                onFeeLoadFailed(isShowStatus, null)
             }
             updateNotifications()
             updateFeeNotifications()
         }.saveIn(feeJobHolder)
     }
 
-    private fun onFeeLoadFailed(isShowStatus: Boolean) {
-        if (isShowStatus) uiState.value = feeStateFactory.onFeeOnErrorState()
+    private fun onFeeLoadFailed(isShowStatus: Boolean, loadFeeError: GetFeeError?) {
+        if (isShowStatus) {
+            uiState.value = feeStateFactory.onFeeOnErrorState(
+                feeErrorHandler.getFeeError(loadFeeError, cryptoCurrency.name),
+            )
+        }
     }
 
     private suspend fun checkIfSubtractAvailable() {

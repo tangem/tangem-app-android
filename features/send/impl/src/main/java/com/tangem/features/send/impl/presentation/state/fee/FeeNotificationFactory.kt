@@ -1,6 +1,9 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
-import com.tangem.features.send.impl.presentation.state.*
+import com.tangem.features.send.impl.presentation.state.SendNotification
+import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.SendUiStateType
+import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.persistentListOf
@@ -21,13 +24,25 @@ internal class FeeNotificationFactory(
             val state = currentStateProvider()
             val feeState = state.getFeeState(stateRouterProvider().isEditState) ?: return@map persistentListOf()
             buildList {
-                addFeeUnreachableNotification(feeState.feeSelectorState)
+                addFeeUnreachableNotification(
+                    feeState.feeSelectorState,
+                )
             }.toImmutableList()
         }
 
     private fun MutableList<SendNotification>.addFeeUnreachableNotification(feeSelectorState: FeeSelectorState) {
-        if (feeSelectorState is FeeSelectorState.Error) {
-            add(SendNotification.Warning.NetworkFeeUnreachable(clickIntents::feeReload))
+        when (feeSelectorState) {
+            is FeeSelectorState.Error.TronAccountActivationError -> add(
+                SendNotification.Warning.TronAccountNotActivated(
+                    feeSelectorState.tokenName,
+                ),
+            )
+            is FeeSelectorState.Error.NetworkError -> add(
+                SendNotification.Warning.NetworkFeeUnreachable(clickIntents::feeReload),
+            )
+            else -> {
+                /* do nothing */
+            }
         }
     }
 }
