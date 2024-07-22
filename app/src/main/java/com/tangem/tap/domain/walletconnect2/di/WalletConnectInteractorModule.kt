@@ -14,26 +14,24 @@ import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
 import com.tangem.tap.domain.walletconnect2.app.WalletConnectEventsHandlerImpl
 import com.tangem.tap.domain.walletconnect2.data.DefaultLegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.data.DefaultWalletConnectSessionsRepository
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
 import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
-import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityComponent
-import dagger.hilt.android.scopes.ActivityScoped
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(ActivityComponent::class)
+@InstallIn(SingletonComponent::class)
 internal object WalletConnectInteractorModule {
 
     @Provides
-    @ActivityScoped
+    @Singleton
     fun provideWalletConnectInteractor(
         wcRepository: LegacyWalletConnectRepository,
         wcSessionsRepository: WalletConnectSessionsRepository,
@@ -41,6 +39,7 @@ internal object WalletConnectInteractorModule {
         currenciesRepository: CurrenciesRepository,
         walletManagersFacade: WalletManagersFacade,
         userWalletsListManager: UserWalletsListManager,
+        coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): WalletConnectInteractor {
         return WalletConnectInteractor(
             handler = WalletConnectEventsHandlerImpl(),
@@ -51,7 +50,7 @@ internal object WalletConnectInteractorModule {
             currenciesRepository = currenciesRepository,
             walletManagersFacade = walletManagersFacade,
             userWalletsListManager = userWalletsListManager,
-            dispatchers = AppCoroutineDispatcherProvider(),
+            dispatchers = coroutineDispatcherProvider,
         )
     }
 }
