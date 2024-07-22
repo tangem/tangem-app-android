@@ -30,10 +30,8 @@ class DefaultMarketsTokenListComponent @AssistedInject constructor(
 
     init {
         model.tokenSelected
-            .onEach {
-                onTokenSelected(it)
-                Timber.tag("ASDASD").d("aklsjdhfkljashdlkfjhasljkdf")
-            }.launchIn(componentScope)
+            .onEach { onTokenSelected(it) }
+            .launchIn(componentScope)
     }
 
     @Composable
