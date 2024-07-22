@@ -16,4 +16,6 @@ interface WalletConnectEventsHandler {
     fun onSessionRequest(request: WcPreparedRequest)
 
     fun onUnsupportedRequest()
+
+    fun onPairConnectError(error: Throwable)
 }
