@@ -22,17 +22,19 @@ sealed class WalletConnectAction : Action {
 
     data class ShowClipboardOrScanQrDialog(val wcUri: String) : WalletConnectAction()
     //region WalletConnect 2.0
-    object ApproveProposal : WalletConnectAction()
-    object RejectProposal : WalletConnectAction()
+    data object ApproveProposal : WalletConnectAction()
+    data object RejectProposal : WalletConnectAction()
 
-    object SessionEstablished : WalletConnectAction()
+    data object SessionEstablished : WalletConnectAction()
     data class SessionRejected(val error: WalletConnectError) : WalletConnectAction()
     data class SessionListUpdated(val sessions: List<WcSessionForScreen>) : WalletConnectAction()
 
     data class ShowSessionRequest(val sessionRequest: WcPreparedRequest) : WalletConnectAction()
 
-    object RejectUnsupportedRequest : WalletConnectAction()
+    data object RejectUnsupportedRequest : WalletConnectAction()
 
     data class PerformRequestedAction(val sessionRequest: WcPreparedRequest) : WalletConnectAction()
+
+    data class PairConnectErrorAction(val throwable: Throwable) : WalletConnectAction()
     //endregion WalletConnect 2.0
 }
