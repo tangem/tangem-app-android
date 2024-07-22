@@ -46,4 +46,8 @@ internal class WalletConnectEventsHandlerImpl : WalletConnectEventsHandler {
     override fun onUnsupportedRequest() {
         store.dispatchOnMain(WalletConnectAction.RejectUnsupportedRequest)
     }
+
+    override fun onPairConnectError(error: Throwable) {
+        store.dispatchOnMain(WalletConnectAction.PairConnectErrorAction(error))
+    }
 }
