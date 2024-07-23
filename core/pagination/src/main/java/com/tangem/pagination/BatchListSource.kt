@@ -92,11 +92,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                 awaitCancellation()
             } finally {
                 withContext(NonCancellable) {
-                    stopAllUpdates()
-                    loadMoreActionJob = null
-                    loadMoreActionJob = null
-                    lastRequestResult.value = null
-                    state.value = BatchListState(emptyList(), PaginationStatus.None)
+                    resetState()
                 }
             }
         }
@@ -110,6 +106,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun collectActions(action: BatchAction<TKey, TRequestParams, TUpdate>) {
         when (action) {
             is BatchAction.Reload -> {
@@ -164,6 +161,9 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
             BatchAction.CancelBatchLoading -> {
                 loadMoreActionJob?.cancel()
                 reloadActionJob?.cancel()
+            }
+            BatchAction.Reset -> {
+                resetState()
             }
         }
     }
@@ -237,13 +237,17 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
         state.value = when (res) {
             is BatchFetchResult.Success -> {
-                val key = generateNewKey(listOf())
-                val batch = Batch(
-                    key = key,
-                    data = res.data,
-                )
+                val batch = if (res.empty.not()) {
+                    Batch(
+                        key = generateNewKey(listOf()),
+                        data = res.data,
+                    )
+                } else {
+                    null
+                }
+
                 BatchListState(
-                    data = listOf(batch),
+                    data = batch?.let { listOf(it) } ?: emptyList(),
                     status = if (res.last) {
                         PaginationStatus.EndOfPagination
                     } else {
@@ -289,13 +293,17 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         state.update { currentState ->
             when (res) {
                 is BatchFetchResult.Success -> {
-                    val newBatch = Batch(
-                        key = generateNewKey(currentState.data.map { it.key }),
-                        data = res.data,
-                    )
+                    val newBatch = if (res.empty.not()) {
+                        Batch(
+                            key = generateNewKey(currentState.data.map { it.key }),
+                            data = res.data,
+                        )
+                    } else {
+                        null
+                    }
 
                     currentState.copy(
-                        data = currentState.data + newBatch,
+                        data = newBatch?.let { currentState.data + it } ?: currentState.data,
                         status = if (res.last) {
                             PaginationStatus.EndOfPagination
                         } else {
@@ -398,6 +406,18 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         return updateAsyncJobs.value.any { it.first.operationId == operationId } ||
             updateJobs.value.any { it.first.operationId == operationId } ||
             waitingUpdateJobs.value.any { it.first.operationId == operationId }
+    }
+
+    private fun resetState() {
+        if (updateFetcher != null) {
+            stopAllUpdates()
+        }
+        loadMoreActionJob?.cancel()
+        loadMoreActionJob = null
+        reloadActionJob?.cancel()
+        reloadActionJob = null
+        lastRequestResult.value = null
+        state.value = BatchListState(emptyList(), PaginationStatus.None)
     }
 
     private fun stopAllUpdates() {

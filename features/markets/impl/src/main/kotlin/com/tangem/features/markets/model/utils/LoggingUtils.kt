@@ -5,7 +5,17 @@ import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.TokenMarketUpdateRequest
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchUpdateResult
+import com.tangem.pagination.PaginationStatus
 import timber.log.Timber
+
+internal fun logStatus(tag: String, status: PaginationStatus<List<TokenMarket>>) {
+    Timber.tag(tag).d(
+        """
+        Status
+        $status
+        """.trimIndent(),
+    )
+}
 
 internal fun logAction(tag: String, action: BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>) {
     when (action) {

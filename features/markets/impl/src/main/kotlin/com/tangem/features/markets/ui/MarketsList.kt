@@ -1,25 +1,25 @@
 package com.tangem.features.markets.ui
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
@@ -28,31 +28,41 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.markets.component.BottomSheetState
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.model.SortByBottomSheetContentUM
-import com.tangem.features.markets.ui.components.MarketsListItem
-import com.tangem.features.markets.ui.components.MarketsListItemPlaceholder
+import com.tangem.features.markets.ui.components.MarketsListLazyColumn
 import com.tangem.features.markets.ui.components.MarketsListSortByBottomSheet
 import com.tangem.features.markets.ui.entity.ListUM
 import com.tangem.features.markets.ui.entity.MarketsListUM
+import com.tangem.features.markets.ui.entity.SortByBottomSheetContentUM
 import com.tangem.features.markets.ui.entity.SortByTypeUM
 import com.tangem.features.markets.ui.preview.MarketChartListItemPreviewDataProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun MarketsList(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modifier: Modifier = Modifier) {
+internal fun MarketsList(
+    state: MarketsListUM,
+    onHeaderSizeChange: (Dp) -> Unit,
+    bottomSheetState: BottomSheetState,
+    modifier: Modifier = Modifier,
+) {
     Content(
         modifier = modifier,
         state = state,
         onHeaderSizeChange = onHeaderSizeChange,
     )
-
     MarketsListSortByBottomSheet(config = state.sortByBottomSheet)
+    KeyboardEvents(
+        isSortByBottomSheetShown = state.sortByBottomSheet.isShow,
+        bottomSheetState = bottomSheetState,
+    )
 }
 
 @Composable
@@ -66,7 +76,6 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
             .background(color = TangemTheme.colors.background.primary),
     ) {
         SearchBar(
-            state = state.searchBar,
             modifier = Modifier
                 .background(color = TangemTheme.colors.background.primary)
                 .padding(
@@ -77,28 +86,40 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
                 .onGloballyPositioned {
                     with(density) { onHeaderSizeChange(it.size.height.toDp()) }
                 },
+            state = state.searchBar,
         )
         Spacer(Modifier.height(TangemTheme.dimens.spacing20))
         Column(Modifier.padding(horizontal = TangemTheme.dimens.size16)) {
-            Title()
-            SpacerH12()
-            Options(
-                sortByTypeUM = state.selectedSortBy,
-                trendInterval = state.selectedInterval,
-                onIntervalClick = state.onIntervalClick,
-                onSortByClick = state.onSortByButtonClick,
-            )
+            Title(isInSearchMode = state.isInSearchMode)
+            AnimatedVisibility(state.isInSearchMode.not()) {
+                Column {
+                    SpacerH12()
+                    Options(
+                        sortByTypeUM = state.selectedSortBy,
+                        trendInterval = state.selectedInterval,
+                        onIntervalClick = state.onIntervalClick,
+                        onSortByClick = state.onSortByButtonClick,
+                    )
+                }
+            }
         }
         SpacerH12()
-        Items(state = state.list)
+        ItemsList(
+            isInSearchMode = state.isInSearchMode,
+            state = state.list,
+        )
     }
 }
 
 @Composable
-private fun Title(modifier: Modifier = Modifier) {
+private fun Title(isInSearchMode: Boolean, modifier: Modifier = Modifier) {
     Text(
         modifier = modifier,
-        text = stringResource(id = R.string.markets_common_title),
+        text = if (isInSearchMode) {
+            stringResource(id = R.string.markets_search_result_title)
+        } else {
+            stringResource(id = R.string.markets_common_title)
+        },
         style = TangemTheme.typography.h3,
         color = TangemTheme.colors.text.primary1,
     )
@@ -158,102 +179,46 @@ private fun Options(
 }
 
 @Composable
-private fun Items(state: ListUM, modifier: Modifier = Modifier) {
-    val lazyListState = rememberLazyListState()
-    val scrollEnabled = state !is ListUM.Loading
-    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+private fun ItemsList(isInSearchMode: Boolean, state: ListUM, modifier: Modifier = Modifier) {
+    val searchLazyListState = rememberLazyListState()
+    val mainLazyListState = rememberLazyListState()
 
-    LazyColumn(
-        modifier = modifier.nestedScroll(DisableParentConnection),
-        state = lazyListState,
-        contentPadding = PaddingValues(bottom = bottomBarHeight),
-        userScrollEnabled = scrollEnabled,
-    ) {
-        // ATTENTION! There should be no elements with a string key value except MarketsListItem!
-        when (state) {
-            ListUM.Loading -> {
-                items(count = 50, key = { it }) {
-                    MarketsListItemPlaceholder()
-                }
-            }
-            ListUM.SearchNothingFound -> {
-// [REDACTED_TODO_COMMENT]
-            }
-            is ListUM.Content -> {
-                items(
-                    items = state.items,
-                    key = { it.id },
-                ) { item ->
-                    MarketsListItem(
-                        model = item,
-                    )
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(state) {
-        if (state is ListUM.Loading) {
-            lazyListState.scrollToItem(0)
-        }
-    }
-
-    VisibleItemsTracker(lazyListState, state)
-
-    InfiniteListHandler(
-        listState = lazyListState,
-        buffer = 50,
-        onLoadMore = remember(state) {
-            {
-                if (state is ListUM.Content) {
-                    state.loadMore()
-                }
-            }
+    MarketsListLazyColumn(
+        modifier = modifier,
+        state = state,
+        isInSearchMode = isInSearchMode,
+        lazyListState = if (isInSearchMode) {
+            searchLazyListState
+        } else {
+            mainLazyListState
         },
     )
 }
 
 @Composable
-fun VisibleItemsTracker(listState: LazyListState, state: ListUM) {
-    val visibleItems by remember {
-        derivedStateOf {
-            listState.layoutInfo.visibleItemsInfo.mapNotNull { it.key as? String }
+private fun KeyboardEvents(isSortByBottomSheetShown: Boolean, bottomSheetState: BottomSheetState) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val keyboard by keyboardAsState()
+    val focusManager = LocalFocusManager.current
+
+    BackHandler(enabled = keyboard is Keyboard.Opened) {
+        keyboardController?.hide()
+    }
+
+    LaunchedEffect(keyboard) {
+        if (keyboard is Keyboard.Closed) {
+            focusManager.clearFocus()
         }
     }
 
-    LaunchedEffect(listState.isScrollInProgress, visibleItems) {
-        if (state is ListUM.Content && listState.isScrollInProgress.not()) {
-            state.visibleIdsChanged(visibleItems)
-        }
-    }
-}
-
-@Composable
-fun InfiniteListHandler(listState: LazyListState, onLoadMore: () -> Unit, buffer: Int = 2) {
-    val loadMore by remember {
-        derivedStateOf {
-            val layoutInfo = listState.layoutInfo
-            val totalItemsNumber = layoutInfo.totalItemsCount
-            val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
-
-            lastVisibleItemIndex > totalItemsNumber - buffer
-        }
+    LaunchedEffect(isSortByBottomSheetShown) {
+        keyboardController?.hide()
     }
 
-    val totalItemsCount by remember { derivedStateOf { listState.layoutInfo.totalItemsCount } }
-    var emitted by remember(totalItemsCount) { mutableStateOf(false) }
-
-    LaunchedEffect(loadMore) {
-        if (loadMore && !emitted) {
-            emitted = true
-            onLoadMore()
+    LaunchedEffect(bottomSheetState) {
+        if (bottomSheetState == BottomSheetState.COLLAPSED) {
+            focusManager.clearFocus()
         }
-    }
-}
-
-private object DisableParentConnection : NestedScrollConnection {
-    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-        return available.copy(x = 0f)
     }
 }
 
@@ -272,8 +237,11 @@ private fun Preview() {
                             item.copy(id = index.toString())
                         }
                         .toImmutableList(),
+                    showUnder100kTokens = false,
                     loadMore = {},
                     visibleIdsChanged = {},
+                    onShowTokensUnder100kClicked = {},
+                    triggerScrollReset = consumedEvent(),
                 ),
                 searchBar = SearchBarUM(
                     placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
@@ -287,12 +255,13 @@ private fun Preview() {
                 onIntervalClick = {},
                 onSortByButtonClick = {},
                 sortByBottomSheet = TangemBottomSheetConfig(
-                    false,
+                    isShow = false,
                     onDismissRequest = {},
                     content = SortByBottomSheetContentUM(selectedOption = SortByTypeUM.Rating) {},
                 ),
             ),
             onHeaderSizeChange = {},
+            bottomSheetState = BottomSheetState.EXPANDED,
         )
     }
 }
