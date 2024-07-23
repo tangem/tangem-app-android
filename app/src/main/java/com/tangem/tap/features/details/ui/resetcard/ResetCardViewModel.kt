@@ -1,104 +1,145 @@
 package com.tangem.tap.features.details.ui.resetcard
 
+import android.os.Bundle
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.bundle.unbundle
+import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.onUserWalletSelected
-import com.tangem.tap.features.details.redux.CardSettingsState
-import com.tangem.tap.features.details.redux.DetailsAction.ResetToFactory
-import com.tangem.tap.features.details.ui.cardsettings.TextReference
-import com.tangem.tap.features.details.ui.resetcard.featuretoggles.ResetCardFeatureToggles
-import com.tangem.tap.features.details.ui.utils.toResetCardDescriptionText
+import com.tangem.tap.features.details.redux.ResetCardDialog
+import com.tangem.tap.features.details.ui.common.utils.getResetToFactoryDescription
 import com.tangem.tap.store
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
-import com.tangem.tap.features.details.redux.CardSettingsState.Dialog as CardSettingsDialog
 
 @Suppress("LongParameterList")
 @HiltViewModel
 internal class ResetCardViewModel @Inject constructor(
-    private val resetCardFeatureToggles: ResetCardFeatureToggles,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val resetCardUseCase: ResetCardUseCase,
     private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
     private val userWalletsListManager: UserWalletsListManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val firstCardScanResponse = store.state.detailsState.cardSettingsState?.scanResponse
-        ?: error("ScanResponse can't be null")
-
-    private val currentUserWalletId = createUserWalletId(firstCardScanResponse)
+    private val userWalletId = savedStateHandle.get<Bundle>(AppRoute.ResetToFactory.USER_WALLET_ID)
+        ?.unbundle(UserWalletId.serializer())
+        ?: error("User wallet ID must be provided for ResetCardViewModel")
 
     // TODO: move logic to separate domain entity
     private var resetBackupCardCount = 0
 
-    fun updateState(state: CardSettingsState?): ResetCardScreenState.ResetCardScreenContent {
-        val descriptionText = state?.cardInfo
-            ?.toResetCardDescriptionText()
-            ?: TextReference.Str(value = "")
+    val screenState: MutableStateFlow<ResetCardScreenState> = MutableStateFlow(
+        value = getInitialState(),
+    )
+
+    private fun getInitialState(): ResetCardScreenState {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
+            error("Failed to get user wallet $userWalletId: $it")
+        }
+        val card = userWallet.scanResponse.card
+        val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
+        val descriptionText = getResetToFactoryDescription(card, cardTypesResolver)
+        val isTangemWallet = cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()
+        val showResetPasswordButton = isTangemWallet && card.backupStatus is CardDTO.BackupStatus.Active
 
         val warningsToShow = buildList {
             add(ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS)
 
-            if (state?.isShowPasswordResetRadioButton == true) {
+            if (showResetPasswordButton) {
                 add(ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE)
             }
         }
 
-        return ResetCardScreenState.ResetCardScreenContent(
-            accepted = state?.resetButtonEnabled ?: false,
+        return ResetCardScreenState(
+            resetButtonEnabled = false,
             descriptionText = descriptionText,
             warningsToShow = warningsToShow,
-            acceptCondition1Checked = state?.condition1Checked ?: false,
-            acceptCondition2Checked = state?.condition2Checked ?: false,
-            onAcceptCondition1ToggleClick = { store.dispatch(ResetToFactory.AcceptCondition1(it)) },
-            onAcceptCondition2ToggleClick = { store.dispatch(ResetToFactory.AcceptCondition2(it)) },
-            onResetButtonClick = { showDialog(CardSettingsDialog.StartResetDialog) },
-            dialog = state?.dialog?.let(::createDialog),
+            showResetPasswordButton = showResetPasswordButton,
+            acceptCondition1Checked = false,
+            acceptCondition2Checked = false,
+            onAcceptCondition1ToggleClick = ::toggleFirstCondition,
+            onAcceptCondition2ToggleClick = ::toggleSecondCondition,
+            onResetButtonClick = { showDialog(ResetCardDialog.StartResetDialog) },
+            dialog = null,
         )
     }
 
-    private fun createDialog(dialog: CardSettingsDialog): ResetCardScreenState.ResetCardScreenContent.Dialog {
+    private fun toggleFirstCondition(isAccepted: Boolean) {
+        screenState.update { prevState ->
+            val resetButtonEnabled = if (prevState.showResetPasswordButton) {
+                isAccepted && prevState.acceptCondition2Checked
+            } else {
+                isAccepted
+            }
+
+            prevState.copy(
+                acceptCondition1Checked = isAccepted,
+                resetButtonEnabled = resetButtonEnabled,
+            )
+        }
+    }
+
+    private fun toggleSecondCondition(isAccepted: Boolean) {
+        screenState.update { prevState ->
+            val resetButtonEnabled = prevState.acceptCondition1Checked && isAccepted
+
+            prevState.copy(
+                acceptCondition2Checked = isAccepted,
+                resetButtonEnabled = resetButtonEnabled,
+            )
+        }
+    }
+
+    private fun createDialog(dialog: ResetCardDialog): ResetCardScreenState.Dialog {
         return when (dialog) {
-            CardSettingsDialog.StartResetDialog -> {
-                ResetCardScreenState.ResetCardScreenContent.Dialog.StartReset(
+            ResetCardDialog.StartResetDialog -> {
+                ResetCardScreenState.Dialog.StartReset(
                     onConfirmClick = ::onStartResetClick,
                     onDismiss = ::dismissDialog,
                 )
             }
-            CardSettingsDialog.ContinueResetDialog -> {
-                ResetCardScreenState.ResetCardScreenContent.Dialog.ContinueReset(
+            ResetCardDialog.ContinueResetDialog -> {
+                ResetCardScreenState.Dialog.ContinueReset(
                     onConfirmClick = ::onContinueResetClick,
                     onDismiss = ::onContinueResetDialogDismiss,
                 )
             }
-            CardSettingsDialog.InterruptedResetDialog -> {
-                ResetCardScreenState.ResetCardScreenContent.Dialog.InterruptedReset(
+            ResetCardDialog.InterruptedResetDialog -> {
+                ResetCardScreenState.Dialog.InterruptedReset(
                     onConfirmClick = ::onContinueResetClick,
                     onDismiss = ::onInterruptedResetDialogDismiss,
                 )
             }
-            CardSettingsDialog.CompletedResetDialog -> {
-                ResetCardScreenState.ResetCardScreenContent.Dialog.CompletedReset(
+            ResetCardDialog.CompletedResetDialog -> {
+                ResetCardScreenState.Dialog.CompletedReset(
                     onConfirmClick = ::dismissAndFinishFullReset,
                 )
             }
@@ -108,21 +149,26 @@ internal class ResetCardViewModel @Inject constructor(
     private fun onStartResetClick() {
         dismissDialog()
 
-        if (resetCardFeatureToggles.isFullResetEnabled) {
-            makeFullReset()
-        } else {
-            store.dispatch(ResetToFactory.Proceed)
-        }
+        makeFullReset()
     }
 
     private fun makeFullReset() {
         viewModelScope.launch {
-            resetCardUseCase(card = firstCardScanResponse.card).onRight {
-                deleteSavedAccessCodesUseCase(firstCardScanResponse.card.cardId)
-                deleteWalletUseCase(currentUserWalletId)
+            val userWallet = getUserWallet()
+            val scanResponse = userWallet.scanResponse
 
-                val newSelectedWallet = getSelectedWalletSyncUseCase().getOrNull()
-                if (newSelectedWallet != null) {
+            resetCardUseCase(card = scanResponse.card).onRight {
+                deleteSavedAccessCodesUseCase(scanResponse.card.cardId)
+                val hasUserWallets = deleteWalletUseCase(userWalletId).getOrElse {
+                    Timber.e("Unable to delete user wallet: $it")
+                    return@launch
+                }
+
+                if (hasUserWallets) {
+                    val newSelectedWallet = getSelectedWalletSyncUseCase().getOrElse {
+                        error("Failed to get selected wallet: $it")
+                    }
+
                     store.onUserWalletSelected(newSelectedWallet)
                 }
 
@@ -137,10 +183,11 @@ internal class ResetCardViewModel @Inject constructor(
         dismissDialog()
 
         viewModelScope.launch {
+            val userWallet = getUserWallet()
             resetCardUseCase(
                 cardNumber = resetBackupCardCount + 1,
-                card = firstCardScanResponse.card,
-                userWalletId = currentUserWalletId,
+                card = userWallet.scanResponse.card,
+                userWalletId = userWalletId,
             )
                 .onRight {
                     resetBackupCardCount++
@@ -149,14 +196,14 @@ internal class ResetCardViewModel @Inject constructor(
 
                     checkRemainingBackupCards()
                 }
-                .onLeft { showDialog(CardSettingsDialog.InterruptedResetDialog) }
+                .onLeft { showDialog(ResetCardDialog.InterruptedResetDialog) }
         }
     }
 
     private fun onContinueResetDialogDismiss() {
         dismissDialog()
 
-        showDialog(CardSettingsDialog.InterruptedResetDialog)
+        showDialog(ResetCardDialog.InterruptedResetDialog)
     }
 
     private fun onInterruptedResetDialogDismiss() {
@@ -166,17 +213,23 @@ internal class ResetCardViewModel @Inject constructor(
     }
 
     private fun checkRemainingBackupCards() {
-        val backupCardsCount = firstCardScanResponse.getBackupCardsCount()
+        val backupCardsCount = getUserWallet().scanResponse.getBackupCardsCount()
 
         when {
-            backupCardsCount > resetBackupCardCount -> showDialog(CardSettingsDialog.ContinueResetDialog)
+            backupCardsCount > resetBackupCardCount -> showDialog(ResetCardDialog.ContinueResetDialog)
             backupCardsCount == resetBackupCardCount -> {
                 analyticsEventHandler.send(
                     event = Settings.CardSettings.FactoryResetFinished(cardsCount = resetBackupCardCount + 1),
                 )
-                showDialog(CardSettingsDialog.CompletedResetDialog)
+                showDialog(ResetCardDialog.CompletedResetDialog)
             }
             else -> finishFullReset()
+        }
+    }
+
+    private fun getUserWallet(): UserWallet {
+        return getUserWalletUseCase(userWalletId).getOrElse {
+            error("Failed to get user wallet $userWalletId: $it")
         }
     }
 
@@ -190,23 +243,23 @@ internal class ResetCardViewModel @Inject constructor(
         val newSelectedWallet = userWalletsListManager.selectedUserWalletSync
 
         if (newSelectedWallet != null) {
-            store.dispatch(NavigationAction.PopBackTo(AppScreen.Wallet))
+            store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
         } else {
             val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }.isSuccess
             if (isLocked && userWalletsListManager.hasUserWallets) {
-                store.dispatch(NavigationAction.PopBackTo(AppScreen.Welcome))
+                store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
             } else {
-                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                store.dispatchNavigationAction { popTo<AppRoute.Home>() }
             }
         }
     }
 
-    private fun showDialog(dialog: CardSettingsDialog) {
-        store.dispatch(ResetToFactory.ShowDialog(dialog))
+    private fun showDialog(dialog: ResetCardDialog) {
+        screenState.update { it.copy(dialog = createDialog(dialog)) }
     }
 
     private fun dismissDialog() {
-        store.dispatch(ResetToFactory.DismissDialog)
+        screenState.update { it.copy(dialog = null) }
     }
 
     private fun ScanResponse.getBackupCardsCount(): Int {
@@ -219,10 +272,5 @@ internal class ResetCardViewModel @Inject constructor(
             null,
             -> 0
         }
-    }
-
-    private fun createUserWalletId(scanResponse: ScanResponse): UserWalletId {
-        return UserWalletIdBuilder.scanResponse(scanResponse).build()
-            ?: error("UserWalletId can't be null")
     }
 }
