@@ -68,6 +68,7 @@
   <string name="cardano_max_amount_has_token_title">Недостаточно ADA</string>
   <string name="common_accept">Принять</string>
   <string name="common_access_denied">Доступ запрещен</string>
+  <string name="common_allow">Разрешить</string>
   <string name="common_apply">Применить</string>
   <string name="common_approval">Одобрение</string>
   <string name="common_approve">Подтвердить</string>
