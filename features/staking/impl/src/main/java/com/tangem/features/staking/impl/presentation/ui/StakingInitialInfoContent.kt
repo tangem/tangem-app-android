@@ -7,9 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -27,8 +25,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
-import com.tangem.core.ui.components.rows.CornersToRound
-import com.tangem.core.ui.components.rows.RoundableCornersRow
+import com.tangem.core.ui.components.list.RoundedListWithDividers
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -37,7 +34,6 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.previewdata.InitialStakingStatePreview
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
-import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.PLUS
@@ -55,13 +51,12 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
                 start = TangemTheme.dimens.spacing16,
                 end = TangemTheme.dimens.spacing16,
                 bottom = TangemTheme.dimens.spacing16,
-            )
-            .verticalScroll(rememberScrollState()),
+            ),
     ) {
         AnimatedVisibility(state.yieldBalance == InnerYieldBalanceState.Empty) {
             MetricsBlock(state)
         }
-        StakingDetailsRows(state)
+        RoundedListWithDividers(state.infoItems)
         AnimatedContent(targetState = state.yieldBalance, label = "Rewards block visibility animation") {
             if (it is InnerYieldBalanceState.Data) {
                 StakingRewardBlock(
@@ -139,57 +134,6 @@ private fun MetricsBlock(state: StakingStates.InitialInfoState.Data) {
                 )
             }
         }
-    }
-}
-
-@Composable
-internal fun StakingDetailsRows(state: StakingStates.InitialInfoState.Data) {
-    Column {
-        InitialInfoContentRow(
-            startText = stringResource(id = R.string.staking_details_available),
-            endText = state.available,
-            cornersToRound = CornersToRound.TOP_2,
-        )
-        InitialInfoContentRow(
-            startText = stringResource(id = R.string.staking_details_on_stake),
-            endText = state.onStake,
-            cornersToRound = CornersToRound.ZERO,
-        )
-        InitialInfoContentRow(
-            startText = stringResource(id = R.string.staking_details_apy),
-            endText = state.aprRange.resolveReference(),
-            cornersToRound = CornersToRound.ZERO,
-            iconClick = { state.onInfoClick(InfoType.APY) },
-        )
-        InitialInfoContentRow(
-            startText = stringResource(id = R.string.staking_details_unbonding_period),
-            endText = state.unbondingPeriod,
-            cornersToRound = CornersToRound.ZERO,
-            iconClick = { state.onInfoClick(InfoType.UNBOUNDING_PERIOD) },
-        )
-        InitialInfoContentRow(
-            startText = stringResource(id = R.string.staking_details_minimum_requirement),
-            endText = state.minimumRequirement,
-            cornersToRound = CornersToRound.ZERO,
-        )
-        InitialInfoContentRow(
-            startText = stringResource(id = R.string.staking_details_reward_claiming),
-            endText = state.rewardClaiming,
-            cornersToRound = CornersToRound.ZERO,
-            iconClick = { state.onInfoClick(InfoType.REWARD_CLAIMING) },
-        )
-        InitialInfoContentRow(
-            startText = stringResource(id = R.string.staking_details_warmup_period),
-            endText = state.warmupPeriod,
-            cornersToRound = CornersToRound.ZERO,
-            iconClick = { state.onInfoClick(InfoType.WARMUP_PERIOD) },
-        )
-        InitialInfoContentRow(
-            startText = stringResource(id = R.string.staking_details_reward_schedule),
-            endText = state.rewardSchedule,
-            cornersToRound = CornersToRound.BOTTOM_2,
-            iconClick = { state.onInfoClick(InfoType.REWARD_SCHEDULE) },
-        )
     }
 }
 
@@ -295,25 +239,7 @@ private fun ActiveStakingBlock(groups: List<BalanceGroupedState>, onClick: (Bala
     }
 }
 
-@Composable
-private fun InitialInfoContentRow(
-    startText: String,
-    endText: String,
-    cornersToRound: CornersToRound,
-    iconClick: (() -> Unit)? = null,
-) {
-    RoundableCornersRow(
-        startText = startText,
-        startTextColor = TangemTheme.colors.text.primary1,
-        startTextStyle = TangemTheme.typography.body2,
-        endText = endText,
-        endTextColor = TangemTheme.colors.text.tertiary,
-        endTextStyle = TangemTheme.typography.body2,
-        cornersToRound = cornersToRound,
-        iconResId = R.drawable.ic_information_24,
-        iconClick = iconClick,
-    )
-}
+// region preview
 
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
