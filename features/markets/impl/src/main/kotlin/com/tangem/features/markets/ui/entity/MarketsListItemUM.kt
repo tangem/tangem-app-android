@@ -17,6 +17,7 @@ data class MarketsListItemUM(
     val trendPercentText: String,
     val trendType: PriceChangeType,
     val chardData: MarketChartRawData?,
+    val showUnder100kMarketCap: Boolean = false,
 ) {
     val chartType: MarketChartLook.Type = when (trendType) {
         PriceChangeType.UP,
