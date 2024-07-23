@@ -53,7 +53,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             buildList {
                 addSwapPromoNotification(shouldShowPromo, promoBanner, clickIntents)
 
-                addCriticalNotifications(userWallet)
+                addCriticalNotifications(userWallet, clickIntents)
 
                 addInformationalNotifications(cardTypesResolver, maybeTokenList, clickIntents)
 
@@ -87,11 +87,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
-    private fun MutableList<WalletNotification>.addCriticalNotifications(userWallet: UserWallet) {
+    private fun MutableList<WalletNotification>.addCriticalNotifications(
+        userWallet: UserWallet,
+        clickIntents: WalletClickIntents,
+    ) {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         addIf(
-            element = WalletNotification.Critical.BackupError,
-            condition = !backupValidator.isValid(userWallet.scanResponse.card) || userWallet.hasBackupError,
+            element = WalletNotification.Critical.BackupError { clickIntents.onSupportClick() },
+            condition = !backupValidator.isValidBackupStatus(userWallet.scanResponse.card) || userWallet.hasBackupError,
         )
 
         addIf(
