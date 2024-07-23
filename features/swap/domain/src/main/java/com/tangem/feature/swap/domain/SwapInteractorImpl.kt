@@ -1866,7 +1866,6 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     companion object {
-        @Suppress("UnusedPrivateMember")
         private const val INCREASE_GAS_LIMIT_BY = 112 // 12%
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
         private const val INFINITY_SYMBOL = "∞"

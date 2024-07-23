@@ -18,7 +18,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun RoundedListWithDividers(rows: List<RoundedListWithDividersItemData>) {
+fun RoundedListWithDividers(rows: List<RoundedListWithDividersItemData>, modifier: Modifier = Modifier) {
     LazyColumn {
         itemsIndexed(
             items = rows,
