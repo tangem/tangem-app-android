@@ -5,6 +5,7 @@ import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.tokens.model.CryptoCurrency
 
 /**
  * Use case for getting entry info about staking on token screen.
@@ -14,9 +15,17 @@ class GetStakingEntryInfoUseCase(
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
-    suspend operator fun invoke(integrationId: String): Either<StakingError, StakingEntryInfo> {
+    suspend operator fun invoke(
+        cryptoCurrencyId: CryptoCurrency.ID,
+        symbol: String,
+    ): Either<StakingError, StakingEntryInfo> {
         return Either
-            .catch { stakingRepository.getEntryInfo(integrationId) }
+            .catch {
+                stakingRepository.getEntryInfo(
+                    cryptoCurrencyId = cryptoCurrencyId,
+                    symbol = symbol,
+                )
+            }
             .mapLeft { stakingErrorResolver.resolve(it) }
     }
 }

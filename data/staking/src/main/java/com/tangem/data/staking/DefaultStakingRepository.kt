@@ -124,9 +124,9 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo {
+    override suspend fun getEntryInfo(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingEntryInfo {
         return withContext(dispatchers.io) {
-            val yield = stakeKitApi.getSingleYield(integrationId).getOrThrow()
+            val yield = getYield(cryptoCurrencyId, symbol)
 
             StakingEntryInfo(
                 interestRate = yield.apy,
