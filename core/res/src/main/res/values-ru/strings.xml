@@ -424,7 +424,7 @@
   <string name="onboarding_wallet_info_title_third">Код доступа</string>
   <string name="organize_tokens_group">Группы</string>
   <string name="organize_tokens_sort_by_balance">По балансу</string>
-  <string name="organize_tokens_title">Сортировка токенов</string>
+  <string name="organize_tokens_title">Упорядочить токены</string>
   <string name="organize_tokens_ungroup">Список</string>
   <string name="qr_scanner_camera_denied_gallery_button">Выбрать из галереи</string>
   <string name="qr_scanner_camera_denied_settings_button">Настройки</string>
@@ -710,7 +710,7 @@
   <string name="wallet_settings_title">Настройки кошелька</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту, чтобы разблокировать доступ к вашему кошельку</string>
-  <string name="warning_backup_errors_message">Пожалуйста, выведите все средства из этого кошелька, сбросьте его к заводским настройкам и создайте новый. Доступ к текущему кошельку будет утерян.</string>
+  <string name="warning_backup_errors_message">Похоже, что процесс активации карт не был завершен корректно. Это могло быть вызвано проблемой взаимодействия с модулем NFC либо некорректным прикладыванием карты к телефону. Пожалуйста, обратитесь в нашу службу поддержки для уточнения деталей.</string>
   <string name="warning_backup_errors_title">Ошибка активации</string>
   <string name="warning_beacon_chain_retirement_content">По решению разработчиков сети BNB стандарт BEP-2 перестанет поддерживаться в июне 2024 года. Чтобы не потерять активы, их необходимо преобразовать в стандарт BEP-20. Используйте функцию обмена в приложении или сторонние сервисы, чтобы перевести средства в cеть BNB Smart Chain.</string>
   <string name="warning_beacon_chain_retirement_title">Отключение сети BNB Beacon Chain</string>
