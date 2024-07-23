@@ -39,14 +39,18 @@ class YieldConverter(
     private fun convertEnter(enterDTO: YieldDTO.ArgsDTO.Enter): Yield.Args.Enter {
         return Yield.Args.Enter(
             addresses = convertAddresses(enterDTO.addresses),
-            args = enterDTO.args.mapValues { convertAddressArgument(it.value) },
+            args = enterDTO.args
+                .mapKeys { convertArgType(it.key) }
+                .mapValues { convertAddressArgument(it.value) },
         )
     }
 
     private fun convertAddresses(addressesDTO: YieldDTO.ArgsDTO.Enter.Addresses): Yield.Args.Enter.Addresses {
         return Yield.Args.Enter.Addresses(
             address = convertAddressArgument(addressesDTO.address),
-            additionalAddresses = addressesDTO.additionalAddresses?.mapValues { convertAddressArgument(it.value) },
+            additionalAddresses = addressesDTO.additionalAddresses
+                ?.mapKeys { convertArgType(it.key) }
+                ?.mapValues { convertAddressArgument(it.value) },
         )
     }
 
@@ -120,6 +124,14 @@ class YieldConverter(
             YieldDTO.RewardTypeDTO.APY -> Yield.RewardType.APY
             YieldDTO.RewardTypeDTO.APR -> Yield.RewardType.APR
             else -> Yield.RewardType.UNKNOWN
+        }
+    }
+
+    private fun convertArgType(value: String): Yield.Args.ArgType {
+        return when (value) {
+            "address" -> Yield.Args.ArgType.ADDRESS
+            "amount" -> Yield.Args.ArgType.AMOUNT
+            else -> Yield.Args.ArgType.UNKNOWN
         }
     }
 }
