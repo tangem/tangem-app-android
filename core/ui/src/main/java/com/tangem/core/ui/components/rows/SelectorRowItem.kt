@@ -25,6 +25,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.utils.StringsSigns
 
 @Composable
 fun SelectorRowItem(
@@ -127,7 +128,7 @@ private fun RowScope.SelectorValueContent(
     )
     if (postDot != null) {
         Text(
-            text = "•",
+            text = StringsSigns.DOT,
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
