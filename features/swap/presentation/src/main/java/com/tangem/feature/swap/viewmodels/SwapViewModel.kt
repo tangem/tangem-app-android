@@ -847,7 +847,6 @@ internal class SwapViewModel @Inject constructor(
         onAmountChanged(newAmount.formatToUIRepresentation())
     }
 
-    @Suppress("UnusedPrivateMember")
     private fun onAmountSelected(selected: Boolean) {
         if (selected) {
             analyticsEventHandler.send(SwapEvents.SendTokenBalanceClicked)
