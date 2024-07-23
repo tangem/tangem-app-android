@@ -124,6 +124,7 @@
   <string name="common_origin_card">Основная карта</string>
   <string name="common_passphrase">Парольная фраза</string>
   <string name="common_paste">Вставить</string>
+  <string name="common_range">%1$s-%2$s</string>
   <string name="common_read_more">Подробнее</string>
   <string name="common_receive">Получить</string>
   <string name="common_reject">Отклонить</string>
@@ -424,7 +425,7 @@
   <string name="onboarding_wallet_info_title_third">Код доступа</string>
   <string name="organize_tokens_group">Группы</string>
   <string name="organize_tokens_sort_by_balance">По балансу</string>
-  <string name="organize_tokens_title">Сортировка токенов</string>
+  <string name="organize_tokens_title">Упорядочить токены</string>
   <string name="organize_tokens_ungroup">Список</string>
   <string name="qr_scanner_camera_denied_gallery_button">Выбрать из галереи</string>
   <string name="qr_scanner_camera_denied_settings_button">Настройки</string>
@@ -564,16 +565,18 @@
   <string name="send_total_subtitle_fiat_format">≈ %1$s (вкл. комиссию: %2$s)</string>
   <string name="send_total_subtitle_format">%s будет отправлено</string>
   <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
-  <string name="send_tron_account_activation_error">%1$s — это монета в сети Tron. Чтобы рассчитать комиссию и совершить транзакцию, вам необходимо внести немного Tron (TRX) на свой адрес.</string>
+  <string name="send_tron_account_activation_error">%1s — это монета в сети Tron. Чтобы рассчитать комиссию и совершить транзакцию, вам необходимо внести немного Tron (TRX) на свой адрес.</string>
   <string name="send_validation_invalid_address">Неверный адрес</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
   <string name="settings_card_settings_footer">Подготовьтесь к сканированию карты, которую вы хотите настроить.</string>
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
+  <string name="staking_amount_requirement_error">Сумма для стейкинда должна быть не менее %s</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_apy_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
   <string name="staking_details_available">Доступно</string>
+  <string name="staking_details_estimated_profit">%s</string>
   <string name="staking_details_reward_claiming">Способ возраграждения</string>
   <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Он может быть автоматическим или ручным.</string>
   <string name="staking_details_reward_schedule">Период возрагражения</string>
@@ -710,7 +713,7 @@
   <string name="wallet_settings_title">Настройки кошелька</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту, чтобы разблокировать доступ к вашему кошельку</string>
-  <string name="warning_backup_errors_message">Пожалуйста, выведите все средства из этого кошелька, сбросьте его к заводским настройкам и создайте новый. Доступ к текущему кошельку будет утерян.</string>
+  <string name="warning_backup_errors_message">Похоже, что процесс активации карт не был завершен корректно. Это могло быть вызвано проблемой взаимодействия с модулем NFC либо некорректным прикладыванием карты к телефону. Пожалуйста, обратитесь в нашу службу поддержки для уточнения деталей.</string>
   <string name="warning_backup_errors_title">Ошибка активации</string>
   <string name="warning_beacon_chain_retirement_content">По решению разработчиков сети BNB стандарт BEP-2 перестанет поддерживаться в июне 2024 года. Чтобы не потерять активы, их необходимо преобразовать в стандарт BEP-20. Используйте функцию обмена в приложении или сторонние сервисы, чтобы перевести средства в cеть BNB Smart Chain.</string>
   <string name="warning_beacon_chain_retirement_title">Отключение сети BNB Beacon Chain</string>
