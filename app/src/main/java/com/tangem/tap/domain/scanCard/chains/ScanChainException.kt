@@ -1,6 +1,6 @@
 package com.tangem.tap.domain.scanCard.chains
 
-import com.tangem.core.navigation.AppScreen
+import com.tangem.common.routing.AppRoute
 import com.tangem.domain.card.ScanCardException
 
 sealed class ScanChainException : ScanCardException.ChainException() {
@@ -19,5 +19,5 @@ sealed class ScanChainException : ScanCardException.ChainException() {
      *
      * @param onboardingRoute route where to navigate
      * */
-    data class OnboardingNeeded(val onboardingRoute: AppScreen) : ScanChainException()
+    data class OnboardingNeeded(val onboardingRoute: AppRoute) : ScanChainException()
 }
