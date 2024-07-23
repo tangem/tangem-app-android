@@ -28,6 +28,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
     implementation(deps.lifecycle.compose)
+    implementation(deps.androidx.activity.compose)
 
     /* DI */
     implementation(deps.hilt.android)
