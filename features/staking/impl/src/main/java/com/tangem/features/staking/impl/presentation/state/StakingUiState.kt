@@ -55,17 +55,6 @@ internal sealed class StakingStates {
             val isStakeMoreAvailable: Boolean,
         ) : InitialInfoState()
 
-        data class InitialInfoItems(
-            val available: String,
-            val onStake: String,
-            val aprRange: TextReference,
-            val unbondingPeriod: String,
-            val minimumRequirement: String,
-            val rewardClaiming: String,
-            val warmupPeriod: String,
-            val rewardSchedule: String,
-        )
-
         data class Empty(
             override val isPrimaryButtonEnabled: Boolean = false,
         ) : InitialInfoState()
