@@ -1,8 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.settings.DelayPermissionRequestUseCase
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.SetFirstTimeAskingPermissionUseCase
+import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.launch
@@ -14,7 +17,9 @@ internal interface WalletPushPermissionClickIntents {
 
     fun onDelayAskPushPermission()
 
-    fun onNeverAskPushPermission()
+    fun onDenyPushPermission()
+
+    fun onAllowPushPermission()
 }
 
 @ViewModelScoped
@@ -22,6 +27,7 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
     private val setFirstTimeAskingPermissionUseCase: SetFirstTimeAskingPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val delayPermissionRequestUseCase: DelayPermissionRequestUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : BaseWalletClickIntents(), WalletPushPermissionClickIntents {
 
     override fun onRequestPushPermission() {
@@ -32,11 +38,24 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
 
     override fun onDelayAskPushPermission() {
         viewModelScope.launch {
+            analyticsEventHandler.send(
+                PushNotificationAnalyticEvents.ButtonLater(AnalyticsParam.ScreensSources.Main),
+            )
             delayPermissionRequestUseCase(PUSH_PERMISSION)
         }
     }
 
-    override fun onNeverAskPushPermission() {
+    override fun onDenyPushPermission() {
+        analyticsEventHandler.send(PushNotificationAnalyticEvents.ButtonCancel)
+        viewModelScope.launch {
+            neverRequestPermissionUseCase(PUSH_PERMISSION)
+        }
+    }
+
+    override fun onAllowPushPermission() {
+        analyticsEventHandler.send(
+            PushNotificationAnalyticEvents.ButtonAllow(AnalyticsParam.ScreensSources.Main),
+        )
         viewModelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
         }

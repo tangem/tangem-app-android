@@ -16,7 +16,9 @@ internal class StakingStateRouter(
         when (stateController.value.currentStep) {
             StakingStep.InitialInfo -> when (stateController.value.routeType) {
                 RouteType.STAKE -> showAmount()
-                RouteType.UNSTAKE -> showConfirmation()
+                RouteType.OTHER,
+                RouteType.UNSTAKE,
+                -> showConfirmation()
                 RouteType.CLAIM -> showRewardsValidators()
             }
             StakingStep.RewardsValidators,

@@ -303,9 +303,6 @@
   <string name="main_swap_changelly_promotion_message">Обменивайте свои токены с %1$s комиссии провайдера через Changelly с %2$s по %3$s февраля.</string>
   <string name="main_swap_changelly_promotion_title">Обмен с Changelly, %s комиссии</string>
   <string name="main_tokens">Токены</string>
-  <string name="main_travala_promotion_button">Забронировать</string>
-  <string name="main_travala_promotion_description" formatted="false">Оплатите его криптой и сэкономьте **50 долларов** через нашего партнера Travala: **%1s - %2s**</string>
-  <string name="main_travala_promotion_title">Забронируйте отпуск с Tangem</string>
   <string name="manage_tokens_add">Добавить</string>
   <string name="manage_tokens_edit">Изменить</string>
   <string name="manage_tokens_list_header_title">Рыночная капитализация</string>
@@ -657,6 +654,9 @@
   <string name="twins_recreate_warning">Это действие необратимо. У вас не будет доступа к старому кошельку.</string>
   <string name="twins_scan_twin_with_number">Приложите twin-карту с номером %s и не убирайте до окончания операции</string>
   <string name="unlock_wallet_description_full">Используйте %s или отсканируйте карту, чтобы получить доступ к своему кошельку</string>
+  <string name="user_push_notification_agreement_argument_one">Будьте в курсе новых функций и новостей</string>
+  <string name="user_push_notification_agreement_argument_two">Узнавайте первым о новых акциях</string>
+  <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
   <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
   <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите удалить этот кошелек?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Произошла ошибка, пожалуйста, отсканируйте свою карту для входа</string>

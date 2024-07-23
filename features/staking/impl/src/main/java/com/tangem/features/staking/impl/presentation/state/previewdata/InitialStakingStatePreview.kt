@@ -89,6 +89,7 @@ internal object InitialStakingStatePreview {
                                 preferred = false,
                             ),
                             unbondingPeriod = stringReference("3 days"),
+                            pendingActions = persistentListOf(),
                         ),
                     ),
                 ),

@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
@@ -31,6 +32,7 @@ data class BalanceState(
     val fiatAmount: TextReference,
     val rawCurrencyId: String?,
     val unbondingPeriod: TextReference,
+    val pendingActions: ImmutableList<PendingAction>,
 )
 
 enum class BalanceGroupType {

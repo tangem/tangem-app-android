@@ -29,9 +29,8 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.featuretoggles)
     implementation(projects.core.navigation)
-
-    /** Common modules */
-    implementation(projects.common.routing)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
 
     /** Common modules */
     implementation(projects.common.routing)
