@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
@@ -22,10 +23,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
-import com.tangem.core.ui.components.list.RoundedListWithDividers
+import com.tangem.core.ui.components.list.roundedListItems
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -39,37 +41,50 @@ import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.extensions.orZero
 
+private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
+private const val METRICS_BLOCK_KEY = "MetricsBlock"
+private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
+
 @Composable
 internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, clickIntents: StakingClickIntents) {
     if (state !is StakingStates.InitialInfoState.Data) return
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-        modifier = Modifier // Do not put fillMaxSize() in here
+    LazyColumn(
+        modifier = Modifier
             .background(TangemTheme.colors.background.tertiary)
-            .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing16,
-            ),
+            .padding(TangemTheme.dimens.spacing16)
+            .fillMaxSize(),
     ) {
-        AnimatedVisibility(state.yieldBalance == InnerYieldBalanceState.Empty) {
-            MetricsBlock(state)
+        item(key = METRICS_BLOCK_KEY) {
+            AnimatedVisibility(state.yieldBalance == InnerYieldBalanceState.Empty) {
+                MetricsBlock(state)
+            }
+            SpacerH12()
         }
-        RoundedListWithDividers(state.infoItems)
-        AnimatedContent(targetState = state.yieldBalance, label = "Rewards block visibility animation") {
-            if (it is InnerYieldBalanceState.Data) {
-                StakingRewardBlock(
-                    rewardCrypto = it.rewardsCrypto,
-                    rewardFiat = it.rewardsFiat,
-                    isRewardsToClaim = it.isRewardsToClaim,
-                    onRewardsClick = clickIntents::openRewardsValidators,
-                )
+
+        this.roundedListItems(state.infoItems)
+        item { SpacerH12() }
+
+        item(key = STAKING_REWARD_BLOCK_KEY) {
+            AnimatedContent(targetState = state.yieldBalance, label = "Rewards block visibility animation") {
+                if (it is InnerYieldBalanceState.Data) {
+                    StakingRewardBlock(
+                        rewardCrypto = it.rewardsCrypto,
+                        rewardFiat = it.rewardsFiat,
+                        isRewardsToClaim = it.isRewardsToClaim,
+                        onRewardsClick = clickIntents::openRewardsValidators,
+                    )
+                }
             }
         }
-        AnimatedContent(targetState = state.yieldBalance, label = "Rewards block visibility animation") {
-            if (it is InnerYieldBalanceState.Data) {
-                ActiveStakingBlock(it.balance, clickIntents::onActiveStake)
+
+        item { SpacerH12() }
+
+        item(key = ACTIVE_STAKING_BLOCK_KEY) {
+            AnimatedContent(targetState = state.yieldBalance, label = "Rewards block visibility animation") {
+                if (it is InnerYieldBalanceState.Data) {
+                    ActiveStakingBlock(it.balance, clickIntents::onActiveStake)
+                }
             }
         }
     }
