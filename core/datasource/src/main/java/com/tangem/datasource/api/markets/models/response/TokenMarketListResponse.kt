@@ -5,7 +5,7 @@ import java.math.BigDecimal
 
 data class TokenMarketListResponse(
     @Json(name = "imageHost")
-    val imageHost: String,
+    val imageHost: String?,
     @Json(name = "tokens")
     val tokens: List<Token>,
     @Json(name = "total")
