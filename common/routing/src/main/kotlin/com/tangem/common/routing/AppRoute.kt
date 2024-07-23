@@ -5,6 +5,7 @@ import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -143,15 +144,26 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data object AppSettings : AppRoute(path = "/app_settings")
 
+    /**
+     * Reset to factory route
+     *
+     * @property userWalletId     user wallet id
+     * @property cardSpecificInfo info about card that was scanned on CardSettings
+     */
     @Serializable
     data class ResetToFactory(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/reset_to_factory/${userWalletId.stringValue}"), RouteBundleParams {
+        val cardSpecificInfo: CardSpecificInfo,
+    ) : AppRoute(path = "/reset_to_factory/${userWalletId.stringValue}/$cardSpecificInfo"), RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
 
+        @Serializable
+        data class CardSpecificInfo(val cardId: String, val backupStatus: CardDTO.BackupStatus?)
+
         companion object {
             const val USER_WALLET_ID = "userWalletId"
+            const val CARD_SPECIFIC_DATA = "cardSpecificInfo"
         }
     }
 
