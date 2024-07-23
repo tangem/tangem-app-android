@@ -246,7 +246,20 @@ internal class DefaultLegacyWalletConnectRepository(
     }
 
     override fun pair(uri: String) {
-        Web3Wallet.pair(Wallet.Params.Pair(uri))
+        Web3Wallet.pair(
+            params = Wallet.Params.Pair(uri),
+            onSuccess = {
+                Timber.i("Paired successfully: $it")
+            },
+            onError = {
+                Timber.e("Error while pairing: $it")
+                scope.launch {
+                    _events.emit(
+                        WalletConnectEvents.PairConnectError(it.throwable),
+                    )
+                }
+            },
+        )
     }
 
     override fun approve(userNamespaces: Map<NetworkNamespace, List<Account>>) {
