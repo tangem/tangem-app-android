@@ -19,7 +19,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun RoundedListWithDividers(rows: List<RoundedListWithDividersItemData>, modifier: Modifier = Modifier) {
-    LazyColumn {
+    LazyColumn(modifier = modifier) {
         itemsIndexed(
             items = rows,
             key = { _, item -> item.id },
