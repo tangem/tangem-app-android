@@ -47,8 +47,11 @@ class WalletConnectMiddleware {
 
         when (action) {
             is WalletConnectAction.HandleDeepLink -> {
-                if (!action.wcUri.isNullOrBlank()) {
-                    store.dispatchOnMain(WalletConnectAction.OpenSession(action.wcUri))
+                val wsUrl = action.wcUri
+                Timber.i("WC deeplink: $wsUrl")
+                if (!wsUrl.isNullOrBlank()) {
+                    Timber.i("WC deeplink added to stack: $wsUrl")
+                    walletConnectInteractor.addDeeplink(wsUrl)
                 }
             }
             is WalletConnectAction.DisconnectSession -> {
@@ -171,6 +174,9 @@ class WalletConnectMiddleware {
             }
             is WalletConnectAction.RejectUnsupportedRequest -> {
                 store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork()))
+            }
+            is WalletConnectAction.PairConnectErrorAction -> {
+                store.dispatch(GlobalAction.ShowDialog(WalletConnectDialog.PairConnectErrorDialog(action.throwable)))
             }
         }
     }

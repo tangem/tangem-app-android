@@ -7,8 +7,12 @@ import javax.inject.Inject
 
 class BackupValidator @Inject constructor() {
 
-    fun isValid(cardDTO: CardDTO): Boolean {
+    fun isValidFull(cardDTO: CardDTO): Boolean {
         return validateBackupStatus(cardDTO) && validateCurves(cardDTO)
+    }
+
+    fun isValidBackupStatus(cardDTO: CardDTO): Boolean {
+        return validateBackupStatus(cardDTO)
     }
 
     private fun validateCurves(cardDTO: CardDTO): Boolean {
