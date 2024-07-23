@@ -68,4 +68,10 @@ sealed class BatchAction<out TKey, out TRequestParams, out TUpdate> {
     class CancelUpdates<TKey, TUpdate>(
         val predicate: (UpdateBatches<TKey, TUpdate>) -> Boolean,
     ) : BatchAction<TKey, Nothing, TUpdate>()
+
+    /**
+     * Clears the state and stops all current batch loading and updates
+     * After this status becomes [PaginationStatus.None]
+     */
+    data object Reset : BatchAction<Nothing, Nothing, Nothing>()
 }
