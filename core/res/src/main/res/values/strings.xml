@@ -337,7 +337,12 @@
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
   <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you need to attach a Tangem card</string>
+  <string name="markets_loading_error_title">Unable to load the data…</string>
   <string name="markets_quick_actions">Quick actions</string>
+  <string name="markets_search_result_title">Result</string>
+  <string name="markets_search_see_tokens_under_100k">See tokens under 100k market cap</string>
+  <string name="markets_search_show_tokens">Show tokens</string>
+  <string name="markets_search_token_no_result_title">No result</string>
   <string name="markets_select_network">Select network</string>
   <string name="markets_select_wallet">Select wallet</string>
   <string name="markets_selector_interval_1m_title">1m</string>
@@ -722,6 +727,7 @@
   <string name="transaction_history_operation">Operation</string>
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
+  <string name="try_to_load_data_again_button_title">Try again</string>
   <string name="twin_error_same_card">You\'ve scanned the same card. To create a twin wallet you need to scan the card with number %d</string>
   <string name="twin_error_wrong_twin">You\'ve scanned wrong twin card. Please try another one</string>
   <string name="twins_onboarding_description_format">This one that you are holding in your hands and the other one with number %s.\n\nBoth cards can be used to extract funds from this wallet.</string>
