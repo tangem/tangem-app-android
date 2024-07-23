@@ -29,4 +29,13 @@ sealed class PushNotificationAnalyticEvents(
     data object ButtonCancel : PushNotificationAnalyticEvents(
         event = "Button - Cancel",
     )
+
+    data class PermissionStatus(
+        val isAllowed: Boolean,
+    ) : PushNotificationAnalyticEvents(
+        event = "Permission Status",
+        params = mapOf(
+            AnalyticsParam.STATE to if (isAllowed) "Allow" else "Cancel",
+        ),
+    )
 }
