@@ -1,8 +1,11 @@
 package com.tangem.tap.features.welcome.ui
 
-import android.content.Intent
+import android.os.Bundle
 import androidx.lifecycle.*
 import com.tangem.common.core.TangemError
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.bundle.unbundle
+import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.tap.common.analytics.events.SignIn
@@ -26,7 +29,8 @@ internal class WelcomeViewModel @Inject constructor(
     StoreSubscriber<WelcomeState>,
     DefaultLifecycleObserver {
 
-    private val initialIntent: Intent? = savedStateHandle[WelcomeFragment.INITIAL_INTENT_KEY]
+    private val initialIntent: SerializableIntent? = savedStateHandle.get<Bundle>(AppRoute.Welcome.INITIAL_INTENT_KEY)
+        ?.unbundle(SerializableIntent.serializer())
 
     private val stateInternal = MutableStateFlow(WelcomeScreenState())
     val state: StateFlow<WelcomeScreenState> = stateInternal
@@ -38,7 +42,7 @@ internal class WelcomeViewModel @Inject constructor(
         initGlobalState()
 
         val welcomeAction = if (initialIntent != null) {
-            WelcomeAction.ProceedWithIntent(initialIntent)
+            WelcomeAction.ProceedWithIntent(initialIntent.toIntent())
         } else {
             WelcomeAction.ProceedWithBiometrics()
         }
