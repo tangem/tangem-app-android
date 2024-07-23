@@ -1,105 +1,124 @@
 package com.tangem.tap.features.details.ui.cardsettings
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
+import android.os.Bundle
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import arrow.core.Either
+import androidx.lifecycle.viewModelScope
+import arrow.core.getOrElse
+import com.tangem.common.CompletionResult
+import com.tangem.common.doOnSuccess
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.common.getTwinCardIdForUser
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.features.details.redux.CardSettingsState
-import com.tangem.tap.features.details.redux.DetailsAction
-import com.tangem.tap.features.details.redux.DetailsState
+import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.redux.AppDialog
+import com.tangem.tap.domain.extensions.signedHashesCount
+import com.tangem.tap.domain.sdk.TangemSdkManager
+import com.tangem.tap.features.details.ui.common.utils.*
 import com.tangem.tap.store
+import com.tangem.wallet.R
 import dagger.hilt.android.lifecycle.HiltViewModel
-import org.rekotlin.StoreSubscriber
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 internal class CardSettingsViewModel @Inject constructor(
-    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-) :
-    ViewModel(), DefaultLifecycleObserver, StoreSubscriber<DetailsState> {
+    private val scanCardProcessor: ScanCardProcessor,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val tangemSdkManager: TangemSdkManager,
+    savedStateHandle: SavedStateHandle,
+) : ViewModel() {
 
-    var screenState: MutableState<CardSettingsScreenState> =
-        mutableStateOf(updateState(store.state.detailsState.cardSettingsState))
+    private val userWalletId = savedStateHandle.get<Bundle>(AppRoute.CardSettings.USER_WALLET_ID_KEY)
+        ?.unbundle(UserWalletId.serializer())
+        ?: error("User wallet ID is required for CardSettingsViewModel")
 
-    override fun onStart(owner: LifecycleOwner) {
-        when (val selectedWalletEither = getSelectedWalletSyncUseCase()) {
-            is Either.Left -> {
-                Timber.e(selectedWalletEither.value.toString())
+    val screenState: MutableStateFlow<CardSettingsScreenState> = MutableStateFlow(getInitialState())
+
+    private fun getInitialState() = CardSettingsScreenState(
+        cardDetails = null,
+        onElementClick = ::handleClickingItem,
+        onScanCardClick = ::scanCard,
+    )
+
+    private fun scanCard() = viewModelScope.launch {
+        scanCardProcessor.scan(allowsRequestAccessCodeFromRepository = true)
+            .doOnSuccess { scanResponse ->
+                val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+                val isCorrectUserWalletScanned = scannedUserWalletId == userWalletId
+
+                if (isCorrectUserWalletScanned) {
+                    val userWallet = getUserWallet()
+
+                    updateCardDetails(userWallet)
+                } else {
+                    store.dispatchDialogShow(
+                        AppDialog.SimpleOkDialogRes(
+                            headerId = R.string.common_warning,
+                            messageId = R.string.error_wrong_wallet_tapped,
+                        ),
+                    )
+                }
             }
-            is Either.Right -> Unit
+    }
+
+    private fun updateCardDetails(userWallet: UserWallet) {
+        val card = userWallet.scanResponse.card
+        val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
+        val cardId = cardTypesResolver.getCardId()
+
+        val currentSecurityOption = getCurrentSecurityOption(card)
+        val allowedSecurityOptions = getAllowedSecurityOptions(
+            card = card,
+            cardTypesResolver = cardTypesResolver,
+            currentSecurityOption = currentSecurityOption,
+        )
+        val isResetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver)
+
+        val cardDetails = buildList {
+            CardInfo.CardId(cardId).let(::add)
+            CardInfo.Issuer(card.issuer.name).let(::add)
+
+            if (!cardTypesResolver.isTangemTwins()) {
+                CardInfo.SignedHashes(card.signedHashesCount().toString()).let(::add)
+            }
+
+            CardInfo.SecurityMode(
+                currentSecurityOption,
+                clickable = allowedSecurityOptions.size > 1,
+            ).let(::add)
+
+            if (card.backupStatus?.isActive == true && card.isAccessCodeSet) {
+                CardInfo.ChangeAccessCode.let(::add)
+            }
+
+            if (isAccessCodeRecoveryAllowed(cardTypesResolver)) {
+                CardInfo.AccessCodeRecovery(isAccessCodeRecoveryEnabled(cardTypesResolver, card)).let(::add)
+            }
+
+            if (isResetCardAllowed) {
+                CardInfo.ResetToFactorySettings(
+                    description = getResetToFactoryDescription(card, cardTypesResolver),
+                ).let(::add)
+            }
         }
 
-        store.subscribe(this) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.detailsState == newState.detailsState
-            }.select { it.detailsState }
-        }
-    }
-
-    override fun onStop(owner: LifecycleOwner) {
-        store.unsubscribe(this)
-    }
-
-    override fun newState(state: DetailsState) {
-        screenState.value = updateState(state.cardSettingsState)
-    }
-
-    private fun updateState(state: CardSettingsState?): CardSettingsScreenState {
-        return if (state?.manageSecurityState == null) {
-            CardSettingsScreenState(
-                cardDetails = null,
-                accessCodeRecoveryState = null,
-                onElementClick = {},
-                onScanCardClick = {
-                    store.dispatch(DetailsAction.ScanCard)
-                },
-            )
-        } else {
-            val cardId = if (state.card.isTangemTwins) {
-                state.card.getTwinCardIdForUser()
-            } else {
-                state.cardInfo.cardId
-            }
-            val cardDetails: MutableList<CardInfo> = mutableListOf(
-                CardInfo.CardId(cardId),
-                CardInfo.Issuer(state.cardInfo.issuer),
-            )
-
-            if (!state.card.isTangemTwins) {
-                cardDetails.add(CardInfo.SignedHashes(state.cardInfo.signedHashes.toString()))
-            }
-            cardDetails.add(
-                CardInfo.SecurityMode(
-                    securityOption = state.manageSecurityState.currentOption,
-                    clickable = state.manageSecurityState.allowedOptions.size > 1,
-                ),
-            )
-            if (state.card.backupStatus?.isActive == true && state.card.isAccessCodeSet) {
-                cardDetails.add(CardInfo.ChangeAccessCode)
-            }
-            if (state.accessCodeRecovery != null) {
-                cardDetails.add(CardInfo.AccessCodeRecovery(state.accessCodeRecovery.enabledOnCard))
-            }
-            if (state.resetCardAllowed) {
-                cardDetails.add(CardInfo.ResetToFactorySettings(state.cardInfo))
-            }
-            CardSettingsScreenState(
-                cardDetails = cardDetails,
-                accessCodeRecoveryState = state.accessCodeRecovery,
-                onScanCardClick = { },
-                onElementClick = {
-                    handleClickingItem(it)
-                },
-            )
+        screenState.update { state ->
+            state.copy(cardDetails = cardDetails)
         }
     }
 
@@ -107,20 +126,49 @@ internal class CardSettingsViewModel @Inject constructor(
         when (item) {
             is CardInfo.ChangeAccessCode -> {
                 Analytics.send(Settings.CardSettings.ButtonChangeUserCode(AnalyticsParam.UserCode.AccessCode))
-                store.dispatch(DetailsAction.ManageSecurity.ChangeAccessCode)
+                changeAccessCode()
             }
             is CardInfo.ResetToFactorySettings -> {
                 Analytics.send(Settings.CardSettings.ButtonFactoryReset())
-                store.dispatch(DetailsAction.ResetToFactory.Start)
+                store.dispatchNavigationAction {
+                    push(route = AppRoute.ResetToFactory(userWalletId))
+                }
             }
             is CardInfo.SecurityMode -> {
                 Analytics.send(Settings.CardSettings.ButtonChangeSecurityMode())
-                store.dispatch(DetailsAction.ManageSecurity.OpenSecurity)
+                store.dispatchNavigationAction {
+                    push(route = AppRoute.DetailsSecurity(userWalletId))
+                }
             }
             is CardInfo.AccessCodeRecovery -> {
-                store.dispatch(DetailsAction.AccessCodeRecovery.Open)
+                store.dispatchNavigationAction {
+                    push(route = AppRoute.AccessCodeRecovery(userWalletId))
+                }
             }
             else -> {}
         }
+    }
+
+    private fun changeAccessCode() = viewModelScope.launch {
+        val card = getUserWallet().scanResponse.card
+
+        when (val result = tangemSdkManager.setAccessCode(card.cardId)) {
+            is CompletionResult.Success -> Analytics.send(Settings.CardSettings.UserCodeChanged())
+            is CompletionResult.Failure -> {
+                Timber.e("Failed to change access code: ${result.error}")
+            }
+        }
+    }
+
+    private fun getUserWallet(): UserWallet {
+        return getUserWalletUseCase(userWalletId).getOrElse {
+            error("Failed to get user wallet $userWalletId: $it")
+        }
+    }
+
+    private fun isResetToFactoryAllowedByCard(card: CardDTO, cardTypesResolver: CardTypesResolver): Boolean {
+        val hasPermanentWallet = card.wallets.any { it.settings.isPermanent }
+        val isNotAllowed = hasPermanentWallet || cardTypesResolver.isStart2Coin()
+        return !isNotAllowed
     }
 }

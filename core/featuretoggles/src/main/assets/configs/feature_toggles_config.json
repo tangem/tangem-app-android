@@ -4,10 +4,6 @@
         "version": "undefined"
     },
     {
-        "name": "REDESIGNED_MANAGE_TOKENS_SCREEN_ENABLED",
-        "version": "undefined"
-    },
-    {
         "name": "REDESIGNED_SEND_SCREEN_ENABLED",
         "version": "5.10.0"
     },
@@ -24,10 +20,6 @@
         "version": "undefined"
     },
     {
-        "name": "TOKEN_LIST_LCE_ENABLED",
-        "version": "5.12.0"
-    },
-    {
         "name": "CARDANO_TOKENS_SUPPORT_ENABLED",
         "version": "5.12.0"
     },
@@ -36,11 +28,15 @@
         "version": "undefined"
     },
     {
-        "name": "FULL_RESET_ENABLED",
-        "version": "5.12.0"
+        "name": "DETAILS_REDESIGN_ENABLED",
+        "version": "5.13.0"
     },
     {
-        "name": "DETAILS_REDESIGN_ENABLED",
+        "name": "PUSH_NOTIFICATIONS_ENABLED",
+        "version": "5.13.0"
+    },
+    {
+        "name": "MARKETS_ENABLED",
         "version": "undefined"
     }
 ]
