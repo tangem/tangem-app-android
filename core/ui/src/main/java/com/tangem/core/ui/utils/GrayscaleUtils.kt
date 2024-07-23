@@ -9,3 +9,12 @@ const val NORMAL_ALPHA = 1f
 
 val GrayscaleColorFilter: ColorFilter
     get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })
+
+/**
+ * Returns alpha and color filter for grayscale if [isGrayscale] is true
+ */
+fun getGreyScaleColorFilter(isGrayscale: Boolean): Pair<Float, ColorFilter?> = if (isGrayscale) {
+    GRAY_SCALE_ALPHA to GrayscaleColorFilter
+} else {
+    NORMAL_ALPHA to null
+}
