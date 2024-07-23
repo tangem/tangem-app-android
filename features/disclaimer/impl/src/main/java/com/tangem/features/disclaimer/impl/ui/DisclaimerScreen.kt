@@ -2,26 +2,28 @@ package com.tangem.features.disclaimer.impl.ui
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
-import android.view.View
-import android.view.ViewGroup
-import android.webkit.WebView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.web.WebView
+import com.google.accompanist.web.rememberWebViewState
+import com.google.accompanist.web.rememberWebViewStateWithHTMLData
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.components.PrimaryButton
@@ -35,6 +37,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.disclaimer.impl.R
 import com.tangem.features.disclaimer.impl.entity.DisclaimerUM
 import com.tangem.features.disclaimer.impl.entity.DummyDisclaimer
+import com.tangem.features.disclaimer.impl.local.localTermsOfServices
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 
 @Composable
@@ -63,6 +66,7 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
                     iconRes = R.drawable.ic_back_24,
                     onIconClicked = state.popBack,
                 ).takeIf { state.isTosAccepted },
+                titleAlignment = Alignment.CenterHorizontally,
                 textColor = textColor,
                 iconTint = iconColor,
             )
@@ -81,52 +85,51 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 private fun DisclaimerContent(url: String, isTosAccepted: Boolean) {
-    val progressState = remember { mutableStateOf(ProgressState.Loading) }
-    val webClient = remember { DisclaimerWebViewClient(progressState) }
-    val transparent = Color.Transparent
     val backgroundColor = if (isTosAccepted) TangemTheme.colors.background.primary else TangemColorPalette.Dark6
-    Box(
-        modifier = Modifier,
-    ) {
-        AndroidView(
-            factory = {
-                WebView(it).apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                    )
-                    setBackgroundColor(transparent.toArgb())
-                    settings.allowFileAccess = false
-                    // to inject css style to display only in dark theme
-                    settings.javaScriptEnabled = !isTosAccepted
-                    overScrollMode = View.OVER_SCROLL_NEVER
-                    webViewClient = webClient
 
-                    clearHistory()
-                    clearFormData()
-                    clearCache(true)
+    val webViewStateUrl = rememberWebViewState(url)
+    val webViewStateData =
+        rememberWebViewStateWithHTMLData(data = localTermsOfServices, mimeType = "text/html", encoding = "UTF-8")
 
-                    loadUrl(url)
-                }
+    val webViewState by remember {
+        derivedStateOf {
+            if (webViewStateUrl.errorsForCurrentRequest.isNotEmpty()) {
+                webViewStateData
+            } else {
+                webViewStateUrl
+            }
+        }
+    }
+
+    Box {
+        WebView(
+            state = webViewState,
+            captureBackPresses = false,
+            onCreated = {
+                it.settings.javaScriptEnabled = !isTosAccepted
+                it.setBackgroundColor(backgroundColor.toArgb())
             },
+            client = remember { DisclaimerWebViewClient() },
         )
 
-        when (progressState.value) {
-            ProgressState.Loading -> {
-                Box(
+        AnimatedVisibility(
+            visible = webViewState.isLoading,
+            label = "Loading state change animation",
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(backgroundColor),
+            ) {
+                CircularProgressIndicator(
+                    color = TangemTheme.colors.icon.informative,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(backgroundColor),
-                ) {
-                    CircularProgressIndicator(
-                        color = TangemTheme.colors.icon.informative,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(TangemTheme.dimens.spacing8),
-                    )
-                }
+                        .align(Alignment.Center)
+                        .padding(TangemTheme.dimens.spacing8),
+                )
             }
-            else -> Unit
         }
     }
 }
