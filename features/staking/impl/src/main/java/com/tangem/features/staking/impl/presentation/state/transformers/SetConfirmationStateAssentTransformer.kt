@@ -14,7 +14,6 @@ import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 
-@Suppress("UnusedPrivateMember")
 internal class SetConfirmationStateAssentTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
