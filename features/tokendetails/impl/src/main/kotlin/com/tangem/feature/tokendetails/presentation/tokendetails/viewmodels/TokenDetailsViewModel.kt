@@ -144,12 +144,11 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val refreshStateJobHolder = JobHolder()
     private val warningsJobHolder = JobHolder()
     private val swapTxJobHolder = JobHolder()
-    private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
-
-    private var swapTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<SwapTransactionsState>>()
-
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
+
+    private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var stakingEntryInfo: StakingEntryInfo? = null
+    private var swapTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<SwapTransactionsState>>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
