@@ -8,6 +8,8 @@ import com.tangem.common.card.EncryptionMode
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.attestation.Attestation
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import java.util.Date
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
 
@@ -298,11 +300,19 @@ data class CardDTO(
         }
     }
 
+    @Serializable
     sealed class BackupStatus {
+
+        @Serializable
+        @SerialName("card_linked")
         data class CardLinked(val cardCount: Int) : BackupStatus()
 
+        @Serializable
+        @SerialName("active")
         data class Active(val cardCount: Int) : BackupStatus()
 
+        @Serializable
+        @SerialName("no_backup")
         data object NoBackup : BackupStatus()
 
         val isActive: Boolean
