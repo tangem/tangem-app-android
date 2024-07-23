@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+  <string name="address_type_default">За замовчуванням</string>
+  <string name="address_type_legacy">Застарілий</string>
+  <string name="common_fee_error">Не вдалося отримати комісію</string>
+  <string name="common_utxo_validate_withdrawal_message_warning">Через обмеження %1$s в одну транзакцію може поміститися тільки %2$d UTXO. Це означає, що ви можете відправити тільки %3$s або менше. Вам потрібно зменшити суму.</string>
+  <string name="eth_gas_required_exceeds_allowance">Недостатньо коштів для здійснення транзакції. Будь ласка, поповніть свій акаунт.</string>
+  <string name="generic_error_code">Виникла помилка. Код: %s.</string>
+  <string name="no_account_generic">Щоб користуватися мережею %1$s, ви маєте оплатити резерв акаунта (%2$s %3$s), який блокується і не використовується у вашому балансі</string>
+  <string name="no_account_polkadot">Обліковий запис одержувача не активовано. Надішліть %s або більше, щоб активувати обліковий запис.</string>
+  <string name="no_account_send_to_create">Для створення акаунту надішліть кошти на цю адресу</string>
+  <string name="send_error_dust_amount_format">Мінімальна сума: %s</string>
+  <string name="send_error_dust_change">Решта занадто мала</string>
+  <string name="send_error_invalid_fee_value">Невірна комісія</string>
+  <string name="send_error_minimum_balance_format">Мінімальний баланс: %s</string>
+  <string name="send_error_no_target_account">Обліковий запис одержувача не створено. Сума для переказу повинна бути %s + комісія або більше</string>
+  <string name="send_error_unknown">Невідома помилка</string>
+  <string name="send_validation_amount_exceeds_balance">Сума перевищує залишок</string>
+  <string name="send_validation_invalid_amount">Недопустима сума</string>
+  <string name="send_validation_invalid_fee">Комісія перевищує залишок</string>
+  <string name="send_validation_invalid_total">Сума, що відправляється, перевищує залишок</string>
+  <string name="xtz_withdrawal_message_ignore">Ні, відправити все</string>
+  <string name="xtz_withdrawal_message_reduce">Зменшити на %s XTZ</string>
+  <string name="xtz_withdrawal_message_warning">Щоб не платити підвищену комісію при наступному поповненні гаманця, зменште суму на %s XTZ</string>
+</resources>
