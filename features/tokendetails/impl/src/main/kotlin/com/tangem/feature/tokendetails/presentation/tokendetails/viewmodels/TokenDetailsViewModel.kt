@@ -34,6 +34,7 @@ import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
@@ -148,10 +149,12 @@ internal class TokenDetailsViewModel @Inject constructor(
     private var swapTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<SwapTransactionsState>>()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
+    private var stakingEntryInfo: StakingEntryInfo? = null
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        stakingEntryInfoProvider = Provider { stakingEntryInfo },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
@@ -397,7 +400,8 @@ internal class TokenDetailsViewModel @Inject constructor(
                     cryptoCurrencyId = cryptoCurrency.id,
                     symbol = cryptoCurrency.symbol,
                 )
-                internalUiState.value = stateFactory.getStateWithStaking(stakingInfo)
+
+                stakingEntryInfo = stakingInfo.getOrNull()
             }
         }
     }

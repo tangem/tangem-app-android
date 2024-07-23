@@ -11,6 +11,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -31,9 +32,11 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
@@ -136,13 +139,28 @@ internal class TokenDetailsLoadedBalanceConverter(
 
     private fun getYieldBalance(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM {
         val yieldBalance = status.value.yieldBalance as? YieldBalance.Data
+        val stakingEntryInfo = stakingEntryInfoProvider.invoke()
 
         val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance()
         val stakingRewardAmount = yieldBalance?.getRewardStakingBalance()
         val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
+        val iconState = state.tokenInfoBlockState.iconState
 
         return if (stakingCryptoAmount.isNullOrZero()) {
-            StakingBlockUM.Loading(state.tokenInfoBlockState.iconState)
+            if (stakingEntryInfo != null) {
+                StakingBlockUM.StakeAvailable(
+                    interestRate = BigDecimalFormatter.formatPercent(
+                        percent = stakingEntryInfo.interestRate,
+                        useAbsoluteValue = true,
+                    ),
+                    periodInDays = stakingEntryInfo.periodInDays,
+                    tokenSymbol = stakingEntryInfo.tokenSymbol,
+                    iconState = iconState,
+                    onStakeClicked = clickIntents::onStakeBannerClick,
+                )
+            } else {
+                StakingBlockUM.Error(iconState = iconState)
+            }
         } else {
             StakingBlockUM.Staked(
                 cryptoAmount = stakingCryptoAmount,
