@@ -21,6 +21,7 @@ data class Address(
         val binanceBeaconAddress: String? = null,
 
         // solana-specific
+        @Deprecated("Legacy in StakeKit, isn't used in Solana")
         @Json(name = "stakeAccounts")
         val stakeAccounts: List<String>? = null,
         @Json(name = "lidoStakeAccounts")
