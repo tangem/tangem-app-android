@@ -23,8 +23,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.constraintlayout.compose.*
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
-import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
@@ -72,8 +72,8 @@ internal fun LazyListScope.swapTransactionsItems(
 @Composable
 private fun ExchangeStatusItem(
     providerName: String,
-    fromTokenIconState: TokenIconState,
-    toTokenIconState: TokenIconState,
+    fromTokenIconState: CurrencyIconState,
+    toTokenIconState: CurrencyIconState,
     fromAmount: String,
     fromSymbol: String,
     toSymbol: String,
@@ -102,7 +102,7 @@ private fun ExchangeStatusItem(
                 top.linkTo(parent.top)
             },
         )
-        TokenIcon(
+        CurrencyIcon(
             state = fromTokenIconState,
             shouldDisplayNetwork = false,
             modifier = Modifier
@@ -139,7 +139,7 @@ private fun ExchangeStatusItem(
                     bottom.linkTo(parent.bottom)
                 },
         )
-        TokenIcon(
+        CurrencyIcon(
             state = toTokenIconState,
             shouldDisplayNetwork = false,
             modifier = Modifier
@@ -205,8 +205,8 @@ private fun ExchangeStatusItemPreview(
     TangemThemePreview {
         ExchangeStatusItem(
             providerName = "ChangeNow",
-            fromTokenIconState = TokenIconState.Loading,
-            toTokenIconState = TokenIconState.Loading,
+            fromTokenIconState = CurrencyIconState.Loading,
+            toTokenIconState = CurrencyIconState.Loading,
             fromAmount = amount,
             fromSymbol = "USDT",
             toSymbol = "USDT",
