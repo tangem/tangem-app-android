@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.previewdata
 
+import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.features.send.impl.presentation.state.SendUiState
 
