@@ -126,8 +126,18 @@ internal class SendNotificationFactory(
     }
 
     private fun MutableList<SendNotification>.addFeeUnreachableNotification(feeSelectorState: FeeSelectorState) {
-        if (feeSelectorState is FeeSelectorState.Error) {
-            add(SendNotification.Warning.NetworkFeeUnreachable(clickIntents::feeReload))
+        when (feeSelectorState) {
+            is FeeSelectorState.Error.TronAccountActivationError -> add(
+                SendNotification.Warning.TronAccountNotActivated(
+                    feeSelectorState.tokenName,
+                ),
+            )
+            is FeeSelectorState.Error.NetworkError -> add(
+                SendNotification.Warning.NetworkFeeUnreachable(clickIntents::feeReload),
+            )
+            else -> {
+                /* do nothing */
+            }
         }
     }
 

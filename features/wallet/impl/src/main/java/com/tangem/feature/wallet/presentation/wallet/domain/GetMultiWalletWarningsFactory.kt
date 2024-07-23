@@ -39,8 +39,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val backupValidator: BackupValidator,
 ) {
 
-    private var readyForRateAppNotification = false
-
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
@@ -52,8 +50,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             flow4 = shouldShowSwapPromoWalletUseCase(),
             flow5 = promoFlow,
         ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, shouldShowPromo, promoBanner ->
-
-            readyForRateAppNotification = true
             buildList {
                 addSwapPromoNotification(shouldShowPromo, promoBanner, clickIntents)
 
@@ -63,7 +59,13 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
                 addWarningNotifications(cardTypesResolver, maybeTokenList, isNeedToBackup, clickIntents)
 
-                addRateTheAppNotification(isReadyToShowRating, clickIntents)
+                val hasCriticalOrWarning = any { notification ->
+                    notification is WalletNotification.Critical || notification is WalletNotification.Warning
+                }
+
+                if (!hasCriticalOrWarning) {
+                    addRateTheAppNotification(isReadyToShowRating, clickIntents)
+                }
             }.toImmutableList()
         }
     }
@@ -200,17 +202,12 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 onDislikeClick = clickIntents::onDislikeAppClick,
                 onCloseClick = clickIntents::onCloseRateAppWarningClick,
             ),
-            condition = isReadyToShowRating && readyForRateAppNotification,
+            condition = isReadyToShowRating,
         )
     }
 
     private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
-        if (condition) {
-            add(element = element)
-            if (element is WalletNotification.Critical || element is WalletNotification.Warning) {
-                readyForRateAppNotification = false
-            }
-        }
+        if (condition) add(element = element)
     }
 
     private companion object {

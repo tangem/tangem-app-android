@@ -16,17 +16,18 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun PushNotificationsScreen(
-    onShowAllow: () -> Unit,
-    onAllow: () -> Unit,
-    onLater: () -> Unit,
+    onRequest: () -> Unit,
+    onRequestLater: () -> Unit,
+    onAllowPermission: () -> Unit,
+    onDenyPermission: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     val isClicked = remember { mutableStateOf(false) }
     val requestPushPermission = requestPushPermission(
         isFirstTimeAsking = true,
         isClicked = isClicked,
-        onAllow = onAllow,
-        onDeny = onLater,
+        onAllow = onAllowPermission,
+        onDeny = onDenyPermission,
         onOpenSettings = onOpenSettings,
         pushPermission = getPushPermissionOrNull(),
     )
@@ -48,13 +49,13 @@ internal fun PushNotificationsScreen(
             buttonText = resourceReference(R.string.common_allow),
             onClick = {
                 isClicked.value = true
-                onShowAllow()
+                onRequest()
                 requestPushPermission()
             },
         ),
         secondaryButton = ShowcaseButtonModel(
             buttonText = resourceReference(R.string.common_later),
-            onClick = onLater,
+            onClick = onRequestLater,
         ),
         modifier = Modifier.systemBarsPadding(),
     )

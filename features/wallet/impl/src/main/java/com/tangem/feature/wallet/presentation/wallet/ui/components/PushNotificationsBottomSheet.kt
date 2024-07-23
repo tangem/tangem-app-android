@@ -84,7 +84,7 @@ private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetC
                     stringResource(R.string.common_cancel)
                 },
                 onClick = {
-                    content.onDeny()
+                    content.onRequestLater()
                     onDismiss()
                 },
                 modifier = Modifier.weight(1f),
@@ -113,6 +113,7 @@ private fun PushNotificationsSheetContent_Preview() {
                 isFirstTimeRequested = false,
                 wasInitiallyAsk = false,
                 onRequest = {},
+                onRequestLater = {},
                 onAllow = {},
                 onDeny = {},
                 openSettings = {},

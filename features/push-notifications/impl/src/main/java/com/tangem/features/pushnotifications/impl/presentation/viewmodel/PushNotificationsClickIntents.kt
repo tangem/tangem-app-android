@@ -1,11 +1,13 @@
 package com.tangem.features.pushnotifications.impl.presentation.viewmodel
 
 internal interface PushNotificationsClickIntents {
-    fun onAskLater()
+    fun onRequest()
+
+    fun onRequestLater()
 
     fun onAllowPermission()
 
-    fun onAllowedPermission()
+    fun onDenyPermission()
 
     fun openSettings()
 }
