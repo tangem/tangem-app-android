@@ -143,7 +143,13 @@ internal class TangemCardTypesResolver(
 
     override fun getRemainingSignatures(): Int? = card.wallets.firstOrNull()?.remainingSignatures
 
-    override fun getCardId(): String = card.cardId
+    override fun getCardId(): String {
+        return if (isTangemTwins()) {
+            card.getTwinCardIdForUser()
+        } else {
+            card.cardId
+        }
+    }
 
     override fun isTestCard(): Boolean = card.isTestCard
 
