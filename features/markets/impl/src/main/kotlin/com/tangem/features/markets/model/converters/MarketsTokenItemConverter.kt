@@ -30,6 +30,7 @@ internal class MarketsTokenItemConverter(
             trendPercentText = value.getTrendPercent(),
             trendType = value.getTrendType(),
             chardData = value.getChartData(),
+            showUnder100kMarketCap = value.isUnder100kMarketCap(),
         )
     }
 
@@ -76,7 +77,7 @@ internal class MarketsTokenItemConverter(
     private fun TokenMarket.getCurrentPrice(prev: TokenMarket? = null): MarketsListItemUM.Price {
         val prevPrice = prev?.tokenQuotes?.currentPrice
 
-        val priceText = BigDecimalFormatter.formatFiatAmount(
+        val priceText = BigDecimalFormatter.formatFiatAmountUncapped(
             fiatAmount = tokenQuotes.currentPrice,
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
@@ -140,5 +141,13 @@ internal class MarketsTokenItemConverter(
             percent = percent,
             useAbsoluteValue = true,
         )
+    }
+
+    private fun TokenMarket.isUnder100kMarketCap(): Boolean {
+        return tokenQuotes.currentPrice.compareTo(decimal100k) == -1
+    }
+
+    private companion object {
+        val decimal100k: BigDecimal = BigDecimal.valueOf(100_000)
     }
 }
