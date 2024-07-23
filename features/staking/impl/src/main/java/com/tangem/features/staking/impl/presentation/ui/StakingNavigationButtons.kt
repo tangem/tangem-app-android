@@ -25,8 +25,6 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.presentation.state.*
-import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.StakingUiState
 
 @Composable
 internal fun StakingNavigationButtons(uiState: StakingUiState, modifier: Modifier = Modifier) {
@@ -70,10 +68,8 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
     val showTangemIcon = uiState.currentStep == StakingStep.Confirmation &&
         (isInProgressInnerState || isInAssentInnerState)
 
-    val (buttonTextId, buttonClick) = getButtonData(
-        currentState = uiState,
-    )
-    val isButtonEnabled = isButtonEnabled(uiState)
+    val buttonTextId = getButtonData(currentState = uiState)
+    val (isButtonEnabled, isButtonDisplayed) = isButtonEnabled(uiState)
     val buttonIcon = if (showTangemIcon) {
         TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
     } else {
@@ -101,17 +97,17 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
             }
         }
         AnimatedVisibility(
-            visible = buttonClick != null,
+            visible = isButtonDisplayed,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
             TangemButton(
                 text = stringResource(buttonTextId),
                 icon = buttonIcon,
-                enabled = isButtonEnabled && buttonClick != null,
+                enabled = isButtonEnabled && isButtonDisplayed,
                 onClick = {
                     if (showTangemIcon) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    if (buttonClick != null) buttonClick()
+                    onPrimaryClick(uiState)
                 },
                 showProgress = isInProgressInnerState,
                 modifier = Modifier.fillMaxWidth(),
@@ -121,37 +117,62 @@ private fun StakingNavigationButton(uiState: StakingUiState, modifier: Modifier 
     }
 }
 
-private fun getButtonData(currentState: StakingUiState): Pair<Int, (() -> Unit)?> {
+private fun getButtonData(currentState: StakingUiState): Int {
     return when (currentState.currentStep) {
         StakingStep.InitialInfo -> {
             val initialState = currentState.initialInfoState as? StakingStates.InitialInfoState.Data
             if (initialState?.yieldBalance is InnerYieldBalanceState.Data) {
-                val click = if (initialState.isStakeMoreAvailable) {
-                    currentState.clickIntents::onNextClick
-                } else {
-                    null
-                }
-                R.string.staking_stake_more to click
+                R.string.staking_stake_more
             } else {
-                R.string.common_next to currentState.clickIntents::onNextClick
+                R.string.common_next
             }
         }
-        StakingStep.Amount,
-        -> R.string.common_next to currentState.clickIntents::onNextClick
         StakingStep.Confirmation -> {
             val confirmationState = currentState.confirmationState
             if (confirmationState is StakingStates.ConfirmationState.Data) {
                 if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
-                    R.string.common_close to currentState.clickIntents::onBackClick
+                    R.string.common_close
                 } else {
-                    R.string.common_stake to currentState.clickIntents::onNextClick
+                    R.string.common_stake
                 }
             } else {
-                R.string.common_close to currentState.clickIntents::onBackClick
+                R.string.common_close
             }
         }
-        StakingStep.Validators -> R.string.common_continue to currentState.clickIntents::onNextClick
-        StakingStep.RewardsValidators -> R.string.common_next to null
+        StakingStep.Validators -> R.string.common_continue
+        StakingStep.Amount,
+        StakingStep.RewardsValidators,
+        -> R.string.common_next
+    }
+}
+
+private fun onPrimaryClick(currentState: StakingUiState) {
+    when (currentState.currentStep) {
+        StakingStep.InitialInfo -> {
+            val initialState = currentState.initialInfoState as? StakingStates.InitialInfoState.Data
+            if (initialState?.yieldBalance is InnerYieldBalanceState.Data) {
+                if (initialState.isStakeMoreAvailable) {
+                    currentState.clickIntents.onNextClick()
+                }
+            } else {
+                currentState.clickIntents.onNextClick()
+            }
+        }
+        StakingStep.Amount -> currentState.clickIntents.onNextClick()
+        StakingStep.Confirmation -> {
+            val confirmationState = currentState.confirmationState
+            if (confirmationState is StakingStates.ConfirmationState.Data) {
+                if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
+                    currentState.clickIntents.onBackClick()
+                } else {
+                    currentState.clickIntents.onNextClick()
+                }
+            } else {
+                currentState.clickIntents.onBackClick()
+            }
+        }
+        StakingStep.Validators -> currentState.clickIntents.onNextClick()
+        StakingStep.RewardsValidators -> Unit
     }
 }
 
@@ -165,12 +186,16 @@ private fun isPrevButtonVisible(step: StakingStep): Boolean = when (step) {
     -> true
 }
 
-private fun isButtonEnabled(uiState: StakingUiState): Boolean {
+private fun isButtonEnabled(uiState: StakingUiState): Pair<Boolean, Boolean> {
     return when (uiState.currentStep) {
-        StakingStep.InitialInfo -> uiState.initialInfoState.isPrimaryButtonEnabled
-        StakingStep.Amount -> uiState.amountState.isPrimaryButtonEnabled
-        StakingStep.Confirmation -> uiState.confirmationState.isPrimaryButtonEnabled
-        StakingStep.RewardsValidators -> uiState.rewardsValidatorsState.isPrimaryButtonEnabled
-        StakingStep.Validators -> true
+        StakingStep.InitialInfo -> {
+            val initialState = uiState.initialInfoState as? StakingStates.InitialInfoState.Data
+            val isDisplayed = initialState?.isStakeMoreAvailable == true
+            uiState.initialInfoState.isPrimaryButtonEnabled to isDisplayed
+        }
+        StakingStep.Amount -> uiState.amountState.isPrimaryButtonEnabled to true
+        StakingStep.Confirmation -> uiState.confirmationState.isPrimaryButtonEnabled to true
+        StakingStep.RewardsValidators -> uiState.rewardsValidatorsState.isPrimaryButtonEnabled to false
+        StakingStep.Validators -> true to true
     }
 }
