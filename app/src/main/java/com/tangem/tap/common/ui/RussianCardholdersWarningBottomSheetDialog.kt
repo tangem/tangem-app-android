@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchOpenUrl
@@ -44,7 +43,7 @@ class RussianCardholdersWarningBottomSheetDialog(
             dismiss()
         }
         binding?.btnNo?.setOnClickListener {
-            store.dispatch(NavigationAction.OpenUrl(INSTRUCTION_URL))
+            store.dispatchOpenUrl(INSTRUCTION_URL)
             dismiss()
         }
     }

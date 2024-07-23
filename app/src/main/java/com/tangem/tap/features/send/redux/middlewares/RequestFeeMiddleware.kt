@@ -1,6 +1,9 @@
 package com.tangem.tap.features.send.redux.middlewares
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
@@ -92,6 +95,7 @@ class RequestFeeMiddleware {
                         dispatch(
                             SendAction.Dialog.RequestFeeError(
                                 error = blockchainSdkError,
+                                scanResponse = scanResponse,
                                 onRetry = { dispatch(FeeAction.RequestFee) },
                             ),
                         )

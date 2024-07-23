@@ -4,14 +4,12 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,8 +18,8 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
 
 /**
@@ -116,7 +114,10 @@ private fun PriceBlock(state: MarketPriceBlockState, priceWidthDp: Dp) {
             ) {
                 Price(price = marketPriceBlockState.price, modifier = priceModifier)
 
-                PriceChangeInPercent(marketPriceBlockState.priceChangeConfig)
+                PriceChangeInPercent(
+                    valueInPercent = marketPriceBlockState.priceChangeConfig.valueInPercent,
+                    type = marketPriceBlockState.priceChangeConfig.type,
+                )
             }
         } else {
             Price(price = BigDecimalFormatter.EMPTY_BALANCE_SIGN, modifier = priceModifier)
@@ -134,47 +135,6 @@ private fun Price(price: String, modifier: Modifier = Modifier) {
         maxLines = 1,
         style = TangemTheme.typography.body2,
     )
-}
-
-@Composable
-private fun PriceChangeInPercent(config: PriceChangeState.Content) {
-    AnimatedContent(
-        targetState = config.type,
-        contentAlignment = Alignment.CenterStart,
-        label = "Update price change",
-    ) { type ->
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing2),
-        ) {
-            Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size8),
-                painter = painterResource(
-                    id = when (type) {
-                        PriceChangeType.UP -> R.drawable.ic_arrow_up_8
-                        PriceChangeType.DOWN -> R.drawable.ic_arrow_down_8
-                        PriceChangeType.NEUTRAL -> R.drawable.ic_elipse_8
-                    },
-                ),
-                tint = when (type) {
-                    PriceChangeType.UP -> TangemTheme.colors.icon.accent
-                    PriceChangeType.DOWN -> TangemTheme.colors.icon.warning
-                    PriceChangeType.NEUTRAL -> TangemTheme.colors.icon.inactive
-                },
-                contentDescription = null,
-            )
-
-            Text(
-                text = config.valueInPercent,
-                color = when (type) {
-                    PriceChangeType.UP -> TangemTheme.colors.text.accent
-                    PriceChangeType.DOWN -> TangemTheme.colors.text.warning
-                    PriceChangeType.NEUTRAL -> TangemTheme.colors.text.disabled
-                },
-                style = TangemTheme.typography.body2,
-            )
-        }
-    }
 }
 
 @Composable

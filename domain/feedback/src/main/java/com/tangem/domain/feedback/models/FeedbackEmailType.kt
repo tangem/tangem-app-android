@@ -7,15 +7,19 @@ package com.tangem.domain.feedback.models
  */
 sealed interface FeedbackEmailType {
 
+    val cardInfo: CardInfo?
+
     /** User initiate request yourself. Example, button on DetailsScreen or OnboardingScreen */
-    data object DirectUserRequest : FeedbackEmailType
+    data class DirectUserRequest(override val cardInfo: CardInfo) : FeedbackEmailType
 
     /** User rate the app as "can be better" */
-    data object RateCanBeBetter : FeedbackEmailType
+    data class RateCanBeBetter(override val cardInfo: CardInfo) : FeedbackEmailType
 
     /** User has problem with scanning */
-    data object ScanningProblem : FeedbackEmailType
+    data object ScanningProblem : FeedbackEmailType {
+        override val cardInfo: CardInfo? = null
+    }
 
     /** User has problem with sending transaction */
-    data object TransactionSendingProblem : FeedbackEmailType
+    data class TransactionSendingProblem(override val cardInfo: CardInfo) : FeedbackEmailType
 }

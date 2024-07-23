@@ -1,37 +1,38 @@
 package com.tangem.tap
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.arkivanov.decompose.value.observe
+import com.arkivanov.essenty.lifecycle.asEssentyLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.deeplink.DeepLinksRegistry
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
@@ -40,15 +41,20 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
-import com.tangem.features.managetokens.navigation.ManageTokensUi
+import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.send.api.navigation.SendRouter
+import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -59,6 +65,9 @@ import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
+import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.common.extensions.showFragmentAllowingStateLoss
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
@@ -68,17 +77,18 @@ import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHan
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
-import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.routing.RoutingComponent
+import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
-import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.lang.ref.WeakReference
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
@@ -126,9 +136,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var tokenDetailsRouter: TokenDetailsRouter
 
     @Inject
-    lateinit var manageTokensUi: ManageTokensUi
-
-    @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
 
     @Inject
@@ -144,6 +151,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var settingsRepository: SettingsRepository
 
     @Inject
+    lateinit var sendUnsubmittedHashesUseCase: SendUnsubmittedHashesUseCase
+
+    @Inject
     lateinit var getPolkadotCheckHasResetUseCase: GetPolkadotCheckHasResetUseCase
 
     @Inject
@@ -157,6 +167,31 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     lateinit var emailSender: EmailSender
+
+    @Inject
+    lateinit var stakingRouter: StakingRouter
+
+    @Inject
+    @RootAppComponentContext
+    internal lateinit var rootComponentContext: AppComponentContext
+
+    @Inject
+    internal lateinit var appRouterConfig: AppRouterConfig
+
+    @Inject
+    internal lateinit var routingComponentFactory: RoutingComponent.Factory
+
+    @Inject
+    internal lateinit var appRouter: AppRouter
+
+    @Inject
+    lateinit var pushNotificationsRouter: PushNotificationsRouter
+
+    @Inject
+    lateinit var cardRepository: CardRepository
+
+    @Inject
+    lateinit var shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase
 
     internal val viewModel: MainViewModel by viewModels()
 
@@ -176,6 +211,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         val splashScreen = installSplashScreen()
 
+        enableEdgeToEdge(
+            navigationBarStyle = SystemBarStyle.auto(
+                Color.Transparent.toArgb(),
+                Color.Transparent.toArgb(),
+            ),
+        )
+
         super.onCreate(savedInstanceState)
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
@@ -184,14 +226,40 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         observeAppThemeModeUpdates()
 
         setContentView(R.layout.activity_main)
+        installRouting()
         initContent()
 
-        checkForNotificationPermission()
         observeStateUpdates()
         observePolkadotAccountHealthCheck()
+        sendStakingUnsubmittedHashes()
 
         if (intent != null) {
             deepLinksRegistry.launch(intent)
+        }
+    }
+
+    private fun installRouting() {
+        val routingComponent = routingComponentFactory.create(
+            context = rootComponentContext,
+        )
+
+        appRouterConfig.routerScope = lifecycleScope
+        appRouterConfig.componentRouter = routingComponent.router
+
+        routingComponent.stack.observe(lifecycle.asEssentyLifecycle()) { childStack ->
+            appRouterConfig.stack = childStack.backStack
+                .plus(childStack.active)
+                .map { it.configuration }
+
+            when (val child = childStack.active.instance) {
+                is RoutingComponent.Child.Initial -> Unit
+                is RoutingComponent.Child.LegacyFragment -> {
+                    supportFragmentManager.showFragmentAllowingStateLoss(child.name, child.fragmentProvider)
+                }
+                is RoutingComponent.Child.LegacyIntent -> {
+                    startActivity(child.intent)
+                }
+            }
         }
     }
 
@@ -216,8 +284,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun installActivityDependencies() {
-        store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
-
         cardSdkOwner.register(activity = this)
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
@@ -237,11 +303,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 walletRouter = walletRouter,
                 walletConnectInteractor = walletConnectInteractor,
                 tokenDetailsRouter = tokenDetailsRouter,
-                manageTokensUi = manageTokensUi,
                 cardSdkConfigRepository = cardSdkConfigRepository,
                 sendRouter = sendRouter,
                 qrScanningRouter = qrScanningRouter,
                 emailSender = emailSender,
+                stakingRouter = stakingRouter,
+                pushNotificationsRouter = pushNotificationsRouter,
             ),
         )
     }
@@ -262,8 +329,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @SuppressLint("SourceLockedOrientationActivity")
     private fun initContent() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
         supportFragmentManager.registerFragmentLifecycleCallbacks(
             NavBarInsetsFragmentLifecycleCallback(),
             true,
@@ -307,7 +372,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     override fun onDestroy() {
-        store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
         intentProcessor.removeAll()
         super.onDestroy()
     }
@@ -447,8 +511,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun navigateToInitialScreenIfNeeded(intentWhichStartedActivity: Intent?) {
-        val backStack = store.state.navigationState.backStack
-        val isOnInitialScreen = backStack.all { it == AppScreen.Welcome || it == AppScreen.Home }
+        val backStack = appRouter.stack
+        val isOnInitialScreen = backStack.all { it is AppRoute.Welcome || it is AppRoute.Home }
         val isNotScannedBefore = store.state.globalState.scanResponse == null
         val isOnboardingServiceNotActive = !store.state.globalState.onboardingState.onboardingStarted
 
@@ -465,32 +529,29 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
         if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
-            store.dispatch(
-                NavigationAction.NavigateTo(
-                    screen = AppScreen.Welcome,
-                    bundle = intentWhichStartedActivity?.let {
-                        bundleOf(WelcomeFragment.INITIAL_INTENT_KEY to it)
-                    },
-                ),
-            )
+            store.dispatchNavigationAction {
+                replaceAll(AppRoute.Welcome(intentWhichStartedActivity?.let(::SerializableIntent)))
+            }
         } else {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
             lifecycleScope.launch {
+                val toggles = store.inject(getDependency = DaggerGraphState::pushNotificationsFeatureToggles)
+                val isPushPermissionEnabled = toggles.isPushNotificationsEnabled
+                val shouldShowTos = !cardRepository.isTangemTOSAccepted() && isPushPermissionEnabled
+                val wasPushInitiallyAsked = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { false }
+                val shouldShowInitialPush = wasPushInitiallyAsked && isPushPermissionEnabled
+
+                val route = when {
+                    shouldShowTos -> AppRoute.Disclaimer(isTosAccepted = false)
+                    shouldShowInitialPush -> AppRoute.PushNotification
+                    else -> AppRoute.Home
+                }
+
+                store.dispatchNavigationAction { replaceAll(route) }
                 intentProcessor.handleIntent(intentWhichStartedActivity, false)
             }
         }
 
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
-    }
-
-    private fun checkForNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            BuildConfig.LOG_ENABLED &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
-            PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
-        }
     }
 
     private fun observePolkadotAccountHealthCheck() {
@@ -511,6 +572,14 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                         WalletScreenAnalyticsEvent.Token.PolkadotImmortalTransactions(it.second),
                     )
                 }
+        }
+    }
+
+    private fun sendStakingUnsubmittedHashes() {
+        lifecycleScope.launch {
+            sendUnsubmittedHashesUseCase.invoke()
+                .onRight { Timber.d("Submitting hashes succeeded") }
+                .onLeft { Timber.e(it.toString()) }
         }
     }
 }

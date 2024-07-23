@@ -13,6 +13,7 @@ import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.configs.Wallet2CardConfig
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWallet
 
 val ScanResponse.cardTypesResolver: CardTypesResolver
     get() = TangemCardTypesResolver(
@@ -26,6 +27,9 @@ val ScanResponse.derivationStyleProvider: DerivationStyleProvider
         cardTypesResolver,
         card,
     )
+
+val UserWallet.cardTypesResolver: CardTypesResolver
+    get() = scanResponse.cardTypesResolver
 
 fun ScanResponse.twinsIsTwinned(): Boolean = card.isTangemTwins && walletData != null && secondTwinPublicKey != null
 fun ScanResponse.supportsHdWallet(): Boolean = card.settings.isHDWalletAllowed

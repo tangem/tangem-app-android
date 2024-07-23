@@ -8,6 +8,7 @@ import com.tangem.common.module.ModuleMessageConverter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.sdk.extensions.localizedDescription
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.feedback.SendTransactionFailedEmail
@@ -21,21 +22,21 @@ import com.tangem.wallet.R
  */
 object SendTransactionFailsDialog {
     fun create(context: Context, dialog: SendAction.Dialog.SendTransactionFails.CardSdkError): AlertDialog {
-        return create(context, dialog.error.localizedDescription(context))
+        return create(context, dialog.error.localizedDescription(context), dialog.scanResponse)
     }
 
     fun create(context: Context, dialog: SendAction.Dialog.SendTransactionFails.BlockchainSdkError): AlertDialog {
         val errorConverter = BlockchainSdkErrorConverter(context)
-        return create(context, errorConverter.convert(dialog.error))
+        return create(context, errorConverter.convert(dialog.error), dialog.scanResponse)
     }
 
-    private fun create(context: Context, errorMessage: String): AlertDialog {
+    private fun create(context: Context, errorMessage: String, scanResponse: ScanResponse): AlertDialog {
         return AlertDialog.Builder(context).apply {
             setTitle(R.string.alert_failed_to_send_transaction_title)
             setMessage(context.getString(R.string.alert_failed_to_send_transaction_message, errorMessage))
             setNeutralButton(R.string.details_row_title_contact_to_support) { _, _ ->
                 Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Send))
-                store.dispatch(GlobalAction.SendEmail(SendTransactionFailedEmail(errorMessage)))
+                store.dispatch(GlobalAction.SendEmail(SendTransactionFailedEmail(errorMessage), scanResponse))
             }
             setPositiveButton(R.string.common_cancel) { _, _ -> }
             setOnDismissListener { store.dispatch(SendAction.Dialog.Hide) }

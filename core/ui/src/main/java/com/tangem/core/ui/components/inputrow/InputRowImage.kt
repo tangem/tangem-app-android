@@ -18,13 +18,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
-import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * [Input Row Image](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-813&mode=design&t=IQ5lBJEkFGU4WSvi-4)
@@ -32,7 +32,7 @@ import com.tangem.core.ui.res.TangemTheme
  * @param title title reference
  * @param subtitle subtitle reference
  * @param caption caption reference
- * @param tokenIconState token icon state [TokenIconState]
+ * @param tokenIconState token icon state [CurrencyIconState]
  * @param modifier modifier
  * @param titleColor title color
  * @param subtitleColor subtitle color
@@ -48,7 +48,7 @@ fun InputRowImage(
     title: TextReference,
     subtitle: TextReference,
     caption: TextReference,
-    tokenIconState: TokenIconState,
+    tokenIconState: CurrencyIconState,
     modifier: Modifier = Modifier,
     titleColor: Color = TangemTheme.colors.text.secondary,
     subtitleColor: Color = TangemTheme.colors.text.primary1,
@@ -79,7 +79,7 @@ fun InputRowImage(
                         top = TangemTheme.dimens.spacing6,
                     ),
             ) {
-                TokenIcon(
+                CurrencyIcon(
                     state = tokenIconState,
                     shouldDisplayNetwork = showNetworkIcon,
                     modifier = Modifier
@@ -146,7 +146,7 @@ private data class InputRowImagePreviewData(
     val title: TextReference,
     val subtitle: TextReference,
     val caption: TextReference,
-    val iconState: TokenIconState,
+    val iconState: CurrencyIconState,
     val showDivider: Boolean,
     val actionIconRes: Int?,
     val showNetworkIcon: Boolean = false,
@@ -160,7 +160,7 @@ private class InputRowImagePreviewDataProvider :
                 title = TextReference.Str("title"),
                 subtitle = TextReference.Str("subtitle"),
                 caption = TextReference.Str("caption"),
-                iconState = TokenIconState.Locked,
+                iconState = CurrencyIconState.Locked,
                 actionIconRes = null,
                 showDivider = false,
                 showNetworkIcon = false,
@@ -169,7 +169,7 @@ private class InputRowImagePreviewDataProvider :
                 title = TextReference.Str("title"),
                 subtitle = TextReference.Str("subtitle"),
                 caption = TextReference.Str("caption"),
-                iconState = TokenIconState.Locked,
+                iconState = CurrencyIconState.Locked,
                 actionIconRes = R.drawable.ic_chevron_right_24,
                 showDivider = true,
                 showNetworkIcon = true,

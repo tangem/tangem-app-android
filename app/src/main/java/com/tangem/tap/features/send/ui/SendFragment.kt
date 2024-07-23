@@ -8,7 +8,6 @@ import android.text.method.DigitsKeyListener
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
-import androidx.core.os.bundleOf
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
@@ -20,19 +19,18 @@ import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.sdk.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.analytics.events.Token
-import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
@@ -162,14 +160,9 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         imvQrCode.setOnClickListener {
             Analytics.send(Token.Send.ButtonQRCode())
 
-            store.dispatchOnMain(
-                NavigationAction.NavigateTo(
-                    screen = AppScreen.QrScanning,
-                    bundle = bundleOf(
-                        QrScanningRouter.SOURCE_KEY to SourceType.SEND,
-                    ),
-                ),
-            )
+            store.dispatchNavigationAction {
+                push(AppRoute.QrScanning(source = SourceType.SEND))
+            }
         }
     }
 
@@ -370,7 +363,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     override fun handleOnBackPressed() {
         val externalTransactionData = store.state.sendState.externalTransactionData
         if (externalTransactionData == null) {
-            store.dispatch(NavigationAction.PopBackTo())
+            store.dispatchNavigationAction(AppRouter::pop)
         } else {
             store.dispatch(TradeCryptoAction.FinishSelling(externalTransactionData.transactionId))
         }

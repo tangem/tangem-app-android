@@ -42,6 +42,7 @@ dependencies {
 
     /** Compose libraries */
     implementation(deps.compose.material)
+    implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)

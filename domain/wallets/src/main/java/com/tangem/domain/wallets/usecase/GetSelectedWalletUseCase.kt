@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
  */
 class GetSelectedWalletUseCase(private val userWalletsListManager: UserWalletsListManager) {
 
+    @Deprecated("You should provide the selected wallet via routing parameters due to the scalability of the features")
     operator fun invoke(): Either<GetUserWalletError, Flow<UserWallet>> {
         return either {
             userWalletsListManager.selectedUserWallet
