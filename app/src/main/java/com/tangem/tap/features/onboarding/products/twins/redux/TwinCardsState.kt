@@ -1,8 +1,8 @@
 package com.tangem.tap.features.onboarding.products.twins.redux
 
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
@@ -29,6 +29,7 @@ data class TwinCardsState(
     val balanceNonCriticalError: TapError? = null,
     val balanceCriticalError: TapError? = null,
     val showConfetti: Boolean = false,
+    val welcomeOnlyScanResponse: ScanResponse? = null,
 ) : StateType {
 
     val steps: List<TwinCardsStep>
