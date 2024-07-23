@@ -19,7 +19,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.model.SortByBottomSheetContentUM
+import com.tangem.features.markets.ui.entity.SortByBottomSheetContentUM
 import com.tangem.features.markets.ui.entity.SortByTypeUM
 
 @Composable
