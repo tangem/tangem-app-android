@@ -16,7 +16,7 @@ class ValidateTransactionUseCase(
     @Suppress("LongParameterList")
     suspend operator fun invoke(
         amount: Amount,
-        fee: Fee,
+        fee: Fee?,
         memo: String?,
         destination: String,
         userWalletId: UserWalletId,

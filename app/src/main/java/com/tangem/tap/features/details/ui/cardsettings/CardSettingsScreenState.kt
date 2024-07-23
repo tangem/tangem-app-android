@@ -4,16 +4,12 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.res.stringResource
-import com.tangem.tap.features.details.redux.AccessCodeRecoveryState
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.securitymode.toTitleRes
-import com.tangem.tap.features.details.ui.utils.toResetCardDescriptionText
 import com.tangem.wallet.R
-import com.tangem.tap.features.details.redux.CardInfo as ReduxCardInfo
 
 internal data class CardSettingsScreenState(
     val cardDetails: List<CardInfo>? = null,
-    val accessCodeRecoveryState: AccessCodeRecoveryState? = null,
     val onScanCardClick: () -> Unit,
     val onElementClick: (CardInfo) -> Unit,
 )
@@ -44,7 +40,7 @@ internal sealed class CardInfo(
         clickable = clickable,
     )
 
-    object ChangeAccessCode : CardInfo(
+    data object ChangeAccessCode : CardInfo(
         titleRes = TextReference.Res(R.string.card_settings_change_access_code),
         subtitle = TextReference.Res(R.string.card_settings_change_access_code_footer),
         clickable = true,
@@ -60,9 +56,9 @@ internal sealed class CardInfo(
         clickable = true,
     )
 
-    class ResetToFactorySettings(cardInfo: ReduxCardInfo) : CardInfo(
+    class ResetToFactorySettings(description: TextReference) : CardInfo(
         titleRes = TextReference.Res(R.string.card_settings_reset_card_to_factory),
-        subtitle = cardInfo.toResetCardDescriptionText(),
+        subtitle = description,
         clickable = true,
     )
 }
