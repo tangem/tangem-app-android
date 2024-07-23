@@ -16,7 +16,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.tap.common.analytics.events.SignIn
@@ -49,19 +48,14 @@ internal class WelcomeFragment : ComposeFragment() {
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
         val warning by rememberUpdatedState(newValue = state.warning)
 
-        val backgroundColor = TangemTheme.colors.background.primary
-        SystemBarsEffect {
-            setSystemBarsColor(backgroundColor)
-        }
-
         BackHandler {
             requireActivity().finish()
         }
 
         Box(
             modifier = modifier
-                .systemBarsPadding()
-                .background(backgroundColor),
+                .background(TangemTheme.colors.background.primary)
+                .systemBarsPadding(),
         ) {
             WelcomeScreenContent(
                 showUnlockProgress = state.showUnlockWithBiometricsProgress,
@@ -87,9 +81,5 @@ internal class WelcomeFragment : ComposeFragment() {
                 viewModel.closeError()
             }
         }
-    }
-
-    internal companion object {
-        const val INITIAL_INTENT_KEY = "intent"
     }
 }

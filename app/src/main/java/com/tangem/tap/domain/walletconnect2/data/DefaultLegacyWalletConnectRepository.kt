@@ -507,6 +507,6 @@ internal class DefaultLegacyWalletConnectRepository(
 
     private companion object {
 
-        val unsupportedDApps = listOf("dYdX", "dYdX v4", "Apex Pro")
+        val unsupportedDApps = listOf("dYdX", "dYdX v4", "Apex Pro", "The Sandbox")
     }
 }
