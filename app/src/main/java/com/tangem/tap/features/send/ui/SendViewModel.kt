@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.ui
 
 import androidx.lifecycle.*
 import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
@@ -12,7 +13,6 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.di.DelayedWork
 import com.tangem.tap.features.send.redux.AddressActionUi
@@ -52,7 +52,7 @@ internal class SendViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private val cryptoCurrency: CryptoCurrency? = savedStateHandle[SendRouter.CRYPTO_CURRENCY_KEY]
+    private val cryptoCurrency: CryptoCurrency? = savedStateHandle[AppRoute.Send.CRYPTO_CURRENCY_KEY]
 
     override fun onCreate(owner: LifecycleOwner) {
         getBalanceHidingSettingsUseCase()
