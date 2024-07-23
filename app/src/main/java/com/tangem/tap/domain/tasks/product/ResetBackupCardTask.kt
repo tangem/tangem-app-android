@@ -19,11 +19,11 @@ import com.tangem.tap.domain.tasks.UserWalletIdPreflightReadFilter
  */
 internal class ResetBackupCardTask(
     private val userWalletId: UserWalletId,
-) : CardSessionRunnable<Unit> {
+) : CardSessionRunnable<Boolean> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
 
-    override fun run(session: CardSession, callback: CompletionCallback<Unit>) {
+    override fun run(session: CardSession, callback: CompletionCallback<Boolean>) {
         PreflightReadTask(
             readMode = PreflightReadMode.FullCardRead,
             filter = UserWalletIdPreflightReadFilter(expectedUserWalletId = userWalletId),
@@ -35,10 +35,10 @@ internal class ResetBackupCardTask(
         }
     }
 
-    private fun resetCard(session: CardSession, callback: CompletionCallback<Unit>) {
+    private fun resetCard(session: CardSession, callback: CompletionCallback<Boolean>) {
         ResetToFactorySettingsTask(allowsRequestAccessCodeFromRepository).run(session) { result ->
             when (result) {
-                is CompletionResult.Success -> callback(CompletionResult.Success(Unit))
+                is CompletionResult.Success -> callback(CompletionResult.Success(result.data))
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
             }
         }
