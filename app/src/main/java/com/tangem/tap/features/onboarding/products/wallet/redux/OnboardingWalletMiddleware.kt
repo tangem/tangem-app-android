@@ -480,7 +480,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 when (result) {
                     is CompletionResult.Success -> {
                         val backupValidator = BackupValidator()
-                        if (!backupValidator.isValid(CardDTO(result.data))) {
+                        if (!backupValidator.isValidBackupStatus(CardDTO(result.data))) {
                             store.dispatchOnMain(BackupAction.ErrorInBackupCard)
                         }
                         if (backupService.currentState == BackupService.State.Finished) {
