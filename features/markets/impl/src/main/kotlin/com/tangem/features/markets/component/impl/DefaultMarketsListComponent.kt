@@ -30,15 +30,17 @@ internal class DefaultMarketsListComponent @AssistedInject constructor(
         modifier: Modifier,
     ) {
         val state by model.state.collectAsStateWithLifecycle()
+        val bsState by bottomSheetState
 
-        LaunchedEffect(bottomSheetState.value) {
-            model.containerBottomSheetState.value = bottomSheetState.value
+        LaunchedEffect(bsState) {
+            model.containerBottomSheetState.value = bsState
         }
 
         MarketsList(
-            onHeaderSizeChange = onHeaderSizeChange,
-            state = state,
             modifier = modifier,
+            state = state,
+            onHeaderSizeChange = onHeaderSizeChange,
+            bottomSheetState = bsState,
         )
     }
 
