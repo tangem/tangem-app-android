@@ -4,6 +4,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
 import com.tangem.features.markets.model.converters.MarketsTokenItemConverter
 import com.tangem.features.markets.model.utils.logAction
+import com.tangem.features.markets.model.utils.logStatus
 import com.tangem.features.markets.model.utils.logUpdateResults
 import com.tangem.features.markets.ui.entity.MarketsListItemUM
 import com.tangem.features.markets.ui.entity.MarketsListUM.TrendInterval
@@ -18,23 +19,27 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-private const val LOG_EVENTS = false
+private const val LOG_EVENTS = true
 
-internal class MarketsListUiItemsManager(
-    private val logTag: String = "main",
+@Suppress("LongParameterList")
+internal class MarketsListBatchFlowManager(
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
+    private val batchFlowType: GetMarketsTokenListFlowUseCase.BatchFlowType,
     private val currentTrendInterval: Provider<TrendInterval>,
     private val currentAppCurrency: Provider<AppCurrency>,
+    private val currentSearchText: Provider<String?>,
+    private val currentSortByType: Provider<SortByTypeUM>,
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
     private val actionsFlow = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
 
     private val batchFlow = getMarketsTokenListFlowUseCase(
-        TokenListBatchingContext(
+        batchingContext = TokenListBatchingContext(
             actionsFlow = actionsFlow,
             coroutineScope = modelScope,
         ),
+        batchFlowType = batchFlowType,
     )
 
     val uiItems: StateFlow<ImmutableList<MarketsListItemUM>>
@@ -53,7 +58,7 @@ internal class MarketsListUiItemsManager(
             )
 
     val onLastBatchLoadedSuccess = batchFlow.state
-        .distinctUntilChanged { old, new -> old.status === new.status }
+        .distinctUntilChanged { old, new -> old.status == new.status && old.data.size == new.data.size }
         .mapNotNull {
             when (val status = it.status) {
                 is PaginationStatus.Paginating -> {
@@ -69,6 +74,28 @@ internal class MarketsListUiItemsManager(
                 else -> null
             }
         }
+
+    val isInInitialLoadingErrorState = batchFlow.state
+        .map { it.status is PaginationStatus.InitialLoadingError }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false,
+        )
+
+    val isSearchNotFoundState = batchFlow.state
+        .map {
+            currentSearchText().isNullOrEmpty().not() &&
+                it.status is PaginationStatus.EndOfPagination &&
+                it.data.isEmpty()
+        }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false,
+        )
 
     private val uiBatches = MutableStateFlow<List<Batch<Int, List<MarketsListItemUM>>>>(emptyList())
 
@@ -86,11 +113,16 @@ internal class MarketsListUiItemsManager(
 
         if (LOG_EVENTS) {
             batchFlow.updateResults
-                .onEach { logUpdateResults(logTag, it) }
+                .onEach { logUpdateResults(batchFlowType.name, it) }
+                .launchIn(modelScope)
+
+            batchFlow.state
+                .map { it.status }
+                .onEach { logStatus(batchFlowType.name, it) }
                 .launchIn(modelScope)
 
             actionsFlow
-                .onEach { logAction(logTag, it) }
+                .onEach { logAction(batchFlowType.name, it) }
                 .launchIn(modelScope)
         }
     }
@@ -144,17 +176,21 @@ internal class MarketsListUiItemsManager(
         }
     }
 
-    fun reload(interval: TrendInterval, sortBy: SortByTypeUM) {
+    fun reload(searchText: String? = null) {
         modelScope.launch {
             uiBatches.value = emptyList()
             actionsFlow.emit(
                 BatchAction.Reload(
                     requestParams = TokenMarketListConfig(
                         fiatPriceCurrency = currentAppCurrency().code,
-                        searchText = null,
-                        showUnder100kMarketCapTokens = false,
-                        priceChangeInterval = interval.toBatchRequestInterval(),
-                        order = sortBy.toRequestOrder(),
+                        searchText = if (currentSearchText() == null) {
+                            null
+                        } else {
+                            searchText ?: currentSearchText()
+                        },
+                        showUnder100kMarketCapTokens = false, // TODO
+                        priceChangeInterval = currentTrendInterval().toBatchRequestInterval(),
+                        order = currentSortByType().toRequestOrder(),
                     ),
                 ),
             )
@@ -226,6 +262,13 @@ internal class MarketsListUiItemsManager(
                     operationId = "update quotes",
                 ),
             )
+        }
+    }
+
+    fun clearStateAndStopAllActions() {
+        uiBatches.value = emptyList()
+        modelScope.launch {
+            actionsFlow.emit(BatchAction.Reset)
         }
     }
 
