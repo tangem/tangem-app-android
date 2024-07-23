@@ -148,17 +148,10 @@ private fun getButtonData(currentState: StakingUiState): Int {
 
 private fun onPrimaryClick(currentState: StakingUiState) {
     when (currentState.currentStep) {
-        StakingStep.InitialInfo -> {
-            val initialState = currentState.initialInfoState as? StakingStates.InitialInfoState.Data
-            if (initialState?.yieldBalance is InnerYieldBalanceState.Data) {
-                if (initialState.isStakeMoreAvailable) {
-                    currentState.clickIntents.onNextClick()
-                }
-            } else {
-                currentState.clickIntents.onNextClick()
-            }
-        }
-        StakingStep.Amount -> currentState.clickIntents.onNextClick()
+        StakingStep.InitialInfo,
+        StakingStep.Validators,
+        StakingStep.Amount,
+        -> currentState.clickIntents.onNextClick()
         StakingStep.Confirmation -> {
             val confirmationState = currentState.confirmationState
             if (confirmationState is StakingStates.ConfirmationState.Data) {
@@ -171,7 +164,6 @@ private fun onPrimaryClick(currentState: StakingUiState) {
                 currentState.clickIntents.onBackClick()
             }
         }
-        StakingStep.Validators -> currentState.clickIntents.onNextClick()
         StakingStep.RewardsValidators -> Unit
     }
 }
