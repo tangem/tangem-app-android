@@ -5,7 +5,6 @@ import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
 
-@Suppress("UnusedPrivateMember")
 internal class SetConfirmationStateLoadingTransformer(
     private val yield: Yield,
 ) : Transformer<StakingUiState> {
