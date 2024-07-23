@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="add_custom_token_choose_network">Выберите сеть</string>
   <string name="add_custom_token_title">Добавить токен</string>
   <string name="add_tokens_title">Валюты</string>
   <string name="address_qr_code_message_format">Отправляйте только %1$s (%2$s) в сети %3$s на этот адрес. Использование другой сети может привести к утрате средств.</string>
+  <string name="alert_button_how_to_scan">Как сканировать</string>
   <string name="alert_button_request_support">Обратиться в поддержку</string>
+  <string name="alert_button_try_again">Попробовать снова</string>
   <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
   <string name="alert_failed_to_send_transaction_message">Причина: %s</string>
   <string name="alert_failed_to_send_transaction_title">Не могу отправить транзакцию</string>
@@ -65,8 +68,10 @@
   <string name="cardano_max_amount_has_token_title">Недостаточно ADA</string>
   <string name="common_accept">Принять</string>
   <string name="common_access_denied">Доступ запрещен</string>
+  <string name="common_allow">Разрешить</string>
   <string name="common_apply">Применить</string>
   <string name="common_approval">Одобрение</string>
+  <string name="common_approve">Подтвердить</string>
   <string name="common_attention">Внимание</string>
   <string name="common_balance">Баланс: %s</string>
   <string name="common_balance_title">Баланс</string>
@@ -81,6 +86,13 @@
   <string name="common_copy">Копировать</string>
   <string name="common_copy_address">Скопировать адрес</string>
   <string name="common_create">Создать</string>
+  <string name="common_custom">Свое</string>
+  <plurals name="common_days">
+    <item quantity="one">%d день</item>
+    <item quantity="few">%d дня</item>
+    <item quantity="many">%d дней</item>
+    <item quantity="other">%d дней</item>
+  </plurals>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
   <string name="common_done">Готово</string>
@@ -92,7 +104,6 @@
   <string name="common_explorer">Обозреватель</string>
   <string name="common_fee_label">Комиссия</string>
   <string name="common_fee_selector_footer">Сетевые комиссии – это плата пользователя за обработку и подтверждение транзакций. Размер комиссии зависит от нагрузки на сеть, объема транзакции и приоритета исполнения. %s</string>
-  <string name="common_fee_selector_option_custom">Свое</string>
   <string name="common_fee_selector_option_fast">Быстро</string>
   <string name="common_fee_selector_option_market">По рынку</string>
   <string name="common_fee_selector_option_slow">Медленно</string>
@@ -108,6 +119,7 @@
   <string name="common_next">Далее</string>
   <string name="common_no">Нет</string>
   <string name="common_no_address">Нет адреса</string>
+  <string name="common_now">Сейчас</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Основная карта</string>
   <string name="common_passphrase">Парольная фраза</string>
@@ -117,6 +129,7 @@
   <string name="common_reject">Отклонить</string>
   <string name="common_reload">Перезагрузить</string>
   <string name="common_rename">Переименовать</string>
+  <string name="common_save">Сохранить</string>
   <string name="common_save_changes">Сохранить изменения</string>
   <string name="common_search">Искать</string>
   <string name="common_search_tokens">Поиск токенов</string>
@@ -128,12 +141,14 @@
   <string name="common_share">Поделиться</string>
   <string name="common_sign">Подписать</string>
   <string name="common_sign_and_send">Подписать и отправить</string>
+  <string name="common_staking">Стейкинг</string>
   <string name="common_start">Начать</string>
   <string name="common_submit">Отправить</string>
   <string name="common_success">Успешно</string>
   <string name="common_support">Поддержка</string>
   <string name="common_swap">Обмен</string>
   <string name="common_terms_and_conditions">условия участия</string>
+  <string name="common_today">Сегодня</string>
   <string name="common_transaction_failed">Ошибка транзакции</string>
   <string name="common_transactions">Транзакции</string>
   <string name="common_transfer">Перевод</string>
@@ -169,6 +184,7 @@
   <string name="custom_token_validation_error_not_found">Токены могут быть созданы кем угодно. Остерегайтесь мошеннических токенов, они могут ничего не стоить</string>
   <string name="custom_token_validation_error_not_found_description">Остерегайтесь мошеннических токенов, они могут ничего не стоить</string>
   <string name="custom_token_validation_error_not_found_title">Токены могут быть созданы кем угодно</string>
+  <string name="details_buy_wallet">Купить кошелек Tangem</string>
   <string name="details_chat">Чат</string>
   <string name="details_manage_security_access_code">Код доступа</string>
   <string name="details_manage_security_access_code_description">Перед сканированием карты вам нужно будет ввести правильный код доступа.</string>
@@ -186,6 +202,7 @@
   <string name="details_row_title_flip_to_hide">Скрывать балансы жестом переворота</string>
   <string name="details_row_title_issuer">Эмитент</string>
   <string name="details_row_title_signed_hashes">Подписано</string>
+  <string name="details_send_feedback">Отправить отзыв</string>
   <string name="details_title">Подробности</string>
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
   <string name="disclaimer_title">Условия использования</string>
@@ -254,6 +271,14 @@
   <string name="feedback_subject_support">Обращение в поддержку</string>
   <string name="feedback_subject_support_tangem">Обращение в поддержку Tangem</string>
   <string name="feedback_subject_tx_failed">Не могу отправить транзакцию</string>
+  <string name="give_permission_current_transaction">Текущая транзакция</string>
+  <string name="give_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
+  <string name="give_permission_policy_type_footer">Укажите лимит доступа к выбранному токену</string>
+  <string name="give_permission_rows_amount">Количество %s</string>
+  <string name="give_permission_staking_footer">Функция подтверждения необходима для предоставления другому адресу разрешения на использование определенного количества ваших токенов.По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту StakeKit разрешение использовать ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете осуществить стейкинг токена.</string>
+  <string name="give_permission_swap_subtitle" formatted="false">Чтобы продолжить, вам нужно разрешить смарт-контракту %1s использовать ваш %2s</string>
+  <string name="give_permission_title">Дать разрешение</string>
+  <string name="give_permission_unlimited">Безлимитно</string>
   <string name="home_button_order">Купить</string>
   <string name="home_button_scan">Сканировать</string>
   <string name="initial_message_change_access_code_body">Чтобы изменить код доступа, приложите карту как показано выше и не убирайте до окончания операции</string>
@@ -279,9 +304,6 @@
   <string name="main_swap_changelly_promotion_message">Обменивайте свои токены с %1$s комиссии провайдера через Changelly с %2$s по %3$s февраля.</string>
   <string name="main_swap_changelly_promotion_title">Обмен с Changelly, %s комиссии</string>
   <string name="main_tokens">Токены</string>
-  <string name="main_travala_promotion_button">Забронировать</string>
-  <string name="main_travala_promotion_description" formatted="false">Оплатите его криптой и сэкономьте **50 долларов** через нашего партнера Travala: **%1s - %2s**</string>
-  <string name="main_travala_promotion_title">Забронируйте отпуск с Tangem</string>
   <string name="manage_tokens_add">Добавить</string>
   <string name="manage_tokens_edit">Изменить</string>
   <string name="manage_tokens_list_header_title">Рыночная капитализация</string>
@@ -297,11 +319,15 @@
     <item quantity="many">%1$d из %2$d кошельков</item>
     <item quantity="other">%1$d из %2$d кошельков</item>
   </plurals>
+  <string name="manage_tokens_remove">Удалить</string>
   <string name="manage_tokens_search_placeholder">например Bitcoin</string>
+  <string name="manage_tokens_toast_portfolio_updated">Ваш портфель был обновлен</string>
   <string name="manage_tokens_unavailable_description">Выбранный токен не доступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
   <string name="manage_tokens_unavailable_vote">Голосовать</string>
   <string name="manage_tokens_wallet_selector_title">Выберите кошелек</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Кошелёк не поддерживает более одной сети</string>
+  <string name="markets_token_details_links">Ссылки</string>
+  <string name="markets_token_details_metrics">Метрики</string>
   <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
   <string name="onboarding_access_code_feature_1_title">Защита</string>
   <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты</string>
@@ -377,6 +403,7 @@
   <string name="onboarding_title">Активация карты</string>
   <string name="onboarding_title_backup_card_format">Резервная карта #%d</string>
   <string name="onboarding_title_no_backup_cards">Нет резервных карт</string>
+  <string name="onboarding_title_notifications">Уведомления</string>
   <string name="onboarding_title_one_backup_card">Добавлена ​​одна резервная карта</string>
   <string name="onboarding_title_scan_origin_card">Подготовьте свою карту</string>
   <string name="onboarding_title_two_backup_cards">Добавлены две резервные карты</string>
@@ -464,15 +491,17 @@
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
   <string name="send_amount_label">Сумма</string>
   <string name="send_bitcoin_custom_fee_footer">Вы можете установить комиссию за транзакцию, изменив значение в поле Satoshi per vByte.</string>
+  <string name="send_custom_amount_fee_footer">Комиссия, которая будет взята за вашу транзакцию. Вы можете выставить своё собственное значение.</string>
   <string name="send_custom_evm_max_fee_footer">Это стоимость, которую вы готовы заплатить за каждую единицу газа. Чем выше цена газа, тем быстрее ваша транзакция будет обработана. (Приоритетная комиссия включена)</string>
   <string name="send_custom_evm_priority_fee">Приоритетная комиссия</string>
   <string name="send_custom_evm_priority_fee_footer">Комиссия, которую пользователь может заплатить майнерам или валидаторам за ускорение включения его транзакции в блок.</string>
+  <string name="send_custom_kaspa_per_utxo_footer">Комиссия, которую нужно заплатить за использование каждого неиспользованного выхода транзакции (UTXO) в сети Kaspa. Чем больше UTXO вы используете в транзакции, тем выше будет комиссия.</string>
+  <string name="send_custom_kaspa_per_utxo_title">KAS за UTXO</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
   <string name="send_enter_address_field">Введите адрес</string>
   <string name="send_error_address_same_as_wallet">Адрес совпадает с адресом кошелька</string>
-  <string name="send_evm_custom_fee_footer">Комиссия, которая будет взята за вашу транзакцию. Вы можете выставить своё собственное значение.</string>
   <string name="send_extras_error_invalid_destination_tag">Недопустимый Tag. Он не будет добавлен в транзакцию.</string>
   <string name="send_extras_error_invalid_memo">Недопустимый Memo. Он не будет добавлен в транзакцию.</string>
   <string name="send_extras_hint_destination_tag">Tag</string>
@@ -535,11 +564,25 @@
   <string name="send_total_subtitle_fiat_format">≈ %1$s (вкл. комиссию: %2$s)</string>
   <string name="send_total_subtitle_format">%s будет отправлено</string>
   <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
+  <string name="send_tron_account_activation_error">%1$s — это монета в сети Tron. Чтобы рассчитать комиссию и совершить транзакцию, вам необходимо внести немного Tron (TRX) на свой адрес.</string>
   <string name="send_validation_invalid_address">Неверный адрес</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
+  <string name="settings_card_settings_footer">Подготовьтесь к сканированию карты, которую вы хотите настроить.</string>
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
+  <string name="staking_details_apy">APY</string>
+  <string name="staking_details_apy_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
+  <string name="staking_details_available">Доступно</string>
+  <string name="staking_details_reward_claiming">Способ возраграждения</string>
+  <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Он может быть автоматическим или ручным.</string>
+  <string name="staking_details_reward_schedule">Период возрагражения</string>
+  <string name="staking_details_reward_schedule_info">Это период, определяющий, когда участники стейкинга получат свои вознаграждения.</string>
+  <string name="staking_details_title">Стейкинг %s</string>
+  <string name="staking_details_unbonding_period">Период вывода</string>
+  <string name="staking_details_unbonding_period_info">Период, который необходимо подождать после запроса на вывод средств из стейкинга, прежде чем токены станут доступны.</string>
+  <string name="staking_details_warmup_period">Период прогрева</string>
+  <string name="staking_details_warmup_period_info">Время, необходимое для начала процесса стейкинга.</string>
   <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
   <string name="story_awe_title">Революционный аппаратный кошелек</string>
   <string name="story_backup_description">До трех карт с одним кошельком</string>
@@ -559,17 +602,9 @@
   <string name="swapping_approve_information_text">Подтверждения считаются отраслевым стандартом для всех децентрализованных бирж и защищают ваш кошелек от доступа со стороны смарт-контракта без вашего разрешения. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту 1inch разрешение тратить ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете обменять свой токен.</string>
   <string name="swapping_approve_information_title">Подтвердить</string>
   <string name="swapping_from_title">Вы отправляете</string>
-  <string name="swapping_give_permission">Дать разрешение</string>
   <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
   <string name="swapping_insufficient_funds">Недостаточно средств</string>
-  <string name="swapping_permission_buttons_approve">Подтвердить</string>
-  <string name="swapping_permission_current_transaction">Текущая транзакция</string>
-  <string name="swapping_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
   <string name="swapping_permission_header">Дать разрешение</string>
-  <string name="swapping_permission_policy_type_footer">Укажите лимит доступа к выбранному токену</string>
-  <string name="swapping_permission_rows_amount">Количество %s</string>
-  <string name="swapping_permission_subheader">Чтобы продолжить, вам нужно разрешить смарт-контракту 1inch использовать ваш %s</string>
-  <string name="swapping_permission_unlimited">Безлимитно</string>
   <string name="swapping_success_view_title">В процессе</string>
   <string name="swapping_swap_action">Обменять</string>
   <string name="swapping_to_title">Вы получите</string>
@@ -583,9 +618,10 @@
   <string name="token_button_unavailability_reason_empty_balance_sell">У вас нет средств для продажи. Пополните счет, чтобы иметь возможность продать с него средства.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">У вас нет средств для отправки. Пополните счет, чтобы иметь возможность отправить с него средства.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">В данный момент обмен монеты %s недоступен. Следите за нашими обновлениями.</string>
-  <string name="token_button_unavailability_reason_pending_transaction_sell">Продажа средств станет доступной после завершения транзакции(-ий) в сети  %s</string>
+  <string name="token_button_unavailability_reason_pending_transaction_sell">Продажа средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">В данный момент продажа %s недоступна. Следите за нашими обновлениями.</string>
+  <string name="token_button_unavailability_reason_staking_unavailable">В данный момент стейкинг монеты %s недоступен. Следите за нашими обновлениями.</string>
   <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
   <string name="token_details_hide_alert_hide">Скрыть</string>
   <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
@@ -620,6 +656,9 @@
   <string name="twins_recreate_warning">Это действие необратимо. У вас не будет доступа к старому кошельку.</string>
   <string name="twins_scan_twin_with_number">Приложите twin-карту с номером %s и не убирайте до окончания операции</string>
   <string name="unlock_wallet_description_full">Используйте %s или отсканируйте карту, чтобы получить доступ к своему кошельку</string>
+  <string name="user_push_notification_agreement_argument_one">Будьте в курсе новых функций и новостей</string>
+  <string name="user_push_notification_agreement_argument_two">Узнавайте первым о новых акциях</string>
+  <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
   <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
   <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите удалить этот кошелек?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Произошла ошибка, пожалуйста, отсканируйте свою карту для входа</string>
@@ -662,6 +701,7 @@
   <string name="wallet_connect_sessions_title">Сессии WalletConnect</string>
   <string name="wallet_connect_subtitle">Подключение к dApps</string>
   <string name="wallet_connect_title">WalletConnect</string>
+  <string name="wallet_connect_toast_awaiting_session_proposal">Подключение может занять несколько секунд</string>
   <string name="wallet_marketplace_block_title">Рыночная цена %s</string>
   <string name="wallet_marketprice_block_update_time">за 24 часа</string>
   <string name="wallet_network_group_title">Сеть %s</string>

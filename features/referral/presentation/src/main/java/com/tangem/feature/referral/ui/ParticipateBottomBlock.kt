@@ -26,6 +26,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.core.content.ContextCompat.startActivity
 import com.tangem.core.ui.components.PrimaryButtonIconStart
+import com.tangem.core.ui.components.rows.CornersToRound
+import com.tangem.core.ui.components.rows.RoundableCornersRow
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.domain.models.ExpectedAward
@@ -82,7 +84,7 @@ private fun CounterAndAwards(purchasedWalletCount: Int, expectedAwards: Expected
 private fun Counter(purchasedWalletCount: Int, expectedAwards: ExpectedAwards?) {
     val isExpectedAwardsPresent = expectedAwards != null
 
-    AwardText(
+    RoundableCornersRow(
         startText = stringResource(id = R.string.referral_friends_bought_title),
         startTextColor = TangemTheme.colors.text.tertiary,
         startTextStyle = TangemTheme.typography.subtitle2,
@@ -111,7 +113,7 @@ private fun Awards(expectedAwards: ExpectedAwards) {
         thickness = TangemTheme.dimens.size0_5,
         color = TangemTheme.colors.stroke.primary,
     )
-    AwardText(
+    RoundableCornersRow(
         startText = if (expectedAwards.expectedAwards.isNotEmpty()) {
             stringResource(id = R.string.referral_expected_awards)
         } else {
@@ -137,7 +139,7 @@ private fun Awards(expectedAwards: ExpectedAwards) {
     val extraItems = expectedAwards.expectedAwards.drop(elementsCountToShowInLessMode)
 
     initialItems.forEachIndexed { index, expectedAward ->
-        AwardText(
+        RoundableCornersRow(
             startText = expectedAward.paymentDate,
             startTextColor = TangemTheme.colors.text.primary1,
             startTextStyle = TangemTheme.typography.subtitle2,
@@ -218,7 +220,7 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
 private fun ExtraItems(extraItems: List<ExpectedAward>) {
     Column {
         extraItems.forEach { expectedAward ->
-            AwardText(
+            RoundableCornersRow(
                 startText = expectedAward.paymentDate,
                 startTextColor = TangemTheme.colors.text.primary1,
                 startTextStyle = TangemTheme.typography.subtitle2,

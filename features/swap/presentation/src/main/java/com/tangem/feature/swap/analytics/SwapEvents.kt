@@ -1,9 +1,9 @@
 package com.tangem.feature.swap.analytics
 
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.FeeType
-import com.tangem.feature.swap.models.ApproveType
 
 private const val SWAP_CATEGORY = "Swap"
 private const val PROMO_CATEGORY = "Promo"
@@ -60,6 +60,8 @@ sealed class SwapEvents(
     data class SwapInProgressScreen(
         val provider: SwapProvider,
         val commission: FeeType, // Market / Fast
+        val sendBlockchain: String,
+        val receiveBlockchain: String,
         val sendToken: String,
         val receiveToken: String,
     ) : SwapEvents(
@@ -69,6 +71,8 @@ sealed class SwapEvents(
             "Commission" to if (commission == FeeType.NORMAL) "Market" else "Fast",
             "Send Token" to sendToken,
             "Receive Token" to receiveToken,
+            "Send Blockchain" to sendBlockchain,
+            "Receive Blockchain" to receiveBlockchain,
         ),
     )
 
