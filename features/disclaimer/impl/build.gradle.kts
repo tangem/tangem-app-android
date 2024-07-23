@@ -21,6 +21,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.accompanist.permission)
+    implementation(deps.compose.accompanist.webView)
     implementation(deps.compose.material3)
     implementation(deps.compose.material)
 
@@ -40,6 +41,9 @@ dependencies {
     /** Feature modules */
     implementation(projects.features.disclaimer.api)
     implementation(projects.features.pushNotifications.api)
+
+    /** Other dependencies */
+    implementation(deps.arrow.core)
 
     /** DI */
     implementation(deps.hilt.android)
