@@ -14,6 +14,7 @@ dependencies {
 
     /** Tangem SDKs */
     implementation(deps.tangem.blockchain)
+    implementation(deps.tangem.card.core)
 
     /** Core */
     implementation(projects.core.datasource)
@@ -25,6 +26,7 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.transaction.models)
 
     /** DI */
     implementation(deps.hilt.android)
