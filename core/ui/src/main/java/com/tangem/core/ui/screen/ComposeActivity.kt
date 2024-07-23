@@ -12,6 +12,6 @@ abstract class ComposeActivity : ComponentActivity(), ComposeScreen {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(createComposeView(context = this))
+        setContentView(createComposeView(context = this, activity = this))
     }
 }

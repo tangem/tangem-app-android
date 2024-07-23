@@ -3,9 +3,10 @@ package com.tangem.tap.features.onboarding.products.twins.redux
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
@@ -39,6 +40,7 @@ import kotlinx.coroutines.runBlocking
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
+import kotlin.reflect.KClass
 
 object TwinCardsMiddleware {
     val handler = twinsWalletMiddleware
@@ -328,7 +330,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                         if (walletsRepository.shouldSaveUserWalletsSync()) {
                             OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
                         } else {
-                            store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                            store.dispatchNavigationAction { popTo<AppRoute.Home>() }
                         }
                     }
                 }
@@ -352,7 +354,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     store.dispatch(TwinCardsAction.CardsManager.Release)
 
                     action.shouldResetTwinCardsWidget(shouldReturnCardBack) {
-                        store.dispatchOnMain(NavigationAction.PopBackTo(getPopBackScreen()))
+                        store.dispatchNavigationAction { popTo(routeClass = getPopBackScreen()) }
                     }
                 }
                 store.dispatchDialogShow(OnboardingDialog.InterruptOnboarding(onOkCallback))
@@ -362,18 +364,19 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
     }
 }
 
-private fun getPopBackScreen(): AppScreen {
+private fun getPopBackScreen(): KClass<out AppRoute> {
     val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
 
     return if (userWalletsListManager.hasUserWallets) {
         val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
             .fold(onSuccess = { true }, onFailure = { false })
+
         if (isLocked) {
-            AppScreen.Welcome
+            AppRoute.Welcome::class
         } else {
-            AppScreen.Wallet
+            AppRoute.Wallet::class
         }
     } else {
-        AppScreen.Home
+        AppRoute.Home::class
     }
 }
