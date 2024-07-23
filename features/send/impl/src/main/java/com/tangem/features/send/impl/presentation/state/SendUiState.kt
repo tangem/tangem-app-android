@@ -3,17 +3,14 @@ package com.tangem.features.send.impl.presentation.state
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.event.StateEvent
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
-import com.tangem.features.send.impl.presentation.state.amount.SendAmountSegmentedButtonsConfig
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.PersistentList
 import java.math.BigDecimal
 
 /**
@@ -24,11 +21,11 @@ internal data class SendUiState(
     val clickIntents: SendClickIntents,
     val isEditingDisabled: Boolean,
     val cryptoCurrencyName: String,
-    val amountState: SendStates.AmountState? = null,
+    val amountState: AmountState,
     val recipientState: SendStates.RecipientState? = null,
     val feeState: SendStates.FeeState? = null,
     val sendState: SendStates.SendState? = null,
-    val editAmountState: SendStates.AmountState? = null,
+    val editAmountState: AmountState,
     val editRecipientState: SendStates.RecipientState? = null,
     val editFeeState: SendStates.FeeState? = null,
     val isBalanceHidden: Boolean,
@@ -36,7 +33,7 @@ internal data class SendUiState(
     val event: StateEvent<SendEvent>,
 ) {
 
-    fun getAmountState(isEditState: Boolean): SendStates.AmountState? {
+    fun getAmountState(isEditState: Boolean): AmountState {
         return if (isEditState) {
             editAmountState
         } else {
@@ -62,7 +59,7 @@ internal data class SendUiState(
 
     fun copyWrapped(
         isEditState: Boolean,
-        amountState: SendStates.AmountState? = this.amountState,
+        amountState: AmountState = this.amountState,
         feeState: SendStates.FeeState? = this.feeState,
         recipientState: SendStates.RecipientState? = this.recipientState,
         sendState: SendStates.SendState? = this.sendState,
@@ -89,21 +86,6 @@ internal sealed class SendStates {
     abstract val type: SendUiStateType
 
     abstract val isPrimaryButtonEnabled: Boolean
-
-    /** Amount state */
-    @Stable
-    data class AmountState(
-        override val type: SendUiStateType = SendUiStateType.Amount,
-        override val isPrimaryButtonEnabled: Boolean,
-        val walletName: String,
-        val walletBalance: TextReference,
-        val tokenIconState: TokenIconState,
-        val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
-        val selectedButton: Int,
-        val isSegmentedButtonsEnabled: Boolean,
-        val amountTextField: SendTextField.AmountField,
-        val appCurrencyCode: String,
-    ) : SendStates()
 
     /** Recipient state */
     @Stable

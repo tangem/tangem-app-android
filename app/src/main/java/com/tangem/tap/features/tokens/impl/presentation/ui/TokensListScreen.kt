@@ -15,7 +15,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -34,6 +33,8 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import com.tangem.core.ui.components.BottomFade
+import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
@@ -61,32 +62,45 @@ internal fun TokensListScreen(stateHolder: TokensListStateHolder, modifier: Modi
 
     Scaffold(
         modifier = modifier,
-        topBar = { TokensListToolbar(state = stateHolder.toolbarState) },
+        topBar = {
+            TokensListToolbar(state = stateHolder.toolbarState)
+        },
         floatingActionButton = {
             if (stateHolder is TokensListStateHolder.ManageContent) {
                 val density = LocalDensity.current
                 val verticalPadding = TangemTheme.dimens.spacing32
 
                 SaveChangesButton(
-                    modifier = Modifier.onSizeChanged {
-                        with(density) { floatingButtonHeight = it.height.toDp() + verticalPadding }
-                    },
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .onSizeChanged {
+                            with(density) { floatingButtonHeight = it.height.toDp() + verticalPadding }
+                        },
                     showProgress = stateHolder.isSavingInProgress,
                     onClick = stateHolder.onSaveButtonClick,
                 )
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
-        backgroundColor = TangemTheme.colors.background.primary,
-    ) { scaffoldPadding ->
+        backgroundColor = TangemTheme.colors.background.secondary,
+    ) { _ ->
         val tokens = stateHolder.tokens.collectAsLazyPagingItems()
 
-        TokensListContent(
-            isDifferentAddressesBlockVisible = stateHolder.isDifferentAddressesBlockVisible,
-            tokens = tokens,
-            scaffoldPadding = scaffoldPadding,
-            bottomMarginDp = floatingButtonHeight,
-        )
+        if (stateHolder !is TokensListStateHolder.ManageContent) {
+            NavigationBar3ButtonsScrim()
+        }
+
+        Box {
+            TokensListContent(
+                isDifferentAddressesBlockVisible = stateHolder.isDifferentAddressesBlockVisible,
+                tokens = tokens,
+                bottomMarginDp = floatingButtonHeight,
+            )
+
+            if (stateHolder is TokensListStateHolder.ManageContent) {
+                BottomFade(Modifier.align(Alignment.BottomCenter))
+            }
+        }
 
         Crossfade(targetState = stateHolder.isLoading, label = "Update progress bar visibility") {
             if (it) {
@@ -112,23 +126,24 @@ private fun LoadingContent() {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun TokensListContent(
     isDifferentAddressesBlockVisible: Boolean,
     tokens: LazyPagingItems<TokenItemState>,
-    scaffoldPadding: PaddingValues,
     bottomMarginDp: Dp,
 ) {
     val state = rememberLazyListState()
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     LazyColumn(
         modifier = Modifier
+            .background(color = TangemTheme.colors.background.primary)
             .imePadding()
-            .fillMaxSize()
-            .padding(scaffoldPadding),
+            .fillMaxSize(),
         state = state,
-        contentPadding = PaddingValues(bottom = bottomMarginDp),
+        contentPadding = PaddingValues(
+            bottom = bottomMarginDp + bottomBarHeight,
+        ),
     ) {
         item(
             key = "DifferentAddressesWarning$isDifferentAddressesBlockVisible",

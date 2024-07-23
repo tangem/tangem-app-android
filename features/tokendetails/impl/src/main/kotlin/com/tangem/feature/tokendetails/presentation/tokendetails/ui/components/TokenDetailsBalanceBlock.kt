@@ -11,9 +11,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
+import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -21,6 +22,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPre
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.utils.StringsSigns.STARS
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -35,20 +37,23 @@ internal fun TokenDetailsBalanceBlock(
         color = TangemTheme.colors.background.primary,
     ) {
         Column {
-            Box(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing12)
                     .padding(horizontal = TangemTheme.dimens.spacing12)
                     .fillMaxWidth()
                     .heightIn(min = TangemTheme.dimens.spacing24),
-                contentAlignment = Alignment.CenterStart,
             ) {
                 Text(
                     text = stringResource(id = R.string.common_balance_title),
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.subtitle2,
                     maxLines = 1,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(top = TangemTheme.dimens.spacing12),
                 )
+                BalanceButtons(state)
             }
             FiatBalance(
                 state = state,
@@ -89,7 +94,7 @@ private fun FiatBalance(
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
             modifier = modifier,
-            text = if (isBalanceHidden) STARS else state.fiatBalance,
+            text = if (isBalanceHidden) STARS else state.displayFiatBalance,
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
@@ -117,7 +122,7 @@ private fun CryptoBalance(
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
             modifier = modifier,
-            text = if (isBalanceHidden) STARS else state.cryptoBalance,
+            text = if (isBalanceHidden) STARS else state.displayCryptoBalance,
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -126,6 +131,35 @@ private fun CryptoBalance(
             text = if (isBalanceHidden) STARS else BigDecimalFormatter.EMPTY_BALANCE_SIGN,
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
+        )
+    }
+}
+
+@Composable
+private fun BalanceButtons(state: TokenDetailsBalanceBlockState) {
+    if (state !is TokenDetailsBalanceBlockState.Content || !state.isBalanceSelectorEnabled) return
+
+    SegmentedButtons(
+        config = state.balanceSegmentedButtonConfig,
+        onClick = state.onBalanceSelect,
+        showIndication = false,
+        modifier = Modifier
+            .padding(top = TangemTheme.dimens.spacing11)
+            .width(IntrinsicSize.Min),
+    ) { config ->
+        Text(
+            text = config.title.resolveReference(),
+            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography.caption1,
+            maxLines = 1,
+            modifier = Modifier
+                .padding(
+                    start = TangemTheme.dimens.spacing5,
+                    end = TangemTheme.dimens.spacing5,
+                    top = TangemTheme.dimens.spacing3,
+                    bottom = TangemTheme.dimens.spacing3,
+                )
+                .align(Alignment.Center),
         )
     }
 }
