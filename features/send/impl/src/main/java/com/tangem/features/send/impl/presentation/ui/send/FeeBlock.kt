@@ -14,6 +14,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.common.ui.amountScreen.utils.getCryptoReference
+import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.res.TangemThemePreview
@@ -24,8 +26,6 @@ import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.previewdata.FeeStatePreviewData
-import com.tangem.features.send.impl.presentation.utils.getCryptoReference
-import com.tangem.features.send.impl.presentation.utils.getFiatReference
 
 @Composable
 internal fun FeeBlock(feeState: SendStates.FeeState, isClickDisabled: Boolean, onClick: () -> Unit) {
@@ -53,7 +53,7 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isClickDisabled: Boolean, o
                     FeeType.Slow -> R.string.common_fee_selector_option_slow to R.drawable.ic_tortoise_24
                     FeeType.Market -> R.string.common_fee_selector_option_market to R.drawable.ic_bird_24
                     FeeType.Fast -> R.string.common_fee_selector_option_fast to R.drawable.ic_hare_24
-                    FeeType.Custom -> R.string.common_fee_selector_option_custom to R.drawable.ic_edit_24
+                    FeeType.Custom -> R.string.common_custom to R.drawable.ic_edit_24
                 }
             } else {
                 R.string.common_fee_selector_option_market to R.drawable.ic_bird_24
@@ -105,7 +105,7 @@ private fun BoxScope.FeeError(feeSelectorState: FeeSelectorState) {
         label = "Fee Error State Change",
         modifier = Modifier.align(Alignment.CenterEnd),
     ) {
-        if (it == FeeSelectorState.Error) {
+        if (it is FeeSelectorState.Error) {
             Text(
                 text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
                 color = TangemTheme.colors.text.primary1,
