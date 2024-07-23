@@ -82,6 +82,7 @@
   <string name="common_buy_currency">Go to %1$s</string>
   <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
   <string name="common_cancel">Cancel</string>
+  <string name="common_claim_rewards">Claim rewards</string>
   <string name="common_close">Close</string>
   <string name="common_continue">Continue</string>
   <string name="common_copy">Copy</string>
@@ -156,6 +157,7 @@
   <string name="common_understand">I understand</string>
   <string name="common_unknown_error">There was an error. Please try again.</string>
   <string name="common_unreachable">Unreachable</string>
+  <string name="common_unstake">Unstake</string>
   <string name="common_yes">Yes</string>
   <string name="contract_address_copied_message">Contract address copied!</string>
   <string name="currency_subtitle_expanded">Available networks</string>
@@ -637,6 +639,7 @@
   <string name="settings_wallet_name_title">Name</string>
   <string name="staking_active">Active</string>
   <string name="staking_active_footer">To unstake your assets, click here.</string>
+  <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_apy_info">The annual percentage return you can earn from participating in staking.</string>
@@ -795,7 +798,7 @@
   <string name="wallet_settings_title">Wallet settings</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Use %s or scan a card to unlock access to your wallet</string>
-  <string name="warning_backup_errors_message">Please withdraw all funds from this wallet, reset it to factory settings, and create a new one. Access to the current wallet will be lost.</string>
+  <string name="warning_backup_errors_message">It seems that the card activation was not completed correctly. This could be due to an issue with your device\'s NFC module or incorrect tapping of the card to your device. Please contact our Support team for assistance.</string>
   <string name="warning_backup_errors_title">Activation error</string>
   <string name="warning_beacon_chain_retirement_content">According to BNB network developers, support for the BEP-2 standard will end in June 2024. To avoid losing assets with this standard, please convert them to the BEP-20 standard. Use our swap service or third-party services to transfer funds to the BNB Smart Chain network.</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain will shut down</string>
