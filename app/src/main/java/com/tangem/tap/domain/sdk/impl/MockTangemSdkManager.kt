@@ -87,12 +87,12 @@ class MockTangemSdkManager(
     override suspend fun resetToFactorySettings(
         cardId: String,
         allowsRequestAccessCodeFromRepository: Boolean,
-    ): CompletionResult<CardDTO> {
-        return MockProvider.getCardDto()
+    ): CompletionResult<Boolean> {
+        return CompletionResult.Success(true)
     }
 
-    override suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Unit> {
-        return CompletionResult.Success(Unit)
+    override suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Boolean> {
+        return CompletionResult.Success(true)
     }
 
     override suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {

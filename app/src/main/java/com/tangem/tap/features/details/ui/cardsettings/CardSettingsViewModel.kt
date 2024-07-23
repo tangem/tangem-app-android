@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
@@ -14,10 +13,9 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -38,7 +36,6 @@ import javax.inject.Inject
 @HiltViewModel
 internal class CardSettingsViewModel @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val tangemSdkManager: TangemSdkManager,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -46,6 +43,8 @@ internal class CardSettingsViewModel @Inject constructor(
     private val userWalletId = savedStateHandle.get<Bundle>(AppRoute.CardSettings.USER_WALLET_ID_KEY)
         ?.unbundle(UserWalletId.serializer())
         ?: error("User wallet ID is required for CardSettingsViewModel")
+
+    private val scannedScanResponse = MutableStateFlow<ScanResponse?>(value = null)
 
     val screenState: MutableStateFlow<CardSettingsScreenState> = MutableStateFlow(getInitialState())
 
@@ -58,13 +57,11 @@ internal class CardSettingsViewModel @Inject constructor(
     private fun scanCard() = viewModelScope.launch {
         scanCardProcessor.scan(allowsRequestAccessCodeFromRepository = true)
             .doOnSuccess { scanResponse ->
+                scannedScanResponse.value = scanResponse
+
                 val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
-                val isCorrectUserWalletScanned = scannedUserWalletId == userWalletId
-
-                if (isCorrectUserWalletScanned) {
-                    val userWallet = getUserWallet()
-
-                    updateCardDetails(userWallet)
+                if (userWalletId == scannedUserWalletId || scannedUserWalletId == null) {
+                    updateCardDetails(scanResponse)
                 } else {
                     store.dispatchDialogShow(
                         AppDialog.SimpleOkDialogRes(
@@ -76,9 +73,9 @@ internal class CardSettingsViewModel @Inject constructor(
             }
     }
 
-    private fun updateCardDetails(userWallet: UserWallet) {
-        val card = userWallet.scanResponse.card
-        val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
+    private fun updateCardDetails(scanResponse: ScanResponse) {
+        val card = scanResponse.card
+        val cardTypesResolver = scanResponse.cardTypesResolver
         val cardId = cardTypesResolver.getCardId()
 
         val currentSecurityOption = getCurrentSecurityOption(card)
@@ -112,7 +109,7 @@ internal class CardSettingsViewModel @Inject constructor(
 
             if (isResetCardAllowed) {
                 CardInfo.ResetToFactorySettings(
-                    description = getResetToFactoryDescription(card, cardTypesResolver),
+                    description = getResetToFactoryDescription(card.backupStatus, cardTypesResolver),
                 ).let(::add)
             }
         }
@@ -129,9 +126,21 @@ internal class CardSettingsViewModel @Inject constructor(
                 changeAccessCode()
             }
             is CardInfo.ResetToFactorySettings -> {
+                val card = requireNotNull(scannedScanResponse.value) {
+                    "Impossible to reset card if ScanResponse is null"
+                }.card
+
                 Analytics.send(Settings.CardSettings.ButtonFactoryReset())
                 store.dispatchNavigationAction {
-                    push(route = AppRoute.ResetToFactory(userWalletId))
+                    push(
+                        route = AppRoute.ResetToFactory(
+                            userWalletId = userWalletId,
+                            cardSpecificInfo = AppRoute.ResetToFactory.CardSpecificInfo(
+                                cardId = card.cardId,
+                                backupStatus = card.backupStatus,
+                            ),
+                        ),
+                    )
                 }
             }
             is CardInfo.SecurityMode -> {
@@ -150,19 +159,13 @@ internal class CardSettingsViewModel @Inject constructor(
     }
 
     private fun changeAccessCode() = viewModelScope.launch {
-        val card = getUserWallet().scanResponse.card
+        val scanResponse = requireNotNull(scannedScanResponse.value) { "Scan response is null" }
 
-        when (val result = tangemSdkManager.setAccessCode(card.cardId)) {
+        when (val result = tangemSdkManager.setAccessCode(scanResponse.card.cardId)) {
             is CompletionResult.Success -> Analytics.send(Settings.CardSettings.UserCodeChanged())
             is CompletionResult.Failure -> {
                 Timber.e("Failed to change access code: ${result.error}")
             }
-        }
-    }
-
-    private fun getUserWallet(): UserWallet {
-        return getUserWalletUseCase(userWalletId).getOrElse {
-            error("Failed to get user wallet $userWalletId: $it")
         }
     }
 
