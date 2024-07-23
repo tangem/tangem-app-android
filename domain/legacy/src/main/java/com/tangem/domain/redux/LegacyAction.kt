@@ -8,6 +8,8 @@ import java.math.BigDecimal
 
 sealed interface LegacyAction : Action {
 
+    data class SendEmailSupport(val scanResponse: ScanResponse) : LegacyAction
+
     data class SendEmailRateCanBeBetter(val scanResponse: ScanResponse) : LegacyAction
 
     /**
