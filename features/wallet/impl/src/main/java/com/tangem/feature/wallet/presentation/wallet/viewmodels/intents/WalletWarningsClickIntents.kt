@@ -62,6 +62,8 @@ internal interface WalletWarningsClickIntents {
     fun onTravalaPromoClick(link: String?)
 
     fun onCloseTravalaPromoClick()
+
+    fun onSupportClick()
 }
 
 @Suppress("LongParameterList")
@@ -260,6 +262,15 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             shouldShowTravalaPromoWalletUseCase.neverToShow()
         }
+    }
+
+    override fun onSupportClick() {
+        reduxStateHolder.dispatch(
+            LegacyAction.SendEmailSupport(
+                scanResponse = getSelectedUserWallet()?.scanResponse
+                    ?: error("ScanResponse must be not null"),
+            ),
+        )
     }
 
     private fun getSelectedUserWallet(): UserWallet? {
