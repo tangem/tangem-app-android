@@ -6,6 +6,7 @@ import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.RateCanBeBetterEmail
 import com.tangem.tap.common.feedback.SendTransactionFailedEmail
 import com.tangem.tap.common.redux.AppState
@@ -24,6 +25,12 @@ internal object LegacyMiddleware {
                     is LegacyAction.SendEmailRateCanBeBetter -> {
                         store.state.globalState.feedbackManager?.sendEmail(
                             feedbackData = RateCanBeBetterEmail(),
+                            scanResponse = action.scanResponse,
+                        )
+                    }
+                    is LegacyAction.SendEmailSupport -> {
+                        store.state.globalState.feedbackManager?.sendEmail(
+                            feedbackData = FeedbackEmail(),
                             scanResponse = action.scanResponse,
                         )
                     }
