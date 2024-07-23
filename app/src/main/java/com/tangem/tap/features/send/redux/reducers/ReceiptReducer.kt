@@ -10,6 +10,7 @@ import com.tangem.tap.features.send.redux.ReceiptAction.RefreshReceipt
 import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.store
+import com.tangem.utils.StringsSigns.LOWER_SIGN
 import java.math.BigDecimal
 
 /**
@@ -401,11 +402,7 @@ class ReceiptReducer : SendInternalReducer {
     }
 
     private fun String.addPrecisionSign(): String {
-        val result = if (feeState.feeIsApproximate) "$CAN_BE_LOWER_SIGN $this" else this
+        val result = if (feeState.feeIsApproximate) "$LOWER_SIGN $this" else this
         return result.trim()
-    }
-
-    private companion object {
-        const val CAN_BE_LOWER_SIGN = "<"
     }
 }
