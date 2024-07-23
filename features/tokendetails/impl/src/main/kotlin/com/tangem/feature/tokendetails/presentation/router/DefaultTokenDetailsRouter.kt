@@ -1,41 +1,50 @@
 package com.tangem.feature.tokendetails.presentation.router
 
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.navigation.ReduxNavController
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.tokendetails.presentation.TokenDetailsFragment
-import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 
 internal class DefaultTokenDetailsRouter(
-    private val reduxNavController: ReduxNavController,
+    private val router: AppRouter,
+    private val urlOpener: UrlOpener,
+    private val shareManager: ShareManager,
 ) : InnerTokenDetailsRouter {
 
     override fun getEntryFragment(): Fragment = TokenDetailsFragment()
 
     override fun popBackStack() {
-        reduxNavController.navigate(NavigationAction.PopBackTo())
+        router.pop()
     }
 
     override fun openUrl(url: String) {
-        reduxNavController.navigate(NavigationAction.OpenUrl(url = url))
+        urlOpener.openUrl(url)
     }
 
     override fun share(text: String) {
-        reduxNavController.navigate(NavigationAction.Share(text))
+        shareManager.shareText(text)
     }
 
     override fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
-        reduxNavController.navigate(
-            action = NavigationAction.NavigateTo(
-                screen = AppScreen.WalletDetails,
-                bundle = bundleOf(
-                    TokenDetailsRouter.USER_WALLET_ID_KEY to userWalletId.stringValue,
-                    TokenDetailsRouter.CRYPTO_CURRENCY_KEY to currency,
-                ),
+        router.push(
+            AppRoute.CurrencyDetails(
+                userWalletId = userWalletId,
+                currency = currency,
+            ),
+        )
+    }
+
+    override fun openStaking(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, yield: Yield) {
+        router.push(
+            AppRoute.Staking(
+                userWalletId = userWalletId,
+                cryptoCurrencyId = cryptoCurrency.id,
+                yield = yield,
             ),
         )
     }
