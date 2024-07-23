@@ -14,6 +14,7 @@ object WalletConnectReducer {
             is WalletConnectAction.RejectProposal,
             is WalletConnectAction.SessionEstablished,
             is WalletConnectAction.SessionRejected,
+            is WalletConnectAction.PairConnectErrorAction,
             -> state.copy(loading = false)
             is WalletConnectAction.SessionListUpdated -> state.copy(
                 wc2Sessions = action.sessions,
