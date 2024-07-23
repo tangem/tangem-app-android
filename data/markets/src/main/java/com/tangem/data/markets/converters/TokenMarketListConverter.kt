@@ -9,6 +9,14 @@ import com.tangem.utils.converter.Converter
 class TokenMarketListConverter : Converter<TokenMarketListResponse, List<TokenMarket>> {
 
     override fun convert(value: TokenMarketListResponse): List<TokenMarket> {
+        val imageHost = value.imageHost ?: run {
+            if (value.tokens.isEmpty()) {
+                return emptyList()
+            } else {
+                error("imageHost cannot be null")
+            }
+        }
+
         return value.tokens.map { token ->
             TokenMarket(
                 id = token.id,
@@ -16,7 +24,7 @@ class TokenMarketListConverter : Converter<TokenMarketListResponse, List<TokenMa
                 symbol = token.symbol,
                 marketRating = token.marketRating,
                 marketCap = token.marketCap,
-                imageHost = value.imageHost,
+                imageHost = imageHost,
                 tokenQuotes = TokenQuotes(
                     currentPrice = token.currentPrice,
                     priceChanges = mapOf(
