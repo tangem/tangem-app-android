@@ -5,12 +5,11 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.twinsIsTwinned
@@ -21,6 +20,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.disclaimer.redux.DisclaimerCallback
+import com.tangem.tap.features.disclaimer.redux.DisclaimerSource
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
@@ -118,7 +118,7 @@ internal object LegacyScanProcessor {
                 disclaimerWillShow()
                 store.dispatchWithMain(
                     DisclaimerAction.Show(
-                        fromScreen = AppScreen.Home,
+                        from = DisclaimerSource.Home,
                         callback = DisclaimerCallback(
                             onAccept = {
                                 scope.launch(Dispatchers.Main) {
@@ -170,7 +170,7 @@ internal object LegacyScanProcessor {
             if (scanResponse.twinsIsTwinned() && !wasTwinsOnboardingShown) {
                 onWalletNotCreated()
                 store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(scanResponse)))
-                navigateTo(AppScreen.OnboardingTwins) { onProgressStateChange(it) }
+                navigateTo(AppRoute.OnboardingTwins) { onProgressStateChange(it) }
             } else {
                 delay(DELAY_SDK_DIALOG_CLOSE)
                 onSuccess(scanResponse)
@@ -178,9 +178,9 @@ internal object LegacyScanProcessor {
         }
     }
 
-    private suspend inline fun navigateTo(screen: AppScreen, onProgressStateChange: (showProgress: Boolean) -> Unit) {
+    private suspend inline fun navigateTo(route: AppRoute, onProgressStateChange: (showProgress: Boolean) -> Unit) {
         delay(DELAY_SDK_DIALOG_CLOSE)
-        store.dispatchOnMain(NavigationAction.NavigateTo(screen))
+        store.dispatchNavigationAction { push(route) }
         onProgressStateChange(false)
     }
 }
