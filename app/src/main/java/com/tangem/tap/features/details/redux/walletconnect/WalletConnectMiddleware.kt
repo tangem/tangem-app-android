@@ -1,19 +1,17 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
-import androidx.core.os.bundleOf
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+import com.tangem.common.routing.AppRoute
 import com.tangem.domain.qrscanning.models.SourceType
-import com.tangem.feature.qrscanning.QrScanningRouter
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
 import com.tangem.tap.domain.walletconnect2.domain.models.Account
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
@@ -65,14 +63,7 @@ class WalletConnectMiddleware {
                     // TODO check
                     store.dispatchOnMain(WalletConnectAction.ShowClipboardOrScanQrDialog(uri))
                 } else {
-                    store.dispatchOnMain(
-                        NavigationAction.NavigateTo(
-                            screen = AppScreen.QrScanning,
-                            bundle = bundleOf(
-                                QrScanningRouter.SOURCE_KEY to SourceType.WALLET_CONNECT,
-                            ),
-                        ),
-                    )
+                    store.dispatchNavigationAction { push(AppRoute.QrScanning(SourceType.WALLET_CONNECT)) }
                 }
             }
             is WalletConnectAction.ShowClipboardOrScanQrDialog -> {
