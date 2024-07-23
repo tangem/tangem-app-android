@@ -42,6 +42,9 @@ dependencies {
     implementation(projects.features.disclaimer.api)
     implementation(projects.features.pushNotifications.api)
 
+    /** Other dependencies */
+    implementation(deps.arrow.core)
+
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
