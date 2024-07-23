@@ -9,21 +9,21 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.features.markets.component.BottomSheetState
 import com.tangem.features.markets.model.statemanager.MarketsListUMStateManager
-import com.tangem.features.markets.model.statemanager.MarketsListUiItemsManager
+import com.tangem.features.markets.model.statemanager.MarketsListBatchFlowManager
 import com.tangem.features.markets.ui.entity.ListUM
 import com.tangem.features.markets.ui.entity.SortByTypeUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val UPDATE_QUOTES_TIMER_MILLIS = 60000L
+private const val SEARCH_QUERY_DEBOUNCE_MILLIS = 800L
 
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @ComponentScoped
 @Stable
 internal class MarketsListModel @Inject constructor(
@@ -42,38 +42,65 @@ internal class MarketsListModel @Inject constructor(
         )
 
     private val visibleItemIds = MutableStateFlow<List<String>>(emptyList())
-    val containerBottomSheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
+
     private val marketsListUMStateManager = MarketsListUMStateManager(
         onLoadMoreUiItems = { activeListManager.loadMore() },
         visibleItemsChanged = { visibleItemIds.value = it },
+        onRetryButtonClicked = { activeListManager.reload() },
     )
 
-    private val marketsListManager = MarketsListUiItemsManager(
-        logTag = "main",
+    private val mainMarketsListManager = MarketsListBatchFlowManager(
         getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
+        batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
         currentAppCurrency = Provider { currentAppCurrency.value },
         currentTrendInterval = Provider { marketsListUMStateManager.selectedInterval },
+        currentSortByType = Provider { marketsListUMStateManager.selectedSortByType },
+        currentSearchText = Provider { null },
         modelScope = modelScope,
         dispatchers = dispatchers,
     )
-    private val searchMarketsListManager = MarketsListUiItemsManager(
-        logTag = "search",
+    private val searchMarketsListManager = MarketsListBatchFlowManager(
         getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
+        batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
         currentAppCurrency = Provider { currentAppCurrency.value },
-        currentTrendInterval = Provider { marketsListUMStateManager.selectedInterval },
+        currentTrendInterval = Provider { marketsListUMStateManager.selectedInterval }, // FIXME fix on backend
+        currentSortByType = Provider { SortByTypeUM.Rating }, // FIXME maybe fix on backend
+        currentSearchText = Provider { marketsListUMStateManager.searchQuery },
         modelScope = modelScope,
         dispatchers = dispatchers,
     )
 
-    private var activeListManager: MarketsListUiItemsManager = marketsListManager
+    private var activeListManager: MarketsListBatchFlowManager = mainMarketsListManager
+
+    val containerBottomSheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
 
     val state = marketsListUMStateManager.state.asStateFlow()
 
     init {
+        @Suppress("UnnecessaryParentheses")
         modelScope.launch {
-            marketsListManager.uiItems
-                .collectLatest {
-                    marketsListUMStateManager.onUiItemsChanged(it)
+            marketsListUMStateManager.isInSearchStateFlow
+                .flatMapLatest { isInSearchMode ->
+                    if (isInSearchMode) {
+                        combine(
+                            searchMarketsListManager.uiItems,
+                            searchMarketsListManager.isInInitialLoadingErrorState,
+                            searchMarketsListManager.isSearchNotFoundState,
+                        ) { items, isError, notFound ->
+                            (items to isError) to notFound
+                        }
+                    } else {
+                        combine(
+                            mainMarketsListManager.uiItems,
+                            mainMarketsListManager.isInInitialLoadingErrorState,
+                        ) { items, isError -> (items to isError) to false }
+                    }
+                }.collect {
+                    marketsListUMStateManager.onUiItemsChanged(
+                        uiItems = it.first.first,
+                        isInErrorState = it.first.second,
+                        isSearchNotFound = it.second,
+                    )
                 }
         }
 
@@ -87,23 +114,16 @@ internal class MarketsListModel @Inject constructor(
         currentAppCurrency
             .drop(1)
             .onEach {
-                marketsListManager.reload(
-                    interval = marketsListUMStateManager.selectedInterval,
-                    sortBy = marketsListUMStateManager.selectedSortByType,
-                )
+                mainMarketsListManager.reload()
                 if (marketsListUMStateManager.isInSearchState) {
-                    // TODO
-                    searchMarketsListManager.reload(
-                        interval = marketsListUMStateManager.selectedInterval,
-                        sortBy = marketsListUMStateManager.selectedSortByType,
-                    )
+                    searchMarketsListManager.reload()
                 }
             }.launchIn(modelScope)
 
         // load charts when new batch is being loaded
-        marketsListManager.onLastBatchLoadedSuccess
+        mainMarketsListManager.onLastBatchLoadedSuccess
             .onEach {
-                marketsListManager.loadCharts(setOf(it), marketsListUMStateManager.selectedInterval)
+                mainMarketsListManager.loadCharts(setOf(it), marketsListUMStateManager.selectedInterval)
                 modelScope.loadQuotesWithTimer(timeMillis = UPDATE_QUOTES_TIMER_MILLIS)
             }
             .launchIn(modelScope)
@@ -117,11 +137,11 @@ internal class MarketsListModel @Inject constructor(
                 .collectLatest { interval ->
                     when (marketsListUMStateManager.selectedSortByType) {
                         SortByTypeUM.Rating -> {
-                            marketsListManager.updateUIWithSameState()
-                            val batchKeys = marketsListManager.getBatchKeysByItemIds(visibleItemIds.value)
-                            marketsListManager.loadCharts(batchKeys, interval)
+                            mainMarketsListManager.updateUIWithSameState()
+                            val batchKeys = mainMarketsListManager.getBatchKeysByItemIds(visibleItemIds.value)
+                            mainMarketsListManager.loadCharts(batchKeys, interval)
                         }
-                        else -> marketsListManager.reload(interval, marketsListUMStateManager.selectedSortByType)
+                        else -> mainMarketsListManager.reload()
                     }
                 }
         }
@@ -133,12 +153,12 @@ internal class MarketsListModel @Inject constructor(
                 .distinctUntilChanged()
                 .drop(1)
                 .collectLatest {
-                    marketsListManager.reload(marketsListUMStateManager.selectedInterval, it)
+                    mainMarketsListManager.reload()
                 }
         }
 
         // listen current visible batch and update charts
-        modelScope.launch(dispatchers.default) {
+        modelScope.launch {
             visibleItemIds
                 .mapNotNull {
                     if (it.isNotEmpty()) {
@@ -153,11 +173,41 @@ internal class MarketsListModel @Inject constructor(
                 }
         }
 
+        // ===Search===
+
+        modelScope.launch {
+            marketsListUMStateManager.isInSearchStateFlow
+                .collectLatest { isInSearchMode ->
+                    activeListManager = if (isInSearchMode) {
+                        searchMarketsListManager
+                    } else {
+                        searchMarketsListManager.clearStateAndStopAllActions()
+                        mainMarketsListManager
+                    }
+                }
+        }
+
+        modelScope.launch {
+            marketsListUMStateManager.searchQueryFlow
+                .filter { it.isNotEmpty() }
+                .debounce(timeoutMillis = SEARCH_QUERY_DEBOUNCE_MILLIS)
+                .filter { activeListManager == searchMarketsListManager }
+                .collectLatest {
+                    searchMarketsListManager.reload(searchText = it)
+                }
+        }
+
+        modelScope.launch {
+            searchMarketsListManager
+                .onLastBatchLoadedSuccess
+                .collectLatest {
+                    searchMarketsListManager.loadCharts(setOf(it), marketsListUMStateManager.selectedInterval)
+                    modelScope.loadQuotesWithTimer(timeMillis = UPDATE_QUOTES_TIMER_MILLIS)
+                }
+        }
+
         // initial loading
-        marketsListManager.reload(
-            interval = marketsListUMStateManager.selectedInterval,
-            sortBy = marketsListUMStateManager.selectedSortByType,
-        )
+        mainMarketsListManager.reload()
     }
 
     private var updateQuotesJob = JobHolder()
@@ -167,7 +217,7 @@ internal class MarketsListModel @Inject constructor(
                 delay(timeMillis)
                 // Update quotes only when the container bottom sheet is in the expanded state
                 containerBottomSheetState.first { it == BottomSheetState.EXPANDED }
-                activeListManager.updateQuotes()
+                activeListManager.updateQuotes() // TODO update a batch that is currently on screen
             }
         }.saveIn(updateQuotesJob)
     }
