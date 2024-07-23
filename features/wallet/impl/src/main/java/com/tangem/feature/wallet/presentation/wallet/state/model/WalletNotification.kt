@@ -19,11 +19,16 @@ import org.joda.time.DateTime
 @Immutable
 sealed class WalletNotification(val config: NotificationConfig) {
 
-    sealed class Critical(title: TextReference, subtitle: TextReference) : WalletNotification(
+    sealed class Critical(
+        title: TextReference,
+        subtitle: TextReference,
+        buttonsState: NotificationConfig.ButtonsState? = null,
+    ) : WalletNotification(
         config = NotificationConfig(
             title = title,
             subtitle = subtitle,
             iconResId = R.drawable.ic_alert_circle_24,
+            buttonsState = buttonsState,
         ),
     ) {
 
@@ -37,9 +42,13 @@ sealed class WalletNotification(val config: NotificationConfig) {
             subtitle = resourceReference(id = R.string.warning_failed_to_verify_card_message),
         )
 
-        data object BackupError : Critical(
+        data class BackupError(val onSupportClick: () -> Unit) : Critical(
             title = resourceReference(R.string.warning_backup_errors_title),
             subtitle = resourceReference(R.string.warning_backup_errors_message),
+            buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(id = R.string.details_row_title_contact_to_support),
+                onClick = onSupportClick,
+            ),
         )
     }
 
