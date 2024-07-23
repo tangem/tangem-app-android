@@ -32,6 +32,7 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
         suspend fun fetch(
             request: Request<TRequestParams>,
             lastResult: BatchFetchResult<TData>?,
+            isFirstBatchFetching: Boolean,
         ): BatchFetchResult<TData>
     }
 
@@ -45,7 +46,7 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
         )
 
         val res = runCatching {
-            subFetcher.fetch(req, null)
+            subFetcher.fetch(request = req, lastResult = null, isFirstBatchFetching = true)
         }.getOrElse {
             currentCoroutineContext().ensureActive()
             BatchFetchResult.Error(it)
@@ -77,7 +78,7 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
         }
 
         val res = runCatching {
-            subFetcher.fetch(req, lastResult)
+            subFetcher.fetch(request = req, lastResult = lastResult, isFirstBatchFetching = false)
         }.getOrElse {
             currentCoroutineContext().ensureActive()
             BatchFetchResult.Error(it)
