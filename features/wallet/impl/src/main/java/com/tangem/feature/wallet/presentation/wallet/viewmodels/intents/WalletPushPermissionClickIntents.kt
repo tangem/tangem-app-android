@@ -17,6 +17,8 @@ internal interface WalletPushPermissionClickIntents {
 
     fun onDelayAskPushPermission()
 
+    fun onNeverAskPushPermission()
+
     fun onDenyPushPermission()
 
     fun onAllowPushPermission()
@@ -31,6 +33,9 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
 ) : BaseWalletClickIntents(), WalletPushPermissionClickIntents {
 
     override fun onRequestPushPermission() {
+        analyticsEventHandler.send(
+            PushNotificationAnalyticEvents.ButtonAllow(AnalyticsParam.ScreensSources.Main),
+        )
         viewModelScope.launch {
             setFirstTimeAskingPermissionUseCase(PUSH_PERMISSION)
         }
@@ -45,17 +50,22 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
         }
     }
 
+    override fun onNeverAskPushPermission() {
+        viewModelScope.launch {
+            analyticsEventHandler.send(PushNotificationAnalyticEvents.ButtonCancel)
+            neverRequestPermissionUseCase(PUSH_PERMISSION)
+        }
+    }
+
     override fun onDenyPushPermission() {
-        analyticsEventHandler.send(PushNotificationAnalyticEvents.ButtonCancel)
+        analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isAllowed = false))
         viewModelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
         }
     }
 
     override fun onAllowPushPermission() {
-        analyticsEventHandler.send(
-            PushNotificationAnalyticEvents.ButtonAllow(AnalyticsParam.ScreensSources.Main),
-        )
+        analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isAllowed = true))
         viewModelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
         }
