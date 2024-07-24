@@ -12,13 +12,11 @@ internal class AmountChangeStateTransformer(
     private val value: String,
 ) : Transformer<StakingUiState> {
 
-    private val amountRequirementStateTransformer by lazy(LazyThreadSafetyMode.NONE) {
-        AmountRequirementStateTransformer(
-            cryptoCurrencyStatus,
-            yield,
-            value,
-        )
-    }
+    private val amountRequirementStateTransformer = AmountRequirementStateTransformer(
+        cryptoCurrencyStatus,
+        yield,
+        value,
+    )
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         val updatedAmountState = AmountFieldChangeTransformer(
