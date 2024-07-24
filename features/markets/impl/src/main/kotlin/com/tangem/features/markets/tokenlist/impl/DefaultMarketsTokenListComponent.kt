@@ -19,7 +19,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import timber.log.Timber
 
 class DefaultMarketsTokenListComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
