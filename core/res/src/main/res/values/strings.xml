@@ -82,6 +82,7 @@
   <string name="common_buy_currency">Go to %1$s</string>
   <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
   <string name="common_cancel">Cancel</string>
+  <string name="common_claim_rewards">Claim rewards</string>
   <string name="common_close">Close</string>
   <string name="common_continue">Continue</string>
   <string name="common_copy">Copy</string>
@@ -156,6 +157,7 @@
   <string name="common_understand">I understand</string>
   <string name="common_unknown_error">There was an error. Please try again.</string>
   <string name="common_unreachable">Unreachable</string>
+  <string name="common_unstake">Unstake</string>
   <string name="common_yes">Yes</string>
   <string name="contract_address_copied_message">Contract address copied!</string>
   <string name="currency_subtitle_expanded">Available networks</string>
@@ -637,6 +639,7 @@
   <string name="settings_wallet_name_title">Name</string>
   <string name="staking_active">Active</string>
   <string name="staking_active_footer">To unstake your assets, click here.</string>
+  <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_apy_info">The annual percentage return you can earn from participating in staking.</string>
