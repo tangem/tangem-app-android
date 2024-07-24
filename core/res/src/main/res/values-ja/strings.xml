@@ -621,7 +621,7 @@
   <string name="send_total_subtitle_fiat_format">≈ %1$s (%2$s: 手数料を含む)</string>
   <string name="send_total_subtitle_format">%sが送信されます</string>
   <string name="send_transaction_success">取引は正常に署名され、ブロックチェーンノードに送信されました。ウォレットの残高はしばらくして更新されます。</string>
-  <string name="send_tron_account_activation_error">%1sはTronネットワークのアセットです。手数料を計算して取引を行うには、アカウントにTron（TRX）を入金する必要があります。</string>
+  <string name="send_tron_account_activation_error">%1$sはTronネットワークのアセットです。手数料を計算して取引を行うには、アカウントにTron（TRX）を入金する必要があります。</string>
   <string name="send_validation_invalid_address">無効なアドレス</string>
   <string name="send_wallet_balance_format">%1$s ( %2$s )</string>
   <string name="sent_transaction_sent_title">取引が送信されました</string>
