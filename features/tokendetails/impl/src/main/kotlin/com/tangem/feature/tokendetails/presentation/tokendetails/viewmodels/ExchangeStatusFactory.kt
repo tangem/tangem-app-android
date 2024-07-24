@@ -4,6 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swaptx.ExchangeAnalyticsStatus
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
@@ -38,6 +39,7 @@ internal class ExchangeStatusFactory(
     private val swapRepository: SwapRepository,
     private val quotesRepository: QuotesRepository,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val clickIntents: TokenDetailsClickIntents,
@@ -85,7 +87,7 @@ internal class ExchangeStatusFactory(
         val bottomSheetConfig = state.bottomSheetConfig?.content as? ExchangeStatusBottomSheetConfig ?: return state
         val selectedTx = bottomSheetConfig.value
 
-        return if (selectedTx.activeStatus.isTerminal()) {
+        return if (selectedTx.activeStatus.isTerminal(selectedTx.isRefundTerminalStatus)) {
             swapTransactionRepository.removeTransaction(
                 userWalletId = userWalletId,
                 fromCryptoCurrency = selectedTx.fromCryptoCurrency,
@@ -104,12 +106,19 @@ internal class ExchangeStatusFactory(
     suspend fun updateSwapTxStatuses(swapTxList: PersistentList<SwapTransactionsState>) = withContext(dispatchers.io) {
         swapTxList.map { tx ->
             async {
-                if (tx.activeStatus.isTerminal()) {
+                val statusModel = getExchangeStatus(tx.txId)
+                val isRefundTerminalStatus = statusModel?.refundNetwork == null &&
+                    statusModel?.refundContractAddress == null
+                if (tx.activeStatus.isTerminal(isRefundTerminalStatus)) {
                     tx
                 } else {
-                    val statusModel = getExchangeStatus(tx.txId)
-                    swapTransactionsStateConverter
-                        .updateTxStatus(tx, statusModel)
+                    val addedRefundToken = addRefundCurrencyIfNeeded(statusModel)
+                    swapTransactionsStateConverter.updateTxStatus(
+                        tx = tx,
+                        statusModel = statusModel,
+                        refundToken = addedRefundToken,
+                        isRefundTerminalStatus = isRefundTerminalStatus,
+                    )
                 }
             }
         }
@@ -142,6 +151,20 @@ internal class ExchangeStatusFactory(
         }
     }
 
+    private suspend fun addRefundCurrencyIfNeeded(status: ExchangeStatusModel?): CryptoCurrency? {
+        status ?: return null
+        val refundNetwork = status.refundNetwork
+        val refundContractAddress = status.refundContractAddress
+        if (refundNetwork != null && refundContractAddress != null) {
+            return addCryptoCurrenciesUseCase(
+                userWalletId = userWalletId,
+                contractAddress = refundContractAddress,
+                networkId = refundNetwork,
+            ).getOrNull()
+        }
+        return null
+    }
+
     private fun getExchangeStatusState(
         savedTransactions: List<SavedSwapTransactionListModel>?,
         quotes: Set<Quote>,
@@ -156,11 +179,14 @@ internal class ExchangeStatusFactory(
         )
     }
 
-    private fun ExchangeStatus?.isTerminal() = this == ExchangeStatus.Refunded ||
-        this == ExchangeStatus.Finished ||
-        this == ExchangeStatus.Cancelled ||
-        this == ExchangeStatus.TxFailed ||
-        this == ExchangeStatus.Unknown
+    private fun ExchangeStatus?.isTerminal(isRefundTerminal: Boolean): Boolean {
+        val needTerminalRefund = this == ExchangeStatus.Refunded && isRefundTerminal
+        return needTerminalRefund ||
+            this == ExchangeStatus.Finished ||
+            this == ExchangeStatus.Cancelled ||
+            this == ExchangeStatus.TxFailed ||
+            this == ExchangeStatus.Unknown
+    }
 
     private fun toAnalyticStatus(status: ExchangeStatus?): ExchangeAnalyticsStatus? {
         return when (status) {
