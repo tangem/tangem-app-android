@@ -1,8 +1,6 @@
 package com.tangem.features.staking.impl.presentation.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -57,12 +55,9 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
             .fillMaxSize(),
         contentPadding = PaddingValues(TangemTheme.dimens.spacing16),
     ) {
-        item(key = METRICS_BLOCK_KEY) {
-            AnimatedVisibility(
-                visible = state.yieldBalance == InnerYieldBalanceState.Empty,
-                modifier = Modifier.animateItemPlacement()
-            ) {
-                Column {
+        if (state.yieldBalance == InnerYieldBalanceState.Empty) {
+            item(key = METRICS_BLOCK_KEY) {
+                Column(modifier = Modifier.animateItemPlacement()) {
                     MetricsBlock(state)
                     SpacerH12()
                 }
@@ -72,37 +67,25 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
         this.roundedListItems(state.infoItems)
         item { SpacerH12() }
 
-        item(key = STAKING_REWARD_BLOCK_KEY) {
-            AnimatedContent(
-                targetState = state.yieldBalance,
-                label = "Rewards block visibility animation",
-                modifier = Modifier.animateItemPlacement()
-            ) {
-                if (it is InnerYieldBalanceState.Data) {
-                    Column {
-                        StakingRewardBlock(
-                            rewardCrypto = it.rewardsCrypto,
-                            rewardFiat = it.rewardsFiat,
-                            isRewardsToClaim = it.isRewardsToClaim,
-                            onRewardsClick = clickIntents::openRewardsValidators,
-                        )
-                        SpacerH12()
-                    }
+        if (state.yieldBalance is InnerYieldBalanceState.Data) {
+            item(key = STAKING_REWARD_BLOCK_KEY) {
+                Column(modifier = Modifier.animateItemPlacement()) {
+                    StakingRewardBlock(
+                        rewardCrypto = state.yieldBalance.rewardsCrypto,
+                        rewardFiat = state.yieldBalance.rewardsFiat,
+                        isRewardsToClaim = state.yieldBalance.isRewardsToClaim,
+                        onRewardsClick = clickIntents::openRewardsValidators,
+                    )
+                    SpacerH12()
                 }
             }
         }
 
-        item(key = ACTIVE_STAKING_BLOCK_KEY) {
-            AnimatedContent(
-                targetState = state.yieldBalance,
-                label = "Staking yield visibility animation",
-                modifier = Modifier.animateItemPlacement()
-            ) {
-                if (it is InnerYieldBalanceState.Data) {
-                    Column {
-                        ActiveStakingBlock(it.balance, clickIntents::onActiveStake)
-                        SpacerH12()
-                    }
+        if (state.yieldBalance is InnerYieldBalanceState.Data) {
+            item(key = ACTIVE_STAKING_BLOCK_KEY) {
+                Column(modifier = Modifier.animateItemPlacement()) {
+                    ActiveStakingBlock(state.yieldBalance.balance, clickIntents::onActiveStake)
+                    SpacerH12()
                 }
             }
         }
