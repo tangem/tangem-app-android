@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.withIndex
 
 @Composable
 internal fun StakingScreen(uiState: StakingUiState) {
-    BackHandler(onBack = uiState.clickIntents::onBackClick)
+    BackHandler(onBack = uiState.clickIntents::onPrevClick)
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.tertiary)
