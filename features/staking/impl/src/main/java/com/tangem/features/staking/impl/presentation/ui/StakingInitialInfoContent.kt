@@ -58,8 +58,8 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
         item(key = METRICS_BLOCK_KEY) {
             AnimatedVisibility(state.yieldBalance == InnerYieldBalanceState.Empty) {
                 MetricsBlock(state)
+                SpacerH12()
             }
-            SpacerH12()
         }
 
         this.roundedListItems(state.infoItems)
