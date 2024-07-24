@@ -33,14 +33,20 @@ data class Yield(
         @Serializable
         data class Enter(
             val addresses: Addresses,
-            val args: Map<String, AddressArgument>,
+            val args: Map<ArgType, AddressArgument>,
         ) {
 
             @Serializable
             data class Addresses(
                 val address: AddressArgument,
-                val additionalAddresses: Map<String, AddressArgument>? = null,
+                val additionalAddresses: Map<ArgType, AddressArgument>? = null,
             )
+        }
+
+        enum class ArgType {
+            ADDRESS,
+            AMOUNT,
+            UNKNOWN,
         }
     }
 
@@ -113,6 +119,6 @@ data class Token(
 data class AddressArgument(
     val required: Boolean,
     val network: String? = null,
-    val minimum: Double? = null,
-    val maximum: Double? = null,
+    val minimum: SerializedBigDecimal? = null,
+    val maximum: SerializedBigDecimal? = null,
 )
