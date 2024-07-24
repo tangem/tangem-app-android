@@ -1,5 +1,6 @@
 package com.tangem.tap.data
 
+import com.tangem.common.CompletionResult
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
@@ -29,7 +30,10 @@ internal class RuntimeUserWalletsStore(
         return userWalletsListManager.userWallets.firstOrNull()
     }
 
-    override suspend fun update(userWalletId: UserWalletId, update: suspend (UserWallet) -> UserWallet) {
-        userWalletsListManager.update(userWalletId, update)
+    override suspend fun update(
+        userWalletId: UserWalletId,
+        update: suspend (UserWallet) -> UserWallet,
+    ): CompletionResult<UserWallet> {
+        return userWalletsListManager.update(userWalletId, update)
     }
 }
