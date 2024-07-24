@@ -32,10 +32,17 @@ internal class StakingStateRouter(
     }
 
     fun onPrevClick() {
-        when (stateController.uiState.value.currentStep) {
+        val uiState = stateController.uiState.value
+        when (uiState.currentStep) {
             StakingStep.InitialInfo -> onBackClick()
             StakingStep.Amount -> showInitial()
-            StakingStep.Confirmation -> showAmount()
+            StakingStep.Confirmation -> {
+                if (uiState.routeType == RouteType.OTHER || uiState.routeType == RouteType.UNSTAKE) {
+                    showInitial()
+                } else {
+                    showAmount()
+                }
+            }
             StakingStep.Validators -> showConfirmation()
             StakingStep.RewardsValidators -> showInitial()
         }
