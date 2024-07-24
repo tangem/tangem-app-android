@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.staking)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.legacy)
 
     /** Feature Api modules */
     implementation(projects.features.staking.api)
@@ -40,6 +41,8 @@ dependencies {
 
 
     implementation(projects.libs.blockchainSdk)
+
+    implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain) {
         exclude(module = "joda-time")
     }
