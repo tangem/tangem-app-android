@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,19 +21,23 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 fun RoundedListWithDividers(rows: List<RoundedListWithDividersItemData>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier) {
-        itemsIndexed(
-            items = rows,
-            key = { _, item -> item.id },
-        ) { index, row ->
-            InitialInfoContentRow(
-                startText = row.startText.resolveReference(),
-                endText = row.endText.resolveReference(),
-                cornersToRound = getCornersToRound(index, rows.size),
-                iconClick = row.iconClick,
-            )
-            if (index < rows.lastIndex) {
-                RoundedListDivider()
-            }
+        this.roundedListItems(rows)
+    }
+}
+
+fun LazyListScope.roundedListItems(rows: List<RoundedListWithDividersItemData>) {
+    itemsIndexed(
+        items = rows,
+        key = { _, item -> item.id },
+    ) { index, row ->
+        InitialInfoContentRow(
+            startText = row.startText.resolveReference(),
+            endText = row.endText.resolveReference(),
+            cornersToRound = getCornersToRound(index, rows.size),
+            iconClick = row.iconClick,
+        )
+        if (index < rows.lastIndex) {
+            RoundedListDivider()
         }
     }
 }
