@@ -55,4 +55,6 @@ interface TokenDetailsClickIntents {
     fun onCopyAddress(): TextReference?
 
     fun onAssociateClick()
+
+    fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency)
 }

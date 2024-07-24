@@ -18,6 +18,12 @@ data class ExchangeStatusResponse(
 
     @Json(name = "error")
     val error: ExchangeStatusError?,
+
+    @Json(name = "refundNetwork")
+    val refundNetwork: String? = null,
+
+    @Json(name = "refundContractAddress")
+    val refundContractAddress: String? = null,
 )
 
 enum class ExchangeStatus {
