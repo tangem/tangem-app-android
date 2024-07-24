@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.presentation.ui
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -45,6 +46,7 @@ private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
 private const val METRICS_BLOCK_KEY = "MetricsBlock"
 private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, clickIntents: StakingClickIntents) {
     if (state !is StakingStates.InitialInfoState.Data) return
@@ -56,9 +58,14 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
         contentPadding = PaddingValues(TangemTheme.dimens.spacing16),
     ) {
         item(key = METRICS_BLOCK_KEY) {
-            AnimatedVisibility(state.yieldBalance == InnerYieldBalanceState.Empty) {
-                MetricsBlock(state)
-                SpacerH12()
+            AnimatedVisibility(
+                visible = state.yieldBalance == InnerYieldBalanceState.Empty,
+                modifier = Modifier.animateItemPlacement()
+            ) {
+                Column {
+                    MetricsBlock(state)
+                    SpacerH12()
+                }
             }
         }
 
@@ -66,24 +73,36 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
         item { SpacerH12() }
 
         item(key = STAKING_REWARD_BLOCK_KEY) {
-            AnimatedContent(targetState = state.yieldBalance, label = "Rewards block visibility animation") {
+            AnimatedContent(
+                targetState = state.yieldBalance,
+                label = "Rewards block visibility animation",
+                modifier = Modifier.animateItemPlacement()
+            ) {
                 if (it is InnerYieldBalanceState.Data) {
-                    StakingRewardBlock(
-                        rewardCrypto = it.rewardsCrypto,
-                        rewardFiat = it.rewardsFiat,
-                        isRewardsToClaim = it.isRewardsToClaim,
-                        onRewardsClick = clickIntents::openRewardsValidators,
-                    )
-                    SpacerH12()
+                    Column {
+                        StakingRewardBlock(
+                            rewardCrypto = it.rewardsCrypto,
+                            rewardFiat = it.rewardsFiat,
+                            isRewardsToClaim = it.isRewardsToClaim,
+                            onRewardsClick = clickIntents::openRewardsValidators,
+                        )
+                        SpacerH12()
+                    }
                 }
             }
         }
 
         item(key = ACTIVE_STAKING_BLOCK_KEY) {
-            AnimatedContent(targetState = state.yieldBalance, label = "Staking yield visibility animation") {
+            AnimatedContent(
+                targetState = state.yieldBalance,
+                label = "Staking yield visibility animation",
+                modifier = Modifier.animateItemPlacement()
+            ) {
                 if (it is InnerYieldBalanceState.Data) {
-                    ActiveStakingBlock(it.balance, clickIntents::onActiveStake)
-                    SpacerH12()
+                    Column {
+                        ActiveStakingBlock(it.balance, clickIntents::onActiveStake)
+                        SpacerH12()
+                    }
                 }
             }
         }
