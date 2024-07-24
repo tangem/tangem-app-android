@@ -196,7 +196,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onAmountValueChange(value: String) {
-        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, value))
+        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, yield, value))
     }
 
     override fun onAmountPasteTriggerDismiss() {
@@ -204,7 +204,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onMaxValueClick() {
-        stateController.update(AmountMaxValueStateTransformer(cryptoCurrencyStatus))
+        stateController.update(AmountMaxValueStateTransformer(cryptoCurrencyStatus, yield))
     }
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {
@@ -223,7 +223,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun selectRewardValidator(rewardValue: String) {
-        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, rewardValue))
+        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, yield, rewardValue))
         onNextClick()
     }
 
@@ -234,7 +234,7 @@ internal class StakingViewModel @Inject constructor(
             RouteType.OTHER
         }
         stateController.update { it.copy(routeType = routeType) }
-        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, activeStake.cryptoValue))
+        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, yield, activeStake.cryptoValue))
         onNextClick(activeStake.pendingActions)
     }
 
