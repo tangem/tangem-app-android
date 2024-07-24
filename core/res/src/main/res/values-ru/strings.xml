@@ -124,6 +124,7 @@
   <string name="common_origin_card">Основная карта</string>
   <string name="common_passphrase">Парольная фраза</string>
   <string name="common_paste">Вставить</string>
+  <string name="common_range">%1$s-%2$s</string>
   <string name="common_read_more">Подробнее</string>
   <string name="common_receive">Получить</string>
   <string name="common_reject">Отклонить</string>
@@ -564,16 +565,18 @@
   <string name="send_total_subtitle_fiat_format">≈ %1$s (вкл. комиссию: %2$s)</string>
   <string name="send_total_subtitle_format">%s будет отправлено</string>
   <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
-  <string name="send_tron_account_activation_error">%1$s — это монета в сети Tron. Чтобы рассчитать комиссию и совершить транзакцию, вам необходимо внести немного Tron (TRX) на свой адрес.</string>
+  <string name="send_tron_account_activation_error">%1s — это монета в сети Tron. Чтобы рассчитать комиссию и совершить транзакцию, вам необходимо внести немного Tron (TRX) на свой адрес.</string>
   <string name="send_validation_invalid_address">Неверный адрес</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
   <string name="settings_card_settings_footer">Подготовьтесь к сканированию карты, которую вы хотите настроить.</string>
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
+  <string name="staking_amount_requirement_error">Сумма для стейкинда должна быть не менее %s</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_apy_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
   <string name="staking_details_available">Доступно</string>
+  <string name="staking_details_estimated_profit">%s</string>
   <string name="staking_details_reward_claiming">Способ возраграждения</string>
   <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Он может быть автоматическим или ручным.</string>
   <string name="staking_details_reward_schedule">Период возрагражения</string>
