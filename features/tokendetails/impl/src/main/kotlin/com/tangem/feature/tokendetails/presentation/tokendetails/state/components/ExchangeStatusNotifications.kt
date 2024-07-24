@@ -3,6 +3,8 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.componen
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.tokendetails.impl.R
 
 @Immutable
@@ -32,6 +34,21 @@ internal sealed class ExchangeStatusNotifications(val config: NotificationConfig
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = TextReference.Res(R.string.common_go_to_provider),
                 onClick = onGoToProviderClick,
+            ),
+        ),
+    )
+
+    data class TokenRefunded(
+        val cryptoCurrency: CryptoCurrency,
+        val onGoToTokenClick: () -> Unit,
+    ) : ExchangeStatusNotifications(
+        config = NotificationConfig(
+            title = stringReference("TITLE FOR TOKEN REFUND"),
+            subtitle = stringReference("SUBTITLE FOR TOKEN REFUND"),
+            iconResId = R.drawable.ic_alert_triangle_20,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = stringReference("Go to token"),
+                onClick = onGoToTokenClick,
             ),
         ),
     )
