@@ -133,7 +133,12 @@ private fun getButtonData(currentState: StakingUiState): Int {
                 if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
                     R.string.common_close
                 } else {
-                    R.string.common_stake
+                    when (currentState.routeType) {
+                        RouteType.STAKE -> R.string.common_stake
+                        RouteType.CLAIM -> R.string.common_claim_rewards
+                        RouteType.UNSTAKE -> R.string.common_unstake
+                        RouteType.OTHER -> R.string.common_stake
+                    }
                 }
             } else {
                 R.string.common_close
@@ -182,7 +187,8 @@ private fun isButtonEnabled(uiState: StakingUiState): Pair<Boolean, Boolean> {
     return when (uiState.currentStep) {
         StakingStep.InitialInfo -> {
             val initialState = uiState.initialInfoState as? StakingStates.InitialInfoState.Data
-            val isDisplayed = initialState?.isStakeMoreAvailable == true
+            val isDisplayed = initialState?.isStakeMoreAvailable == true ||
+                initialState?.yieldBalance is InnerYieldBalanceState.Empty
             uiState.initialInfoState.isPrimaryButtonEnabled to isDisplayed
         }
         StakingStep.Amount -> uiState.amountState.isPrimaryButtonEnabled to true
