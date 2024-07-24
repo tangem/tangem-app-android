@@ -39,7 +39,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import com.tangem.blockchain.common.FeePaidCurrency as FeePaidSdkCurrency
 
-@Suppress("LargeClass", "LongParameterList")
+@Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultCurrenciesRepository(
     private val tangemTechApi: TangemTechApi,
     private val tangemExpressApi: TangemExpressApi,
@@ -53,6 +53,7 @@ internal class DefaultCurrenciesRepository(
 
     private val demoConfig = DemoConfig()
     private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory()
+    private val cryptoCurrencyFactory = CryptoCurrencyFactory()
     private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
@@ -125,7 +126,7 @@ internal class DefaultCurrenciesRepository(
         return newTokens
             .filterNot { savedCurrencies.hasCoinForToken(it) } // tokens without coins
             .mapNotNull {
-                CryptoCurrencyFactory().createCoin(
+                cryptoCurrencyFactory.createCoin(
                     blockchain = getBlockchain(networkId = it.network.id),
                     extraDerivationPath = it.network.derivationPath.value,
                     derivationStyleProvider = getUserWallet(userWalletId).scanResponse.derivationStyleProvider,
@@ -413,10 +414,52 @@ internal class DefaultCurrenciesRepository(
     }
 
     override fun createTokenCurrency(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token {
-        return CryptoCurrencyFactory().createToken(
+        return cryptoCurrencyFactory.createToken(
             cryptoCurrency = cryptoCurrency,
             network = network,
         )
+    }
+
+    override suspend fun createTokenCurrency(
+        userWalletId: UserWalletId,
+        contractAddress: String,
+        networkId: String,
+    ): CryptoCurrency.Token {
+        val userWallet = getUserWallet(userWalletId)
+        val token = withContext(dispatchers.io) {
+            val foundToken = tangemTechApi.getCoins(
+                contractAddress = contractAddress,
+                networkIds = networkId,
+            )
+                .getOrThrow()
+                .coins
+                .firstNotNullOfOrNull { coin ->
+                    val networksWithTheSameAddress = coin.networks.filter { network ->
+                        (network.contractAddress != null || network.decimalCount != null) &&
+                            network.contractAddress?.equals(contractAddress, ignoreCase = true) == true
+                    }
+
+                    if (networksWithTheSameAddress.isNotEmpty()) {
+                        coin.copy(networks = networksWithTheSameAddress)
+                    } else {
+                        null
+                    }
+                } ?: error("Token not found")
+            val network = foundToken.networks.firstOrNull { it.networkId == networkId } ?: error("Network not found")
+            CryptoCurrencyFactory.Token(
+                symbol = foundToken.symbol,
+                name = foundToken.name,
+                contractAddress = contractAddress,
+                decimals = network.decimalCount?.toInt() ?: error("Decimals not found"),
+                id = foundToken.id,
+            )
+        }
+        return cryptoCurrencyFactory.createToken(
+            token = token,
+            networkId = networkId,
+            extraDerivationPath = null,
+            derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+        ) ?: error("Unable to create token")
     }
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
