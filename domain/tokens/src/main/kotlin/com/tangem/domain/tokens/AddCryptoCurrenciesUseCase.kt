@@ -79,11 +79,33 @@ class AddCryptoCurrenciesUseCase(
             .toNonEmptyListOrNull()
             ?: return@either
 
-        catch({ currenciesRepository.addCurrencies(userWalletId, currenciesToAdd) }) {
-            raise(it)
-        }
-
+        addCurrencies(userWalletId, currenciesToAdd)
         refreshUpdatedNetworks(userWalletId, currenciesToAdd, existingCurrencies)
+    }
+
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        contractAddress: String,
+        networkId: String,
+    ): Either<Throwable, CryptoCurrency> = either {
+        val existingCurrencies =
+            catch({ currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId) }) {
+                raise(it)
+            }
+        val foundToken = existingCurrencies
+            .filterIsInstance<CryptoCurrency.Token>()
+            .firstOrNull {
+                it.network.backendId == networkId &&
+                    !it.isCustom &&
+                    it.contractAddress.equals(contractAddress, true)
+            }
+        if (foundToken != null) {
+            return@either foundToken
+        }
+        val tokenToAdd = createTokenCurrency(userWalletId, contractAddress, networkId)
+        addCurrencies(userWalletId, listOf(tokenToAdd))
+        refreshUpdatedNetworks(userWalletId, listOf(tokenToAdd), existingCurrencies)
+        tokenToAdd
     }
 
     /**
@@ -112,6 +134,33 @@ class AddCryptoCurrenciesUseCase(
                     refresh = true,
                 )
             },
+        ) {
+            raise(it)
+        }
+    }
+
+    private suspend fun Raise<Throwable>.createTokenCurrency(
+        userWalletId: UserWalletId,
+        contractAddress: String,
+        networkId: String,
+    ): CryptoCurrency.Token {
+        return catch(
+            block = {
+                currenciesRepository.createTokenCurrency(
+                    userWalletId = userWalletId,
+                    contractAddress = contractAddress,
+                    networkId = networkId,
+                )
+            },
+            catch = {
+                raise(it)
+            },
+        )
+    }
+
+    private suspend fun Raise<Throwable>.addCurrencies(userWalletId: UserWalletId, tokens: List<CryptoCurrency>) {
+        catch(
+            { currenciesRepository.addCurrencies(userWalletId, tokens) },
         ) {
             raise(it)
         }
