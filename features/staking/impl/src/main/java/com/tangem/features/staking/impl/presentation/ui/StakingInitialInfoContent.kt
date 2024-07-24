@@ -52,8 +52,8 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
     LazyColumn(
         modifier = Modifier
             .background(TangemTheme.colors.background.tertiary)
-            .padding(TangemTheme.dimens.spacing16)
             .fillMaxSize(),
+        contentPadding = PaddingValues(TangemTheme.dimens.spacing16),
     ) {
         item(key = METRICS_BLOCK_KEY) {
             AnimatedVisibility(state.yieldBalance == InnerYieldBalanceState.Empty) {
@@ -74,16 +74,16 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
                         isRewardsToClaim = it.isRewardsToClaim,
                         onRewardsClick = clickIntents::openRewardsValidators,
                     )
+                    SpacerH12()
                 }
             }
         }
-
-        item { SpacerH12() }
 
         item(key = ACTIVE_STAKING_BLOCK_KEY) {
             AnimatedContent(targetState = state.yieldBalance, label = "Staking yield visibility animation") {
                 if (it is InnerYieldBalanceState.Data) {
                     ActiveStakingBlock(it.balance, clickIntents::onActiveStake)
+                    SpacerH12()
                 }
             }
         }
