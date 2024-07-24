@@ -127,7 +127,7 @@ internal class SetInitialDataStateTransformer(
                 startText = TextReference.Res(R.string.staking_details_minimum_requirement),
                 endText = TextReference.Str(
                     value = BigDecimalFormatter.formatCryptoAmount(
-                        cryptoAmount = yield.args.enter.args[KEY_AMOUNT]?.minimum?.toBigDecimal(),
+                        cryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum,
                         cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
                         decimals = cryptoCurrencyStatus.currency.decimals,
                     ),
@@ -191,6 +191,5 @@ internal class SetInitialDataStateTransformer(
 
     companion object {
         private val EQUALITY_THRESHOLD = BigDecimal(1E-10)
-        private const val KEY_AMOUNT = "amount"
     }
 }
