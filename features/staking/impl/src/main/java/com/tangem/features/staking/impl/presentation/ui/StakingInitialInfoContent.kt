@@ -67,7 +67,7 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
                 )
             }
         }
-        AnimatedContent(targetState = state.yieldBalance, label = "Rewards block visibility animation") {
+        AnimatedContent(targetState = state.yieldBalance, label = "Staking yield visibility animation") {
             if (it is InnerYieldBalanceState.Data) {
                 ActiveStakingBlock(it.balance, clickIntents::onActiveStake)
             }
@@ -168,6 +168,7 @@ private fun StakingRewardBlock(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(),
+                enabled = isRewardsToClaim,
                 onClick = onRewardsClick,
             ),
     )
@@ -192,18 +193,20 @@ private fun ActiveStakingBlock(groups: List<BalanceGroupedState>, onClick: (Bala
                     ) {
                         group.items.forEachIndexed { index, balance ->
                             key(balance.validator.address) {
-                                val caption = combinedReference(
-                                    if (group.type == BalanceGroupType.UNSTAKED) {
-                                        resourceReference(R.string.staking_details_unbonding_period)
+                                val caption = if (group.type == BalanceGroupType.UNSTAKED) {
+                                    combinedReference(
+                                        resourceReference(R.string.staking_details_unbonding_period),
                                         annotatedReference {
                                             appendSpace()
                                             appendColored(
                                                 text = balance.unbondingPeriod.resolveReference(),
                                                 color = TangemTheme.colors.text.accent,
                                             )
-                                        }
-                                    } else {
-                                        resourceReference(R.string.app_name)
+                                        },
+                                    )
+                                } else {
+                                    combinedReference(
+                                        resourceReference(R.string.app_name),
                                         annotatedReference {
                                             appendSpace()
                                             appendColored(
@@ -213,9 +216,9 @@ private fun ActiveStakingBlock(groups: List<BalanceGroupedState>, onClick: (Bala
                                                 ),
                                                 color = TangemTheme.colors.text.accent,
                                             )
-                                        }
-                                    },
-                                )
+                                        },
+                                    )
+                                }
                                 InputRowImageInfo(
                                     title = group.title.takeIf { index == 0 },
                                     subtitle = stringReference(balance.validator.name),
