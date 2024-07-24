@@ -23,7 +23,9 @@ class GetStakingTransactionUseCase(
             // workaround, sometimes transaction is not created immediately after actions/enter
             delay(PATCH_TRANSACTION_REQUEST_DELAY)
 
-            val createdTransaction = createAction.transactions?.get(0) ?: error("No available transaction to patch")
+            val createdTransaction = createAction.transactions
+                ?.get(createAction.currentStepIndex)
+                ?: error("No available transaction to patch")
             val patchedTransaction = stakingRepository.constructTransaction(createdTransaction.id)
 
             patchedTransaction
