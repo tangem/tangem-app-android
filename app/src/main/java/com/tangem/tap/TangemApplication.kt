@@ -52,7 +52,6 @@ import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
-import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -315,7 +314,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private fun initWithConfigDependency(config: Config) {
         initAnalytics(this, config)
-        initFeedbackManager(this, foregroundActivityObserver, store)
+        initFeedbackManager(this, store)
     }
 
     private fun initAnalytics(application: Application, config: Config) {
@@ -336,11 +335,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         // ExceptionHandler.append(blockchainExceptionHandler) TODO: https://tangem.atlassian.net/browse/AND-4173
     }
 
-    private fun initFeedbackManager(
-        context: Context,
-        foregroundActivityObserver: ForegroundActivityObserver,
-        store: Store<AppState>,
-    ) {
+    private fun initFeedbackManager(context: Context, store: Store<AppState>) {
         fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo {
             return AdditionalFeedbackInfo().apply {
                 appVersion = try {
@@ -381,7 +376,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         val feedbackManager = LegacyFeedbackManager(
             infoHolder = additionalFeedbackInfo,
             logCollector = tangemLogCollector,
-            chatManager = ChatManager(foregroundActivityObserver),
             feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
             getFeedbackEmailUseCase = getFeedbackEmailUseCase,
         )

@@ -74,26 +74,6 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
                 scanResponse = action.scanResponse,
             )
         }
-        is GlobalAction.OpenChat -> {
-            val globalState = store.state.globalState
-            val feedbackManager = globalState.feedbackManager.guard {
-                store.dispatchDebugErrorNotification("FeedbackManager not initialized")
-                return
-            }
-            val config = globalState.configManager?.config.guard {
-                store.dispatchDebugErrorNotification("Config not initialized")
-                return
-            }
-
-            // if config not set -> try to get it based on a scanResponse.productType
-            val unsafeChatConfig = action.chatConfig ?: config.sprinklr
-
-            val chatConfig = unsafeChatConfig.guard {
-                store.dispatchDebugErrorNotification("The chat config is not initialized")
-                return
-            }
-            feedbackManager.openChat(chatConfig, action.feedbackData)
-        }
         is GlobalAction.ExchangeManager.Init -> {
             val appStateSafe = appState() ?: return
             val config = appStateSafe.globalState.configManager?.config ?: return
