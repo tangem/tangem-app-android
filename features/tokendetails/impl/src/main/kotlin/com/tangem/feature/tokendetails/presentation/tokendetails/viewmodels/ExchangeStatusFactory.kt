@@ -13,6 +13,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
@@ -108,11 +109,12 @@ internal class ExchangeStatusFactory(
             async {
                 val statusModel = getExchangeStatus(tx.txId)
                 val isRefundTerminalStatus = statusModel?.refundNetwork == null &&
-                    statusModel?.refundContractAddress == null
+                    statusModel?.refundContractAddress == null &&
+                    tx.provider.type != ExchangeProviderType.DEX_BRIDGE
                 if (tx.activeStatus.isTerminal(isRefundTerminalStatus)) {
                     tx
                 } else {
-                    val addedRefundToken = addRefundCurrencyIfNeeded(statusModel)
+                    val addedRefundToken = addRefundCurrencyIfNeeded(statusModel, tx.provider.type)
                     swapTransactionsStateConverter.updateTxStatus(
                         tx = tx,
                         statusModel = statusModel,
@@ -151,8 +153,15 @@ internal class ExchangeStatusFactory(
         }
     }
 
-    private suspend fun addRefundCurrencyIfNeeded(status: ExchangeStatusModel?): CryptoCurrency? {
+    /**
+     * For now do it only for dex-bridge provider
+     */
+    private suspend fun addRefundCurrencyIfNeeded(
+        status: ExchangeStatusModel?,
+        type: ExchangeProviderType,
+    ): CryptoCurrency? {
         status ?: return null
+        if (type != ExchangeProviderType.DEX_BRIDGE) return null
         val refundNetwork = status.refundNetwork
         val refundContractAddress = status.refundContractAddress
         if (refundNetwork != null && refundContractAddress != null) {
