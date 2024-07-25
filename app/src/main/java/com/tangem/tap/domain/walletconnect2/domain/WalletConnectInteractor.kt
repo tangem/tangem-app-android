@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
+import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -132,6 +133,7 @@ class WalletConnectInteractor(
         runCatching {
             if (accounts.isEmpty()) return
             isWalletConnectReadyForDeepLinks = true
+            if (deeplinkStack.empty()) return
             val lastDeeplink = deeplinkStack.pop()
             store.dispatchOnMain(WalletConnectAction.OpenSession(lastDeeplink))
         }.onFailure {
@@ -361,6 +363,18 @@ class WalletConnectInteractor(
      * @param deeplink deeplink to handle
      */
     fun addDeeplink(deeplink: String) {
+        val deeplinkQueries = deeplink.split(WC_SPLIT_CHAR).lastOrNull()
+        val sessionTopic = deeplinkQueries?.let { Uri.parse(it).getQueryParameter(WC_TOPIC_QUERY_NAME) }
+
+        val isAlreadyActiveSessionTopic = walletConnectRepository.currentSessions.any { session ->
+            session.topic == sessionTopic
+        }
+
+        if (isAlreadyActiveSessionTopic && deeplinkQueries != null) {
+            Timber.i("WC already has an active session topic: $deeplink")
+            return
+        }
+
         if (isWalletConnectReadyForDeepLinks) {
             store.dispatchOnMain(WalletConnectAction.OpenSession(deeplink))
         } else {
@@ -406,7 +420,9 @@ class WalletConnectInteractor(
         return sessionRequestConverter.prepareRequest(sessionRequest, userWalletId)
     }
 
-    companion object {
-        private const val WC_SCHEME = "wc"
+    private companion object {
+        const val WC_SCHEME = "wc"
+        const val WC_TOPIC_QUERY_NAME = "sessionTopic"
+        const val WC_SPLIT_CHAR = "/"
     }
 }
