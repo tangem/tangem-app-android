@@ -368,7 +368,9 @@ private fun BaseScaffoldWithMarkets(
             WalletSnackbarHost(
                 snackbarHostState = it,
                 event = state.event,
-                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing16),
+                modifier = Modifier
+                    .padding(bottom = TangemTheme.dimens.spacing4)
+                    .navigationBarsPadding(),
             )
         },
         containerColor = TangemTheme.colors.background.secondary,

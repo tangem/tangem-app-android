@@ -64,7 +64,12 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
         topBar = { TokenDetailsTopAppBar(config = state.topAppBarConfig) },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                modifier = Modifier.padding(bottom = bottomBarHeight),
+                hostState = snackbarHostState,
+            )
+        },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
