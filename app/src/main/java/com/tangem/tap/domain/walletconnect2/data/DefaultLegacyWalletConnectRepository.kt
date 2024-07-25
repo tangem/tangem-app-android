@@ -35,7 +35,8 @@ internal class DefaultLegacyWalletConnectRepository(
     private val _activeSessions: MutableSharedFlow<List<WalletConnectSession>> = MutableSharedFlow()
     override val activeSessions: Flow<List<WalletConnectSession>> = _activeSessions
 
-    private var currentSessions: List<WalletConnectSession> = emptyList()
+    override var currentSessions: List<WalletConnectSession> = emptyList()
+        private set
 
     /**
      * @param projectId Project ID at https://cloud.walletconnect.com/
