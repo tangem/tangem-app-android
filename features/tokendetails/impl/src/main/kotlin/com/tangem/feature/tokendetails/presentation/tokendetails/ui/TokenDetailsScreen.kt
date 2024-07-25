@@ -12,7 +12,6 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -32,6 +31,7 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.OkxPromoNotification
+import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.event.EventEffect
@@ -63,7 +63,16 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
         topBar = { TokenDetailsTopAppBar(config = state.topAppBarConfig) },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            TangemSnackbarHost(
+                modifier = Modifier.padding(
+                    start = TangemTheme.dimens.spacing16,
+                    end = TangemTheme.dimens.spacing16,
+                    bottom = bottomBarHeight + TangemTheme.dimens.spacing16,
+                ),
+                hostState = snackbarHostState,
+            )
+        },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
