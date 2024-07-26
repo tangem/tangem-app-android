@@ -26,7 +26,7 @@ import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
-import com.tangem.core.ui.components.list.roundedListItems
+import com.tangem.core.ui.components.list.roundedListWithDividersItems
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -64,8 +64,10 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
             }
         }
 
-        this.roundedListItems(state.infoItems)
-        item { SpacerH12() }
+        this.roundedListWithDividersItems(
+            rows = state.infoItems,
+            footerContent = { SpacerH12() },
+        )
 
         if (state.yieldBalance is InnerYieldBalanceState.Data) {
             item(key = STAKING_REWARD_BLOCK_KEY) {
