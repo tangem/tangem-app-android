@@ -726,6 +726,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         router.openTokenDetails(userWalletId, cryptoCurrency)
     }
 
+    override fun onOpenUrlClick(url: String) {
+        router.openUrl(url)
+    }
+
     override fun onSwapPromoDismiss() {
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoTokenUseCase.neverToShow()
