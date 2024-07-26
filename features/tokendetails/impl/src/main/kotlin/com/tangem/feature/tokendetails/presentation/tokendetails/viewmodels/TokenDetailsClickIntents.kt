@@ -57,4 +57,6 @@ interface TokenDetailsClickIntents {
     fun onAssociateClick()
 
     fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency)
+
+    fun onOpenUrlClick(url: String)
 }
