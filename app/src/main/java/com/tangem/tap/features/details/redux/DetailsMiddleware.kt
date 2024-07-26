@@ -247,7 +247,7 @@ class DetailsMiddleware {
             deleteSavedAccessCodes()
             store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
 
-            store.dispatchNavigationAction { popTo<AppRoute.Home>() }
+            store.dispatchNavigationAction { replaceAll(AppRoute.Home) }
 
             return CompletionResult.Success(Unit)
         }
