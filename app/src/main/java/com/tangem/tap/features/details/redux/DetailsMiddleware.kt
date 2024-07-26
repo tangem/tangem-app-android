@@ -156,7 +156,6 @@ class DetailsMiddleware {
             // Nothing to change
             val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
 
-            // TODO: как такое возможно?)
             if (walletsRepository.shouldSaveUserWalletsSync() == enable) {
                 store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
                 return@launch
@@ -248,7 +247,7 @@ class DetailsMiddleware {
             deleteSavedAccessCodes()
             store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
 
-            store.dispatchNavigationAction { popTo<AppRoute.Home>() }
+            store.dispatchNavigationAction { replaceAll(AppRoute.Home) }
 
             return CompletionResult.Success(Unit)
         }
