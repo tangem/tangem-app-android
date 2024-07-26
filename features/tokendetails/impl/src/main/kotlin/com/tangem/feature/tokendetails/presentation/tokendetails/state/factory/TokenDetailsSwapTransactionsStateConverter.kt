@@ -25,6 +25,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
+import java.util.Locale
 
 internal class TokenDetailsSwapTransactionsStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
@@ -163,9 +164,11 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                 if (refundToken == null) {
                     null
                 } else {
-                    ExchangeStatusNotifications.TokenRefunded(refundToken) {
-                        clickIntents.onGoToRefundedTokenClick(refundToken)
-                    }
+                    ExchangeStatusNotifications.TokenRefunded(
+                        cryptoCurrency = refundToken,
+                        onReadMoreClick = { clickIntents.onOpenUrlClick(url = getAboutCrossChainBridgesLink()) },
+                        onGoToTokenClick = { clickIntents.onGoToRefundedTokenClick(refundToken) },
+                    )
                 }
             }
             else -> null
@@ -315,5 +318,13 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             isActive = isSending,
             isDone = isSendingDone,
         )
+    }
+
+    private fun getAboutCrossChainBridgesLink(): String {
+        return if (Locale.getDefault().country == "RU") {
+            "https://tangem.com/ru/blog/post/an-overview-of-cross-chain-bridges/"
+        } else {
+            "https://tangem.com/en/blog/post/an-overview-of-cross-chain-bridges/"
+        }
     }
 }
