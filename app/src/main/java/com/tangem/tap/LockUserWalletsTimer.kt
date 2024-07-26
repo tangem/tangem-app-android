@@ -4,7 +4,6 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.utils.popTo
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
@@ -49,7 +48,7 @@ internal class LockUserWalletsTimer(
             start()
 
             if (shouldOpenWelcomeScreenOnResume) {
-                store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
+                store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
                 settingsRepository.setShouldOpenWelcomeScreenOnResume(value = false)
             }
         }
@@ -127,7 +126,7 @@ internal class LockUserWalletsTimer(
                 if (wasApplicationStopped) {
                     settingsRepository.setShouldOpenWelcomeScreenOnResume(value = true)
                 } else {
-                    store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
+                    store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
                 }
             }
         }
