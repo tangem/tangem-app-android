@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.utils.transformer.Transformer
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +35,7 @@ internal class StakingStateController @Inject constructor() {
 
     private fun getInitialState(): StakingUiState {
         return StakingUiState(
+            title = TextReference.Str(""),
             clickIntents = StakingClickIntentsStub,
             cryptoCurrencyName = "",
             currentStep = StakingStep.InitialInfo,

@@ -110,6 +110,7 @@
   <string name="common_fee_selector_title">Speed and fee</string>
   <string name="common_generate_addresses">Get addresses</string>
   <string name="common_go_to_provider">Go to provider</string>
+  <string name="common_go_to_token">Go to token</string>
   <string name="common_import">Import</string>
   <string name="common_later">Later</string>
   <string name="common_locked">Locked</string>
@@ -225,6 +226,8 @@
   <string name="express_exchange_by">Exchange by %s</string>
   <string name="express_exchange_notification_failed_text">Visit provider’s website to refund your money</string>
   <string name="express_exchange_notification_failed_title">Operation failed by provider</string>
+  <string name="express_exchange_notification_refund_text">The transaction amount was refunded in %1$s to your wallet due to OKX or bridge rules. %2$s</string>
+  <string name="express_exchange_notification_refund_title">The amount was refunded in %1$s (%2$s network)</string>
   <string name="express_exchange_notification_verification_text">Visit provider’s website for verification</string>
   <string name="express_exchange_notification_verification_title">KYC verification required by provider</string>
   <string name="express_exchange_status_canceled">Canceled</string>
@@ -661,6 +664,7 @@
   <string name="staking_details_unbonding_period_info">The period you must wait after requesting to withdraw funds from staking before the tokens become available.</string>
   <string name="staking_details_warmup_period">Warmup period</string>
   <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
+  <string name="staking_initial_info_title">Stake %s</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">Staking allow you to earn %1s. Your staking rewards arrive every ~%2s days.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
