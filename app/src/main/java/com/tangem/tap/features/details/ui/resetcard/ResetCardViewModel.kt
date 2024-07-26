@@ -13,7 +13,6 @@ import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.card.ResetCardUserCodeParams
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.models.UserWalletId
@@ -65,8 +64,15 @@ internal class ResetCardViewModel @Inject constructor(
     // endregion
 
     // region Data of card that was scanned on CardSettings
-    private val primaryCardId: String
-    private val primaryBackupStatus: CardDTO.BackupStatus?
+    private val primaryCardId: String = savedStateHandle.get<String>(AppRoute.ResetToFactory.CARD_ID)
+        ?: error("CardId must be provided for ResetCardViewModel")
+
+    private val isActiveBackupPrimaryCard =
+        savedStateHandle.get<Boolean>(AppRoute.ResetToFactory.IS_ACTIVE_BACKUP_STATUS)
+            ?: error("IsActiveBackupCard must be provided for ResetCardViewModel")
+
+    private val primaryBackupCardsCount = savedStateHandle.get<Int>(AppRoute.ResetToFactory.BACKUP_CARDS_COUNT)
+        ?: error("CardCount must be provided for ResetCardViewModel")
     // endregion
 // [REDACTED_TODO_COMMENT]
     private var resetBackupCardCount = 0
@@ -74,15 +80,6 @@ internal class ResetCardViewModel @Inject constructor(
     val screenState: MutableStateFlow<ResetCardScreenState> = MutableStateFlow(
         value = getInitialState(),
     )
-
-    init {
-        val cardSpecificInfo = savedStateHandle.get<Bundle>(AppRoute.ResetToFactory.CARD_SPECIFIC_DATA)
-            ?.unbundle(AppRoute.ResetToFactory.CardSpecificInfo.serializer())
-            ?: error("CardSpecificData must be provided for ResetCardViewModel")
-
-        primaryCardId = cardSpecificInfo.cardId
-        primaryBackupStatus = cardSpecificInfo.backupStatus
-    }
 
     private fun getInitialState(): ResetCardScreenState {
         val shouldShowResetPasswordButton = shouldShowResetPasswordButton()
@@ -97,7 +94,7 @@ internal class ResetCardViewModel @Inject constructor(
         return ResetCardScreenState(
             resetButtonEnabled = false,
             descriptionText = getResetToFactoryDescription(
-                backupStatus = primaryBackupStatus,
+                isActiveBackupStatus = isActiveBackupPrimaryCard,
                 typesResolver = currentCardTypesResolver,
             ),
             warningsToShow = warningsToShow,
@@ -114,7 +111,7 @@ internal class ResetCardViewModel @Inject constructor(
     private fun shouldShowResetPasswordButton(): Boolean {
         val isTangemWallet = currentCardTypesResolver.isTangemWallet() || currentCardTypesResolver.isWallet2()
 
-        return isTangemWallet && primaryBackupStatus is CardDTO.BackupStatus.Active
+        return isTangemWallet && isActiveBackupPrimaryCard
     }
 
     private fun toggleFirstCondition(isAccepted: Boolean) {
@@ -282,12 +279,6 @@ internal class ResetCardViewModel @Inject constructor(
     private fun getBackupCardsCount(): Int {
         if (!currentCardTypesResolver.isMultiwalletAllowed()) return 0
 
-        return when (val status = primaryBackupStatus) {
-            is CardDTO.BackupStatus.Active -> status.cardCount
-            is CardDTO.BackupStatus.CardLinked,
-            is CardDTO.BackupStatus.NoBackup,
-            null,
-            -> 0
-        }
+        return primaryBackupCardsCount
     }
 }
