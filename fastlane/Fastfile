@@ -23,12 +23,8 @@ platform :android do
 
   desc "Runs all the tests"
   lane :test do
-    gradle(
-        task: "clean assemble",
-        build_type: "Debug"
-    )
     gradle(task: "detekt")
-    gradle(task: "test")
+    gradle(task: "testDebugUnitTest")
   end
 
   desc "Build a signed release APK"
