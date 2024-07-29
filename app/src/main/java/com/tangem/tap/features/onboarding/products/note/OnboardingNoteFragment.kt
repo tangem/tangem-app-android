@@ -11,12 +11,14 @@ import coil.load
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.ShareElement
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.features.addBackPressHandler
+import com.tangem.tap.features.onboarding.OnboardingWalletBalance
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteState
@@ -134,7 +136,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     }
 
     private fun setupTopUpWalletState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
-        if (state.isBuyAllowed) {
+        if (availableForBuy(state.scanResponse, state.walletBalance)) {
             btnMainAction.setText(R.string.onboarding_top_up_button_but_crypto)
             btnMainAction.icon = null
             btnMainAction.setOnClickListener {
@@ -215,6 +217,11 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             transition.interpolator = OvershootInterpolator()
             TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
         }
+    }
+
+    private fun availableForBuy(scanResponse: ScanResponse?, walletBalance: OnboardingWalletBalance): Boolean {
+        scanResponse ?: return false
+        return store.state.globalState.exchangeManager.availableForBuy(scanResponse, walletBalance.currency)
     }
 
     override fun handleOnBackPressed() {
