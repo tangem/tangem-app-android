@@ -137,7 +137,7 @@ private fun getButtonData(currentState: StakingUiState): Int {
                         RouteType.STAKE -> R.string.common_stake
                         RouteType.CLAIM -> R.string.common_claim_rewards
                         RouteType.UNSTAKE -> R.string.common_unstake
-                        RouteType.OTHER -> R.string.common_stake
+                        RouteType.OTHER -> R.string.common_claim_rewards
                     }
                 }
             } else {

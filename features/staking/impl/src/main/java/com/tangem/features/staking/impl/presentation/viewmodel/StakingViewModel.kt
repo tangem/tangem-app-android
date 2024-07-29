@@ -234,7 +234,7 @@ internal class StakingViewModel @Inject constructor(
         val routeType = if (activeStake.pendingActions.isEmpty()) {
             RouteType.UNSTAKE
         } else {
-            RouteType.CLAIM
+            RouteType.OTHER
         }
         stateController.update { it.copy(routeType = routeType) }
         stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, yield, activeStake.cryptoValue))
