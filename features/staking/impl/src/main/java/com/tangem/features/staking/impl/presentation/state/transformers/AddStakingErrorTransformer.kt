@@ -28,7 +28,7 @@ internal class AddStakingErrorTransformer(
             )
             // TODO staking
             else -> StakingNotification.Error.Common(
-                subtitle = error.toString()
+                subtitle = error.toString(),
             )
         }
     }

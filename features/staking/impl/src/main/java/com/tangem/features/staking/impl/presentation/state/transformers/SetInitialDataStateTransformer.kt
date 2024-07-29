@@ -25,7 +25,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
 internal class SetInitialDataStateTransformer(
@@ -88,7 +88,7 @@ internal class SetInitialDataStateTransformer(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance
 
-        return persistentListOf(
+        return listOfNotNull(
             createAvailableItem(cryptoCurrencyStatus),
             createApyItem(),
             createOnStakeItem(cryptoCurrencyStatus, yieldBalance),
@@ -97,7 +97,7 @@ internal class SetInitialDataStateTransformer(
             createRewardClaimingItem(),
             createWarmupPeriodItem(),
             createRewardScheduleItem(),
-        )
+        ).toPersistentList()
     }
 
     private fun createAvailableItem(cryptoCurrencyStatus: CryptoCurrencyStatus): RoundedListWithDividersItemData {
@@ -155,18 +155,21 @@ internal class SetInitialDataStateTransformer(
 
     private fun createMinimumRequirementItem(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): RoundedListWithDividersItemData {
-        return RoundedListWithDividersItemData(
-            id = R.string.staking_details_minimum_requirement,
-            startText = TextReference.Res(R.string.staking_details_minimum_requirement),
-            endText = TextReference.Str(
-                value = BigDecimalFormatter.formatCryptoAmount(
-                    cryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum,
-                    cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-                    decimals = cryptoCurrencyStatus.currency.decimals,
+    ): RoundedListWithDividersItemData? {
+        val minimumCryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum
+        return minimumCryptoAmount?.let {
+            RoundedListWithDividersItemData(
+                id = R.string.staking_details_minimum_requirement,
+                startText = TextReference.Res(R.string.staking_details_minimum_requirement),
+                endText = TextReference.Str(
+                    value = BigDecimalFormatter.formatCryptoAmount(
+                        cryptoAmount = it,
+                        cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
+                        decimals = cryptoCurrencyStatus.currency.decimals,
+                    ),
                 ),
-            ),
-        )
+            )
+        }
     }
 
     private fun createRewardClaimingItem(): RoundedListWithDividersItemData {
