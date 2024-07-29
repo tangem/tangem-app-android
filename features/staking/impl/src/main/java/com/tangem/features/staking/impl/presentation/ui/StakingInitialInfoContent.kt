@@ -40,8 +40,9 @@ import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.extensions.orZero
 
-private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
+@Suppress("UnusedPrivateMember")
 private const val METRICS_BLOCK_KEY = "MetricsBlock"
+private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
 private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -51,18 +52,20 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
 
     LazyColumn(
         modifier = Modifier
-            .background(TangemTheme.colors.background.tertiary)
+            .background(TangemTheme.colors.background.secondary)
             .fillMaxSize(),
         contentPadding = PaddingValues(TangemTheme.dimens.spacing16),
     ) {
-        if (state.yieldBalance == InnerYieldBalanceState.Empty) {
-            item(key = METRICS_BLOCK_KEY) {
-                Column(modifier = Modifier.animateItemPlacement()) {
-                    MetricsBlock(state)
-                    SpacerH12()
-                }
-            }
-        }
+        // metrics block is temporary disabled
+        // https://www.figma.com/design/Vs6SkVsFnUPsSCNwlnVf5U?node-id=12484-35755#876661319
+        // if (state.yieldBalance == InnerYieldBalanceState.Empty) {
+        //     item(key = METRICS_BLOCK_KEY) {
+        //         Column(modifier = Modifier.animateItemPlacement()) {
+        //             MetricsBlock(state)
+        //             SpacerH12()
+        //         }
+        //     }
+        // }
 
         this.roundedListWithDividersItems(
             rows = state.infoItems,
@@ -94,6 +97,7 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
     }
 }
 
+@Suppress("UnusedPrivateMember")
 @Composable
 private fun MetricsBlock(state: StakingStates.InitialInfoState.Data) {
     Column(
