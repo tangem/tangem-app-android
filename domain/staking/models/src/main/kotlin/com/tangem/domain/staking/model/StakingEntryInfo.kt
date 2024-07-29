@@ -1,9 +1,9 @@
 package com.tangem.domain.staking.model
 
-import java.math.BigDecimal
+import com.tangem.domain.core.serialization.SerializedBigDecimal
 
 data class StakingEntryInfo(
-    val interestRate: BigDecimal,
+    val interestRate: SerializedBigDecimal,
     val periodInDays: Int,
     val tokenSymbol: String,
 )

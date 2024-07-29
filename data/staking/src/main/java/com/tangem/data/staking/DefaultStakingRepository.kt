@@ -40,6 +40,7 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.orZero
 import com.tangem.utils.toFormattedString
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
@@ -129,7 +130,7 @@ internal class DefaultStakingRepository(
             val yield = getYield(cryptoCurrencyId, symbol)
 
             StakingEntryInfo(
-                interestRate = yield.apy,
+                interestRate = requireNotNull(yield.validators.maxByOrNull { it.apr.orZero() }?.apr),
                 periodInDays = yield.metadata.cooldownPeriod.days,
                 tokenSymbol = yield.token.symbol,
             )
