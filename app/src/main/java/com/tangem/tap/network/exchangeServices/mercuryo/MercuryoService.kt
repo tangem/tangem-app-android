@@ -6,6 +6,7 @@ import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -28,7 +29,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
 
     override fun isSellAllowed(): Boolean = false
 
-    override fun availableForBuy(currency: Currency): Boolean {
+    override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean {
         if (!isBuyAllowed()) return false
 
         val mercuryoNetwork = currency.blockchain.mercuryoNetwork()
