@@ -6,9 +6,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
-import com.tangem.tap.store
 import org.rekotlin.StateType
-import kotlin.properties.ReadOnlyProperty
 
 /**
 [REDACTED_AUTHOR]
@@ -56,10 +54,6 @@ data class TwinCardsState(
 
     val twinningInProgress: Boolean
         get() = currentStep == TwinCardsStep.CreateSecondWallet || currentStep == TwinCardsStep.CreateThirdWallet
-
-    val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { _, _ ->
-        store.state.globalState.exchangeManager.availableForBuy(walletBalance.currency)
-    }
 }
 
 enum class CreateTwinWalletMode { CreateWallet, RecreateWallet }
