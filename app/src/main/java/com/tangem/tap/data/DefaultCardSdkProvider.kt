@@ -19,6 +19,8 @@ import com.tangem.sdk.extensions.*
 import com.tangem.sdk.nfc.NfcManager
 import com.tangem.sdk.storage.create
 import com.tangem.tap.foregroundActivityObserver
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,6 +32,7 @@ import javax.inject.Singleton
 @Singleton
 internal class DefaultCardSdkProvider @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : CardSdkProvider, CardSdkOwner {
 
     private val observer = Observer()
@@ -39,12 +42,12 @@ internal class DefaultCardSdkProvider @Inject constructor(
     override val sdk: TangemSdk
         get() = holder?.sdk ?: tryToRegisterWithForegroundActivity()
 
-    override fun register(activity: FragmentActivity) {
+    override fun register(activity: FragmentActivity) = runBlocking(dispatchers.mainImmediate) {
         if (activity.isDestroyed || activity.isFinishing || activity.isChangingConfigurations) {
             val message = "Tangem SDK owner registration skipped: activity is destroyed or finishing"
             analyticsEventHandler.send(TangemSdkWarningEvent(message))
             Log.info { message }
-            return
+            return@runBlocking
         }
 
         if (holder != null) {
@@ -58,7 +61,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
         Log.info { "Tangem SDK owner registered" }
     }
 
-    private fun tryToRegisterWithForegroundActivity(): TangemSdk {
+    private fun tryToRegisterWithForegroundActivity(): TangemSdk = runBlocking(dispatchers.mainImmediate) {
         val warning = "Tangem SDK holder is null, trying to recreate it with foreground activity"
         analyticsEventHandler.send(TangemSdkWarningEvent(warning))
         Log.warning { warning }
@@ -83,7 +86,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
             error(error)
         }
 
-        return sdk
+        return@runBlocking sdk
     }
 
     private fun initialize(activity: FragmentActivity) {

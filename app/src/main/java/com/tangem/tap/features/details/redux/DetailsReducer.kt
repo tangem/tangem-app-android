@@ -76,7 +76,9 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: AppS
         },
         createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         appSettingsState = AppSettingsState(
-            isBiometricsAvailable = tangemSdkManager.canUseBiometry,
+            isBiometricsAvailable = runBlocking {
+                tangemSdkManager.checkCanUseBiometry()
+            },
             saveWallets = action.shouldSaveUserWallets,
             saveAccessCodes = runBlocking {
                 store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
