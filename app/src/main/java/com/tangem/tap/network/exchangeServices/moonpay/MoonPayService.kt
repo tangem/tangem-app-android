@@ -7,6 +7,7 @@ import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
 import com.tangem.datasource.api.common.createRetrofitInstance
 import com.tangem.domain.common.extensions.withIOContext
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -83,7 +84,7 @@ class MoonPayService(
         return status?.responseUserStatus?.isSellAllowed ?: false
     }
 
-    override fun availableForBuy(currency: Currency): Boolean = false
+    override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean = false
 
     override fun availableForSell(currency: Currency): Boolean {
         if (!isSellAllowed()) return false
