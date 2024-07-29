@@ -100,7 +100,7 @@ internal class DefaultNetworksRepository(
 
     override fun isNeedToCreateAccountWithoutReserve(network: Network): Boolean {
         val blockchain = Blockchain.fromNetworkId(network.id.value)
-        return blockchain == Blockchain.Aptos
+        return blockchain == Blockchain.Aptos || blockchain == Blockchain.Filecoin
     }
 
     override suspend fun getNetworkAddresses(
