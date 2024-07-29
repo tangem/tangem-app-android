@@ -5,10 +5,7 @@ import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -123,8 +120,12 @@ internal class SetInitialDataStateTransformer(
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_unbonding_period,
                 startText = TextReference.Res(R.string.staking_details_unbonding_period),
-                endText = TextReference.Str(yield.metadata.cooldownPeriod.days.toString()),
-                iconClick = { clickIntents.onInfoClick(InfoType.UNBOUNDING_PERIOD) },
+                endText = pluralReference(
+                    id = R.plurals.common_days,
+                    count = yield.metadata.cooldownPeriod.days,
+                    formatArgs = wrappedList(yield.metadata.cooldownPeriod.days),
+                ),
+                iconClick = { clickIntents.onInfoClick(InfoType.UNBONDING_PERIOD) },
             ),
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_minimum_requirement,
@@ -146,7 +147,11 @@ internal class SetInitialDataStateTransformer(
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_warmup_period,
                 startText = TextReference.Res(R.string.staking_details_warmup_period),
-                endText = TextReference.Str(yield.metadata.warmupPeriod.days.toString()),
+                endText = pluralReference(
+                    id = R.plurals.common_days,
+                    count = yield.metadata.cooldownPeriod.days,
+                    formatArgs = wrappedList(yield.metadata.warmupPeriod.days),
+                ),
                 iconClick = { clickIntents.onInfoClick(InfoType.WARMUP_PERIOD) },
             ),
             RoundedListWithDividersItemData(
