@@ -99,7 +99,7 @@ object OnboardingHelper {
                 }
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
                 // then open save wallet screen
-                tangemSdkManager.canUseBiometry && settingsRepository.shouldShowSaveUserWalletScreen() -> {
+                tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen() -> {
                     proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
 
                     delay(timeMillis = 1_200)
