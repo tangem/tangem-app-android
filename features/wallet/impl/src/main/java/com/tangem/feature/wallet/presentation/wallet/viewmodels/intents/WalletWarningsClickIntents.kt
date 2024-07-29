@@ -62,6 +62,8 @@ internal interface WalletWarningsClickIntents {
     fun onTravalaPromoClick(link: String?)
 
     fun onCloseTravalaPromoClick()
+
+    fun onSupportClick()
 }
 
 @Suppress("LongParameterList")
@@ -254,7 +256,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    private suspend fun getSelectedUserWallet(): UserWallet? {
+    override fun onSupportClick() {
+        reduxStateHolder.dispatch(LegacyAction.SendEmailSupport)
+    }
+
+    private fun getSelectedUserWallet(): UserWallet? {
         val userWalletId = stateHolder.getSelectedWalletId()
         return getUserWalletUseCase(userWalletId).getOrElse {
             Timber.e(
