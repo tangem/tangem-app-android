@@ -27,6 +27,7 @@ import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.domain.twins.TwinsCardWidget
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.OnboardingMenuProvider
+import com.tangem.tap.features.onboarding.OnboardingWalletBalance
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -65,12 +66,7 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
     }
 
     override fun loadToolbarMenu(): MenuProvider = OnboardingMenuProvider(
-        scanResponseProvider = Provider {
-            store.state.twinCardsState.welcomeOnlyScanResponse
-                ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
-                ?: store.state.detailsState.scanResponse
-                ?: error("ScanResponse must be not null")
-        },
+        scanResponseProvider = Provider { getActualScanResponse() },
     )
 
     @Suppress("MagicNumber")
@@ -342,7 +338,7 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
             else -> {}
         }
 
-        if (state.isBuyAllowed) {
+        if (availableForBuy(getActualScanResponse(), state.walletBalance)) {
             btnMainAction.setText(R.string.onboarding_top_up_button_but_crypto)
             btnMainAction.setOnClickListener {
                 store.dispatch(TwinCardsAction.TopUp)
@@ -422,6 +418,18 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
         } else {
             onEnd()
         }
+    }
+
+    private fun availableForBuy(scanResponse: ScanResponse?, walletBalance: OnboardingWalletBalance): Boolean {
+        scanResponse ?: return false
+        return store.state.globalState.exchangeManager.availableForBuy(scanResponse, walletBalance.currency)
+    }
+
+    private fun getActualScanResponse(): ScanResponse {
+        return store.state.twinCardsState.welcomeOnlyScanResponse
+            ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
+            ?: store.state.detailsState.scanResponse
+            ?: error("ScanResponse must be not null")
     }
 
     override fun handleOnBackPressed() {
