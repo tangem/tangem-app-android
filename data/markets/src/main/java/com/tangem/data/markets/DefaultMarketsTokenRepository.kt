@@ -19,6 +19,7 @@ internal class DefaultMarketsTokenRepository(
 ) : MarketsTokenRepository {
 
     private val tokenListConverter = TokenMarketListConverter()
+    private val tokenChartConverter = TokenChartConverter()
 
     private fun createTokenMarketsFetcher(firstBatchSize: Int, nextBatchSize: Int) = LimitOffsetBatchFetcher(
         prefetchDistance = firstBatchSize,
@@ -88,5 +89,14 @@ internal class DefaultMarketsTokenRepository(
             batchFetcher = createTokenMarketsFetcher(firstBatchSize = firstBatchSize, nextBatchSize = nextBatchSize),
             updateFetcher = tokenMarketsUpdateFetcher,
         ).toBatchFlow()
+    }
+
+    override suspend fun getChart(interval: PriceChangeInterval, tokenId: String): TokenChart {
+        val response = marketsApi.getCoinChart(
+            currency = tokenId,
+            interval = interval.toRequestParam(),
+        )
+
+        return tokenChartConverter.convert(interval, response.getOrThrow())
     }
 }
