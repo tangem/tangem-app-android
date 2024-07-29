@@ -89,77 +89,114 @@ internal class SetInitialDataStateTransformer(
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance
 
         return persistentListOf(
-            RoundedListWithDividersItemData(
-                id = R.string.staking_details_available,
-                startText = TextReference.Res(R.string.staking_details_available),
-                endText = TextReference.Str(
-                    value = BigDecimalFormatter.formatCryptoAmount(
-                        cryptoAmount = cryptoCurrencyStatus.value.amount,
-                        cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-                        decimals = cryptoCurrencyStatus.currency.decimals,
-                    ),
+            createAvailableItem(cryptoCurrencyStatus),
+            createApyItem(),
+            createOnStakeItem(cryptoCurrencyStatus, yieldBalance),
+            createUnbondingPeriodItem(),
+            createMinimumRequirementItem(cryptoCurrencyStatus),
+            createRewardClaimingItem(),
+            createWarmupPeriodItem(),
+            createRewardScheduleItem(),
+        )
+    }
+
+    private fun createAvailableItem(cryptoCurrencyStatus: CryptoCurrencyStatus): RoundedListWithDividersItemData {
+        return RoundedListWithDividersItemData(
+            id = R.string.staking_details_available,
+            startText = TextReference.Res(R.string.staking_details_available),
+            endText = TextReference.Str(
+                value = BigDecimalFormatter.formatCryptoAmount(
+                    cryptoAmount = cryptoCurrencyStatus.value.amount,
+                    cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
+                    decimals = cryptoCurrencyStatus.currency.decimals,
                 ),
             ),
-            RoundedListWithDividersItemData(
-                id = R.string.staking_details_apy,
-                startText = TextReference.Res(R.string.staking_details_apy),
-                endText = getAprRange(),
-                iconClick = { clickIntents.onInfoClick(InfoType.APY) },
-            ),
-            RoundedListWithDividersItemData(
-                id = R.string.staking_details_on_stake,
-                startText = TextReference.Res(R.string.staking_details_on_stake),
-                endText = TextReference.Str(
-                    value = BigDecimalFormatter.formatCryptoAmount(
-                        cryptoAmount = (yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero(),
-                        cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-                        decimals = cryptoCurrencyStatus.currency.decimals,
-                    ),
+        )
+    }
+
+    private fun createApyItem(): RoundedListWithDividersItemData {
+        return RoundedListWithDividersItemData(
+            id = R.string.staking_details_apy,
+            startText = TextReference.Res(R.string.staking_details_apy),
+            endText = getAprRange(),
+            iconClick = { clickIntents.onInfoClick(InfoType.APY) },
+        )
+    }
+
+    private fun createOnStakeItem(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        yieldBalance: YieldBalance?,
+    ): RoundedListWithDividersItemData {
+        return RoundedListWithDividersItemData(
+            id = R.string.staking_details_on_stake,
+            startText = TextReference.Res(R.string.staking_details_on_stake),
+            endText = TextReference.Str(
+                value = BigDecimalFormatter.formatCryptoAmount(
+                    cryptoAmount = (yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero(),
+                    cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
+                    decimals = cryptoCurrencyStatus.currency.decimals,
                 ),
             ),
-            RoundedListWithDividersItemData(
-                id = R.string.staking_details_unbonding_period,
-                startText = TextReference.Res(R.string.staking_details_unbonding_period),
-                endText = pluralReference(
-                    id = R.plurals.common_days,
-                    count = yield.metadata.cooldownPeriod.days,
-                    formatArgs = wrappedList(yield.metadata.cooldownPeriod.days),
+        )
+    }
+
+    private fun createUnbondingPeriodItem(): RoundedListWithDividersItemData {
+        return RoundedListWithDividersItemData(
+            id = R.string.staking_details_unbonding_period,
+            startText = TextReference.Res(R.string.staking_details_unbonding_period),
+            endText = pluralReference(
+                id = R.plurals.common_days,
+                count = yield.metadata.cooldownPeriod.days,
+                formatArgs = wrappedList(yield.metadata.cooldownPeriod.days),
+            ),
+            iconClick = { clickIntents.onInfoClick(InfoType.UNBONDING_PERIOD) },
+        )
+    }
+
+    private fun createMinimumRequirementItem(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): RoundedListWithDividersItemData {
+        return RoundedListWithDividersItemData(
+            id = R.string.staking_details_minimum_requirement,
+            startText = TextReference.Res(R.string.staking_details_minimum_requirement),
+            endText = TextReference.Str(
+                value = BigDecimalFormatter.formatCryptoAmount(
+                    cryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum,
+                    cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
+                    decimals = cryptoCurrencyStatus.currency.decimals,
                 ),
-                iconClick = { clickIntents.onInfoClick(InfoType.UNBONDING_PERIOD) },
             ),
-            RoundedListWithDividersItemData(
-                id = R.string.staking_details_minimum_requirement,
-                startText = TextReference.Res(R.string.staking_details_minimum_requirement),
-                endText = TextReference.Str(
-                    value = BigDecimalFormatter.formatCryptoAmount(
-                        cryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum,
-                        cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-                        decimals = cryptoCurrencyStatus.currency.decimals,
-                    ),
-                ),
+        )
+    }
+
+    private fun createRewardClaimingItem(): RoundedListWithDividersItemData {
+        return RoundedListWithDividersItemData(
+            id = R.string.staking_details_reward_claiming,
+            startText = TextReference.Res(R.string.staking_details_reward_claiming),
+            endText = TextReference.Str(yield.metadata.rewardClaiming),
+            iconClick = { clickIntents.onInfoClick(InfoType.REWARD_CLAIMING) },
+        )
+    }
+
+    private fun createWarmupPeriodItem(): RoundedListWithDividersItemData {
+        return RoundedListWithDividersItemData(
+            id = R.string.staking_details_warmup_period,
+            startText = TextReference.Res(R.string.staking_details_warmup_period),
+            endText = pluralReference(
+                id = R.plurals.common_days,
+                count = yield.metadata.warmupPeriod.days,
+                formatArgs = wrappedList(yield.metadata.warmupPeriod.days),
             ),
-            RoundedListWithDividersItemData(
-                id = R.string.staking_details_reward_claiming,
-                startText = TextReference.Res(R.string.staking_details_reward_claiming),
-                endText = TextReference.Str(yield.metadata.rewardClaiming),
-                iconClick = { clickIntents.onInfoClick(InfoType.REWARD_CLAIMING) },
-            ),
-            RoundedListWithDividersItemData(
-                id = R.string.staking_details_warmup_period,
-                startText = TextReference.Res(R.string.staking_details_warmup_period),
-                endText = pluralReference(
-                    id = R.plurals.common_days,
-                    count = yield.metadata.cooldownPeriod.days,
-                    formatArgs = wrappedList(yield.metadata.warmupPeriod.days),
-                ),
-                iconClick = { clickIntents.onInfoClick(InfoType.WARMUP_PERIOD) },
-            ),
-            RoundedListWithDividersItemData(
-                id = R.string.staking_details_reward_schedule,
-                startText = TextReference.Res(R.string.staking_details_reward_schedule),
-                endText = TextReference.Str(yield.metadata.rewardSchedule),
-                iconClick = { clickIntents.onInfoClick(InfoType.REWARD_SCHEDULE) },
-            ),
+            iconClick = { clickIntents.onInfoClick(InfoType.WARMUP_PERIOD) },
+        )
+    }
+
+    private fun createRewardScheduleItem(): RoundedListWithDividersItemData {
+        return RoundedListWithDividersItemData(
+            id = R.string.staking_details_reward_schedule,
+            startText = TextReference.Res(R.string.staking_details_reward_schedule),
+            endText = TextReference.Str(yield.metadata.rewardSchedule),
+            iconClick = { clickIntents.onInfoClick(InfoType.REWARD_SCHEDULE) },
         )
     }
 

@@ -8,6 +8,12 @@ import com.tangem.features.staking.impl.presentation.state.StakingNotification
 @Composable
 internal fun NotificationsBlock(notifications: List<StakingNotification>) {
     notifications.forEach {
-        Notification(config = it.config, iconTint = TangemTheme.colors.icon.accent)
+        Notification(
+            config = it.config,
+            iconTint = when (it) {
+                is StakingNotification.Error -> TangemTheme.colors.icon.warning
+                is StakingNotification.Warning -> TangemTheme.colors.icon.accent
+            },
+        )
     }
 }

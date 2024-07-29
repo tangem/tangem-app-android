@@ -170,7 +170,10 @@ internal class StakingViewModel @Inject constructor(
                     passthrough = pendingActions.firstOrNull()?.passthrough,
                     type = pendingActions.firstOrNull()?.type,
                 ),
-            ).getOrElse { error("Can't get fee info") }
+            ).getOrElse {
+                stateController.update(AddStakingErrorTransformer(it))
+                return@launch
+            }
 
             stateController.update(
                 SetConfirmationStateAssentTransformer(
@@ -231,7 +234,7 @@ internal class StakingViewModel @Inject constructor(
         val routeType = if (activeStake.pendingActions.isEmpty()) {
             RouteType.UNSTAKE
         } else {
-            RouteType.OTHER
+            RouteType.CLAIM
         }
         stateController.update { it.copy(routeType = routeType) }
         stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, yield, activeStake.cryptoValue))
