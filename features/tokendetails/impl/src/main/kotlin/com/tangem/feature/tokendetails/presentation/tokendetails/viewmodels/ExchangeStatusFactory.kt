@@ -73,7 +73,8 @@ internal class ExchangeStatusFactory(
             .map { savedTransactions ->
                 val quotes = savedTransactions
                     ?.flatMap { setOf(it.fromCryptoCurrency.id, it.toCryptoCurrency.id) }
-                    ?.let { quotesRepository.getQuotesSync(it.toSet(), true) }
+                    ?.toSet()
+                    ?.getQuotesOrEmpty(true)
                     ?: emptySet()
 
                 getExchangeStatusState(
@@ -214,6 +215,14 @@ internal class ExchangeStatusFactory(
             ExchangeStatus.Cancelled -> ExchangeAnalyticsStatus.Cancelled
             ExchangeStatus.Unknown -> ExchangeAnalyticsStatus.Unknown
             else -> null
+        }
+    }
+
+    private suspend fun Set<CryptoCurrency.ID>.getQuotesOrEmpty(refresh: Boolean): Set<Quote> {
+        return try {
+            quotesRepository.getQuotesSync(this, refresh)
+        } catch (t: Throwable) {
+            emptySet()
         }
     }
 }
