@@ -221,5 +221,11 @@ internal object SettingsDomainModule {
     ): NeverRequestPermissionUseCase {
         return NeverRequestPermissionUseCase(repository = permissionRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideShouldSaveAccessCodesUseCase(settingsRepository: SettingsRepository): ShouldSaveAccessCodesUseCase {
+        return ShouldSaveAccessCodesUseCase(settingsRepository = settingsRepository)
+    }
     // endregion
 }
