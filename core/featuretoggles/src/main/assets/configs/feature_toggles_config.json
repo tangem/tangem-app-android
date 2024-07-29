@@ -38,5 +38,9 @@
     {
         "name": "MARKETS_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "HOME_SCREEN_CALLBACKS_REFACTORING_ENABLED",
+        "version": "5.14.0"
     }
 ]
