@@ -59,7 +59,11 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
             .background(backgroundColor)
             .statusBarsPadding(),
     ) {
-        Column(modifier = Modifier.padding(bottom = bottomPadding)) {
+        Column(
+            modifier = Modifier
+                .padding(bottom = bottomPadding)
+                .fillMaxSize(),
+        ) {
             TangemTopAppBar(
                 title = resourceReference(R.string.disclaimer_title),
                 startButton = TopAppBarButtonUM(
@@ -110,6 +114,7 @@ private fun DisclaimerContent(url: String, isTosAccepted: Boolean) {
                 it.setBackgroundColor(backgroundColor.toArgb())
             },
             client = remember { DisclaimerWebViewClient() },
+            modifier = Modifier.fillMaxSize(),
         )
 
         AnimatedVisibility(
@@ -117,6 +122,9 @@ private fun DisclaimerContent(url: String, isTosAccepted: Boolean) {
             label = "Loading state change animation",
             enter = fadeIn(),
             exit = fadeOut(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundColor),
         ) {
             Box(
                 modifier = Modifier
