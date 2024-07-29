@@ -1949,11 +1949,19 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, Quote> {
-        val set = quotesRepository.getQuotesSync(ids.toSet(), false)
+        val set = ids.toSet().getQuotesOrEmpty(false)
 
         return ids
             .mapNotNull { id -> set.find { it.rawCurrencyId == id.rawCurrencyId }?.let { id to it } }
             .toMap()
+    }
+
+    private suspend fun Set<CryptoCurrency.ID>.getQuotesOrEmpty(refresh: Boolean): Set<Quote> {
+        return try {
+            quotesRepository.getQuotesSync(this, refresh)
+        } catch (t: Throwable) {
+            emptySet()
+        }
     }
 
     private fun getDemoFees(cryptoCurrency: CryptoCurrency): ProxyFees.MultipleFees {
