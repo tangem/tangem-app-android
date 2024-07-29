@@ -1,5 +1,6 @@
 package com.tangem.tap.network.exchangeServices
 
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.feature.Feature
 import com.tangem.tap.domain.model.Currency
@@ -7,7 +8,7 @@ import com.tangem.tap.domain.model.Currency
 interface Exchanger {
     fun isBuyAllowed(): Boolean
     fun isSellAllowed(): Boolean
-    fun availableForBuy(currency: Currency): Boolean
+    fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean
     fun availableForSell(currency: Currency): Boolean
 }
 
@@ -20,7 +21,7 @@ interface ExchangeService : Feature, Exchanger, ExchangeUrlBuilder {
             override suspend fun update() {}
             override fun isBuyAllowed(): Boolean = false
             override fun isSellAllowed(): Boolean = false
-            override fun availableForBuy(currency: Currency): Boolean = false
+            override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean = false
             override fun availableForSell(currency: Currency): Boolean = false
             override fun getUrl(
                 action: CurrencyExchangeManager.Action,
@@ -45,7 +46,7 @@ interface ExchangeRules : Feature, Exchanger {
             override fun featureIsSwitchedOn(): Boolean = false
             override fun isBuyAllowed(): Boolean = false
             override fun isSellAllowed(): Boolean = false
-            override fun availableForBuy(currency: Currency): Boolean = false
+            override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean = false
             override fun availableForSell(currency: Currency): Boolean = false
         }
     }
