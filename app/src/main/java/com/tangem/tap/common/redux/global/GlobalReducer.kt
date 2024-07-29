@@ -92,9 +92,6 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
                 userCountryCode = action.countryCode,
             )
         }
-        is GlobalAction.ChangeAppThemeMode -> globalState.copy(
-            appThemeMode = action.appThemeMode,
-        )
         else -> globalState
     }
 }
