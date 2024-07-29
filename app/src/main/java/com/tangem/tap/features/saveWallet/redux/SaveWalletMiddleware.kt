@@ -91,10 +91,10 @@ internal class SaveWalletMiddleware {
         store.dispatchOnMain(NavigationAction.OpenBiometricsSettings)
     }
 
-    private fun allowToUseBiometrics(state: SaveWalletState) {
-        if (tangemSdkManager.needEnrollBiometrics) {
-            store.dispatchOnMain(SaveWalletAction.EnrollBiometrics)
-            return
+    private fun allowToUseBiometrics(state: SaveWalletState) = scope.launch {
+        if (tangemSdkManager.checkNeedEnrollBiometrics()) {
+            store.dispatchWithMain(SaveWalletAction.EnrollBiometrics)
+            return@launch
         }
 
         if (state.backupInfo != null) {
@@ -104,24 +104,22 @@ internal class SaveWalletMiddleware {
             Analytics.send(MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.On))
         }
 
-        scope.launch {
-            /*
-             * We don't need to save user wallet if it is not created from backup info,
-             * because it will be automatically saved on UserWalletsListManager switch
-             */
-            val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
-            val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
-                val error = IllegalStateException("No selected user wallet")
-                Timber.e(error, "Unable to save user wallet")
-                store.dispatchWithMain(
-                    SaveWalletAction.AllowToUseBiometrics.Error(TangemSdkError.ExceptionError(error)),
-                )
-                return@launch
-            }
+        /*
+         * We don't need to save user wallet if it is not created from backup info,
+         * because it will be automatically saved on UserWalletsListManager switch
+         */
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+            val error = IllegalStateException("No selected user wallet")
+            Timber.e(error, "Unable to save user wallet")
+            store.dispatchWithMain(
+                SaveWalletAction.AllowToUseBiometrics.Error(TangemSdkError.ExceptionError(error)),
+            )
+            return@launch
+        }
 
-            handleSuccessAllowing(selectedUserWallet)
-        }.saveIn(saveWalletJobHolder)
-    }
+        handleSuccessAllowing(selectedUserWallet)
+    }.saveIn(saveWalletJobHolder)
 
     private suspend fun handleSuccessAllowing(userWallet: UserWallet) {
         store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)

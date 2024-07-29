@@ -82,7 +82,9 @@ private fun LazyListScope.contentItems(
             when (item) {
                 is TxHistoryState.TxHistoryItemState.GroupTitle -> item.itemKey
                 is TxHistoryState.TxHistoryItemState.Title -> item.onExploreClick.hashCode()
-                is TxHistoryState.TxHistoryItemState.Transaction -> item.state.txHash
+                is TxHistoryState.TxHistoryItemState.Transaction ->
+                    item.state.txHash +
+                        ((item.state as? TransactionState.Content)?.hashCode() ?: "")
             }
         },
         contentType = txHistoryItems.itemContentType { it::class.java },

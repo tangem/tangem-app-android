@@ -4,5 +4,5 @@ import com.tangem.domain.settings.repositories.LegacySettingsRepository
 
 class CanUseBiometryUseCase(private val legacySettingsRepository: LegacySettingsRepository) {
 
-    operator fun invoke(): Boolean = legacySettingsRepository.canUseBiometry()
+    suspend operator fun invoke(): Boolean = legacySettingsRepository.canUseBiometry()
 }

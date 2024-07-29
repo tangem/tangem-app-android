@@ -19,8 +19,9 @@ internal interface TokensListRouter {
      *
      * @param tokenName   token name
      * @param tokenSymbol token brief name
+     * @param networkName blockchain network full name
      */
-    fun openUnableHideMainTokenAlert(tokenName: String, tokenSymbol: String)
+    fun openUnableHideMainTokenAlert(tokenName: String, tokenSymbol: String, networkName: String)
 
     /**
      * Open alert to remove wallet

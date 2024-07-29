@@ -126,6 +126,11 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 preparedData = state.dialog.data,
                 context = context,
             )
+            is WalletConnectDialog.PairConnectErrorDialog -> SimpleAlertDialog.create(
+                titleRes = R.string.wallet_connect_title,
+                message = state.dialog.error.message,
+                context = context,
+            )
             is BackupDialog.AttestationFailed -> AttestationFailedDialog.create(context)
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
@@ -139,8 +144,9 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
                 message = context.getString(
                     state.dialog.messageRes,
-                    state.dialog.currencySymbol,
                     state.dialog.currencyTitle,
+                    state.dialog.currencySymbol,
+                    state.dialog.networkName,
                 ),
                 context = context,
             )
