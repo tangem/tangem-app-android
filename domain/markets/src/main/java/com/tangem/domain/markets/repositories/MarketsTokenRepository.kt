@@ -9,4 +9,6 @@ interface MarketsTokenRepository {
         firstBatchSize: Int,
         nextBatchSize: Int,
     ): TokenListBatchFlow
+
+    suspend fun getChart(interval: PriceChangeInterval, tokenId: String): TokenChart
 }
