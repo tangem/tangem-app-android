@@ -37,7 +37,10 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
@@ -265,7 +268,6 @@ class DetailsMiddleware {
                 .onEach { needEnrollBiometrics ->
                     store.dispatchWithMain(DetailsAction.AppSettings.BiometricsStatusChanged(needEnrollBiometrics))
                 }
-                .flowOn(Dispatchers.IO)
                 .launchIn(lifecycleScope)
                 .saveIn(checkBiometricsStatusJobHolder)
         }
