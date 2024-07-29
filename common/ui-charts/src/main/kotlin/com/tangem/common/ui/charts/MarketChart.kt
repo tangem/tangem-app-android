@@ -70,9 +70,9 @@ private const val GUIDELINES_COUNT = 3
 fun MarketChart(
     modifier: Modifier = Modifier,
     state: MarketChartState = rememberMarketChartState(),
-    splitChartSegmentColor: Color,
-    @FloatRange(from = 0.0, to = 1.0) backgroundSplitChartSegmentColorAlpha: Float,
-    @FloatRange(from = 0.0, to = 1.0) backgroundColorAlpha: Float,
+    splitChartSegmentColor: Color = TangemTheme.colors.icon.inactive,
+    @FloatRange(from = 0.0, to = 1.0) backgroundSplitChartSegmentColorAlpha: Float = 0.24f,
+    @FloatRange(from = 0.0, to = 1.0) backgroundColorAlpha: Float = 0.24f,
     noChartContent: @Composable BoxScope.() -> Unit,
 ) {
     var canvasWidth by remember { mutableIntStateOf(0) }
@@ -358,41 +358,47 @@ private fun MarketChartPreview(
                     text = "Change marker highlight side",
                 )
             }
-            Button(onClick = {
-                coroutineScope.launch {
-                    dataProducer.runTransactionSuspend {
-                        updateData {
-                            MarketChartData.Data(
-                                x = it.x,
-                                y = it.y.reversed(),
-                            )
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        dataProducer.runTransactionSuspend {
+                            updateData {
+                                MarketChartData.Data(
+                                    x = it.x,
+                                    y = it.y.reversed(),
+                                )
+                            }
                         }
                     }
-                }
-            },) {
+                },
+            ) {
                 Text("Change Data")
             }
-            Button(onClick = {
-                dataProducer.runTransaction {
-                    updateLook { it.copy(animationOnDataChange = it.animationOnDataChange.not()) }
-                }
-            },) {
+            Button(
+                onClick = {
+                    dataProducer.runTransaction {
+                        updateLook { it.copy(animationOnDataChange = it.animationOnDataChange.not()) }
+                    }
+                },
+            ) {
                 Text("Change animationOnDataChange = ${look.animationOnDataChange}")
             }
 
-            Button(onClick = {
-                dataProducer.runTransaction {
-                    updateLook {
-                        it.copy(
-                            type = if (it.type == MarketChartLook.Type.Growing) {
-                                MarketChartLook.Type.Falling
-                            } else {
-                                MarketChartLook.Type.Growing
-                            },
-                        )
+            Button(
+                onClick = {
+                    dataProducer.runTransaction {
+                        updateLook {
+                            it.copy(
+                                type = if (it.type == MarketChartLook.Type.Growing) {
+                                    MarketChartLook.Type.Falling
+                                } else {
+                                    MarketChartLook.Type.Growing
+                                },
+                            )
+                        }
                     }
-                }
-            },) {
+                },
+            ) {
                 Text("Change color type")
             }
         }
