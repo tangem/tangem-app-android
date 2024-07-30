@@ -254,7 +254,6 @@ reactive-network = { module = "com.github.pwittchen:reactivenetwork-rx2", versio
 walletConnectCore = { module = "com.walletconnect:android-core", version.ref = "walletConnectCore" }
 walletConnectWeb3 = { module = "com.walletconnect:web3wallet", version.ref = "walletConnectWeb3" }
 prettyLogger = { module = "com.orhanobut:logger", version.ref = "prettyLogger" }
-sprClient = { module = "com.spr:messengerclient", version.ref = "spr-client" }
 chucker = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
 chuckerStub = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "chucker" }
 mlKit-barcodeScanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "mlKit-barcodeScanning" }
