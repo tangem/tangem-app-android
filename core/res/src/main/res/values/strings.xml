@@ -82,6 +82,7 @@
   <string name="common_buy_currency">Go to %1$s</string>
   <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
   <string name="common_cancel">Cancel</string>
+  <string name="common_claim_rewards">Claim rewards</string>
   <string name="common_close">Close</string>
   <string name="common_continue">Continue</string>
   <string name="common_copy">Copy</string>
@@ -109,6 +110,7 @@
   <string name="common_fee_selector_title">Speed and fee</string>
   <string name="common_generate_addresses">Get addresses</string>
   <string name="common_go_to_provider">Go to provider</string>
+  <string name="common_go_to_token">Go to token</string>
   <string name="common_import">Import</string>
   <string name="common_later">Later</string>
   <string name="common_locked">Locked</string>
@@ -156,6 +158,7 @@
   <string name="common_understand">I understand</string>
   <string name="common_unknown_error">There was an error. Please try again.</string>
   <string name="common_unreachable">Unreachable</string>
+  <string name="common_unstake">Unstake</string>
   <string name="common_yes">Yes</string>
   <string name="contract_address_copied_message">Contract address copied!</string>
   <string name="currency_subtitle_expanded">Available networks</string>
@@ -223,6 +226,8 @@
   <string name="express_exchange_by">Exchange by %s</string>
   <string name="express_exchange_notification_failed_text">Visit provider’s website to refund your money</string>
   <string name="express_exchange_notification_failed_title">Operation failed by provider</string>
+  <string name="express_exchange_notification_refund_text">The transaction amount was refunded in %1$s to your wallet due to OKX or bridge rules. %2$s</string>
+  <string name="express_exchange_notification_refund_title">The amount was refunded in %1$s (%2$s network)</string>
   <string name="express_exchange_notification_verification_text">Visit provider’s website for verification</string>
   <string name="express_exchange_notification_verification_title">KYC verification required by provider</string>
   <string name="express_exchange_status_canceled">Canceled</string>
@@ -336,7 +341,7 @@
   <string name="markets_available_networks">Available networks</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
-  <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you need to attach a Tangem card</string>
+  <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you must scan your Tangem Wallet card.</string>
   <string name="markets_loading_error_title">Unable to load the data…</string>
   <string name="markets_quick_actions">Quick actions</string>
   <string name="markets_search_result_title">Result</string>
@@ -497,7 +502,7 @@
   <string name="qr_scanner_camera_denied_title">Camera access denied</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message_full">Send only %s to this address. Sending any other currency will result in its irreversible loss.</string>
-  <string name="receive_token_description">Show QR-code or share your address</string>
+  <string name="receive_token_description">Show a QR-code or share your address</string>
   <string name="referral_button_participate">Participate</string>
   <string name="referral_error_failed_to_load_info">Failed to load the information about the referral program. Please try again later.</string>
   <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Error code: %s. Please try again later.</string>
@@ -637,6 +642,7 @@
   <string name="settings_wallet_name_title">Name</string>
   <string name="staking_active">Active</string>
   <string name="staking_active_footer">To unstake your assets, click here.</string>
+  <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_apy_info">The annual percentage return you can earn from participating in staking.</string>
@@ -658,13 +664,15 @@
   <string name="staking_details_unbonding_period_info">The period you must wait after requesting to withdraw funds from staking before the tokens become available.</string>
   <string name="staking_details_warmup_period">Warmup period</string>
   <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
+  <string name="staking_initial_info_title">Stake %s</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">Staking allow you to earn %1s. Your staking rewards arrive every ~%2s days.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_rewards">Rewards</string>
   <string name="staking_stake_more">Stake more</string>
-  <string name="staking_unstaked">Unstacked</string>
+  <string name="staking_unstaked">Unstaked</string>
   <string name="staking_unstaked_footer">Check unstaked to claim your assets</string>
+  <string name="staking_unstaking">Unstaking</string>
   <string name="staking_validator">Validator</string>
   <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
   <string name="story_awe_title">Revolutionary Hardware Wallet</string>
