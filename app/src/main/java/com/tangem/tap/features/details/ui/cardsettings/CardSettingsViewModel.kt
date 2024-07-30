@@ -24,6 +24,8 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.features.details.ui.common.utils.*
+import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -129,27 +131,8 @@ internal class CardSettingsViewModel @Inject constructor(
                 changeAccessCode()
             }
             is CardInfo.ResetToFactorySettings -> {
-                val card = requireNotNull(scannedScanResponse.value) {
-                    "Impossible to reset card if ScanResponse is null"
-                }.card
-
                 Analytics.send(Settings.CardSettings.ButtonFactoryReset())
-                store.dispatchNavigationAction {
-                    push(
-                        route = AppRoute.ResetToFactory(
-                            userWalletId = userWalletId,
-                            cardId = card.cardId,
-                            isActiveBackupStatus = card.backupStatus?.isActive == true,
-                            backupCardsCount = when (val status = card.backupStatus) {
-                                is CardDTO.BackupStatus.Active -> status.cardCount
-                                is CardDTO.BackupStatus.CardLinked,
-                                CardDTO.BackupStatus.NoBackup,
-                                null,
-                                -> 0
-                            },
-                        ),
-                    )
-                }
+                resetWalletToFactorySettings()
             }
             is CardInfo.SecurityMode -> {
                 Analytics.send(Settings.CardSettings.ButtonChangeSecurityMode())
@@ -163,6 +146,37 @@ internal class CardSettingsViewModel @Inject constructor(
                 }
             }
             else -> {}
+        }
+    }
+
+    private fun resetWalletToFactorySettings() {
+        val scanResponse = requireNotNull(scannedScanResponse.value) {
+            "Impossible to reset card if ScanResponse is null"
+        }
+
+        if (scanResponse.cardTypesResolver.isTangemTwins()) {
+            store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet(scanResponse)))
+
+            store.dispatchNavigationAction { push(AppRoute.OnboardingTwins) }
+        } else {
+            val card = scanResponse.card
+
+            store.dispatchNavigationAction {
+                push(
+                    route = AppRoute.ResetToFactory(
+                        userWalletId = userWalletId,
+                        cardId = card.cardId,
+                        isActiveBackupStatus = card.backupStatus?.isActive == true,
+                        backupCardsCount = when (val status = card.backupStatus) {
+                            is CardDTO.BackupStatus.Active -> status.cardCount
+                            is CardDTO.BackupStatus.CardLinked,
+                            CardDTO.BackupStatus.NoBackup,
+                            null,
+                            -> 0
+                        },
+                    ),
+                )
+            }
         }
     }
 
