@@ -429,22 +429,12 @@ internal class DefaultCurrenciesRepository(
         val token = withContext(dispatchers.io) {
             val foundToken = tangemTechApi.getCoins(
                 contractAddress = contractAddress,
-                networkIds = networkId,
+                networkId = networkId,
             )
                 .getOrThrow()
                 .coins
-                .firstNotNullOfOrNull { coin ->
-                    val networksWithTheSameAddress = coin.networks.filter { network ->
-                        (network.contractAddress != null || network.decimalCount != null) &&
-                            network.contractAddress?.equals(contractAddress, ignoreCase = true) == true
-                    }
-
-                    if (networksWithTheSameAddress.isNotEmpty()) {
-                        coin.copy(networks = networksWithTheSameAddress)
-                    } else {
-                        null
-                    }
-                } ?: error("Token not found")
+                .firstOrNull()
+                ?: error("Token not found")
             val network = foundToken.networks.firstOrNull { it.networkId == networkId } ?: error("Network not found")
             CryptoCurrencyFactory.Token(
                 symbol = foundToken.symbol,
