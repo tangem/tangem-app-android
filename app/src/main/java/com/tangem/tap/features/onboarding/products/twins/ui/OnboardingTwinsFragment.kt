@@ -56,10 +56,10 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
 
     override fun configureTransitions() {
         when (store.state.twinCardsState.mode) {
-            CreateTwinWalletMode.CreateWallet -> {
+            is CreateTwinWalletMode.CreateWallet -> {
                 super.configureTransitions()
             }
-            CreateTwinWalletMode.RecreateWallet -> {
+            is CreateTwinWalletMode.RecreateWallet -> {
                 configureDefaultTransactions()
             }
         }
@@ -391,8 +391,8 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
         tvBody.setText(R.string.onboarding_done_body)
 
         val layout = when (state.mode) {
-            CreateTwinWalletMode.CreateWallet -> R.layout.lp_onboarding_done_activation_twins
-            CreateTwinWalletMode.RecreateWallet -> R.layout.lp_onboarding_done
+            is CreateTwinWalletMode.CreateWallet -> R.layout.lp_onboarding_done_activation_twins
+            is CreateTwinWalletMode.RecreateWallet -> R.layout.lp_onboarding_done
         }
         updateConstraints(state.currentStep, layout)
     }
