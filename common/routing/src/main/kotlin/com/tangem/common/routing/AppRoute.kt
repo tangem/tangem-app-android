@@ -5,7 +5,6 @@ import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -145,25 +144,35 @@ sealed class AppRoute(val path: String) : Route {
     data object AppSettings : AppRoute(path = "/app_settings")
 
     /**
-     * Reset to factory route
+     * Reset to factory
      *
-     * @property userWalletId     user wallet id
-     * @property cardSpecificInfo info about card that was scanned on CardSettings
+     * @property userWalletId         user wallet id
+     * @property cardId               reset card id
+     * @property isActiveBackupStatus reset backup card status
+     * @property backupCardsCount     backup cards count
      */
     @Serializable
     data class ResetToFactory(
         val userWalletId: UserWalletId,
-        val cardSpecificInfo: CardSpecificInfo,
-    ) : AppRoute(path = "/reset_to_factory/${userWalletId.stringValue}/$cardSpecificInfo"), RouteBundleParams {
+        val cardId: String,
+        val isActiveBackupStatus: Boolean,
+        val backupCardsCount: Int,
+    ) : AppRoute(
+        path = "/reset_to_factory" +
+            "/${userWalletId.stringValue}" +
+            "/$cardId" +
+            "/$isActiveBackupStatus" +
+            "/$backupCardsCount",
+    ),
+        RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
 
-        @Serializable
-        data class CardSpecificInfo(val cardId: String, val backupStatus: CardDTO.BackupStatus?)
-
         companion object {
             const val USER_WALLET_ID = "userWalletId"
-            const val CARD_SPECIFIC_DATA = "cardSpecificInfo"
+            const val CARD_ID = "cardId"
+            const val IS_ACTIVE_BACKUP_STATUS = "isActiveBackupStatus"
+            const val BACKUP_CARDS_COUNT = "backupCardsCount"
         }
     }
 
