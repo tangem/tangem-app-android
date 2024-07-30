@@ -108,6 +108,7 @@
   <string name="common_fee_selector_title">速度と料金</string>
   <string name="common_generate_addresses">アドレスを取得する</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
+  <string name="common_go_to_token">トークンへ移動</string>
   <string name="common_import">インポート</string>
   <string name="common_later">後で</string>
   <string name="common_locked">ロックされています</string>
@@ -223,6 +224,8 @@
   <string name="express_exchange_by">%sによる交換</string>
   <string name="express_exchange_notification_failed_text">返金を受けるには、プロバイダーのウェブサイトにアクセスしてください。</string>
   <string name="express_exchange_notification_failed_title">プロバイダーによる操作が失敗しました。</string>
+  <string name="express_exchange_notification_refund_text">OKXまたはブリッジのルールにより、取引金額は%1$sでウォレットに返金されました。%2$s</string>
+  <string name="express_exchange_notification_refund_title">金額は %1$s（%2$sネットワーク）で返金されました</string>
   <string name="express_exchange_notification_verification_text">確認するには、プロバイダーのウェブサイトにアクセスしてください。</string>
   <string name="express_exchange_notification_verification_title">プロバイダーによる本人確認手続きが必要です。</string>
   <string name="express_exchange_status_canceled">キャンセルされました</string>
@@ -613,7 +616,7 @@
   <string name="send_sending">送金中...</string>
   <string name="send_summary_tap_hint">変更するには任意の箇所をタップしてください</string>
   <string name="send_summary_title">%sを送金する</string>
-  <string name="send_summary_transaction_description">** %1$s ** を送金する (ネットワーク手数料%2$sを含む)</string>
+  <string name="send_summary_transaction_description">**%1$s** を送金する (ネットワーク手数料%2$sを含む)</string>
   <string name="send_summary_transaction_description_no_fiat_fee">**%1$s** と %2$s を送金しています。</string>
   <string name="send_title_currency_format">%sを送信しています</string>
   <string name="send_total_label">合計</string>
@@ -621,6 +624,7 @@
   <string name="send_total_subtitle_fiat_format">≈ %1$s (%2$s: 手数料を含む)</string>
   <string name="send_total_subtitle_format">%sが送信されます</string>
   <string name="send_transaction_success">取引は正常に署名され、ブロックチェーンノードに送信されました。ウォレットの残高はしばらくして更新されます。</string>
+  <string name="send_tron_account_activation_error">%1$sはTronネットワークのアセットです。手数料を計算して取引を行うには、アカウントにTron（TRX）を入金する必要があります。</string>
   <string name="send_validation_invalid_address">無効なアドレス</string>
   <string name="send_wallet_balance_format">%1$s ( %2$s )</string>
   <string name="sent_transaction_sent_title">取引が送信されました</string>
@@ -788,6 +792,7 @@
   <string name="wallet_settings_title">ウォレット設定</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">%sを使用するか、カードをスキャンしてウォレットにアクセスしてください</string>
+  <string name="warning_backup_errors_message">カードのアクティベーションが正しく完了しませんでした。デバイスの NFCモジュールに問題があるか、カードをデバイスに正しくタップしていないことが原因かもしれません。サポートチームにお問い合わせください。</string>
   <string name="warning_backup_errors_title">アクティベーションに失敗しました</string>
   <string name="warning_beacon_chain_retirement_content">BNBネットワーク開発者によると、BEP-2規格のサポートは2024年6月に終了します。この規格の資産を失わないために、BEP-20規格に変換してください。BNBスマートチェーンネットワークへ移行するには、Tangemのスワップサービスをご利用ください。</string>
   <string name="warning_beacon_chain_retirement_title">BNBビーコンチェーンは閉鎖されます。</string>
