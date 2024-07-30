@@ -10,7 +10,7 @@ internal class PreviewRenameWalletComponent : RenameWalletComponent {
 
     private val previewState = RenameWalletUM(
         walletNameValue = TextFieldValue(text = "My Wallet"),
-        isNameCorrect = false,
+        isConfirmEnabled = false,
         updateValue = {},
         onConfirm = {},
     )
