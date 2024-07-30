@@ -47,7 +47,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
-import com.tangem.utils.toFormattedString
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
