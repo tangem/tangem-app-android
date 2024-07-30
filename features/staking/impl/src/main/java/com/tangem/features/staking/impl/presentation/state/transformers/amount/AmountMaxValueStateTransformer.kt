@@ -12,16 +12,13 @@ internal class AmountMaxValueStateTransformer(
     private val yield: Yield,
 ) : Transformer<StakingUiState> {
 
-    private val amountRequirementStateTransformer by lazy(LazyThreadSafetyMode.NONE) {
-        val value = cryptoCurrencyStatus.value.amount
+    private val amountRequirementStateTransformer = AmountRequirementStateTransformer(
+        cryptoCurrencyStatus = cryptoCurrencyStatus,
+        yield = yield,
+        value = cryptoCurrencyStatus.value.amount
             ?.parseBigDecimal(cryptoCurrencyStatus.currency.decimals)
-            .orEmpty()
-        AmountRequirementStateTransformer(
-            cryptoCurrencyStatus,
-            yield,
-            value,
-        )
-    }
+            .orEmpty(),
+    )
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         val updatedAmountState = AmountFieldMaxAmountTransformer(cryptoCurrencyStatus).transform(prevState.amountState)

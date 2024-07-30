@@ -61,9 +61,9 @@ interface StakingRepository {
         addresses: List<CryptoCurrencyAddress>,
     ): YieldBalanceList
 
-    suspend fun createAction(params: ActionParams): StakingAction
+    suspend fun createAction(userWalletId: UserWalletId, network: Network, params: ActionParams): StakingAction
 
-    suspend fun estimateGas(params: ActionParams): StakingGasEstimate
+    suspend fun estimateGas(userWalletId: UserWalletId, network: Network, params: ActionParams): StakingGasEstimate
 
     suspend fun constructTransaction(transactionId: String): StakingTransaction
 

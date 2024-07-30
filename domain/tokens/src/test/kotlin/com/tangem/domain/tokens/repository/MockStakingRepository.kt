@@ -167,7 +167,11 @@ class MockStakingRepository : StakingRepository {
         balances = listOf(YieldBalance.Error),
     )
 
-    override suspend fun createAction(params: ActionParams): StakingAction {
+    override suspend fun createAction(
+        userWalletId: UserWalletId,
+        network: Network,
+        params: ActionParams,
+    ): StakingAction {
         return StakingAction(
             id = "quis",
             integrationId = "persequeris",
@@ -182,7 +186,11 @@ class MockStakingRepository : StakingRepository {
         )
     }
 
-    override suspend fun estimateGas(params: ActionParams): StakingGasEstimate {
+    override suspend fun estimateGas(
+        userWalletId: UserWalletId,
+        network: Network,
+        params: ActionParams,
+    ): StakingGasEstimate {
         return StakingGasEstimate(
             amount = BigDecimal(0.0001),
             token = Token(

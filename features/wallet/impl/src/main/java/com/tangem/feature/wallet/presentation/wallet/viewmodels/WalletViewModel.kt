@@ -341,6 +341,8 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private suspend fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
+        walletScreenContentLoader.cancel(action.deletedWalletId)
+
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,

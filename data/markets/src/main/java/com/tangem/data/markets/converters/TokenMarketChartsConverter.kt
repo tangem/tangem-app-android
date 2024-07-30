@@ -5,7 +5,7 @@ import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarket
 
 class TokenMarketChartsConverter(
-    private val tokenListChartConverter: TokenListChartConverter,
+    private val tokenChartConverter: TokenChartConverter,
 ) {
 
     fun convert(
@@ -19,13 +19,13 @@ class TokenMarketChartsConverter(
         }
         return when (interval) {
             PriceChangeInterval.H24 -> chartsToCopy.copy(
-                h24 = tokenListChartConverter.convert(interval, prices),
+                h24 = tokenChartConverter.convert(interval, prices),
             )
             PriceChangeInterval.WEEK -> chartsToCopy.copy(
-                week = tokenListChartConverter.convert(interval, prices),
+                week = tokenChartConverter.convert(interval, prices),
             )
             PriceChangeInterval.MONTH -> chartsToCopy.copy(
-                month = tokenListChartConverter.convert(interval, prices),
+                month = tokenChartConverter.convert(interval, prices),
             )
             else -> error("unsupported interval=$interval. This shouldn't have happened.")
         }

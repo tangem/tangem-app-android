@@ -65,9 +65,7 @@ private fun AppExtension.configureBuildTypes() {
 
 private fun AndroidBuildType.configureBuildVariant(extension: AppExtension, buildType: BuildType) {
     when (buildType) {
-        BuildType.Release,
-        BuildType.External,
-        -> {
+        BuildType.Release -> {
             isDebuggable = false
             isMinifyEnabled = false
             proguardFiles(extension.getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
@@ -75,6 +73,11 @@ private fun AndroidBuildType.configureBuildVariant(extension: AppExtension, buil
         BuildType.Debug -> {
             isDebuggable = true
             isMinifyEnabled = false
+        }
+        BuildType.External -> {
+            initWith(extension.buildTypes.getByName(BuildType.Release.id))
+            matchingFallbacks.add(BuildType.Release.id)
+            signingConfig = extension.signingConfigs.getByName(BuildType.Debug.id)
         }
         BuildType.Internal,
         BuildType.Mocked,

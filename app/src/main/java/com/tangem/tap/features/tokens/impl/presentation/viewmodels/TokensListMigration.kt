@@ -135,6 +135,7 @@ internal class TokensListMigration(
         derivePublicKeysUseCase(userWalletId = currentUserWallet.walletId, currencies = currencyList)
             .onRight {
                 addCryptoCurrenciesUseCase(userWalletId = currentUserWallet.walletId, currencies = currencyList)
+                store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
             }
             .onLeft { Timber.e(it, "Failed to derive public keys") }
     }

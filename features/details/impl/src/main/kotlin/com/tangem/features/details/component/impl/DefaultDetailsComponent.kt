@@ -24,7 +24,7 @@ internal class DefaultDetailsComponent @AssistedInject constructor(
     private val model: DetailsModel = getOrCreateModel(params)
 
     private val userWalletListComponent = userWalletListComponentFactory.create(
-        context = child(key = "user_wallet_list"),
+        context = child(key = "user_wallet_list_component"),
     )
 
     @Composable

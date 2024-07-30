@@ -120,6 +120,8 @@ internal class StakingViewModel @Inject constructor(
                 val pendingActions = confirmationState.pendingActions
 
                 val stakingTransaction = getStakingTransactionUseCase(
+                    userWalletId = userWalletId,
+                    network = cryptoCurrencyStatus.currency.network,
                     params = ActionParams(
                         actionCommonType = getStakingCommonType(),
                         integrationId = yield.id,
@@ -158,6 +160,8 @@ internal class StakingViewModel @Inject constructor(
             val cryptoCurrencyValue = cryptoCurrencyStatus.value
 
             val stakingGasEstimate = estimateGasUseCase(
+                userWalletId = userWalletId,
+                network = cryptoCurrencyStatus.currency.network,
                 params = ActionParams(
                     actionCommonType = getStakingCommonType(),
                     integrationId = yield.id,

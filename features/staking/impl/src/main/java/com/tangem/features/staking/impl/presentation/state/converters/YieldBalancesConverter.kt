@@ -113,7 +113,6 @@ internal class YieldBalancesConverter(
     private fun BalanceType.toGroup() = when (this) {
         BalanceType.PREPARING,
         BalanceType.STAKED,
-        BalanceType.REWARDS,
         BalanceType.AVAILABLE,
         BalanceType.LOCKED,
         -> BalanceGroupType.ACTIVE
@@ -121,6 +120,7 @@ internal class YieldBalancesConverter(
         BalanceType.UNLOCKING,
         BalanceType.UNSTAKED,
         -> BalanceGroupType.UNSTAKED
+        BalanceType.REWARDS,
         BalanceType.UNKNOWN,
         -> BalanceGroupType.UNKNOWN
     }
