@@ -153,7 +153,7 @@ class DetailsMiddleware {
         private fun toggleSaveWallets(state: DetailsState, enable: Boolean) = scope.launch {
             // Nothing to change
             val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
-// [REDACTED_TODO_COMMENT]
+
             if (walletsRepository.shouldSaveUserWalletsSync() == enable) {
                 store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
                 return@launch
@@ -245,7 +245,7 @@ class DetailsMiddleware {
             deleteSavedAccessCodes()
             store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
 
-            store.dispatchNavigationAction { popTo<AppRoute.Home>() }
+            store.dispatchNavigationAction { replaceAll(AppRoute.Home) }
 
             return CompletionResult.Success(Unit)
         }
