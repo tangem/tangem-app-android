@@ -4,6 +4,7 @@
   <string name="add_tokens_title">管理代幣</string>
   <string name="address_qr_code_message_format">僅將 %1$s (%2$s) 從 %3$s 網絡發送到此地址。使用其他代幣和網絡可能會導致資金損失</string>
   <string name="alert_button_request_support">請求支持</string>
+  <string name="alert_button_try_again">再試一次</string>
   <string name="alert_demo_feature_disabled">此功能不在展示模式中提供</string>
   <string name="alert_failed_to_send_transaction_message">原因：%s</string>
   <string name="alert_failed_to_send_transaction_title">無法發送交易</string>
@@ -36,6 +37,7 @@
   <string name="card_settings_security_mode">安全模式</string>
   <string name="card_settings_title">卡片設置</string>
   <string name="common_accept">接受</string>
+  <string name="common_approve">允許</string>
   <string name="common_attention">注意</string>
   <string name="common_balance">餘額: %s</string>
   <string name="common_balance_title">餘額</string>
@@ -127,6 +129,9 @@
   <string name="feedback_subject_support">反饋</string>
   <string name="feedback_subject_support_tangem">Tangem反饋</string>
   <string name="feedback_subject_tx_failed">無法發送交易</string>
+  <string name="give_permission_rows_amount">數量 %s</string>
+  <string name="give_permission_swap_subtitle" formatted="false">要繼續，您需要允許 %1s 智能合約使用您的 %2s</string>
+  <string name="give_permission_title">賦予權限</string>
   <string name="home_button_scan">掃描卡片</string>
   <string name="initial_message_change_access_code_body">要更改訪問密碼，請完全按照上圖所示連接手機和卡片</string>
   <string name="initial_message_change_passcode_body">要更改密碼，請完全按照上圖所示連接手機和卡</string>
@@ -171,7 +176,6 @@
   <string name="onboarding_exit_alert_message">這此情況，您必須要重新開始</string>
   <string name="onboarding_exit_alert_title">您想要離開啟用程序嗎?</string>
   <string name="onboarding_getting_started">開始</string>
-  <string name="onboarding_linking_error_card_with_wallets">您要添加的卡上已經創建了另一個錢包。你想重置它並將卡用於新錢包嗎？</string>
   <string name="onboarding_navbar_title_creating_backup">創建備份</string>
   <string name="onboarding_seed_button_read_more">閱讀更多關於助記詞的訊息</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -288,7 +292,7 @@
   <string name="token_details_hide_alert_message">您即將在主屏幕上隱藏此代幣。您可以隨時通過管理代幣頁面將其添加回來。</string>
   <string name="token_details_hide_alert_title">隱藏 %s</string>
   <string name="token_details_hide_token">隱藏代幣</string>
-  <string name="token_details_unable_hide_alert_message">%1$s 代幣是 %2$s 網絡上的主要貨幣，只要列表中還有該網絡上的其他代幣，它就無法被隱藏。</string>
+  <string name="token_details_unable_hide_alert_message">%1$s (%2$s) 代幣是 %3$s 網絡上的主要貨幣，只要列表中還有該網絡上的其他代幣，它就無法被隱藏。</string>
   <string name="token_details_unable_hide_alert_title">無法隱藏 %s</string>
   <string name="transaction_history_empty_transactions">您還沒有任何交易</string>
   <string name="transaction_history_error_failed_to_load">無法加載交易</string>
