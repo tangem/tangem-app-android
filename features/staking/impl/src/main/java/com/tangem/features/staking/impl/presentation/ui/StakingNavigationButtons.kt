@@ -133,7 +133,12 @@ private fun getButtonData(currentState: StakingUiState): Int {
                 if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
                     R.string.common_close
                 } else {
-                    R.string.common_stake
+                    when (currentState.routeType) {
+                        RouteType.STAKE -> R.string.common_stake
+                        RouteType.CLAIM -> R.string.common_claim_rewards
+                        RouteType.UNSTAKE -> R.string.common_unstake
+                        RouteType.OTHER -> R.string.common_stake
+                    }
                 }
             } else {
                 R.string.common_close
@@ -148,17 +153,10 @@ private fun getButtonData(currentState: StakingUiState): Int {
 
 private fun onPrimaryClick(currentState: StakingUiState) {
     when (currentState.currentStep) {
-        StakingStep.InitialInfo -> {
-            val initialState = currentState.initialInfoState as? StakingStates.InitialInfoState.Data
-            if (initialState?.yieldBalance is InnerYieldBalanceState.Data) {
-                if (initialState.isStakeMoreAvailable) {
-                    currentState.clickIntents.onNextClick()
-                }
-            } else {
-                currentState.clickIntents.onNextClick()
-            }
-        }
-        StakingStep.Amount -> currentState.clickIntents.onNextClick()
+        StakingStep.InitialInfo,
+        StakingStep.Validators,
+        StakingStep.Amount,
+        -> currentState.clickIntents.onNextClick()
         StakingStep.Confirmation -> {
             val confirmationState = currentState.confirmationState
             if (confirmationState is StakingStates.ConfirmationState.Data) {
@@ -171,7 +169,6 @@ private fun onPrimaryClick(currentState: StakingUiState) {
                 currentState.clickIntents.onBackClick()
             }
         }
-        StakingStep.Validators -> currentState.clickIntents.onNextClick()
         StakingStep.RewardsValidators -> Unit
     }
 }
@@ -190,7 +187,8 @@ private fun isButtonEnabled(uiState: StakingUiState): Pair<Boolean, Boolean> {
     return when (uiState.currentStep) {
         StakingStep.InitialInfo -> {
             val initialState = uiState.initialInfoState as? StakingStates.InitialInfoState.Data
-            val isDisplayed = initialState?.isStakeMoreAvailable == true
+            val isDisplayed = initialState?.isStakeMoreAvailable == true ||
+                initialState?.yieldBalance is InnerYieldBalanceState.Empty
             uiState.initialInfoState.isPrimaryButtonEnabled to isDisplayed
         }
         StakingStep.Amount -> uiState.amountState.isPrimaryButtonEnabled to true

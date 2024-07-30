@@ -134,8 +134,6 @@ class DetailsMiddleware {
 
             scope.launch {
                 repository.changeAppThemeMode(appThemeMode)
-
-                store.dispatchWithMain(GlobalAction.ChangeAppThemeMode(appThemeMode))
             }
         }
 
