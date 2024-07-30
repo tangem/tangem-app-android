@@ -3,7 +3,6 @@ package com.tangem.tap.common.redux.global
 import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.datasource.config.ConfigManager
-import com.tangem.datasource.config.models.ChatConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
@@ -79,7 +78,6 @@ sealed class GlobalAction : Action {
     data class SetFeedbackManager(val feedbackManager: LegacyFeedbackManager) : GlobalAction()
 
     data class SendEmail(val feedbackData: FeedbackData, val scanResponse: ScanResponse?) : GlobalAction()
-    data class OpenChat(val feedbackData: FeedbackData, val chatConfig: ChatConfig? = null) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
         object Init : GlobalAction() {
