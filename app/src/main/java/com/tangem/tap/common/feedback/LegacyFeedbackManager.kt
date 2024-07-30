@@ -2,13 +2,11 @@ package com.tangem.tap.common.feedback
 
 import android.content.Context
 import com.tangem.core.navigation.email.EmailSender
-import com.tangem.datasource.config.models.ChatConfig
 import com.tangem.domain.common.TapWorkarounds
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.log.TangemLogCollector
@@ -29,12 +27,10 @@ import java.io.StringWriter
 class LegacyFeedbackManager(
     val infoHolder: AdditionalFeedbackInfo,
     private val logCollector: TangemLogCollector,
-    private val chatManager: ChatManager,
     private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
     private val getFeedbackEmailUseCase: GetFeedbackEmailUseCase,
 ) {
 
-    private var sessionFeedbackFile: File? = null
     private var sessionLogsFile: File? = null
 
     fun sendEmail(feedbackData: FeedbackData, scanResponse: ScanResponse?) {
@@ -97,43 +93,6 @@ class LegacyFeedbackManager(
         }
     }
 
-    fun openChat(config: ChatConfig, feedbackData: FeedbackData) {
-        chatManager.open(
-            config = config,
-            createLogsFile = ::getLogFile,
-            createFeedbackFile = { context -> getFeedbackFile(context, feedbackData) },
-        )
-    }
-
-    private fun getFeedbackFile(context: Context, feedbackData: FeedbackData): File? {
-        return try {
-            if (sessionFeedbackFile != null) {
-                return sessionFeedbackFile
-            }
-            val file = File(context.filesDir, FEEDBACK_FILE)
-            file.delete()
-            file.createNewFile()
-
-            val feedback = feedbackData.run {
-                prepare(infoHolder)
-                joinTogether(context, infoHolder)
-            }
-            val fileWriter = FileWriter(file)
-            fileWriter.write(feedback)
-            fileWriter.close()
-
-            if (file.exists()) {
-                sessionFeedbackFile = file
-                sessionFeedbackFile
-            } else {
-                null
-            }
-        } catch (ex: Exception) {
-            Timber.e(ex, "Can't create the logs file")
-            null
-        }
-    }
-
     private fun getLogFile(context: Context): File? {
         return try {
             if (sessionLogsFile != null) {
@@ -172,7 +131,6 @@ class LegacyFeedbackManager(
     private companion object {
         const val DEFAULT_SUPPORT_EMAIL = "support@tangem.com"
         const val S2C_SUPPORT_EMAIL = "cardsupport@start2coin.com"
-        const val FEEDBACK_FILE = "feedback.txt"
         const val LOGS_FILE = "logs.txt"
     }
 }
