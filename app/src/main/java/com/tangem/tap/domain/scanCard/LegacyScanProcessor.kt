@@ -32,6 +32,7 @@ import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal object LegacyScanProcessor {
 
@@ -115,24 +116,28 @@ internal object LegacyScanProcessor {
         } else {
             scope.launch {
                 delay(DELAY_SDK_DIALOG_CLOSE)
-                disclaimerWillShow()
-                store.dispatchWithMain(
-                    DisclaimerAction.Show(
-                        from = DisclaimerSource.Home,
-                        callback = DisclaimerCallback(
-                            onAccept = {
-                                scope.launch(Dispatchers.Main) {
-                                    nextHandler(scanResponse)
-                                }
-                            },
-                            onDismiss = {
-                                scope.launch(Dispatchers.Main) {
-                                    onFailure(TangemSdkError.UserCancelled())
-                                }
-                            },
+
+                withContext(Dispatchers.Main.immediate) {
+                    disclaimerWillShow()
+
+                    store.dispatch(
+                        DisclaimerAction.Show(
+                            from = DisclaimerSource.Home,
+                            callback = DisclaimerCallback(
+                                onAccept = {
+                                    scope.launch(Dispatchers.Main.immediate) {
+                                        nextHandler(scanResponse)
+                                    }
+                                },
+                                onDismiss = {
+                                    scope.launch(Dispatchers.Main.immediate) {
+                                        onFailure(TangemSdkError.UserCancelled())
+                                    }
+                                },
+                            ),
                         ),
-                    ),
-                )
+                    )
+                }
             }
         }
     }
