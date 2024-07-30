@@ -19,7 +19,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runCatching
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 internal typealias Derivations = Map<ByteArrayKey, List<DerivationPath>>
@@ -48,13 +48,12 @@ internal class DefaultDerivationsRepository(
 
         tangemSdkManager.derivePublicKeys(cardId = null, derivations = derivations)
             .doOnSuccess { response ->
-                updatePublicKeys(userWalletId = userWalletId, keys = response.entries).fold(
-                    onSuccess = {
-                        validateDerivations(userWallet.scanResponse, derivations)
+                updatePublicKeys(userWalletId = userWalletId, keys = response.entries)
+                    .doOnSuccess {
+                        validateDerivations(scanResponse = it.scanResponse, derivations = derivations)
                         return
-                    },
-                    onFailure = { throw it },
-                )
+                    }
+                    .doOnFailure { throw it }
             }
             .doOnFailure { throw it }
 
@@ -99,8 +98,8 @@ internal class DefaultDerivationsRepository(
         }
     }
 
-    private suspend fun updatePublicKeys(userWalletId: UserWalletId, keys: DerivedKeys): Result<Unit> {
-        return runCatching(dispatchers.io) {
+    private suspend fun updatePublicKeys(userWalletId: UserWalletId, keys: DerivedKeys): CompletionResult<UserWallet> {
+        return withContext(dispatchers.io) {
             userWalletsStore.update(
                 userWalletId = userWalletId,
                 update = { userWallet -> userWallet.updateDerivedKeys(keys) },
