@@ -27,20 +27,12 @@ configurations.all {
 
     resolutionStrategy {
         dependencySubstitution {
-            substitute(module("com.facebook.react:react-native"))
-                .using(module("com.facebook.react:react-android:0.72.4"))
-
-            substitute(module("com.facebook.react:hermes-engine"))
-                .using(module("com.facebook.react:hermes-android:0.72.4"))
-
             substitute(module("org.bouncycastle:bcprov-jdk15on"))
                 .using(module("org.bouncycastle:bcprov-jdk18on:1.73"))
         }
 
         force(
             "org.bouncycastle:bcpkix-jdk15on:1.70",
-            "com.facebook.react:react-android:0.72.4",
-            "com.facebook.react:hermes-android:0.72.4",
         )
     }
 }
@@ -224,10 +216,6 @@ dependencies {
     implementation(deps.walletConnectCore)
     implementation(deps.walletConnectWeb3)
     implementation(deps.prettyLogger)
-    implementation("com.facebook.react:react-android:0.72.4")
-    implementation(deps.sprClient) {
-        exclude(group = "com.github.stephenc.jcip")
-    }
 
     /** Testing libraries */
     testImplementation(deps.test.coroutine)
