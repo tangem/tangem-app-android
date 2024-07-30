@@ -32,7 +32,7 @@ data class TwinCardsState(
 
     val steps: List<TwinCardsStep>
         get() = when (mode) {
-            CreateTwinWalletMode.CreateWallet -> listOf(
+            is CreateTwinWalletMode.CreateWallet -> listOf(
                 TwinCardsStep.None,
                 TwinCardsStep.CreateFirstWallet,
                 TwinCardsStep.CreateSecondWallet,
@@ -40,7 +40,7 @@ data class TwinCardsState(
                 TwinCardsStep.TopUpWallet,
                 TwinCardsStep.Done,
             )
-            CreateTwinWalletMode.RecreateWallet -> listOf(
+            is CreateTwinWalletMode.RecreateWallet -> listOf(
                 TwinCardsStep.None,
                 TwinCardsStep.CreateFirstWallet,
                 TwinCardsStep.CreateSecondWallet,
@@ -56,7 +56,13 @@ data class TwinCardsState(
         get() = currentStep == TwinCardsStep.CreateSecondWallet || currentStep == TwinCardsStep.CreateThirdWallet
 }
 
-enum class CreateTwinWalletMode { CreateWallet, RecreateWallet }
+sealed class CreateTwinWalletMode {
+    data object CreateWallet : CreateTwinWalletMode()
+
+    data class RecreateWallet(
+        val scanResponse: ScanResponse,
+    ) : CreateTwinWalletMode()
+}
 
 sealed class TwinCardsStep {
     object None : TwinCardsStep()
