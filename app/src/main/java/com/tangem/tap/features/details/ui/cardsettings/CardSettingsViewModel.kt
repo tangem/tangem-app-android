@@ -109,7 +109,10 @@ internal class CardSettingsViewModel @Inject constructor(
 
             if (isResetCardAllowed) {
                 CardInfo.ResetToFactorySettings(
-                    description = getResetToFactoryDescription(card.backupStatus, cardTypesResolver),
+                    description = getResetToFactoryDescription(
+                        isActiveBackupStatus = card.backupStatus?.isActive == true,
+                        typesResolver = cardTypesResolver,
+                    ),
                 ).let(::add)
             }
         }
@@ -135,10 +138,15 @@ internal class CardSettingsViewModel @Inject constructor(
                     push(
                         route = AppRoute.ResetToFactory(
                             userWalletId = userWalletId,
-                            cardSpecificInfo = AppRoute.ResetToFactory.CardSpecificInfo(
-                                cardId = card.cardId,
-                                backupStatus = card.backupStatus,
-                            ),
+                            cardId = card.cardId,
+                            isActiveBackupStatus = card.backupStatus?.isActive == true,
+                            backupCardsCount = when (val status = card.backupStatus) {
+                                is CardDTO.BackupStatus.Active -> status.cardCount
+                                is CardDTO.BackupStatus.CardLinked,
+                                CardDTO.BackupStatus.NoBackup,
+                                null,
+                                -> 0
+                            },
                         ),
                     )
                 }
