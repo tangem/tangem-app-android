@@ -12,7 +12,9 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -144,7 +146,7 @@ internal class DefaultDerivationsRepositoryTest {
         coEvery { tangemSdkManager.derivePublicKeys(null, any()) } returns CompletionResult.Success(
             DerivationTaskResponse(DerivedKeysMocks.ethereumDerivedKeys),
         )
-        coEvery { userWalletsStore.update(defaultUserWalletId, any()) } just Runs
+        coEvery { userWalletsStore.update(defaultUserWalletId, any()) } returns CompletionResult.Success(userWallet)
 
         runCatching {
             repository.derivePublicKeys(
