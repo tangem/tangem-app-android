@@ -1271,7 +1271,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 val feeToCheckFunds = feeByPriority + (otherNativeFee ?: BigDecimal.ZERO)
                 val isBalanceIncludeFeeEnough = isBalanceEnough(fromToken, amount, feeToCheckFunds)
                 val feeState = getFeeState(
-                    fee = feeByPriority,
+                    fee = feeToCheckFunds,
                     spendAmount = amount,
                     networkId = networkId,
                     fromTokenStatus = fromToken,
