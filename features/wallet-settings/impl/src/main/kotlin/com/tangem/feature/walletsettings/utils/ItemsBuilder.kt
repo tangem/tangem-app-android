@@ -51,7 +51,7 @@ internal class ItemsBuilder @Inject constructor(
 
                 if (isReferralAvailable) {
                     BlockUM(
-                        text = resourceReference(R.string.referral_title),
+                        text = resourceReference(R.string.details_referral_title),
                         iconRes = R.drawable.ic_add_friends_24,
                         onClick = { router.push(AppRoute.ReferralProgram(userWalletId)) },
                     ).let(::add)
