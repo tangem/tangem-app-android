@@ -576,7 +576,7 @@
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
-  <string name="staking_amount_requirement_error">Сумма для стейкинда должна быть не менее %s</string>
+  <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_apy_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
   <string name="staking_details_available">Доступно</string>
