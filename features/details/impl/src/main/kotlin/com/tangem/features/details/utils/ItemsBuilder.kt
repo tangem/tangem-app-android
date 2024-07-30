@@ -87,7 +87,7 @@ internal class ItemsBuilder @Inject constructor(
             DetailsItemUM.Basic.Item(
                 id = "send_feedback",
                 block = BlockUM(
-                    text = resourceReference(R.string.details_send_feedback),
+                    text = resourceReference(R.string.details_row_title_contact_to_support),
                     iconRes = R.drawable.ic_comment_24,
                     onClick = onClick,
                 ),
