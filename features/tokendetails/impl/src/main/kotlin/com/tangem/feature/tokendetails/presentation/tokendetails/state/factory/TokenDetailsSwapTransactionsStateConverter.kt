@@ -142,9 +142,9 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         txUrl: String?,
         refundToken: CryptoCurrency?,
     ): ExchangeStatusNotifications? {
-        if (txUrl == null) return null
         return when (status) {
             ExchangeStatus.Failed -> {
+                if (txUrl == null) return null
                 ExchangeStatusNotifications.Failed {
                     analyticsEventsHandlerProvider().send(
                         TokenExchangeAnalyticsEvent.GoToProviderFail(cryptoCurrency.symbol),
@@ -153,6 +153,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                 }
             }
             ExchangeStatus.Verifying -> {
+                if (txUrl == null) return null
                 ExchangeStatusNotifications.NeedVerification {
                     analyticsEventsHandlerProvider().send(
                         TokenExchangeAnalyticsEvent.GoToProviderKYC(cryptoCurrency.symbol),
