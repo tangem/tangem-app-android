@@ -110,6 +110,7 @@
   <string name="common_fee_selector_title">Скорость и комиссия</string>
   <string name="common_generate_addresses">Получить адреса</string>
   <string name="common_go_to_provider">К провайдеру</string>
+  <string name="common_go_to_token">Перейти в токен</string>
   <string name="common_import">Импортировать</string>
   <string name="common_later">Позже</string>
   <string name="common_locked">Заблокирован</string>
@@ -124,6 +125,7 @@
   <string name="common_origin_card">Основная карта</string>
   <string name="common_passphrase">Парольная фраза</string>
   <string name="common_paste">Вставить</string>
+  <string name="common_range">%1$s-%2$s</string>
   <string name="common_read_more">Подробнее</string>
   <string name="common_receive">Получить</string>
   <string name="common_reject">Отклонить</string>
@@ -222,6 +224,8 @@
   <string name="express_exchange_by">Обмен через %s</string>
   <string name="express_exchange_notification_failed_text">Чтобы вернуть ваши деньги, посетите сайт провайдера</string>
   <string name="express_exchange_notification_failed_title">Операция не выполнена провайдером</string>
+  <string name="express_exchange_notification_refund_text">Отправленные средства были возвращены в %1$s на ваш кошелек в соответствии с правилами OKX или моста обмена. %2$s</string>
+  <string name="express_exchange_notification_refund_title">Сумма была возвращена в %1$s (%2$s сети)</string>
   <string name="express_exchange_notification_verification_text">Посетите сайт провайдера для проверки</string>
   <string name="express_exchange_notification_verification_title">Провайдер запрашивает прохождение верификации</string>
   <string name="express_exchange_status_canceled">Отменен</string>
@@ -326,6 +330,7 @@
   <string name="manage_tokens_unavailable_vote">Голосовать</string>
   <string name="manage_tokens_wallet_selector_title">Выберите кошелек</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Кошелёк не поддерживает более одной сети</string>
+  <string name="markets_generate_addresses_notification">Чтобы создать адреса для выбранных сетей, необходимо отсканировать свой кошелек Tangem.</string>
   <string name="markets_token_details_links">Ссылки</string>
   <string name="markets_token_details_metrics">Метрики</string>
   <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
@@ -571,9 +576,11 @@
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
+  <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_apy_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
   <string name="staking_details_available">Доступно</string>
+  <string name="staking_details_estimated_profit">%s</string>
   <string name="staking_details_reward_claiming">Способ возраграждения</string>
   <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Он может быть автоматическим или ручным.</string>
   <string name="staking_details_reward_schedule">Период возрагражения</string>
