@@ -87,6 +87,10 @@
   <string name="common_copy_address">Copier l\'adresse</string>
   <string name="common_create">Créer</string>
   <string name="common_custom">Personnalisé</string>
+  <plurals name="common_days">
+    <item quantity="one">%d jour</item>
+    <item quantity="other">%d jours</item>
+  </plurals>
   <string name="common_delete">Supprimer</string>
   <string name="common_disabled">Désactivé</string>
   <string name="common_done">Exécuté</string>
@@ -272,8 +276,8 @@
   <string name="give_permission_swap_subtitle" formatted="false">Pour continuer, accordez aux smart contracts de %1s l\'autorisation d\'utiliser votre %2s</string>
   <string name="give_permission_title">Donner l\'autorisation</string>
   <string name="give_permission_unlimited">Illimité</string>
-  <string name="home_button_order">Commander une carte</string>
-  <string name="home_button_scan">Scannez la carte</string>
+  <string name="home_button_order">Commandez</string>
+  <string name="home_button_scan">Scannez</string>
   <string name="initial_message_change_access_code_body">Touchez, pour modifier le code d\'accès</string>
   <string name="initial_message_change_passcode_body">Touchez, pour modifier le mot de passe</string>
   <string name="initial_message_create_wallet_body">Pour créer le portefeuille, appuyez sur la carte comme indiqué ci-dessus et ne la retirez pas jusqu\'à la fin de l\'opération</string>
@@ -324,6 +328,7 @@
   <string name="markets_add_to_portfolio_button">Ajouter au portfolio</string>
   <string name="markets_common_my_portfolio">Mon portfolio</string>
   <string name="markets_common_title">Marché</string>
+  <string name="markets_generate_addresses_notification">Pour générer des adresses pour les réseaux sélectionnés, vous devez scanner votre carte Tangem.</string>
   <string name="markets_select_wallet">Sélectionnez un portefeuille</string>
   <string name="markets_sort_by_title">Trier par</string>
   <string name="markets_token_details_insights">Idées</string>
@@ -490,6 +495,8 @@
   <string name="send_custom_evm_max_fee_footer">Il s\'agit du coût que vous êtes prêt à payer pour chaque unité de gaz. Plus le prix du gaz est élevé, plus votre transaction sera traitée rapidement. (Frais de priorité inclus)</string>
   <string name="send_custom_evm_priority_fee">Frais de priorité</string>
   <string name="send_custom_evm_priority_fee_footer">Les frais qu\'un utilisateur peut payer aux mineurs ou aux validateurs pour accélérer l\'inclusion de leur transaction dans un bloc.</string>
+  <string name="send_custom_kaspa_per_utxo_footer">Les frais requis pour l\'utilisation de chaque sortie de transaction non dépensée (UTXO) dans le réseau Kaspa. Plus vous utilisez d’UTXO dans une transaction, plus les frais seront élevés.</string>
+  <string name="send_custom_kaspa_per_utxo_title">KAS pour UTXO</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Adresse</string>
   <string name="send_destination_tag_field">Destination Tag</string>
@@ -581,7 +588,7 @@
   <string name="staking_details_reward_claiming_info">Un moyen de recevoir des récompenses de staking. Il peut être réclamé automatiquement ou manuellement.</string>
   <string name="staking_details_reward_schedule">Calendrier de récompenses</string>
   <string name="staking_details_reward_schedule_info">Il s\'agit d\'un calendrier qui détermine le moment où les participants au staking reçoivent leurs récompenses.</string>
-  <string name="staking_details_rewards_to_claim">Récompenses à réclamer : %s</string>
+  <string name="staking_details_rewards_to_claim">Récompenses à réclamer: %s</string>
   <string name="staking_details_title">Staking %s</string>
   <string name="staking_details_unbonding_period">Période de détachement</string>
   <string name="staking_details_unbonding_period_info">La période que vous devez attendre après avoir demandé le retrait des fonds du staking avant que les jetons ne soient disponibles.</string>
@@ -667,6 +674,7 @@
   <string name="twins_scan_twin_with_number">Appuyez sur la carte jumelle avec le numéro %s et ne la retirez pas jusqu\'à la fin de l\'opération</string>
   <string name="unlock_wallet_description_full">Utilisez %s ou scannez une carte pour avoir accès à votre portefeuille</string>
   <string name="user_push_notification_agreement_argument_one">Restez à jour avec les dernières fonctionnalités et actualités</string>
+  <string name="user_push_notification_agreement_argument_two">Soyez le premier informé des nouvelles promotions</string>
   <string name="user_push_notification_agreement_header">Souhaitez-vous utiliser les notifications push?</string>
   <string name="user_wallet_list_add_button">Ajouter un nouveau portefeuille</string>
   <string name="user_wallet_list_delete_prompt">Êtes-vous sûr de vouloir supprimer ce portefeuille ?</string>
@@ -718,6 +726,7 @@
   <string name="wallet_settings_title">Paramètres du portefeuille</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Utilisez %s ou scannez une carte pour déverrouiller l\'accès à votre portefeuille</string>
+  <string name="warning_backup_errors_message">Il semble que l\'activation de la carte ne se soit pas déroulée correctement. Cela peut être dû à un problème avec le module NFC de votre appareil ou à une mauvaise connexion de la carte sur votre appareil. Veuillez contacter notre équipe de support pour obtenir de l’aide.</string>
   <string name="warning_backup_errors_title">Erreur d\'activation</string>
   <string name="warning_beacon_chain_retirement_content">Selon les développeurs du réseau BNB, le support de la norme BEP-2\nprendra fin en juin 2024. Pour éviter de perdre des actifs avec cette norme, veuillez les convertir à la norme BEP-20. Utilisez notre service de d\'échange pour les transférer sur le réseau BNB Smart Chain.</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain va s\'arrêter de fonctionner</string>
