@@ -13,6 +13,9 @@
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">選択したものは%1$sネットワークをサポートしていません。</string>
   <string name="alert_manage_tokens_unsupported_curve_message">%1$sブロックチェーンの暗号化を有効にするには、ウォレットを工場出荷時の設定にリセットする必要があります。リセットする前に出金して、資金が失われないようにしてから、リセット処理を完了してください。リセット後は、現在のウォレットにアクセスできなくなります。</string>
   <string name="alert_manage_tokens_unsupported_message">%1$s ネットワークのトークンは、ファームウェアの制限により、このカードではサポートされていません。</string>
+  <string name="alert_negative_app_rate_sent_message">ご意見ありがとうございます。できるだけ早くご返信いたします。</string>
+  <string name="alert_negative_app_rate_sent_title">あなたの提案が送信されました</string>
+  <string name="alert_troubleshooting_scan_card_message">アニメーションに表示されているとおりにカードをタップするか、簡単なガイドをお読みください。それでも問題が解決しない場合は、サポートをご依頼ください。</string>
   <string name="alert_troubleshooting_scan_card_title">カードのスキャンに問題がありますか?</string>
   <string name="alert_unsupported_card">このカードはこのアプリでは使用できません。</string>
   <string name="app_settings_default_fee">デフォルト手数料</string>
@@ -28,6 +31,8 @@
   <string name="app_settings_theme_mode_dark">ダーク</string>
   <string name="app_settings_theme_mode_light">ライト</string>
   <string name="app_settings_theme_mode_system">システムのデフォルト</string>
+  <string name="app_settings_theme_selection_footer">システムを選択した場合、アプリはデバイスのシステム設定に基づいて自動調整されます。</string>
+  <string name="app_settings_theme_selection_system_short">システム</string>
   <string name="app_settings_theme_selector_title">テーマ</string>
   <string name="app_settings_title">アプリ設定</string>
   <string name="balance_hidden_description">残高を表示または非表示にするには、デバイスの画面を下向きにするか、設定でオフにしてください。</string>
@@ -93,6 +98,7 @@
   </plurals>
   <string name="common_delete">削除</string>
   <string name="common_disabled">無効</string>
+  <string name="common_disconnect">切断</string>
   <string name="common_done">完了</string>
   <string name="common_enable">有効にする</string>
   <string name="common_enabled">有効</string>
@@ -129,6 +135,7 @@
   <string name="common_reject">拒否</string>
   <string name="common_reload">リロード</string>
   <string name="common_rename">名前を変更</string>
+  <string name="common_retry">リトライ</string>
   <string name="common_save">保存</string>
   <string name="common_save_changes">変更内容を保存</string>
   <string name="common_search">検索</string>
@@ -157,6 +164,7 @@
   <string name="common_unknown_error">エラーが発生しました。もう一度お試しください。</string>
   <string name="common_unreachable">アクセスできません</string>
   <string name="common_unstake">ステーキング解除</string>
+  <string name="common_warning">警告</string>
   <string name="common_yes">はい</string>
   <string name="contract_address_copied_message">コントラクトアドレスをコピーしました!</string>
   <string name="currency_subtitle_expanded">利用可能なネットワーク</string>
@@ -204,6 +212,7 @@
   <string name="details_row_title_flip_to_hide">フリップして残高を非表示にする</string>
   <string name="details_row_title_issuer">発行者</string>
   <string name="details_row_title_signed_hashes">署名済み</string>
+  <string name="details_security_management_warning">コードを忘れた場合、資金にアクセスできなくなります。コードの回復は不可能です。</string>
   <string name="details_send_feedback">フィードバックを送信</string>
   <string name="details_title">詳細</string>
   <string name="disclaimer_error_loading">インターネット接続を確認するか、別のネットワークに切り替えてください。</string>
@@ -560,6 +569,7 @@
   <string name="send_date_format">%1$s 、 %2$s</string>
   <string name="send_destination_hint_address">アドレス</string>
   <string name="send_destination_tag_field">宛先タグ</string>
+  <string name="send_dismiss_message">送金画面を閉じてもよろしいですか?</string>
   <string name="send_enter_address_field">アドレスを入力</string>
   <string name="send_error_address_same_as_wallet">アドレスはウォレットアドレスと同じです</string>
   <string name="send_extras_error_invalid_destination_tag">無効なタグです。取引には追加されません。</string>
@@ -704,6 +714,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">ネットワーク%s内の保留中の取引が完了すると、送金が可能になります。</string>
   <string name="token_button_unavailability_reason_sell_unavailable">現在、 %sの売却はご利用いただけません。アップデート情報をご確認ください。</string>
   <string name="token_button_unavailability_reason_staking_unavailable">%s のステーキングは現在ご利用いただけません。最新情報をご確認ください。</string>
+  <string name="token_details_choose_address">アドレスを選択</string>
   <string name="token_details_generate_xpub">XPUBを生成する</string>
   <string name="token_details_hide_alert_hide">非表示</string>
   <string name="token_details_hide_alert_message">このトークンをメイン画面から非表示にします。トークンの管理ページからいつでも再度追加できます。</string>
