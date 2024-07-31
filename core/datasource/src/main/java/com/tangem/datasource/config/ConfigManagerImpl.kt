@@ -154,6 +154,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 zkSyncEra = GetBlockAccessToken(rest = accessTokens.zksync?.jsonRPC),
                 polygonZkEvm = GetBlockAccessToken(rest = accessTokens.polygonZkevm?.jsonRPC),
                 base = GetBlockAccessToken(rest = accessTokens.base?.jsonRPC),
+                blast = GetBlockAccessToken(jsonRpc = accessTokens.blast?.jsonRPC),
             )
         }
     }

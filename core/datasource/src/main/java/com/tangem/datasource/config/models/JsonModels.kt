@@ -75,6 +75,7 @@ data class GetBlockAccessTokens(
     @Json(name = "polygon-zkevm") val polygonZkevm: GetBlockToken?,
     @Json(name = "zksync") val zksync: GetBlockToken?,
     @Json(name = "base") val base: GetBlockToken?,
+    @Json(name = "blast") val blast: GetBlockToken?,
 )
 
 @JsonClass(generateAdapter = true)
