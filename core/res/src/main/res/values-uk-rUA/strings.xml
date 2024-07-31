@@ -13,6 +13,9 @@
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">Обраний гаманець не підтримує мережу %1$s</string>
   <string name="alert_manage_tokens_unsupported_curve_message">Щоб активувати криптографічне шифрування блокчейну %1$s, вам потрібно скинути налаштування гаманця до заводських. Зніміть свої кошти перед цим, щоб переконатися, що ви їх не втратите, а потім завершіть процес скидання. Вхід до поточного гаманця буде неможливий після скидання.</string>
   <string name="alert_manage_tokens_unsupported_message">Токени в мережі %1$s не підтримуються цією карткою через обмеження прошивки.</string>
+  <string name="alert_negative_app_rate_sent_message">Дякуємо за ваш відгук. Ми відповімо якнайшвидше.</string>
+  <string name="alert_negative_app_rate_sent_title">Ваші пропозиції надіслано</string>
+  <string name="alert_troubleshooting_scan_card_message">Будь ласка, спробуйте прикласти картку точно так, як показано на анімації, або прочитайте наш простий посібник. Якщо проблема залишилася, зверніться до служби підтримки.</string>
   <string name="alert_troubleshooting_scan_card_title">У вас виникли труднощі зі скануванням картки?</string>
   <string name="alert_unsupported_card">Ця картка не призначена для роботи з цим додатком</string>
   <string name="app_settings_default_fee">Комісія за замовчуванням</string>
@@ -28,6 +31,8 @@
   <string name="app_settings_theme_mode_dark">Темна</string>
   <string name="app_settings_theme_mode_light">Світла</string>
   <string name="app_settings_theme_mode_system">Системна</string>
+  <string name="app_settings_theme_selection_footer">При виборі \"Системна\" застосунок буде використовувати тему відповідно до налаштувань вашого пристрою</string>
+  <string name="app_settings_theme_selection_system_short">Системна</string>
   <string name="app_settings_theme_selector_title">Тема</string>
   <string name="app_settings_title">Налаштування застосунку</string>
   <string name="balance_hidden_description">Щоб приховати або показати свій баланс, просто переверніть екран пристрою вниз або вимкніть його в налаштуваннях</string>
@@ -99,6 +104,7 @@
   </plurals>
   <string name="common_delete">Видалити</string>
   <string name="common_disabled">Вимкнуто</string>
+  <string name="common_disconnect">Від\'єднати</string>
   <string name="common_done">Готово</string>
   <string name="common_enable">Увімкнути</string>
   <string name="common_enabled">Увімкнено</string>
@@ -135,6 +141,7 @@
   <string name="common_reject">Відхилити</string>
   <string name="common_reload">Перезавантажити</string>
   <string name="common_rename">Перейменувати</string>
+  <string name="common_retry">Повторити</string>
   <string name="common_save">Зберегти</string>
   <string name="common_save_changes">Зберегти зміни</string>
   <string name="common_search">Шукати</string>
@@ -163,6 +170,7 @@
   <string name="common_unknown_error">Виникла помилка. Будь ласка, спробуйте ще раз.</string>
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Скасувати стейкінг</string>
+  <string name="common_warning">Увага</string>
   <string name="common_yes">Так</string>
   <string name="contract_address_copied_message">Адреса контракту скопійована!</string>
   <string name="currency_subtitle_expanded">Доступні мережі</string>
@@ -210,6 +218,7 @@
   <string name="details_row_title_flip_to_hide">Приховувати баланси жестом перевороту</string>
   <string name="details_row_title_issuer">Емітент</string>
   <string name="details_row_title_signed_hashes">Підписано</string>
+  <string name="details_security_management_warning">Якщо ви забудете код, ви втратите доступ до своїх коштів. Відновлення коду неможливе.</string>
   <string name="details_send_feedback">Надіслати відгук</string>
   <string name="details_title">Деталі</string>
   <string name="disclaimer_error_loading">Перевірте підключення до інтернету або змініть мережу</string>
@@ -584,6 +593,7 @@
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адреса</string>
   <string name="send_destination_tag_field">Тег призначення</string>
+  <string name="send_dismiss_message">Ви дійсно хочете закрити екран надсилання транзакції?</string>
   <string name="send_enter_address_field">Введіть адресу</string>
   <string name="send_error_address_same_as_wallet">Адреса збігається з адресою гаманця</string>
   <string name="send_extras_error_invalid_destination_tag">Недопустимий Tag. Він не буде доданий у транзакцію.</string>
@@ -648,7 +658,7 @@
   <string name="send_total_subtitle_fiat_format">≈ %1$s (вкл. комісію: %2$s )</string>
   <string name="send_total_subtitle_format">%s буде надіслано</string>
   <string name="send_transaction_success">Транзакція успішно підписана і відправлена до блокчейну. Баланс гаманця буде оновлено через деякий час</string>
-  <string name="send_tron_account_activation_error">%1$s — це монета у мережі Tron. Щоб розрахувати комісію та здійснити транзакцію, вам необхідно внести певну кількість Tron(TRX) на свій рахунок.</string>
+  <string name="send_tron_account_activation_error">%1$s — це монета у мережі Tron. Щоб розрахувати комісію та здійснити транзакцію, вам необхідно внести певну кількість Tron (TRX) на свій рахунок.</string>
   <string name="send_validation_invalid_address">Недійсна адреса</string>
   <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Трансакцію надіслано</string>
@@ -729,6 +739,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">Надсилання коштів стане доступним після завершення транзакції(-ій) в мережі %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Наразі продаж %s недоступний. Слідкуйте за нашими оновленнями.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Стейкінг %s зараз недоступний. Будь ласка, слідкуйте за нашими оновленнями.</string>
+  <string name="token_details_choose_address">Оберіть адресу</string>
   <string name="token_details_generate_xpub">Згенерувати XPUB</string>
   <string name="token_details_hide_alert_hide">Приховати</string>
   <string name="token_details_hide_alert_message">Ви збираєтеся приховати цей токен з головного екрану. Ви можете додати його назад будь-коли на сторінці керування токенами.</string>
