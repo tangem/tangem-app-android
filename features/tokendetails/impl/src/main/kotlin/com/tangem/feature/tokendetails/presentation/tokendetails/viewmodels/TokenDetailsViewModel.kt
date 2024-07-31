@@ -718,8 +718,8 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency) {
         if (internalUiState.value.bottomSheetConfig?.content is ExchangeStatusBottomSheetConfig) {
-            viewModelScope.launch(dispatchers.main) {
-                internalUiState.value = exchangeStatusFactory.removeTransactionOnBottomSheetClosed()
+            viewModelScope.launch {
+                internalUiState.value = exchangeStatusFactory.removeTransactionOnBottomSheetClosed(true)
             }
         }
         internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
