@@ -15,9 +15,9 @@ internal interface WalletPushPermissionClickIntents {
 
     fun onRequestPushPermission()
 
-    fun onDelayAskPushPermission()
+    fun onDelayAskPushPermission(isUserDismissed: Boolean)
 
-    fun onNeverAskPushPermission()
+    fun onNeverAskPushPermission(isUserDismissed: Boolean)
 
     fun onDenyPushPermission()
 
@@ -32,7 +32,9 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : BaseWalletClickIntents(), WalletPushPermissionClickIntents {
 
+    private var isUserDismissedDialog: Boolean = true
     override fun onRequestPushPermission() {
+        isUserDismissedDialog = false
         analyticsEventHandler.send(
             PushNotificationAnalyticEvents.ButtonAllow(AnalyticsParam.ScreensSources.Main),
         )
@@ -41,7 +43,9 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onDelayAskPushPermission() {
+    override fun onDelayAskPushPermission(isUserDismissed: Boolean) {
+        if (!isUserDismissedDialog) return
+        isUserDismissedDialog = isUserDismissed
         viewModelScope.launch {
             analyticsEventHandler.send(
                 PushNotificationAnalyticEvents.ButtonLater(AnalyticsParam.ScreensSources.Main),
@@ -50,7 +54,9 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onNeverAskPushPermission() {
+    override fun onNeverAskPushPermission(isUserDismissed: Boolean) {
+        if (!isUserDismissedDialog) return
+        isUserDismissedDialog = isUserDismissed
         viewModelScope.launch {
             analyticsEventHandler.send(PushNotificationAnalyticEvents.ButtonCancel)
             neverRequestPermissionUseCase(PUSH_PERMISSION)
