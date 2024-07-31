@@ -5,6 +5,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListItemUM
+import kotlinx.collections.immutable.persistentListOf
 
 internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvider<MarketsListItemUM>(
     collection = listOf(
@@ -19,7 +20,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             trendPercentText = "12.43%",
             trendType = PriceChangeType.UP,
             chardData = MarketChartRawData(
-                y = listOf(0.4f, 0.2f, 0.4f, 0.1f, 0.4f, 2f, 5f, 0.1f, 2f, 2f, 3f),
+                y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
             ),
         ),
         MarketsListItemUM(
@@ -45,7 +46,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             trendPercentText = "12.43%",
             trendType = PriceChangeType.DOWN,
             chardData = MarketChartRawData(
-                y = listOf(0.4f, 0.2f, 0.4f, 0.1f, 0.4f, 2f, 5f, 0.1f, 2f, 2f, 3f),
+                y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
             ),
         ),
         MarketsListItemUM(
@@ -59,7 +60,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             trendPercentText = "12.43%",
             trendType = PriceChangeType.UP,
             chardData = MarketChartRawData(
-                y = listOf(0.4f, 0.2f, 0.4f, 0.1f, 0.4f, 2f, 5f, 0.1f, 2f, 2f, 3f),
+                y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
             ),
         ),
         MarketsListItemUM(
@@ -73,7 +74,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             trendPercentText = "12.43%",
             trendType = PriceChangeType.UP,
             chardData = MarketChartRawData(
-                y = listOf(0.4f, 0.2f, 0.4f, 0.1f, 0.4f, 2f, 5f, 0.1f, 2f, 2f, 3f),
+                y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
             ),
         ),
         MarketsListItemUM(
@@ -87,7 +88,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             trendPercentText = "12.43%",
             trendType = PriceChangeType.UP,
             chardData = MarketChartRawData(
-                y = listOf(0.4f, 0.2f, 0.4f, 0.1f, 0.4f, 2f, 5f, 0.1f, 2f, 2f, 3f),
+                y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
             ),
         ),
     ),

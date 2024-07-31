@@ -3,13 +3,14 @@ package com.tangem.common.ui.charts.state
 import androidx.compose.runtime.Stable
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
-import com.patrykandpatrick.vico.core.common.data.ExtraStore
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
+import com.tangem.common.ui.charts.state.converter.PointValuesConverter
+import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
+import com.tangem.common.ui.charts.state.formatter.FormatterWrapWithCache
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.withContext
-import java.math.BigDecimal
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * This class represents a transaction for updating the state and look of a Market Chart.
@@ -75,21 +76,24 @@ class TransactionSuspend(
 class MarketChartDataProducer private constructor(
     initialData: MarketChartData,
     initialLook: MarketChartLook,
-    val pointsValuesConverter: PointValuesConverter = DefaultPointValuesConverter,
+    val pointsValuesConverter: PointValuesConverter = PriceAndTimePointValuesConverter(needToFormatAxis = true),
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
-    internal val startDrawingAnimation = MutableSharedFlow<Unit>()
     internal val dataState = MutableStateFlow(initialData)
     internal val lookState = MutableStateFlow(initialLook)
     internal val entries = MutableStateFlow<List<LineCartesianLayerModel.Entry>>(emptyList())
-
-    internal val modelProducer = CartesianChartModelProducer.build(dispatcher = dispatcher)
+    internal val modelProducer = CartesianChartModelProducer(dispatcher = dispatcher)
+    internal val rawData = MutableStateFlow<MarketChartRawData?>(null)
+    private val mutex = Mutex()
 
     /**
      * This function runs a suspending transaction block to update the state and look of the Market Chart.
      */
-    suspend fun runTransactionSuspend(block: TransactionSuspend.() -> Unit) =
-        handleTransactionSuspend(transaction = TransactionSuspend(dataState.value, lookState.value).apply(block))
+    suspend fun runTransactionSuspend(block: TransactionSuspend.() -> Unit) = withContext(dispatcher) {
+        mutex.withLock {
+            handleTransactionSuspend(transaction = TransactionSuspend(dataState.value, lookState.value).apply(block))
+        }
+    }
 
     /**
      * This function runs a non-suspending transaction block to update the state and look of the Market Chart.
@@ -107,27 +111,29 @@ class MarketChartDataProducer private constructor(
         }
 
         if (chartData is MarketChartData.Data && (oldData !is MarketChartData.Data || oldData != chartData)) {
-            if (lookState.value.animationOnDataChange) {
-                startDrawingAnimation.emit(Unit)
+            lookState.update {
+                it.copy(
+                    xAxisFormatter = FormatterWrapWithCache(it.xAxisFormatter),
+                    yAxisFormatter = FormatterWrapWithCache(it.yAxisFormatter),
+                )
             }
-            withContext(dispatcher) {
-                val rawData = pointsValuesConverter.convert(chartData)
 
-                val entriesLocal =
-                    rawData.x.mapIndexed { index, fl -> LineCartesianLayerModel.Entry(fl, rawData.y[index]) }
+            val rawData = pointsValuesConverter.convert(chartData)
+            this.rawData.value = rawData
 
-                entries.value = entriesLocal
+            val entriesLocal =
+                rawData.x.mapIndexed { index, fl -> LineCartesianLayerModel.Entry(fl, rawData.y[index]) }
 
+            entries.value = entriesLocal
+
+            currentCoroutineContext().ensureActive()
+
+            runCatching {
                 modelProducer.runTransaction {
                     add(LineCartesianLayerModel.Partial(series = listOf(entriesLocal)))
-
-                    updateExtras {
-                        it[entriesKey] = entriesLocal
-                        it[xKey] = chartData.x
-                        it[yKey] = chartData.y
-                    }
-                }.await()
+                }
             }
+            delay(timeMillis = 200)
         }
 
         nonSuspendTransaction?.let { handleTransaction(it) }
@@ -143,10 +149,6 @@ class MarketChartDataProducer private constructor(
     }
 
     companion object {
-        internal val entriesKey = ExtraStore.Key<List<LineCartesianLayerModel.Entry>>()
-        internal val xKey = ExtraStore.Key<List<BigDecimal>>()
-        internal val yKey = ExtraStore.Key<List<BigDecimal>>()
-
         private val initialData: MarketChartData = MarketChartData.NoData.Empty
         private val initialLook: MarketChartLook = MarketChartLook()
 
@@ -159,7 +161,7 @@ class MarketChartDataProducer private constructor(
          * @return A MarketChartDataProducer.
          */
         suspend fun buildSuspend(
-            pointsValuesConverter: PointValuesConverter = DefaultPointValuesConverter,
+            pointsValuesConverter: PointValuesConverter = PriceAndTimePointValuesConverter(needToFormatAxis = true),
             dispatcher: CoroutineDispatcher = Dispatchers.Default,
             block: TransactionSuspend.() -> Unit,
         ): MarketChartDataProducer {
@@ -184,7 +186,7 @@ class MarketChartDataProducer private constructor(
          * @return A MarketChartDataProducer.
          */
         fun build(
-            pointsValuesConverter: PointValuesConverter = DefaultPointValuesConverter,
+            pointsValuesConverter: PointValuesConverter = PriceAndTimePointValuesConverter(needToFormatAxis = true),
             dispatcher: CoroutineDispatcher = Dispatchers.Default,
             block: Transaction.() -> Unit,
         ): MarketChartDataProducer {
