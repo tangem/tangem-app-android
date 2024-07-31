@@ -61,18 +61,6 @@ internal class DefaultCurrenciesRepository(
     private val isMultiCurrencyWalletCurrenciesFetching = MutableStateFlow(
         value = emptyMap<UserWalletId, Boolean>(),
     )
-    private val parallelTransactionsEnabledBlockchains = setOf(
-        Blockchain.Ethereum,
-        Blockchain.EthereumTestnet,
-        Blockchain.Polygon,
-        Blockchain.PolygonTestnet,
-        Blockchain.Arbitrum,
-        Blockchain.ArbitrumTestnet,
-        Blockchain.Binance,
-        Blockchain.BinanceTestnet,
-        Blockchain.Tron,
-        Blockchain.TronTestnet,
-    )
 
     override suspend fun saveTokens(
         userWalletId: UserWalletId,
@@ -391,7 +379,8 @@ internal class DefaultCurrenciesRepository(
                 val outgoingTransactions = cryptoCurrencyStatus.value.pendingTransactions.filter { it.isOutgoing }
                 outgoingTransactions.isNotEmpty()
             }
-            parallelTransactionsEnabledBlockchains.contains(blockchain) -> false
+            blockchain.isEvm() -> false
+            blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet -> false
             else -> coinStatus?.value?.hasCurrentNetworkTransactions == true
         }
     }
