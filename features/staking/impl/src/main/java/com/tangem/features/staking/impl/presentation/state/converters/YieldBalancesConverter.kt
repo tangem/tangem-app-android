@@ -10,7 +10,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.BalanceGroupType
 import com.tangem.features.staking.impl.presentation.state.BalanceGroupedState
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
@@ -59,12 +58,14 @@ internal class YieldBalancesConverter(
         .groupBy { it.type.toGroup() }
         .mapNotNull { item ->
             val (title, footer) = getGroupTitle(item.key)
+            val isClickable = getClickableType(item.key)
             title?.let {
                 BalanceGroupedState(
                     items = item.value.mapBalances().toPersistentList(),
                     footer = footer,
                     title = it,
                     type = item.key,
+                    isClickable = isClickable,
                 )
             }
         }
@@ -111,31 +112,25 @@ internal class YieldBalancesConverter(
     }
 
     private fun BalanceType.toGroup() = when (this) {
-        BalanceType.PREPARING,
-        BalanceType.STAKED,
-        BalanceType.AVAILABLE,
-        BalanceType.LOCKED,
-        -> BalanceGroupType.ACTIVE
-        BalanceType.UNSTAKING,
-        BalanceType.UNLOCKING,
-        BalanceType.UNSTAKED,
-        -> BalanceGroupType.UNSTAKED
         BalanceType.REWARDS,
         BalanceType.UNKNOWN,
-        -> BalanceGroupType.UNKNOWN
+        -> BalanceType.UNKNOWN
+        else -> this
     }
 
-    private fun getGroupTitle(type: BalanceGroupType) = when (type) {
-        BalanceGroupType.ACTIVE -> resourceReference(
-            R.string.staking_active,
-        ) to resourceReference(
-            R.string.staking_active_footer,
-        )
-        BalanceGroupType.UNSTAKED -> resourceReference(
-            R.string.staking_unstaked,
-        ) to resourceReference(
-            R.string.staking_unstaked_footer,
-        )
-        BalanceGroupType.UNKNOWN -> null to null
+    private fun getGroupTitle(type: BalanceType) = when (type) {
+        BalanceType.STAKED -> resourceReference(R.string.staking_active) to
+            resourceReference(R.string.staking_active_footer)
+        BalanceType.UNSTAKED -> resourceReference(R.string.staking_unstaked) to
+            resourceReference(R.string.staking_unstaked_footer)
+        BalanceType.UNSTAKING -> resourceReference(R.string.staking_unstaking) to null
+        else -> null to null
+    }
+
+    private fun getClickableType(type: BalanceType) = when (type) {
+        BalanceType.STAKED,
+        BalanceType.UNSTAKED,
+        -> true
+        else -> false
     }
 }
