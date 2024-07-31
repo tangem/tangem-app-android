@@ -159,22 +159,24 @@ internal class WalletViewModel @Inject constructor(
 
             val isFirstTimeRequested = isFirstTimeAskingPermissionUseCase(PUSH_PERMISSION).getOrElse { true }
             val wasInitiallyAsk = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { true }
-            val onRequestLater: () -> Unit = if (wasInitiallyAsk) {
-                clickIntents::onDelayAskPushPermission
-            } else {
-                clickIntents::onNeverAskPushPermission
+            val onRequestLater: (Boolean) -> Unit = { isUserDismissed ->
+                if (wasInitiallyAsk) {
+                    clickIntents.onDelayAskPushPermission(isUserDismissed)
+                } else {
+                    clickIntents.onNeverAskPushPermission(isUserDismissed)
+                }
             }
             stateHolder.showBottomSheet(
                 content = PushNotificationsBottomSheetConfig(
                     isFirstTimeRequested = isFirstTimeRequested,
                     wasInitiallyAsk = wasInitiallyAsk,
                     onRequest = clickIntents::onRequestPushPermission,
-                    onRequestLater = onRequestLater,
+                    onRequestLater = { onRequestLater(false) },
                     onAllow = clickIntents::onAllowPushPermission,
                     onDeny = clickIntents::onDenyPushPermission,
                     openSettings = settingsManager::openSettings,
                 ),
-                onDismiss = onRequestLater,
+                onDismiss = { onRequestLater(true) },
             )
         }
     }
