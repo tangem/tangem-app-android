@@ -13,6 +13,9 @@
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">The selected does not support the %1$s network</string>
   <string name="alert_manage_tokens_unsupported_curve_message">To activate the %1$s blockchain\'s cryptographic encryption, you\'ll need to reset the wallet to factory settings. Please withdraw your funds before doing so to ensure that you don\'t lose them, and then complete the reset process. Access to the current wallet will not be possible after the reset.</string>
   <string name="alert_manage_tokens_unsupported_message">Tokens in %1$s network are not supported by this card due to firmware limitation.</string>
+  <string name="alert_negative_app_rate_sent_message">Thank you for your feedback. We will respond as soon as possible</string>
+  <string name="alert_negative_app_rate_sent_title">Your suggestions were sent</string>
+  <string name="alert_troubleshooting_scan_card_message">Please try to tap the card exactly as shown in the animation or read our simple guide, or request support. If the problem persists, please request support.</string>
   <string name="alert_troubleshooting_scan_card_title">Are you having difficulty scanning your card?</string>
   <string name="alert_unsupported_card">This card is not designed to work with this app</string>
   <string name="app_settings_default_fee">Default Fee</string>
@@ -28,6 +31,8 @@
   <string name="app_settings_theme_mode_dark">Dark</string>
   <string name="app_settings_theme_mode_light">Light</string>
   <string name="app_settings_theme_mode_system">System default</string>
+  <string name="app_settings_theme_selection_footer">If system is selected, the app will auto-adjust based on your device\'s system settings</string>
+  <string name="app_settings_theme_selection_system_short">System</string>
   <string name="app_settings_theme_selector_title">Theme</string>
   <string name="app_settings_title">App settings</string>
   <string name="balance_hidden_description">To hide or show your balances, simply flip your device screen down, or switch it off in Settings</string>
@@ -39,7 +44,7 @@
   <string name="biometric_lockout_warning_title">Too many attempts</string>
   <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
   <string name="button_start_backup_process">Start backup process</string>
-  <string name="buy_token_description">From your fiat card or bank account</string>
+  <string name="buy_token_description">With your bank card or bank account</string>
   <plurals name="card_label_card_count">
     <item quantity="one">%d card</item>
     <item quantity="other">%d cards</item>
@@ -95,6 +100,7 @@
   </plurals>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
+  <string name="common_disconnect">Disconnect</string>
   <string name="common_done">Done</string>
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
@@ -131,6 +137,7 @@
   <string name="common_reject">Reject</string>
   <string name="common_reload">Reload</string>
   <string name="common_rename">Rename</string>
+  <string name="common_retry">Retry</string>
   <string name="common_save">Save</string>
   <string name="common_save_changes">Save changes</string>
   <string name="common_search">Search</string>
@@ -159,6 +166,7 @@
   <string name="common_unknown_error">There was an error. Please try again.</string>
   <string name="common_unreachable">Unreachable</string>
   <string name="common_unstake">Unstake</string>
+  <string name="common_warning">Warning</string>
   <string name="common_yes">Yes</string>
   <string name="contract_address_copied_message">Contract address copied!</string>
   <string name="currency_subtitle_expanded">Available networks</string>
@@ -206,6 +214,7 @@
   <string name="details_row_title_flip_to_hide">Flip-to-Hide Balances</string>
   <string name="details_row_title_issuer">Issuer</string>
   <string name="details_row_title_signed_hashes">Signed</string>
+  <string name="details_security_management_warning">If you forget the code you will lose access to your funds. Code recovery is not possible.</string>
   <string name="details_send_feedback">Send feedback</string>
   <string name="details_title">Details</string>
   <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
@@ -267,7 +276,7 @@
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>
-  <string name="exсhange_token_description">From another currency in your wallet</string>
+  <string name="exсhange_token_description">With another currency in your wallet</string>
   <string name="feedback_data_collection_message">The following information is optional. You can erase it if you don\'t want to share it.</string>
   <string name="feedback_preface_rate_negative">Tell us what functions you are missing, and we will try to help you.</string>
   <string name="feedback_preface_scan_failed">Please tell us what card do you have</string>
@@ -568,6 +577,7 @@
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Address</string>
   <string name="send_destination_tag_field">Destination Tag</string>
+  <string name="send_dismiss_message">Are you sure you want to close the send screen?</string>
   <string name="send_enter_address_field">Enter address</string>
   <string name="send_error_address_same_as_wallet">Address is the same as wallet address</string>
   <string name="send_extras_error_invalid_destination_tag">Invalid Tag. It won\'t be added to the transaction.</string>
@@ -632,7 +642,7 @@
   <string name="send_total_subtitle_fiat_format">≈ %1$s (inc. fee: %2$s)</string>
   <string name="send_total_subtitle_format">%s will be sent</string>
   <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
-  <string name="send_tron_account_activation_error">%1$s is an asset in the Tron network. To calculate the fee and make a transaction you need to deposit some Tron(TRX) in your account.</string>
+  <string name="send_tron_account_activation_error">%1$s is an asset in the Tron network. To calculate the fee and make a transaction you need to deposit some Tron (TRX) in your account.</string>
   <string name="send_validation_invalid_address">Invalid address</string>
   <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
@@ -714,6 +724,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Selling %s is not available at the moment. Please check our updates.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Staking %s is not available at the moment. Please check our updates.</string>
+  <string name="token_details_choose_address">Choose address</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>
   <string name="token_details_hide_alert_hide">Hide</string>
   <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
