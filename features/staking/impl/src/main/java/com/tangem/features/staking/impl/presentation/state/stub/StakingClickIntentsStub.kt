@@ -13,6 +13,8 @@ object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onNextClick(pendingActions: ImmutableList<PendingAction>) {}
 
+    override fun onActionClick(pendingAction: PendingAction?) {}
+
     override fun onPrevClick() {}
 
     override fun onInfoClick(infoType: InfoType) {}
@@ -32,8 +34,6 @@ object StakingClickIntentsStub : StakingClickIntents {
     override fun onValidatorSelect(validator: Yield.Validator) {}
 
     override fun openRewardsValidators() {}
-
-    override fun selectRewardValidator(rewardValue: String) {}
 
     override fun onExploreClick() {}
 
