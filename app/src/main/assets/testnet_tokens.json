@@ -688,6 +688,16 @@
                     "networkId": "base/test"
                 }
             ]
+        },
+        {
+            "id": "blast-ethereum",
+            "name": "Blast",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "blast/test"
+                }
+            ]
         }
     ]
 }
