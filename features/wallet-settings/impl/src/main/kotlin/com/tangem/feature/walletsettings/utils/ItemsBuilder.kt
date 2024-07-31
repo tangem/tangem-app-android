@@ -19,15 +19,18 @@ internal class ItemsBuilder @Inject constructor(
     private val router: Router,
 ) {
 
+    @Suppress("LongParameterList")
     fun buildItems(
         userWalletId: UserWalletId,
         userWalletName: String,
+        isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
         forgetWallet: () -> Unit,
         renameWallet: () -> Unit,
+        onLinkMoreCardsClick: () -> Unit,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf(
         buildNameItem(userWalletName, renameWallet),
-        buildCardItem(userWalletId, isReferralAvailable),
+        buildCardItem(userWalletId, isLinkMoreCardsAvailable, isReferralAvailable, onLinkMoreCardsClick),
         buildForgetItem(forgetWallet),
     )
 
@@ -38,26 +41,38 @@ internal class ItemsBuilder @Inject constructor(
         onClick = renameWallet,
     )
 
-    private fun buildCardItem(userWalletId: UserWalletId, isReferralAvailable: Boolean) =
-        WalletSettingsItemUM.WithItems(
-            id = "card",
-            description = resourceReference(R.string.settings_card_settings_footer),
-            blocks = buildList {
+    private fun buildCardItem(
+        userWalletId: UserWalletId,
+        isLinkMoreCardsAvailable: Boolean,
+        isReferralAvailable: Boolean,
+        onLinkMoreCardsClick: () -> Unit,
+    ) = WalletSettingsItemUM.WithItems(
+        id = "card",
+        description = resourceReference(R.string.settings_card_settings_footer),
+        blocks = buildList {
+            if (isLinkMoreCardsAvailable) {
                 BlockUM(
-                    text = resourceReference(R.string.card_settings_title),
-                    iconRes = R.drawable.ic_card_settings_24,
-                    onClick = { router.push(AppRoute.CardSettings(userWalletId)) },
+                    text = resourceReference(R.string.details_row_title_create_backup),
+                    iconRes = R.drawable.ic_more_cards_24,
+                    onClick = onLinkMoreCardsClick,
                 ).let(::add)
+            }
 
-                if (isReferralAvailable) {
-                    BlockUM(
-                        text = resourceReference(R.string.details_referral_title),
-                        iconRes = R.drawable.ic_add_friends_24,
-                        onClick = { router.push(AppRoute.ReferralProgram(userWalletId)) },
-                    ).let(::add)
-                }
-            }.toImmutableList(),
-        )
+            BlockUM(
+                text = resourceReference(R.string.card_settings_title),
+                iconRes = R.drawable.ic_card_settings_24,
+                onClick = { router.push(AppRoute.CardSettings(userWalletId)) },
+            ).let(::add)
+
+            if (isReferralAvailable) {
+                BlockUM(
+                    text = resourceReference(R.string.details_referral_title),
+                    iconRes = R.drawable.ic_add_friends_24,
+                    onClick = { router.push(AppRoute.ReferralProgram(userWalletId)) },
+                ).let(::add)
+            }
+        }.toImmutableList(),
+    )
 
     private fun buildForgetItem(forgetWallet: () -> Unit) = WalletSettingsItemUM.WithItems(
         id = "forget",
