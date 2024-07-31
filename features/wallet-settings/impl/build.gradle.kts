@@ -21,11 +21,13 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.featuretoggles)
     implementation(projects.core.navigation)
+    implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.common.routing)
 
     /* Project - Domain */
     implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
 
@@ -50,4 +52,5 @@ dependencies {
     /* Other */
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
+    implementation(deps.reKotlin)
 }
