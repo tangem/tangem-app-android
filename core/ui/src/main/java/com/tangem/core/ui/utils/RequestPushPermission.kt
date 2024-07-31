@@ -26,11 +26,10 @@ fun requestPushPermission(
     val permissionState = pushPermission?.let { permission ->
         val tempPermissionState = rememberPermissionState(permission = permission)
         rememberPermissionState(permission = permission) {
-            when {
-                it -> onAllow()
-                !tempPermissionState.status.shouldShowRationale && !isFirstTimeAsking -> onOpenSettings()
-                else -> onDeny()
-            }
+            val isGranted = tempPermissionState.status.isGranted
+            val shouldShowRationale = tempPermissionState.status.shouldShowRationale
+
+            if (isGranted && !shouldShowRationale && !isFirstTimeAsking) onOpenSettings()
         }
     }
 
