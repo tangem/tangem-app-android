@@ -84,12 +84,13 @@ internal class ExchangeStatusFactory(
             }
     }
 
-    suspend fun removeTransactionOnBottomSheetClosed(): TokenDetailsState {
+    suspend fun removeTransactionOnBottomSheetClosed(isForceTerminal: Boolean = false): TokenDetailsState {
         val state = currentStateProvider()
         val bottomSheetConfig = state.bottomSheetConfig?.content as? ExchangeStatusBottomSheetConfig ?: return state
         val selectedTx = bottomSheetConfig.value
 
-        return if (selectedTx.activeStatus.isTerminal(selectedTx.isRefundTerminalStatus)) {
+        val shouldTerminate = selectedTx.activeStatus.isTerminal(selectedTx.isRefundTerminalStatus) || isForceTerminal
+        return if (shouldTerminate) {
             swapTransactionRepository.removeTransaction(
                 userWalletId = userWalletId,
                 fromCryptoCurrency = selectedTx.fromCryptoCurrency,
