@@ -124,13 +124,25 @@ internal class YieldBalancesConverter(
         BalanceType.UNSTAKED -> resourceReference(R.string.staking_unstaked) to
             resourceReference(R.string.staking_unstaked_footer)
         BalanceType.UNSTAKING -> resourceReference(R.string.staking_unstaking) to null
-        else -> null to null
+        BalanceType.AVAILABLE -> null to null
+        BalanceType.PREPARING -> null to null
+        BalanceType.REWARDS -> null to null
+        BalanceType.LOCKED -> null to null
+        BalanceType.UNLOCKING -> null to null
+        BalanceType.UNKNOWN -> null to null
     }
 
     private fun getClickableType(type: BalanceType) = when (type) {
         BalanceType.STAKED,
         BalanceType.UNSTAKED,
         -> true
-        else -> false
+        BalanceType.AVAILABLE,
+        BalanceType.UNSTAKING,
+        BalanceType.PREPARING,
+        BalanceType.REWARDS,
+        BalanceType.LOCKED,
+        BalanceType.UNLOCKING,
+        BalanceType.UNKNOWN,
+        -> false
     }
 }
