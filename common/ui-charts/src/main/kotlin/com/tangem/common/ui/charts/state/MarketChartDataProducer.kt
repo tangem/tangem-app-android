@@ -8,7 +8,6 @@ import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConver
 import com.tangem.common.ui.charts.state.formatter.FormatterWrapWithCache
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -26,7 +25,12 @@ class Transaction(
     var chartData: MarketChartData.NoData? = null
 
     fun updateLook(block: (prev: MarketChartLook) -> MarketChartLook) {
-        chartLook = block(currentLook)
+        val newLook = block(currentLook)
+
+        chartLook = newLook.copy(
+            xAxisFormatter = FormatterWrapWithCache(newLook.xAxisFormatter),
+            yAxisFormatter = FormatterWrapWithCache(newLook.yAxisFormatter),
+        )
     }
 
     fun updateState(block: (prev: MarketChartData) -> MarketChartData.NoData) {
@@ -57,7 +61,12 @@ class TransactionSuspend(
         }
 
     fun updateLook(block: (prev: MarketChartLook) -> MarketChartLook) {
-        chartLook = block(currentLook)
+        val newLook = block(currentLook)
+
+        chartLook = newLook.copy(
+            xAxisFormatter = FormatterWrapWithCache(newLook.xAxisFormatter),
+            yAxisFormatter = FormatterWrapWithCache(newLook.yAxisFormatter),
+        )
     }
 
     internal fun updateState(block: (prev: MarketChartData) -> MarketChartData) {
@@ -106,25 +115,14 @@ class MarketChartDataProducer private constructor(
         val chartData = transaction.chartData
         val oldData = dataState.value
 
-        if (chartData != null) {
-            dataState.value = chartData
-        }
-
         if (chartData is MarketChartData.Data && (oldData !is MarketChartData.Data || oldData != chartData)) {
-            lookState.update {
-                it.copy(
-                    xAxisFormatter = FormatterWrapWithCache(it.xAxisFormatter),
-                    yAxisFormatter = FormatterWrapWithCache(it.yAxisFormatter),
-                )
-            }
+            (lookState.value.xAxisFormatter as? FormatterWrapWithCache)?.clearCache()
+            (lookState.value.yAxisFormatter as? FormatterWrapWithCache)?.clearCache()
 
             val rawData = pointsValuesConverter.convert(chartData)
-            this.rawData.value = rawData
 
             val entriesLocal =
                 rawData.x.mapIndexed { index, fl -> LineCartesianLayerModel.Entry(fl, rawData.y[index]) }
-
-            entries.value = entriesLocal
 
             currentCoroutineContext().ensureActive()
 
@@ -133,7 +131,14 @@ class MarketChartDataProducer private constructor(
                     add(LineCartesianLayerModel.Partial(series = listOf(entriesLocal)))
                 }
             }
+
+            entries.value = entriesLocal
+            dataState.value = chartData
+            this.rawData.value = rawData
+
             delay(timeMillis = 200)
+        } else if (chartData != null) {
+            dataState.value = chartData
         }
 
         nonSuspendTransaction?.let { handleTransaction(it) }

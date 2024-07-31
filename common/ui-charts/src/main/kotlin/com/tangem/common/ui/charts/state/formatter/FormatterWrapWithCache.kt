@@ -8,4 +8,8 @@ internal class FormatterWrapWithCache(private val formatter: AxisLabelFormatter)
     override fun format(value: BigDecimal): CharSequence {
         return cache.getOrPut(value) { formatter.format(value) }
     }
+
+    fun clearCache() {
+        cache.clear()
+    }
 }

@@ -70,7 +70,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     val state = MutableStateFlow(
         MarketsTokenDetailsUM(
             tokenName = params.token.name,
-            priceText = BigDecimalFormatter.formatFiatAmount(
+            priceText = BigDecimalFormatter.formatFiatAmountUncapped(
                 fiatAmount = params.token.tokenQuotes.currentPrice,
                 fiatCurrencyCode = currentAppCurrency.value.code,
                 fiatCurrencySymbol = currentAppCurrency.value.symbol,
@@ -221,7 +221,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         state.update {
             it.copy(
                 dateTimeText = timeText,
-                priceText = BigDecimalFormatter.formatFiatAmount(
+                priceText = BigDecimalFormatter.formatFiatAmountUncapped(
                     fiatAmount = price ?: params.token.tokenQuotes.currentPrice,
                     fiatCurrencyCode = currentAppCurrency.value.code,
                     fiatCurrencySymbol = currentAppCurrency.value.symbol,
