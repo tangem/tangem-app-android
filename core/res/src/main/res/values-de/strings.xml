@@ -13,6 +13,9 @@
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">Das gewählte unterstützt nicht das %1$s Netzwerk</string>
   <string name="alert_manage_tokens_unsupported_curve_message">Um die kryptografische Verschlüsselung der %1$s Blockchain zu aktivieren, musst Du die Wallet auf die Werkseinstellungen zurücksetzen. Bitte heb vorher dein Guthaben ab, um sicherzustellen, dass du nichts verlierst, und führe dann den Reset-Vorgang durch. Nach dem Zurücksetzen ist der Zugriff auf die aktuelle Wallet nicht mehr möglich.</string>
   <string name="alert_manage_tokens_unsupported_message">Tokens im %1$s -Netzwerk werden von dieser Karte aufgrund einer Firmware-Einschränkung nicht unterstützt.</string>
+  <string name="alert_negative_app_rate_sent_message">Vielen Dank für dein Feedback. Wir werden so schnell wie möglich antworten</string>
+  <string name="alert_negative_app_rate_sent_title">Deine Vorschläge wurden übermittelt</string>
+  <string name="alert_troubleshooting_scan_card_message">Bitte versuche, die Karte genau wie in der Animation gezeigt anzutippen, oder lese unsere einfache Anleitung, oder forder Support an. Wenn das Problem weiterhin besteht, wende dich bitte an den Support.</string>
   <string name="alert_troubleshooting_scan_card_title">Hast du Probleme beim Scannen deiner Karte?</string>
   <string name="alert_unsupported_card">Diese Karte ist für die Zusammenarbeit mit Tangem nicht geeignet</string>
   <string name="app_settings_default_fee">Standardgebühr</string>
@@ -28,6 +31,8 @@
   <string name="app_settings_theme_mode_dark">Dunkel</string>
   <string name="app_settings_theme_mode_light">Hell</string>
   <string name="app_settings_theme_mode_system">Systemstandard</string>
+  <string name="app_settings_theme_selection_footer">Wenn das System ausgewählt ist, passt sich die App automatisch an die Systemeinstellungen deines Geräts an</string>
+  <string name="app_settings_theme_selection_system_short">System</string>
   <string name="app_settings_theme_selector_title">Thema</string>
   <string name="app_settings_title">App Einstellungen</string>
   <string name="balance_hidden_description">Um deine Kontostände ein- oder auszublenden, flippe einfach das Display deines Geräts nach unten, oder schalte es in den Einstellungen aus.</string>
@@ -95,6 +100,7 @@
   </plurals>
   <string name="common_delete">Entfernen</string>
   <string name="common_disabled">Deaktiviert</string>
+  <string name="common_disconnect">Trennen</string>
   <string name="common_done">Erledigt</string>
   <string name="common_enable">Aktivieren</string>
   <string name="common_enabled">Aktiviert</string>
@@ -131,6 +137,7 @@
   <string name="common_reject">Ablehnen</string>
   <string name="common_reload">Neu laden</string>
   <string name="common_rename">Umbenennen</string>
+  <string name="common_retry">Wiederholen</string>
   <string name="common_save">Speichern</string>
   <string name="common_save_changes">Änderungen speichern</string>
   <string name="common_search">Suchen</string>
@@ -159,6 +166,7 @@
   <string name="common_unknown_error">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
   <string name="common_unreachable">Nicht erreichbar</string>
   <string name="common_unstake">staking beenden</string>
+  <string name="common_warning">Warnung</string>
   <string name="common_yes">Ja</string>
   <string name="contract_address_copied_message">Vertragsadresse kopiert!</string>
   <string name="currency_subtitle_expanded">Verfügbare Netzwerke</string>
@@ -206,6 +214,7 @@
   <string name="details_row_title_flip_to_hide">Flipp um Guthaben auszublenden</string>
   <string name="details_row_title_issuer">Aussteller</string>
   <string name="details_row_title_signed_hashes">Signiert</string>
+  <string name="details_security_management_warning">Wenn du den Code vergisst, verlierst du den Zugriff auf dein Geld. Eine Codewiederherstellung ist nicht möglich.</string>
   <string name="details_send_feedback">Gib uns eine Rückmeldung</string>
   <string name="details_title">Details</string>
   <string name="disclaimer_error_loading">Überprüfe deine Internetverbindung oder wechseln zu einem anderen Netzwerk</string>
@@ -572,6 +581,7 @@
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Adresse</string>
   <string name="send_destination_tag_field">Ziel-Tag</string>
+  <string name="send_dismiss_message">Möchtest du den Sendebildschirm wirklich schließen?</string>
   <string name="send_enter_address_field">Adresse eingeben</string>
   <string name="send_error_address_same_as_wallet">Die Adresse stimmt mit der Adresse Ihrer Brieftasche überein</string>
   <string name="send_extras_error_invalid_destination_tag">Ungültiges Tag. Es wird der Transaktion nicht hinzugefügt.</string>
@@ -668,6 +678,7 @@
   <string name="staking_details_unbonding_period_info">Der Zeitraum, den du nach der Beantragung der Abhebung von Geldern aus dem Staking warten musst, bevor die Token verfügbar werden.</string>
   <string name="staking_details_warmup_period">Aufwärmphase</string>
   <string name="staking_details_warmup_period_info">Die zugewiesene Zeit für die Aktivierung der Teilnahme am Staking.</string>
+  <string name="staking_initial_info_title">Stake %s</string>
   <string name="staking_native">Natives Staking</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">Mit Staking kannst du %1s verdienen. Deine Staking-Belohnungen kommen alle ~%2s Tage.</string>
   <string name="staking_notification_earn_rewards_title">Verdiene Staking-Belohnungen</string>
@@ -675,6 +686,7 @@
   <string name="staking_stake_more">Mehr staken</string>
   <string name="staking_unstaked">unstaken</string>
   <string name="staking_unstaked_footer">Prüfe, was nicht eingesetzt wurde, um dein Vermögen zu beanspruchen</string>
+  <string name="staking_unstaking">Staking beenden</string>
   <string name="staking_validator">Validator/ Prüfer</string>
   <string name="story_awe_description">Bewahre deine Krypto-Assets sicher auf, während die privaten Schlüssel auf deiner Karte bleiben</string>
   <string name="story_awe_title">Revolutionäre Hardware-Wallet</string>
@@ -716,6 +728,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">Die Geldsendung wird verfügbar, sobald die ausstehende(n) Transaktion(en) im Netzwerk %s abgeschlossen ist/sind.</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Der Verkauf von %s ist im Moment nicht verfügbar. Bitte prüfe später ob es Updates gibt.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Staking %s ist aktuell nicht verfügbar. Prüfe bitte ob es ein neues Update gibt.</string>
+  <string name="token_details_choose_address">Adresse wählen</string>
   <string name="token_details_generate_xpub">Generiere XPUB</string>
   <string name="token_details_hide_alert_hide">Ausblenden</string>
   <string name="token_details_hide_alert_message">Du bist dabei, dieses Token vom Hauptbildschirm auszublenden. Du kannst es jederzeit über die Seite „Token verwalten“ wieder hinzufügen.</string>
