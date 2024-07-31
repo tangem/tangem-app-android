@@ -49,8 +49,7 @@ fun MarketChartMini(
     val lineSpec = rememberLine(
         shader = ColorShader(lineColor.toArgb()),
         thickness = 1.dp,
-        backgroundShader =
-        Brush.verticalGradient(
+        backgroundShader = Brush.verticalGradient(
             colors = listOf(lineColor.copy(alpha = 0.22f), Color.Transparent),
         ).toDynamicShader(),
     )

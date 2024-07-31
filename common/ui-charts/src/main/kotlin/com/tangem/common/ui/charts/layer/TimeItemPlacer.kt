@@ -11,16 +11,13 @@ class TimeItemPlacer : HorizontalAxis.ItemPlacer {
 
     private val ChartValues.measuredLabelValues
         get() = buildList {
-            // produce exactly 7 values distributed evenly
+            // produce exactly 6 values distributed evenly
             val xLength = maxX - minX
-            val xStep = xLength / 6
+            val xStep = xLength / 7
 
-            add(minX + xStep)
-            add(minX + xStep * 2)
-            add(minX + xStep * 3)
-            add(minX + xStep * 4)
-            add(minX + xStep * 5)
-            add(minX + xStep * 6)
+            repeat(times = 6) {
+                add(minX + xStep * (it + 1))
+            }
         }
 
     override fun getEndHorizontalAxisInset(
