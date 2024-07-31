@@ -13,6 +13,9 @@
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">Выбранный кошелёк не поддерживает сеть %1$s</string>
   <string name="alert_manage_tokens_unsupported_curve_message">Для активации криптографии сети %1$s необходимо сбросить кошелек до заводских настроек. Пожалуйста, выведите свои средства, чтобы не потерять их, после сброса доступ к текущему кошельку будет невозможен.</string>
   <string name="alert_manage_tokens_unsupported_message">Токены в сети %1$s не поддерживаются этой картой из-за ограничений прошивки.</string>
+  <string name="alert_negative_app_rate_sent_message">Спасибо за ваш отзыв. Мы ответим в кратчайшие сроки.</string>
+  <string name="alert_negative_app_rate_sent_title">Ваши предложения отправлены</string>
+  <string name="alert_troubleshooting_scan_card_message">Пожалуйста, попробуйте приложить карту в точности, как показано на анимации, либо прочтите руководство по сканированию. Если проблема осталась, то запросите поддержку.</string>
   <string name="alert_troubleshooting_scan_card_title">У вас возникли трудности со сканированием карты?</string>
   <string name="alert_unsupported_card">Эта карта не предназначена для работы с этим приложением</string>
   <string name="app_settings_default_fee_footer">Подключите функцию комиссии по умолчанию и при формировании транзакции на отправку средств комиссия будет выставлена автоматически, а экран комиссии пропущен. Вы всегда сможете на него вернуться.</string>
@@ -27,6 +30,8 @@
   <string name="app_settings_theme_mode_dark">Тёмная</string>
   <string name="app_settings_theme_mode_light">Светлая</string>
   <string name="app_settings_theme_mode_system">Как в системе</string>
+  <string name="app_settings_theme_selection_footer">При выборе настройки как в системе приложение будет использовать тему в соответствии с настройками вашего устройства</string>
+  <string name="app_settings_theme_selection_system_short">Системная</string>
   <string name="app_settings_theme_selector_title">Тема</string>
   <string name="app_settings_title">Настройки приложения</string>
   <string name="balance_hidden_description">Чтобы скрыть или показать баланс, просто поверните ваше устройство вниз или отключите опцию его в разделе \"Настройки\"</string>
@@ -95,6 +100,7 @@
   </plurals>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
+  <string name="common_disconnect">Отключить</string>
   <string name="common_done">Готово</string>
   <string name="common_enable">Включить</string>
   <string name="common_enabled">Включено</string>
@@ -131,6 +137,7 @@
   <string name="common_reject">Отклонить</string>
   <string name="common_reload">Перезагрузить</string>
   <string name="common_rename">Переименовать</string>
+  <string name="common_retry">Повторить</string>
   <string name="common_save">Сохранить</string>
   <string name="common_save_changes">Сохранить изменения</string>
   <string name="common_search">Искать</string>
@@ -157,6 +164,7 @@
   <string name="common_understand">Я понял</string>
   <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
   <string name="common_unreachable">Недоступно</string>
+  <string name="common_warning">Предупреждение</string>
   <string name="common_yes">Да</string>
   <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
   <string name="currency_subtitle_expanded">Доступные сети</string>
@@ -204,6 +212,7 @@
   <string name="details_row_title_flip_to_hide">Скрывать балансы жестом переворота</string>
   <string name="details_row_title_issuer">Эмитент</string>
   <string name="details_row_title_signed_hashes">Подписано</string>
+  <string name="details_security_management_warning">Если вы забудете код, то потеряете доступ к своим средствам. Восстановление кода невозможно.</string>
   <string name="details_send_feedback">Отправить отзыв</string>
   <string name="details_title">Подробности</string>
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
@@ -505,6 +514,7 @@
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
+  <string name="send_dismiss_message">Вы действительно хотите закрыть экран отправки транзакции?</string>
   <string name="send_enter_address_field">Введите адрес</string>
   <string name="send_error_address_same_as_wallet">Адрес совпадает с адресом кошелька</string>
   <string name="send_extras_error_invalid_destination_tag">Недопустимый Tag. Он не будет добавлен в транзакцию.</string>
@@ -629,6 +639,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">В данный момент продажа %s недоступна. Следите за нашими обновлениями.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">В данный момент стейкинг монеты %s недоступен. Следите за нашими обновлениями.</string>
+  <string name="token_details_choose_address">Выберите адрес</string>
   <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
   <string name="token_details_hide_alert_hide">Скрыть</string>
   <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
