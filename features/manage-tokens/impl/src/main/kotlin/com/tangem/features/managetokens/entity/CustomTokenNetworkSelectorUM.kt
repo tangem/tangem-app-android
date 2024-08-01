@@ -5,5 +5,6 @@ import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
 internal data class CustomTokenNetworkSelectorUM(
+    val showTitle: Boolean,
     val networks: ImmutableList<CurrencyNetworkUM>,
 )

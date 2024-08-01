@@ -22,8 +22,12 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.appbar.TangemTopAppBar
+import com.tangem.core.ui.components.appbar.TangemTopAppBarHeight
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetTitle
 import com.tangem.core.ui.components.isOpened
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.resourceReference
@@ -39,17 +43,39 @@ import com.tangem.features.managetokens.impl.R
 
 @Composable
 internal fun AddCustomTokenBottomSheet(config: TangemBottomSheetConfig, content: LazyListScope.() -> Unit) {
-    TangemBottomSheet(
+    TangemBottomSheet<AddCustomTokenUM>(
         config = config,
-        titleText = resourceReference(R.string.add_custom_token_title),
+        title = { model ->
+            Title(model)
+        },
         containerColor = TangemTheme.colors.background.secondary,
-        content = { model: AddCustomTokenUM ->
+        content = { model ->
             Content(
                 model = model,
                 content = content,
             )
         },
     )
+}
+
+@Composable
+private fun Title(model: AddCustomTokenUM, modifier: Modifier = Modifier) {
+    val showTokenNetworkTitle = model is AddCustomTokenUM.NetworkSelector && model.selectedNetwork != null
+
+    if (showTokenNetworkTitle) {
+        TangemTopAppBar(
+            modifier = modifier,
+            title = resourceReference(R.string.custom_token_network_selector_title),
+            titleAlignment = Alignment.CenterHorizontally,
+            startButton = TopAppBarButtonUM.Back(model.popBack),
+            height = TangemTopAppBarHeight.BOTTOM_SHEET,
+        )
+    } else {
+        TangemBottomSheetTitle(
+            modifier = modifier,
+            title = resourceReference(R.string.add_custom_token_title),
+        )
+    }
 }
 
 @Composable
@@ -94,19 +120,23 @@ private fun Content(model: AddCustomTokenUM, content: LazyListScope.() -> Unit, 
             ),
         ) {
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = TangemTheme.dimens.spacing16),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(fraction = 0.7f),
-                        text = stringResource(id = R.string.custom_token_subtitle),
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.secondary,
-                        textAlign = TextAlign.Center,
-                    )
+                if (model is AddCustomTokenUM.NetworkSelector && model.selectedNetwork != null) {
+                    Spacer(modifier = Modifier.size(TangemTheme.dimens.spacing12))
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = TangemTheme.dimens.spacing16),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(fraction = 0.7f),
+                            text = stringResource(id = R.string.custom_token_subtitle),
+                            style = TangemTheme.typography.caption2,
+                            color = TangemTheme.colors.text.secondary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
             }
 
@@ -132,7 +162,17 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
         get() = sequenceOf(
             PreviewAddCustomTokenComponent(),
             PreviewAddCustomTokenComponent(
+                initialState = AddCustomTokenUM.NetworkSelector(
+                    popBack = {},
+                    selectedNetwork = SelectedNetworkUM(
+                        id = Network.ID(value = "0"),
+                        name = "Ethereum",
+                    ),
+                ),
+            ),
+            PreviewAddCustomTokenComponent(
                 initialState = AddCustomTokenUM.Form(
+                    popBack = {},
                     selectedNetwork = SelectedNetworkUM(
                         id = Network.ID(value = "1"),
                         name = "Ethereum",

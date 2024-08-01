@@ -38,6 +38,7 @@ internal class PreviewCustomTokenNetworkSelectorComponent(
     }.toImmutableList()
 
     private val previewState = CustomTokenNetworkSelectorUM(
+        showTitle = params.selectedNetwork == null,
         networks = previewNetworks,
     )
 
