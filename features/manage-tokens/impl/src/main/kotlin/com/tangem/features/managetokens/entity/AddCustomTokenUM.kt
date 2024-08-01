@@ -10,8 +10,11 @@ internal sealed class AddCustomTokenUM : TangemBottomSheetConfigContent {
     abstract val selectedNetwork: SelectedNetworkUM?
     abstract val addTokenButton: AddCustomTokenButtonUM
 
+    abstract val popBack: () -> Unit
+
     data class NetworkSelector(
         override val selectedNetwork: SelectedNetworkUM? = null,
+        override val popBack: () -> Unit,
     ) : AddCustomTokenUM() {
 
         override val addTokenButton: AddCustomTokenButtonUM = AddCustomTokenButtonUM.Hidden
@@ -20,6 +23,7 @@ internal sealed class AddCustomTokenUM : TangemBottomSheetConfigContent {
     data class Form(
         override val selectedNetwork: SelectedNetworkUM,
         override val addTokenButton: AddCustomTokenButtonUM.Visible,
+        override val popBack: () -> Unit,
     ) : AddCustomTokenUM()
 }
 
