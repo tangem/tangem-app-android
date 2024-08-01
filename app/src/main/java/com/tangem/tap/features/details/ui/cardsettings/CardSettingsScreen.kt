@@ -1,10 +1,13 @@
 package com.tangem.tap.features.details.ui.cardsettings
 
 import android.content.res.Configuration
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,18 +16,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
 @Composable
-internal fun CardSettingsScreen(
-    state: CardSettingsScreenState,
-    onBackClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun CardSettingsScreen(state: CardSettingsScreenState, modifier: Modifier = Modifier) {
     val needReadCard = state.cardDetails == null
 
     SettingsScreensScaffold(
@@ -37,7 +36,7 @@ internal fun CardSettingsScreen(
             }
         },
         titleRes = R.string.card_settings_title,
-        onBackClick = onBackClick,
+        onBackClick = state.onBackClick,
     )
 }
 
@@ -180,7 +179,7 @@ private fun CardSettings(state: CardSettingsScreenState) {
 // region Preview
 @Composable
 private fun CardSettingsScreenStateSample() {
-    CardSettingsScreen(state = CardSettingsScreenState(onScanCardClick = {}, onElementClick = {}), {})
+    CardSettingsScreen(state = CardSettingsScreenState(onBackClick = {}, onScanCardClick = {}, onElementClick = {}))
 }
 
 @Preview(showBackground = true, widthDp = 360)
