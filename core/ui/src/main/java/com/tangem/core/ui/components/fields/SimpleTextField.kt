@@ -1,12 +1,11 @@
 package com.tangem.core.ui.components.fields
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.LocalTextSelectionColors
-import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -40,6 +39,7 @@ fun SimpleTextField(
     textStyle: TextStyle = TangemTheme.typography.body2.copy(color = color),
     placeholderColor: Color = TangemTheme.colors.text.disabled,
     readOnly: Boolean = false,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     isValuePasted: Boolean = false,
     onValuePastedTriggerDismiss: () -> Unit = {},
     decorationBox: (@Composable (innerTextField: @Composable () -> Unit) -> Unit)? = null,
@@ -54,10 +54,6 @@ fun SimpleTextField(
         )
     }
     val focusRequester = remember { FocusRequester.Default }
-    val customTextSelectionColors = TextSelectionColors(
-        handleColor = TangemTheme.colors.text.accent,
-        backgroundColor = TangemTheme.colors.text.accent.copy(alpha = 0.3f),
-    )
     val textFieldValue = textFieldValueState.copy(text = value)
     var lastTextValue by remember(proxyValue, isValuePasted) {
         textFieldValueState = textFieldValueState.copy(
@@ -85,37 +81,36 @@ fun SimpleTextField(
         }
     }
 
-    CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
-        BasicTextField(
-            value = textFieldValue,
-            onValueChange = { newTextFieldValueState ->
-                textFieldValueState = newTextFieldValueState
+    BasicTextField(
+        value = textFieldValue,
+        onValueChange = { newTextFieldValueState ->
+            textFieldValueState = newTextFieldValueState
 
-                val stringChangedSinceLastInvocation = lastTextValue != newTextFieldValueState.text
-                lastTextValue = newTextFieldValueState.text
+            val stringChangedSinceLastInvocation = lastTextValue != newTextFieldValueState.text
+            lastTextValue = newTextFieldValueState.text
 
-                if (stringChangedSinceLastInvocation) onValueChange(newTextFieldValueState.text)
-            },
-            textStyle = textStyle.copy(color = color),
-            cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
-            singleLine = singleLine,
-            readOnly = readOnly,
-            visualTransformation = visualTransformation,
-            keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions,
-            decorationBox = decorationBox ?: { textValue ->
-                SimpleTextPlaceholder(
-                    placeholder = placeholder,
-                    value = value,
-                    textStyle = textStyle,
-                    textValue = textValue,
-                    color = placeholderColor,
-                )
-            },
-            modifier = modifier
-                .focusRequester(focusRequester),
-        )
-    }
+            if (stringChangedSinceLastInvocation) onValueChange(newTextFieldValueState.text)
+        },
+        textStyle = textStyle.copy(color = color),
+        cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
+        singleLine = singleLine,
+        readOnly = readOnly,
+        visualTransformation = visualTransformation,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        interactionSource = interactionSource,
+        decorationBox = decorationBox ?: { textValue ->
+            SimpleTextPlaceholder(
+                placeholder = placeholder,
+                value = value,
+                textStyle = textStyle,
+                textValue = textValue,
+                color = placeholderColor,
+            )
+        },
+        modifier = modifier
+            .focusRequester(focusRequester),
+    )
 }
 
 @Composable
