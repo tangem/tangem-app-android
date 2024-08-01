@@ -19,7 +19,6 @@ internal class SetConfirmationStateAssentTransformer(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val stakingGasEstimate: StakingGasEstimate,
     private val pendingActionList: ImmutableList<PendingAction>,
-    private val pendingAction: PendingAction?,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
@@ -49,7 +48,6 @@ internal class SetConfirmationStateAssentTransformer(
                 ),
                 validatorState = validatorState.copySealed(isClickable = true),
                 pendingActions = pendingActionList,
-                pendingActionInProgress = pendingAction,
                 isPrimaryButtonEnabled = true,
             )
         } else {
