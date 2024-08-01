@@ -35,6 +35,7 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.components.rows.BlockchainRow
 import com.tangem.core.ui.components.rows.ChainRow
+import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -245,7 +246,15 @@ private fun NetworksList(networks: NetworksUM, currencyId: String, modifier: Mod
                     isLastItem = index == currentItems.lastIndex,
                     content = {
                         BlockchainRow(
-                            model = network.model,
+                            model = with(network) {
+                                BlockchainRowUM(
+                                    name = name,
+                                    type = type,
+                                    iconResId = iconResId,
+                                    isMainNetwork = isMainNetwork,
+                                    isSelected = isSelected,
+                                )
+                            },
                             action = {
                                 TangemSwitch(
                                     checked = network.isSelected,
