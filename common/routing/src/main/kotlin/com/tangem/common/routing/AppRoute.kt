@@ -177,15 +177,9 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data class AccessCodeRecovery(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/access_code_recovery/${userWalletId.stringValue}"), RouteBundleParams {
+    data object AccessCodeRecovery : AppRoute(path = "/access_code_recovery"), RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val USER_WALLET_ID_KEY = "userWalletId"
-        }
     }
 
     @Serializable
