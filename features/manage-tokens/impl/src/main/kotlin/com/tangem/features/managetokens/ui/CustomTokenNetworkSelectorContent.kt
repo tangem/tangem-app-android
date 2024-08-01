@@ -16,41 +16,50 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.ChainRowUM
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.managetokens.component.CustomTokenNetworkSelectorComponent
 import com.tangem.features.managetokens.component.preview.PreviewCustomTokenNetworkSelectorComponent
 import com.tangem.features.managetokens.entity.CurrencyNetworkUM
 import com.tangem.features.managetokens.entity.CustomTokenNetworkSelectorUM
+import com.tangem.features.managetokens.entity.SelectedNetworkUM
 import com.tangem.features.managetokens.impl.R
 
 internal fun LazyListScope.customTokenNetworkSelectorContent(model: CustomTokenNetworkSelectorUM) {
     val lastIndex = model.networks.lastIndex
 
-    item {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = TangemTheme.dimens.size36)
-                .background(
-                    color = TangemTheme.colors.background.primary,
-                    shape = TangemTheme.shapes.bottomSheet,
-                ),
-        ) {
-            Text(
+    if (model.showTitle) {
+        item {
+            Box(
                 modifier = Modifier
-                    .padding(
-                        top = TangemTheme.dimens.spacing12,
-                        bottom = TangemTheme.dimens.spacing6,
-                    )
-                    .padding(horizontal = TangemTheme.dimens.spacing12),
-                text = "Choose network",
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-            )
+                    .fillMaxWidth()
+                    .heightIn(min = TangemTheme.dimens.size36)
+                    .background(
+                        color = TangemTheme.colors.background.primary,
+                        shape = TangemTheme.shapes.bottomSheet,
+                    ),
+            ) {
+                Text(
+                    modifier = Modifier
+                        .padding(
+                            top = TangemTheme.dimens.spacing12,
+                            bottom = TangemTheme.dimens.spacing6,
+                        )
+                        .padding(horizontal = TangemTheme.dimens.spacing12),
+                    text = stringResource(R.string.add_custom_token_choose_network),
+                    style = TangemTheme.typography.subtitle2,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            }
         }
     }
 
@@ -62,13 +71,16 @@ internal fun LazyListScope.customTokenNetworkSelectorContent(model: CustomTokenN
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(
-                    shape = if (index == lastIndex) {
-                        RoundedCornerShape(
+                    shape = when {
+                        !model.showTitle && index == 0 -> RoundedCornerShape(
+                            topStart = TangemTheme.dimens.radius16,
+                            topEnd = TangemTheme.dimens.radius16,
+                        )
+                        index == lastIndex -> RoundedCornerShape(
                             bottomStart = TangemTheme.dimens.radius16,
                             bottomEnd = TangemTheme.dimens.radius16,
                         )
-                    } else {
-                        RectangleShape
+                        else -> RectangleShape
                     },
                 )
                 .background(color = TangemTheme.colors.background.primary)
@@ -115,11 +127,32 @@ private fun NetworkItem(model: CurrencyNetworkUM, modifier: Modifier = Modifier)
 @Composable
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun Preview_CustomTokenNetworkSelectorContent() {
+private fun Preview_CustomTokenNetworkSelectorContent(
+    @PreviewParameter(CustomTokenNetworkSelectorComponentPreviewProvider::class)
+    component: CustomTokenNetworkSelectorComponent,
+) {
     TangemThemePreview {
         LazyColumn {
-            PreviewCustomTokenNetworkSelectorComponent().content(this)
+            component.content(this)
         }
     }
+}
+
+private class CustomTokenNetworkSelectorComponentPreviewProvider :
+    PreviewParameterProvider<CustomTokenNetworkSelectorComponent> {
+    override val values: Sequence<CustomTokenNetworkSelectorComponent>
+        get() = sequenceOf(
+            PreviewCustomTokenNetworkSelectorComponent(),
+            PreviewCustomTokenNetworkSelectorComponent(
+                params = CustomTokenNetworkSelectorComponent.Params(
+                    userWalletId = UserWalletId(stringValue = "321"),
+                    selectedNetwork = SelectedNetworkUM(
+                        id = Network.ID(value = "0"),
+                        name = "",
+                    ),
+                    onNetworkSelected = {},
+                ),
+            ),
+        )
 }
 // endregion Preview
