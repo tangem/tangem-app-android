@@ -39,7 +39,6 @@ private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetC
     val isClicked = remember { mutableStateOf(false) }
     val requestPushPermission = requestPushPermission(
         pushPermission = getPushPermissionOrNull(),
-        isFirstTimeAsking = content.isFirstTimeRequested,
         isClicked = isClicked,
         onAllow = {
             content.onAllow()
@@ -49,7 +48,6 @@ private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetC
             content.onDeny()
             onDismiss()
         },
-        onOpenSettings = content.openSettings,
     )
 
     Column(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
@@ -78,13 +76,9 @@ private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetC
             ),
         ) {
             SecondaryButton(
-                text = if (content.wasInitiallyAsk) {
-                    stringResource(R.string.common_later)
-                } else {
-                    stringResource(R.string.common_cancel)
-                },
+                text = stringResource(R.string.common_cancel),
                 onClick = {
-                    content.onRequestLater()
+                    content.onNeverRequest()
                     onDismiss()
                 },
                 modifier = Modifier.weight(1f),
@@ -110,13 +104,10 @@ private fun PushNotificationsSheetContent_Preview() {
     TangemThemePreview {
         PushNotificationsSheetContent(
             PushNotificationsBottomSheetConfig(
-                isFirstTimeRequested = false,
-                wasInitiallyAsk = false,
                 onRequest = {},
-                onRequestLater = {},
+                onNeverRequest = {},
                 onAllow = {},
                 onDeny = {},
-                openSettings = {},
             ),
             onDismiss = {},
         )
