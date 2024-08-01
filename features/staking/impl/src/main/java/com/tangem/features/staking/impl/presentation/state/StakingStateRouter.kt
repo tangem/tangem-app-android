@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.common.routing.AppRouter
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 
 internal class StakingStateRouter(
     private val appRouter: AppRouter,
@@ -14,12 +15,12 @@ internal class StakingStateRouter(
 
     fun onNextClick() {
         when (stateController.value.currentStep) {
-            StakingStep.InitialInfo -> when (stateController.value.routeType) {
-                RouteType.STAKE -> showAmount()
-                RouteType.OTHER,
-                RouteType.UNSTAKE,
+            StakingStep.InitialInfo -> when (stateController.value.actionType) {
+                StakingActionCommonType.ENTER -> showAmount()
+                StakingActionCommonType.PENDING_OTHER,
+                StakingActionCommonType.EXIT,
                 -> showConfirmation()
-                RouteType.CLAIM -> showRewardsValidators()
+                StakingActionCommonType.PENDING_REWARDS -> showRewardsValidators()
             }
             StakingStep.RewardsValidators,
             StakingStep.Validators,
@@ -37,7 +38,7 @@ internal class StakingStateRouter(
             StakingStep.InitialInfo -> onBackClick()
             StakingStep.Amount -> showInitial()
             StakingStep.Confirmation -> {
-                if (uiState.routeType == RouteType.OTHER || uiState.routeType == RouteType.UNSTAKE) {
+                if (uiState.actionType != StakingActionCommonType.ENTER) {
                     showInitial()
                 } else {
                     showAmount()
