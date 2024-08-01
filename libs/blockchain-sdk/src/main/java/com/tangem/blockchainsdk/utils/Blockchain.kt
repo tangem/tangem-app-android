@@ -351,7 +351,5 @@ private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
-    Blockchain.Mantle,
-    Blockchain.MantleTestnet,
     Blockchain.Filecoin,
 )
