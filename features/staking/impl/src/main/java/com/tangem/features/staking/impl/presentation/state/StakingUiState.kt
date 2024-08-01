@@ -83,6 +83,7 @@ internal sealed class StakingStates {
             val notifications: ImmutableList<StakingNotification>,
             val footerText: String,
             val transactionDoneState: TransactionDoneState,
+            val pendingActionInProgress: PendingAction? = null,
         ) : ConfirmationState()
 
         data class Empty(
