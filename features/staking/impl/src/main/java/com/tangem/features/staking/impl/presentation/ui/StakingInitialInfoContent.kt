@@ -31,6 +31,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.previewdata.InitialStakingStatePreview
@@ -210,7 +211,7 @@ private fun ActiveStakingBlock(groups: List<BalanceGroupedState>, onClick: (Bala
                     ) {
                         group.items.forEachIndexed { index, balance ->
                             key(balance.validator.address) {
-                                val caption = if (group.type == BalanceGroupType.UNSTAKED) {
+                                val caption = if (group.type == BalanceType.UNSTAKING) {
                                     combinedReference(
                                         resourceReference(R.string.staking_details_unbonding_period),
                                         annotatedReference {
@@ -240,13 +241,14 @@ private fun ActiveStakingBlock(groups: List<BalanceGroupedState>, onClick: (Bala
                                     title = group.title.takeIf { index == 0 },
                                     subtitle = stringReference(balance.validator.name),
                                     caption = caption,
-                                    isGrayscaleImage = group.type == BalanceGroupType.UNSTAKED,
+                                    isGrayscaleImage = group.type == BalanceType.UNSTAKING,
                                     infoTitle = balance.fiatAmount,
                                     infoSubtitle = balance.cryptoAmount,
                                     imageUrl = balance.validator.image.orEmpty(),
                                     modifier = Modifier.clickable(
                                         interactionSource = remember { MutableInteractionSource() },
                                         indication = rememberRipple(),
+                                        enabled = group.isClickable,
                                         onClick = { onClick(balance) },
                                     ),
                                 )
