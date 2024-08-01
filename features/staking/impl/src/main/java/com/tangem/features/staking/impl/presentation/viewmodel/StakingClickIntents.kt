@@ -14,6 +14,8 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onNextClick(pendingActions: ImmutableList<PendingAction> = persistentListOf())
 
+    fun onActionClick(pendingAction: PendingAction?)
+
     fun onPrevClick()
 
     fun onInfoClick(infoType: InfoType)
@@ -25,8 +27,6 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun onValidatorSelect(validator: Yield.Validator)
 
     fun openRewardsValidators()
-
-    fun selectRewardValidator(rewardValue: String)
 
     fun onActiveStake(activeStake: BalanceState)
 
