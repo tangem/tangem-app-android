@@ -13,6 +13,8 @@ import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListItemUM
 import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListUM
 import com.tangem.features.markets.tokenlist.impl.ui.entity.SortByTypeUM
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 
 @Stable
@@ -79,6 +81,7 @@ internal class MarketsListUMStateManager(
     val state = MutableStateFlow(state())
     val isInSearchStateFlow = state.map { it.searchBar.isActive }.distinctUntilChanged()
     val searchQueryFlow = state.map { it.searchBar.query }.distinctUntilChanged()
+    private val searchUiItemsCache = MutableStateFlow<ImmutableList<MarketsListItemUM>>(persistentListOf())
 
     fun onUiItemsChanged(
         isInErrorState: Boolean,
@@ -99,20 +102,60 @@ internal class MarketsListUMStateManager(
                     it.copy(list = ListUM.Loading)
                 }
                 else -> {
-                    it.copy(
-                        list = ListUM.Content(
-                            items = uiItems,
-                            loadMore = onLoadMoreUiItems,
-                            visibleIdsChanged = visibleItemsChanged,
-                            showUnder100kTokens = true,
-                            onShowTokensUnder100kClicked = { },
-                            triggerScrollReset = consumedEvent(),
-                            onItemClick = onTokenClick,
-                        ),
-                    )
+                    it.updateItems(newItems = uiItems)
                 }
             }
         }
+    }
+
+    private fun MarketsListUM.updateItems(newItems: ImmutableList<MarketsListItemUM>): MarketsListUM {
+        val isNextPageInSearch = isInSearchState && (this.list as? ListUM.Content)?.showUnder100kTokens == true
+
+        val items = if (isInSearchState && isNextPageInSearch.not()) {
+            searchUiItemsCache.value = newItems
+            val filtered = newItems.filter { item -> item.isUnder100kMarketCap.not() }.toImmutableList()
+
+            if (filtered.size == newItems.size) {
+                return copy(
+                    list = ListUM.Content(
+                        items = newItems,
+                        loadMore = onLoadMoreUiItems,
+                        visibleIdsChanged = visibleItemsChanged,
+                        showUnder100kTokens = true,
+                        onShowTokensUnder100kClicked = {},
+                        triggerScrollReset = consumedEvent(),
+                        onItemClick = onTokenClick,
+                    ),
+                )
+            } else {
+                filtered
+            }
+        } else {
+            searchUiItemsCache.value = persistentListOf()
+            newItems
+        }
+
+        return copy(
+            list = ListUM.Content(
+                items = items,
+                loadMore = onLoadMoreUiItems,
+                visibleIdsChanged = visibleItemsChanged,
+                showUnder100kTokens = isInSearchState.not() || isNextPageInSearch,
+                onShowTokensUnder100kClicked = {
+                    state.update {
+                        it.copy(
+                            list = (it.list as ListUM.Content).copy(
+                                items = searchUiItemsCache.value,
+                                showUnder100kTokens = true,
+                            ),
+                        )
+                    }
+                    searchUiItemsCache.value = persistentListOf()
+                },
+                triggerScrollReset = consumedEvent(),
+                onItemClick = onTokenClick,
+            ),
+        )
     }
 
     private fun state(): MarketsListUM = MarketsListUM(
