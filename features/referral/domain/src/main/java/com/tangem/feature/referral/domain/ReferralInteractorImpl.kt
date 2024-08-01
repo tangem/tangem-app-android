@@ -1,10 +1,12 @@
 package com.tangem.feature.referral.domain
 
 import arrow.core.getOrElse
+import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.feature.referral.domain.errors.ReferralError
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.TokenData
 import com.tangem.lib.crypto.UserWalletManager
@@ -42,7 +44,7 @@ internal class ReferralInteractorImpl(
         val cryptoCurrency = repository.getCryptoCurrency(userWalletId = userWallet.walletId, tokenData = tokenData)
         derivePublicKeysUseCase(userWallet.walletId, listOfNotNull(cryptoCurrency)).getOrElse {
             Timber.e("Failed to derive public keys: $it")
-            throw it
+            throw it.mapToDomainError()
         }
 
         addCryptoCurrenciesUseCase(
@@ -66,5 +68,14 @@ internal class ReferralInteractorImpl(
     private fun saveReferralTokens(tokens: List<TokenData>) {
         tokensForReferral.clear()
         tokensForReferral.addAll(tokens)
+    }
+
+    private fun Throwable.mapToDomainError(): ReferralError {
+        if (this !is TangemSdkError) return ReferralError.DataError(this)
+        return if (this is TangemSdkError.UserCancelled) {
+            ReferralError.UserCancelledException
+        } else {
+            ReferralError.SdkError
+        }
     }
 }
