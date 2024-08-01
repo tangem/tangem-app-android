@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
 internal class PreviewAddCustomTokenComponent(
-    initialState: AddCustomTokenUM = AddCustomTokenUM.NetworkSelector(),
+    initialState: AddCustomTokenUM = AddCustomTokenUM.NetworkSelector(popBack = {}),
 ) : AddCustomTokenComponent {
 
     private val userWalletId = UserWalletId(stringValue = "321")
@@ -64,12 +64,15 @@ internal class PreviewAddCustomTokenComponent(
     }
 
     private fun showNetworkSelector(selectedNetwork: SelectedNetworkUM) {
-        previewState.update { AddCustomTokenUM.NetworkSelector(selectedNetwork) }
+        previewState.update {
+            AddCustomTokenUM.NetworkSelector(selectedNetwork, popBack = { showForm(selectedNetwork) })
+        }
     }
 
     private fun showForm(network: SelectedNetworkUM) {
         previewState.update {
             AddCustomTokenUM.Form(
+                popBack = {},
                 selectedNetwork = network,
                 addTokenButton = AddCustomTokenButtonUM.Visible(
                     isEnabled = false,
