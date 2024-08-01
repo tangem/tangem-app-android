@@ -17,17 +17,13 @@ sealed class PushNotificationAnalyticEvents(
         ),
     )
 
-    data class ButtonLater(
+    data class ButtonCancel(
         val source: AnalyticsParam.ScreensSources,
     ) : PushNotificationAnalyticEvents(
-        event = "Button - Later",
+        event = "Button - Cancel",
         params = mapOf(
             AnalyticsParam.SOURCE to source.value,
         ),
-    )
-
-    data object ButtonCancel : PushNotificationAnalyticEvents(
-        event = "Button - Cancel",
     )
 
     data class PermissionStatus(
