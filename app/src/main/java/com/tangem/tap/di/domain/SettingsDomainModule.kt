@@ -186,30 +186,6 @@ internal object SettingsDomainModule {
 
     @Provides
     @Singleton
-    fun provideIsFirstTimeAskingPermissionUseCase(
-        permissionRepository: PermissionRepository,
-    ): IsFirstTimeAskingPermissionUseCase {
-        return IsFirstTimeAskingPermissionUseCase(repository = permissionRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideSetFirstTimeAskingPushPermissionUseCase(
-        permissionRepository: PermissionRepository,
-    ): SetFirstTimeAskingPermissionUseCase {
-        return SetFirstTimeAskingPermissionUseCase(repository = permissionRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideDelayPermissionRequestUseCase(
-        permissionRepository: PermissionRepository,
-    ): DelayPermissionRequestUseCase {
-        return DelayPermissionRequestUseCase(repository = permissionRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideShouldAskPermissionUseCase(permissionRepository: PermissionRepository): ShouldAskPermissionUseCase {
         return ShouldAskPermissionUseCase(repository = permissionRepository)
     }
