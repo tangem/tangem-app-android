@@ -106,7 +106,7 @@ fun MarketChart(
         marker = marker,
     )
 
-    // we need to calculate how much height is to get correct chart height
+    // we need to calculate what the overall height should be in order to get the correct height of the graph
     val bottomAxisHeight = with(LocalDensity.current) {
         TangemTheme.typography.caption2.fontSize.toPx().toInt() + TangemTheme.dimens.spacing26.toPx().toInt()
     }
@@ -231,17 +231,7 @@ private fun rememberMarketChartBottomAxis(
         line = null,
         guideline = null,
         sizeConstraint = BaseAxis.SizeConstraint.Auto(),
-        itemPlacer = remember {
-            //
-            //
-            // HorizontalAxis.ItemPlacer.default(
-            //     spacing = 1, // FIXME ?
-            //     offset = 60, // FIXME ?
-            //     shiftExtremeTicks = false,
-            //     addExtremeLabelPadding = false,
-            // )
-            TimeItemPlacer()
-        },
+        itemPlacer = remember { TimeItemPlacer() },
         valueFormatter = xValueFormatter,
     )
 }
