@@ -1,8 +1,11 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
+import com.tangem.features.staking.impl.presentation.state.transformers.SetButtonsStateTransformer
 import com.tangem.utils.transformer.Transformer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,16 +23,21 @@ internal class StakingStateController @Inject constructor() {
 
     val uiState: StateFlow<StakingUiState> get() = mutableUiState.asStateFlow()
 
+    private val buttonsTransformer = SetButtonsStateTransformer()
+
     fun update(function: (StakingUiState) -> StakingUiState) {
         mutableUiState.update(function = function)
+        mutableUiState.update(function = buttonsTransformer::transform)
     }
 
     fun update(transformer: Transformer<StakingUiState>) {
         mutableUiState.update(function = transformer::transform)
+        mutableUiState.update(function = buttonsTransformer::transform)
     }
 
     fun clear() {
         mutableUiState.update { getInitialState() }
+        mutableUiState.update(function = buttonsTransformer::transform)
     }
 
     private fun getInitialState(): StakingUiState {
@@ -44,7 +52,8 @@ internal class StakingStateController @Inject constructor() {
             isBalanceHidden = false,
             event = consumedEvent(),
             bottomSheetConfig = null,
-            routeType = RouteType.STAKE,
+            actionType = StakingActionCommonType.ENTER,
+            buttonsState = NavigationButtonsState.Empty,
         )
     }
 }
