@@ -12,6 +12,7 @@ internal data class CardSettingsScreenState(
     val cardDetails: List<CardInfo>? = null,
     val onScanCardClick: () -> Unit,
     val onElementClick: (CardInfo) -> Unit,
+    val onBackClick: () -> Unit,
 )
 
 internal sealed class CardInfo(
