@@ -60,14 +60,14 @@ internal sealed class SettingsItem(
     data class LinkMoreCards(
         override val onClick: () -> Unit,
     ) : SettingsItem(
-        iconResId = R.drawable.ic_more_cards,
+        iconResId = R.drawable.ic_more_cards_24,
         title = resourceReference(R.string.details_row_title_create_backup),
     )
 
     data class CardSettings(
         override val onClick: () -> Unit,
     ) : SettingsItem(
-        iconResId = R.drawable.ic_card_settings,
+        iconResId = R.drawable.ic_card_settings_24,
         title = resourceReference(R.string.card_settings_title),
     )
 
@@ -95,7 +95,7 @@ internal sealed class SettingsItem(
     data class ReferralProgram(
         override val onClick: () -> Unit,
     ) : SettingsItem(
-        iconResId = R.drawable.ic_add_friends,
+        iconResId = R.drawable.ic_add_friends_24,
         title = resourceReference(R.string.details_referral_title),
     )
 
