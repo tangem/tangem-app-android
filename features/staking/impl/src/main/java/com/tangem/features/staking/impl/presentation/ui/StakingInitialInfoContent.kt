@@ -33,7 +33,10 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.BalanceGroupedState
+import com.tangem.features.staking.impl.presentation.state.BalanceState
+import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
+import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.previewdata.InitialStakingStatePreview
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
@@ -55,8 +58,7 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
     LazyColumn(
         modifier = Modifier
             .background(TangemTheme.colors.background.secondary)
-            .fillMaxSize(),
-        contentPadding = PaddingValues(TangemTheme.dimens.spacing16),
+            .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
 // [REDACTED_TODO_COMMENT]
         // https://www.figma.com/design/Vs6SkVsFnUPsSCNwlnVf5U?node-id=12484-35755#876661319
@@ -185,7 +187,7 @@ private fun StakingRewardBlock(
     InputRowDefault(
         title = resourceReference(R.string.staking_rewards),
         text = text,
-        iconRes = R.drawable.ic_chevron_right_24,
+        iconRes = R.drawable.ic_chevron_right_24.takeIf { isRewardsToClaim },
         textColor = textColor,
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
