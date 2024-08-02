@@ -10,6 +10,8 @@ import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.utils.StringsSigns.MINUS
+import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
 import com.tangem.utils.toFormattedCurrencyString
@@ -96,7 +98,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
     private fun TxHistoryItem.getAmount(): String {
         val prefix = when (status) {
             TxHistoryItem.TransactionStatus.Failed -> ""
-            else -> if (isOutgoing) "-" else "+"
+            else -> if (isOutgoing) MINUS else PLUS
         }
         return prefix + amount.toFormattedCurrencyString(currency = symbol, decimals = decimals)
     }

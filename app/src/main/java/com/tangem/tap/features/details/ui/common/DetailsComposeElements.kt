@@ -13,8 +13,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
-import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.wallet.R
 
 @Composable
@@ -24,31 +24,42 @@ internal fun SettingsScreensScaffold(
     modifier: Modifier = Modifier,
     @StringRes titleRes: Int? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    addBottomInsets: Boolean = true,
     fab: @Composable () -> Unit = {},
 ) {
     val state = rememberScaffoldState(snackbarHostState = snackbarHostState)
     val backgroundColor = TangemTheme.colors.background.secondary
 
     BackHandler(onBack = onBackClick)
-    SystemBarsEffect {
-        setSystemBarsColor(backgroundColor)
-    }
 
     Scaffold(
         scaffoldState = state,
         topBar = {
             EmptyTopBarWithNavigation(
+                modifier = Modifier.statusBarsPadding(),
                 onBackClick = onBackClick,
                 backgroundColor = backgroundColor,
             )
         },
-        modifier = modifier.systemBarsPadding(),
+        modifier = modifier,
+        contentWindowInsets = WindowInsetsZero,
         backgroundColor = backgroundColor,
-        floatingActionButton = fab,
-        content = { paddings ->
+        floatingActionButton = {
+            Box(modifier = Modifier.navigationBarsPadding()) {
+                fab()
+            }
+        },
+        content = { paddingValues ->
             Column(
                 modifier = Modifier
-                    .padding(paddings)
+                    .run {
+                        if (addBottomInsets) {
+                            navigationBarsPadding()
+                        } else {
+                            this
+                        }
+                    }
+                    .padding(paddingValues)
                     .fillMaxSize(),
             ) {
                 if (titleRes != null) {
@@ -81,9 +92,11 @@ internal fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
 @Composable
 internal fun EmptyTopBarWithNavigation(
     onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
     backgroundColor: Color = TangemTheme.colors.background.primary,
 ) {
     TopAppBar(
+        modifier = modifier,
         title = { },
         navigationIcon =
         {

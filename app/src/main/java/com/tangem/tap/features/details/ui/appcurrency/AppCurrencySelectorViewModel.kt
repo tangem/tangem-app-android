@@ -2,8 +2,9 @@ package com.tangem.tap.features.details.ui.appcurrency
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.navigation.ReduxNavController
+
 import com.tangem.domain.appcurrency.GetAvailableCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.SelectAppCurrencyUseCase
@@ -20,7 +21,7 @@ internal class AppCurrencySelectorViewModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getAvailableCurrenciesUseCase: GetAvailableCurrenciesUseCase,
     private val selectAppCurrencyUseCase: SelectAppCurrencyUseCase,
-    private val reduxNavController: ReduxNavController,
+    private val router: AppRouter,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel(), AppCurrencySelectorIntents {
@@ -34,7 +35,7 @@ internal class AppCurrencySelectorViewModel @Inject constructor(
     val uiState: StateFlow<AppCurrencySelectorState> = stateController.stateFlow
 
     override fun onBackClick() {
-        reduxNavController.popBackStack()
+        router.pop()
     }
 
     override fun onSearchClick() {
@@ -52,7 +53,7 @@ internal class AppCurrencySelectorViewModel @Inject constructor(
                     analyticsEventHandler.send(
                         event = Settings.AppSettings.MainCurrencyChanged(currencyType = currency.name),
                     )
-                    reduxNavController.popBackStack()
+                    router.pop()
                 }
         }
     }
