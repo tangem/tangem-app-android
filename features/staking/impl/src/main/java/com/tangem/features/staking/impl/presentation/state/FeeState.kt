@@ -5,9 +5,9 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import java.math.BigDecimal
 
+@Immutable
 sealed class FeeState {
 
-    @Immutable
     data class Content(
         val fee: Fee?,
         val rate: BigDecimal?,
