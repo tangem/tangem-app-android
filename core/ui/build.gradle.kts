@@ -9,9 +9,6 @@ android {
 }
 
 dependencies {
-    /** Project - Common */
-    implementation(projects.common)
-
     /** Project - Domain */
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.appTheme.models)
@@ -25,6 +22,12 @@ dependencies {
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.androidx.palette)
+    implementation(deps.androidx.windowManager) {
+        exclude(
+            deps.kotlin.coroutines.android.get().module.group,
+            deps.kotlin.coroutines.android.get().module.name
+        )
+    }
 
     /** Compose */
     implementation(deps.compose.constraintLayout)
@@ -40,11 +43,12 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.compose.accompanist.permission)
     implementation(deps.material)
     implementation(deps.compose.shimmer)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.zxing.qrCore)
-    implementation(deps.jodatime)
+    api(deps.jodatime)
     implementation(deps.timber)
     implementation(deps.markdown)
 }
