@@ -7,6 +7,7 @@ import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.AppRatingRepository
+import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.settings.repositories.PromoSettingsRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.tap.domain.sdk.TangemSdkManager
@@ -17,6 +18,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+@Suppress("TooManyFunctions")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object SettingsDomainModule {
@@ -164,4 +166,60 @@ internal object SettingsDomainModule {
     ): IncrementAppLaunchCounterUseCase {
         return IncrementAppLaunchCounterUseCase(settingsRepository = settingsRepository)
     }
+
+    // region PushPermissionRepository
+    @Provides
+    @Singleton
+    fun provideShouldInitiallyAskPermissionUseCase(
+        permissionRepository: PermissionRepository,
+    ): ShouldInitiallyAskPermissionUseCase {
+        return ShouldInitiallyAskPermissionUseCase(repository = permissionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNeverToInitiallyAskPermissionUseCase(
+        permissionRepository: PermissionRepository,
+    ): NeverToInitiallyAskPermissionUseCase {
+        return NeverToInitiallyAskPermissionUseCase(repository = permissionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsFirstTimeAskingPermissionUseCase(
+        permissionRepository: PermissionRepository,
+    ): IsFirstTimeAskingPermissionUseCase {
+        return IsFirstTimeAskingPermissionUseCase(repository = permissionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSetFirstTimeAskingPushPermissionUseCase(
+        permissionRepository: PermissionRepository,
+    ): SetFirstTimeAskingPermissionUseCase {
+        return SetFirstTimeAskingPermissionUseCase(repository = permissionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDelayPermissionRequestUseCase(
+        permissionRepository: PermissionRepository,
+    ): DelayPermissionRequestUseCase {
+        return DelayPermissionRequestUseCase(repository = permissionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideShouldAskPermissionUseCase(permissionRepository: PermissionRepository): ShouldAskPermissionUseCase {
+        return ShouldAskPermissionUseCase(repository = permissionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNeverRequestPermissionUseCase(
+        permissionRepository: PermissionRepository,
+    ): NeverRequestPermissionUseCase {
+        return NeverRequestPermissionUseCase(repository = permissionRepository)
+    }
+    // endregion
 }

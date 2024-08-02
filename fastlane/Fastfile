@@ -59,18 +59,20 @@ platform :android do
           "android.injected.signing.store.password" => options[:store_password],
           "android.injected.signing.key.alias" => options[:key_alias],
           "android.injected.signing.key.password" => options[:key_password],
-        })
-        gradle(
-          task: "assemble",
-          build_type: "Release",
-          properties: {
-            'versionCode' => options[:versionCode],
-            'versionName' => options[:versionName],
-            "android.injected.signing.store.file" => options[:keystore],
-            "android.injected.signing.store.password" => options[:store_password],
-            "android.injected.signing.key.alias" => options[:key_alias],
-            "android.injected.signing.key.password" => options[:key_password],
-          })
+       }
+     )
+     gradle(
+       task: "assemble",
+       build_type: "Release",
+       properties: {
+         'versionCode' => options[:versionCode],
+         'versionName' => options[:versionName],
+         "android.injected.signing.store.file" => options[:keystore],
+         "android.injected.signing.store.password" => options[:store_password],
+         "android.injected.signing.key.alias" => options[:key_alias],
+         "android.injected.signing.key.password" => options[:key_password],
+       }
+     )
   end
 
   desc "Submit a new Beta Build to Firebase App Distribution"
@@ -81,4 +83,20 @@ platform :android do
             groups: options[:groups])
   end
 
+  desc "Publish internal and external builds to Firebase App Distribution"
+  lane :publishToFirebase do |options|
+    gradle(
+      task: "clean assemble",
+      build_type: "Internal",
+      properties: {
+        'versionCode' => ENV['versionCode'],
+        'versionName' => ENV['versionName'],
+      }
+    )
+    firebase_app_distribution(
+      app: ENV['app_id_internal'],
+      apk_path: ENV['apk_path_internal'],
+      groups: ENV['groups']
+    )
+  end
 end

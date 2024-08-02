@@ -18,9 +18,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
-import com.tangem.core.ui.utils.GrayscaleColorFilter
-import com.tangem.core.ui.utils.NORMAL_ALPHA
+import com.tangem.core.ui.utils.getGreyScaleColorFilter
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
 import com.tangem.features.tokendetails.impl.R
@@ -46,11 +44,7 @@ internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Mod
         }
 
         val (alpha, colorFilter) = remember(state.iconState.isGrayscale) {
-            if (state.iconState.isGrayscale) {
-                GRAY_SCALE_ALPHA to GrayscaleColorFilter
-            } else {
-                NORMAL_ALPHA to null
-            }
+            getGreyScaleColorFilter(state.iconState.isGrayscale)
         }
         CurrencyIcon(
             modifier = Modifier
