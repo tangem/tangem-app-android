@@ -2,11 +2,13 @@ package com.tangem.features.staking.impl.presentation.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.staking.model.stakekit.PendingAction
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import kotlinx.collections.immutable.ImmutableList
@@ -25,7 +27,8 @@ internal data class StakingUiState(
     val confirmationState: StakingStates.ConfirmationState,
     val isBalanceHidden: Boolean,
     val bottomSheetConfig: TangemBottomSheetConfig?,
-    val routeType: RouteType,
+    val actionType: StakingActionCommonType,
+    val buttonsState: NavigationButtonsState,
     val event: StateEvent<StakingEvent>,
 ) {
 
@@ -98,11 +101,4 @@ enum class StakingStep {
     Amount,
     Confirmation,
     Validators,
-}
-
-enum class RouteType {
-    STAKE,
-    UNSTAKE,
-    CLAIM,
-    OTHER,
 }
