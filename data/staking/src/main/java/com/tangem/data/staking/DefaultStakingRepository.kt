@@ -187,7 +187,9 @@ internal class DefaultStakingRepository(
                         params,
                     ),
                 )
-                StakingActionCommonType.PENDING -> stakeKitApi.createPendingAction(
+                StakingActionCommonType.PENDING_OTHER,
+                StakingActionCommonType.PENDING_REWARDS,
+                -> stakeKitApi.createPendingAction(
                     createPendingActionRequestBody(params),
                 )
             }
@@ -217,7 +219,9 @@ internal class DefaultStakingRepository(
                         params,
                     ),
                 )
-                StakingActionCommonType.PENDING -> stakeKitApi.estimateGasOnPending(
+                StakingActionCommonType.PENDING_REWARDS,
+                StakingActionCommonType.PENDING_OTHER,
+                -> stakeKitApi.estimateGasOnPending(
                     createPendingActionRequestBody(params),
                 )
             }
