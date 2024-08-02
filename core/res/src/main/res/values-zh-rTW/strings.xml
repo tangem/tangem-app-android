@@ -283,7 +283,7 @@
   <string name="swapping_permission_buttons_approve">允許</string>
   <string name="swapping_permission_header">賦予權限</string>
   <string name="swapping_permission_rows_amount">數量 %s</string>
-  <string name="swapping_permission_subheader">要繼續，您需要允許 1inch 智能合約使用您的 %s</string>
+  <string name="swapping_permission_subheader">要繼續，您需要允許 %1$s 智能合約使用您的 %2$s</string>
   <string name="swapping_success_view_title">進行中</string>
   <string name="swapping_swap_action">交易</string>
   <string name="swapping_token_list_title">選擇代幣</string>
