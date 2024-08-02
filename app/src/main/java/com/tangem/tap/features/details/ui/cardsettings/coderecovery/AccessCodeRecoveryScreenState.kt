@@ -11,6 +11,6 @@ data class AccessCodeRecoveryScreenState(
     val enabledOnCard: Boolean,
     val enabledSelection: Boolean,
     val isSaveChangesEnabled: Boolean,
-    val onSaveChangesClick: (Boolean) -> Unit,
+    val onSaveChangesClick: () -> Unit,
     val onOptionClick: (Boolean) -> Unit,
 )

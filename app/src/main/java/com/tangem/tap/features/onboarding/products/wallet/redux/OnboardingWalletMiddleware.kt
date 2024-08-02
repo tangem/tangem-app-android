@@ -7,16 +7,16 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.common.extensions.toHexString
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.models.Artwork
 import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.models.Artwork
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.wallet.presentation.wallet.domain.BackupValidator
@@ -25,10 +25,7 @@ import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchWithMain
-import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
@@ -164,7 +161,7 @@ private fun handleWalletAction(action: Action) {
             store.dispatch(GlobalAction.Onboarding.Stop)
 
             if (scanResponse == null) {
-                store.dispatch(NavigationAction.PopBackTo())
+                store.dispatchNavigationAction(AppRouter::pop)
                 store.dispatch(HomeAction.ReadCard(scope = action.scope))
             } else {
                 val backupState = store.state.onboardingWalletState.backupState
@@ -529,7 +526,8 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     addedBackupCardsCount = backupService.addedBackupCardsCount,
                 ),
             )
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+
+            store.dispatchNavigationAction { push(AppRoute.OnboardingWallet()) }
         }
         is BackupAction.SkipBackup -> {
             Analytics.send(Onboarding.Backup.Skipped())
@@ -614,7 +612,7 @@ private fun handleOnBackPressed(state: OnboardingWalletState) {
         }
         BackupStep.Finished -> {
             OnboardingHelper.onInterrupted()
-            store.dispatch(NavigationAction.PopBackTo())
+            store.dispatchNavigationAction(AppRouter::pop)
         }
     }
 }
@@ -625,7 +623,7 @@ private fun showInterruptOnboardingDialog() {
             onOk = {
                 OnboardingHelper.onInterrupted()
                 store.dispatch(BackupAction.DiscardBackup)
-                store.dispatch(NavigationAction.PopBackTo())
+                store.dispatchNavigationAction(AppRouter::pop)
             },
         ),
     )

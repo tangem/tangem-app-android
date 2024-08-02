@@ -2,6 +2,7 @@ package com.tangem.feature.swap.models
 
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -21,7 +22,7 @@ data class SwapStateHolder(
     val providerState: ProviderState,
 
     val fee: FeeItemState = FeeItemState.Empty,
-    val permissionState: SwapPermissionState = SwapPermissionState.Empty,
+    val permissionState: GiveTxPermissionState = GiveTxPermissionState.Empty,
     val priceImpact: PriceImpact,
 
     val successState: SwapSuccessStateHolder? = null,
