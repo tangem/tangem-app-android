@@ -39,6 +39,7 @@ import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickInten
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.extensions.orZero
+import kotlinx.collections.immutable.ImmutableList
 
 @Suppress("UnusedPrivateMember")
 private const val METRICS_BLOCK_KEY = "MetricsBlock"
@@ -198,7 +199,7 @@ private fun StakingRewardBlock(
 }
 
 @Composable
-private fun ActiveStakingBlock(groups: List<BalanceGroupedState>, onClick: (BalanceState) -> Unit) {
+private fun ActiveStakingBlock(groups: ImmutableList<BalanceGroupedState>, onClick: (BalanceState) -> Unit) {
     Column(
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {

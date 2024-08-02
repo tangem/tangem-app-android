@@ -1,11 +1,13 @@
 package com.tangem.features.staking.impl.presentation.state
 
+import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import java.math.BigDecimal
 
 sealed class FeeState {
 
+    @Immutable
     data class Content(
         val fee: Fee?,
         val rate: BigDecimal?,

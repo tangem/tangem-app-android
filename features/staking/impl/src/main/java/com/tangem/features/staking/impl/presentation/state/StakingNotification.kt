@@ -29,9 +29,9 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
             subtitle = stringReference(message),
         )
 
-        data class Common(val subtitle: String) : Error(
+        data class Common(val subtitle: TextReference) : Error(
             title = resourceReference(R.string.common_error),
-            subtitle = stringReference(subtitle),
+            subtitle = subtitle,
         )
     }
 

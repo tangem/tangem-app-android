@@ -16,6 +16,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 private const val ROUNDED_LIST_WITH_DIVIDERS_HEADER_KEY = "ROUNDED_LIST_WITH_DIVIDERS_HEADER_KEY"
@@ -23,7 +24,7 @@ private const val ROUNDED_LIST_WITH_DIVIDERS_FOOTER_KEY = "ROUNDED_LIST_WITH_DIV
 
 @Composable
 fun RoundedListWithDividers(
-    rows: List<RoundedListWithDividersItemData>,
+    rows: ImmutableList<RoundedListWithDividersItemData>,
     modifier: Modifier = Modifier,
     headerContent: (@Composable () -> Unit)? = null,
     footerContent: (@Composable () -> Unit)? = null,
@@ -38,7 +39,7 @@ fun RoundedListWithDividers(
 }
 
 fun LazyListScope.roundedListWithDividersItems(
-    rows: List<RoundedListWithDividersItemData>,
+    rows: ImmutableList<RoundedListWithDividersItemData>,
     headerContent: (@Composable () -> Unit)? = null,
     footerContent: (@Composable () -> Unit)? = null,
 ) {

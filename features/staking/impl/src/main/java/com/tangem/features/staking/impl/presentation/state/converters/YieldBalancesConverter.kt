@@ -68,6 +68,7 @@ internal class YieldBalancesConverter(
                 )
             }
         }
+        .toPersistentList()
 
     private fun List<BalanceItem>.mapBalances(): List<BalanceState> {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()

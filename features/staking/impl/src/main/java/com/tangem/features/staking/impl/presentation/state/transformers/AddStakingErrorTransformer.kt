@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.utils.transformer.Transformer
@@ -28,7 +29,7 @@ internal class AddStakingErrorTransformer(
             )
             // TODO staking
             else -> StakingNotification.Error.Common(
-                subtitle = error.toString(),
+                subtitle = stringReference(error.toString()),
             )
         }
     }
