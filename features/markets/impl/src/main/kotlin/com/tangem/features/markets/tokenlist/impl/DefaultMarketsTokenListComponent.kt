@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.features.markets.component.BottomSheetState
 import com.tangem.features.markets.tokenlist.api.MarketsTokenListComponent
@@ -22,14 +23,14 @@ import kotlinx.coroutines.flow.onEach
 
 class DefaultMarketsTokenListComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted private val onTokenSelected: (TokenMarket) -> Unit,
+    @Assisted private val onTokenSelected: (TokenMarket, AppCurrency) -> Unit,
 ) : AppComponentContext by appComponentContext, MarketsTokenListComponent {
 
     private val model: MarketsListModel = getOrCreateModel()
 
     init {
         model.tokenSelected
-            .onEach { onTokenSelected(it) }
+            .onEach { onTokenSelected(it.first, it.second) }
             .launchIn(componentScope)
     }
 
@@ -58,7 +59,7 @@ class DefaultMarketsTokenListComponent @AssistedInject constructor(
     interface Factory : MarketsTokenListComponent.Factory {
         override fun create(
             context: AppComponentContext,
-            onTokenSelected: (TokenMarket) -> Unit,
+            onTokenSelected: (TokenMarket, AppCurrency) -> Unit,
         ): DefaultMarketsTokenListComponent
     }
 }
