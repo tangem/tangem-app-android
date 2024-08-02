@@ -2,7 +2,6 @@ package com.tangem.feature.swap.domain
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -10,12 +9,12 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.minimalAmount
-import com.tangem.common.extensions.hexToBytes
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
+import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.*
@@ -24,13 +23,10 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.utils.convertToAmount
-import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
-import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
-import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
-import com.tangem.domain.transaction.usecase.SendTransactionUseCase
-import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.transaction.models.TransactionType
+import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -44,9 +40,9 @@ import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
-import com.tangem.lib.crypto.models.*
-import com.tangem.lib.crypto.models.transactions.SendTxResult
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.lib.crypto.models.ProxyAmount
+import com.tangem.lib.crypto.models.ProxyFee
+import com.tangem.lib.crypto.models.ProxyFees
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
@@ -63,23 +59,20 @@ internal class SwapInteractorImpl @Inject constructor(
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
-    private val walletManagersFacade: WalletManagersFacade,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
+    private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val quotesRepository: QuotesRepository,
-    private val dispatcher: CoroutineDispatcherProvider,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
-    private val transactionRepository: TransactionRepository,
+    private val demoConfig: DemoConfig,
+    private val validateTransactionUseCase: ValidateTransactionUseCase,
+    private val estimateFeeUseCase: EstimateFeeUseCase,
 ) : SwapInteractor {
-
-    private val estimateFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
-        EstimateFeeUseCase(walletManagersFacade, dispatcher)
-    }
 
     private val getSelectedAppCurrencyUseCase by lazy(LazyThreadSafetyMode.NONE) {
         GetSelectedAppCurrencyUseCase(appCurrencyRepository)
@@ -222,35 +215,50 @@ internal class SwapInteractorImpl @Inject constructor(
         } else {
             permissionOptions.approveData.approveData
         }
-        val result = transactionManager.sendApproveTransaction(
-            txData = ApproveTxData(
-                networkId = networkId,
-                feeAmount = permissionOptions.txFee.feeValue,
-                gasLimit = permissionOptions.txFee.gasLimit,
-                destinationAddress = getTokenAddress(permissionOptions.fromToken),
-                dataToSign = dataToSign,
+        val approveTransaction = createTransactionUseCase(
+            amount = BigDecimal.ZERO.convertToAmount(permissionOptions.fromToken),
+            fee = getFeeForTransaction(
+                fee = permissionOptions.txFee,
+                blockchain = Blockchain.fromId(permissionOptions.fromToken.network.id.value),
             ),
-            derivationPath = derivationPath,
-            analyticsData = AnalyticsData(
-                feeType = permissionOptions.txFee.feeType.getNameForAnalytics(),
-                tokenSymbol = permissionOptions.fromToken.symbol,
-                permissionType = permissionOptions.approveType.getNameForAnalytics(),
+            memo = null,
+            destination = getTokenAddress(permissionOptions.fromToken),
+            network = permissionOptions.fromToken.network,
+            userWalletId = requireNotNull(getSelectedWallet()).walletId,
+            txExtras = createDexTxExtras(
+                dataToSign,
+                permissionOptions.fromToken.network,
+                permissionOptions.txFee.gasLimit,
             ),
+        ).getOrElse {
+            Timber.e(it, "Failed to create approveTransaction")
+            return SwapTransactionState.UnknownError
+        }
+
+        val result = sendTransactionUseCase(
+            txData = approveTransaction,
+            userWallet = requireNotNull(getSelectedWallet()),
+            network = permissionOptions.fromToken.network,
         )
-        return when (result) {
-            is SendTxResult.Success -> {
+        return result.fold(
+            ifRight = { hash ->
                 allowPermissionsHandler.addAddressToInProgress(permissionOptions.forTokenContractAddress)
                 SwapTransactionState.TxSent(
-                    txHash = userWalletManager.getLastTransactionHash(networkId, derivationPath).orEmpty(),
+                    txHash = hash,
                     timestamp = System.currentTimeMillis(),
                 )
-            }
-            SendTxResult.UserCancelledError -> SwapTransactionState.UserCancelled
-            is SendTxResult.BlockchainSdkError -> SwapTransactionState.BlockchainError
-            is SendTxResult.TangemSdkError -> SwapTransactionState.TangemSdkError
-            is SendTxResult.NetworkError -> SwapTransactionState.NetworkError
-            is SendTxResult.UnknownError -> SwapTransactionState.UnknownError
-        }
+            },
+            ifLeft = {
+                when (it) {
+                    SendTransactionError.UserCancelledError -> SwapTransactionState.UserCancelled
+                    is SendTransactionError.BlockchainSdkError -> SwapTransactionState.BlockchainError
+                    is SendTransactionError.TangemSdkError -> SwapTransactionState.TangemSdkError
+                    is SendTransactionError.NetworkError -> SwapTransactionState.NetworkError
+                    is SendTransactionError.DemoCardError -> SwapTransactionState.DemoMode
+                    else -> SwapTransactionState.UnknownError
+                }
+            },
+        )
     }
 
     override suspend fun findBestQuote(
@@ -498,35 +506,33 @@ internal class SwapInteractorImpl @Inject constructor(
             ),
         )
 
-        transactionRepository.validateTransaction(
+        validateTransactionUseCase(
             amount = amount.value.convertToAmount(fromToken),
             fee = fee,
             memo = null,
-            txExtras = null,
             destination = getTokenAddress(fromToken),
             userWalletId = userWalletId,
             network = fromToken.network,
-        )
-            .fold(
-                onFailure = {
-                    addCardanoTransactionValidationError(
-                        warnings = warnings,
-                        error = it as? BlockchainSdkError.Cardano ?: return@fold,
-                        fromToken = fromToken,
-                        userWalletId = userWalletId,
+        ).fold(
+            ifLeft = {
+                addCardanoTransactionValidationError(
+                    warnings = warnings,
+                    error = it as? BlockchainSdkError.Cardano ?: return@fold,
+                    fromToken = fromToken,
+                    userWalletId = userWalletId,
+                )
+            },
+            ifRight = {
+                minAdaValue?.let {
+                    warnings.add(
+                        Warning.Cardano.MinAdaValueCharged(
+                            tokenName = fromToken.name,
+                            minAdaValue = minAdaValue.parseBigDecimal(fromToken.decimals),
+                        ),
                     )
-                },
-                onSuccess = {
-                    minAdaValue?.let {
-                        warnings.add(
-                            Warning.Cardano.MinAdaValueCharged(
-                                tokenName = fromToken.name,
-                                minAdaValue = minAdaValue.parseBigDecimal(fromToken.decimals),
-                            ),
-                        )
-                    }
-                },
-            )
+                }
+            },
+        )
     }
 
     private suspend fun addCardanoTransactionValidationError(
@@ -667,10 +673,10 @@ internal class SwapInteractorImpl @Inject constructor(
             destination = swapData.transaction.txTo,
             userWalletId = userWalletId,
             network = currencyToSendStatus.currency.network,
-            txExtras = createDexTxExtras(fee.gasLimit, dataToSign),
+            txExtras = createDexTxExtras(dataToSign, currencyToSendStatus.currency.network, fee.gasLimit),
             hash = dataToSign,
         ).getOrElse {
-            Timber.e(it)
+            Timber.e(it, "Failed to create swap dex tx data")
             return SwapTransactionState.UnknownError
         }
 
@@ -720,13 +726,13 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private fun createDexTxExtras(gasLimit: Int, data: String): TransactionExtras {
-        // for now we support only Ethereum like DEX
-        // need to be extended if we support other blockchains in DEX
-        return EthereumTransactionExtras(
-            gasLimit = gasLimit.toBigInteger(),
-            data = data.removePrefix(HEX_PREFIX).hexToBytes(),
-        )
+    private fun createDexTxExtras(data: String, network: Network, gasLimit: Int?): TransactionExtras {
+        return createTransactionExtrasUseCase(
+            data = data,
+            network = network,
+            transactionType = TransactionType.APPROVE,
+            gasLimit = gasLimit?.toBigInteger(),
+        ).getOrNull() ?: error("failed to create extras")
     }
 
     @Suppress("LongMethod")
@@ -757,27 +763,27 @@ internal class SwapInteractorImpl @Inject constructor(
         val exchangeDataCex =
             exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.UnknownError
 
-        val txExtras = transactionManager.getMemoExtras(
-            currencyToSend.currency.network.backendId,
-            exchangeDataCex.txExtraId,
-        )
-        if (txExtras == null && exchangeDataCex.txExtraId != null) {
-            return SwapTransactionState.UnknownError
-        }
+        val cardId = getSelectedWallet()?.scanResponse?.card?.cardId ?: return SwapTransactionState.UnknownError
+        if (demoConfig.isDemoCardId(cardId)) return SwapTransactionState.UnknownError
+
         val txData = createTransactionUseCase(
             amount = amount.value.convertToAmount(currencyToSend.currency),
             fee = getFeeForTransaction(
                 fee = txFee,
                 blockchain = Blockchain.fromId(currencyToSend.currency.network.id.value),
             ),
-            memo = null,
+            memo = exchangeDataCex.txExtraId,
             destination = exchangeDataCex.txTo,
             userWalletId = userWalletId,
             network = currencyToSend.currency.network,
         ).getOrElse {
-            Timber.e(it)
+            Timber.e(it, "Failed to create swap CEX tx data")
             return SwapTransactionState.UnknownError
-        }.copy(extras = txExtras)
+        }
+
+        if (txData.extras == null && exchangeDataCex.txExtraId != null) {
+            return SwapTransactionState.UnknownError
+        }
 
         val result = sendTransactionUseCase(
             txData = txData,
@@ -995,10 +1001,10 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
         return coroutineScope {
-            val txFeeResult = getSelectedWalletSyncUseCase().getOrNull()?.walletId?.let { userWalletId ->
+            val txFeeResult = getSelectedWalletSyncUseCase().getOrNull()?.let { userWallet ->
                 getUnhandledFee(
                     amount = amount.value,
-                    userWalletId = userWalletId,
+                    userWallet = userWallet,
                     cryptoCurrency = fromToken,
                 )
             }
@@ -1263,7 +1269,15 @@ internal class SwapInteractorImpl @Inject constructor(
                 val otherNativeFee = transaction.otherNativeFeeWei
                     ?.movePointLeft(nativeCoinDecimals)
                     ?: BigDecimal.ZERO
-                val txFeeState = when (val feeData = getFeeDataForDexSwap(networkId, transaction, fromToken.currency)) {
+                val userWallet = getSelectedWallet()
+                val txFeeState = when (
+                    val feeData = getFeeDataForDexSwap(
+                        networkId = networkId,
+                        transaction = transaction,
+                        fromToken = fromToken.currency,
+                        cardId = userWallet?.scanResponse?.card?.cardId,
+                    )
+                ) {
                     is ProxyFees.MultipleFees -> feeData.proxyFeesToFeeState(fromToken.currency, otherNativeFee)
                     is ProxyFees.SingleFee -> feeData.proxyFeesToFeeState(fromToken.currency, otherNativeFee)
                 }
@@ -1325,7 +1339,11 @@ internal class SwapInteractorImpl @Inject constructor(
         networkId: String,
         transaction: ExpressTransactionModel.DEX,
         fromToken: CryptoCurrency,
+        cardId: String?,
     ): ProxyFees {
+        if (cardId != null && isDemoCardUseCase(cardId)) {
+            return getDemoFees(fromToken)
+        }
         return try {
             val nativeBalance = userWalletManager.getNativeTokenBalance(
                 networkId = networkId,
@@ -1406,12 +1424,12 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private suspend fun getUnhandledFee(
         amount: BigDecimal,
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
     ): Either<GetFeeError, TransactionFee>? {
         return estimateFeeUseCase(
             amount = amount,
-            userWalletId = userWalletId,
+            userWallet = userWallet,
             cryptoCurrency = cryptoCurrency,
         ).firstOrNull()
     }
@@ -1987,7 +2005,6 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     companion object {
-        @Suppress("UnusedPrivateMember")
         private const val INCREASE_GAS_LIMIT_BY = 112 // 12%
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
         private const val INFINITY_SYMBOL = "∞"

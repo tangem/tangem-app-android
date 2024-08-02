@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import java.math.BigDecimal
 
@@ -45,6 +46,9 @@ data class CryptoCurrencyStatus(
 
         /** The network address */
         open val networkAddress: NetworkAddress? = null
+
+        /** Staking yield balance */
+        open val yieldBalance: YieldBalance? = null
     }
 
     /** Represents the Loading state of a cryptocurrency, typically while fetching its details. */
@@ -107,6 +111,7 @@ data class CryptoCurrencyStatus(
         override val fiatAmount: BigDecimal,
         override val fiatRate: BigDecimal,
         override val priceChange: BigDecimal,
+        override val yieldBalance: YieldBalance?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
@@ -128,6 +133,7 @@ data class CryptoCurrencyStatus(
         override val fiatAmount: BigDecimal?,
         override val fiatRate: BigDecimal?,
         override val priceChange: BigDecimal?,
+        override val yieldBalance: YieldBalance?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
@@ -143,6 +149,7 @@ data class CryptoCurrencyStatus(
      */
     data class NoQuote(
         override val amount: BigDecimal,
+        override val yieldBalance: YieldBalance?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,

@@ -13,7 +13,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
-import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
+import com.tangem.core.ui.components.containers.FooterContainer
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable

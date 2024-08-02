@@ -86,6 +86,7 @@ fun PrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: TangemButtonSize = TangemButtonSize.Default,
+    colors: ButtonColors = TangemButtonsDefaults.primaryButtonColors,
     showProgress: Boolean = false,
     enabled: Boolean = true,
 ) {
@@ -94,7 +95,7 @@ fun PrimaryButton(
         text = text,
         icon = TangemButtonIconPosition.None,
         onClick = onClick,
-        colors = TangemButtonsDefaults.primaryButtonColors,
+        colors = colors,
         enabled = enabled,
         showProgress = showProgress,
         size = size,

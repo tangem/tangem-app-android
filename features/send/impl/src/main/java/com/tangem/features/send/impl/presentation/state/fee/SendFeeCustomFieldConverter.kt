@@ -6,6 +6,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.custom.BitcoinCustomFeeConverter
 import com.tangem.features.send.impl.presentation.state.fee.custom.EthereumCustomFeeConverter
+import com.tangem.features.send.impl.presentation.state.fee.custom.KaspaCustomFeeConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
@@ -38,10 +39,20 @@ internal class SendFeeCustomFieldConverter(
         )
     }
 
+    private val kaspaCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
+        KaspaCustomFeeConverter(
+            clickIntents = clickIntents,
+            stateRouterProvider = stateRouterProvider,
+            appCurrencyProvider = appCurrencyProvider,
+            feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
+        )
+    }
+
     override fun convert(value: Fee): ImmutableList<SendTextField.CustomFee> {
         return when (value) {
             is Fee.Ethereum -> ethereumCustomFeeConverter.convert(value)
             is Fee.Bitcoin -> bitcoinCustomFeeConverter.convert(value)
+            is Fee.Kaspa -> kaspaCustomFeeConverter.convert(value)
             else -> persistentListOf()
         }
     }
@@ -58,6 +69,12 @@ internal class SendFeeCustomFieldConverter(
                 index = index,
                 value = value,
                 txSize = fee.txSize,
+            )
+            is Fee.Kaspa -> kaspaCustomFeeConverter.onValueChange(
+                customValues = feeSelectorState.customValues,
+                index = index,
+                value = value,
+                utxoCount = fee.utxoCount,
             )
             else -> feeSelectorState.customValues
         },
