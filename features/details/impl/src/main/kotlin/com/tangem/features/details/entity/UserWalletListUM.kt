@@ -1,10 +1,11 @@
 package com.tangem.features.details.entity
 
-import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.collections.immutable.ImmutableList
 
+@Immutable
 internal data class UserWalletListUM(
     val userWallets: ImmutableList<UserWalletUM>,
     val isWalletSavingInProgress: Boolean,
@@ -12,12 +13,13 @@ internal data class UserWalletListUM(
     val onAddNewWalletClick: () -> Unit,
 ) {
 
+    @Immutable
     data class UserWalletUM(
         val id: UserWalletId,
-        val name: String,
+        val name: TextReference,
         val information: TextReference,
-        @DrawableRes
-        val imageResId: Int,
+        val imageUrl: String,
+        val isEnabled: Boolean,
         val onClick: () -> Unit,
     )
 }
