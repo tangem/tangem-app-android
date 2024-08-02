@@ -6,6 +6,8 @@ data class ExchangeStatusModel(
     val txId: String? = null,
     val txExternalUrl: String? = null,
     val txExternalId: String? = null,
+    val refundNetwork: String? = null,
+    val refundContractAddress: String? = null,
 )
 
 enum class ExchangeStatus {
@@ -20,5 +22,6 @@ enum class ExchangeStatus {
     Finished,
     Refunded,
     Cancelled,
+    TxFailed,
     Unknown,
 }

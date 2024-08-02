@@ -25,6 +25,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
+import java.util.Locale
 
 internal class TokenDetailsSwapTransactionsStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
@@ -62,7 +63,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                     }?.fiatRate?.multiply(fromAmount)
                     val timestamp = transaction.timestamp
                     val notifications =
-                        getNotification(transaction.status?.status, transaction.status?.txExternalUrl)
+                        getNotification(transaction.status?.status, transaction.status?.txExternalUrl, null)
                     val showProviderLink = getShowProviderLink(notifications, transaction.status)
                     result.add(
                         SwapTransactionsState(
@@ -77,10 +78,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             statuses = getStatuses(transaction.status?.status),
                             hasFailed = transaction.status?.status == ExchangeStatus.Failed,
                             activeStatus = transaction.status?.status,
-                            notification = getNotification(
-                                transaction.status?.status,
-                                transaction.status?.txExternalUrl,
-                            ),
+                            notification = notifications,
                             toCryptoCurrency = toCryptoCurrency,
                             toCryptoAmount = BigDecimalFormatter.formatCryptoAmount(
                                 cryptoAmount = toAmount,
@@ -110,10 +108,15 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         return result.toPersistentList()
     }
 
-    fun updateTxStatus(tx: SwapTransactionsState, statusModel: ExchangeStatusModel?): SwapTransactionsState {
+    fun updateTxStatus(
+        tx: SwapTransactionsState,
+        statusModel: ExchangeStatusModel?,
+        refundToken: CryptoCurrency?,
+        isRefundTerminalStatus: Boolean,
+    ): SwapTransactionsState {
         if (statusModel == null || tx.activeStatus == statusModel.status) return tx
         val hasFailed = tx.hasFailed || statusModel.status == ExchangeStatus.Failed
-        val notifications = getNotification(statusModel.status, statusModel.txExternalUrl)
+        val notifications = getNotification(statusModel.status, statusModel.txExternalUrl, refundToken)
         val showProviderLink = getShowProviderLink(notifications, statusModel)
         return tx.copy(
             activeStatus = statusModel.status,
@@ -122,6 +125,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             statuses = getStatuses(statusModel.status, hasFailed),
             txUrl = statusModel.txExternalUrl,
             showProviderLink = showProviderLink,
+            isRefundTerminalStatus = isRefundTerminalStatus,
         )
     }
 
@@ -133,10 +137,14 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         )
     }
 
-    private fun getNotification(status: ExchangeStatus?, txUrl: String?): ExchangeStatusNotifications? {
-        if (txUrl == null) return null
+    private fun getNotification(
+        status: ExchangeStatus?,
+        txUrl: String?,
+        refundToken: CryptoCurrency?,
+    ): ExchangeStatusNotifications? {
         return when (status) {
             ExchangeStatus.Failed -> {
+                if (txUrl == null) return null
                 ExchangeStatusNotifications.Failed {
                     analyticsEventsHandlerProvider().send(
                         TokenExchangeAnalyticsEvent.GoToProviderFail(cryptoCurrency.symbol),
@@ -145,11 +153,23 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                 }
             }
             ExchangeStatus.Verifying -> {
+                if (txUrl == null) return null
                 ExchangeStatusNotifications.NeedVerification {
                     analyticsEventsHandlerProvider().send(
                         TokenExchangeAnalyticsEvent.GoToProviderKYC(cryptoCurrency.symbol),
                     )
                     clickIntents.onGoToProviderClick(txUrl)
+                }
+            }
+            ExchangeStatus.Refunded -> {
+                if (refundToken == null) {
+                    null
+                } else {
+                    ExchangeStatusNotifications.TokenRefunded(
+                        cryptoCurrency = refundToken,
+                        onReadMoreClick = { clickIntents.onOpenUrlClick(url = getAboutCrossChainBridgesLink()) },
+                        onGoToTokenClick = { clickIntents.onGoToRefundedTokenClick(refundToken) },
+                    )
                 }
             }
             else -> null
@@ -287,7 +307,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             status = ExchangeStatus.Refunded,
             text = TextReference.Res(R.string.express_exchange_status_refunded),
             isActive = false,
-            isDone = isRefunded,
+            isDone = false,
         )
         else -> ExchangeStatusState(
             status = ExchangeStatus.Sending,
@@ -299,5 +319,13 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             isActive = isSending,
             isDone = isSendingDone,
         )
+    }
+
+    private fun getAboutCrossChainBridgesLink(): String {
+        return if (Locale.getDefault().country == "RU") {
+            "https://tangem.com/ru/blog/post/an-overview-of-cross-chain-bridges/"
+        } else {
+            "https://tangem.com/en/blog/post/an-overview-of-cross-chain-bridges/"
+        }
     }
 }
