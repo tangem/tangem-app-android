@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation
 
 import android.os.Bundle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.defaultComponentContext
 import com.tangem.core.decompose.context.DefaultAppComponentContext
@@ -68,7 +69,11 @@ internal class WalletFragment : ComposeFragment() {
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         _walletRouter.Initialize(
-            onFinish = requireActivity()::finish,
+            onFinish = remember(requireActivity()) {
+                {
+                    requireActivity().finish()
+                }
+            },
             marketsEntryComponent = marketsEntryComponent,
         )
     }
