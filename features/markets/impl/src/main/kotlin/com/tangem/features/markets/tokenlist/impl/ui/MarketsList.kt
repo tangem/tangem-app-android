@@ -1,16 +1,15 @@
 package com.tangem.features.markets.tokenlist.impl.ui
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -32,6 +31,7 @@ import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.component.BottomSheetState
@@ -68,23 +68,28 @@ internal fun MarketsList(
 @Composable
 private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modifier: Modifier = Modifier) {
     val density = LocalDensity.current
+    val background = LocalMainBottomSheetColor.current.value
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .imePadding()
-            .background(color = TangemTheme.colors.background.primary),
+            .drawBehind { drawRect(background) },
     ) {
         SearchBar(
             modifier = Modifier
-                .background(color = TangemTheme.colors.background.primary)
+                .drawBehind { drawRect(background) }
                 .padding(
                     start = TangemTheme.dimens.spacing16,
                     end = TangemTheme.dimens.spacing16,
                     bottom = TangemTheme.dimens.spacing4,
                 )
                 .onGloballyPositioned {
-                    with(density) { onHeaderSizeChange(it.size.height.toDp()) }
+                    if (it.size.height > 0) {
+                        with(density) {
+                            onHeaderSizeChange(it.size.height.toDp())
+                        }
+                    }
                 },
             state = state.searchBar,
         )
@@ -225,45 +230,52 @@ private fun KeyboardEvents(isSortByBottomSheetShown: Boolean, bottomSheetState: 
 //region: Preview
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview() {
-    TangemThemePreview {
-        MarketsList(
-            state = MarketsListUM(
-                list = ListUM.Content(
-                    items = MarketChartListItemPreviewDataProvider().values
-                        .flatMap { item -> List(size = 10) { item } }
-                        .mapIndexed { index, item ->
-                            item.copy(id = index.toString())
-                        }
-                        .toImmutableList(),
-                    showUnder100kTokens = false,
-                    loadMore = {},
-                    visibleIdsChanged = {},
-                    onShowTokensUnder100kClicked = {},
-                    triggerScrollReset = consumedEvent(),
-                    onItemClick = {},
+    TangemThemePreview(alwaysShowBottomSheets = false) {
+        val primaryBackground = TangemTheme.colors.background.primary
+
+        CompositionLocalProvider(
+            LocalMainBottomSheetColor provides remember { mutableStateOf(primaryBackground) },
+        ) {
+            MarketsList(
+                state = MarketsListUM(
+                    list = ListUM.Content(
+                        items = MarketChartListItemPreviewDataProvider().values
+                            .flatMap { item -> List(size = 10) { item } }
+                            .mapIndexed { index, item ->
+                                item.copy(id = index.toString())
+                            }
+                            .toImmutableList(),
+                        showUnder100kTokens = false,
+                        loadMore = {},
+                        visibleIdsChanged = {},
+                        onShowTokensUnder100kClicked = {},
+                        triggerScrollReset = consumedEvent(),
+                        onItemClick = {},
+                    ),
+                    searchBar = SearchBarUM(
+                        placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
+                        query = "",
+                        onQueryChange = {},
+                        isActive = false,
+                        onActiveChange = { },
+                    ),
+                    selectedSortBy = SortByTypeUM.Rating,
+                    selectedInterval = MarketsListUM.TrendInterval.H24,
+                    onIntervalClick = {},
+                    onSortByButtonClick = {},
+                    sortByBottomSheet = TangemBottomSheetConfig(
+                        isShow = false,
+                        onDismissRequest = {},
+                        content = SortByBottomSheetContentUM(selectedOption = SortByTypeUM.Rating) {},
+                    ),
                 ),
-                searchBar = SearchBarUM(
-                    placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
-                    query = "",
-                    onQueryChange = {},
-                    isActive = false,
-                    onActiveChange = { },
-                ),
-                selectedSortBy = SortByTypeUM.Rating,
-                selectedInterval = MarketsListUM.TrendInterval.H24,
-                onIntervalClick = {},
-                onSortByButtonClick = {},
-                sortByBottomSheet = TangemBottomSheetConfig(
-                    isShow = false,
-                    onDismissRequest = {},
-                    content = SortByBottomSheetContentUM(selectedOption = SortByTypeUM.Rating) {},
-                ),
-            ),
-            onHeaderSizeChange = {},
-            bottomSheetState = BottomSheetState.EXPANDED,
-        )
+                onHeaderSizeChange = {},
+                bottomSheetState = BottomSheetState.EXPANDED,
+            )
+        }
     }
 }
 
