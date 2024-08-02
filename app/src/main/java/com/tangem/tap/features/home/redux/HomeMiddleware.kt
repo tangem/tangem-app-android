@@ -1,5 +1,7 @@
 package com.tangem.tap.features.home.redux
 
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
@@ -63,8 +65,13 @@ private fun handleHomeAction(action: Action) {
         }
         is HomeAction.GoToShop -> {
             Analytics.send(Shop.ScreenOpened())
-            store.dispatchOpenUrl(NEW_BUY_WALLET_URL)
-
+            Firebase.analytics.appInstanceId
+                .addOnSuccessListener {
+                    store.dispatchOpenUrl("$NEW_BUY_WALLET_URL&app_instance_id=$it")
+                }
+                .addOnFailureListener {
+                    store.dispatchOpenUrl(NEW_BUY_WALLET_URL)
+                }
             // disabled for now in task [REDACTED_JIRA]
             // when (action.userCountryCode) {
             //     RUSSIA_COUNTRY_CODE, BELARUS_COUNTRY_CODE -> store.dispatchOpenUrl(BUY_WALLET_URL)
