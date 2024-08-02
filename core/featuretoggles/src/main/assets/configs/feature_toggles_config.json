@@ -42,5 +42,9 @@
     {
         "name": "HOME_SCREEN_CALLBACKS_REFACTORING_ENABLED",
         "version": "5.14.0"
+    },
+    {
+        "name": "NEW_MANAGE_TOKENS",
+        "version": "undefined"
     }
 ]
