@@ -10,6 +10,7 @@ import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.managetokens.ManageTokensToggles
+import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
@@ -48,6 +49,7 @@ internal class ChildFactory @Inject constructor(
     private val detailsComponentFactory: DetailsComponent.Factory,
     private val walletSettingsComponentFactory: WalletSettingsComponent.Factory,
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
+    private val manageTokensComponentFactory: ManageTokensComponent.Factory,
     private val sendRouter: SendRouter,
     private val tokenDetailsRouter: TokenDetailsRouter,
     private val walletRouter: WalletRouter,
@@ -122,7 +124,11 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.ManageTokens -> {
                 if (manageTokensToggles.isFeatureEnabled) {
-                    TODO("Not implemented yet") // [REDACTED_JIRA]
+                    route.asComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = ManageTokensComponent.Params(),
+                        componentFactory = manageTokensComponentFactory,
+                    )
                 } else {
                     route.asFragmentChild(Provider { TokensListFragment() })
                 }
