@@ -8,6 +8,10 @@ import java.math.BigDecimal
 
 sealed interface SwapState {
 
+    /**
+     * @param txFee fee state uses for calculation and build transaction
+     * @param txFeeIncludeOtherNativeFee fee state uses for display and included otherNativeFee (specific for bridge)
+     */
     data class QuotesLoadedState(
         val fromTokenInfo: TokenSwapInfo,
         val toTokenInfo: TokenSwapInfo,
@@ -23,6 +27,7 @@ sealed interface SwapState {
         val swapDataModel: SwapDataModel? = null,
         val txFee: TxFeeState,
         val warnings: List<Warning> = emptyList(),
+        val swapProvider: SwapProvider,
     ) : SwapState
 
     data class EmptyAmountState(val zeroAmountEquivalent: String) : SwapState
@@ -102,6 +107,9 @@ data class TxFee(
     val gasLimit: Int,
     val feeFiatFormatted: String,
     val feeCryptoFormatted: String,
+    val feeIncludeOtherNativeFee: BigDecimal,
+    val feeFiatFormattedWithNative: String,
+    val feeCryptoFormattedWithNative: String,
     val decimals: Int,
     val cryptoSymbol: String,
     val feeType: FeeType,
