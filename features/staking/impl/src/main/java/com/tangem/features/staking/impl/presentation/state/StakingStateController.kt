@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.presentation.state
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.state.transformers.SetButtonsStateTransformer
@@ -42,6 +43,7 @@ internal class StakingStateController @Inject constructor() {
 
     private fun getInitialState(): StakingUiState {
         return StakingUiState(
+            title = TextReference.EMPTY,
             clickIntents = StakingClickIntentsStub,
             cryptoCurrencyName = "",
             currentStep = StakingStep.InitialInfo,
