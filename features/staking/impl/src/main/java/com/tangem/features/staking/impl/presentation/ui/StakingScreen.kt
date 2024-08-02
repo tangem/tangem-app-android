@@ -16,6 +16,7 @@ import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.common.ui.navigationButtons.NavigationButtonsBlock
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -74,7 +75,7 @@ private fun SendAppBar(uiState: StakingUiState) {
         StakingStep.RewardsValidators,
         StakingStep.Validators,
         StakingStep.Confirmation,
-        -> stringResource(id = R.string.common_stake)
+        -> uiState.title.resolveReference()
     }
     val backIcon = when (uiState.currentStep) {
         StakingStep.Amount,
