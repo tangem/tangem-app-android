@@ -2,9 +2,6 @@ package com.tangem.common.ui.charts.layer
 
 import android.content.res.Configuration
 import androidx.annotation.FloatRange
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animate
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,22 +17,22 @@ import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.fullWidth
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineSpec
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberSplitLineSpec
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberSplitLine
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
-import com.patrykandpatrick.vico.compose.common.shader.BrushShader
+import com.patrykandpatrick.vico.compose.common.shader.toDynamicShader
 import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
 import com.patrykandpatrick.vico.core.cartesian.Zoom
 import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
 import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.shader.ColorShader
 import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 import com.tangem.common.ui.charts.preview.MarketChartPreviewDataProvider
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
 /**
@@ -59,117 +56,50 @@ internal fun rememberMarketChartLayer(
     backgroundLineColor: Color,
     secondLineColor: Color,
     backgroundSecondLineColor: Color,
-    startDrawingAnimation: MutableState<Boolean>,
     axisValueOverrider: AxisValueOverrider,
     secondColorOnTheRightSide: Boolean,
     @FloatRange(from = 0.0, to = 1.0) markerFraction: Float?,
     canvasHeight: Int,
 ): LineCartesianLayer {
-    var animationFraction: Float? by remember { mutableStateOf(null) }
+    val backgroundColorLineGradient = persistentListOf(backgroundLineColor, Color.Transparent)
+    val backgroundSecondLineColorGradient = persistentListOf(backgroundSecondLineColor, Color.Transparent)
 
-    LaunchedEffect(startDrawingAnimation.value) {
-        animationFraction = null
-        if (startDrawingAnimation.value) {
-            animate(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = tween(easing = LinearEasing, durationMillis = 1000),
-            ) { start, _ ->
-                if (start == 1f) {
-                    animationFraction = null
-                    startDrawingAnimation.value = false
-                } else {
-                    animationFraction = start
-                }
-            }
-        }
-    }
+    val markerSet = markerFraction != null
 
-    return rememberRawMarketChartLayer(
-        lineColor = lineColor,
-        backgroundLineColor = backgroundLineColor,
-        secondLineColor = secondLineColor,
-        backgroundSecondLineColor = backgroundSecondLineColor,
+    return rememberLayer(
+        fractionValue = markerFraction ?: 0f,
         axisValueOverrider = axisValueOverrider,
-        secondColorOnTheRightSide = secondColorOnTheRightSide,
-        markerFraction = markerFraction,
-        animationFraction = animationFraction,
         canvasHeight = canvasHeight,
+        lineColor = if (markerFraction != null) {
+            secondLineColor
+        } else {
+            lineColor
+        },
+        backLineColor = if (markerSet && !secondColorOnTheRightSide) {
+            backgroundSecondLineColorGradient
+        } else {
+            backgroundColorLineGradient
+        },
+        lineColorRight = when {
+            markerSet && secondColorOnTheRightSide -> secondLineColor
+            else -> lineColor
+        },
+        backLineColorRight = when {
+            markerSet && secondColorOnTheRightSide -> backgroundSecondLineColorGradient
+            else -> backgroundColorLineGradient
+        },
     )
 }
 
 @Suppress("LongParameterList")
 @Composable
-private fun rememberRawMarketChartLayer(
-    lineColor: Color,
-    backgroundLineColor: Color,
-    secondLineColor: Color,
-    backgroundSecondLineColor: Color,
-    axisValueOverrider: AxisValueOverrider,
-    canvasHeight: Int,
-    secondColorOnTheRightSide: Boolean = false,
-    @FloatRange(from = 0.0, to = 1.0) markerFraction: Float? = null,
-    @FloatRange(from = 0.0, to = 1.0) animationFraction: Float? = null,
-): LineCartesianLayer {
-    val backgroundColorLineGradient = listOf(backgroundLineColor, Color.Transparent)
-    val backgroundSecondLineColorGradient = listOf(backgroundSecondLineColor, Color.Transparent)
-
-    val markerSet = markerFraction != null
-    val animationRunning = animationFraction != null && animationFraction != 1f
-
-    val layerColors = when {
-        !animationRunning && markerSet && secondColorOnTheRightSide -> {
-            LayerColors(
-                lineColor = lineColor,
-                backLineColor = backgroundColorLineGradient,
-                lineColorRight = secondLineColor,
-                backLineColorRight = backgroundSecondLineColorGradient,
-            )
-        }
-        !animationRunning && markerSet && !secondColorOnTheRightSide -> {
-            LayerColors(
-                lineColor = secondLineColor,
-                backLineColor = backgroundSecondLineColorGradient,
-                lineColorRight = lineColor,
-                backLineColorRight = backgroundColorLineGradient,
-            )
-        }
-        animationRunning -> {
-            LayerColors(
-                lineColor = lineColor,
-                backLineColor = backgroundColorLineGradient,
-                lineColorRight = Color.Transparent,
-                backLineColorRight = listOf(Color.Transparent, Color.Transparent),
-            )
-        }
-        else -> {
-            LayerColors(
-                lineColor = lineColor,
-                backLineColor = backgroundColorLineGradient,
-            )
-        }
-    }
-
-    return rememberLayer(
-        fractionValue = animationFraction ?: markerFraction,
-        axisValueOverrider = axisValueOverrider,
-        layerColors = layerColors,
-        canvasHeight = canvasHeight,
-    )
-}
-
-private data class LayerColors(
-    val lineColor: Color,
-    val backLineColor: List<Color>,
-    val lineColorRight: Color? = null,
-    val backLineColorRight: List<Color>? = null,
-)
-
-@Composable
 private fun rememberLayer(
-    fractionValue: Float?,
+    fractionValue: Float,
     axisValueOverrider: AxisValueOverrider,
-    layerColors: LayerColors,
+    lineColor: Color,
+    backLineColor: ImmutableList<Color>,
+    lineColorRight: Color,
+    backLineColorRight: ImmutableList<Color>,
     canvasHeight: Int,
 ): LineCartesianLayer {
     val endGradientColorPosition = if (canvasHeight != 0) {
@@ -178,47 +108,27 @@ private fun rememberLayer(
         Float.POSITIVE_INFINITY
     }
 
+    val alineColor = remember(lineColor) { lineColor.toArgb() }
+    val alineColorRight = remember(lineColorRight) { lineColorRight.toArgb() }
+
     return rememberLineCartesianLayer(
-        listOf(
-            if (layerColors.lineColorRight == null || layerColors.backLineColorRight == null || fractionValue == null) {
-                rememberLineSpec(
-                    shader = remember(layerColors.lineColor) { ColorShader(color = layerColors.lineColor.toArgb()) },
-                    backgroundShader = remember(layerColors.backLineColor, endGradientColorPosition) {
-                        BrushShader(
-                            brush = Brush.verticalGradient(
-                                colors = layerColors.backLineColor,
-                                endY = endGradientColorPosition,
-                            ),
-                        )
-                    },
-                )
-            } else {
-                rememberSplitLineSpec(
-                    shader = remember(layerColors.lineColor, layerColors.lineColorRight, fractionValue) {
-                        DynamicShader.Companion.horizontalGradient(
-                            colors = intArrayOf(layerColors.lineColor.toArgb(), layerColors.lineColorRight.toArgb()),
-                            positions = floatArrayOf(fractionValue, fractionValue),
-                        )
-                    },
-                    backgroundShaderFirst = remember(layerColors.backLineColor, endGradientColorPosition) {
-                        BrushShader(
-                            brush = Brush.verticalGradient(
-                                colors = layerColors.backLineColor,
-                                endY = endGradientColorPosition,
-                            ),
-                        )
-                    },
-                    backgroundShaderSecond = remember(layerColors.backLineColorRight, endGradientColorPosition) {
-                        BrushShader(
-                            brush = Brush.verticalGradient(
-                                colors = layerColors.backLineColorRight,
-                                endY = endGradientColorPosition,
-                            ),
-                        )
-                    },
-                    xSplitFraction = fractionValue,
-                )
-            },
+        LineCartesianLayer.LineProvider.series(
+            rememberSplitLine(
+                shader = DynamicShader.Companion.horizontalGradient(
+                    colors = intArrayOf(alineColor, alineColorRight),
+                    positions = floatArrayOf(fractionValue, fractionValue),
+                ),
+                backgroundShaderFirst = Brush.verticalGradient(
+                    colors = backLineColor,
+                    endY = endGradientColorPosition,
+                ).toDynamicShader(),
+                backgroundShaderSecond = Brush.verticalGradient(
+                    colors = backLineColorRight,
+                    endY = endGradientColorPosition,
+                ).toDynamicShader(),
+                xSplitFraction = fractionValue,
+                thickness = 1.dp,
+            ),
         ),
         axisValueOverrider = axisValueOverrider,
     )
@@ -250,25 +160,26 @@ private fun LayerChartPreview(
             CartesianChartHost(
                 modifier = Modifier.fillMaxWidth(),
                 chart = rememberCartesianChart(
-                    rememberRawMarketChartLayer(
+                    rememberMarketChartLayer(
                         lineColor = lineColor,
                         backgroundLineColor = lineColor.copy(alpha = 0.24f),
                         secondLineColor = Color.Gray,
                         backgroundSecondLineColor = Color.Gray.copy(alpha = 0.24f),
                         secondColorOnTheRightSide = true,
                         axisValueOverrider = AxisValueOverrider.fixed(minY = model.models[0].minY),
+                        markerFraction = 0.35f,
                         canvasHeight = 495,
                     ),
+                    horizontalLayout = HorizontalLayout.fullWidth(),
                 ),
                 zoomState = rememberVicoZoomState(initialZoom = Zoom.Content, zoomEnabled = false),
-                horizontalLayout = HorizontalLayout.fullWidth(),
                 model = model,
             )
 
             CartesianChartHost(
                 modifier = Modifier.fillMaxWidth(),
                 chart = rememberCartesianChart(
-                    rememberRawMarketChartLayer(
+                    rememberMarketChartLayer(
                         lineColor = lineColor,
                         backgroundLineColor = lineColor.copy(alpha = 0.24f),
                         secondLineColor = Color.Gray,
@@ -278,16 +189,16 @@ private fun LayerChartPreview(
                         axisValueOverrider = AxisValueOverrider.fixed(minY = model.models[0].minY),
                         canvasHeight = 495,
                     ),
+                    horizontalLayout = HorizontalLayout.fullWidth(),
                 ),
                 zoomState = rememberVicoZoomState(initialZoom = Zoom.Content, zoomEnabled = false),
-                horizontalLayout = HorizontalLayout.fullWidth(),
                 model = model,
             )
 
             CartesianChartHost(
                 modifier = Modifier.fillMaxWidth(),
                 chart = rememberCartesianChart(
-                    rememberRawMarketChartLayer(
+                    rememberMarketChartLayer(
                         lineColor = lineColor,
                         backgroundLineColor = lineColor.copy(alpha = 0.24f),
                         secondLineColor = Color.Gray,
@@ -297,29 +208,9 @@ private fun LayerChartPreview(
                         axisValueOverrider = AxisValueOverrider.fixed(minY = model.models[0].minY),
                         canvasHeight = 495,
                     ),
+                    horizontalLayout = HorizontalLayout.fullWidth(),
                 ),
                 zoomState = rememberVicoZoomState(initialZoom = Zoom.Content, zoomEnabled = false),
-                horizontalLayout = HorizontalLayout.fullWidth(),
-                model = model,
-            )
-
-            CartesianChartHost(
-                modifier = Modifier.fillMaxWidth(),
-                chart = rememberCartesianChart(
-                    rememberRawMarketChartLayer(
-                        lineColor = lineColor,
-                        backgroundLineColor = lineColor.copy(alpha = 0.24f),
-                        secondLineColor = lineColor,
-                        backgroundSecondLineColor = lineColor.copy(alpha = 0.24f),
-                        markerFraction = 0.35f,
-                        secondColorOnTheRightSide = true,
-                        animationFraction = 0.7f,
-                        axisValueOverrider = AxisValueOverrider.fixed(minY = model.models[0].minY),
-                        canvasHeight = 495,
-                    ),
-                ),
-                zoomState = rememberVicoZoomState(initialZoom = Zoom.Content, zoomEnabled = false),
-                horizontalLayout = HorizontalLayout.fullWidth(),
                 model = model,
             )
         }
