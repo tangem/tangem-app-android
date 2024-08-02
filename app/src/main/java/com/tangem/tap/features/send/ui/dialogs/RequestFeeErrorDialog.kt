@@ -23,7 +23,12 @@ object RequestFeeErrorDialog {
             setMessage(context.getString(R.string.alert_failed_to_send_transaction_message, errorMessage))
             setNegativeButton(R.string.details_row_title_contact_to_support) { _, _ ->
                 Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Send))
-                store.dispatch(GlobalAction.SendEmail(SendTransactionFailedEmail(errorMessage)))
+                store.dispatch(
+                    GlobalAction.SendEmail(
+                        feedbackData = SendTransactionFailedEmail(errorMessage),
+                        scanResponse = dialog.scanResponse,
+                    ),
+                )
             }
             setPositiveButton(R.string.common_retry) { _, _ -> dialog.onRetry() }
             setNeutralButton(R.string.common_cancel) { _, _ -> }
