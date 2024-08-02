@@ -13,7 +13,7 @@ internal object AttestationFailedDialog {
         return MaterialAlertDialogBuilder(context, R.style.CustomMaterialDialog).apply {
             setTitle(R.string.common_error)
             setMessage(R.string.issuer_signature_loading_failed)
-            setPositiveButton(R.string.ok) { dialog, _ ->
+            setPositiveButton(R.string.common_ok) { dialog, _ ->
                 dialog.dismiss()
             }
             setOnDismissListener {

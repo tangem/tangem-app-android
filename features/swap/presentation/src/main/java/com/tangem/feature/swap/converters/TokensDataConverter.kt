@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.converters
 
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -11,8 +11,8 @@ import com.tangem.feature.swap.models.CurrenciesGroupWithFromCurrency
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenToSelectState
-import com.tangem.utils.Provider
 import com.tangem.feature.swap.presentation.R
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
@@ -76,10 +76,10 @@ class TokensDataConverter(
         )
     }
 
-    private fun convertIcon(currency: CryptoCurrency, isAvailable: Boolean): TokenIconState {
+    private fun convertIcon(currency: CryptoCurrency, isAvailable: Boolean): CurrencyIconState {
         return when (currency) {
             is CryptoCurrency.Coin -> {
-                TokenIconState.CoinIcon(
+                CurrencyIconState.CoinIcon(
                     url = currency.iconUrl,
                     fallbackResId = currency.networkIconResId,
                     isGrayscale = !isAvailable,
@@ -90,11 +90,11 @@ class TokensDataConverter(
                 val isGrayscale = currency.network.isTestnet
                 val background = currency.tryGetBackgroundForTokenIcon(isGrayscale)
                 val tint = getTintForTokenIcon(background)
-                TokenIconState.TokenIcon(
+                CurrencyIconState.TokenIcon(
                     url = currency.iconUrl,
                     isGrayscale = !isAvailable,
                     showCustomBadge = currency.isCustom,
-                    networkBadgeIconResId = currency.networkIconResId,
+                    topBadgeIconResId = currency.networkIconResId,
                     fallbackTint = tint,
                     fallbackBackground = background,
                 )

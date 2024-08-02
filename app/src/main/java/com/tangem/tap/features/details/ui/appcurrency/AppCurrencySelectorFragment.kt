@@ -6,8 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.components.SystemBarsEffect
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.screen.ComposeFragment
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -22,12 +21,8 @@ internal class AppCurrencySelectorFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        val systemBarsColor = TangemTheme.colors.background.secondary
-        SystemBarsEffect {
-            setSystemBarsColor(systemBarsColor)
-        }
-
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+        NavigationBar3ButtonsScrim()
         AppCurrencySelectorScreen(
             modifier = modifier,
             state = uiState,

@@ -4,10 +4,14 @@
   <string name="add_tokens_title">管理代幣</string>
   <string name="address_qr_code_message_format">僅將 %1$s (%2$s) 從 %3$s 網絡發送到此地址。使用其他代幣和網絡可能會導致資金損失</string>
   <string name="alert_button_request_support">請求支持</string>
+  <string name="alert_button_try_again">再試一次</string>
   <string name="alert_demo_feature_disabled">此功能不在展示模式中提供</string>
   <string name="alert_failed_to_send_transaction_message">原因：%s</string>
   <string name="alert_failed_to_send_transaction_title">無法發送交易</string>
   <string name="alert_manage_tokens_unsupported_message">此卡不支持%1$s網路上的代幣因為韌體限制</string>
+  <string name="alert_negative_app_rate_sent_message">感謝您的反饋。我們會盡快回复</string>
+  <string name="alert_negative_app_rate_sent_title">你的建議已送出</string>
+  <string name="alert_troubleshooting_scan_card_message">請嘗試完全按照動畫中顯示的方式點擊卡片或請求支持</string>
   <string name="alert_troubleshooting_scan_card_title">有困難在掃描卡上嗎？</string>
   <string name="alert_unsupported_card">此卡不適用於此app</string>
   <string name="app_settings_enable_biometrics_description">轉到設置以在 Tangem App 中啟用生物識別身份驗證</string>
@@ -36,6 +40,7 @@
   <string name="card_settings_security_mode">安全模式</string>
   <string name="card_settings_title">卡片設置</string>
   <string name="common_accept">接受</string>
+  <string name="common_approve">允許</string>
   <string name="common_attention">注意</string>
   <string name="common_balance">餘額: %s</string>
   <string name="common_balance_title">餘額</string>
@@ -51,6 +56,7 @@
   <string name="common_create">創造</string>
   <string name="common_delete">刪除</string>
   <string name="common_disabled">禁用</string>
+  <string name="common_disconnect">斷開連接</string>
   <string name="common_done">完成</string>
   <string name="common_enable">允許</string>
   <string name="common_enabled">啟用</string>
@@ -63,6 +69,7 @@
   <string name="common_origin_card">主卡片</string>
   <string name="common_reject">拒絕</string>
   <string name="common_rename">重新命名</string>
+  <string name="common_retry">重試</string>
   <string name="common_save_changes">保存設置</string>
   <string name="common_search">搜索</string>
   <string name="common_search_tokens">搜尋代幣</string>
@@ -81,6 +88,7 @@
   <string name="common_transactions">交易</string>
   <string name="common_understand">我了解</string>
   <string name="common_unreachable">無法觸達</string>
+  <string name="common_warning">警告</string>
   <string name="common_yes">是</string>
   <string name="contract_address_copied_message">已複製代幣地址</string>
   <string name="currency_subtitle_expanded">支持的網路</string>
@@ -113,6 +121,7 @@
   <string name="details_row_title_currency">App Currency</string>
   <string name="details_row_title_issuer">發行人</string>
   <string name="details_row_title_signed_hashes">簽署</string>
+  <string name="details_security_management_warning">如果您忘記密碼，您將無法使用您的資金。無法恢復代碼</string>
   <string name="details_title">更多</string>
   <string name="disclaimer_error_loading">檢查您的網路連接或切換到其他網絡</string>
   <string name="disclaimer_title">服務條款</string>
@@ -127,6 +136,9 @@
   <string name="feedback_subject_support">反饋</string>
   <string name="feedback_subject_support_tangem">Tangem反饋</string>
   <string name="feedback_subject_tx_failed">無法發送交易</string>
+  <string name="give_permission_rows_amount">數量 %s</string>
+  <string name="give_permission_swap_subtitle" formatted="false">要繼續，您需要允許 %1s 智能合約使用您的 %2s</string>
+  <string name="give_permission_title">賦予權限</string>
   <string name="home_button_scan">掃描卡片</string>
   <string name="initial_message_change_access_code_body">要更改訪問密碼，請完全按照上圖所示連接手機和卡片</string>
   <string name="initial_message_change_passcode_body">要更改密碼，請完全按照上圖所示連接手機和卡</string>
@@ -171,7 +183,6 @@
   <string name="onboarding_exit_alert_message">這此情況，您必須要重新開始</string>
   <string name="onboarding_exit_alert_title">您想要離開啟用程序嗎?</string>
   <string name="onboarding_getting_started">開始</string>
-  <string name="onboarding_linking_error_card_with_wallets">您要添加的卡上已經創建了另一個錢包。你想重置它並將卡用於新錢包嗎？</string>
   <string name="onboarding_navbar_title_creating_backup">創建備份</string>
   <string name="onboarding_seed_button_read_more">閱讀更多關於助記詞的訊息</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -277,13 +288,9 @@
   <string name="story_web3_title">兼容Web3.0</string>
   <string name="swapping_approve_information_text">批准被視為所有去中心化交易所的行業標準，並保護您的錢包在未經您許可的情況下不被智能合約訪問。按照設計，智能合約無法訪問您的代幣，除非您從您的終端批准訪問。通過“解鎖”您的代幣，您將獲得 1inch 智能合約使用您的資產的權限。網絡的礦工將獲得Gas Fee（由您支付）作為補償，以在區塊鏈上記錄此操作。一旦獲得許可，您就可以交易您的代幣。</string>
   <string name="swapping_approve_information_title">批准</string>
-  <string name="swapping_give_permission">賦予權限</string>
   <string name="swapping_high_price_impact_description">在此代幣交換的數量將對價格產生重大影響，並降低您收到的數量</string>
   <string name="swapping_insufficient_funds">餘額不足</string>
-  <string name="swapping_permission_buttons_approve">允許</string>
   <string name="swapping_permission_header">賦予權限</string>
-  <string name="swapping_permission_rows_amount">數量 %s</string>
-  <string name="swapping_permission_subheader">要繼續，您需要允許 %1$s 智能合約使用您的 %2$s</string>
   <string name="swapping_success_view_title">進行中</string>
   <string name="swapping_swap_action">交易</string>
   <string name="swapping_token_list_title">選擇代幣</string>
@@ -292,7 +299,7 @@
   <string name="token_details_hide_alert_message">您即將在主屏幕上隱藏此代幣。您可以隨時通過管理代幣頁面將其添加回來。</string>
   <string name="token_details_hide_alert_title">隱藏 %s</string>
   <string name="token_details_hide_token">隱藏代幣</string>
-  <string name="token_details_unable_hide_alert_message">%1$s 代幣是 %2$s 網絡上的主要貨幣，只要列表中還有該網絡上的其他代幣，它就無法被隱藏。</string>
+  <string name="token_details_unable_hide_alert_message">%1$s (%2$s) 代幣是 %3$s 網絡上的主要貨幣，只要列表中還有該網絡上的其他代幣，它就無法被隱藏。</string>
   <string name="token_details_unable_hide_alert_title">無法隱藏 %s</string>
   <string name="transaction_history_empty_transactions">您還沒有任何交易</string>
   <string name="transaction_history_error_failed_to_load">無法加載交易</string>
