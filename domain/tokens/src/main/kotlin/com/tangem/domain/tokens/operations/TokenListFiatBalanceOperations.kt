@@ -1,8 +1,10 @@
 package com.tangem.domain.tokens.operations
 
 import arrow.core.NonEmptyList
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TotalFiatBalance
+import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
 internal class TokenListFiatBalanceOperations(
@@ -56,10 +58,13 @@ internal class TokenListFiatBalanceOperations(
         currentBalance: TotalFiatBalance,
     ): TotalFiatBalance {
         return with(currentBalance) {
+            val stakingBalance = (status.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero()
+            val fiatStakingBalance = status.fiatRate.times(stakingBalance)
+
             (this as? TotalFiatBalance.Loaded)?.copy(
-                amount = this.amount + status.fiatAmount,
+                amount = this.amount + status.fiatAmount + fiatStakingBalance,
             ) ?: TotalFiatBalance.Loaded(
-                amount = status.fiatAmount,
+                amount = status.fiatAmount + fiatStakingBalance,
                 isAllAmountsSummarized = true,
             )
         }
@@ -71,12 +76,13 @@ internal class TokenListFiatBalanceOperations(
     ): TotalFiatBalance {
         return with(currentBalance) {
             val isTokenAmountCanBeSummarized = status.fiatAmount != null
-
+            val yieldBalance = (status.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero()
+            val fiatYieldBalance = status.fiatRate?.times(yieldBalance).orZero()
             (this as? TotalFiatBalance.Loaded)?.copy(
-                amount = this.amount + (status.fiatAmount ?: BigDecimal.ZERO),
+                amount = this.amount + status.fiatAmount.orZero() + fiatYieldBalance,
                 isAllAmountsSummarized = isTokenAmountCanBeSummarized,
             ) ?: TotalFiatBalance.Loaded(
-                amount = status.fiatAmount ?: BigDecimal.ZERO,
+                amount = status.fiatAmount.orZero() + fiatYieldBalance,
                 isAllAmountsSummarized = isTokenAmountCanBeSummarized,
             )
         }
