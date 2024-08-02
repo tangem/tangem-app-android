@@ -70,7 +70,7 @@ fun InputRowEnterInfoAmount(
         ) {
             Text(
                 text = title.resolveReference(),
-                style = TangemTheme.typography.caption2,
+                style = TangemTheme.typography.subtitle2,
                 color = titleColor,
             )
             Row {
