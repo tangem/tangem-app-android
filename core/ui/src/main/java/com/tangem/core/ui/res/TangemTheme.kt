@@ -56,6 +56,7 @@ fun TangemTheme(
         ) {
             CompositionLocalProvider(
                 LocalTangemShimmer provides TangemShimmer,
+                LocalMainBottomSheetColor provides remember { mutableStateOf(Color.Unspecified) },
             ) {
                 ProvideTextStyle(
                     value = TangemTheme.typography.body1,
@@ -246,4 +247,8 @@ val LocalWindowSize = staticCompositionLocalOf<WindowSize> {
 
 val LocalTangemShimmer = staticCompositionLocalOf<Shimmer> {
     error("No TangemShimmer provided")
+}
+
+val LocalMainBottomSheetColor = staticCompositionLocalOf<MutableState<Color>> {
+    error("No MainBottomSheetColor provided")
 }
