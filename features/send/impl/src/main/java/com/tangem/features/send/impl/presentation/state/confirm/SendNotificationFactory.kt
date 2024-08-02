@@ -6,6 +6,9 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.minimalAmount
+import com.tangem.common.ui.amountScreen.models.AmountFieldModel
+import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -24,8 +27,6 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.fee.*
-import com.tangem.features.send.impl.presentation.state.fields.SendTextField
-import com.tangem.features.send.impl.presentation.utils.getFiatString
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
@@ -41,7 +42,7 @@ import java.math.BigDecimal
 @Suppress("LongParameterList", "LargeClass")
 internal class SendNotificationFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-    private val coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
     private val currencyChecksRepository: CurrencyChecksRepository,
@@ -62,7 +63,7 @@ internal class SendNotificationFactory(
             val balance = cryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
             val sendState = state.sendState ?: return@map persistentListOf()
             val feeState = state.getFeeState(isEditState) ?: return@map persistentListOf()
-            val amountState = state.getAmountState(isEditState) ?: return@map persistentListOf()
+            val amountState = state.getAmountState(isEditState) as? AmountState.Data ?: return@map persistentListOf()
 
             val amountValue = amountState.amountTextField.cryptoAmount.value ?: BigDecimal.ZERO
             val feeValue = feeState.fee?.amount?.value ?: BigDecimal.ZERO
@@ -125,8 +126,18 @@ internal class SendNotificationFactory(
     }
 
     private fun MutableList<SendNotification>.addFeeUnreachableNotification(feeSelectorState: FeeSelectorState) {
-        if (feeSelectorState is FeeSelectorState.Error) {
-            add(SendNotification.Warning.NetworkFeeUnreachable(clickIntents::feeReload))
+        when (feeSelectorState) {
+            is FeeSelectorState.Error.TronAccountActivationError -> add(
+                SendNotification.Warning.TronAccountNotActivated(
+                    feeSelectorState.tokenName,
+                ),
+            )
+            is FeeSelectorState.Error.NetworkError -> add(
+                SendNotification.Warning.NetworkFeeUnreachable(clickIntents::feeReload),
+            )
+            else -> {
+                /* do nothing */
+            }
         }
     }
 
@@ -239,7 +250,7 @@ internal class SendNotificationFactory(
 
     private fun MutableList<SendNotification>.addFeeCoverageNotification(
         isFeeCoverage: Boolean,
-        amountField: SendTextField.AmountField,
+        amountField: AmountFieldModel,
         sendingValue: BigDecimal,
     ) {
         if (isFeeCoverage) {
@@ -307,6 +318,7 @@ internal class SendNotificationFactory(
 
     private fun checkDustLimits(feeAmount: BigDecimal, receivedAmount: BigDecimal, dustValue: BigDecimal): Boolean {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val feeCurrencyStatus = feeCryptoCurrencyStatusProvider() ?: return false
 
         val change = when (cryptoCurrencyStatus.currency) {
             is CryptoCurrency.Coin -> {
@@ -314,7 +326,7 @@ internal class SendNotificationFactory(
                 balance - (feeAmount + receivedAmount)
             }
             is CryptoCurrency.Token -> {
-                val balance = coinCryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
+                val balance = feeCurrencyStatus.value.amount ?: BigDecimal.ZERO
                 balance - feeAmount
             }
         }
@@ -351,16 +363,14 @@ internal class SendNotificationFactory(
         val feeValue = fee?.amount?.value ?: BigDecimal.ZERO
         val userWalletId = userWalletProvider().walletId
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val feeCurrencyStatus = feeCryptoCurrencyStatusProvider() ?: return
 
         val warning = getBalanceNotEnoughForFeeWarningUseCase(
             fee = feeValue,
             userWalletId = userWalletId,
             tokenStatus = cryptoCurrencyStatus,
-            coinStatus = coinCryptoCurrencyStatusProvider(),
-        ).fold(
-            ifLeft = { null },
-            ifRight = { it },
-        ) ?: return
+            coinStatus = feeCurrencyStatus,
+        ).getOrNull() ?: return
 
         val mergeFeeNetworkName = cryptoCurrencyStatus.shouldMergeFeeNetworkName()
         when (warning) {

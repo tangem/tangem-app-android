@@ -4,12 +4,12 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.models.Config
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.SendAction
@@ -69,27 +69,10 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             }
         }
         is GlobalAction.SendEmail -> {
-            store.state.globalState.feedbackManager?.sendEmail(action.feedbackData)
-        }
-        is GlobalAction.OpenChat -> {
-            val globalState = store.state.globalState
-            val feedbackManager = globalState.feedbackManager.guard {
-                store.dispatchDebugErrorNotification("FeedbackManager not initialized")
-                return
-            }
-            val config = globalState.configManager?.config.guard {
-                store.dispatchDebugErrorNotification("Config not initialized")
-                return
-            }
-
-            // if config not set -> try to get it based on a scanResponse.productType
-            val unsafeChatConfig = action.chatConfig ?: config.sprinklr
-
-            val chatConfig = unsafeChatConfig.guard {
-                store.dispatchDebugErrorNotification("The chat config is not initialized")
-                return
-            }
-            feedbackManager.openChat(chatConfig, action.feedbackData)
+            store.state.globalState.feedbackManager?.sendEmail(
+                feedbackData = action.feedbackData,
+                scanResponse = action.scanResponse,
+            )
         }
         is GlobalAction.ExchangeManager.Init -> {
             val appStateSafe = appState() ?: return
