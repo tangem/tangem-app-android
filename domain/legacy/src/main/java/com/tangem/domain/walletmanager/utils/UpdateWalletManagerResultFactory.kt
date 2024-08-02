@@ -90,7 +90,7 @@ internal class UpdateWalletManagerResultFactory {
 
     private fun getCurrentTransactions(
         txHistoryItemConverter: TransactionDataToTxHistoryItemConverter,
-        recentTransactions: Set<TransactionData>,
+        recentTransactions: Set<TransactionData.Uncompiled>,
     ): Set<CryptoCurrencyTransaction> {
         val unconfirmedTransactions = recentTransactions.filter {
             it.status == TransactionStatus.Unconfirmed
@@ -122,7 +122,7 @@ internal class UpdateWalletManagerResultFactory {
 
     private fun createCurrencyTransaction(
         txHistoryItemConverter: TransactionDataToTxHistoryItemConverter,
-        data: TransactionData,
+        data: TransactionData.Uncompiled,
     ): CryptoCurrencyTransaction? {
         return when (val type = data.amount.type) {
             is AmountType.Coin -> {
