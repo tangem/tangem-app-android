@@ -9,6 +9,7 @@ import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
+import com.tangem.features.managetokens.ManageTokensToggles
 import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
@@ -55,6 +56,7 @@ internal class ChildFactory @Inject constructor(
     private val testerRouter: TesterRouter,
     private val detailsFeatureToggles: DetailsFeatureToggles,
     private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles,
+    private val manageTokensToggles: ManageTokensToggles,
     private val pushNotificationRouter: PushNotificationsRouter,
 ) {
 
@@ -119,7 +121,11 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { HomeFragment() })
             }
             is AppRoute.ManageTokens -> {
-                route.asFragmentChild(Provider { TokensListFragment() })
+                if (manageTokensToggles.isFeatureEnabled) {
+                    TODO("Not implemented yet") // https://tangem.atlassian.net/browse/AND-7798
+                } else {
+                    route.asFragmentChild(Provider { TokensListFragment() })
+                }
             }
             is AppRoute.OnboardingNote -> {
                 route.asFragmentChild(Provider { OnboardingNoteFragment() })
