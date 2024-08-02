@@ -136,4 +136,12 @@ internal class MockCurrenciesRepository(
     override fun createTokenCurrency(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token {
         return cryptoCurrency
     }
+
+    override suspend fun createTokenCurrency(
+        userWalletId: UserWalletId,
+        contractAddress: String,
+        networkId: String,
+    ): CryptoCurrency.Token {
+        error("not implemented")
+    }
 }
