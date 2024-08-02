@@ -2,6 +2,8 @@ package com.tangem.domain.tokens
 
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -10,6 +12,7 @@ import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,6 +31,8 @@ class GetCryptoCurrencyActionsUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
+    private val stakingRepository: StakingRepository,
+    private val stakingFeatureToggles: StakingFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -40,6 +45,7 @@ class GetCryptoCurrencyActionsUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
             userWalletId = userWallet.walletId,
         )
         val networkId = cryptoCurrencyStatus.currency.network.id
@@ -100,7 +106,7 @@ class GetCryptoCurrencyActionsUseCase(
             return listOf(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
         }
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Unreachable) {
-            return getActionsForUnreachableCurrency(cryptoCurrencyStatus, needAssociateAsset)
+            return getActionsForUnreachableCurrency(userWallet, cryptoCurrencyStatus, needAssociateAsset)
         }
 
         val activeList = mutableListOf<TokenActionsState.ActionState>()
@@ -119,6 +125,19 @@ class GetCryptoCurrencyActionsUseCase(
                 ScenarioUnavailabilityReason.None
             }
             activeList.add(TokenActionsState.ActionState.Receive(scenario))
+        }
+
+        // staking
+        if (stakingFeatureToggles.isStakingEnabled) {
+            if (isStakingAvailable(cryptoCurrency)) {
+                activeList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.None))
+            } else {
+                disabledList.add(
+                    TokenActionsState.ActionState.Stake(
+                        unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(cryptoCurrency.name),
+                    ),
+                )
+            }
         }
 
         // send
@@ -149,7 +168,7 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // buy
-        if (rampManager.availableForBuy(cryptoCurrency)) {
+        if (rampManager.availableForBuy(userWallet.scanResponse, cryptoCurrency)) {
             activeList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
         } else {
             disabledList.add(
@@ -203,6 +222,7 @@ class GetCryptoCurrencyActionsUseCase(
     }
 
     private fun getActionsForUnreachableCurrency(
+        userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         needAssociateAsset: Boolean,
     ): List<TokenActionsState.ActionState> {
@@ -211,7 +231,7 @@ class GetCryptoCurrencyActionsUseCase(
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
             actionsList.add(TokenActionsState.ActionState.CopyAddress(ScenarioUnavailabilityReason.None))
         }
-        if (rampManager.availableForBuy(cryptoCurrencyStatus.currency)) {
+        if (rampManager.availableForBuy(userWallet.scanResponse, cryptoCurrencyStatus.currency)) {
             actionsList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
         } else {
             actionsList.add(
@@ -225,7 +245,6 @@ class GetCryptoCurrencyActionsUseCase(
         actionsList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.Unreachable))
         actionsList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.Unreachable))
         actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.Unreachable))
-
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
             val scenario = if (needAssociateAsset) {
                 ScenarioUnavailabilityReason.UnassociatedAsset
@@ -234,7 +253,11 @@ class GetCryptoCurrencyActionsUseCase(
             }
             actionsList.add(TokenActionsState.ActionState.Receive(scenario))
         }
+        if (stakingFeatureToggles.isStakingEnabled) {
+            actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable))
+        }
         actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
+
         return actionsList
     }
 
@@ -246,7 +269,7 @@ class GetCryptoCurrencyActionsUseCase(
             cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
                 ScenarioUnavailabilityReason.EmptyBalance(ScenarioUnavailabilityReason.WithdrawalScenario.SEND)
             }
-            currenciesRepository.hasPendingTransactions(
+            currenciesRepository.isSendBlockedByPendingTransactions(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 coinStatus = coinStatus,
             ) -> {
@@ -263,5 +286,12 @@ class GetCryptoCurrencyActionsUseCase(
 
     private fun isAddressAvailable(networkAddress: NetworkAddress?): Boolean {
         return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
+    }
+
+    private suspend fun isStakingAvailable(cryptoCurrency: CryptoCurrency): Boolean {
+        return stakingRepository.getStakingAvailabilityForActions(
+            cryptoCurrencyId = cryptoCurrency.id,
+            symbol = cryptoCurrency.symbol,
+        ) is StakingAvailability.Available
     }
 }
