@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.models
 
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 
 data class SwapSuccessStateHolder(
@@ -16,8 +16,8 @@ data class SwapSuccessStateHolder(
     val toTokenAmount: TextReference,
     val fromTokenFiatAmount: TextReference,
     val toTokenFiatAmount: TextReference,
-    val fromTokenIconState: TokenIconState?,
-    val toTokenIconState: TokenIconState?,
+    val fromTokenIconState: CurrencyIconState?,
+    val toTokenIconState: CurrencyIconState?,
     val onExploreButtonClick: () -> Unit,
     val onStatusButtonClick: () -> Unit,
 )
