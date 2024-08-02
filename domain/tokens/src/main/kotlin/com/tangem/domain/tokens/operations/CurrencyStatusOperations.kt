@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.operations
 
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.*
 import java.math.BigDecimal
 
@@ -7,6 +8,7 @@ internal class CurrencyStatusOperations(
     private val currency: CryptoCurrency,
     private val quote: Quote?,
     private val networkStatus: NetworkStatus?,
+    private val yieldBalance: YieldBalance?,
     private val ignoreQuote: Boolean,
 ) {
 
@@ -18,7 +20,7 @@ internal class CurrencyStatusOperations(
             is NetworkStatus.MissedDerivation -> createMissedDerivationStatus()
             is NetworkStatus.Unreachable -> createUnreachableStatus(status)
             is NetworkStatus.NoAccount -> createNoAccountStatus(status)
-            is NetworkStatus.Verified -> createStatus(status)
+            is NetworkStatus.Verified -> createStatus(status, yieldBalance)
         }
     }
 
@@ -42,7 +44,7 @@ internal class CurrencyStatusOperations(
             networkAddress = status.address,
         )
 
-    private fun createStatus(status: NetworkStatus.Verified): CryptoCurrencyStatus.Value {
+    private fun createStatus(status: NetworkStatus.Verified, yieldBalance: YieldBalance?): CryptoCurrencyStatus.Value {
         val amount = when (val amount = status.amounts[currency.id]) {
             null -> {
                 return CryptoCurrencyStatus.Loading
@@ -62,6 +64,7 @@ internal class CurrencyStatusOperations(
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
                 networkAddress = status.address,
+                yieldBalance = yieldBalance,
             )
             currency is CryptoCurrency.Token && currency.isCustom -> CryptoCurrencyStatus.Custom(
                 amount = amount,
@@ -71,6 +74,7 @@ internal class CurrencyStatusOperations(
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
                 networkAddress = status.address,
+                yieldBalance = yieldBalance,
             )
             quote == null -> CryptoCurrencyStatus.Loading
             else -> CryptoCurrencyStatus.Loaded(
@@ -81,6 +85,7 @@ internal class CurrencyStatusOperations(
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
                 networkAddress = status.address,
+                yieldBalance = yieldBalance,
             )
         }
     }

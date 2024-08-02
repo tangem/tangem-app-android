@@ -13,7 +13,7 @@ internal class QuotesConverter : Converter<StoredQuote, Quote> {
         return Quote(
             rawCurrencyId = rawCurrencyId,
             fiatRate = responseQuote.price ?: BigDecimal.ZERO,
-            priceChange = (responseQuote.priceChange ?: BigDecimal.ZERO).movePointLeft(2),
+            priceChange = (responseQuote.priceChange24h ?: BigDecimal.ZERO).movePointLeft(2),
         )
     }
 }

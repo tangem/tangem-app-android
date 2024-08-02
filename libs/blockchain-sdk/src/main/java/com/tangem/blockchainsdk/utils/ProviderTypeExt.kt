@@ -24,6 +24,7 @@ fun createPrivateProviderType(name: String): ProviderType? {
         "tron" -> ProviderType.Tron.TronGrid
         "dwellirBittensor" -> ProviderType.Bittensor.Dwellir
         "onfinalityBittensor" -> ProviderType.Bittensor.Onfinality
+        "koinospro" -> ProviderType.Koinos.KoinosPro
         else -> {
             Timber.e("Private provider with name $name is not supported")
             null

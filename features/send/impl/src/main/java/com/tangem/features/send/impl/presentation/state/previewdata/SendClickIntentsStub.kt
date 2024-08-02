@@ -29,6 +29,7 @@ internal object SendClickIntentsStub : SendClickIntents {
     override fun onAmountValueChange(value: String) {}
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {}
+    override fun onAmountNext() {}
 
     override fun onMaxValueClick() {}
 
