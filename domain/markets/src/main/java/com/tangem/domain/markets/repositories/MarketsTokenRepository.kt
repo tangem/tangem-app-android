@@ -10,5 +10,5 @@ interface MarketsTokenRepository {
         nextBatchSize: Int,
     ): TokenListBatchFlow
 
-    suspend fun getChart(interval: PriceChangeInterval, tokenId: String): TokenChart
+    suspend fun getChart(fiatCurrencyCode: String, interval: PriceChangeInterval, tokenId: String): TokenChart
 }
