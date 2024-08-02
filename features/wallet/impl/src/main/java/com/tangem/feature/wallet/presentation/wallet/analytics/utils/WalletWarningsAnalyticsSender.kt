@@ -46,10 +46,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.Informational.MissingAddresses -> MainScreen.MissingAddresses
             is WalletNotification.RateApp -> MainScreen.HowDoYouLikeTangem
             is WalletNotification.Critical.BackupError -> MainScreen.BackupError
-            is WalletNotification.TravalaPromo -> TokenSwapPromoAnalyticsEvent.NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Travala,
-            )
             is WalletNotification.SwapPromo -> TokenSwapPromoAnalyticsEvent.NoticePromotionBanner(
                 source = AnalyticsParam.ScreensSources.Main,
                 programName = TokenSwapPromoAnalyticsEvent.ProgramName.OKX,
