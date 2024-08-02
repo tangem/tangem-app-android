@@ -4,8 +4,11 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -15,10 +18,8 @@ import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.FeePaidCurrency
-import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
@@ -316,8 +317,8 @@ internal class SwapInteractorImpl @Inject constructor(
 
         val fromTokenAddress = getTokenAddress(fromToken.currency)
         val isAllowedToSpend = quotes.fold(
-            ifRight = {
-                it.allowanceContract?.let {
+            ifRight = { quotes ->
+                quotes.allowanceContract?.let {
                     isAllowedToSpend(networkId, fromToken.currency, amount, it)
                 } ?: true
             },
@@ -342,7 +343,7 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         } else {
             provider to getQuotesState(
-                exchangeProviderType = provider.type,
+                provider = provider,
                 quoteDataModel = quotes,
                 amount = amount,
                 fromToken = fromToken,
@@ -366,7 +367,6 @@ internal class SwapInteractorImpl @Inject constructor(
         isBalanceWithoutFeeEnough: Boolean,
     ): Pair<SwapProvider, SwapState> {
         return provider to loadCexQuoteData(
-            exchangeProviderType = ExchangeProviderType.CEX,
             networkId = networkId,
             amount = amount,
             fromTokenStatus = fromToken,
@@ -595,8 +595,8 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapData = requireNotNull(swapData),
                     currencyToSendStatus = currencyToSend,
                     currencyToGetStatus = currencyToGet,
-                    amountToSwap = amountToSwap,
                     fee = fee,
+                    amountToSwap = amountToSwap,
                     userWalletId = requireNotNull(getSelectedWallet()).walletId,
                 )
             }
@@ -622,8 +622,8 @@ internal class SwapInteractorImpl @Inject constructor(
         )
         val fee = when (val txFee = state.txFee) {
             TxFeeState.Empty -> BigDecimal.ZERO
-            is TxFeeState.MultipleFeeState -> txFee.priorityFee.feeValue
-            is TxFeeState.SingleFeeState -> txFee.fee.feeValue
+            is TxFeeState.MultipleFeeState -> txFee.priorityFee.feeIncludeOtherNativeFee
+            is TxFeeState.SingleFeeState -> txFee.fee.feeIncludeOtherNativeFee
         }
         val feeState = getFeeState(
             fee = fee,
@@ -656,8 +656,9 @@ internal class SwapInteractorImpl @Inject constructor(
         val derivationPath = currencyToSendStatus.currency.network.derivationPath.value
         val dexTransaction = swapData.transaction as ExpressTransactionModel.DEX
         val dataToSign = dexTransaction.txData
+        val amountToSend = createNativeAmountForDex(swapData.transaction.txValue, currencyToSendStatus.currency.network)
         val txData = createTransactionUseCase(
-            amount = amount.value.convertToAmount(currencyToSendStatus.currency),
+            amount = amountToSend,
             fee = getFeeForTransaction(
                 fee = fee,
                 blockchain = Blockchain.fromId(currencyToSendStatus.currency.network.id.value),
@@ -668,7 +669,6 @@ internal class SwapInteractorImpl @Inject constructor(
             network = currencyToSendStatus.currency.network,
             txExtras = createDexTxExtras(fee.gasLimit, dataToSign),
             hash = dataToSign,
-            isSwap = true,
         ).getOrElse {
             Timber.e(it)
             return SwapTransactionState.UnknownError
@@ -870,7 +870,7 @@ internal class SwapInteractorImpl @Inject constructor(
             )
             blockchain == Blockchain.Aptos -> {
                 val gasUnitPrice = fee.feeValue.divide(
-                    BigDecimal(fee.gasLimit),
+                    fee.gasLimit.toBigDecimal(),
                     Blockchain.Aptos.decimals(),
                     RoundingMode.HALF_UP,
                 )
@@ -984,7 +984,6 @@ internal class SwapInteractorImpl @Inject constructor(
      */
     @Suppress("LongParameterList")
     private suspend fun loadCexQuoteData(
-        exchangeProviderType: ExchangeProviderType,
         networkId: String,
         amount: SwapAmount,
         fromTokenStatus: CryptoCurrencyStatus,
@@ -1035,7 +1034,7 @@ internal class SwapInteractorImpl @Inject constructor(
             )
 
             getQuotesState(
-                exchangeProviderType = exchangeProviderType,
+                provider = provider,
                 quoteDataModel = quotes,
                 amount = amount,
                 fromToken = fromTokenStatus,
@@ -1052,7 +1051,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
     @Suppress("LongMethod")
     private suspend fun getQuotesState(
-        exchangeProviderType: ExchangeProviderType,
+        provider: SwapProvider,
         quoteDataModel: Either<DataError, QuoteModel>,
         amount: SwapAmount,
         fromToken: CryptoCurrencyStatus,
@@ -1074,6 +1073,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     toTokenAmount = quoteModel.toTokenAmount,
                     swapData = null,
                     txFeeState = txFee,
+                    provider = provider,
                 ).copy(
                     warnings = manageWarnings(
                         fromTokenStatus = fromToken,
@@ -1083,7 +1083,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     ),
                 )
 
-                when (exchangeProviderType) {
+                when (provider.type) {
                     ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                         val state = updatePermissionState(
                             networkId = networkId,
@@ -1147,8 +1147,8 @@ internal class SwapInteractorImpl @Inject constructor(
     ): IncludeFeeInAmount {
         val feeValue = when (txFee) {
             TxFeeState.Empty -> BigDecimal.ZERO
-            is TxFeeState.MultipleFeeState -> txFee.priorityFee.feeValue
-            is TxFeeState.SingleFeeState -> txFee.fee.feeValue
+            is TxFeeState.MultipleFeeState -> txFee.priorityFee.feeIncludeOtherNativeFee
+            is TxFeeState.SingleFeeState -> txFee.fee.feeIncludeOtherNativeFee
         }
         val feePaidCurrency = getFeePaidCurrency(
             userWalletId = requireNotNull(getSelectedWallet()).walletId,
@@ -1254,28 +1254,34 @@ internal class SwapInteractorImpl @Inject constructor(
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
             toAddress = toToken.value.networkAddress?.defaultAddress?.value.orEmpty(),
+            refundAddress = fromToken.value.networkAddress?.defaultAddress?.value,
         ).fold(
             ifRight = { swapData ->
-                val feeData = transactionManager.getFee(
-                    networkId = networkId,
-                    amountToSend = amount.value,
-                    currencyToSend = swapCurrencyConverter.convert(fromToken.currency),
-                    destinationAddress = swapData.transaction.txTo,
-                    increaseBy = INCREASE_GAS_LIMIT_BY,
-                    data = (swapData.transaction as ExpressTransactionModel.DEX).txData,
-                    derivationPath = fromToken.currency.network.derivationPath.value,
-                )
-                val txFeeState = when (feeData) {
-                    is ProxyFees.MultipleFees -> feeData.proxyFeesToFeeState(fromToken.currency)
-                    is ProxyFees.SingleFee -> feeData.proxyFeesToFeeState(fromToken.currency)
+                val transaction = swapData.transaction as ExpressTransactionModel.DEX
+                val nativeCoinDecimals = Blockchain.fromNetworkId(networkId)?.decimals()
+                    ?: error("Blockchain not found")
+                val otherNativeFee = transaction.otherNativeFeeWei
+                    ?.movePointLeft(nativeCoinDecimals)
+                    ?: BigDecimal.ZERO
+                val txFeeState = when (val feeData = getFeeDataForDexSwap(networkId, transaction, fromToken.currency)) {
+                    is ProxyFees.MultipleFees -> feeData.proxyFeesToFeeState(fromToken.currency, otherNativeFee)
+                    is ProxyFees.SingleFee -> feeData.proxyFeesToFeeState(fromToken.currency, otherNativeFee)
                 }
                 val feeByPriority = selectFeeByType(feeType = selectedFee, txFeeState = txFeeState)
-                val isBalanceIncludeFeeEnough = isBalanceEnough(fromToken, amount, feeByPriority)
+                val feeToCheckFunds = feeByPriority + (otherNativeFee ?: BigDecimal.ZERO)
+                val isBalanceIncludeFeeEnough = isBalanceEnough(fromToken, amount, feeToCheckFunds)
                 val feeState = getFeeState(
-                    fee = feeByPriority,
+                    fee = feeToCheckFunds,
                     spendAmount = amount,
                     networkId = networkId,
                     fromTokenStatus = fromToken,
+                )
+                val preparedSwapConfigState = PreparedSwapConfigState(
+                    isAllowedToSpend = true,
+                    isBalanceEnough = isBalanceIncludeFeeEnough,
+                    feeState = feeState,
+                    hasOutgoingTransaction = hasOutgoingTransaction(fromToken),
+                    includeFeeInAmount = IncludeFeeInAmount.Excluded, // exclude for dex
                 )
                 val swapState = updateBalances(
                     networkId = networkId,
@@ -1285,6 +1291,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     toTokenAmount = swapData.toTokenAmount,
                     swapData = swapData,
                     txFeeState = txFeeState,
+                    provider = provider,
                 )
                 swapState.copy(
                     permissionState = PermissionDataState.Empty,
@@ -1292,17 +1299,9 @@ internal class SwapInteractorImpl @Inject constructor(
                         fromTokenStatus = fromToken,
                         amount = amount,
                         feeState = txFeeState,
-                        minAdaValue = (feeData as? ProxyFees.SingleFee)?.let {
-                            (it.singleFee as? ProxyFee.CardanoToken)?.minAdaValue
-                        },
+                        minAdaValue = null, // no ADA in DEX
                     ),
-                    preparedSwapConfigState = PreparedSwapConfigState(
-                        isAllowedToSpend = true,
-                        isBalanceEnough = isBalanceIncludeFeeEnough,
-                        feeState = feeState,
-                        hasOutgoingTransaction = hasOutgoingTransaction(fromToken),
-                        includeFeeInAmount = IncludeFeeInAmount.Excluded, // exclude for dex
-                    ),
+                    preparedSwapConfigState = preparedSwapConfigState,
                 )
             },
             ifLeft = { error ->
@@ -1322,8 +1321,42 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    private suspend fun getFeeDataForDexSwap(
+        networkId: String,
+        transaction: ExpressTransactionModel.DEX,
+        fromToken: CryptoCurrency,
+    ): ProxyFees {
+        return try {
+            val nativeBalance = userWalletManager.getNativeTokenBalance(
+                networkId = networkId,
+                derivationPath = fromToken.network.derivationPath.value,
+            ) ?: ProxyAmount.empty()
+            val amountToSend = createNativeAmountForDex(transaction.txValue, fromToken.network)
+            // transaction.txValue is always native coin
+            if (nativeBalance.value < amountToSend.value) {
+                error("It's impossible to calculate fee for nativeBalance.value < amountToSend.value")
+            }
+            transactionManager.getFee(
+                networkId = networkId,
+                amountToSend = amountToSend,
+                currencyToSend = swapCurrencyConverter.convert(fromToken),
+                destinationAddress = transaction.txTo,
+                increaseBy = INCREASE_GAS_LIMIT_BY,
+                data = transaction.txData,
+                derivationPath = fromToken.network.derivationPath.value,
+            )
+        } catch (e: IllegalStateException) {
+            transactionManager.getFeeForGas(
+                networkId = networkId,
+                gas = transaction.gas.multiply(INCREASE_GAS_LIMIT_BY.toBigInteger()).divide(100.toBigInteger()),
+                derivationPath = fromToken.network.derivationPath.value,
+            )
+        }
+    }
+
     @Suppress("LongParameterList")
     private suspend fun updateBalances(
+        provider: SwapProvider,
         networkId: String,
         fromTokenStatus: CryptoCurrencyStatus,
         toTokenStatus: CryptoCurrencyStatus,
@@ -1335,7 +1368,6 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
         val nativeToken = repository.getNativeTokenForNetwork(networkId)
-
         val rates = getQuotes(fromToken.id, toToken.id, nativeToken.id)
         return SwapState.QuotesLoadedState(
             fromTokenInfo = TokenSwapInfo(
@@ -1358,6 +1390,7 @@ internal class SwapInteractorImpl @Inject constructor(
             ),
             swapDataModel = swapData,
             txFee = txFeeState,
+            swapProvider = provider,
         )
     }
 
@@ -1367,7 +1400,7 @@ internal class SwapInteractorImpl @Inject constructor(
     ): TxFeeState {
         return txFeeResult?.fold(
             ifLeft = { TxFeeState.Empty },
-            ifRight = { txFee -> txFee.toTxFeeState(fromToken.currency) },
+            ifRight = { txFee -> txFee.toTxFeeState(fromToken.currency, null) },
         ) ?: TxFeeState.Empty
     }
 
@@ -1427,7 +1460,7 @@ internal class SwapInteractorImpl @Inject constructor(
             try {
                 transactionManager.getFee(
                     networkId = networkId,
-                    amountToSend = BigDecimal.ZERO,
+                    amountToSend = createNativeAmountForDex("0", fromToken.network),
                     currencyToSend = swapCurrencyConverter.convert(repository.getNativeTokenForNetwork(networkId)),
                     destinationAddress = fromToken.getContractAddress(),
                     increaseBy = INCREASE_GAS_LIMIT_BY,
@@ -1475,11 +1508,16 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private suspend fun ProxyFees.MultipleFees.proxyFeesToFeeState(fromToken: CryptoCurrency): TxFeeState {
+    private suspend fun ProxyFees.MultipleFees.proxyFeesToFeeState(
+        fromToken: CryptoCurrency,
+        otherNativeFee: BigDecimal? = null,
+    ): TxFeeState {
+        val otherNativeFeeValue = otherNativeFee ?: BigDecimal.ZERO
         val normalFeeValue = this.minFee.fee.value // in swap for normal use min fee
         val normalFeeGas = this.minFee.gasLimit.toInt()
         val priorityFeeValue = this.normalFee.fee.value // in swap for priority use normal fee
         val priorityFeeGas = this.normalFee.gasLimit.toInt()
+        // region fees to use
         val feesFiat = getFormattedFiatFees(fromToken, normalFeeValue, priorityFeeValue)
         val normalFiatFee = requireNotNull(feesFiat.getOrNull(0)) { "feesFiat item 0 couldn't be null" }
         val priorityFiatFee = requireNotNull(feesFiat.getOrNull(1)) { "feesFiat item 1 couldn't be null" }
@@ -1491,12 +1529,35 @@ internal class SwapInteractorImpl @Inject constructor(
             amount = priorityFeeValue,
             decimals = normalFee.fee.decimals,
         )
+        // endregion
+        // region fees include otherNativeFee
+        val feesFiatWithNative = getFormattedFiatFees(
+            fromToken = fromToken,
+            normalFeeValue + otherNativeFeeValue,
+            priorityFeeValue + otherNativeFeeValue,
+        )
+        val normalFiatFeeWithNative =
+            requireNotNull(feesFiatWithNative.getOrNull(0)) { "feesFiat item 0 couldn't be null" }
+        val priorityFiatFeeWithNative =
+            requireNotNull(feesFiatWithNative.getOrNull(1)) { "feesFiat item 1 couldn't be null" }
+        val normalCryptoFeeWithNative = amountFormatter.formatBigDecimalAmountToUI(
+            amount = normalFeeValue + otherNativeFeeValue,
+            decimals = minFee.fee.decimals,
+        )
+        val priorityCryptoFeeWithNative = amountFormatter.formatBigDecimalAmountToUI(
+            amount = priorityFeeValue + otherNativeFeeValue,
+            decimals = normalFee.fee.decimals,
+        )
+        // endregion
         return TxFeeState.MultipleFeeState(
             normalFee = TxFee(
                 feeValue = normalFeeValue,
                 gasLimit = normalFeeGas,
                 feeFiatFormatted = normalFiatFee,
                 feeCryptoFormatted = normalCryptoFee,
+                feeIncludeOtherNativeFee = normalFeeValue + otherNativeFeeValue,
+                feeFiatFormattedWithNative = normalFiatFeeWithNative,
+                feeCryptoFormattedWithNative = normalCryptoFeeWithNative,
                 decimals = minFee.fee.decimals,
                 cryptoSymbol = minFee.fee.currencySymbol,
                 feeType = FeeType.NORMAL,
@@ -1506,6 +1567,9 @@ internal class SwapInteractorImpl @Inject constructor(
                 gasLimit = priorityFeeGas,
                 feeFiatFormatted = priorityFiatFee,
                 feeCryptoFormatted = priorityCryptoFee,
+                feeIncludeOtherNativeFee = priorityFeeValue + otherNativeFeeValue,
+                feeFiatFormattedWithNative = priorityFiatFeeWithNative,
+                feeCryptoFormattedWithNative = priorityCryptoFeeWithNative,
                 decimals = normalFee.fee.decimals,
                 cryptoSymbol = normalFee.fee.currencySymbol,
                 feeType = FeeType.PRIORITY,
@@ -1513,7 +1577,11 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private suspend fun ProxyFees.SingleFee.proxyFeesToFeeState(fromToken: CryptoCurrency): TxFeeState {
+    private suspend fun ProxyFees.SingleFee.proxyFeesToFeeState(
+        fromToken: CryptoCurrency,
+        otherNativeFee: BigDecimal? = null,
+    ): TxFeeState {
+        val otherNativeFeeValue = otherNativeFee ?: BigDecimal.ZERO
         val normalFeeValue = this.singleFee.fee.value
         val normalFeeGas = this.singleFee.gasLimit.toInt()
         val feesFiat = getFormattedFiatFees(fromToken, normalFeeValue)
@@ -1522,12 +1590,28 @@ internal class SwapInteractorImpl @Inject constructor(
             amount = normalFeeValue,
             decimals = singleFee.fee.decimals,
         )
+        // region fees include otherNativeFee
+        val feesFiatWithNative = getFormattedFiatFees(
+            fromToken = fromToken,
+            normalFeeValue + otherNativeFeeValue,
+            normalFeeValue + otherNativeFeeValue,
+        )
+        val normalFiatFeeWithNative =
+            requireNotNull(feesFiatWithNative.getOrNull(0)) { "feesFiat item 0 couldn't be null" }
+        val normalCryptoFeeWithNative = amountFormatter.formatBigDecimalAmountToUI(
+            amount = normalFeeValue + otherNativeFeeValue,
+            decimals = singleFee.fee.decimals,
+        )
+        // endregion
         return TxFeeState.SingleFeeState(
             fee = TxFee(
                 feeValue = normalFeeValue,
                 gasLimit = normalFeeGas,
                 feeFiatFormatted = normalFiatFee,
                 feeCryptoFormatted = normalCryptoFee,
+                feeIncludeOtherNativeFee = normalFeeValue + otherNativeFeeValue,
+                feeFiatFormattedWithNative = normalFiatFeeWithNative,
+                feeCryptoFormattedWithNative = normalCryptoFeeWithNative,
                 decimals = singleFee.fee.decimals,
                 cryptoSymbol = singleFee.fee.currencySymbol,
                 feeType = FeeType.NORMAL,
@@ -1535,7 +1619,12 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private suspend fun TransactionFee.toTxFeeState(fromToken: CryptoCurrency): TxFeeState {
+    @Suppress("LongMethod")
+    private suspend fun TransactionFee.toTxFeeState(
+        fromToken: CryptoCurrency,
+        otherNativeFee: BigDecimal?,
+    ): TxFeeState {
+        val otherNativeFeeValue = otherNativeFee ?: BigDecimal.ZERO
         return when (this) {
             is TransactionFee.Choosable -> {
                 val normalFee = this.normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SEND)
@@ -1553,12 +1642,31 @@ internal class SwapInteractorImpl @Inject constructor(
                     amount = feePriority,
                     decimals = priorityFee.amount.decimals,
                 )
+
+                // region otherNativeFee
+                val normalFeeWithOtherNative = feeNormal + otherNativeFeeValue
+                val priorityFeeWithOtherNative = feePriority + otherNativeFeeValue
+                val normalFiatValueWithNative = getFormattedFiatFees(fromToken, normalFeeWithOtherNative)[0]
+                val priorityFiatValueWithNative = getFormattedFiatFees(fromToken, priorityFeeWithOtherNative)[0]
+
+                val normalCryptoFeeWithNative = amountFormatter.formatBigDecimalAmountToUI(
+                    amount = normalFeeWithOtherNative,
+                    decimals = normalFee.amount.decimals,
+                )
+                val priorityCryptoFeeWithNative = amountFormatter.formatBigDecimalAmountToUI(
+                    amount = priorityFeeWithOtherNative,
+                    decimals = priorityFee.amount.decimals,
+                )
+                // endregion
                 TxFeeState.MultipleFeeState(
                     normalFee = TxFee(
                         feeValue = feeNormal,
                         gasLimit = normalFee.getGasLimit(),
                         feeFiatFormatted = normalFiatValue,
                         feeCryptoFormatted = normalCryptoFee,
+                        feeIncludeOtherNativeFee = normalFeeWithOtherNative,
+                        feeFiatFormattedWithNative = normalFiatValueWithNative,
+                        feeCryptoFormattedWithNative = normalCryptoFeeWithNative,
                         decimals = normalFee.amount.decimals,
                         cryptoSymbol = normalFee.amount.currencySymbol,
                         feeType = FeeType.NORMAL,
@@ -1568,6 +1676,9 @@ internal class SwapInteractorImpl @Inject constructor(
                         gasLimit = priorityFee.getGasLimit(),
                         feeFiatFormatted = priorityFiatValue,
                         feeCryptoFormatted = priorityCryptoFee,
+                        feeIncludeOtherNativeFee = priorityFeeWithOtherNative,
+                        feeFiatFormattedWithNative = priorityFiatValueWithNative,
+                        feeCryptoFormattedWithNative = priorityCryptoFeeWithNative,
                         decimals = priorityFee.amount.decimals,
                         cryptoSymbol = priorityFee.amount.currencySymbol,
                         feeType = FeeType.PRIORITY,
@@ -1581,12 +1692,24 @@ internal class SwapInteractorImpl @Inject constructor(
                     amount = feeNormal,
                     decimals = this.normal.amount.decimals,
                 )
+                // region otherNativeFee
+                val normalFeeWithOtherNative = feeNormal + otherNativeFeeValue
+                val normalFiatValueWithNative = getFormattedFiatFees(fromToken, normalFeeWithOtherNative)[0]
+
+                val normalCryptoFeeWithNative = amountFormatter.formatBigDecimalAmountToUI(
+                    amount = normalFeeWithOtherNative,
+                    decimals = this.normal.amount.decimals,
+                )
+                // endregion
                 TxFeeState.SingleFeeState(
                     fee = TxFee(
                         feeValue = this.normal.amount.value ?: BigDecimal.ZERO,
                         gasLimit = this.normal.getGasLimit(),
                         feeFiatFormatted = normalFiatValue,
                         feeCryptoFormatted = normalCryptoFee,
+                        feeIncludeOtherNativeFee = normalFeeWithOtherNative,
+                        feeFiatFormattedWithNative = normalFiatValueWithNative,
+                        feeCryptoFormattedWithNative = normalCryptoFeeWithNative,
                         decimals = normal.amount.decimals,
                         cryptoSymbol = normal.amount.currencySymbol,
                         feeType = FeeType.NORMAL,
@@ -1594,6 +1717,18 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun createNativeAmountForDex(txValueAmount: String, network: Network): Amount {
+        val nativeDecimals = Blockchain.fromNetworkId(network.backendId)?.decimals()
+            ?: error("Blockchain not found")
+        val decimalValue = txValueAmount.toBigDecimalOrNull()?.movePointLeft(nativeDecimals)
+            ?: error("txValue parse error")
+        return Amount(
+            currencySymbol = network.currencySymbol,
+            value = decimalValue,
+            decimals = nativeDecimals,
+        )
     }
 
     /**
@@ -1656,7 +1791,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 if (fromToken.currency is CryptoCurrency.Token) {
                     tokenBalance >= amount.value
                 } else {
-                    tokenBalance > amount.value.plus(fee ?: BigDecimal.ZERO)
+                    tokenBalance >= amount.value.plus(fee ?: BigDecimal.ZERO)
                 }
             }
         }
@@ -1843,7 +1978,6 @@ internal class SwapInteractorImpl @Inject constructor(
             normalFee = ProxyFee.Common(
                 gasLimit = 1.toBigInteger(),
                 fee = demoFee.copy(value = normalDemoFee),
-
             ),
             priorityFee = ProxyFee.Common(
                 gasLimit = 1.toBigInteger(),
