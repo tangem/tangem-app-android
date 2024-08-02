@@ -17,7 +17,7 @@ import com.tangem.core.ui.components.inputrow.inner.PasteButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
+import com.tangem.core.ui.components.containers.FooterContainer
 
 @Composable
 internal fun TextFieldWithPaste(
