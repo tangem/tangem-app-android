@@ -299,6 +299,7 @@ data class CardDTO(
     }
 
     sealed class BackupStatus {
+
         data class CardLinked(val cardCount: Int) : BackupStatus()
 
         data class Active(val cardCount: Int) : BackupStatus()
