@@ -1,5 +1,6 @@
 package com.tangem.core.decompose.di
 
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import dagger.BindsInstance
@@ -36,6 +37,14 @@ interface DecomposeComponent {
          * @return The builder instance.
          */
         fun uiMessageSender(@BindsInstance uiMessageSender: UiMessageSender): Builder
+
+        /**
+         * Sets the parameters container for the component.
+         *
+         * @param container The parameters container to set.
+         * @return The builder instance.
+         */
+        fun paramsContainer(@BindsInstance container: ParamsContainer): Builder
 
         /**
          * Builds the Decompose component.
