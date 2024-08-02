@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
+import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.clipboard.ClipboardManager
@@ -18,6 +19,7 @@ import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -58,6 +60,8 @@ interface WalletCurrencyActionsClickIntents {
 
     fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
+    fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
     fun onCopyAddressLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus): TextReference?
 
     fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
@@ -89,6 +93,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val hapticManager: HapticManager,
     private val clipboardManager: ClipboardManager,
+    private val getYieldUseCase: GetYieldUseCase,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -364,6 +369,27 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         showErrorIfDemoModeOrElse(action = ::openExplorer)
     }
 
+    override fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        viewModelScope.launch {
+            val userWalletId = stateHolder.getSelectedWalletId()
+            val cryptoCurrency = cryptoCurrencyStatus.currency
+            val yield = getYieldUseCase.invoke(
+                cryptoCurrencyId = cryptoCurrency.id,
+                symbol = cryptoCurrency.symbol,
+            ).getOrElse {
+                error("Staking is unavailable for ${cryptoCurrency.name}")
+            }
+
+            reduxStateHolder.dispatch(
+                TradeCryptoAction.Stake(
+                    userWalletId = userWalletId,
+                    cryptoCurrencyId = cryptoCurrency.id,
+                    yield = yield,
+                ),
+            )
+        }
+    }
+
     private fun openExplorer() {
         val userWalletId = stateHolder.getSelectedWalletId()
 
@@ -466,6 +492,12 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason): TextReference {
         return when (unavailabilityReason) {
+            is ScenarioUnavailabilityReason.StakingUnavailable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_staking_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
             is ScenarioUnavailabilityReason.PendingTransaction -> {
                 when (unavailabilityReason.withdrawalScenario) {
                     ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
