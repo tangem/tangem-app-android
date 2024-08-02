@@ -102,7 +102,10 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onBackClick()
     }
 
-    override fun onNextClick(pendingActions: ImmutableList<PendingAction>) {
+    override fun onNextClick(actionType: StakingActionCommonType?, pendingActions: ImmutableList<PendingAction>) {
+        if (actionType != null) {
+            stateController.update { it.copy(actionType = actionType) }
+        }
         stakingStateRouter.onNextClick()
         if (isAssentState()) {
             estimateGas(pendingActions)
@@ -163,6 +166,10 @@ internal class StakingViewModel @Inject constructor(
                 ),
             )
             val cryptoCurrencyValue = cryptoCurrencyStatus.value
+            val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
+                ?: error("No confirmation state")
+            val validatorState = confirmationState.validatorState as? ValidatorState.Content
+                ?: error("No validator provided")
 
             val pendingAction = pendingActions.firstOrNull()
             val stakingGasEstimate = estimateGasUseCase(
@@ -175,7 +182,7 @@ internal class StakingViewModel @Inject constructor(
                         ?: error("No amount provided"),
                     address = cryptoCurrencyValue.networkAddress?.defaultAddress?.value
                         ?: error("No available address"),
-                    validatorAddress = yield.validators.getOrNull(0)?.address ?: error("No available validator"),
+                    validatorAddress = validatorState.chosenValidator.address,
                     token = yield.token,
                     passthrough = pendingAction?.passthrough,
                     type = pendingAction?.type,
@@ -230,10 +237,7 @@ internal class StakingViewModel @Inject constructor(
         stateController.update(ValidatorSelectChangeTransformer(validator))
     }
 
-    override fun openRewardsValidators() {
-        stateController.update { it.copy(actionType = StakingActionCommonType.PENDING_REWARDS) }
-        onNextClick()
-    }
+    override fun openRewardsValidators() = onNextClick(actionType = StakingActionCommonType.PENDING_REWARDS)
 
     override fun onActiveStake(activeStake: BalanceState) {
         val actionType = if (activeStake.pendingActions.isEmpty()) {
@@ -241,9 +245,9 @@ internal class StakingViewModel @Inject constructor(
         } else {
             StakingActionCommonType.PENDING_OTHER
         }
-        stateController.update { it.copy(actionType = actionType) }
+        stateController.update(ValidatorSelectChangeTransformer(activeStake.validator))
         stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, yield, activeStake.cryptoValue))
-        onNextClick(activeStake.pendingActions)
+        onNextClick(actionType, activeStake.pendingActions)
     }
 
     override fun onExploreClick() {
