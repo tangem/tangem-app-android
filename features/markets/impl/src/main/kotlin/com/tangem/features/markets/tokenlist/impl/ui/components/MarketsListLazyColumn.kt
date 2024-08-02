@@ -89,7 +89,7 @@ internal fun MarketsListLazyColumn(
                 is ListUM.Content -> {
                     items(
                         items = state.items,
-                        key = { it.id },
+                        key = { it.id + it.marketCap.toString() },
                     ) { item ->
                         MarketsListItem(
                             model = item,
