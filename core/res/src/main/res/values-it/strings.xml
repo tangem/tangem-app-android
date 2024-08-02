@@ -14,6 +14,7 @@
   <string name="common_save_changes">Mantieni le modifiche</string>
   <string name="common_send">Invia</string>
   <string name="common_success">Con successo</string>
+  <string name="common_warning">Avviso</string>
   <string name="details_manage_security_access_code">Codice di accesso</string>
   <string name="details_manage_security_access_code_description">Prima di scansionare la carta sarà necessario inserire il codice di accesso corretto</string>
   <string name="details_manage_security_long_tap">Mantenimento della carta</string>
