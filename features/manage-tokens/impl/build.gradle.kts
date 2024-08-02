@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.common.routing)
+    implementation(projects.core.featuretoggles)
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)
