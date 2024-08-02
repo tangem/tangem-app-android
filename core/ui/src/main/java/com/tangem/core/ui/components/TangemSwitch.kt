@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
@@ -23,6 +24,8 @@ import com.tangem.core.ui.res.TangemTheme
 @Composable
 fun TangemSwitch(
     onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     checkedColor: Color = TangemTheme.colors.control.checked,
     uncheckedColor: Color = TangemTheme.colors.icon.informative,
     size: Dp = 48.dp,
@@ -39,23 +42,20 @@ fun TangemSwitch(
         (if (isChecked) checkedColor else uncheckedColor)
             .copy(alpha = if (enabled) 1f else .4f)
     }
-    val interactionSource = remember { MutableInteractionSource() }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                enabled = enabled,
-            ) {
-                onCheckedChange(!checked)
-            }
-            .indication(
                 interactionSource = interactionSource,
                 indication = rememberRipple(
                     bounded = false,
                     color = Color.Transparent,
                 ),
+                enabled = enabled,
+                role = Role.Switch,
+                onClick = {
+                    onCheckedChange(!checked)
+                },
             ),
     ) {
         BoxWithConstraints(

@@ -1,10 +1,7 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -42,8 +40,15 @@ internal fun TokensListToolbar(state: TokensListToolbarState) {
     } else {
         AppBarDefaults.TopAppBarElevation
     }
+    val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
+
     TopAppBar(
         backgroundColor = TangemTheme.colors.background.secondary,
+        contentPadding = PaddingValues(
+            start = TangemTheme.dimens.spacing4,
+            end = TangemTheme.dimens.spacing4,
+            top = statusBarHeight,
+        ),
         elevation = toolbarElevation,
     ) {
         IconButton(onClick = state.onBackButtonClick) {

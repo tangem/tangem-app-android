@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.di
 
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.features.staking.impl.navigation.DefaultStakingRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
 import dagger.Module
@@ -17,7 +18,9 @@ internal object StakingRouterModule {
 
     @Provides
     @ActivityScoped
-    fun provideStakingRouter(): StakingRouter {
-        return DefaultStakingRouter()
+    fun provideStakingRouter(urlOpener: UrlOpener): StakingRouter {
+        return DefaultStakingRouter(
+            urlOpener = urlOpener,
+        )
     }
 }

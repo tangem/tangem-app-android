@@ -7,6 +7,9 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.model.stakekit.YieldBalanceList
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -20,6 +23,7 @@ internal class CurrenciesStatusesLceOperations(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
+    private val stakingRepository: StakingRepository,
 ) {
 
     fun getCurrenciesStatuses(
@@ -29,7 +33,7 @@ internal class CurrenciesStatusesLceOperations(
         return transformToCurrenciesStatuses(
             userWalletId = userWalletId,
             flow = if (isSingleCurrencyWalletsAllowed) {
-                getWalletCurrenies(userWalletId)
+                getWalletCurrencies(userWalletId)
             } else {
                 getMultiCurrencyWalletCurrencies(userWalletId)
             },
@@ -65,11 +69,18 @@ internal class CurrenciesStatusesLceOperations(
 
             val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
 
+            val addresses = networksRepository.getNetworkAddresses(userWalletId)
             combine(
                 getQuotes(currenciesIds),
                 getNetworksStatuses(userWalletId, networks),
-            ) { maybeQuotes, maybeNetworksStatuses ->
-                val statuses = createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes, maybeNetworksStatuses)
+                getYieldBalances(userWalletId, addresses),
+            ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances ->
+                val statuses = createCurrenciesStatuses(
+                    currencies = nonEmptyCurrencies,
+                    maybeQuotes = maybeQuotes,
+                    maybeNetworkStatuses = maybeNetworksStatuses,
+                    maybeYieldBalances = maybeYieldBalances,
+                )
                 emit(statuses)
             }.collect()
         }
@@ -84,16 +95,17 @@ internal class CurrenciesStatusesLceOperations(
             lceLoading()
         } else {
             createCurrenciesStatuses(
-                nonEmptyCurrencies,
+                currencies = nonEmptyCurrencies,
                 maybeNetworkStatuses = null,
                 maybeQuotes = null,
+                maybeYieldBalances = null,
             )
         }
 
         return statuses
     }
 
-    private fun getWalletCurrenies(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrency>> {
+    private fun getWalletCurrencies(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrency>> {
         return currenciesRepository.getWalletCurrenciesUpdates(userWalletId)
             .map { maybeCurrencies ->
                 maybeCurrencies.mapError { TokenListError.DataError(it) }
@@ -113,6 +125,7 @@ internal class CurrenciesStatusesLceOperations(
         currencies: NonEmptyList<CryptoCurrency>,
         maybeQuotes: Either<TokenListError, Set<Quote>>?,
         maybeNetworkStatuses: Lce<TokenListError, Set<NetworkStatus>>?,
+        maybeYieldBalances: Lce<TokenListError, YieldBalanceList>?,
     ): Lce<TokenListError, List<CryptoCurrencyStatus>> = lce {
         isLoading.set(maybeNetworkStatuses == null)
 
@@ -127,11 +140,20 @@ internal class CurrenciesStatusesLceOperations(
             null
         }
 
+        val yieldBalances = maybeYieldBalances?.getOrNull()
+
         currencies.map { currency ->
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
+            val yieldBalance = (yieldBalances as? YieldBalanceList.Data)?.getBalance(currency.id.rawCurrencyId)
 
-            createCurrencyStatus(currency, quote, networkStatus, ignoreQuote = quotesRetrievingFailed)
+            createCurrencyStatus(
+                currency = currency,
+                quote = quote,
+                networkStatus = networkStatus,
+                yieldBalance = yieldBalance,
+                ignoreQuote = quotesRetrievingFailed,
+            )
         }
     }
 
@@ -139,12 +161,14 @@ internal class CurrenciesStatusesLceOperations(
         currency: CryptoCurrency,
         quote: Quote?,
         networkStatus: NetworkStatus?,
+        yieldBalance: YieldBalance?,
         ignoreQuote: Boolean,
     ): CryptoCurrencyStatus {
         val currencyStatusOperations = CurrencyStatusOperations(
             currency = currency,
             quote = quote,
             networkStatus = networkStatus,
+            yieldBalance = yieldBalance,
             ignoreQuote = ignoreQuote,
         )
 
@@ -165,6 +189,18 @@ internal class CurrenciesStatusesLceOperations(
             .map { maybeStatuses ->
                 maybeStatuses.mapError { TokenListError.DataError(it) }
             }
+    }
+
+    private fun getYieldBalances(
+        userWalletId: UserWalletId,
+        addresses: List<CryptoCurrencyAddress>,
+    ): LceFlow<TokenListError, YieldBalanceList> {
+        return stakingRepository.getMultiYieldBalanceLce(
+            userWalletId = userWalletId,
+            addresses = addresses,
+        ).map { maybeBalances ->
+            maybeBalances.mapError { TokenListError.DataError(it) }
+        }
     }
 
     private fun getIds(currencies: List<CryptoCurrency>): Pair<NonEmptySet<Network>, NonEmptySet<CryptoCurrency.ID>> {

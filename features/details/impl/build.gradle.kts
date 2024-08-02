@@ -15,6 +15,7 @@ dependencies {
 
     /* Project - API */
     implementation(projects.features.details.api)
+    implementation(projects.features.disclaimer.api)
     implementation(projects.features.tester.api)
 
     /* Project - Core */
@@ -23,13 +24,30 @@ dependencies {
     implementation(projects.core.featuretoggles)
     implementation(projects.core.navigation)
     implementation(projects.core.analytics.models)
+    implementation(projects.common.routing)
 
     /* Project - Domain */
+    implementation(projects.domain.models)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.card)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.walletConnect)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.legacy)
 
+    /* SDK */
+// [REDACTED_TODO_COMMENT]
+    implementation(deps.tangem.card.core)
+    // For image resolving
+    implementation(deps.tangem.blockchain)
+
     /* AndroidX */
-    implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.activity.compose)
     implementation(deps.lifecycle.compose)
 
@@ -40,6 +58,7 @@ dependencies {
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.shimmer)
+    implementation(deps.compose.coil)
 
     /* DI */
     implementation(deps.hilt.android)
@@ -47,4 +66,5 @@ dependencies {
 
     /* Other */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.timber)
 }

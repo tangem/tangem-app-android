@@ -1,6 +1,6 @@
 package com.tangem.feature.qrscanning.di
 
-import com.tangem.core.navigation.ReduxNavController
+import com.tangem.common.routing.AppRouter
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.qrscanning.navigation.DefaultQrScanningRouter
 import dagger.Module
@@ -15,7 +15,7 @@ internal object QrScanningRouterModule {
 
     @Provides
     @ActivityScoped
-    fun provideQrScanRouter(reduxNavController: ReduxNavController): QrScanningRouter {
-        return DefaultQrScanningRouter(reduxNavController)
+    fun provideQrScanRouter(appRouter: AppRouter): QrScanningRouter {
+        return DefaultQrScanningRouter(appRouter)
     }
 }

@@ -2,7 +2,7 @@ package com.tangem.feature.referral.domain.di
 
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.referral.domain.ReferralInteractor
 import com.tangem.feature.referral.domain.ReferralInteractorImpl
 import com.tangem.feature.referral.domain.ReferralRepository
@@ -23,14 +23,14 @@ class ReferralDomainModule {
         referralRepository: ReferralRepository,
         userWalletManager: UserWalletManager,
         derivePublicKeysUseCase: DerivePublicKeysUseCase,
-        getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+        getUserWalletUseCase: GetUserWalletUseCase,
         addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     ): ReferralInteractor {
         return ReferralInteractorImpl(
             repository = referralRepository,
             userWalletManager = userWalletManager,
             derivePublicKeysUseCase = derivePublicKeysUseCase,
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            getUserWalletUseCase = getUserWalletUseCase,
             addCryptoCurrenciesUseCase = addCryptoCurrenciesUseCase,
         )
     }

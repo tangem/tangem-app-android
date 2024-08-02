@@ -8,9 +8,9 @@ import java.math.BigDecimal
 
 sealed interface LegacyAction : Action {
 
-    data object SendEmailSupport : LegacyAction
+    data class SendEmailSupport(val scanResponse: ScanResponse) : LegacyAction
 
-    data object SendEmailRateCanBeBetter : LegacyAction
+    data class SendEmailRateCanBeBetter(val scanResponse: ScanResponse) : LegacyAction
 
     /**
      * Initiate an onboarding process.
@@ -36,5 +36,6 @@ sealed interface LegacyAction : Action {
         val fee: BigDecimal?,
         val destinationAddress: String?,
         val errorMessage: String,
+        val scanResponse: ScanResponse,
     ) : LegacyAction
 }

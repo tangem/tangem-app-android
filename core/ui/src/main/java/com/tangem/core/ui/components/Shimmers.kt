@@ -17,10 +17,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import com.tangem.core.ui.res.LocalIsInDarkTheme
-import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.*
 import com.valentinilk.shimmer.*
 
 /**
@@ -31,7 +28,7 @@ fun RectangleShimmer(modifier: Modifier = Modifier, radius: Dp = TangemTheme.dim
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(size = radius))
-            .shimmer(TangemShimmer),
+            .shimmer(LocalTangemShimmer.current),
     )
 }
 
@@ -44,11 +41,11 @@ fun CircleShimmer(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(CircleShape)
-            .shimmer(TangemShimmer),
+            .shimmer(LocalTangemShimmer.current),
     )
 }
 
-private val TangemShimmer: Shimmer
+internal val TangemShimmer: Shimmer
     @Composable
     get() = rememberShimmer(
         shimmerBounds = ShimmerBounds.View,

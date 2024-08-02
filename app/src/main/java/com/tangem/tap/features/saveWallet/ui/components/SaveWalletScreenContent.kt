@@ -2,13 +2,7 @@ package com.tangem.tap.features.saveWallet.ui.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -20,16 +14,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.SpacerH32
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerHHalf
-import com.tangem.core.ui.components.SpacerW24
-import com.tangem.core.ui.components.SpacerW8
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.atoms.Hand
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.wallet.R
 
 @Composable
@@ -37,10 +25,7 @@ internal fun SaveWalletScreenContent(showProgress: Boolean, onSaveWalletClick: (
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Header(onCloseClick = onCloseClick)
         SpacerHHalf()
-        Title(
-            modifier = Modifier
-                .widthIn(max = TangemTheme.dimens.size200),
-        )
+        Title(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing22))
         SpacerH32()
         Description(
             modifier = Modifier

@@ -41,11 +41,11 @@
         android:fullBackupContent="false"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
+        android:resizeableActivity="@bool/resizeable_activity"
         android:label="@string/tangem_app_name"
         android:largeHeap="@bool/largeHeap"
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher"
-        android:extractNativeLibs="true"
         android:supportsRtl="true"
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup, android:fullBackupContent, android:label">
@@ -147,5 +147,19 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_tangem_24" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/white" />
+
+        <service
+            android:name="com.tangem.tap.common.pushes.TangemPushNotificationService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

@@ -13,6 +13,7 @@ import com.tangem.LogFormat
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
@@ -32,6 +33,7 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
+import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
@@ -43,17 +45,15 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
-import com.tangem.features.details.DetailsEntryPoint
 import com.tangem.features.details.DetailsFeatureToggles
-import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
+import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
-import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
-import com.tangem.tap.common.feedback.FeedbackManager
+import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.log.TimberFormatStrategy
@@ -109,9 +109,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val walletConnectSessionsRepository: WalletConnectSessionsRepository
         get() = entryPoint.getWalletConnectSessionsRepository()
-
-    private val manageTokensFeatureToggles: ManageTokensFeatureToggles
-        get() = entryPoint.getManageTokensFeatureToggles()
 
     private val scanCardProcessor: ScanCardProcessor
         get() = entryPoint.getScanCardProcessor()
@@ -181,13 +178,25 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase
         get() = entryPoint.getSaveBlockchainErrorUseCase()
-    // endregion
+
+    private val getCardInfoUseCase: GetCardInfoUseCase
+        get() = entryPoint.getGetCardInfoUseCase()
 
     private val detailsFeatureToggles: DetailsFeatureToggles
         get() = entryPoint.getDetailsFeatureToggles()
 
-    private val detailsEntryPoint: DetailsEntryPoint
-        get() = entryPoint.getDetailsEntryPoint()
+    private val urlOpener
+        get() = entryPoint.getUrlOpener()
+
+    private val shareManager
+        get() = entryPoint.getShareManager()
+
+    private val appRouter: AppRouter
+        get() = entryPoint.getAppRouter()
+
+    private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles
+        get() = entryPoint.getPushNotificationsFeatureToggles()
+    // endregion
 
     override fun onCreate() {
         super.onCreate()
@@ -252,7 +261,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     customTokenFeatureToggles = customTokenFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
-                    manageTokensFeatureToggles = manageTokensFeatureToggles,
                     scanCardProcessor = scanCardProcessor,
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
@@ -273,9 +281,14 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
                     saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,
-                    detailsFeatureToggles = detailsFeatureToggles,
-                    detailsEntryPoint = detailsEntryPoint,
+                    getFeedbackEmailUseCase = getFeedbackEmailUseCase,
+                    getCardInfoUseCase = getCardInfoUseCase,
                     assetLoader = assetLoader,
+                    detailsFeatureToggles = detailsFeatureToggles,
+                    urlOpener = urlOpener,
+                    shareManager = shareManager,
+                    appRouter = appRouter,
+                    pushNotificationsFeatureToggles = pushNotificationsFeatureToggles,
                 ),
             ),
         )
@@ -301,7 +314,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private fun initWithConfigDependency(config: Config) {
         initAnalytics(this, config)
-        initFeedbackManager(this, foregroundActivityObserver, store)
+        initFeedbackManager(this, store)
     }
 
     private fun initAnalytics(application: Application, config: Config) {
@@ -322,11 +335,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         // ExceptionHandler.append(blockchainExceptionHandler) TODO: https://tangem.atlassian.net/browse/AND-4173
     }
 
-    private fun initFeedbackManager(
-        context: Context,
-        foregroundActivityObserver: ForegroundActivityObserver,
-        store: Store<AppState>,
-    ) {
+    private fun initFeedbackManager(context: Context, store: Store<AppState>) {
         fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo {
             return AdditionalFeedbackInfo().apply {
                 appVersion = try {
@@ -364,10 +373,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
             logger = if (feedbackManagerFeatureToggles.isLocalLogsEnabled) tangemSdkLogger else tangemLogCollector,
         )
 
-        val feedbackManager = FeedbackManager(
+        val feedbackManager = LegacyFeedbackManager(
             infoHolder = additionalFeedbackInfo,
             logCollector = tangemLogCollector,
-            chatManager = ChatManager(foregroundActivityObserver),
             feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
             getFeedbackEmailUseCase = getFeedbackEmailUseCase,
         )

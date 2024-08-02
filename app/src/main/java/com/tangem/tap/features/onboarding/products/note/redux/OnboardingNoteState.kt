@@ -1,11 +1,10 @@
 package com.tangem.tap.features.onboarding.products.note.redux
 
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
-import com.tangem.tap.store
 import org.rekotlin.StateType
-import kotlin.properties.ReadOnlyProperty
 
 /**
 * [REDACTED_AUTHOR]
@@ -20,14 +19,11 @@ data class OnboardingNoteState(
     val currentStep: OnboardingNoteStep = OnboardingNoteStep.None,
     val steps: List<OnboardingNoteStep> = OnboardingNoteStep.values().toList(),
     val showConfetti: Boolean = false,
+    val scanResponse: ScanResponse? = null,
 ) : StateType {
 
     val progress: Int
         get() = steps.indexOf(currentStep)
-
-    val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { _, _ ->
-        store.state.globalState.exchangeManager.availableForBuy(walletBalance.currency)
-    }
 }
 
 enum class OnboardingNoteStep {
