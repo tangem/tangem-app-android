@@ -1,6 +1,6 @@
 package com.tangem.features.markets.tokenlist.impl.model.converters
 
-import com.tangem.common.ui.charts.state.DefaultPointValuesConverter
+import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.components.marketprice.PriceChangeType
@@ -10,6 +10,7 @@ import com.tangem.domain.markets.TokenMarket
 import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListItemUM
 import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListUM.TrendInterval
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -17,6 +18,8 @@ internal class MarketsTokenItemConverter(
     private val currentTrendInterval: TrendInterval,
     private val appCurrency: AppCurrency,
 ) : Converter<TokenMarket, MarketsListItemUM> {
+
+    private val priceAndTimePointValuesConverter = PriceAndTimePointValuesConverter(needToFormatAxis = false)
 
     override fun convert(value: TokenMarket): MarketsListItemUM {
         return MarketsListItemUM(
@@ -107,10 +110,10 @@ internal class MarketsTokenItemConverter(
         }
 
         return chart?.let { ct ->
-            DefaultPointValuesConverter.convert(
+            priceAndTimePointValuesConverter.convert(
                 MarketChartData.Data(
-                    y = ct.priceY,
-                    x = ct.timeStamps.map { it.toBigDecimal() },
+                    y = ct.priceY.toImmutableList(),
+                    x = ct.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
                 ),
             )
         }
