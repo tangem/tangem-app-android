@@ -61,7 +61,14 @@ object DateTimeFormatters {
      */
     val dateMMMMd: DateTimeFormatter by lazy {
         DateTimeFormatterBuilder()
-            .appendPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), "MMMM d"))
+            .appendPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), "dd MMM"))
+            .toFormatter()
+            .withLocale(Locale.getDefault())
+    }
+
+    val dateYYYY: DateTimeFormatter by lazy {
+        DateTimeFormatterBuilder()
+            .appendPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), "yyyy"))
             .toFormatter()
             .withLocale(Locale.getDefault())
     }
