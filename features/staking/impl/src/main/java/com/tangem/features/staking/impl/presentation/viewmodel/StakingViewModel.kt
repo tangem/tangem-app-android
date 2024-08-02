@@ -180,7 +180,10 @@ internal class StakingViewModel @Inject constructor(
                     passthrough = pendingAction?.passthrough,
                     type = pendingAction?.type,
                 ),
-            ).getOrElse { error("Can't get fee info") }
+            ).getOrElse {
+                stateController.update(AddStakingErrorTransformer(it))
+                return@launch
+            }
 
             stateController.update(
                 SetConfirmationStateAssentTransformer(
