@@ -42,8 +42,9 @@ import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 
-@Suppress("UnusedPrivateMember")
-private const val METRICS_BLOCK_KEY = "MetricsBlock"
+// TODO staking metrics block is temporary disabled
+// private const val METRICS_BLOCK_KEY = "MetricsBlock"
+
 private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
 private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
 
@@ -58,7 +59,7 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
             .fillMaxSize(),
         contentPadding = PaddingValues(TangemTheme.dimens.spacing16),
     ) {
-        // metrics block is temporary disabled
+        // TODO staking metrics block is temporary disabled
         // https://www.figma.com/design/Vs6SkVsFnUPsSCNwlnVf5U?node-id=12484-35755#876661319
         // if (state.yieldBalance == InnerYieldBalanceState.Empty) {
         //     item(key = METRICS_BLOCK_KEY) {

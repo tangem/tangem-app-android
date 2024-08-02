@@ -40,9 +40,3 @@ data class BalanceState(
     val unbondingPeriod: TextReference,
     val pendingActions: ImmutableList<PendingAction>,
 )
-
-enum class BalanceGroupType {
-    ACTIVE,
-    UNSTAKED,
-    UNKNOWN,
-}
