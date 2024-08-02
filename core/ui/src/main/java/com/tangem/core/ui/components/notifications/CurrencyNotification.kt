@@ -15,8 +15,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -54,12 +54,12 @@ fun CurrencyNotification(
 
 @Composable
 private fun MainContent(
-    tokenIconState: TokenIconState,
+    tokenIconState: CurrencyIconState,
     title: TextReference,
     subtitle: CurrencyNotificationConfig.AnnotatedSubtitle,
 ) {
     Row {
-        TokenIcon(
+        CurrencyIcon(
             state = tokenIconState,
             modifier = Modifier.align(alignment = Alignment.CenterVertically),
         )
@@ -107,9 +107,9 @@ private fun Preview_Notification() {
                     },
                     onClick = { _, _ -> },
                 ),
-                tokenIconState = TokenIconState.TokenIcon(
+                tokenIconState = CurrencyIconState.TokenIcon(
                     url = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/usd-coin.png",
-                    networkBadgeIconResId = R.drawable.ic_polygon_22,
+                    topBadgeIconResId = R.drawable.ic_polygon_22,
                     isGrayscale = false,
                     showCustomBadge = false,
                     fallbackTint = Color(1.0f, 1.0f, 1.0f, 1.0f, ColorSpaces.Srgb),
