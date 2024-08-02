@@ -12,19 +12,21 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.*
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineSpec
-import com.patrykandpatrick.vico.compose.common.shader.BrushShader
+import com.patrykandpatrick.vico.compose.common.shader.toDynamicShader
 import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
 import com.patrykandpatrick.vico.core.cartesian.Zoom
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
 import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
+import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.common.shader.ColorShader
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.toImmutableList
 import kotlin.random.Random
 
 @Composable
@@ -44,18 +46,19 @@ fun MarketChartMini(
         MarketChartLook.Type.Falling -> fallingColor
     }
 
-    val lineSpec = rememberLineSpec(
+    val lineSpec = rememberLine(
         shader = ColorShader(lineColor.toArgb()),
         thickness = 1.dp,
-        backgroundShader = BrushShader(
-            brush = Brush.verticalGradient(
-                colors = listOf(lineColor.copy(alpha = 0.22f), Color.Transparent),
-            ),
-        ),
+        backgroundShader = Brush.verticalGradient(
+            colors = listOf(lineColor.copy(alpha = 0.22f), Color.Transparent),
+        ).toDynamicShader(),
     )
 
-    val layer = rememberLineCartesianLayer(listOf(lineSpec))
-    val chart = rememberCartesianChart(layer)
+    val layer = rememberLineCartesianLayer(LineCartesianLayer.LineProvider.series(lineSpec))
+    val chart = rememberCartesianChart(
+        layer,
+        horizontalLayout = HorizontalLayout.fullWidth(),
+    )
 
     CartesianChartHost(
         modifier = modifier,
@@ -63,7 +66,6 @@ fun MarketChartMini(
         model = model,
         zoomState = rememberVicoZoomState(initialZoom = Zoom.Content, zoomEnabled = false),
         scrollState = rememberVicoScrollState(scrollEnabled = false),
-        horizontalLayout = HorizontalLayout.fullWidth(),
     )
 }
 
@@ -74,8 +76,8 @@ fun MarketChartMini(
 @Composable
 private fun Preview() {
     val data = MarketChartRawData(
-        x = List(20) { Random.nextFloat() },
-        y = List(20) { Random.nextFloat() },
+        x = List(20) { Random.nextFloat().toDouble() }.toImmutableList(),
+        y = List(20) { Random.nextFloat().toDouble() }.toImmutableList(),
     )
 
     TangemThemePreview {
@@ -92,8 +94,8 @@ private fun Preview() {
 @Composable
 private fun PreviewColumn() {
     val data = MarketChartRawData(
-        x = List(20) { Random.nextFloat() },
-        y = List(20) { Random.nextFloat() },
+        x = List(20) { Random.nextFloat().toDouble() }.toImmutableList(),
+        y = List(20) { Random.nextFloat().toDouble() }.toImmutableList(),
     )
 
     TangemThemePreview {

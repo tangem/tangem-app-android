@@ -91,9 +91,14 @@ internal class DefaultMarketsTokenRepository(
         ).toBatchFlow()
     }
 
-    override suspend fun getChart(interval: PriceChangeInterval, tokenId: String): TokenChart {
+    override suspend fun getChart(
+        fiatCurrencyCode: String,
+        interval: PriceChangeInterval,
+        tokenId: String,
+    ): TokenChart {
         val response = marketsApi.getCoinChart(
-            currency = tokenId,
+            currency = fiatCurrencyCode,
+            coinId = tokenId,
             interval = interval.toRequestParam(),
         )
 

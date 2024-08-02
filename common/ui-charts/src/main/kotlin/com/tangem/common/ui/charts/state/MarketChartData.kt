@@ -1,6 +1,8 @@
 package com.tangem.common.ui.charts.state
 
 import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
 @Immutable
@@ -30,7 +32,7 @@ sealed interface MarketChartData {
      */
     @Immutable
     data class Data(
-        val x: List<BigDecimal> = listOf(),
-        val y: List<BigDecimal> = listOf(),
+        val x: ImmutableList<BigDecimal> = persistentListOf(),
+        val y: ImmutableList<BigDecimal> = persistentListOf(),
     ) : MarketChartData
 }
