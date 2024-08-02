@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state
 
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.PendingAction
@@ -12,12 +13,13 @@ sealed class InnerYieldBalanceState {
         val rewardsCrypto: String,
         val rewardsFiat: String,
         val isRewardsToClaim: Boolean,
-        val balance: List<BalanceGroupedState>,
+        val balance: ImmutableList<BalanceGroupedState>,
     ) : InnerYieldBalanceState()
 
     data object Empty : InnerYieldBalanceState()
 }
-
+// [REDACTED_TODO_COMMENT]
+@Immutable
 data class BalanceGroupedState(
     val items: ImmutableList<BalanceState>,
     val footer: TextReference?,
@@ -26,6 +28,7 @@ data class BalanceGroupedState(
     val isClickable: Boolean,
 )
 
+@Immutable
 data class BalanceState(
     val validator: Yield.Validator,
     val cryptoValue: String,

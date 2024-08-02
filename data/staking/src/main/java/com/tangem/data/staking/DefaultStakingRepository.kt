@@ -46,6 +46,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -135,7 +136,7 @@ internal class DefaultStakingRepository(
             val yield = getYield(cryptoCurrencyId, symbol)
 
             StakingEntryInfo(
-                interestRate = yield.apy,
+                interestRate = requireNotNull(yield.validators.maxByOrNull { it.apr.orZero() }?.apr),
                 periodInDays = yield.metadata.cooldownPeriod.days,
                 tokenSymbol = yield.token.symbol,
             )
@@ -568,23 +569,24 @@ internal class DefaultStakingRepository(
         const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
         const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
         const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
-        const val BINANCE_INTEGRATION_ID = "binance-bnb-native-staking"
+        const val BINANCE_INTEGRATION_ID = "bsc-bnb-native-staking"
         const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
         const val NEAR_INTEGRATION_ID = "near-near-native-staking"
         const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
 
+        // uncomment items as implementation is ready
         val integrationIdMap = mapOf(
             Blockchain.Solana.toCoinId() to SOLANA_INTEGRATION_ID,
             Blockchain.Cosmos.toCoinId() to COSMOS_INTEGRATION_ID,
-            Blockchain.Polkadot.toCoinId() to POLKADOT_INTEGRATION_ID,
-            Blockchain.Polygon.toCoinId() to ETHEREUM_INTEGRATION_ID,
-            Blockchain.Avalanche.toCoinId() to AVALANCHE_INTEGRATION_ID,
-            Blockchain.Tron.toCoinId() to TRON_INTEGRATION_ID,
-            Blockchain.Cronos.toCoinId() to CRONOS_INTEGRATION_ID,
-            Blockchain.Binance.toCoinId() to BINANCE_INTEGRATION_ID,
-            Blockchain.Kava.toCoinId() to KAVA_INTEGRATION_ID,
-            Blockchain.Near.toCoinId() to NEAR_INTEGRATION_ID,
-            Blockchain.Tezos.toCoinId() to TEZOS_INTEGRATION_ID,
+            // Blockchain.Polkadot.toCoinId() to POLKADOT_INTEGRATION_ID,
+            // Blockchain.Polygon.toCoinId() to ETHEREUM_INTEGRATION_ID,
+            // Blockchain.Avalanche.toCoinId() to AVALANCHE_INTEGRATION_ID,
+            // Blockchain.Tron.toCoinId() to TRON_INTEGRATION_ID,
+            // Blockchain.Cronos.toCoinId() to CRONOS_INTEGRATION_ID,
+            // Blockchain.Binance.toCoinId() to BINANCE_INTEGRATION_ID,
+            // Blockchain.Kava.toCoinId() to KAVA_INTEGRATION_ID,
+            // Blockchain.Near.toCoinId() to NEAR_INTEGRATION_ID,
+            // Blockchain.Tezos.toCoinId() to TEZOS_INTEGRATION_ID,
         )
     }
 }
