@@ -1,15 +1,32 @@
 package com.tangem.features.markets.details.api
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import com.tangem.core.decompose.factory.ComponentFactory
-import com.tangem.core.ui.decompose.ComposableContentComponent
+import androidx.compose.runtime.State
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.features.markets.component.BottomSheetState
 import kotlinx.serialization.Serializable
 
 @Stable
-interface MarketsTokenDetailsComponent : ComposableContentComponent {
+interface MarketsTokenDetailsComponent {
 
     @Serializable
-    data class Params(val token: TokenMarketSerializable)
+    data class Params(
+        val token: TokenMarketSerializable,
+        val appCurrency: AppCurrency,
+    )
 
-    interface Factory : ComponentFactory<Params, MarketsTokenDetailsComponent>
+    @Composable
+    fun BottomSheetContent(
+        bottomSheetState: State<BottomSheetState>,
+        onHeaderSizeChange: (Dp) -> Unit,
+        modifier: Modifier,
+    )
+
+    interface Factory {
+        fun create(context: AppComponentContext, params: Params, onBack: () -> Unit): MarketsTokenDetailsComponent
+    }
 }
