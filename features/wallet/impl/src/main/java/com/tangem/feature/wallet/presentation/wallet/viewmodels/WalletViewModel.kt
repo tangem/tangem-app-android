@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -44,6 +45,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
+@Stable
 @HiltViewModel
 internal class WalletViewModel @Inject constructor(
     private val stateHolder: WalletStateController,
