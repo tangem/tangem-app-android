@@ -8,14 +8,15 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
+import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import java.math.BigDecimal
 
 /**
@@ -23,27 +24,46 @@ import java.math.BigDecimal
  */
 class EstimateFeeUseCase(
     private val walletManagersFacade: WalletManagersFacade,
-    private val dispatcher: CoroutineDispatcherProvider,
+    private val demoConfig: DemoConfig,
 ) {
     suspend operator fun invoke(
         amount: BigDecimal,
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
     ): Flow<Either<GetFeeError, TransactionFee>> {
         return flow {
-            val result = walletManagersFacade.estimateFee(
-                amount = convertCryptoCurrencyToAmount(cryptoCurrency, amount),
-                userWalletId = userWalletId,
-                network = cryptoCurrency.network,
-            )
+            val amountData = convertCryptoCurrencyToAmount(cryptoCurrency, amount)
+            val result = if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
+                demoTransactionSender(userWallet, cryptoCurrency).estimateFee(
+                    amount = amountData,
+                    destination = "",
+                )
+            } else {
+                walletManagersFacade.estimateFee(
+                    amount = amountData,
+                    userWalletId = userWallet.walletId,
+                    network = cryptoCurrency.network,
+                )
+            }
 
             val maybeFee = when (result) {
                 is Result.Success -> result.data.right()
-                is Result.Failure -> GetFeeError.DataError(result.error).left()
+                is Result.Failure -> result.mapToFeeError().left()
                 null -> GetFeeError.UnknownError.left()
             }
             emit(maybeFee)
-        }.flowOn(dispatcher.io)
+        }
+    }
+
+    private suspend fun demoTransactionSender(
+        userWallet: UserWallet,
+        cryptoCurrency: CryptoCurrency,
+    ): DemoTransactionSender {
+        return DemoTransactionSender(
+            walletManagersFacade
+                .getOrCreateWalletManager(userWallet.walletId, cryptoCurrency.network)
+                ?: error("WalletManager is null"),
+        )
     }
 
     private fun convertCryptoCurrencyToAmount(cryptoCurrency: CryptoCurrency, amount: BigDecimal) = Amount(
