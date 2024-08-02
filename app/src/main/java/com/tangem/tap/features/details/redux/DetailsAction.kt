@@ -14,26 +14,6 @@ sealed class DetailsAction : Action {
         val shouldSaveUserWallets: Boolean,
     ) : DetailsAction()
 
-    data object ReCreateTwinsWallet : DetailsAction()
-
-    sealed class ResetToFactory : DetailsAction() {
-        data object Start : ResetToFactory()
-        data object Proceed : ResetToFactory()
-        data class AcceptCondition1(val accepted: Boolean) : ResetToFactory()
-        data class AcceptCondition2(val accepted: Boolean) : ResetToFactory()
-        data object Failure : ResetToFactory()
-        data object Success : ResetToFactory()
-
-        data class ShowDialog(val dialog: CardSettingsState.Dialog) : ResetToFactory()
-
-        data object DismissDialog : ResetToFactory()
-    }
-
-    data object ScanCard : DetailsAction()
-
-    data class PrepareCardSettingsData(val scanResponse: ScanResponse) : DetailsAction()
-
-    data object ResetCardSettingsData : DetailsAction()
     data object ScanAndSaveUserWallet : DetailsAction() {
 
         data object Success : DetailsAction()
@@ -42,26 +22,6 @@ sealed class DetailsAction : Action {
     }
 
     data object DismissError : DetailsAction()
-
-    sealed class AccessCodeRecovery : DetailsAction() {
-        object Open : AccessCodeRecovery()
-        data class SaveChanges(val enabled: Boolean) : AccessCodeRecovery() {
-            data class Success(val enabled: Boolean) : AccessCodeRecovery()
-        }
-
-        data class SelectOption(val enabled: Boolean) : AccessCodeRecovery()
-    }
-
-    sealed class ManageSecurity : DetailsAction() {
-        data object OpenSecurity : ManageSecurity()
-        data class SelectOption(val option: SecurityOption) : ManageSecurity()
-        data object SaveChanges : ManageSecurity() {
-            data object Success : ManageSecurity()
-            data object Failure : ManageSecurity()
-        }
-
-        data object ChangeAccessCode : ManageSecurity()
-    }
 
     sealed class AppSettings : DetailsAction() {
         data class SwitchPrivacySetting(
@@ -96,6 +56,8 @@ sealed class DetailsAction : Action {
         data class ChangeAppCurrency(
             val currency: AppCurrency,
         ) : AppSettings()
+
+        data class Prepare(val state: AppSettingsState) : AppSettings()
     }
 
     data class ChangeAppCurrency(val currency: AppCurrency) : DetailsAction()

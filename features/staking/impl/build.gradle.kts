@@ -47,8 +47,25 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
 
+
+    /** Domain */
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.staking)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.txhistory)
+
     /** Common */
-    implementation(projects.common)
+    implementation(projects.common.ui)
+    implementation(projects.common.routing)
 
     /** Libs */
     implementation(projects.libs.crypto)

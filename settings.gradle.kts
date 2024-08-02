@@ -35,6 +35,7 @@ dependencyResolutionManagement {
         mavenLocal {
             content {
                 includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin")
+                includeGroupAndSubgroups("com.tangem.vico")
                 includeModule("com.tangem", "blstlib")
                 includeModule("com.tangem", "blockchain")
                 includeModule("com.tangem", "wallet-core-proto")
@@ -80,6 +81,17 @@ dependencyResolutionManagement {
                 includeModule("com.tangem", "wallet-core")
             }
         }
+        maven {
+            // setting any repository from tangem project allows maven search all packages in the project
+            url = uri("https://maven.pkg.github.com/tangem/vico")
+            credentials {
+                username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+            content {
+                includeGroupAndSubgroups("com.tangem.vico")
+            }
+        }
         jcenter { // unable to replace with mavenCentral() due to rekotlin
             content {
                 includeModule("org.rekotlin", "rekotlin")
@@ -100,6 +112,8 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
 include(":common")
+include(":common:ui-charts")
+include(":common:routing")
 
 // region Core modules
 include(":core:analytics")
@@ -113,7 +127,12 @@ include(":core:utils")
 include(":core:deep-links")
 include(":core:deep-links:global")
 include(":core:decompose")
+include(":core:pagination")
 // endregion Core modules
+
+// region Common modules
+include(":common:ui")
+// endregion
 
 // region Libs modules
 include(":libs:auth")
@@ -159,6 +178,18 @@ include(":features:staking:impl")
 
 include(":features:details:api")
 include(":features:details:impl")
+
+include(":features:disclaimer:api")
+include(":features:disclaimer:impl")
+
+include(":features:push-notifications:api")
+include(":features:push-notifications:impl")
+
+include(":features:wallet-settings:api")
+include(":features:wallet-settings:impl")
+
+include(":features:markets:api")
+include(":features:markets:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -191,7 +222,10 @@ include(":domain:feedback")
 include(":domain:qr-scanning")
 include(":domain:qr-scanning:models")
 include(":domain:staking")
+include(":domain:staking:models")
 include(":domain:wallet-connect")
+include(":domain:markets")
+include(":domain:markets:models")
 // endregion Domain modules
 
 // region Data modules
@@ -213,4 +247,5 @@ include(":data:feedback")
 include(":data:qr-scanning")
 include(":data:staking")
 include(":data:wallet-connect")
+include(":data:markets")
 // endregion Data modules
