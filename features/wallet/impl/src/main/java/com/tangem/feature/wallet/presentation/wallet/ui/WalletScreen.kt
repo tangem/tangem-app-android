@@ -49,6 +49,8 @@ import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.res.LocalMainBottomSheetColor
+import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags
@@ -70,6 +72,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balances
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import com.tangem.features.markets.component.BottomSheetState
+import com.tangem.features.markets.component.BottomSheetState.*
 import com.tangem.features.markets.component.MarketsEntryComponent
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
@@ -316,15 +319,15 @@ private fun BaseScaffold(
 @Suppress("LongParameterList", "LongMethod")
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
-private fun BaseScaffoldWithMarkets(
+private inline fun BaseScaffoldWithMarkets(
     state: WalletScreenState,
     selectedWallet: WalletState,
     snackbarHostState: SnackbarHostState,
     bottomSheetHeaderHeightProvider: () -> Dp,
-    bottomSheetContent: @Composable () -> Unit,
+    crossinline bottomSheetContent: @Composable () -> Unit,
     alertConfig: WalletAlertState?,
-    onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    content: @Composable () -> Unit,
+    noinline onBottomSheetStateChange: (BottomSheetState) -> Unit,
+    crossinline content: @Composable () -> Unit,
 ) {
     // show the bottom sheet if there is at least one multicurrency wallet
     val showManageTokensBottomSheet = remember(state.wallets) {
@@ -332,25 +335,19 @@ private fun BaseScaffoldWithMarkets(
     }
     val bottomSheetState = rememberSheetStateEnhanced(
         initialValue = if (showManageTokensBottomSheet) SheetValue.PartiallyExpanded else SheetValue.Hidden,
-        confirmValueChange = { sheetValue ->
-            when {
-                sheetValue == SheetValue.Hidden && showManageTokensBottomSheet -> false
-                sheetValue != SheetValue.Hidden && !showManageTokensBottomSheet -> false
-                else -> true
+        confirmValueChange = remember(showManageTokensBottomSheet) {
+            { sheetValue ->
+                when {
+                    sheetValue == SheetValue.Hidden && showManageTokensBottomSheet -> false
+                    sheetValue != SheetValue.Hidden && !showManageTokensBottomSheet -> false
+                    else -> true
+                }
             }
         },
         skipHiddenState = showManageTokensBottomSheet,
     )
 
     val keyboardShown = keyboardAsState()
-
-    BottomSheetStateEffects(
-        bottomSheetState = bottomSheetState,
-        showManageTokensBottomSheet = showManageTokensBottomSheet,
-        alertConfig = alertConfig,
-        keyboardShown = keyboardShown,
-        onBottomSheetStateChange = onBottomSheetStateChange,
-    )
 
     val scaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = bottomSheetState,
@@ -360,77 +357,89 @@ private fun BaseScaffoldWithMarkets(
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.statusBars.getTop(this).toDp() }
     val peekHeight = bottomSheetHeaderHeightProvider() + handComposableComponentHeight + bottomBarHeight
+    val maxHeight = LocalWindowSize.current.height
 
     val coroutineScope = rememberCoroutineScope()
+    val backgroundPrimary = TangemTheme.colors.background.primary
 
-    BottomSheetScaffold(
-        snackbarHost = {
-            WalletSnackbarHost(
-                snackbarHostState = it,
-                event = state.event,
-                modifier = Modifier
-                    .padding(bottom = TangemTheme.dimens.spacing4)
-                    .navigationBarsPadding(),
-            )
-        },
-        containerColor = TangemTheme.colors.background.secondary,
-        sheetContainerColor = TangemTheme.colors.background.primary,
-        scaffoldState = scaffoldState,
-        sheetPeekHeight = peekHeight,
-        sheetDragHandle = {
-            Hand(modifier = Modifier.background(color = TangemTheme.colors.background.primary))
-        },
-        sheetTonalElevation = 8.dp,
-        sheetShadowElevation = 8.dp,
-        sheetContent = {
-            BoxWithConstraints {
-                Box(
+    CompositionLocalProvider(
+        LocalMainBottomSheetColor provides remember { mutableStateOf(backgroundPrimary) },
+    ) {
+        val backgroundColor = LocalMainBottomSheetColor.current
+
+        BottomSheetStateEffects(
+            bottomSheetState = bottomSheetState,
+            showManageTokensBottomSheet = showManageTokensBottomSheet,
+            alertConfig = alertConfig,
+            keyboardShown = keyboardShown,
+            onBottomSheetStateChange = onBottomSheetStateChange,
+        )
+
+        BottomSheetScaffold(
+            snackbarHost = {
+                WalletSnackbarHost(
+                    snackbarHostState = it,
+                    event = state.event,
                     modifier = Modifier
-                        .sizeIn(maxHeight = maxHeight - statusBarHeight)
-                        .align(Alignment.BottomCenter),
+                        .padding(bottom = TangemTheme.dimens.spacing4)
+                        .navigationBarsPadding(),
+                )
+            },
+            containerColor = TangemTheme.colors.background.secondary,
+            sheetContainerColor = backgroundColor.value,
+            scaffoldState = scaffoldState,
+            sheetPeekHeight = peekHeight,
+            sheetDragHandle = {
+                Hand(modifier = Modifier.background(color = backgroundColor.value))
+            },
+            sheetTonalElevation = 8.dp,
+            sheetShadowElevation = 8.dp,
+            sheetContent = {
+                Box(
+                    modifier = Modifier.sizeIn(maxHeight = maxHeight - statusBarHeight - handComposableComponentHeight),
                 ) {
                     bottomSheetContent()
                 }
-            }
 
-            // hide bottom sheet when back pressed
-            BackHandler(
-                keyboardShown.value is Keyboard.Closed &&
-                    bottomSheetState.currentValue == SheetValue.Expanded,
-            ) {
-                coroutineScope.launch { bottomSheetState.partialExpand() }
-            }
-        },
-        content = { _ ->
-            val pullRefreshState = rememberPullRefreshState(
-                refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                onRefresh = {
-                    selectedWallet.pullToRefreshConfig.onRefresh(WalletPullToRefreshConfig.ShowRefreshState(true))
-                },
-            )
-
-            Column {
-                WalletTopBar(config = state.topBarConfig)
-                Box(
-                    modifier = Modifier.pullRefresh(pullRefreshState),
+                // hide bottom sheet when back pressed
+                BackHandler(
+                    keyboardShown.value is Keyboard.Closed &&
+                        bottomSheetState.currentValue == SheetValue.Expanded,
                 ) {
-                    content()
-
-                    WalletPullToRefreshIndicator(
-                        isRefreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                        state = pullRefreshState,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                    )
+                    coroutineScope.launch { bottomSheetState.partialExpand() }
                 }
-            }
+            },
+            content = { _ ->
+                val pullRefreshState = rememberPullRefreshState(
+                    refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
+                    onRefresh = {
+                        selectedWallet.pullToRefreshConfig.onRefresh(WalletPullToRefreshConfig.ShowRefreshState(true))
+                    },
+                )
 
-            BottomSheetScrim(
-                color = BottomSheetDefaults.ScrimColor,
-                visible = bottomSheetState.targetValue == SheetValue.Expanded,
-                onDismissRequest = { coroutineScope.launch { bottomSheetState.partialExpand() } },
-            )
-        },
-    )
+                Column {
+                    WalletTopBar(config = state.topBarConfig)
+                    Box(
+                        modifier = Modifier.pullRefresh(pullRefreshState),
+                    ) {
+                        content()
+
+                        WalletPullToRefreshIndicator(
+                            isRefreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
+                            state = pullRefreshState,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                        )
+                    }
+                }
+
+                BottomSheetScrim(
+                    color = BottomSheetDefaults.ScrimColor,
+                    visible = bottomSheetState.targetValue == SheetValue.Expanded,
+                    onDismissRequest = { coroutineScope.launch { bottomSheetState.partialExpand() } },
+                )
+            },
+        )
+    }
 }
 
 @Composable
@@ -545,9 +554,9 @@ private fun BottomSheetStateEffects(
     LaunchedEffect(isSheetHidden) {
         onBottomSheetStateChange(
             if (isSheetHidden) {
-                BottomSheetState.COLLAPSED
+                COLLAPSED
             } else {
-                BottomSheetState.EXPANDED
+                EXPANDED
             },
         )
     }
