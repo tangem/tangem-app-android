@@ -2,18 +2,14 @@ package com.tangem.core.ui.components.appbar
 
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.*
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
 fun AppBarWithBackButtonAndIcon(
@@ -26,30 +22,22 @@ fun AppBarWithBackButtonAndIcon(
     onIconClick: (() -> Unit)? = null,
     backgroundColor: Color = TangemTheme.colors.background.secondary,
 ) {
-    AppBarWithBackButtonAndIconContent(
-        onBackClick = onBackClick,
+    TangemTopAppBar(
         modifier = modifier,
-        text = text,
+        title = text,
         subtitle = subtitle,
-        backIconRes = backIconRes,
-        backgroundColor = backgroundColor,
-        iconContent = {
-            AnimatedContent(
-                targetState = iconRes,
-                transitionSpec = { (fadeIn() + scaleIn()).togetherWith(fadeOut() + scaleOut()) },
-                label = "Toolbar icon change",
-            ) {
-                if (onIconClick != null && it != null) {
-                    Icon(
-                        painter = painterResource(it),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(size = TangemTheme.dimens.size24)
-                            .clickable { onIconClick() },
-                        tint = TangemTheme.colors.icon.primary1,
-                    )
-                }
-            }
+        containerColor = backgroundColor,
+        startButton = TopAppBarButtonUM(
+            iconRes = backIconRes ?: R.drawable.ic_back_24,
+            onIconClicked = onBackClick,
+        ),
+        endButton = if (iconRes != null && onIconClick != null) {
+            TopAppBarButtonUM(
+                iconRes = iconRes,
+                onIconClicked = onIconClick,
+            )
+        } else {
+            null
         },
     )
 }
