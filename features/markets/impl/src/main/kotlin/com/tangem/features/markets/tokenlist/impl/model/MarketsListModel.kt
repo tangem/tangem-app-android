@@ -77,7 +77,7 @@ internal class MarketsListModel @Inject constructor(
 
     private var activeListManager: MarketsListBatchFlowManager = mainMarketsListManager
 
-    private val _tokenSelected = MutableSharedFlow<TokenMarket>()
+    private val _tokenSelected = MutableSharedFlow<Pair<TokenMarket, AppCurrency>>()
 
     val tokenSelected = _tokenSelected.asSharedFlow()
 
@@ -223,7 +223,7 @@ internal class MarketsListModel @Inject constructor(
     private fun onTokenUIClicked(token: MarketsListItemUM) {
         modelScope.launch {
             activeListManager.getTokenById(token.id)?.let { found ->
-                _tokenSelected.emit(found)
+                _tokenSelected.emit(found to currentAppCurrency.value)
             }
         }
     }
