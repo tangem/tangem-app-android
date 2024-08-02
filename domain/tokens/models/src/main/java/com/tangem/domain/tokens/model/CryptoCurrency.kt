@@ -1,7 +1,6 @@
 package com.tangem.domain.tokens.model
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
 /**
  * Represents a generic cryptocurrency.
@@ -14,8 +13,8 @@ import kotlinx.parcelize.Parcelize
  * @property iconUrl Optional URL of the cryptocurrency icon. `null` if not found.
  * @property isCustom Indicates whether the currency is a custom user-added currency or not.
  */
-@Parcelize
-sealed class CryptoCurrency : Parcelable {
+@Serializable
+sealed class CryptoCurrency {
 
     abstract val id: ID
     abstract val network: Network
@@ -28,6 +27,7 @@ sealed class CryptoCurrency : Parcelable {
     /**
      * Represents a native coin in the blockchain network.
      */
+    @Serializable
     data class Coin(
         override val id: ID,
         override val network: Network,
@@ -48,6 +48,7 @@ sealed class CryptoCurrency : Parcelable {
      *
      * @property contractAddress Address of the contract managing the token.
      */
+    @Serializable
     data class Token(
         override val id: ID,
         override val network: Network,
@@ -75,12 +76,12 @@ sealed class CryptoCurrency : Parcelable {
      * @property rawCurrencyId Represents not unique currency ID from the blockchain network. `null` if
      * its ID of the custom token.
      */
-    @Parcelize
+    @Serializable
     data class ID(
         private val prefix: Prefix,
         private val body: Body,
         private val suffix: Suffix,
-    ) : Parcelable {
+    ) {
 
         val value: String
             get() = buildString {
@@ -121,12 +122,13 @@ sealed class CryptoCurrency : Parcelable {
          *
          * The body can be either a raw network ID or a raw network ID with a network derivation path.
          */
-        @Parcelize
-        sealed class Body : Parcelable {
+        @Serializable
+        sealed class Body {
 
             /** The value of the body. */
             abstract val value: String
 
+            @Serializable
             /** Represents a raw network ID. */
             data class NetworkId(val rawId: String) : Body() {
                 override val value: String get() = rawId
@@ -137,6 +139,7 @@ sealed class CryptoCurrency : Parcelable {
              *
              * Should be used for a cryptocurrencies with custom derivation path.
              * */
+            @Serializable
             data class NetworkIdWithDerivationPath(
                 val rawId: String,
                 val derivationPath: String,
@@ -155,13 +158,14 @@ sealed class CryptoCurrency : Parcelable {
          *
          * The suffix can either be a raw ID or a contract address.
          */
-        @Parcelize
-        sealed class Suffix : Parcelable {
+        @Serializable
+        sealed class Suffix {
 
             /** The value of the suffix, which could be either a raw ID or a contract address. */
             abstract val value: String
 
             /** Represents a raw ID suffix. */
+            @Serializable
             data class RawID(val rawId: String, val contractAddress: String? = null) : Suffix() {
                 override val value: String
                     get() = buildString {
@@ -174,6 +178,7 @@ sealed class CryptoCurrency : Parcelable {
             }
 
             /** Represents a contract address suffix. */
+            @Serializable
             data class ContractAddress(val contractAddress: String) : Suffix() {
                 override val value: String get() = contractAddress
             }
@@ -183,11 +188,11 @@ sealed class CryptoCurrency : Parcelable {
             return "ID(value='$value')"
         }
 
-        private companion object {
+        companion object {
             // should use delimiters that could be used in URL not like path or query delimiters
-            const val PREFIX_DELIMITER = '_'
-            const val SUFFIX_DELIMITER = ';'
-            const val DERIVATION_PATH_DELIMITER = 'd'
+            private const val PREFIX_DELIMITER = '_'
+            private const val SUFFIX_DELIMITER = ';'
+            private const val DERIVATION_PATH_DELIMITER = 'd'
         }
     }
 
