@@ -3,10 +3,10 @@ package com.tangem.tap.features.onboarding
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.CardDTO
@@ -32,42 +32,43 @@ import timber.log.Timber
  */
 object OnboardingHelper {
     suspend fun isOnboardingCase(response: ScanResponse): Boolean {
-        val onboardingManager = store.state.globalState.onboardingState.onboardingManager
+        val onboardingManager =
+            store.state.globalState.onboardingState.onboardingManager ?: OnboardingManager(response)
         val cardId = response.card.cardId
         return when {
             response.cardTypesResolver.isTangemTwins() -> {
                 if (!response.twinsIsTwinned()) {
                     true
                 } else {
-                    onboardingManager?.isActivationInProgress(cardId) ?: false
+                    onboardingManager.isActivationInProgress(cardId) ?: false
                 }
             }
 
             response.cardTypesResolver.isWallet2() || response.cardTypesResolver.isShibaWallet() -> {
                 val emptyWallets = response.card.wallets.isEmpty()
-                val activationInProgress = onboardingManager?.isActivationInProgress(cardId)
+                val activationInProgress = onboardingManager.isActivationInProgress(cardId)
                 val isNoBackup = response.card.backupStatus == CardDTO.BackupStatus.NoBackup &&
                     !DemoHelper.isDemoCard(response)
-                emptyWallets || activationInProgress == true || isNoBackup
+                emptyWallets || activationInProgress || isNoBackup
             }
 
-            response.card.wallets.isNotEmpty() -> onboardingManager?.isActivationInProgress(cardId) ?: false
+            response.card.wallets.isNotEmpty() -> onboardingManager.isActivationInProgress(cardId) ?: false
             else -> true
         }
     }
 
-    fun whereToNavigate(scanResponse: ScanResponse): AppScreen {
+    fun whereToNavigate(scanResponse: ScanResponse): AppRoute {
         return when (val type = scanResponse.productType) {
-            ProductType.Note -> AppScreen.OnboardingNote
+            ProductType.Note -> AppRoute.OnboardingNote
             ProductType.Wallet,
             ProductType.Wallet2,
             ProductType.Ring,
             -> if (scanResponse.card.settings.isBackupAllowed) {
-                AppScreen.OnboardingWallet
+                AppRoute.OnboardingWallet()
             } else {
-                AppScreen.OnboardingOther
+                AppRoute.OnboardingOther
             }
-            ProductType.Twins -> AppScreen.OnboardingTwins
+            ProductType.Twins -> AppRoute.OnboardingTwins
             ProductType.Start2Coin,
             ProductType.Visa,
             -> throw UnsupportedOperationException("Onboarding for ${type.name} cards is not supported")
@@ -111,14 +112,14 @@ object OnboardingHelper {
                             backupCardsIds = backupCardsIds?.toSet(),
                         ),
                     )
-                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                    store.dispatchNavigationAction { push(AppRoute.Wallet) }
                     delay(timeMillis = 1_800)
-                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.SaveWallet))
+                    store.dispatchNavigationAction { push(AppRoute.SaveWallet) }
                 }
                 // If device has no biometry and save wallet screen has been shown, then go through old scenario
                 else -> {
                     proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
-                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                    store.dispatchNavigationAction { push(AppRoute.Wallet) }
                 }
             }
         }

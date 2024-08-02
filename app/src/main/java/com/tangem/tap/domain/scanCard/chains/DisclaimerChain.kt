@@ -2,7 +2,6 @@ package com.tangem.tap.domain.scanCard.chains
 
 import arrow.core.left
 import arrow.core.right
-import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.core.chain.ResultChain
@@ -13,6 +12,7 @@ import com.tangem.tap.features.disclaimer.Disclaimer
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.disclaimer.redux.DisclaimerCallback
+import com.tangem.tap.features.disclaimer.redux.DisclaimerSource
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.rekotlin.Store
 import kotlin.coroutines.resume
@@ -50,7 +50,7 @@ internal class DisclaimerChain(
         return suspendCancellableCoroutine { continuation ->
             store.dispatchOnMain(
                 DisclaimerAction.Show(
-                    fromScreen = AppScreen.Home,
+                    from = DisclaimerSource.Home,
                     callback = DisclaimerCallback(
                         onAccept = {
                             if (continuation.isActive) {

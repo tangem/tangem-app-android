@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.Wallet
 
 data class PendingTransaction(
-    val transactionData: TransactionData,
+    val transactionData: TransactionData.Uncompiled,
     val type: PendingTransactionType,
 ) {
     val address: String? = when (type) {
@@ -21,7 +21,7 @@ data class PendingTransaction(
 
 enum class PendingTransactionType { Incoming, Outgoing, Unknown }
 
-fun TransactionData.toPendingTransaction(walletAddress: String): PendingTransaction? {
+fun TransactionData.Uncompiled.toPendingTransaction(walletAddress: String): PendingTransaction? {
     if (this.status == TransactionStatus.Confirmed) return null
 
     val type: PendingTransactionType = when {
@@ -32,7 +32,7 @@ fun TransactionData.toPendingTransaction(walletAddress: String): PendingTransact
     return PendingTransaction(this, type)
 }
 
-fun List<TransactionData>.toPendingTransactions(walletAddress: String): List<PendingTransaction> {
+fun List<TransactionData.Uncompiled>.toPendingTransactions(walletAddress: String): List<PendingTransaction> {
     return this.mapNotNull { it.toPendingTransaction(walletAddress) }
 }
 

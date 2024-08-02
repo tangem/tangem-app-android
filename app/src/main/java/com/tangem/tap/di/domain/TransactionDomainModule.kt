@@ -66,6 +66,23 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideCreateTransactionExtrasUseCase(
+        transactionRepository: TransactionRepository,
+    ): CreateTransactionDataExtrasUseCase {
+        return CreateTransactionDataExtrasUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEstimateFeeUseCase(walletManagersFacade: WalletManagersFacade): EstimateFeeUseCase {
+        return EstimateFeeUseCase(
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig(),
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideIsFeeApproximateUseCase(feeRepository: FeeRepository): IsFeeApproximateUseCase {
         return IsFeeApproximateUseCase(feeRepository)
     }

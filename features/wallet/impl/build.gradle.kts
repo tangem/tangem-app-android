@@ -52,9 +52,10 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(projects.common)
+    implementation(projects.common.routing)
     implementation(projects.core.deepLinks)
     implementation(projects.core.deepLinks.global)
+    implementation(projects.core.decompose)
 
     implementation(projects.libs.crypto)
 
@@ -77,6 +78,7 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
+    implementation(projects.domain.staking)
 
     //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
     implementation(projects.features.onboarding)
@@ -88,4 +90,6 @@ dependencies {
     implementation(projects.features.tester.api)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.details.api)
+    implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.markets.api)
 }

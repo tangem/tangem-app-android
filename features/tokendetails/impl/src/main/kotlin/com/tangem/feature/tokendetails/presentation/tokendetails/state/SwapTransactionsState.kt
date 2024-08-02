@@ -1,7 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state
 
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
@@ -23,11 +23,11 @@ internal data class SwapTransactionsState(
     val toCryptoCurrency: CryptoCurrency,
     val toCryptoAmount: String,
     val toFiatAmount: String,
-    val toCurrencyIcon: TokenIconState,
+    val toCurrencyIcon: CurrencyIconState,
     val fromCryptoCurrency: CryptoCurrency,
     val fromCryptoAmount: String,
     val fromFiatAmount: String,
-    val fromCurrencyIcon: TokenIconState,
+    val fromCurrencyIcon: CurrencyIconState,
     val showProviderLink: Boolean,
     val isRefundTerminalStatus: Boolean = true,
     val onClick: () -> Unit,
