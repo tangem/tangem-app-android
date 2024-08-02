@@ -8,6 +8,7 @@ import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.utils.converter.Converter
+import java.math.BigDecimal
 
 internal class ExpressDataConverter : Converter<ExchangeDataResponseWithTxDetails, SwapDataModel> {
 
@@ -24,19 +25,30 @@ internal class ExpressDataConverter : Converter<ExchangeDataResponseWithTxDetail
         dataResponse: ExchangeDataResponse,
     ): ExpressTransactionModel {
         return if (transactionDto.txType == TxType.SWAP) {
+            val otherNativeFeeWei = transactionDto.otherNativeFee?.let {
+                if (it == "0") {
+                    BigDecimal.ZERO
+                } else {
+                    requireNotNull(it.toBigDecimalOrNull()) { "wrong amount format, use only digits" }
+                }
+            }
             ExpressTransactionModel.DEX(
                 fromAmount = createFromAmountWithOffset(dataResponse.fromAmount, dataResponse.fromDecimals),
                 toAmount = createFromAmountWithOffset(dataResponse.toAmount, dataResponse.toDecimals),
+                txValue = transactionDto.txValue,
                 txId = dataResponse.txId,
                 txTo = transactionDto.txTo,
                 txFrom = requireNotNull(transactionDto.txFrom),
                 txData = requireNotNull(transactionDto.txData),
                 txExtraId = transactionDto.txExtraId,
+                otherNativeFeeWei = otherNativeFeeWei,
+                gas = transactionDto.gas?.toBigIntegerOrNull() ?: error("gas is empty"),
             )
         } else {
             ExpressTransactionModel.CEX(
                 fromAmount = createFromAmountWithOffset(dataResponse.fromAmount, dataResponse.fromDecimals),
                 toAmount = createFromAmountWithOffset(dataResponse.toAmount, dataResponse.toDecimals),
+                txValue = transactionDto.txValue,
                 txId = dataResponse.txId,
                 txTo = transactionDto.txTo,
                 externalTxId = requireNotNull(transactionDto.externalTxId),

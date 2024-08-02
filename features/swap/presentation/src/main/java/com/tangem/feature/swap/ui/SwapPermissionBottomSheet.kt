@@ -68,6 +68,7 @@ private fun SwapPermissionBottomSheetContent(content: GivePermissionBottomSheetC
         Text(
             text = stringResource(
                 id = R.string.swapping_permission_subheader,
+                data.providerName,
                 data.currency,
             ),
             color = TangemTheme.colors.text.secondary,
@@ -303,6 +304,7 @@ private fun Preview_AgreementBottomSheet() {
 
 private val previewData = GivePermissionBottomSheetConfig(
     data = SwapPermissionState.ReadyForRequest(
+        providerName = "1inch",
         currency = "DAI",
         amount = "∞",
         walletAddress = "",
