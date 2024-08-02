@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Repository for everything related to the tokens of user wallet
  * */
+@Suppress("TooManyFunctions")
 interface CurrenciesRepository {
 
     /**
@@ -210,4 +211,13 @@ interface CurrenciesRepository {
      * Creates token [cryptoCurrency] based on current token and [network] it`s will be added
      */
     fun createTokenCurrency(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token
+
+    /**
+     * Creates token [cryptoCurrency] based on [contractAddress] and [networkId] it`s will be added
+     */
+    suspend fun createTokenCurrency(
+        userWalletId: UserWalletId,
+        contractAddress: String,
+        networkId: String,
+    ): CryptoCurrency.Token
 }
