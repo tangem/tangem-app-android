@@ -583,7 +583,7 @@ internal class DefaultStakingRepository(
             // Blockchain.Avalanche.toCoinId() to AVALANCHE_INTEGRATION_ID,
             // Blockchain.Tron.toCoinId() to TRON_INTEGRATION_ID,
             // Blockchain.Cronos.toCoinId() to CRONOS_INTEGRATION_ID,
-            // Blockchain.Binance.toCoinId() to BINANCE_INTEGRATION_ID,
+            // Blockchain.BSC.toCoinId() to BINANCE_INTEGRATION_ID,
             // Blockchain.Kava.toCoinId() to KAVA_INTEGRATION_ID,
             // Blockchain.Near.toCoinId() to NEAR_INTEGRATION_ID,
             // Blockchain.Tezos.toCoinId() to TEZOS_INTEGRATION_ID,
