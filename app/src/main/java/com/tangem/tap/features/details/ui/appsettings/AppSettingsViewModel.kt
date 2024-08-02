@@ -1,16 +1,20 @@
 package com.tangem.tap.features.details.ui.appsettings
 
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.*
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.model.AppThemeMode
+import com.tangem.domain.apptheme.repository.AppThemeModeRepository
+import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
+import com.tangem.domain.settings.CanUseBiometryUseCase
+import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.features.details.redux.AppSetting
@@ -26,14 +30,22 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import org.rekotlin.StoreSubscriber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class AppSettingsViewModel @Inject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val walletsRepository: WalletsRepository,
+    private val canUseBiometryUseCase: CanUseBiometryUseCase,
+    private val balanceHidingRepository: BalanceHidingRepository,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val appThemeModeRepository: AppThemeModeRepository,
+    private val settingsRepository: SettingsRepository,
     private val appSettingsItemsAnalyticsSender: AppSettingsItemsAnalyticsSender,
+    private val detailsFeatureToggles: DetailsFeatureToggles,
 ) : ViewModel(),
     StoreSubscriber<DetailsState>,
     DefaultLifecycleObserver {
@@ -50,6 +62,9 @@ internal class AppSettingsViewModel @Inject constructor(
 
     init {
         bootstrapAppCurrencyUpdates()
+        if (detailsFeatureToggles.isRedesignEnabled) {
+            bootstrapBiometricsUpdates()
+        }
 
         subscribeToStoreChanges()
         sendItemsAnalytics()
@@ -128,7 +143,7 @@ internal class AppSettingsViewModel @Inject constructor(
     }
 
     private fun showAppCurrencySelector() {
-        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.AppCurrencySelector))
+        store.dispatchNavigationAction { push(AppRoute.AppCurrencySelector) }
     }
 
     private fun showThemeModeSelector(selectedMode: AppThemeMode) {
@@ -212,6 +227,19 @@ internal class AppSettingsViewModel @Inject constructor(
             }
             .launchIn(scope)
             .saveIn(appCurrencyUpdatesJobHolder)
+    }
+
+    private fun bootstrapBiometricsUpdates() = viewModelScope.launch {
+        val state = AppSettingsState(
+            saveWallets = walletsRepository.shouldSaveUserWalletsSync(),
+            saveAccessCodes = settingsRepository.shouldSaveAccessCodes(),
+            isBiometricsAvailable = canUseBiometryUseCase(),
+            isHidingEnabled = balanceHidingRepository.getBalanceHidingSettings().isHidingEnabledInSettings,
+            selectedAppCurrency = appCurrencyRepository.getSelectedAppCurrency().firstOrNull() ?: AppCurrency.Default,
+            selectedThemeMode = appThemeModeRepository.getAppThemeMode().firstOrNull() ?: AppThemeMode.DEFAULT,
+        )
+
+        store.dispatchWithMain(DetailsAction.AppSettings.Prepare(state))
     }
 
     private fun subscribeToStoreChanges() {
