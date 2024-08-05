@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -17,17 +18,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.components.list.roundedListWithDividersItems
+import com.tangem.core.ui.components.text.HorizontalLinearGradientText
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -45,6 +50,7 @@ import kotlinx.collections.immutable.ImmutableList
 // TODO staking metrics block is temporary disabled
 // private const val METRICS_BLOCK_KEY = "MetricsBlock"
 
+private const val BANNER_BLOCK_KEY = "BannerBlock"
 private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
 private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
 
@@ -61,14 +67,22 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
     ) {
         // TODO staking metrics block is temporary disabled
         // https://www.figma.com/design/Vs6SkVsFnUPsSCNwlnVf5U?node-id=12484-35755#876661319
-        // if (state.yieldBalance == InnerYieldBalanceState.Empty) {
-        //     item(key = METRICS_BLOCK_KEY) {
-        //         Column(modifier = Modifier.animateItemPlacement()) {
-        //             MetricsBlock(state)
-        //             SpacerH12()
-        //         }
-        //     }
-        // }
+        if (state.yieldBalance == InnerYieldBalanceState.Empty) {
+            item(key = BANNER_BLOCK_KEY) {
+                Column(
+                    modifier = Modifier.animateItemPlacement(),
+                ) {
+                    BannerBlock(onClick = clickIntents::onInitialInfoBannerClick)
+                    SpacerH12()
+                }
+            }
+            // item(key = METRICS_BLOCK_KEY) {
+            //     Column(modifier = Modifier.animateItemPlacement()) {
+            //         MetricsBlock(state)
+            //         SpacerH12()
+            //     }
+            // }
+        }
 
         this.roundedListWithDividersItems(
             rows = state.infoItems,
@@ -160,6 +174,31 @@ private fun MetricsBlock(state: StakingStates.InitialInfoState.Data) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun BannerBlock(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier.clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = rememberRipple(),
+            onClick = onClick,
+        ),
+    ) {
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(R.drawable.img_staking_banner),
+            contentDescription = null,
+        )
+        HorizontalLinearGradientText(
+            text = "What is Staking?",
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(16.dp),
+            gradientColors = textGradientColors,
+            textStyle = TangemTheme.typography.h2,
+        )
     }
 }
 
@@ -268,6 +307,11 @@ private fun ActiveStakingBlock(groups: ImmutableList<BalanceGroupedState>, onCli
         }
     }
 }
+
+private val textGradientColors = listOf(
+    TangemColorPalette.White,
+    Color(0xff8fb4df),
+)
 
 // region preview
 

@@ -200,6 +200,10 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onPrevClick()
     }
 
+    override fun onInitialInfoBannerClick() {
+        // TODO staking
+    }
+
     override fun onInfoClick(infoType: InfoType) {
         stateController.update(
             ShowInfoBottomSheetStateTransformer(infoType) {
