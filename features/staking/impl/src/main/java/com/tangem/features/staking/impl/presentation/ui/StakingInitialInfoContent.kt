@@ -192,7 +192,7 @@ private fun BannerBlock(onClick: () -> Unit) {
             contentDescription = null,
         )
         HorizontalLinearGradientText(
-            text = "What is Staking?",
+            text = stringResource(R.string.staking_details_banner_text),
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(16.dp),

@@ -9,7 +9,6 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.R
@@ -22,7 +21,6 @@ import com.tangem.features.staking.impl.presentation.state.converters.YieldBalan
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.Provider
-import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
@@ -89,15 +87,24 @@ internal class SetInitialDataStateTransformer(
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance
 
         return listOfNotNull(
+            createAnnualPercentageRateItem(),
             createAvailableItem(cryptoCurrencyStatus),
-            createApyItem(),
-            createOnStakeItem(cryptoCurrencyStatus, yieldBalance),
+            // createOnStakeItem(cryptoCurrencyStatus, yieldBalance),
             createUnbondingPeriodItem(),
             createMinimumRequirementItem(cryptoCurrencyStatus),
             createRewardClaimingItem(),
             createWarmupPeriodItem(),
             createRewardScheduleItem(),
         ).toPersistentList()
+    }
+
+    private fun createAnnualPercentageRateItem(): RoundedListWithDividersItemData {
+        return RoundedListWithDividersItemData(
+            id = R.string.staking_details_annual_percentage_rate,
+            startText = TextReference.Res(R.string.staking_details_annual_percentage_rate),
+            endText = getAprRange(),
+            iconClick = { clickIntents.onInfoClick(InfoType.ANNUAL_PERCENTAGE_RATE) },
+        )
     }
 
     private fun createAvailableItem(cryptoCurrencyStatus: CryptoCurrencyStatus): RoundedListWithDividersItemData {
@@ -107,32 +114,6 @@ internal class SetInitialDataStateTransformer(
             endText = TextReference.Str(
                 value = BigDecimalFormatter.formatCryptoAmount(
                     cryptoAmount = cryptoCurrencyStatus.value.amount,
-                    cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-                    decimals = cryptoCurrencyStatus.currency.decimals,
-                ),
-            ),
-        )
-    }
-
-    private fun createApyItem(): RoundedListWithDividersItemData {
-        return RoundedListWithDividersItemData(
-            id = R.string.staking_details_apy,
-            startText = TextReference.Res(R.string.staking_details_apy),
-            endText = getAprRange(),
-            iconClick = { clickIntents.onInfoClick(InfoType.APY) },
-        )
-    }
-
-    private fun createOnStakeItem(
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-        yieldBalance: YieldBalance?,
-    ): RoundedListWithDividersItemData {
-        return RoundedListWithDividersItemData(
-            id = R.string.staking_details_on_stake,
-            startText = TextReference.Res(R.string.staking_details_on_stake),
-            endText = TextReference.Str(
-                value = BigDecimalFormatter.formatCryptoAmount(
-                    cryptoAmount = (yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero(),
                     cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
                     decimals = cryptoCurrencyStatus.currency.decimals,
                 ),
@@ -181,7 +162,10 @@ internal class SetInitialDataStateTransformer(
         )
     }
 
-    private fun createWarmupPeriodItem(): RoundedListWithDividersItemData {
+    private fun createWarmupPeriodItem(): RoundedListWithDividersItemData? {
+        val warmupPeriod = yield.metadata.warmupPeriod.days
+        if (warmupPeriod == 0) return null
+
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_warmup_period,
             startText = TextReference.Res(R.string.staking_details_warmup_period),

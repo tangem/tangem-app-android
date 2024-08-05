@@ -659,9 +659,8 @@
   <string name="staking_active">Активний</string>
   <string name="staking_active_footer">Щоб вивести активи зі стейкінгу, натисніть тут.</string>
   <string name="staking_amount_requirement_error">Сума для стейкінгу має бути не менше %s</string>
+  <string name="staking_details_annual_percentage_rate_info">Річний відсоток, який ви можете отримати, беручи участь у стейкінгу.</string>
   <string name="staking_details_apr">APR</string>
-  <string name="staking_details_apy">APY</string>
-  <string name="staking_details_apy_info">Річний відсоток, який ви можете отримати, беручи участь у стейкінгу.</string>
   <string name="staking_details_available">Доступно</string>
   <string name="staking_details_average_reward_rate">Середня ставка винагороди</string>
   <string name="staking_details_estimated_profit">~ прибуток за %s</string>

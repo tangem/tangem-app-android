@@ -636,9 +636,9 @@
   <string name="staking_active_footer">資産のステーキングを解除するには、ここをクリックしてください。</string>
   <string name="staking_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
   <string name="staking_claim_unstaked">ステーキング解除分を請求する</string>
+  <string name="staking_details_annual_percentage_rate">APY</string>
+  <string name="staking_details_annual_percentage_rate_info">ステーキングに参加することで得られる年間収益率。</string>
   <string name="staking_details_apr">APR</string>
-  <string name="staking_details_apy">APY</string>
-  <string name="staking_details_apy_info">ステーキングに参加することで得られる年間収益率。</string>
   <string name="staking_details_available">利用可能</string>
   <string name="staking_details_average_reward_rate">平均報酬率</string>
   <string name="staking_details_estimated_profit">%s 推定利益</string>

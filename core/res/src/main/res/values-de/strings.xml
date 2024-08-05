@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
-  <string name="add_custom_token_title">Benutzerdefiniertes Token hinzufügen</string>
+  <string name="add_custom_token_title">Benutzerdef. Token hinzuf.</string>
   <string name="add_tokens_title">Token verwalten</string>
   <string name="address_qr_code_message_format">Sende nur %1$s ( %2$s ) vom %3$s -Netzwerk an diese Adresse. Die Verwendung anderer Token und Netzwerke kann zum Verlust von Geldern führen.</string>
   <string name="alert_button_how_to_scan">So scannt man</string>
@@ -46,7 +46,7 @@
   </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Deaktiviere diese Option, wenn du nicht möchtest, dass diese Karte zum Zurücksetzen von Zugangscodes auf anderen Karten in dieser Wallets verwendet wird. Bitte beachte, dass du dann auch den Zugangscode auf dieser Karte nicht zurücksetzen kannst.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Ermöglicht die Verwendung dieser Karte zum Zurücksetzen des Zugangscodes auf anderen Karten in dieser Brieftasche</string>
-  <string name="card_settings_access_code_recovery_title">Wiederherstellung des Zugangscodes</string>
+  <string name="card_settings_access_code_recovery_title">Zugangscodes wiederherstellen</string>
   <string name="card_settings_action_sheet_reset">Zurücksetzen</string>
   <string name="card_settings_action_sheet_title">Möchtest du das wirklich tun?</string>
   <string name="card_settings_change_access_code">Zugangscode ändern</string>
@@ -88,7 +88,7 @@
   <string name="common_copy">Kopieren</string>
   <string name="common_copy_address">Adresse kopieren</string>
   <string name="common_create">Erstellen</string>
-  <string name="common_custom">Benutzerdefiniert</string>
+  <string name="common_custom">Benutzerdef.</string>
   <plurals name="common_days">
     <item quantity="one">%d tag</item>
     <item quantity="other">%d tage</item>
@@ -499,7 +499,7 @@
   <string name="organize_tokens_group">Gruppe erstellen</string>
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
-  <string name="organize_tokens_ungroup">Gruppierung aufheben</string>
+  <string name="organize_tokens_ungroup">Gruppierung aufh.</string>
   <string name="qr_scanner_camera_denied_gallery_button">Wählen aus der Galerie aus</string>
   <string name="qr_scanner_camera_denied_settings_button">Einstellungen</string>
   <string name="qr_scanner_camera_denied_text">Du hast keinen Zugriff auf deine Kamera gewährt</string>
@@ -648,9 +648,9 @@
   <string name="staking_active_footer">Um deine Kryptos zu unstaken, klick hier.</string>
   <string name="staking_amount_requirement_error">Die Anzahl der zu stakenden Krypros muss mindesten %s betragen</string>
   <string name="staking_claim_unstaked">nicht gestakte beanspruche</string>
+  <string name="staking_details_annual_percentage_rate">Jährliche prozentuale Rendite</string>
+  <string name="staking_details_annual_percentage_rate_info">Die jährliche prozentuale Rendite, die du durch die Teilnahme am Staking erzielen kannst.</string>
   <string name="staking_details_apr">Effektiver Jahreszins</string>
-  <string name="staking_details_apy">Jährliche prozentuale Rendite</string>
-  <string name="staking_details_apy_info">Die jährliche prozentuale Rendite, die du durch die Teilnahme am Staking erzielen kannst.</string>
   <string name="staking_details_available">Verfügbar</string>
   <string name="staking_details_average_reward_rate">Durchschnittliche Belohnungsquote</string>
   <string name="staking_details_estimated_profit">%s geschätzter Profit</string>
@@ -674,6 +674,7 @@
   <string name="staking_native">Natives Staking</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">Mit Staking kannst du %1s verdienen. Deine Staking-Belohnungen kommen alle ~%2s Tage.</string>
   <string name="staking_notification_earn_rewards_title">Verdiene Staking-Belohnungen</string>
+  <string name="staking_notification_unstake_text">Die Belohnungen werden sofort nach dem unstaken gestoppt. Der unstakingprozess dauert %s.</string>
   <string name="staking_rebond">Erneut binden</string>
   <string name="staking_restake">Erneut staken</string>
   <string name="staking_restake_rewards">Belohnungen erneut staken</string>
@@ -683,7 +684,7 @@
   <string name="staking_stake_locked">Stake gesperrt</string>
   <string name="staking_stake_more">Mehr staken</string>
   <string name="staking_unlocked_locked">gelocktes unlocken</string>
-  <string name="staking_unstaked">unstaken</string>
+  <string name="staking_unstaked">Unstaken</string>
   <string name="staking_unstaked_footer">Prüfe, was nicht eingesetzt wurde, um dein Vermögen zu beanspruchen</string>
   <string name="staking_unstaking">Staking beenden</string>
   <string name="staking_validator">Validator/ Prüfer</string>
@@ -822,7 +823,7 @@
   <string name="warning_backup_errors_title">Aktivierungsfehler</string>
   <string name="warning_beacon_chain_retirement_content">Laut den Entwicklern des BNB-Netzes wird die Unterstützung für den BEP-2-Standard im Juni 2024 enden. Um den Verlust von Vermögenswerten mit diesem Standard zu vermeiden, konvertiere bitte in den BEP-20 Standard. Nutze gerne unseren Swap-Service, um sie auf das BNB Smart Chain Netzwerk zu übertragen.</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain wird abgeschaltet</string>
-  <string name="warning_button_could_be_better">Könnte besser sein</string>
+  <string name="warning_button_could_be_better">verbesserungswürdig</string>
   <string name="warning_button_like_it">Gefällt mir</string>
   <string name="warning_button_ok">OK, habe ich verstanden!</string>
   <string name="warning_button_really_cool">Echt toll!</string>
