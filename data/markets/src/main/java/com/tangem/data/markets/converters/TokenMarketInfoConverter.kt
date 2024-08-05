@@ -37,6 +37,7 @@ class TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, TokenMarketI
         )
     }
 
+    @JvmName("convertNetwork")
     private fun List<TokenMarketInfoResponse.Network>.convert(): List<TokenMarketInfo.Network> {
         return map {
             TokenMarketInfo.Network(
@@ -48,6 +49,7 @@ class TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, TokenMarketI
         }
     }
 
+    @JvmName("convertInsight")
     private fun List<TokenMarketInfoResponse.Insight>.convert(): List<TokenMarketInfo.Insight> {
         return map {
             TokenMarketInfo.Insight(
@@ -87,6 +89,7 @@ class TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, TokenMarketI
         )
     }
 
+    @JvmName("convertLink")
     private fun List<TokenMarketInfoResponse.Link>.convert(): List<TokenMarketInfo.Link> {
         return map {
             TokenMarketInfo.Link(
