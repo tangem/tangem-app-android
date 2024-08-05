@@ -97,7 +97,6 @@ private fun Preview_Grid() {
             },
             content = {
                 GridItems(
-                    itemPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing4),
                     items = persistentListOf(
                         stringReference("Fist item"),
                         stringReference("Second item"),
@@ -105,7 +104,6 @@ private fun Preview_Grid() {
                     itemContent = {
                         PreviewItem(text = it)
                     },
-                    horizontalArragement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
                 )
             },
         )
