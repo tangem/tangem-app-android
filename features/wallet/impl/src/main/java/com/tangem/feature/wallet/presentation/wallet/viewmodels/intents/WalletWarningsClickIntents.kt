@@ -14,7 +14,7 @@ import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
 import com.tangem.domain.settings.ShouldShowTravalaPromoWalletUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.models.analytics.TokenSwapPromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.models.UserWallet
