@@ -4,10 +4,13 @@
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
   <string name="address_qr_code_message_format">Send only %1$s (%2$s) from %3$s network to this address. Using other tokens and networks may result in loss of funds.</string>
+  <string name="alert_app_feedback_sent_message">Thank you for your feedback</string>
+  <string name="alert_app_feedback_sent_title">Sent successfully</string>
   <string name="alert_button_how_to_scan">How to scan</string>
   <string name="alert_button_request_support">Request support</string>
   <string name="alert_button_try_again">Try again</string>
   <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
+  <string name="alert_failed_to_send_email_title">Failed to send the email</string>
   <string name="alert_failed_to_send_transaction_message">Reason: %s</string>
   <string name="alert_failed_to_send_transaction_title">Can\'t send a transaction</string>
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">The selected does not support the %1$s network</string>
@@ -35,6 +38,8 @@
   <string name="app_settings_theme_selection_system_short">System</string>
   <string name="app_settings_theme_selector_title">Theme</string>
   <string name="app_settings_title">App settings</string>
+  <string name="app_settings_warning_subtitle">Go to settings to enable biometric authentication in the Tangem app</string>
+  <string name="app_settings_warning_title">Enable biometric authentication</string>
   <string name="balance_hidden_description">To hide or show your balances, simply flip your device screen down, or switch it off in Settings</string>
   <string name="balance_hidden_do_not_show_button">Don\'t show again</string>
   <string name="balance_hidden_got_it_button">Got it</string>
@@ -43,6 +48,7 @@
   <string name="biometric_lockout_warning_description">Please try again in 30 seconds or scan the card</string>
   <string name="biometric_lockout_warning_title">Too many attempts</string>
   <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
+  <string name="biometry_touch_id_reason">Touch ID is used to save your cards in the app</string>
   <string name="button_start_backup_process">Start backup process</string>
   <string name="buy_token_description">With your bank card or bank account</string>
   <plurals name="card_label_card_count">
@@ -51,6 +57,7 @@
   </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Disable this option if you don\'t want this card to be used to reset access codes on other cards in this wallet. Please note that this will also prevent you from resetting the access code on this card.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Allows you to use this card to reset access code on other cards in this wallet</string>
+  <string name="card_settings_access_code_recovery_footer">Disable the ability to reset the access code on this card or other cards in this wallet</string>
   <string name="card_settings_access_code_recovery_title">Access code recovery</string>
   <string name="card_settings_action_sheet_reset">Reset</string>
   <string name="card_settings_action_sheet_title">Are you sure you want to do this?</string>
@@ -79,13 +86,16 @@
   <string name="common_approval">Approval</string>
   <string name="common_approve">Approve</string>
   <string name="common_attention">Attention</string>
+  <string name="common_back">Back</string>
   <string name="common_balance">Balance: %s</string>
   <string name="common_balance_title">Balance</string>
   <string name="common_biometric_authentication">biometric authentication</string>
   <string name="common_biometrics">biometrics</string>
   <string name="common_buy">Buy</string>
   <string name="common_buy_currency">Go to %1$s</string>
+  <string name="common_camera_alert_button_settings">Settings</string>
   <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
+  <string name="common_camera_denied_alert_title">Camera access denied</string>
   <string name="common_cancel">Cancel</string>
   <string name="common_claim_rewards">Claim rewards</string>
   <string name="common_close">Close</string>
@@ -119,6 +129,7 @@
   <string name="common_go_to_token">Go to token</string>
   <string name="common_import">Import</string>
   <string name="common_later">Later</string>
+  <string name="common_learn_and_earn">Learn &amp; Earn</string>
   <string name="common_locked">Locked</string>
   <string name="common_main_network">Main network</string>
   <string name="common_network_fee_title">Network fee</string>
@@ -131,6 +142,7 @@
   <string name="common_origin_card">Primary Card</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Paste</string>
+  <string name="common_push">Push</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
@@ -172,7 +184,9 @@
   <string name="currency_subtitle_expanded">Available networks</string>
   <string name="custom_token_add_token">Add token</string>
   <string name="custom_token_contract_address_input_title">Contract address</string>
+  <string name="custom_token_creation_error_empty_fields">Please fill in all the fields</string>
   <string name="custom_token_creation_error_invalid_contract_address">Contract address is invalid</string>
+  <string name="custom_token_creation_error_invalid_derivation_path">Derivation path is invalid</string>
   <string name="custom_token_creation_error_network_not_selected">Please select the network</string>
   <string name="custom_token_creation_error_wrong_decimals">Decimal must be a valid integer, up to %li</string>
   <string name="custom_token_custom_derivation">Custom derivation</string>
@@ -202,6 +216,7 @@
   <string name="details_manage_security_access_code_description">You will have to submit the correct access code before scanning the card</string>
   <string name="details_manage_security_long_tap">Long Tap</string>
   <string name="details_manage_security_long_tap_description">This mechanism protects against proximity attacks on a card. It will enforce a delay between reception and execution of a command. </string>
+  <string name="details_manage_security_long_tap_shorter">Long Tap</string>
   <string name="details_manage_security_passcode">Passcode</string>
   <string name="details_manage_security_passcode_description">Before executing any command entailing a change of the card state, you will have to enter the passcode.</string>
   <string name="details_referral_title">Referral program</string>
@@ -210,6 +225,7 @@
   <string name="details_row_title_cid">Card ID</string>
   <string name="details_row_title_contact_to_support">Contact support</string>
   <string name="details_row_title_create_backup">Link More Cards</string>
+  <string name="details_row_title_create_backup_footer">You can synchronize up to three cards into one wallet. It can only be done once.</string>
   <string name="details_row_title_currency">App Currency</string>
   <string name="details_row_title_flip_to_hide">Flip-to-Hide Balances</string>
   <string name="details_row_title_issuer">Issuer</string>
@@ -224,6 +240,7 @@
   <string name="exchange_tokens_empty_tokens">You haven\'t added any tokens yet. Add tokens via Market to swap</string>
   <string name="exchange_tokens_unavailable_tokens_header">Cannot be swapped for %s</string>
   <string name="express_by_provider">Provided by</string>
+  <string name="express_by_provider_placeholder">Provided by %s</string>
   <string name="express_cex_status_button_title">Status</string>
   <string name="express_choose_providers_subtitle">Tangem offers token swaps via 3rd-party providers according to each provider\'s terms</string>
   <string name="express_choose_providers_title">Choose provider</string>
@@ -287,6 +304,7 @@
   <string name="feedback_subject_support">Feedback</string>
   <string name="feedback_subject_support_tangem">Tangem feedback</string>
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
+  <string name="feedback_subject_tx_push_failed">Can\'t push a transaction</string>
   <string name="give_permission_current_transaction">Current transaction</string>
   <string name="give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="give_permission_policy_type_footer">Specify the approve limit for the selected token</string>
@@ -301,8 +319,10 @@
   <string name="initial_message_change_access_code_body">To change the access code tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_create_wallet_body">To create the wallet tap the card as shown above and do not remove until the end of the operation</string>
+  <string name="initial_message_purge_wallet_body">To reset to factory settings tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_reset_backup_card_header">Tap the card #%s of the wallet</string>
   <string name="initial_message_scan_header">Tap to scan</string>
+  <string name="initial_message_sign_body">To sign tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_sign_header">Tap to sign</string>
   <string name="initial_message_tap_header">Tap the card</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card to enter</string>
@@ -314,6 +334,8 @@
   <string name="koinos_mana_exceeds_koin_balance_title">Mana limit</string>
   <string name="koinos_mana_level_description">The Koinos network requires Mana for network fees. Your have %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Mana level</string>
+  <string name="mail_error_no_accounts_body">Please, set up an account to send email</string>
+  <string name="mail_error_no_accounts_title">No Mail accounts</string>
   <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens</string>
   <string name="main_manage_tokens">Manage tokens</string>
   <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
@@ -335,6 +357,11 @@
   <plurals name="manage_tokens_number_of_wallets_android">
     <item quantity="one">%1$d of %2$d wallet</item>
     <item quantity="other">%1$d of %2$d wallets</item>
+  </plurals>
+  <string name="manage_tokens_number_of_wallets_ios">%d of %#@total_wallets@</string>
+  <plurals name="manage_tokens_number_of_wallets_iostotal_wallets">
+    <item quantity="one">%d wallet</item>
+    <item quantity="other">%d wallets</item>
   </plurals>
   <string name="manage_tokens_remove">Remove</string>
   <string name="manage_tokens_search_placeholder">e.g. BTC I trust, hodl I must</string>
@@ -427,6 +454,7 @@
   <string name="onboarding_activation_error_title">Activation error</string>
   <string name="onboarding_add_tokens">Add tokens</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card. When backup process is finished you can\'t add more backup cards. If you have one more card, add it to backup. Do you like to continue the backup process?</string>
+  <string name="onboarding_alert_message_old_device">iPhone 7/7+ is not able to create a backup for Tangem Wallet due to some system limitations. Please use another phone to perform this operation. All other functions work stably.</string>
   <string name="onboarding_backup_exit_warning">The backup process is partly complete. You can\'t exit it now.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">The passphrase is an advanced security feature that crypto wallets use. It adds an extra word or phrase of your own choosing to your already existing recovery phrase to unlock a brand-new set of addresses.</string>
   <string name="onboarding_button_add_backup_card">Add a backup card</string>
@@ -451,6 +479,7 @@
   <string name="onboarding_exit_alert_title">Do you want to exit the activation process?</string>
   <string name="onboarding_getting_started">Getting started</string>
   <string name="onboarding_linking_error_card_with_wallets">Another wallet has already been created on the card you\'re trying to add. If you have funds in this wallet, please withdraw it and then reset this card and add it as a backup.</string>
+  <string name="onboarding_navbar_save_wallet">Save your wallet</string>
   <string name="onboarding_navbar_title_creating_backup">Creating a backup</string>
   <string name="onboarding_seed_button_read_more">Read more about seed phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -470,6 +499,7 @@
   <string name="onboarding_seed_mnemonic_invalid_checksum">Invalid seed phrase. Please check the word order.</string>
   <string name="onboarding_seed_mnemonic_wrong_words">Invalid seed phrase. Please check your spelling.</string>
   <string name="onboarding_seed_phrase_intro_legacy">Legacy</string>
+  <string name="onboarding_seed_screenshot_alert">We do not recommend storing the seed phrase as a screenshot due to the high risk of loss or hacking</string>
   <string name="onboarding_seed_user_validation_message">To check whether you’ve written down your seed phrase correctly, please enter the 2nd, 7th and 11th words</string>
   <string name="onboarding_seed_user_validation_title">So, let’s check</string>
   <string name="onboarding_subtitle_no_backup_cards">To start the backup process add up to two backup cards.</string>
@@ -505,6 +535,9 @@
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
   <string name="organize_tokens_ungroup">Ungroup</string>
+  <string name="push_additional_fee">Additional fee</string>
+  <string name="push_previous_fee">Previous fee</string>
+  <string name="push_tx_address_hint">Previous transaction total including fee</string>
   <string name="qr_scanner_camera_denied_gallery_button">Select from the gallery</string>
   <string name="qr_scanner_camera_denied_settings_button">Settings</string>
   <string name="qr_scanner_camera_denied_text">You have not given access to your camera</string>
@@ -515,6 +548,7 @@
   <string name="referral_button_participate">Participate</string>
   <string name="referral_error_failed_to_load_info">Failed to load the information about the referral program. Please try again later.</string>
   <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Error code: %s. Please try again later.</string>
+  <string name="referral_error_failed_to_participate">Your participation request could not be processed. Error code: %s. Please try again later. If the problem persists — feel free to contact our support.</string>
   <string name="referral_expected_awards">Upcoming payments</string>
   <string name="referral_friends_bought_title">Your friends bought</string>
   <string name="referral_less">Less</string>
@@ -550,11 +584,15 @@
   <string name="russian_bank_card_warning_title">Russian bank cards are not currently accepted</string>
   <string name="save_user_wallet_agreement_access_description">Log into the app and check your balance without scanning the card</string>
   <string name="save_user_wallet_agreement_access_title">Access the app</string>
+  <string name="save_user_wallet_agreement_allow">Allow to use %s</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Allow to use biometrics</string>
+  <string name="save_user_wallet_agreement_code_description">%s will be requested instead of the access code for interactions with your wallet</string>
   <string name="save_user_wallet_agreement_code_description_biometrics">Biometrics will be requested instead of the access code for interactions with your wallet</string>
   <string name="save_user_wallet_agreement_code_title">Access code</string>
+  <string name="save_user_wallet_agreement_dont_allow">Don\'t allow</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_description">It looks like you have biometric authentication disabled, it is necessary to save wallets</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_title">Enable biometric authorization</string>
+  <string name="save_user_wallet_agreement_header">Would you like to use %s?</string>
   <string name="save_user_wallet_agreement_header_biometrics">Would you like to use biometrics?</string>
   <string name="save_user_wallet_agreement_notice">Note that making a transaction with your funds will still require your card</string>
   <string name="scan_card_settings_button">Scan Card</string>
@@ -590,6 +628,7 @@
   <string name="send_fee_picker_priority">Priority</string>
   <string name="send_fee_unreachable_error_text">Check your network connection</string>
   <string name="send_fee_unreachable_error_title">Network fee info unreachable</string>
+  <string name="send_from_wallet">From **%s**</string>
   <string name="send_from_wallet_android">From</string>
   <string name="send_gas_limit">Gas limit</string>
   <string name="send_gas_limit_footer">This is the maximum amount of gas that will be spent to complete a transaction or contract. A gas limit prevents unexpected or unlimited charges when executing a transaction.</string>
@@ -653,6 +692,7 @@
   <string name="staking_active">Active</string>
   <string name="staking_active_footer">To unstake your assets, click here.</string>
   <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
+  <string name="staking_claim_unstaked">Claim unstaked</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_apy_info">The annual percentage return you can earn from participating in staking.</string>
@@ -675,15 +715,26 @@
   <string name="staking_details_warmup_period">Warmup period</string>
   <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
   <string name="staking_initial_info_title">Stake %s</string>
+  <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">Staking allow you to earn %1s. Your staking rewards arrive every ~%2s days.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
+  <string name="staking_rebond">Rebond</string>
+  <string name="staking_restake">Restake</string>
+  <string name="staking_restake_rewards">Restake rewards</string>
+  <string name="staking_revoke">Revoke</string>
+  <string name="staking_revote">Revote</string>
   <string name="staking_rewards">Rewards</string>
+  <string name="staking_stake_locked">Stake locked</string>
   <string name="staking_stake_more">Stake more</string>
+  <string name="staking_unlocked_locked">Unlock locked</string>
   <string name="staking_unstaked">Unstaked</string>
   <string name="staking_unstaked_footer">Check unstaked to claim your assets</string>
   <string name="staking_unstaking">Unstaking</string>
   <string name="staking_validator">Validator</string>
+  <string name="staking_vote">Vote</string>
+  <string name="staking_vote_locked">Vote locked</string>
+  <string name="staking_withdraw">Withdraw</string>
   <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
   <string name="story_awe_title">Revolutionary Hardware Wallet</string>
   <string name="story_backup_description">Up to 3 physical cards to one wallet</string>
@@ -692,6 +743,8 @@
   <string name="story_currencies_title">Thousands of Currencies</string>
   <string name="story_finish_description">Use it on the go, anywhere, anytime. No wires or batteries. Just tap the card to your phone when you need your crypto.</string>
   <string name="story_finish_title">The Wallet for Everyone</string>
+  <string name="story_learn_description">Take three lessons, get a discount on your Tangem Wallet, and receive 1INCH tokens to your wallet</string>
+  <string name="story_learn_learn">Learn</string>
   <string name="story_meet_title">Meet Tangem</string>
   <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
   <string name="story_web3_title">Web 3.0 Compatible</string>
@@ -707,6 +760,7 @@
   <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
   <string name="swapping_insufficient_funds">Insufficient funds</string>
   <string name="swapping_permission_header">Give Permission</string>
+  <string name="swapping_permit_and_swap">Permit and Swap</string>
   <string name="swapping_success_view_title">In progress</string>
   <string name="swapping_swap_action">Swap</string>
   <string name="swapping_to_title">You receive</string>
@@ -772,6 +826,13 @@
   <string name="user_wallet_list_rename_popup_title">Rename Wallet</string>
   <string name="user_wallet_list_unlock_all">Unlock all</string>
   <string name="user_wallet_list_unlock_all_with">Unlock all with %s</string>
+  <string name="voice_over_close_network_fee_settings">Close network fee settings</string>
+  <string name="voice_over_nothing_to_paste">Nothing to paste from clipboard</string>
+  <string name="voice_over_open_card_details">Open card details</string>
+  <string name="voice_over_open_network_fee_settings">Open network fee settings</string>
+  <string name="voice_over_open_new_wallet_connect_session">Scan QR code to open new WalletConnect session</string>
+  <string name="voice_over_paste_from_clipboard">Paste address from clipboard</string>
+  <string name="voice_over_scan_qr_with_address">Scan, QR, code with address</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain is unreachable. Try later</string>
   <string name="wallet_balance_missing_derivation">Scan the card</string>
   <string name="wallet_connect_alert_sign_message">Requesting to sign a message.\n\n%s</string>
@@ -850,6 +911,8 @@
   <string name="warning_hedera_missing_token_association_message_brief">This token must be associated with your Hedera account before you can receive it</string>
   <string name="warning_hedera_missing_token_association_title">Associate your token</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">Not enough %s. Top up your Hedera account to associate this token</string>
+  <string name="warning_long_transaction_message">iPhone 7/7+ cannot sign transactions on this network. To complete this operation, please use a different phone.</string>
+  <string name="warning_long_transaction_title">Transaction signing unavailable</string>
   <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
   <string name="warning_low_signatures_title">Low signature count</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Tokens on different networks can have different addresses. Double-check that your address matches the network when you transfer funds.</string>
@@ -865,6 +928,10 @@
   <string name="warning_no_backup_title">Missing backup</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">This card has been previously used for transactions. If received from an untrusted source, consider withdrawing all funds. If it\'s your card, no action is required.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Card has already signed transactions</string>
+  <string name="warning_old_card_message">Funds in Tangem cards issued before September 2019 cannot be retrieved on iPhones due to iOS restrictions. Please use an Android phone for retrieval. Cards issued after September 2019 work correctly on both OS.</string>
+  <string name="warning_old_card_title">iOS restriction for older cards</string>
+  <string name="warning_old_device_old_card_message">Some iPhone 7/7+ models may have NFC issues during certain operations.</string>
+  <string name="warning_old_device_old_card_title">Device incompatibility detected</string>
   <string name="warning_rate_app_message">Your review keeps us motivated to make Tangem Wallet even better</string>
   <string name="warning_rate_app_title">Enjoying Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">You must associate your token before receiving tokens</string>
@@ -876,6 +943,10 @@
   <string name="warning_solana_rent_fee_message">Solana network charges a rent of %1$s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %2$s to use it for free.</string>
   <string name="warning_some_networks_unreachable_message">Some networks currently are unreachable. Please try again later.</string>
   <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
+  <string name="warning_system_deprecation_title">System update required</string>
+  <string name="warning_system_deprecation_with_date_message">Support for your version of the operating system will end on %s. To receive future app updates you must update it to the latest version.</string>
+  <string name="warning_system_update_message">Tangem recommends installing the latest iOS update for stable and safe operation</string>
+  <string name="warning_system_update_title">System update available</string>
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>

@@ -233,7 +233,7 @@ internal class MarketsListBatchFlowManager(
                     BatchAction.UpdateBatches(
                         keys = batchesKeysToLoad,
                         updateRequest = TokenMarketUpdateRequest.UpdateChart(
-                            interval = interval.toRequestInterval(),
+                            interval = interval.toBatchRequestInterval(),
                             currency = currentAppCurrency().code,
                         ),
                         async = true,
@@ -300,14 +300,6 @@ internal class MarketsListBatchFlowManager(
             TrendInterval.H24 -> TokenMarketListConfig.Interval.H24
             TrendInterval.D7 -> TokenMarketListConfig.Interval.WEEK
             TrendInterval.M1 -> TokenMarketListConfig.Interval.MONTH
-        }
-    }
-
-    private fun TrendInterval.toRequestInterval(): PriceChangeInterval {
-        return when (this) {
-            TrendInterval.H24 -> PriceChangeInterval.H24
-            TrendInterval.D7 -> PriceChangeInterval.WEEK
-            TrendInterval.M1 -> PriceChangeInterval.MONTH
         }
     }
 
