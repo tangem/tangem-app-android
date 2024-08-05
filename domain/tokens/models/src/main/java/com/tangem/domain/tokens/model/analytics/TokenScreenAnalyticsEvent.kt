@@ -1,4 +1,4 @@
-package com.tangem.domain.tokens.models.analytics
+package com.tangem.domain.tokens.model.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 
