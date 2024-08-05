@@ -7,9 +7,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.components.rows.model.ChainRowUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.tokens.model.Network
 import com.tangem.features.managetokens.entity.CurrencyItemUM
 import com.tangem.features.managetokens.entity.CurrencyNetworkUM
 import com.tangem.features.managetokens.entity.ManageTokensUM
@@ -109,14 +109,11 @@ internal class ManageTokensModel @Inject constructor(
 
     private fun getCurrencyNetworks(currencyIndex: Int) = List(size = 3) { networkIndex ->
         CurrencyNetworkUM(
-            id = networkIndex.toString(),
-            model = BlockchainRowUM(
-                name = "NETWORK$networkIndex",
-                type = "N$networkIndex",
-                iconResId = R.drawable.ic_eth_16,
-                isMainNetwork = networkIndex == 0,
-                isSelected = false,
-            ),
+            id = Network.ID(networkIndex.toString()),
+            name = "NETWORK$networkIndex",
+            type = "N$networkIndex",
+            iconResId = R.drawable.ic_eth_16,
+            isMainNetwork = networkIndex == 0,
             isSelected = false,
             onSelectedStateChange = { toggleNetwork(currencyIndex, networkIndex, isSelected = it) },
         )
@@ -151,14 +148,11 @@ internal class ManageTokensModel @Inject constructor(
                             it.fastForEachIndexed { index, network ->
                                 if (index == networkIndex) {
                                     it[index] = network.copy(
-                                        model = network.model.copy(
-                                            iconResId = if (isSelected) {
-                                                R.drawable.img_eth_22
-                                            } else {
-                                                R.drawable.ic_eth_16
-                                            },
-                                            isSelected = isSelected,
-                                        ),
+                                        iconResId = if (isSelected) {
+                                            R.drawable.img_eth_22
+                                        } else {
+                                            R.drawable.ic_eth_16
+                                        },
                                         isSelected = isSelected,
                                     )
                                 }
