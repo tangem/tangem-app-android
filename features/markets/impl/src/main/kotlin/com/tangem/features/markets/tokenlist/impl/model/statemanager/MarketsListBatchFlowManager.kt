@@ -47,8 +47,8 @@ internal class MarketsListBatchFlowManager(
         batchFlowType = batchFlowType,
     )
 
-    private val resultBathes = MutableStateFlow(ResultBathes())
-    private val uiBatches = resultBathes.map { it.uiBathes }
+    private val resultBatches = MutableStateFlow(ResultBatches())
+    private val uiBatches = resultBatches.map { it.uiBatches }
 
     val uiItems: StateFlow<ImmutableList<MarketsListItemUM>>
         get() = uiBatches
@@ -141,14 +141,14 @@ internal class MarketsListBatchFlowManager(
 
     private suspend fun updateState(newList: List<Batch<Int, List<TokenMarket>>>, forceUpdate: Boolean = false) =
         withContext(dispatchers.default) {
-            resultBathes.update { resultBatches ->
-                val items = resultBatches.uiBathes
+            resultBatches.update { resultBatches ->
+                val items = resultBatches.uiBatches
                 val previousList = resultBatches.processedItems
 
                 val converter = MarketsTokenItemConverter(currentTrendInterval(), appCurrency = currentAppCurrency())
 
                 if (newList.isEmpty()) {
-                    return@update ResultBathes(processedItems = emptyList())
+                    return@update ResultBatches(processedItems = emptyList())
                 }
 
                 val isInitialLoading =
@@ -198,8 +198,8 @@ internal class MarketsListBatchFlowManager(
 
                 currentCoroutineContext().ensureActive()
 
-                ResultBathes(
-                    uiBathes = outItems,
+                ResultBatches(
+                    uiBatches = outItems,
                     processedItems = newList,
                 )
             }
@@ -207,7 +207,7 @@ internal class MarketsListBatchFlowManager(
 
     fun reload(searchText: String? = null) {
         modelScope.launch {
-            resultBathes.value = ResultBathes()
+            resultBatches.value = ResultBatches()
             actionsFlow.emit(
                 BatchAction.Reload(
                     requestParams = TokenMarketListConfig(
@@ -296,7 +296,7 @@ internal class MarketsListBatchFlowManager(
     }
 
     fun clearStateAndStopAllActions() {
-        resultBathes.value = ResultBathes()
+        resultBatches.value = ResultBatches()
         modelScope.launch {
             actionsFlow.emit(BatchAction.Reset)
         }
@@ -333,8 +333,8 @@ internal class MarketsListBatchFlowManager(
         }
     }
 
-    private data class ResultBathes(
-        val uiBathes: List<Batch<Int, List<MarketsListItemUM>>> = emptyList(),
+    private data class ResultBatches(
+        val uiBatches: List<Batch<Int, List<MarketsListItemUM>>> = emptyList(),
         val processedItems: List<Batch<Int, List<TokenMarket>>>? = null,
     )
 }

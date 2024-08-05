@@ -81,7 +81,6 @@ internal class MarketsListUMStateManager(
     val state = MutableStateFlow(state())
     val isInSearchStateFlow = state.map { it.searchBar.isActive }.distinctUntilChanged()
     val searchQueryFlow = state.map { it.searchBar.query }.distinctUntilChanged()
-    private val searchUiItemsCache = MutableStateFlow<ImmutableList<MarketsListItemUM>>(persistentListOf())
 
     fun onUiItemsChanged(
         isInErrorState: Boolean,
@@ -109,52 +108,64 @@ internal class MarketsListUMStateManager(
     }
 
     private fun MarketsListUM.updateItems(newItems: ImmutableList<MarketsListItemUM>): MarketsListUM {
+        val currentState = this
         val isNextPageInSearch = isInSearchState && (this.list as? ListUM.Content)?.showUnder100kTokens == true
+        var searchUiItemsCached: ImmutableList<MarketsListItemUM> = persistentListOf()
 
-        val items = if (isInSearchState && isNextPageInSearch.not()) {
-            searchUiItemsCache.value = newItems
-            val filtered = newItems.filter { item -> item.isUnder100kMarketCap.not() }.toImmutableList()
+        val items = when {
+            isInSearchState && isNextPageInSearch.not() -> {
+                searchUiItemsCached = newItems
+                val filtered = newItems.filter { item -> item.isUnder100kMarketCap.not() }.toImmutableList()
 
-            if (filtered.size == newItems.size) {
-                return copy(
-                    list = ListUM.Content(
-                        items = newItems,
-                        loadMore = onLoadMoreUiItems,
-                        visibleIdsChanged = visibleItemsChanged,
-                        showUnder100kTokens = true,
-                        onShowTokensUnder100kClicked = {},
-                        triggerScrollReset = consumedEvent(),
-                        onItemClick = onTokenClick,
-                    ),
-                )
-            } else {
-                filtered
+                if (filtered.size == newItems.size) {
+                    return currentState.copy(list = generalContentState(newItems))
+                } else {
+                    filtered
+                }
             }
-        } else {
-            searchUiItemsCache.value = persistentListOf()
-            newItems
+            else -> {
+                searchUiItemsCached = persistentListOf()
+                newItems
+            }
         }
 
-        return copy(
+        return currentState.copy(
             list = ListUM.Content(
                 items = items,
                 loadMore = onLoadMoreUiItems,
                 visibleIdsChanged = visibleItemsChanged,
                 showUnder100kTokens = isInSearchState.not() || isNextPageInSearch,
                 onShowTokensUnder100kClicked = {
-                    state.update {
-                        it.copy(
-                            list = (it.list as ListUM.Content).copy(
-                                items = searchUiItemsCache.value,
-                                showUnder100kTokens = true,
-                            ),
-                        )
+                    if (searchUiItemsCached.isNotEmpty()) {
+                        state.update { s ->
+                            if (s.list is ListUM.Content) {
+                                s.copy(
+                                    list = s.list.copy(
+                                        items = searchUiItemsCached,
+                                        showUnder100kTokens = true,
+                                    ),
+                                )
+                            } else {
+                                s
+                            }
+                        }
                     }
-                    searchUiItemsCache.value = persistentListOf()
                 },
                 triggerScrollReset = consumedEvent(),
                 onItemClick = onTokenClick,
             ),
+        )
+    }
+
+    private fun generalContentState(newItems: ImmutableList<MarketsListItemUM>): ListUM.Content {
+        return ListUM.Content(
+            items = newItems,
+            loadMore = onLoadMoreUiItems,
+            visibleIdsChanged = visibleItemsChanged,
+            showUnder100kTokens = true,
+            onShowTokensUnder100kClicked = {},
+            triggerScrollReset = consumedEvent(),
+            onItemClick = onTokenClick,
         )
     }
 
