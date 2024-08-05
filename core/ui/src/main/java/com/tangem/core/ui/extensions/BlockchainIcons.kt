@@ -3,7 +3,7 @@ package com.tangem.core.ui.extensions
 import androidx.annotation.DrawableRes
 import com.tangem.core.ui.R
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 @DrawableRes
 fun getActiveIconRes(blockchainId: String): Int {
     return when (blockchainId) {
@@ -71,11 +71,12 @@ fun getActiveIconRes(blockchainId: String): Int {
         "koinos", "koinos/test" -> R.drawable.img_koinos_22
         "bittensor" -> R.drawable.img_bittensor_22
         "blast", "blast/test" -> R.drawable.img_blast_22
+        "filecoin" -> R.drawable.img_filecoin_22
         else -> R.drawable.ic_alert_24
     }
 }
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 @DrawableRes
 fun getActiveIconResByNetworkId(networkId: String): Int {
     return when (networkId) {
@@ -143,6 +144,7 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "koinos", "koinos/test" -> R.drawable.img_koinos_22
         "bittensor" -> R.drawable.img_bittensor_22
         "blast", "blast/test" -> R.drawable.img_blast_22
+        "filecoin" -> R.drawable.img_filecoin_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -212,11 +214,12 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "koinos", "koinos/test" -> R.drawable.img_koinos_22
         "bittensor" -> R.drawable.img_bittensor_22
         "blast", "blast/test" -> R.drawable.img_blast_22
+        "filecoin" -> R.drawable.img_filecoin_22
         else -> R.drawable.ic_alert_24
     }
 }
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 @DrawableRes
 fun getGreyedOutIconRes(blockchainId: String): Int {
     return when (blockchainId) {
@@ -284,11 +287,12 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "koinos", "koinos/test" -> R.drawable.ic_koinos_22
         "bittensor" -> R.drawable.ic_bittensor_22
         "blast", "blast/test" -> R.drawable.ic_blast_22
+        "filecoin" -> R.drawable.ic_filecoin_22
         else -> R.drawable.ic_alert_24
     }
 }
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 @DrawableRes
 fun getGreyedOutIconResByNetworkId(networkId: String): Int {
     return when (networkId) {
@@ -356,6 +360,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "koinos", "koinos/test" -> R.drawable.ic_koinos_22
         "bittensor" -> R.drawable.ic_bittensor_22
         "blast", "blast/test" -> R.drawable.ic_blast_22
+        "filecoin" -> R.drawable.ic_filecoin_22
         else -> R.drawable.ic_alert_24
     }
 }

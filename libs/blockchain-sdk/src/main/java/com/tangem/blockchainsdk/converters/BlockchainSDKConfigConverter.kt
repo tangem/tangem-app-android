@@ -86,6 +86,7 @@ internal object BlockchainSDKConfigConverter : Converter<ConfigValueModel, Block
                 polygonZkEvm = GetBlockAccessToken(jsonRpc = accessTokens.polygonZkevm?.jsonRPC),
                 base = GetBlockAccessToken(jsonRpc = accessTokens.base?.jsonRPC),
                 blast = GetBlockAccessToken(jsonRpc = accessTokens.blast?.jsonRPC),
+                filecoin = GetBlockAccessToken(jsonRpc = accessTokens.filecoin?.jsonRPC),
             )
         }
     }
