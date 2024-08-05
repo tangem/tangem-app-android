@@ -226,6 +226,8 @@ include(":domain:staking:models")
 include(":domain:wallet-connect")
 include(":domain:markets")
 include(":domain:markets:models")
+include(":domain:manage-tokens")
+include(":domain:manage-tokens:models")
 // endregion Domain modules
 
 // region Data modules
