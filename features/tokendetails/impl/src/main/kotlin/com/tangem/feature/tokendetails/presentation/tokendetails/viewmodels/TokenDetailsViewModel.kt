@@ -43,10 +43,10 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
-import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
-import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
-import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
-import com.tangem.domain.tokens.models.analytics.TokenSwapPromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.transaction.usecase.AssociateAssetUseCase
