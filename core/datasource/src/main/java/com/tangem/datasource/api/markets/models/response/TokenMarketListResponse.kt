@@ -14,6 +14,8 @@ data class TokenMarketListResponse(
     val limit: Int,
     @Json(name = "offset")
     val offset: Int,
+    @Json(name = "timestamp")
+    val timestamp: Long? = null,
 ) {
     data class Token(
         @Json(name = "id")
