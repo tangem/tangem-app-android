@@ -57,6 +57,8 @@ fun CircleShimmer(modifier: Modifier = Modifier) {
 /**
  * Shimmer for text
  * Height will be set automatically
+ *
+ * @param textSizeHeight if true, height will be set to font size height.
  */
 @Composable
 fun TextShimmer(
