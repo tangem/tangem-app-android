@@ -76,6 +76,7 @@ data class GetBlockAccessTokens(
     @Json(name = "zksync") val zksync: GetBlockToken?,
     @Json(name = "base") val base: GetBlockToken?,
     @Json(name = "blast") val blast: GetBlockToken?,
+    @Json(name = "filecoin") val filecoin: GetBlockToken?,
 )
 
 @JsonClass(generateAdapter = true)
