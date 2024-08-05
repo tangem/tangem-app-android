@@ -201,7 +201,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onInitialInfoBannerClick() {
-        // TODO staking
+        innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
     }
 
     override fun onInfoClick(infoType: InfoType) {
@@ -400,5 +400,9 @@ internal class StakingViewModel @Inject constructor(
         return value.currentStep == StakingStep.Confirmation &&
             (value.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState ==
             InnerConfirmationStakingState.ASSENT
+    }
+
+    companion object {
+        const val WHAT_IS_STAKING_ARTICLE_URL = "TODO staking"
     }
 }
