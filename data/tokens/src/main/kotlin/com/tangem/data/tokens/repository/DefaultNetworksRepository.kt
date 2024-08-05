@@ -8,8 +8,11 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.NetworkStatusFactory
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.network.NetworksStatusesStore
-import com.tangem.datasource.local.token.UserTokensStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.LceFlow
@@ -33,7 +36,7 @@ internal class DefaultNetworksRepository(
     private val networksStatusesStore: NetworksStatusesStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val userWalletsStore: UserWalletsStore,
-    private val userTokensStore: UserTokensStore,
+    private val appPreferencesStore: AppPreferencesStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : NetworksRepository {
@@ -300,9 +303,14 @@ internal class DefaultNetworksRepository(
         }
 
         return if (userWallet.isMultiCurrency) {
-            val response = requireNotNull(userTokensStore.getSyncOrNull(userWalletId)) {
-                "Unable to find tokens response for user wallet with provided ID: $userWalletId"
-            }
+            val response = requireNotNull(
+                value = appPreferencesStore.getObjectSyncOrNull<UserTokensResponse>(
+                    key = PreferencesKeys.getUserTokensKey(userWalletId.stringValue),
+                ),
+                lazyMessage = {
+                    "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+                },
+            )
 
             responseCurrenciesFactory.createCurrencies(response, userWallet.scanResponse).asSequence()
         } else {
