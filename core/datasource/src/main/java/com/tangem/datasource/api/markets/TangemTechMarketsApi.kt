@@ -16,8 +16,8 @@ interface TangemTechMarketsApi {
         @Query("offset") offset: Int,
         @Query("limit") limit: Int,
         @Query("order") order: String,
-        @Query("general_coins") generalCoins: Boolean,
         @Query("search") search: String?,
+        @Query("timestamp") timestamp: Long?,
     ): ApiResponse<TokenMarketListResponse>
 
     @GET("coins/{coin_id}")

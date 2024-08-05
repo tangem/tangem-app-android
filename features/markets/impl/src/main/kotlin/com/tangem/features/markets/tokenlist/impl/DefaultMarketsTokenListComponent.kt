@@ -1,11 +1,9 @@
 package com.tangem.features.markets.tokenlist.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -40,6 +38,13 @@ class DefaultMarketsTokenListComponent @AssistedInject constructor(
         onHeaderSizeChange: (Dp) -> Unit,
         modifier: Modifier,
     ) {
+        LifecycleStartEffect(Unit) {
+            model.isVisibleOnScreen.value = true
+            onStopOrDispose {
+                model.isVisibleOnScreen.value = false
+            }
+        }
+
         val state by model.state.collectAsStateWithLifecycle()
         val bsState by bottomSheetState
 

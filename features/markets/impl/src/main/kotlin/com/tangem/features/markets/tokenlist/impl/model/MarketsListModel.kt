@@ -82,6 +82,7 @@ internal class MarketsListModel @Inject constructor(
     val tokenSelected = _tokenSelected.asSharedFlow()
 
     val containerBottomSheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
+    val isVisibleOnScreen = MutableStateFlow(false)
 
     val state = marketsListUMStateManager.state.asStateFlow()
 
@@ -201,6 +202,7 @@ internal class MarketsListModel @Inject constructor(
             marketsListUMStateManager.searchQueryFlow
                 .filter { it.isNotEmpty() }
                 .debounce(timeoutMillis = SEARCH_QUERY_DEBOUNCE_MILLIS)
+                .distinctUntilChanged()
                 .filter { activeListManager == searchMarketsListManager }
                 .collectLatest {
                     searchMarketsListManager.reload(searchText = it)
@@ -233,7 +235,10 @@ internal class MarketsListModel @Inject constructor(
                 delay(timeMillis)
                 // Update quotes only when the container bottom sheet is in the expanded state
                 containerBottomSheetState.first { it == BottomSheetState.EXPANDED }
-                activeListManager.updateQuotes() // TODO update a batch that is currently on screen
+                // and is visible on the screen
+                isVisibleOnScreen.first { it }
+
+                activeListManager.updateQuotes()
             }
         }.saveIn(updateQuotesJob)
     }

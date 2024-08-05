@@ -33,7 +33,7 @@ internal class MarketsTokenItemConverter(
             trendPercentText = value.getTrendPercent(),
             trendType = value.getTrendType(),
             chardData = value.getChartData(),
-            showUnder100kMarketCap = value.isUnder100kMarketCap(),
+            isUnder100kMarketCap = value.isUnder100kMarketCap(),
         )
     }
 
@@ -147,7 +147,7 @@ internal class MarketsTokenItemConverter(
     }
 
     private fun TokenMarket.isUnder100kMarketCap(): Boolean {
-        return tokenQuotes.currentPrice.compareTo(decimal100k) == -1
+        return marketCap?.let { it < decimal100k } ?: true
     }
 
     private companion object {
