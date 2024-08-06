@@ -21,6 +21,10 @@ dependencies {
     implementation(projects.common.routing)
     implementation(projects.core.featuretoggles)
 
+    /* Project - Domain */
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.tokens.models)
+
     /* AndroidX */
     implementation(deps.androidx.activity.compose)
     implementation(deps.lifecycle.compose)
@@ -29,6 +33,7 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.foundation)
+    implementation(deps.compose.material) // For button colors
     implementation(deps.compose.material3)
     implementation(deps.compose.shimmer)
 

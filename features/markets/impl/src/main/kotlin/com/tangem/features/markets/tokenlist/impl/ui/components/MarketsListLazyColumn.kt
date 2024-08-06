@@ -25,6 +25,7 @@ import com.tangem.features.markets.tokenlist.impl.ui.entity.ListUM
 import kotlinx.coroutines.launch
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
+private const val TOKEN_LAZY_LIST_ID_SEPARATOR = "***"
 
 @Composable
 @Suppress("LongMethod")
@@ -89,7 +90,7 @@ internal fun MarketsListLazyColumn(
                 is ListUM.Content -> {
                     items(
                         items = state.items,
-                        key = { it.id + it.marketCap.toString() },
+                        key = { it.id + TOKEN_LAZY_LIST_ID_SEPARATOR + it.marketCap.toString() },
                     ) { item ->
                         MarketsListItem(
                             model = item,
@@ -117,8 +118,11 @@ internal fun MarketsListLazyColumn(
         buffer = LOAD_NEXT_PAGE_ON_END_INDEX,
         onLoadMore = remember(state) {
             {
-                if (state is ListUM.Content) {
+                if (state is ListUM.Content && state.showUnder100kTokens) {
                     state.loadMore()
+                    true
+                } else {
+                    false
                 }
             }
         },
@@ -184,7 +188,9 @@ private fun SearchNothingFoundText(modifier: Modifier = Modifier) {
 private fun VisibleItemsTracker(listState: LazyListState, state: ListUM) {
     val visibleItems by remember {
         derivedStateOf {
-            listState.layoutInfo.visibleItemsInfo.mapNotNull { it.key as? String }
+            listState.layoutInfo.visibleItemsInfo.mapNotNull {
+                (it.key as? String)?.split(TOKEN_LAZY_LIST_ID_SEPARATOR)?.first()
+            }
         }
     }
 
@@ -196,7 +202,7 @@ private fun VisibleItemsTracker(listState: LazyListState, state: ListUM) {
 }
 
 @Composable
-fun InfiniteListHandler(listState: LazyListState, onLoadMore: () -> Unit, buffer: Int = 2) {
+fun InfiniteListHandler(listState: LazyListState, onLoadMore: () -> Boolean, buffer: Int = 2) {
     val loadMore by remember {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
@@ -212,8 +218,7 @@ fun InfiniteListHandler(listState: LazyListState, onLoadMore: () -> Unit, buffer
 
     LaunchedEffect(loadMore) {
         if (loadMore && !emitted) {
-            emitted = true
-            onLoadMore()
+            emitted = onLoadMore()
         }
     }
 }

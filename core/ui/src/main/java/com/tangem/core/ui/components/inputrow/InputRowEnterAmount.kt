@@ -72,7 +72,7 @@ fun InputRowEnterAmount(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title.resolveReference(),
-                    style = TangemTheme.typography.caption2,
+                    style = TangemTheme.typography.subtitle2,
                     color = titleColor,
                 )
                 AmountTextField(
