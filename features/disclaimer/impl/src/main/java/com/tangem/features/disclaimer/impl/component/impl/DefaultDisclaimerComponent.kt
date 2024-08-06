@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.disclaimer.impl.model.DisclaimerModel
 import com.tangem.features.disclaimer.impl.ui.DisclaimerScreen
@@ -18,7 +17,6 @@ import dagger.assisted.AssistedInject
 internal class DefaultDisclaimerComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: DisclaimerComponent.Params,
-    private val appFinisher: AppFinisher,
 ) : DisclaimerComponent, AppComponentContext by context {
 
     private val model: DisclaimerModel = getOrCreateModel(params)
@@ -27,13 +25,7 @@ internal class DefaultDisclaimerComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
 
-        BackHandler {
-            if (params.isTosAccepted) {
-                state.popBack()
-            } else {
-                appFinisher.finish()
-            }
-        }
+        BackHandler(onBack = state.popBack)
         DisclaimerScreen(state = state)
     }
 
