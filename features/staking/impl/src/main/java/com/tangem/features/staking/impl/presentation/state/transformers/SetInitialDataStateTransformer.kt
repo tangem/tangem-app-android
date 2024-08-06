@@ -89,7 +89,6 @@ internal class SetInitialDataStateTransformer(
         return listOfNotNull(
             createAnnualPercentageRateItem(),
             createAvailableItem(cryptoCurrencyStatus),
-            // createOnStakeItem(cryptoCurrencyStatus, yieldBalance),
             createUnbondingPeriodItem(),
             createMinimumRequirementItem(cryptoCurrencyStatus),
             createRewardClaimingItem(),
