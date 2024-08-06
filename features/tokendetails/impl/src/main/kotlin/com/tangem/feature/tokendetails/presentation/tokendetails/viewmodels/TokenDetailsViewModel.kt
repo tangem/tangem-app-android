@@ -569,7 +569,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             val extendedKey = getExtendedPublicKeyForCurrencyUseCase(
                 userWalletId,
-                cryptoCurrency.network.derivationPath,
+                cryptoCurrency.network,
             ).fold(
                 ifLeft = {
                     Timber.e(it.cause?.localizedMessage.orEmpty())
