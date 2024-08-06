@@ -6,6 +6,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.tap.domain.card.DefaultDeleteSavedAccessCodesUseCase
@@ -69,8 +70,9 @@ internal object CardDomainModule {
     @Singleton
     fun provideGetExtendedPublicKeyForCurrencyUseCase(
         derivationsRepository: DerivationsRepository,
+        walletManagersFacade: WalletManagersFacade,
     ): GetExtendedPublicKeyForCurrencyUseCase {
-        return GetExtendedPublicKeyForCurrencyUseCase(derivationsRepository)
+        return GetExtendedPublicKeyForCurrencyUseCase(derivationsRepository, walletManagersFacade)
     }
 
     @Provides
