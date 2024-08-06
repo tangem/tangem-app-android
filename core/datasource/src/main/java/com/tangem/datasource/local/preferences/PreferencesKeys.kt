@@ -95,8 +95,6 @@ object PreferencesKeys {
         booleanPreferencesKey(name = "isTokenSwapPromoOkxShown")
     }
 
-    fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
-
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
 
