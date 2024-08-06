@@ -65,9 +65,9 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
     val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
 
     fun getScanResponse(): ScanResponse {
-        return when (val mode = twinCardsState.mode) {
+        return when (twinCardsState.mode) {
             is CreateTwinWalletMode.CreateWallet -> onboardingManager?.scanResponse
-            is CreateTwinWalletMode.RecreateWallet -> mode.scanResponse
+            is CreateTwinWalletMode.RecreateWallet -> globalState.scanResponse
         } ?: throw NullPointerException("ScanResponse can't be NULL")
     }
 
@@ -104,6 +104,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         is TwinCardsAction.Init -> {
             mainScope.launch {
                 if (twinCardsState.currentStep is TwinCardsStep.WelcomeOnly) return@launch
+
+                if (twinCardsState.mode is CreateTwinWalletMode.RecreateWallet) {
+                    store.dispatch(GlobalAction.SaveScanResponse(twinCardsState.mode.scanResponse))
+                }
 
                 val scanResponse = getScanResponse()
                 onboardingManager?.apply {
@@ -368,8 +372,7 @@ private fun getPopBackScreen(): KClass<out AppRoute> {
     val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
 
     return if (userWalletsListManager.hasUserWallets) {
-        val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
-            .fold(onSuccess = { true }, onFailure = { false })
+        val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync!! }.getOrElse { false }
 
         if (isLocked) {
             AppRoute.Welcome::class
