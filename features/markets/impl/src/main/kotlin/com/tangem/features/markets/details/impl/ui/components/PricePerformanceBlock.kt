@@ -32,7 +32,7 @@ import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun PricePerformanceBlock(state: PricePerformanceUM, modifier: Modifier = Modifier) {
+internal fun PricePerformanceBlock(state: PricePerformanceUM, modifier: Modifier = Modifier) {
     var currentInterval by remember { mutableStateOf(PriceChangeInterval.H24) }
 
     InformationBlock(
@@ -156,7 +156,7 @@ private fun Content(state: PricePerformanceUM.Value, modifier: Modifier = Modifi
 }
 
 @Composable
-fun PricePerformanceBlockPlaceholder(modifier: Modifier = Modifier) {
+internal fun PricePerformanceBlockPlaceholder(modifier: Modifier = Modifier) {
     val subtitle2dp = with(LocalDensity.current) { TangemTheme.typography.subtitle2.lineHeight.toDp() }
     val caption1dp = with(LocalDensity.current) { TangemTheme.typography.caption1.lineHeight.toDp() }
     val headerHeight = maxOf(subtitle2dp, caption1dp) + TangemTheme.dimens.spacing4

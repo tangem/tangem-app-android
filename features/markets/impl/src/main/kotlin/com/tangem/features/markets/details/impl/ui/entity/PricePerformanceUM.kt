@@ -4,7 +4,7 @@ import androidx.annotation.FloatRange
 import androidx.compose.runtime.Immutable
 
 @Immutable
-data class PricePerformanceUM(
+internal data class PricePerformanceUM(
     val h24: Value,
     val month: Value,
     val all: Value,

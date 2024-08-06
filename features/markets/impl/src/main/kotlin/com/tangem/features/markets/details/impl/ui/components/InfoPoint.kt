@@ -22,12 +22,11 @@ import com.tangem.core.ui.utils.PreviewShimmerContainer
 import com.tangem.features.markets.details.impl.ui.entity.InfoPointUM
 
 @Composable
-fun InfoPoint(infoPointUM: InfoPointUM, modifier: Modifier = Modifier) {
+internal fun InfoPoint(infoPointUM: InfoPointUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.padding(vertical = TangemTheme.dimens.spacing8),
         horizontalAlignment = Alignment.Start,
     ) {
-        // TODO тултип не совпадает с дизайном
         if (infoPointUM.onInfoClick != null) {
             TooltipText(
                 text = infoPointUM.title,
@@ -59,7 +58,7 @@ fun InfoPoint(infoPointUM: InfoPointUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun InfoPointShimmer(modifier: Modifier = Modifier, withTooltip: Boolean = false) {
+internal fun InfoPointShimmer(modifier: Modifier = Modifier, withTooltip: Boolean = false) {
     Column(
         modifier = modifier.padding(vertical = TangemTheme.dimens.spacing8),
         horizontalAlignment = Alignment.Start,

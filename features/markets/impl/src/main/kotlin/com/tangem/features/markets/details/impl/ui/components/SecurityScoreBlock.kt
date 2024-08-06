@@ -34,7 +34,7 @@ import kotlin.math.round
 private const val STARS_COUNT = 5
 
 @Composable
-fun SecurityScoreBlock(state: SecurityScoreUM, modifier: Modifier = Modifier) {
+internal fun SecurityScoreBlock(state: SecurityScoreUM, modifier: Modifier = Modifier) {
     val rounded = state.score.roundTo1decimal()
     val percentage = rounded / STARS_COUNT
     InformationBlock(
@@ -125,7 +125,7 @@ private fun Float.roundTo1decimal(): Float {
 }
 
 @Composable
-fun SecurityScorePlaceHolder(modifier: Modifier = Modifier) {
+internal fun SecurityScorePlaceHolder(modifier: Modifier = Modifier) {
     InformationBlock(
         modifier = modifier,
         title = {

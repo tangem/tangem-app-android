@@ -28,7 +28,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
+internal fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
     var currentInterval by remember { mutableStateOf(PriceChangeInterval.H24) }
 
     InformationBlock(
@@ -90,7 +90,7 @@ fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun InsightsBlockPlaceholder(modifier: Modifier = Modifier) {
+internal fun InsightsBlockPlaceholder(modifier: Modifier = Modifier) {
     val subtitle2dp = with(LocalDensity.current) { TangemTheme.typography.subtitle2.lineHeight.toDp() }
     val caption1dp = with(LocalDensity.current) { TangemTheme.typography.caption1.lineHeight.toDp() }
     val headerHeight = maxOf(subtitle2dp, caption1dp) + TangemTheme.dimens.spacing4

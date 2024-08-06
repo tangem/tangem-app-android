@@ -4,7 +4,7 @@ import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.utils.converter.Converter
 
-class TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, TokenMarketInfo> {
+internal class TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, TokenMarketInfo> {
 
     override fun convert(value: TokenMarketInfoResponse): TokenMarketInfo {
         return with(value) {

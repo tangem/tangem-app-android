@@ -6,7 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.PersistentList
 
 @Immutable
-data class LinksUM(
+internal data class LinksUM(
     val officialLinks: PersistentList<LinkUM>,
     val social: PersistentList<LinkUM>,
     val repository: PersistentList<LinkUM>,

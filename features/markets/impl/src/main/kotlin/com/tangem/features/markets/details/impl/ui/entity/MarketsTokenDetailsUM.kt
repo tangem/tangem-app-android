@@ -9,7 +9,7 @@ import com.tangem.domain.markets.PriceChangeInterval
 import java.math.BigDecimal
 
 @Immutable
-data class MarketsTokenDetailsUM(
+internal data class MarketsTokenDetailsUM(
     val tokenName: String,
     val priceText: String,
     val iconUrl: String,

@@ -26,7 +26,7 @@ import kotlinx.collections.immutable.toImmutableList
 const val MAX_METRICS_COUNT = 6
 
 @Composable
-fun MetricsBlock(state: MetricsUM, modifier: Modifier = Modifier) {
+internal fun MetricsBlock(state: MetricsUM, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
 
     InformationBlock(
@@ -81,7 +81,7 @@ private fun ShowLessMoreButton(expanded: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun MetricsBlockPlaceholder(modifier: Modifier = Modifier) {
+internal fun MetricsBlockPlaceholder(modifier: Modifier = Modifier) {
     InformationBlock(
         modifier = modifier,
         title = {

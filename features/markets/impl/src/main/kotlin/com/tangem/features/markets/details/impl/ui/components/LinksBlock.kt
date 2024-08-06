@@ -27,7 +27,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun LinksBlock(state: LinksUM, modifier: Modifier = Modifier) {
+internal fun LinksBlock(state: LinksUM, modifier: Modifier = Modifier) {
     InformationBlock(
         modifier = modifier,
         title = {

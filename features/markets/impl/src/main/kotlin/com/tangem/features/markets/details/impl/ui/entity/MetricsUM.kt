@@ -4,6 +4,6 @@ import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.PersistentList
 
 @Immutable
-data class MetricsUM(
+internal data class MetricsUM(
     val metrics: PersistentList<InfoPointUM>,
 )

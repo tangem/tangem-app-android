@@ -4,7 +4,7 @@ import androidx.annotation.FloatRange
 import androidx.compose.runtime.Immutable
 
 @Immutable
-data class SecurityScoreUM(
+internal data class SecurityScoreUM(
     @FloatRange(from = 0.0, to = 5.0) val score: Float,
     val description: String,
     val onInfoClick: () -> Unit,
