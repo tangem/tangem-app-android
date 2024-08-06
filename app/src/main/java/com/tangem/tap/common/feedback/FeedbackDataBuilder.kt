@@ -31,12 +31,6 @@ class FeedbackDataBuilder(
             builder.appendDelimiter()
             builder.appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
             builder.appendKeyValue("Derivation path", walletInfo.derivationPath)
-
-            // enable later
-            // if (walletInfo.blockchain == Blockchain.Bitcoin) {
-            //     builder.appendKeyValue("XPUB", infoHolder.extendedPublicKey)
-            // }
-
             builder.appendKeyValue("Outputs count", walletInfo.outputsCount)
 
             if (walletInfo.tokens.isNotEmpty()) {
