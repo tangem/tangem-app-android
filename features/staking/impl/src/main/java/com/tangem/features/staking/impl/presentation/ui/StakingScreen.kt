@@ -34,7 +34,7 @@ internal fun StakingScreen(uiState: StakingUiState) {
     BackHandler(onBack = uiState.clickIntents::onPrevClick)
     Column(
         modifier = Modifier
-            .background(color = TangemTheme.colors.background.tertiary)
+            .background(color = TangemTheme.colors.background.secondary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),
@@ -94,7 +94,7 @@ private fun SendAppBar(uiState: StakingUiState) {
         text = titleRes,
         backIconRes = backIcon,
         onBackClick = uiState.clickIntents::onBackClick,
-        backgroundColor = TangemTheme.colors.background.tertiary,
+        backgroundColor = TangemTheme.colors.background.secondary,
         modifier = Modifier.height(TangemTheme.dimens.size56),
     )
 }

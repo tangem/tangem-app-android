@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -182,14 +183,16 @@ private fun MetricsBlock(state: StakingStates.InitialInfoState.Data) {
 @Composable
 private fun BannerBlock(onClick: () -> Unit) {
     Box(
-        modifier = Modifier.clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = rememberRipple(),
-            onClick = onClick,
-        ),
+        modifier = Modifier
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(),
+                onClick = onClick,
+            )
     ) {
         Image(
             modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillWidth,
             painter = painterResource(R.drawable.img_staking_banner),
             contentDescription = null,
         )
