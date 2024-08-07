@@ -132,6 +132,7 @@ class WalletConnectInteractor(
         runCatching {
             if (accounts.isEmpty()) return
             isWalletConnectReadyForDeepLinks = true
+            if (deeplinkStack.empty()) return
             val lastDeeplink = deeplinkStack.pop()
             store.dispatchOnMain(WalletConnectAction.OpenSession(lastDeeplink))
         }.onFailure {
@@ -361,6 +362,19 @@ class WalletConnectInteractor(
      * @param deeplink deeplink to handle
      */
     fun addDeeplink(deeplink: String) {
+        val deeplinkRegex = Regex(WC_PARAM_REGEX)
+        val matched = deeplinkRegex.findAll(deeplink)
+        val sessionTopic = matched.firstOrNull { it.value.contains(WC_TOPIC_QUERY_NAME) }?.groupValues?.lastOrNull()
+
+        val isAlreadyActiveSessionTopic = walletConnectRepository.currentSessions.any { session ->
+            session.topic == sessionTopic
+        }
+
+        if (isAlreadyActiveSessionTopic && sessionTopic != null) {
+            Timber.i("WC already has an active session topic: $deeplink")
+            return
+        }
+
         if (isWalletConnectReadyForDeepLinks) {
             store.dispatchOnMain(WalletConnectAction.OpenSession(deeplink))
         } else {
@@ -406,7 +420,9 @@ class WalletConnectInteractor(
         return sessionRequestConverter.prepareRequest(sessionRequest, userWalletId)
     }
 
-    companion object {
-        private const val WC_SCHEME = "wc"
+    private companion object {
+        const val WC_SCHEME = "wc"
+        const val WC_TOPIC_QUERY_NAME = "sessionTopic"
+        const val WC_PARAM_REGEX = "([a-zA-Z\\d-]+)=([a-zA-Z\\d]+)"
     }
 }
