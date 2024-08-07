@@ -18,11 +18,12 @@ object DaggerGraphReducer {
                 walletRouter = action.walletRouter,
                 walletConnectInteractor = action.walletConnectInteractor,
                 tokenDetailsRouter = action.tokenDetailsRouter,
-                manageTokensUi = action.manageTokensUi,
                 cardSdkConfigRepository = action.cardSdkConfigRepository,
                 sendRouter = action.sendRouter,
                 qrScanningRouter = action.qrScanningRouter,
                 emailSender = action.emailSender,
+                stakingRouter = action.stakingRouter,
+                pushNotificationsRouter = action.pushNotificationsRouter,
             )
         }
     }

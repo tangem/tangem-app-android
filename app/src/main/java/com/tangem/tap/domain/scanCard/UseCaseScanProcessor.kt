@@ -3,16 +3,15 @@ package com.tangem.tap.domain.scanCard
 import arrow.fx.coroutines.resourceScope
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.navigation.StateDialog
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.scanCard.chains.*
 import com.tangem.tap.domain.scanCard.utils.ScanCardExceptionConverter
@@ -60,7 +59,11 @@ internal object UseCaseScanProcessor {
                 ),
             )
             add(AnalyticsChain(Basic.CardWasScanned(analyticsSource)))
-            add(DisclaimerChain(store, disclaimerWillShow))
+            val pushNotificationsToggles =
+                store.inject(getDependency = DaggerGraphState::pushNotificationsFeatureToggles)
+            if (pushNotificationsToggles.isPushNotificationsEnabled) {
+                add(DisclaimerChain(store, disclaimerWillShow))
+            }
             add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager))
         }
 
@@ -132,8 +135,8 @@ internal object UseCaseScanProcessor {
         action()
     }
 
-    private suspend inline fun navigateTo(screen: AppScreen) {
+    private suspend inline fun navigateTo(route: AppRoute) {
         delay(DELAY_SDK_DIALOG_CLOSE)
-        store.dispatchOnMain(NavigationAction.NavigateTo(screen))
+        store.dispatchNavigationAction { push(route) }
     }
 }
