@@ -47,7 +47,6 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
-import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
@@ -139,9 +138,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val walletsRepository: WalletsRepository
         get() = entryPoint.getWalletsRepository()
-
-    private val sendFeatureToggles: SendFeatureToggles
-        get() = entryPoint.getSendFeatureToggles()
 
     private val oneTimeEventFilter: OneTimeEventFilter
         get() = entryPoint.getOneTimeEventFilter()
@@ -270,7 +266,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     appThemeModeRepository = appThemeModeRepository,
                     balanceHidingRepository = balanceHidingRepository,
                     walletsRepository = walletsRepository,
-                    sendFeatureToggles = sendFeatureToggles,
                     generalUserWalletsListManager = generalUserWalletsListManager,
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
