@@ -1,29 +1,83 @@
 package com.tangem.tap.features.details.ui.cardsettings.coderecovery
 
-import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.details.redux.AccessCodeRecoveryState
-import com.tangem.tap.features.details.redux.DetailsAction
-import org.rekotlin.Store
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.tangem.common.doOnSuccess
+import com.tangem.common.routing.AppRouter
+import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.domain.sdk.TangemSdkManager
+import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
+import com.tangem.tap.features.details.ui.common.utils.isAccessCodeRecoveryEnabled
+import com.tangem.tap.store
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AccessCodeRecoveryViewModel(val store: Store<AppState>) {
+@HiltViewModel
+internal class AccessCodeRecoveryViewModel @Inject constructor(
+    private val tangemSdkManager: TangemSdkManager,
+    private val cardSettingsInteractor: CardSettingsInteractor,
+) : ViewModel() {
 
-    fun updateState(state: AccessCodeRecoveryState?): AccessCodeRecoveryScreenState {
-        // We shouldn't get to this screen here when this state is null
-        return if (state == null) {
-            AccessCodeRecoveryScreenState(
-                enabledOnCard = false,
-                enabledSelection = false,
-                isSaveChangesEnabled = false,
-                onSaveChangesClick = {},
-                onOptionClick = {},
-            )
-        } else {
-            AccessCodeRecoveryScreenState(
-                enabledOnCard = state.enabledOnCard,
-                enabledSelection = state.enabledSelection,
-                isSaveChangesEnabled = state.enabledOnCard != state.enabledSelection,
-                onSaveChangesClick = { store.dispatch(DetailsAction.AccessCodeRecovery.SaveChanges(it)) },
-                onOptionClick = { store.dispatch(DetailsAction.AccessCodeRecovery.SelectOption(it)) },
+    private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
+        ?: error("Scan response is null")
+
+    val screenState = MutableStateFlow(
+        value = getInitialState(),
+    )
+
+    private fun getInitialState(): AccessCodeRecoveryScreenState {
+        val isEnabled = isAccessCodeRecoveryEnabled(
+            typeResolver = scannedScanResponse.cardTypesResolver,
+            card = scannedScanResponse.card,
+        )
+
+        return AccessCodeRecoveryScreenState(
+            enabledOnCard = isEnabled,
+            enabledSelection = isEnabled,
+            isSaveChangesEnabled = false,
+            onSaveChangesClick = ::saveChanges,
+            onOptionClick = ::selectOption,
+        )
+    }
+
+    private fun saveChanges() = viewModelScope.launch {
+        val isEnabled = screenState.value.enabledSelection
+
+        tangemSdkManager
+            .setAccessCodeRecoveryEnabled(scannedScanResponse.card.cardId, isEnabled)
+            .doOnSuccess {
+                Analytics.send(
+                    Settings.CardSettings.AccessCodeRecoveryChanged(
+                        AnalyticsParam.AccessCodeRecoveryStatus.from(isEnabled),
+                    ),
+                )
+
+                cardSettingsInteractor.update { scanResponse ->
+                    scanResponse.copy(
+                        card = scanResponse.card.copy(
+                            userSettings = scanResponse.card.userSettings?.copy(
+                                isUserCodeRecoveryAllowed = isEnabled,
+                            ),
+                        ),
+                    )
+                }
+
+                store.dispatchNavigationAction(AppRouter::pop)
+            }
+    }
+
+    private fun selectOption(isEnabled: Boolean) {
+        screenState.update {
+            it.copy(
+                enabledSelection = isEnabled,
+                isSaveChangesEnabled = isEnabled != it.enabledOnCard,
             )
         }
     }
