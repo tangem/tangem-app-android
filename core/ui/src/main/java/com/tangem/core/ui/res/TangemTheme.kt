@@ -52,10 +52,11 @@ fun TangemTheme(
             LocalHapticManager provides hapticManager,
             LocalSnackbarHostState provides snackbarHostState,
             LocalWindowSize provides windowSize,
-            LocalTextSelectionColors provides TangemTextSelectionColors,
         ) {
             CompositionLocalProvider(
                 LocalTangemShimmer provides TangemShimmer,
+                LocalMainBottomSheetColor provides remember { mutableStateOf(Color.Unspecified) },
+                LocalTextSelectionColors provides TangemTextSelectionColors,
             ) {
                 ProvideTextStyle(
                     value = TangemTheme.typography.body1,
@@ -208,11 +209,13 @@ private fun darkThemeColors(): TangemColors {
     )
 }
 
-@Stable
-private val TangemTextSelectionColors = TextSelectionColors(
-    handleColor = TangemColorPalette.Azure,
-    backgroundColor = TangemColorPalette.Azure.copy(alpha = 0.4f),
-)
+private val TangemTextSelectionColors: TextSelectionColors
+    @Composable
+    @ReadOnlyComposable
+    get() = TextSelectionColors(
+        handleColor = TangemTheme.colors.text.accent,
+        backgroundColor = TangemTheme.colors.text.accent.copy(alpha = 0.3f),
+    )
 
 private val LocalTangemColors = staticCompositionLocalOf<TangemColors> {
     error("No TangemColors provided")
@@ -246,4 +249,8 @@ val LocalWindowSize = staticCompositionLocalOf<WindowSize> {
 
 val LocalTangemShimmer = staticCompositionLocalOf<Shimmer> {
     error("No TangemShimmer provided")
+}
+
+val LocalMainBottomSheetColor = staticCompositionLocalOf<MutableState<Color>> {
+    error("No MainBottomSheetColor provided")
 }
