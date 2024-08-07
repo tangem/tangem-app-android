@@ -72,6 +72,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "bittensor" -> R.drawable.img_bittensor_22
         "blast", "blast/test" -> R.drawable.img_blast_22
         "filecoin" -> R.drawable.img_filecoin_22
+        "cyber", "cyber/test" -> R.drawable.img_cyber_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -145,6 +146,7 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "bittensor" -> R.drawable.img_bittensor_22
         "blast", "blast/test" -> R.drawable.img_blast_22
         "filecoin" -> R.drawable.img_filecoin_22
+        "cyber", "cyber/test" -> R.drawable.img_cyber_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -215,6 +217,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "bittensor" -> R.drawable.img_bittensor_22
         "blast", "blast/test" -> R.drawable.img_blast_22
         "filecoin" -> R.drawable.img_filecoin_22
+        "cyber", "cyber/test" -> R.drawable.img_cyber_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -288,6 +291,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "bittensor" -> R.drawable.ic_bittensor_22
         "blast", "blast/test" -> R.drawable.ic_blast_22
         "filecoin" -> R.drawable.ic_filecoin_22
+        "cyber", "cyber/test" -> R.drawable.ic_cyber_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -361,6 +365,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "bittensor" -> R.drawable.ic_bittensor_22
         "blast", "blast/test" -> R.drawable.ic_blast_22
         "filecoin" -> R.drawable.ic_filecoin_22
+        "cyber", "cyber/test" -> R.drawable.ic_cyber_22
         else -> R.drawable.ic_alert_24
     }
 }
