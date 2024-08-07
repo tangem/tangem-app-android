@@ -80,10 +80,10 @@ class YieldConverter(
             token = tokenConverter.convert(metadataDTO.tokenDTO),
             tokens = metadataDTO.tokensDTO.map { tokenConverter.convert(it) },
             type = metadataDTO.type,
-            rewardSchedule = metadataDTO.rewardSchedule,
+            rewardSchedule = convertRewardSchedule(metadataDTO.rewardSchedule),
             cooldownPeriod = convertPeriod(metadataDTO.cooldownPeriod),
             warmupPeriod = convertPeriod(metadataDTO.warmupPeriod),
-            rewardClaiming = metadataDTO.rewardClaiming,
+            rewardClaiming = convertRewardClaiming(metadataDTO.rewardClaiming),
             defaultValidator = metadataDTO.defaultValidator,
             minimumStake = metadataDTO.minimumStake,
             supportsMultipleValidators = metadataDTO.supportsMultipleValidators,
@@ -127,6 +127,29 @@ class YieldConverter(
         }
     }
 
+    private fun convertRewardSchedule(rewardTypeDTO: YieldDTO.MetadataDTO.RewardScheduleDTO): Yield.Metadata.RewardSchedule {
+        return when (rewardTypeDTO) {
+            YieldDTO.MetadataDTO.RewardScheduleDTO.BLOCK -> Yield.Metadata.RewardSchedule.BLOCK
+            YieldDTO.MetadataDTO.RewardScheduleDTO.WEEK -> Yield.Metadata.RewardSchedule.WEEK
+            YieldDTO.MetadataDTO.RewardScheduleDTO.HOUR -> Yield.Metadata.RewardSchedule.HOUR
+            YieldDTO.MetadataDTO.RewardScheduleDTO.DAY -> Yield.Metadata.RewardSchedule.DAY
+            YieldDTO.MetadataDTO.RewardScheduleDTO.MONTH -> Yield.Metadata.RewardSchedule.MONTH
+            YieldDTO.MetadataDTO.RewardScheduleDTO.ERA -> Yield.Metadata.RewardSchedule.ERA
+            YieldDTO.MetadataDTO.RewardScheduleDTO.EPOCH -> Yield.Metadata.RewardSchedule.EPOCH
+            else -> Yield.Metadata.RewardSchedule.UNKNOWN
+        }
+    }
+
+    private fun convertRewardClaiming(
+        rewardClaimingDTO: YieldDTO.MetadataDTO.RewardClaimingDTO
+    ): Yield.Metadata.RewardClaiming {
+        return when (rewardClaimingDTO) {
+            YieldDTO.MetadataDTO.RewardClaimingDTO.AUTO -> Yield.Metadata.RewardClaiming.AUTO
+            YieldDTO.MetadataDTO.RewardClaimingDTO.MANUAL -> Yield.Metadata.RewardClaiming.MANUAL
+            else -> Yield.Metadata.RewardClaiming.UNKNOWN
+        }
+    }
+
     private fun convertArgType(value: String): Yield.Args.ArgType {
         return when (value) {
             "address" -> Yield.Args.ArgType.ADDRESS
@@ -135,3 +158,13 @@ class YieldConverter(
         }
     }
 }
+
+
+
+
+
+
+
+
+
+

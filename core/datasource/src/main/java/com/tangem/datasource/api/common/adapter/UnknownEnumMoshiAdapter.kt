@@ -31,6 +31,9 @@ fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
         StakingTransactionTypeDTO::class.java to StakingTransactionTypeDTO.UNKNOWN,
         StakingTransactionStatusDTO::class.java to StakingTransactionStatusDTO.UNKNOWN,
         StakingActionStatusDTO::class.java to StakingActionStatusDTO.UNKNOWN,
+        YieldDTO.RewardTypeDTO::class.java to YieldDTO.RewardTypeDTO.UNKNOWN,
+        YieldDTO.MetadataDTO.RewardScheduleDTO::class.java to YieldDTO.MetadataDTO.RewardScheduleDTO.UNKNOWN,
+        YieldDTO.MetadataDTO.RewardClaimingDTO::class.java to YieldDTO.MetadataDTO.RewardClaimingDTO.UNKNOWN,
     )
 
     return apply {
