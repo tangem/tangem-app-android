@@ -18,6 +18,7 @@ interface TangemTechApi {
         @Query("contractAddress") contractAddress: String? = null,
         @Query("exchangeable") exchangeable: Boolean? = null,
         @Query("networkIds") networkIds: String? = null,
+        @Query("networkId") networkId: String? = null,
         @Query("active") active: Boolean? = null,
         @Query("searchText") searchText: String? = null,
         @Query("offset") offset: Int? = null,
