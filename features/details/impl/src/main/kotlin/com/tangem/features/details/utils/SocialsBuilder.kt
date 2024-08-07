@@ -1,15 +1,17 @@
 package com.tangem.features.details.utils
 
 import androidx.compose.ui.text.intl.Locale
-import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.impl.R
-import com.tangem.features.details.routing.DetailsRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import javax.inject.Inject
 
-internal class SocialsBuilder(
-    private val router: Router,
+@ComponentScoped
+internal class SocialsBuilder @Inject constructor(
+    private val urlOpener: UrlOpener,
 ) {
 
     fun buildAll(): ImmutableList<DetailsFooterUM.Social> = Social.all.map { social ->
@@ -29,7 +31,7 @@ internal class SocialsBuilder(
             social.url
         }
 
-        router.push(DetailsRoute.Url(url))
+        urlOpener.openUrl(url)
     }
 
     private enum class Social(
