@@ -15,7 +15,7 @@ import com.tangem.core.ui.res.TangemTheme
 @Composable
 internal fun InputRowImageBase(
     subtitle: TextReference,
-    caption: TextReference,
+    caption: TextReference?,
     imageUrl: String,
     modifier: Modifier = Modifier,
     subtitleColor: Color = TangemTheme.colors.text.primary1,
@@ -40,12 +40,14 @@ internal fun InputRowImageBase(
                 style = TangemTheme.typography.subtitle2,
                 color = subtitleColor,
             )
-            Text(
-                text = caption.resolveAnnotatedReference(),
-                style = TangemTheme.typography.caption2,
-                color = captionColor,
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
-            )
+            if (caption != null) {
+                Text(
+                    text = caption.resolveAnnotatedReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = captionColor,
+                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
+                )
+            }
         }
         extraContent()
     }
