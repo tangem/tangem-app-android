@@ -3,8 +3,8 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -73,17 +73,22 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
                 horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
             ) {
                 val state = extractNetwork(tokenCurrency = currency)
-                Text(
-                    text = state.normalText,
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
-                )
+
+                if (state.normalText.isNotBlank()) {
+                    Text(
+                        text = state.normalText,
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                }
+
                 Icon(
                     modifier = Modifier.size(TangemTheme.dimens.size16),
                     painter = painterResource(id = currency.networkIcon),
                     tint = Color.Unspecified,
                     contentDescription = null,
                 )
+
                 Text(
                     text = state.boldText,
                     style = TangemTheme.typography.caption1,
@@ -94,7 +99,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
     }
 }
 
-private const val SEPARATOR = " %image% "
+private const val SEPARATOR = "%image%"
 
 @Composable
 private fun extractNetwork(tokenCurrency: TokenInfoBlockState.Currency.Token): ExtractedTokenNetworkText {
@@ -105,20 +110,20 @@ private fun extractNetwork(tokenCurrency: TokenInfoBlockState.Currency.Token): E
                 tokenCurrency.standardName,
                 tokenCurrency.networkName,
             ),
-        ).split(SEPARATOR)
+        )
     } else {
         stringResource(
             id = R.string.token_details_token_type_subtitle_no_standard,
             formatArgs = arrayOf(
                 tokenCurrency.networkName,
             ),
-        ).split(SEPARATOR)
+        )
     }
 
     return remember(splitString) {
         ExtractedTokenNetworkText(
-            normalText = splitString.firstOrNull().orEmpty(),
-            boldText = splitString.getOrNull(1).orEmpty(),
+            normalText = splitString.substringBefore(delimiter = SEPARATOR, missingDelimiterValue = "").trim(),
+            boldText = splitString.substringAfterLast(delimiter = SEPARATOR).trim(),
         )
     }
 }
@@ -130,6 +135,7 @@ private data class ExtractedTokenNetworkText(
 
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(locale = "ja")
 @Composable
 private fun Preview_TokenInfoBlock(
     @PreviewParameter(TokenInfoStateProvider::class)
