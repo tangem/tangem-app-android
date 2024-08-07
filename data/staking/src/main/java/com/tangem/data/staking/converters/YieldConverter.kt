@@ -127,7 +127,9 @@ class YieldConverter(
         }
     }
 
-    private fun convertRewardSchedule(rewardTypeDTO: YieldDTO.MetadataDTO.RewardScheduleDTO): Yield.Metadata.RewardSchedule {
+    private fun convertRewardSchedule(
+        rewardTypeDTO: YieldDTO.MetadataDTO.RewardScheduleDTO,
+    ): Yield.Metadata.RewardSchedule {
         return when (rewardTypeDTO) {
             YieldDTO.MetadataDTO.RewardScheduleDTO.BLOCK -> Yield.Metadata.RewardSchedule.BLOCK
             YieldDTO.MetadataDTO.RewardScheduleDTO.WEEK -> Yield.Metadata.RewardSchedule.WEEK
@@ -141,7 +143,7 @@ class YieldConverter(
     }
 
     private fun convertRewardClaiming(
-        rewardClaimingDTO: YieldDTO.MetadataDTO.RewardClaimingDTO
+        rewardClaimingDTO: YieldDTO.MetadataDTO.RewardClaimingDTO,
     ): Yield.Metadata.RewardClaiming {
         return when (rewardClaimingDTO) {
             YieldDTO.MetadataDTO.RewardClaimingDTO.AUTO -> Yield.Metadata.RewardClaiming.AUTO
@@ -158,13 +160,3 @@ class YieldConverter(
         }
     }
 }
-
-
-
-
-
-
-
-
-
-

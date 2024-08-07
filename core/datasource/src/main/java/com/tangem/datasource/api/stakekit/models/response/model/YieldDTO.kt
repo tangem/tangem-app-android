@@ -139,16 +139,22 @@ data class YieldDTO(
         enum class RewardScheduleDTO {
             @Json(name = "block")
             BLOCK,
+
             @Json(name = "week")
             WEEK,
+
             @Json(name = "hour")
             HOUR,
+
             @Json(name = "day")
             DAY,
+
             @Json(name = "month")
             MONTH,
+
             @Json(name = "era")
             ERA,
+
             @Json(name = "epoch")
             EPOCH,
 
@@ -158,6 +164,7 @@ data class YieldDTO(
         enum class RewardClaimingDTO {
             @Json(name = "auto")
             AUTO,
+
             @Json(name = "manual")
             MANUAL,
 

@@ -188,7 +188,7 @@ private fun BannerBlock(onClick: () -> Unit) {
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(),
                 onClick = onClick,
-            )
+            ),
     ) {
         Image(
             modifier = Modifier.fillMaxSize(),

@@ -131,7 +131,7 @@ private class FeeBlockPreviewProvider : PreviewParameterProvider<FeeState> {
         get() = sequenceOf(
             contentState,
             FeeState.Loading,
-            FeeState.Error
+            FeeState.Error,
         )
 
     private val fee = Fee.Common(
