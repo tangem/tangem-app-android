@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
+import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.impl.navigation.DefaultPushNotificationsRouter
@@ -16,6 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class PushNotificationViewModel @Inject constructor(
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
+    private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
     private val router: DefaultPushNotificationsRouter,
     private val analyticHandler: AnalyticsEventHandler,
 ) : ViewModel(), PushNotificationsClickIntents {
@@ -32,6 +34,7 @@ internal class PushNotificationViewModel @Inject constructor(
         )
         viewModelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
+            neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             router.openHome()
         }
     }
@@ -42,6 +45,7 @@ internal class PushNotificationViewModel @Inject constructor(
         )
         viewModelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
+            neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             router.openHome()
         }
     }
@@ -52,6 +56,7 @@ internal class PushNotificationViewModel @Inject constructor(
         )
         viewModelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
+            neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             router.openHome()
         }
     }
