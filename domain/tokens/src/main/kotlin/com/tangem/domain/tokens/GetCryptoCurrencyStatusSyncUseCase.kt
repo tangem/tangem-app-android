@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens
 
 import arrow.core.Either
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.error.mapper.mapToCurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -16,6 +17,7 @@ class GetCryptoCurrencyStatusSyncUseCase(
     internal val currenciesRepository: CurrenciesRepository,
     internal val quotesRepository: QuotesRepository,
     internal val networksRepository: NetworksRepository,
+    internal val stakingRepository: StakingRepository,
     internal val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -29,6 +31,7 @@ class GetCryptoCurrencyStatusSyncUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
         )
 
         return operations.getCurrencyStatusSync(cryptoCurrencyId, isSingleWalletWithTokens)
@@ -41,6 +44,7 @@ class GetCryptoCurrencyStatusSyncUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
         )
 
         return operations.getPrimaryCurrencyStatusSync()

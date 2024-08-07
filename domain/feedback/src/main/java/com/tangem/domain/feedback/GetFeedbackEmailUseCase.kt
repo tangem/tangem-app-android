@@ -25,23 +25,21 @@ class GetFeedbackEmailUseCase(
     private val emailMessageBodyResolver = EmailMessageBodyResolver(feedbackRepository)
 
     suspend operator fun invoke(type: FeedbackEmailType): FeedbackEmail {
-        val cardInfo = feedbackRepository.getCardInfo()
-
         val formattedLogs = AppLogsFormatter().format(appLogs = feedbackRepository.getAppLogs())
 
         return FeedbackEmail(
-            address = getAddress(cardInfo),
-            subject = emailSubjectResolver.resolve(type, cardInfo),
-            message = createMessage(type, cardInfo),
+            address = getAddress(type.cardInfo),
+            subject = emailSubjectResolver.resolve(type),
+            message = createMessage(type),
             file = feedbackRepository.createLogFile(logs = formattedLogs),
         )
     }
 
-    private fun getAddress(cardInfo: CardInfo): String {
-        return if (cardInfo.isStart2Coin) START2COIN_SUPPORT_EMAIL else TANGEM_SUPPORT_EMAIL
+    private fun getAddress(cardInfo: CardInfo?): String {
+        return if (cardInfo?.isStart2Coin == true) START2COIN_SUPPORT_EMAIL else TANGEM_SUPPORT_EMAIL
     }
 
-    private suspend fun createMessage(type: FeedbackEmailType, cardInfo: CardInfo): String {
+    private suspend fun createMessage(type: FeedbackEmailType): String {
         return StringBuilder().apply {
             val title = emailMessageTitleResolver.resolve(type)
             append(title)
@@ -50,9 +48,7 @@ class GetFeedbackEmailUseCase(
 
             appendDisclaimerIfNeeded(type)
 
-            skipLine()
-
-            val body = emailMessageBodyResolver.resolve(type, cardInfo)
+            val body = emailMessageBodyResolver.resolve(type)
             append(body)
         }.toString()
     }
@@ -62,6 +58,7 @@ class GetFeedbackEmailUseCase(
             this
         } else {
             append(resources.getString(R.string.feedback_data_collection_message))
+            skipLine()
         }
     }
 }
