@@ -9,6 +9,8 @@ interface LegacyWalletConnectRepository {
 
     val activeSessions: Flow<List<WalletConnectSession>>
 
+    val currentSessions: List<WalletConnectSession>
+
     fun init(projectId: String)
 
     fun setUserNamespaces(userNamespaces: Map<NetworkNamespace, List<Account>>)
