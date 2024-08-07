@@ -11,6 +11,7 @@ internal fun CurrenciesStatusesOperations.Error.mapToTokenListError(): TokenList
         is CurrenciesStatusesOperations.Error.EmptyQuotes,
         is CurrenciesStatusesOperations.Error.EmptyCurrencies,
         is CurrenciesStatusesOperations.Error.UnableToCreateCurrencyStatus,
+        is CurrenciesStatusesOperations.Error.EmptyYieldBalances,
         -> TokenListError.EmptyTokens
     }
 }
