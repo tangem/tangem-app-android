@@ -1,9 +1,11 @@
 package com.tangem.tap.features.tokens.impl.presentation.router
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
+
 import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.store
@@ -18,11 +20,11 @@ import com.tangem.wallet.R
 internal class DefaultTokensListRouter : TokensListRouter {
 
     override fun popBackStack() {
-        store.dispatch(NavigationAction.PopBackTo())
+        store.dispatchNavigationAction(AppRouter::pop)
     }
 
     override fun openAddCustomTokenScreen() {
-        store.dispatch(NavigationAction.NavigateTo(AppScreen.AddCustomToken))
+        store.dispatchNavigationAction { push(AppRoute.AddCustomToken) }
     }
 
     override fun showAddressCopiedNotification() {
@@ -58,7 +60,7 @@ internal class DefaultTokensListRouter : TokensListRouter {
         val alert = AppDialog.SimpleOkDialogRes(
             headerId = R.string.common_error,
             messageId = R.string.common_unknown_error,
-            onOk = { store.dispatch(NavigationAction.PopBackTo()) },
+            onOk = { store.dispatchNavigationAction(AppRouter::pop) },
         )
         store.dispatchDialogShow(alert)
     }
