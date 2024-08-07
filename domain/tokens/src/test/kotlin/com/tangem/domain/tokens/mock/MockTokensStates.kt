@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptyListOf
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkAddress
@@ -151,6 +152,7 @@ internal object MockTokensStates {
                 pendingTransactions = emptySet(),
                 hasCurrentNetworkTransactions = false,
                 networkAddress = requireNotNull(networkStatus.value as? NetworkStatus.Verified).address,
+                yieldBalance = YieldBalance.Error,
             ),
         )
     }
@@ -166,6 +168,7 @@ internal object MockTokensStates {
                         .first { it.network == status.currency.network }
                         .value as? NetworkStatus.Verified,
                 ).address,
+                yieldBalance = YieldBalance.Error,
             ),
         )
     }

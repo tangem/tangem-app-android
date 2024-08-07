@@ -85,6 +85,7 @@ internal class TxHistoryPagingSource(
             currency = sourceParams.currency,
         )
             .filterUnconfirmedTransaction()
+            .sortedByDescending { it.timestampInMillis }
             .filterIfTxAlreadyAdded(apiItems = items)
 
         return if (recentItems.isEmpty()) {
