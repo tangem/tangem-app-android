@@ -18,4 +18,10 @@ sealed interface ProxyFee {
         override val fee: ProxyAmount,
         val minAdaValue: BigDecimal,
     ) : ProxyFee
+
+    data class Filecoin(
+        override val gasLimit: BigInteger,
+        override val fee: ProxyAmount,
+        val gasPremium: Long,
+    ) : ProxyFee
 }
