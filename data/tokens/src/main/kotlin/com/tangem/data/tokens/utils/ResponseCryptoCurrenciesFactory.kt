@@ -105,6 +105,7 @@ class ResponseCryptoCurrenciesFactory {
             Blockchain.BaseTestnet,
             Blockchain.Telos,
             Blockchain.Cronos,
+            Blockchain.Cyber,
             -> this.fullName
             else -> responseToken.name
         }
