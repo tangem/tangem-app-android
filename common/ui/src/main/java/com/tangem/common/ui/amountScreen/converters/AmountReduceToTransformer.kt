@@ -2,10 +2,12 @@ package com.tangem.common.ui.amountScreen.converters
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
+import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.utils.checkExceedBalance
 import com.tangem.common.ui.amountScreen.utils.getFiatValue
 import com.tangem.common.ui.amountScreen.utils.getKeyboardAction
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.utils.isNullOrZero
@@ -45,6 +47,7 @@ class AmountReduceToTransformer(
                 value = cryptoValue,
                 fiatValue = fiatValue,
                 isError = isExceedBalance,
+                error = resourceReference(R.string.send_validation_amount_exceeds_balance),
                 cryptoAmount = amountTextField.cryptoAmount.copy(value = value),
                 fiatAmount = amountTextField.fiatAmount.copy(value = decimalFiatValue),
                 keyboardOptions = KeyboardOptions(
