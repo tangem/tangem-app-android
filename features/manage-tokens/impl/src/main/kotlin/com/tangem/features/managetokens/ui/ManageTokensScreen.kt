@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -36,12 +37,14 @@ import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.components.rows.BlockchainRow
 import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.managetokens.component.preview.PreviewManageTokensComponent
 import com.tangem.features.managetokens.entity.CurrencyItemUM
 import com.tangem.features.managetokens.entity.CurrencyItemUM.Basic.NetworksUM
+import com.tangem.features.managetokens.entity.ManageTokensTopBarUM
 import com.tangem.features.managetokens.entity.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
 import kotlinx.collections.immutable.ImmutableList
@@ -57,14 +60,9 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
         modifier = modifier,
         containerColor = TangemTheme.colors.background.primary,
         topBar = {
-            TangemTopAppBar(
+            ManageTokensTopBar(
                 modifier = Modifier.statusBarsPadding(),
-                title = stringResource(id = R.string.main_manage_tokens),
-                startButton = TopAppBarButtonUM.Back(state.popBack),
-                endButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_plus_24,
-                    onIconClicked = state.onAddCustomToken,
-                ),
+                topBar = state.topBar,
             )
         },
         content = { innerPadding ->
@@ -72,18 +70,36 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize(),
-                state = state,
+                search = state.search,
+                items = state.items,
+                isLoading = state.isLoading,
+                hasChanges = state is ManageTokensUM.ManageContent && state.hasChanges,
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
-            SaveChangesButton(
-                modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .fillMaxWidth(),
-                isVisible = state.hasChanges,
-                onClick = state.onSaveClick,
-            )
+            if (state is ManageTokensUM.ManageContent) {
+                SaveChangesButton(
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing16)
+                        .fillMaxWidth(),
+                    isVisible = state.hasChanges,
+                    onClick = state.onSaveClick,
+                )
+            }
+        },
+    )
+}
+
+@Composable
+private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM, modifier: Modifier = Modifier) {
+    TangemTopAppBar(
+        modifier = modifier,
+        title = topBar.title.resolveReference(),
+        startButton = TopAppBarButtonUM.Back(topBar.onBackButtonClick),
+        endButton = when (topBar) {
+            is ManageTokensTopBarUM.ManageContent -> topBar.endButton
+            is ManageTokensTopBarUM.ReadContent -> null
         },
     )
 }
@@ -106,22 +122,46 @@ private fun SaveChangesButton(isVisible: Boolean, onClick: () -> Unit, modifier:
 }
 
 @Composable
-private fun Content(state: ManageTokensUM, modifier: Modifier = Modifier) {
+private fun LoadingContent() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = TangemTheme.colors.background.primary),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(color = TangemTheme.colors.icon.accent)
+    }
+}
+
+@Composable
+private fun Content(
+    search: SearchBarUM,
+    items: ImmutableList<CurrencyItemUM>,
+    isLoading: Boolean,
+    hasChanges: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Box(modifier = modifier) {
         Currencies(
             modifier = Modifier.fillMaxSize(),
-            items = state.items,
-            search = state.search,
+            items = items,
+            search = search,
         )
 
         AnimatedVisibility(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
-            visible = state.hasChanges,
+            visible = hasChanges,
             label = "bottom_fade_visibility",
         ) {
             BottomFade()
+        }
+    }
+
+    Crossfade(targetState = isLoading, label = "ManageTokensLoadingContent") {
+        if (it) {
+            LoadingContent()
         }
     }
 }
