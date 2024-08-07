@@ -16,7 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Constraints
-import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.res.TangemTheme
@@ -49,7 +49,7 @@ internal fun TokenItem(
             .tokenClickable(state = state)
             .background(color = TangemTheme.colors.background.primary),
     ) {
-        TokenIcon(
+        CurrencyIcon(
             state = state.iconState,
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.ICON)
