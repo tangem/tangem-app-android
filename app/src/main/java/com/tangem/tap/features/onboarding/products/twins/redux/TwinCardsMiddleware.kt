@@ -46,7 +46,7 @@ object TwinCardsMiddleware {
     val handler = twinsWalletMiddleware
 }
 
-private val twinsWalletMiddleware: Middleware<AppState> = { dispatch, state ->
+private val twinsWalletMiddleware: Middleware<AppState> = { dispatch, _ ->
     { next ->
         { action ->
             handle(action, dispatch)
@@ -66,15 +66,15 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 
     fun getScanResponse(): ScanResponse {
         return when (twinCardsState.mode) {
-            CreateTwinWalletMode.CreateWallet -> onboardingManager?.scanResponse
-            CreateTwinWalletMode.RecreateWallet -> globalState.scanResponse
+            is CreateTwinWalletMode.CreateWallet -> onboardingManager?.scanResponse
+            is CreateTwinWalletMode.RecreateWallet -> globalState.scanResponse
         } ?: throw NullPointerException("ScanResponse can't be NULL")
     }
 
     fun updateScanResponse(response: ScanResponse) {
         when (twinCardsState.mode) {
-            CreateTwinWalletMode.CreateWallet -> onboardingManager?.scanResponse = response
-            CreateTwinWalletMode.RecreateWallet -> store.dispatchOnMain(GlobalAction.SaveScanResponse(response))
+            is CreateTwinWalletMode.CreateWallet -> onboardingManager?.scanResponse = response
+            is CreateTwinWalletMode.RecreateWallet -> store.dispatchOnMain(GlobalAction.SaveScanResponse(response))
         }
     }
 
@@ -105,6 +105,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             mainScope.launch {
                 if (twinCardsState.currentStep is TwinCardsStep.WelcomeOnly) return@launch
 
+                if (twinCardsState.mode is CreateTwinWalletMode.RecreateWallet) {
+                    store.dispatch(GlobalAction.SaveScanResponse(twinCardsState.mode.scanResponse))
+                }
+
                 val scanResponse = getScanResponse()
                 onboardingManager?.apply {
                     if (!isActivationStarted(scanResponse.card.cardId)) {
@@ -113,7 +117,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 }
 
                 when (twinCardsState.mode) {
-                    CreateTwinWalletMode.CreateWallet -> {
+                    is CreateTwinWalletMode.CreateWallet -> {
                         mainScope.launch {
                             val wasTwinsOnboardingShown = store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase)
                                 .invokeSync()
@@ -132,7 +136,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                             store.dispatch(dispatchAction)
                         }
                     }
-                    CreateTwinWalletMode.RecreateWallet -> {
+                    is CreateTwinWalletMode.RecreateWallet -> {
                         store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Warning))
                     }
                 }
@@ -226,10 +230,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                         delay(DELAY_SDK_DIALOG_CLOSE)
                         withMainContext {
                             when (twinCardsState.mode) {
-                                CreateTwinWalletMode.CreateWallet -> {
+                                is CreateTwinWalletMode.CreateWallet -> {
                                     store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.TopUpWallet))
                                 }
-                                CreateTwinWalletMode.RecreateWallet -> {
+                                is CreateTwinWalletMode.RecreateWallet -> {
                                     store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done))
                                 }
                             }
@@ -319,11 +323,11 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         TwinCardsAction.Done -> {
             val scanResponse = getScanResponse()
             when (twinCardsState.mode) {
-                CreateTwinWalletMode.CreateWallet -> {
+                is CreateTwinWalletMode.CreateWallet -> {
                     store.dispatchOnMain(GlobalAction.Onboarding.Stop)
                     OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
                 }
-                CreateTwinWalletMode.RecreateWallet -> {
+                is CreateTwinWalletMode.RecreateWallet -> {
                     scope.launch {
                         val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
 
@@ -368,8 +372,7 @@ private fun getPopBackScreen(): KClass<out AppRoute> {
     val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
 
     return if (userWalletsListManager.hasUserWallets) {
-        val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
-            .fold(onSuccess = { true }, onFailure = { false })
+        val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync!! }.getOrElse { false }
 
         if (isLocked) {
             AppRoute.Welcome::class
