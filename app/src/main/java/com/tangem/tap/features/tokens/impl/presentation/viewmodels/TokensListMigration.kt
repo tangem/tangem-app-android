@@ -3,8 +3,8 @@ package com.tangem.tap.features.tokens.impl.presentation.viewmodels
 import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.utils.popTo
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -16,7 +16,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
-import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
@@ -126,7 +126,7 @@ internal class TokensListMigration(
         val isNothingToDoWithBlockchain = blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
         if (isNothingToDoWithTokens && isNothingToDoWithBlockchain) {
             store.dispatchDebugErrorNotification(message = "Nothing to save")
-            store.dispatchWithMain(NavigationAction.PopBackTo(screen = AppScreen.Wallet))
+            store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
             return
         }
 
@@ -135,6 +135,7 @@ internal class TokensListMigration(
         derivePublicKeysUseCase(userWalletId = currentUserWallet.walletId, currencies = currencyList)
             .onRight {
                 addCryptoCurrenciesUseCase(userWalletId = currentUserWallet.walletId, currencies = currencyList)
+                store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
             }
             .onLeft { Timber.e(it, "Failed to derive public keys") }
     }

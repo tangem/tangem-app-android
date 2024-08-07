@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.models
 
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.TxFee

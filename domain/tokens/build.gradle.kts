@@ -14,6 +14,7 @@ dependencies {
     api(projects.domain.core)
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.staking)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
@@ -23,7 +24,10 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
+
+    /** Project - Api */
     implementation(projects.features.send.api)
+    implementation(projects.features.staking.api)
 
     /** Project - Other */
     implementation(projects.core.utils)

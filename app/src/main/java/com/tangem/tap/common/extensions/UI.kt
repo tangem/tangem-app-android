@@ -3,7 +3,10 @@
 package com.tangem.tap.common.extensions
 
 import android.app.Activity
-import android.content.*
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.ContextWrapper
 import android.graphics.drawable.Drawable
 import android.view.View
 import androidx.annotation.*
@@ -76,16 +79,6 @@ fun Context.getFromClipboard(default: CharSequence? = null): CharSequence? {
     if (clipData.itemCount == 0) return default
 
     return clipData.getItemAt(0).text
-}
-
-fun Context.shareText(text: String) {
-    val sendIntent: Intent = Intent().apply {
-        action = Intent.ACTION_SEND
-        putExtra(Intent.EXTRA_TEXT, text)
-        type = "text/plain"
-    }
-    val shareIntent = Intent.createChooser(sendIntent, null)
-    startActivity(shareIntent)
 }
 
 fun View.getString(resId: Int, vararg formatArgs: Any?): String {

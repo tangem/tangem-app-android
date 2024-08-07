@@ -2,7 +2,6 @@ package com.tangem.domain.card
 
 import arrow.core.Either
 import com.tangem.domain.card.models.ResetCardError
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
@@ -12,13 +11,18 @@ import com.tangem.domain.wallets.models.UserWalletId
  */
 interface ResetCardUseCase {
 
-    /** Reset card [card] to factory settings */
-    suspend operator fun invoke(card: CardDTO): Either<ResetCardError, Unit>
+    /** Reset card [cardId] to factory settings */
+    suspend operator fun invoke(cardId: String, params: ResetCardUserCodeParams): Either<ResetCardError, Boolean>
 
-    /** Reset backup card [cardNumber] with expected [UserWalletId] using [card] of reset card */
+    /** Reset backup card [cardNumber] with expected [UserWalletId] using [params] of reset card */
     suspend operator fun invoke(
         cardNumber: Int,
-        card: CardDTO,
+        params: ResetCardUserCodeParams,
         userWalletId: UserWalletId,
-    ): Either<ResetCardError, Unit>
+    ): Either<ResetCardError, Boolean>
 }
+
+data class ResetCardUserCodeParams(
+    val isAccessCodeSet: Boolean,
+    val isPasscodeSet: Boolean?,
+)

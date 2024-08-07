@@ -14,6 +14,11 @@ android {
     testOptions {
         animationsDisabled = true
     }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 configurations.all {
@@ -22,20 +27,12 @@ configurations.all {
 
     resolutionStrategy {
         dependencySubstitution {
-            substitute(module("com.facebook.react:react-native"))
-                .using(module("com.facebook.react:react-android:0.72.4"))
-
-            substitute(module("com.facebook.react:hermes-engine"))
-                .using(module("com.facebook.react:hermes-android:0.72.4"))
-
             substitute(module("org.bouncycastle:bcprov-jdk15on"))
                 .using(module("org.bouncycastle:bcprov-jdk18on:1.73"))
         }
 
         force(
             "org.bouncycastle:bcpkix-jdk15on:1.70",
-            "com.facebook.react:react-android:0.72.4",
-            "com.facebook.react:hermes-android:0.72.4",
         )
     }
 }
@@ -69,8 +66,10 @@ dependencies {
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.staking)
     implementation(projects.domain.walletConnect)
+    implementation(projects.domain.markets)
 
     implementation(projects.common)
+    implementation(projects.common.routing)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
@@ -103,6 +102,7 @@ dependencies {
     implementation(projects.data.qrScanning)
     implementation(projects.data.staking)
     implementation(projects.data.walletConnect)
+    implementation(projects.data.markets)
 
     /** Features */
     implementation(projects.features.onboarding)
@@ -130,6 +130,14 @@ dependencies {
     implementation(projects.features.staking.impl)
     implementation(projects.features.details.api)
     implementation(projects.features.details.impl)
+    implementation(projects.features.disclaimer.api)
+    implementation(projects.features.disclaimer.impl)
+    implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.pushNotifications.impl)
+    implementation(projects.features.walletSettings.api)
+    implementation(projects.features.walletSettings.impl)
+    implementation(projects.features.markets.api)
+    implementation(projects.features.markets.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -166,6 +174,7 @@ dependencies {
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
+    implementation(deps.firebase.messaging)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain) {
@@ -207,10 +216,6 @@ dependencies {
     implementation(deps.walletConnectCore)
     implementation(deps.walletConnectWeb3)
     implementation(deps.prettyLogger)
-    implementation("com.facebook.react:react-android:0.72.4")
-    implementation(deps.sprClient) {
-        exclude(group = "com.github.stephenc.jcip")
-    }
 
     /** Testing libraries */
     testImplementation(deps.test.coroutine)
