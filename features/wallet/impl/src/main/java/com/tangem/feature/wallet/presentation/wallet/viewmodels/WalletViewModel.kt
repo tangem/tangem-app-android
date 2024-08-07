@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
@@ -65,11 +64,8 @@ internal class WalletViewModel @Inject constructor(
     private val walletDeepLinksHandler: WalletDeepLinksHandler,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
     private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
-    private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
-    private val isFirstTimeAskingPermissionUseCase: IsFirstTimeAskingPermissionUseCase,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles,
-    private val settingsManager: SettingsManager,
     analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
@@ -159,24 +155,14 @@ internal class WalletViewModel @Inject constructor(
 
             delay(timeMillis = 1_800)
 
-            val isFirstTimeRequested = isFirstTimeAskingPermissionUseCase(PUSH_PERMISSION).getOrElse { true }
-            val wasInitiallyAsk = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { true }
-            val onRequestLater: () -> Unit = if (wasInitiallyAsk) {
-                clickIntents::onDelayAskPushPermission
-            } else {
-                clickIntents::onNeverAskPushPermission
-            }
             stateHolder.showBottomSheet(
                 content = PushNotificationsBottomSheetConfig(
-                    isFirstTimeRequested = isFirstTimeRequested,
-                    wasInitiallyAsk = wasInitiallyAsk,
                     onRequest = clickIntents::onRequestPushPermission,
-                    onRequestLater = onRequestLater,
+                    onNeverRequest = { clickIntents.onNeverAskPushPermission(false) },
                     onAllow = clickIntents::onAllowPushPermission,
                     onDeny = clickIntents::onDenyPushPermission,
-                    openSettings = settingsManager::openSettings,
                 ),
-                onDismiss = onRequestLater,
+                onDismiss = { clickIntents.onNeverAskPushPermission(true) },
             )
         }
     }
