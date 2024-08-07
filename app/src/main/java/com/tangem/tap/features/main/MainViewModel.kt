@@ -18,7 +18,6 @@ import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.features.main.model.MainScreenState
@@ -42,7 +41,6 @@ internal class MainViewModel @Inject constructor(
     private val blockchainSDKFactory: BlockchainSDKFactory,
     private val userWalletsListManager: UserWalletsListManager,
     private val walletManagersFacade: WalletManagersFacade,
-    private val sendFeatureToggles: SendFeatureToggles,
     private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
     private val stakingFeatureToggles: StakingFeatureToggles,
@@ -68,7 +66,6 @@ internal class MainViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) { incrementAppLaunchCounterUseCase() }
 
         updateAppCurrencies()
-        updateSendFeatureToggle()
         observeFlips()
         displayBalancesHidingStatusToast()
         displayHiddenBalancesModalNotification()
@@ -127,12 +124,6 @@ internal class MainViewModel @Inject constructor(
             fetchStakingTokensUseCase()
                 .onLeft { Timber.e(it.toString(), "Unable to fetch the staking tokens list") }
                 .onRight { Timber.d("Staking token list was fetched successfully") }
-        }
-    }
-
-    private fun updateSendFeatureToggle() {
-        viewModelScope.launch(dispatchers.main) {
-            sendFeatureToggles.fetchNewSendEnabled()
         }
     }
 
