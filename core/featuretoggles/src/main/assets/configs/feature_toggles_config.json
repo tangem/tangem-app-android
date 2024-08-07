@@ -4,10 +4,6 @@
         "version": "undefined"
     },
     {
-        "name": "REDESIGNED_SEND_SCREEN_ENABLED",
-        "version": "5.10.0"
-    },
-    {
         "name": "LOCAL_USER_LOGS_ENABLED",
         "version": "5.13.0"
     },
