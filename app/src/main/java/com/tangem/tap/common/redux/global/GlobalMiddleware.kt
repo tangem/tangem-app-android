@@ -12,7 +12,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.network.exchangeServices.BuyExchangeService
 import com.tangem.tap.network.exchangeServices.CardExchangeRules
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -55,18 +54,6 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
         }
         is GlobalAction.RestoreAppCurrency -> {
             restoreAppCurrency()
-        }
-        is GlobalAction.HideWarningMessage -> {
-            store.state.globalState.warningManager?.let {
-                if (it.hideWarning(action.warning)) {
-                    // if (WarningMessagesManager.isAlreadySignedHashesWarning()) {
-                    //     // TODO: No appropriate warningMessage identification. Make it better later
-                    //     store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
-                    // }
-
-                    store.dispatch(SendAction.Warnings.Update)
-                }
-            }
         }
         is GlobalAction.SendEmail -> {
             store.state.globalState.feedbackManager?.sendEmail(
