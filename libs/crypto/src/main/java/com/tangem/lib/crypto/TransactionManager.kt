@@ -1,7 +1,8 @@
 package com.tangem.lib.crypto
 
+import com.tangem.blockchain.common.Amount
 import com.tangem.lib.crypto.models.*
-import java.math.BigDecimal
+import java.math.BigInteger
 
 interface TransactionManager {
 
@@ -21,13 +22,16 @@ interface TransactionManager {
     @Throws(IllegalStateException::class)
     suspend fun getFee(
         networkId: String,
-        amountToSend: BigDecimal,
+        amountToSend: Amount,
         currencyToSend: Currency,
         destinationAddress: String,
         increaseBy: Int?,
         data: String?,
         derivationPath: String?,
     ): ProxyFees
+
+    @Throws(IllegalStateException::class)
+    suspend fun getFeeForGas(networkId: String, gas: BigInteger, derivationPath: String?): ProxyFees
 
     @Throws(IllegalStateException::class)
     suspend fun updateWalletManager(networkId: String, derivationPath: String?)
