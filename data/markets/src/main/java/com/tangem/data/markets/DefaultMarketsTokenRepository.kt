@@ -10,6 +10,7 @@ import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
@@ -112,6 +113,7 @@ internal class DefaultMarketsTokenRepository(
         val response = marketsApi.getCoinMarketData(
             currency = fiatCurrencyCode,
             coinId = tokenId,
+            language = Locale.getDefault().language,
         )
 
         return TokenMarketInfoConverter().convert(response.getOrThrow())

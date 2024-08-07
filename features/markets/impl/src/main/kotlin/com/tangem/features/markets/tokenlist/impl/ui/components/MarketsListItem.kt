@@ -46,7 +46,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.windowsize.WindowSizeType
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListItemUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
 import com.tangem.features.markets.tokenlist.impl.ui.preview.MarketChartListItemPreviewDataProvider
 import com.tangem.utils.StringsSigns.MINUS
 import kotlinx.coroutines.launch

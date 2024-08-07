@@ -1,6 +1,8 @@
 package com.tangem.features.markets.details.impl.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -12,12 +14,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.MarketChartLook
-import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.SpacerH32
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerW4
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
@@ -29,9 +30,12 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.disableNestedScroll
 import com.tangem.domain.markets.PriceChangeInterval
+import com.tangem.features.markets.details.impl.ui.components.InfoBottomSheet
 import com.tangem.features.markets.details.impl.ui.components.MarketTokenDetailsChart
-import com.tangem.features.markets.details.impl.ui.entity.MarketsTokenDetailsUM
+import com.tangem.features.markets.details.impl.ui.components.tokenMarketDetailsBody
+import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
@@ -44,11 +48,13 @@ internal fun MarketsTokenDetailsContent(
     modifier: Modifier = Modifier,
 ) {
     Content(
+        modifier = modifier,
         state = state,
         onBackClick = onBackClick,
         onHeaderSizeChange = onHeaderSizeChange,
-        modifier = modifier,
     )
+
+    InfoBottomSheet(config = state.infoBottomSheet)
 }
 
 @Suppress("UnusedPrivateMember")
@@ -61,6 +67,7 @@ private fun Content(
 ) {
     val backgroundColor = LocalMainBottomSheetColor.current.value
     val density = LocalDensity.current
+    val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     Column(
         modifier = modifier
@@ -78,31 +85,46 @@ private fun Content(
             title = state.tokenName,
             startButton = TopAppBarButtonUM.Back(onBackClick),
         )
+
         SpacerH4()
 
-        Header(
-            state = state,
-            modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing16)
-                .fillMaxWidth(),
-        )
+        LazyColumn(
+            modifier = Modifier.disableNestedScroll(),
+            contentPadding = PaddingValues(bottom = bottomBarHeight),
+        ) {
+            item("header") {
+                Header(
+                    state = state,
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing16)
+                        .fillMaxWidth(),
+                )
+            }
+            item { SpacerH16() }
+            item("intervalSelector") {
+                IntervalSelector(
+                    trendInterval = state.selectedInterval,
+                    onIntervalClick = state.onSelectedIntervalChange,
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing16)
+                        .fillMaxWidth(),
+                )
+            }
+            item { SpacerH32() }
+            item(
+                contentType = "chart",
+            ) {
+                MarketTokenDetailsChart(
+                    modifier = Modifier.fillMaxWidth(),
+                    state = state.chartState,
+                )
+            }
+            item { SpacerH16() }
 
-        SpacerH16()
-
-        IntervalSelector(
-            trendInterval = state.selectedInterval,
-            onIntervalClick = state.onSelectedIntervalChange,
-            modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing16)
-                .fillMaxWidth(),
-        )
-
-        SpacerH32()
-
-        MarketTokenDetailsChart(
-            modifier = Modifier.fillMaxWidth(),
-            state = state.chartState,
-        )
+            tokenMarketDetailsBody(
+                state = state.body,
+            )
+        }
     }
 }
 
@@ -199,6 +221,7 @@ fun PriceChangeInterval.getText(): TextReference {
 private fun Preview() {
     TangemThemePreview {
         Content(
+            modifier = Modifier.background(TangemTheme.colors.background.tertiary),
             state = MarketsTokenDetailsUM(
                 tokenName = "Token Name",
                 priceText = "Price",
@@ -215,6 +238,12 @@ private fun Preview() {
                 ),
                 selectedInterval = PriceChangeInterval.H24,
                 onSelectedIntervalChange = { },
+                body = MarketsTokenDetailsUM.Body.Loading,
+                infoBottomSheet = TangemBottomSheetConfig(
+                    isShow = false,
+                    onDismissRequest = {},
+                    content = TangemBottomSheetConfigContent.Empty,
+                ),
             ),
             onHeaderSizeChange = {},
             onBackClick = {},
