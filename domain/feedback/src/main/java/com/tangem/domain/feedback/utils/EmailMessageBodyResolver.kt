@@ -16,25 +16,33 @@ internal class EmailMessageBodyResolver(
     private val feedbackRepository: FeedbackRepository,
 ) {
 
-    /** Resolve email message body by [type] using [cardInfo] */
-    suspend fun resolve(type: FeedbackEmailType, cardInfo: CardInfo): String = with(FeedbackDataBuilder()) {
+    /** Resolve email message body by [type] */
+    suspend fun resolve(type: FeedbackEmailType): String = with(FeedbackDataBuilder()) {
         when (type) {
-            FeedbackEmailType.DirectUserRequest -> addUserRequestBody(cardInfo)
-            FeedbackEmailType.RateCanBeBetter -> addCardAndPhoneInfo(cardInfo)
-            FeedbackEmailType.ScanningProblem -> addScanningProblemBody()
-            FeedbackEmailType.TransactionSendingProblem -> addTransactionSendingProblemBody(cardInfo)
+            is FeedbackEmailType.DirectUserRequest -> addUserRequestBody(type.cardInfo)
+            is FeedbackEmailType.RateCanBeBetter -> addCardAndPhoneInfo(type.cardInfo)
+            is FeedbackEmailType.ScanningProblem -> addScanningProblemBody()
+            is FeedbackEmailType.TransactionSendingProblem -> addTransactionSendingProblemBody(type.cardInfo)
         }
 
         return build()
     }
 
     private suspend fun FeedbackDataBuilder.addUserRequestBody(cardInfo: CardInfo) {
-        addUserWalletsInfo(userWalletsInfo = feedbackRepository.getUserWalletsInfo())
+        addUserWalletsInfo(userWalletsInfo = feedbackRepository.getUserWalletsInfo(cardInfo.userWalletId))
         addDelimiter()
         addCardInfo(cardInfo)
         addDelimiter()
-        addBlockchainInfoList(blockchainInfoList = feedbackRepository.getBlockchainInfoList())
-        addDelimiter()
+
+        if (cardInfo.userWalletId != null) {
+            val blockchainInfoList = feedbackRepository.getBlockchainInfoList(cardInfo.userWalletId)
+
+            if (blockchainInfoList.isNotEmpty()) {
+                addBlockchainInfoList(blockchainInfoList = blockchainInfoList)
+                addDelimiter()
+            }
+        }
+
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
     }
 
@@ -46,9 +54,11 @@ internal class EmailMessageBodyResolver(
         addCardInfo(cardInfo)
         addDelimiter()
 
-        val blockchainError = feedbackRepository.getBlockchainErrorInfo()
+        val userWalletId = requireNotNull(cardInfo.userWalletId) { "UserWalletId must be not null" }
+        val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
         val blockchainInfo = blockchainError?.let {
             feedbackRepository.getBlockchainInfo(
+                userWalletId = userWalletId,
                 blockchainId = blockchainError.blockchainId,
                 derivationPath = blockchainError.derivationPath,
             )
