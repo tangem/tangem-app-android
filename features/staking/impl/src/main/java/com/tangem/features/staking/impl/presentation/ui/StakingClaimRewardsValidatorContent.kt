@@ -63,7 +63,7 @@ internal fun StakingClaimRewardsValidatorContent(
                         .background(TangemTheme.colors.background.action)
                         .clickable(
                             onClick = {
-                                clickIntents.selectRewardValidator(item.cryptoValue)
+                                clickIntents.onActiveStake(item)
                             },
                         ),
                 )

@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
@@ -79,6 +80,7 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
+            stakingEntryInfoProvider = stakingEntryInfoProvider,
             symbol = symbol,
             decimals = decimals,
             clickIntents = clickIntents,

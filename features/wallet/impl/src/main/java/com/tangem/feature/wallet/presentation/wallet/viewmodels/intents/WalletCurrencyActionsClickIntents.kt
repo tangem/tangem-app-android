@@ -370,6 +370,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
+        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWallet.walletId))
+
         viewModelScope.launch {
             val userWalletId = stateHolder.getSelectedWalletId()
             val cryptoCurrency = cryptoCurrencyStatus.currency

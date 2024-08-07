@@ -20,7 +20,7 @@ fun TokenMarketListConfig.Order.toRequestParam(): String = when (this) {
 fun PriceChangeInterval.toRequestParam(): String = when (this) {
     PriceChangeInterval.H24 -> "24h"
     PriceChangeInterval.WEEK -> "1w"
-    PriceChangeInterval.MONTH -> "30d"
+    PriceChangeInterval.MONTH -> "1m"
     PriceChangeInterval.MONTH3 -> "3m"
     PriceChangeInterval.MONTH6 -> "6m"
     PriceChangeInterval.YEAR -> "1y"
