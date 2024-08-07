@@ -8,7 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.inputrow.InputRowApprox
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -19,8 +19,8 @@ import com.tangem.features.tokendetails.impl.R
 @Composable
 internal fun ExchangeEstimate(
     timestamp: TextReference,
-    fromTokenIconState: TokenIconState,
-    toTokenIconState: TokenIconState,
+    fromTokenIconState: CurrencyIconState,
+    toTokenIconState: CurrencyIconState,
     fromCryptoAmount: TextReference,
     fromCryptoSymbol: String,
     toCryptoAmount: TextReference,

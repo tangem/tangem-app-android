@@ -41,6 +41,7 @@ internal object BlockchainSDKConfigConverter : Converter<ConfigValueModel, Block
             polygonScanApiKey = value.polygonScanApiKey,
             bittensorDwellirApiKey = value.bittensorDwellirApiKey,
             bittensorOnfinalityApiKey = value.bittensorOnfinalityKey,
+            koinosProApiKey = value.koinosProApiKey,
         )
     }
 
