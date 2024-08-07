@@ -37,6 +37,7 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
@@ -185,10 +186,14 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val title = type.headerResId
+        val titleColor = if (type.isError) {
+            TangemTheme.colors.text.warning
+        } else {
+            TangemTheme.colors.text.tertiary
+        }
         Text(
-            text = stringResource(id = title),
-            color = TangemTheme.colors.text.tertiary,
+            text = type.header.resolveReference(),
+            color = titleColor,
             maxLines = 1,
             style = MaterialTheme.typography.subtitle2,
             modifier = Modifier
@@ -546,7 +551,7 @@ private fun Preview_TransactionCardWithoutPriceImpact_InDarkTheme() {
 @Composable
 private fun TransactionCardPreview() {
     TransactionCard(
-        type = TransactionCardType.Inputtable({}, {}),
+        type = TransactionCardType.Inputtable({}, {}, false),
         amountEquivalent = "1 000 000",
         tokenIconUrl = "",
         tokenCurrency = "DAI",
