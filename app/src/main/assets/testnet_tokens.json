@@ -698,6 +698,16 @@
                     "networkId": "blast/test"
                 }
             ]
+        },
+        {
+            "id": "cyberconnect",
+            "name": "Cyber",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "cyber/test"
+                }
+            ]
         }
     ]
 }
