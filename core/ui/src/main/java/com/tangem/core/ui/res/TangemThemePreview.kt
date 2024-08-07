@@ -6,8 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.ui.platform.LocalHapticFeedback
-import com.tangem.core.ui.haptic.MockHapticManager
 import com.tangem.core.ui.windowsize.rememberWindowSizePreview
 
 @Composable
@@ -29,7 +27,6 @@ fun TangemThemePreview(
                 typography = typography,
                 dimens = dimens,
                 windowSize = rememberWindowSizePreview(maxWidth, maxHeight),
-                hapticManager = MockHapticManager(LocalHapticFeedback.current),
                 content = content,
             )
         }
