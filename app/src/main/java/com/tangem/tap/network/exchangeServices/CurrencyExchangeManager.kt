@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
@@ -38,8 +39,9 @@ class CurrencyExchangeManager(
     override fun isBuyAllowed(): Boolean = primaryRules.isBuyAllowed() && buyService.isBuyAllowed()
     override fun isSellAllowed(): Boolean = primaryRules.isSellAllowed() && sellService.isSellAllowed()
 
-    override fun availableForBuy(currency: Currency): Boolean {
-        return primaryRules.availableForBuy(currency) && buyService.availableForBuy(currency)
+    override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean {
+        return primaryRules.availableForBuy(scanResponse, currency) &&
+            buyService.availableForBuy(scanResponse, currency)
     }
 
     override fun availableForSell(currency: Currency): Boolean {
