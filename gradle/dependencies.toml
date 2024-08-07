@@ -88,11 +88,11 @@ markdown = "0.7.2"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.13-718"
+tangemBlockchainSdk = "develop-728"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.13-376"
+tangemCardSdk = "develop-375"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
-tangemVico = "2.0.0-alpha.21-tangem14"
+tangemVico = "2.0.0-alpha.25-tangem16"
 #tangemVico = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
@@ -155,6 +155,7 @@ androidx-datastore = { module = "androidx.datastore:datastore-preferences", vers
 # region AndroidX
 
 # region Compose
+compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "compose-runtime" }
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose-runtime" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose-runtime" }
 compose-ui-utils = { module = "androidx.compose.ui:ui-util", version.ref = "compose-runtime" }
