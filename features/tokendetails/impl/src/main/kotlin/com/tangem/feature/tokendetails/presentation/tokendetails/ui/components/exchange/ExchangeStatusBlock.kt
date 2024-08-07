@@ -115,6 +115,11 @@ private fun ExchangeStatusStep(
                         color = TangemTheme.colors.icon.warning,
                         isDone = it.isDone,
                     )
+                    it.status == ExchangeStatus.Refunded -> ExchangeStep(
+                        iconRes = R.drawable.ic_close_24,
+                        color = TangemTheme.colors.icon.warning,
+                        isDone = it.isDone,
+                    )
                     it.status == ExchangeStatus.Verifying -> ExchangeStep(
                         iconRes = R.drawable.ic_exclamation_24,
                         color = TangemTheme.colors.icon.attention,
@@ -141,6 +146,7 @@ private fun ExchangeStatusStep(
 private fun ExchangeStatusStepText(stepStatus: ExchangeStatusState) {
     val textColor = when {
         stepStatus.status == ExchangeStatus.Cancelled -> TangemTheme.colors.icon.warning
+        stepStatus.status == ExchangeStatus.Refunded -> TangemTheme.colors.icon.warning
         stepStatus.status == ExchangeStatus.Failed && !stepStatus.isDone -> TangemTheme.colors.icon.warning
         stepStatus.status == ExchangeStatus.Verifying && !stepStatus.isDone -> TangemTheme.colors.icon.attention
         stepStatus.isDone -> TangemTheme.colors.text.primary1
