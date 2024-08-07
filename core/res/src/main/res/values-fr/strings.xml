@@ -13,9 +13,6 @@
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">Le sélectionné ne prend pas en charge le réseau %1$s</string>
   <string name="alert_manage_tokens_unsupported_curve_message">Pour activer le cryptage de la blockchain %1$s, vous devrez réinitialiser le portefeuille aux paramètres d\'usine. Veuillez retirer vos fonds avant de le faire pour vous assurer de ne pas les perdre, puis terminez le processus de réinitialisation. L\'accès au portefeuille actuel ne sera pas possible après la réinitialisation.</string>
   <string name="alert_manage_tokens_unsupported_message">Les jetons du réseau %1$s ne sont pas pris en charge par cette carte en raison d\'une limitation du micrologiciel.</string>
-  <string name="alert_negative_app_rate_sent_message">Merci pour votre retour. Nous vous répondrons dès que possible</string>
-  <string name="alert_negative_app_rate_sent_title">Vos suggestions ont été envoyées</string>
-  <string name="alert_troubleshooting_scan_card_message">Veuillez essayer d\'appuyer sur la carte exactement comme indiqué dans l\'animation ou lire notre guide simple, ou demander de l\'aide. Si le problème persiste, veuillez demander de l\'aide.</string>
   <string name="alert_troubleshooting_scan_card_title">Avez-vous des difficultés à scanner votre carte ?</string>
   <string name="alert_unsupported_card">Cette carte n\'est pas conçue pour fonctionner avec Tangem</string>
   <string name="app_settings_default_fee">Frais par défaut</string>
@@ -31,8 +28,6 @@
   <string name="app_settings_theme_mode_dark">Sombre</string>
   <string name="app_settings_theme_mode_light">Clair</string>
   <string name="app_settings_theme_mode_system">Par défaut du système</string>
-  <string name="app_settings_theme_selection_footer">Si le système est sélectionné, l\'application s\'ajustera automatiquement en fonction des paramètres système de votre appareil</string>
-  <string name="app_settings_theme_selection_system_short">Système</string>
   <string name="app_settings_theme_selector_title">Thème</string>
   <string name="app_settings_title">Paramètres de l\'application</string>
   <string name="balance_hidden_description">Pour masquer ou afficher vos soldes, il suffit de retourner l\'écran de votre appareil vers le bas ou de le désactiver dans les paramètres</string>
@@ -98,7 +93,6 @@
   </plurals>
   <string name="common_delete">Supprimer</string>
   <string name="common_disabled">Désactivé</string>
-  <string name="common_disconnect">Se déconnecter</string>
   <string name="common_done">Exécuté</string>
   <string name="common_enable">Activer</string>
   <string name="common_enabled">Activé</string>
@@ -134,7 +128,6 @@
   <string name="common_reject">Rejeter</string>
   <string name="common_reload">Recharger</string>
   <string name="common_rename">Renommer</string>
-  <string name="common_retry">Réessayer</string>
   <string name="common_save">Enregistrer</string>
   <string name="common_save_changes">Sauvegarder les modifications</string>
   <string name="common_search">Rechercher</string>
@@ -162,7 +155,6 @@
   <string name="common_understand">Je comprends</string>
   <string name="common_unknown_error">Il y avait une erreur. Veuillez réessayer.</string>
   <string name="common_unreachable">Inaccessible</string>
-  <string name="common_warning">Alerte</string>
   <string name="common_yes">Oui</string>
   <string name="contract_address_copied_message">Adresse du contrat copiée !</string>
   <string name="currency_subtitle_expanded">Réseaux disponibles</string>
@@ -210,7 +202,6 @@
   <string name="details_row_title_flip_to_hide">Retourner pour masquer les soldes</string>
   <string name="details_row_title_issuer">Emetteur</string>
   <string name="details_row_title_signed_hashes">Signé</string>
-  <string name="details_security_management_warning">Si vous oubliez le code, vous perdrez l\'accès à vos fonds. La récupération du code n\'est pas possible.</string>
   <string name="details_send_feedback">Envoyer un commentaire</string>
   <string name="details_title">Référénces</string>
   <string name="disclaimer_error_loading">Vérifiez votre connexion Internet ou passez à un réseau différent</string>
@@ -385,7 +376,7 @@
   <string name="onboarding_exit_alert_title">Voulez-vous quitter le processus d\'activation ?</string>
   <string name="onboarding_getting_started">Initialiser</string>
   <string name="onboarding_linking_error_card_with_wallets">Un autre portefeuille a déjà été créé sur la carte que vous essayez d\'ajouter. Si vous avez des fonds dans ce portefeuille, veuillez les retirer, puis réinitialiser cette carte et l\'ajouter comme sauvegarde.</string>
-  <string name="onboarding_navbar_title_creating_backup">Création d\'une sauvegarde</string>
+  <string name="onboarding_navbar_title_creating_backup">Sauvegarde en cours</string>
   <string name="onboarding_seed_button_read_more">En savoir plus sur les seed phrases</string>
   <plurals name="onboarding_seed_generate_message_words_count">
     <item quantity="one">Empty</item>
@@ -398,7 +389,7 @@
   </plurals>
   <string name="onboarding_seed_import_message">Pour importer votre portefeuille, entrez votre seed phrase dans le champ ci-dessous</string>
   <string name="onboarding_seed_intro_button_generate">Générer une seed phrase</string>
-  <string name="onboarding_seed_intro_button_import">Importer un portefeuille</string>
+  <string name="onboarding_seed_intro_button_import">Importez</string>
   <string name="onboarding_seed_intro_message">Une seed phrase est une série de mots qui vous permet de récupérer votre portefeuille. Contrairement aux clés générées par la carte, les seed phrases ne sont pas protégées et peuvent être copiées et volées. Utilisez cette option à vos propres risques.</string>
   <string name="onboarding_seed_intro_title">Utiliser une seed phrase</string>
   <string name="onboarding_seed_mnemonic_invalid_checksum">Seed phrase invalide. Veuillez vérifier l\'ordre des mots.</string>
@@ -509,7 +500,6 @@
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Adresse</string>
   <string name="send_destination_tag_field">Destination Tag</string>
-  <string name="send_dismiss_message">Êtes-vous sûr de vouloir fermer l\'écran d\'envoi ?</string>
   <string name="send_enter_address_field">Entrez l\'adresse</string>
   <string name="send_error_address_same_as_wallet">L\'adresse est la même que celle de votre portefeuille</string>
   <string name="send_extras_error_invalid_destination_tag">Tag invalide. Il ne sera pas ajouté à la transaction.</string>
@@ -574,6 +564,7 @@
   <string name="send_total_subtitle_fiat_format">≈ %1$s (incl. les commissions : %2$s)</string>
   <string name="send_total_subtitle_format">Sera envoyé %s</string>
   <string name="send_transaction_success">La transaction a été signée avec succès et envoyée au nœud de blockchain. Le solde du portefeuille sera mis à jour après un certain temps</string>
+  <string name="send_tron_account_activation_error">%1$s est un actif du réseau Tron. Pour calculer les frais et effectuer une transaction, déposez du Tron (TRX) sur votre compte.</string>
   <string name="send_validation_invalid_address">Adresse incorrecte</string>
   <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Transaction envoyée</string>
@@ -583,9 +574,8 @@
   <string name="settings_wallet_name_title">Nom</string>
   <string name="staking_active">Actif</string>
   <string name="staking_active_footer">Afin d\'unstaker vos actifs, cliquez ici.</string>
+  <string name="staking_details_annual_percentage_rate_info">Le pourcentage de rendement annuel que vous pouvez gagner en participant au staking.</string>
   <string name="staking_details_apr">APR</string>
-  <string name="staking_details_apy">APY</string>
-  <string name="staking_details_apy_info">Le pourcentage de rendement annuel que vous pouvez gagner en participant au staking.</string>
   <string name="staking_details_available">Disponible</string>
   <string name="staking_details_average_reward_rate">Taux de récompense moyen</string>
   <string name="staking_details_estimated_profit">%s profit estimatif</string>
@@ -593,7 +583,6 @@
   <string name="staking_details_metrics_block_header">Métriques</string>
   <string name="staking_details_minimum_requirement">Minimum requis</string>
   <string name="staking_details_no_rewards_to_claim">Aucune récompense à réclamer</string>
-  <string name="staking_details_on_stake">En jeu</string>
   <string name="staking_details_reward_claiming">Réclamation de récompense</string>
   <string name="staking_details_reward_claiming_info">Un moyen de recevoir des récompenses de staking. Il peut être réclamé automatiquement ou manuellement.</string>
   <string name="staking_details_reward_schedule">Calendrier de récompenses</string>
@@ -649,7 +638,6 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">L\'envoi de fonds sera disponible une fois la ou les transactions en attente dans le réseau %s terminées.</string>
   <string name="token_button_unavailability_reason_sell_unavailable">La vente de %s n\'est pas disponible pour le moment. Veuillez consulter nos mises à jour.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Le staking %s n’est pas disponible pour le moment. Veuillez consulter nos mises à jour.</string>
-  <string name="token_details_choose_address">Choisissez une adresse</string>
   <string name="token_details_generate_xpub">Générer XPUB</string>
   <string name="token_details_hide_alert_hide">Masquer</string>
   <string name="token_details_hide_alert_message">Vous êtes sur le point de masquer ce jeton de l\'écran principal. Vous pouvez le rajouter à tout moment via la page de gestion des jetons.</string>
@@ -657,7 +645,7 @@
   <string name="token_details_hide_token">Masquer le jeton</string>
   <string name="token_details_staking_block_subtitle">Le Staking vous permet d\'en gagner %1$s et d\'obtenir des récompenses tous les %2$s jours</string>
   <string name="token_details_staking_block_title">Gagnez jusqu\'à %s récompense de mise par an</string>
-  <string name="token_details_token_type_subtitle">%1$s jeton dans %%image%% le réseau %2$s</string>
+  <string name="token_details_token_type_subtitle">%1$s jeton dans %%image%% %2$s le réseau</string>
   <string name="token_details_token_type_subtitle_no_standard">Jeton dans le %%image%% %1$s réseau</string>
   <string name="token_details_unable_hide_alert_message">Le jeton %1$s (%2$s) est la principale devise du réseau %3$s et ne peut pas être masqué tant que vous avez d\'autres jetons de ce réseau dans la liste</string>
   <string name="token_details_unable_hide_alert_title">Impossible de masquer %s</string>
@@ -741,7 +729,7 @@
   <string name="warning_backup_errors_title">Erreur d\'activation</string>
   <string name="warning_beacon_chain_retirement_content">Selon les développeurs du réseau BNB, le support de la norme BEP-2\nprendra fin en juin 2024. Pour éviter de perdre des actifs avec cette norme, veuillez les convertir à la norme BEP-20. Utilisez notre service de d\'échange pour les transférer sur le réseau BNB Smart Chain.</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain va s\'arrêter de fonctionner</string>
-  <string name="warning_button_could_be_better">Pourrait être mieux</string>
+  <string name="warning_button_could_be_better">Pas terrible</string>
   <string name="warning_button_like_it">J\'aime</string>
   <string name="warning_button_ok">Ok, je l\'ai!</string>
   <string name="warning_button_really_cool">Vraiment cool !</string>
