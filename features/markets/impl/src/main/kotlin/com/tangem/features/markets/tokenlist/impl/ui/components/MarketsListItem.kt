@@ -39,6 +39,7 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -97,14 +98,14 @@ fun MarketsListItem(
                 .collect {
                     val border = -actionWidthPx * SWIPE_THRESHOLD_PERCENT
                     if (it < border && actionPerformed.not()) {
-                        hapticManager.vibrateLong()
+                        hapticManager.perform(TangemHapticEffect.View.GestureThresholdActivate)
                         actionPerformed = true
                         releasePerformed = false
                     }
 
                     if (it > border) {
                         if (releasePerformed.not()) {
-                            hapticManager.vibrateShort()
+                            hapticManager.perform(TangemHapticEffect.View.GestureThresholdDeactivate)
                             releasePerformed = true
                         }
                         actionPerformed = false
