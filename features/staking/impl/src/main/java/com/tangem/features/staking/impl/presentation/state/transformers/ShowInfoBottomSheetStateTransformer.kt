@@ -19,8 +19,8 @@ internal class ShowInfoBottomSheetStateTransformer(
                 isShow = true,
                 content = when (infoType) {
                     InfoType.APY -> StakingInfoBottomSheetConfig(
-                        title = resourceReference(R.string.staking_details_apy),
-                        text = resourceReference(R.string.staking_details_apy_info),
+                        title = resourceReference(R.string.staking_details_annual_percentage_rate),
+                        text = resourceReference(R.string.staking_details_annual_percentage_rate_info),
                     )
                     InfoType.UNBONDING_PERIOD -> StakingInfoBottomSheetConfig(
                         title = resourceReference(R.string.staking_details_unbonding_period),

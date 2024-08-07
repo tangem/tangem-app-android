@@ -6,7 +6,6 @@ import androidx.compose.runtime.MutableState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 
 /**
  * Returns push permission requester.
@@ -16,22 +15,13 @@ import com.google.accompanist.permissions.shouldShowRationale
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun requestPushPermission(
-    isFirstTimeAsking: Boolean,
     pushPermission: String?,
     isClicked: MutableState<Boolean>,
     onAllow: () -> Unit,
     onDeny: () -> Unit,
-    onOpenSettings: () -> Unit,
 ): () -> Unit {
     val permissionState = pushPermission?.let { permission ->
-        val tempPermissionState = rememberPermissionState(permission = permission)
-        rememberPermissionState(permission = permission) {
-            when {
-                it -> onAllow()
-                !tempPermissionState.status.shouldShowRationale && !isFirstTimeAsking -> onOpenSettings()
-                else -> onDeny()
-            }
-        }
+        rememberPermissionState(permission = permission)
     }
 
     // Check if user granted permission and close bottom sheet
@@ -45,7 +35,7 @@ fun requestPushPermission(
     }
 
     return if (permissionState == null) {
-        onOpenSettings
+        {}
     } else {
         permissionState::launchPermissionRequest
     }

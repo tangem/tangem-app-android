@@ -13,6 +13,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.referral.analytics.ReferralEvents
 import com.tangem.feature.referral.domain.ReferralInteractor
+import com.tangem.feature.referral.domain.errors.ReferralError
 import com.tangem.feature.referral.domain.models.DiscountType
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.ReferralInfo
@@ -21,7 +22,6 @@ import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.ErrorSnackbar
 import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoState
 import com.tangem.feature.referral.router.ReferralRouter
-import com.tangem.lib.crypto.models.errors.UserCancelledException
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -95,7 +95,7 @@ internal class ReferralViewModel @Inject constructor(
                 runCatching(dispatchers.io) { referralInteractor.startReferral(userWalletId) }
                     .onSuccess(::showContent)
                     .onFailure { throwable ->
-                        if (throwable is UserCancelledException) {
+                        if (throwable is ReferralError.UserCancelledException) {
                             lastReferralData?.let { referralData ->
                                 showContent(referralData)
                             }
