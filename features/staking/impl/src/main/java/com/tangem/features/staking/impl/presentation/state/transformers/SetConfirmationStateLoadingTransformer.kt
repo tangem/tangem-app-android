@@ -33,6 +33,7 @@ internal class SetConfirmationStateLoadingTransformer(
                 footerText = "",
                 transactionDoneState = TransactionDoneState.Empty,
                 pendingActions = persistentListOf(),
+                pendingActionInProgress = null,
             ),
         )
     }
