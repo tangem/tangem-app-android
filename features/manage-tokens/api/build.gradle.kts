@@ -9,5 +9,10 @@ android {
 }
 
 dependencies {
-    implementation(deps.compose.foundation)
+    /* Project - Domain */
+    implementation(projects.domain.wallets.models)
+
+    /* Project - Core */
+    implementation(projects.core.ui)
+    implementation(projects.core.decompose)
 }
