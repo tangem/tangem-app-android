@@ -13,8 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.tangem.common.ui.amountScreen.AmountScreenContent
+import com.tangem.common.ui.navigationButtons.NavigationButtonsBlock
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -29,7 +31,7 @@ import kotlinx.coroutines.flow.withIndex
 
 @Composable
 internal fun StakingScreen(uiState: StakingUiState) {
-    BackHandler(onBack = uiState.clickIntents::onBackClick)
+    BackHandler(onBack = uiState.clickIntents::onPrevClick)
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.tertiary)
@@ -45,8 +47,13 @@ internal fun StakingScreen(uiState: StakingUiState) {
             uiState = uiState,
             modifier = Modifier.weight(1f),
         )
-        StakingNavigationButtons(
-            uiState = uiState,
+        NavigationButtonsBlock(
+            buttonState = uiState.buttonsState,
+            modifier = Modifier.padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
+            ),
         )
         StakingBottomSheet(bottomSheetConfig = uiState.bottomSheetConfig)
     }
@@ -68,7 +75,7 @@ private fun SendAppBar(uiState: StakingUiState) {
         StakingStep.RewardsValidators,
         StakingStep.Validators,
         StakingStep.Confirmation,
-        -> stringResource(id = R.string.common_stake)
+        -> uiState.title.resolveReference()
     }
     val backIcon = when (uiState.currentStep) {
         StakingStep.Amount,
@@ -155,7 +162,7 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                     amountState = uiState.amountState,
                     state = uiState.confirmationState,
                     clickIntents = uiState.clickIntents,
-                    type = uiState.routeType,
+                    type = uiState.actionType,
                 )
                 StakingStep.Validators -> {
                     val confirmState = uiState.confirmationState
