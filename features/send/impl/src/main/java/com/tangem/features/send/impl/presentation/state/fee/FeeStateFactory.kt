@@ -99,13 +99,13 @@ internal class FeeStateFactory(
         )
     }
 
-    fun onFeeOnErrorState(): SendUiState {
+    fun onFeeOnErrorState(feeError: FeeSelectorState.Error): SendUiState {
         val state = currentStateProvider()
         val isEditState = stateRouterProvider().isEditState
         return state.copyWrapped(
             isEditState = isEditState,
             feeState = state.getFeeState(isEditState)?.copy(
-                feeSelectorState = FeeSelectorState.Error,
+                feeSelectorState = feeError,
             ),
             sendState = state.sendState?.copy(
                 isPrimaryButtonEnabled = false,

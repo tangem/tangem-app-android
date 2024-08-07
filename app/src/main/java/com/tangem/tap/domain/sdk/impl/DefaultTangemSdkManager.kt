@@ -202,7 +202,7 @@ class DefaultTangemSdkManager(
     override suspend fun resetToFactorySettings(
         cardId: String,
         allowsRequestAccessCodeFromRepository: Boolean,
-    ): CompletionResult<CardDTO> {
+    ): CompletionResult<Boolean> {
         return runTaskAsyncReturnOnMain(
             runnable = ResetToFactorySettingsTask(
                 allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
@@ -210,10 +210,9 @@ class DefaultTangemSdkManager(
             cardId = cardId,
             initialMessage = Message(resources.getString(R.string.card_settings_reset_card_to_factory)),
         )
-            .map { CardDTO(it) }
     }
 
-    override suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Unit> {
+    override suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Boolean> {
         return runTaskAsyncReturnOnMain(
             runnable = ResetBackupCardTask(userWalletId),
             initialMessage = Message(

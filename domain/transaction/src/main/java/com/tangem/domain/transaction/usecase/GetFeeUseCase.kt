@@ -10,6 +10,7 @@ import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import java.math.BigDecimal
@@ -47,7 +48,7 @@ class GetFeeUseCase(
 
                 val maybeFee = when (result) {
                     is Result.Success -> result.data
-                    is Result.Failure -> raise(GetFeeError.DataError(result.error))
+                    is Result.Failure -> raise(result.mapToFeeError())
                 }
                 maybeFee
             },

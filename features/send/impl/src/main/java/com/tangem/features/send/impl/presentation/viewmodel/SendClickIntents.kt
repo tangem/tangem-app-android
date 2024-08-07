@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.viewmodel
 
+import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
@@ -8,7 +9,7 @@ import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
-internal interface SendClickIntents {
+internal interface SendClickIntents : AmountScreenClickIntents {
 
     fun popBackStack()
 
@@ -25,16 +26,6 @@ internal interface SendClickIntents {
     fun onFailedTxEmailClick(errorMessage: String)
 
     fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency)
-
-    // region Amount
-    fun onAmountValueChange(value: String)
-
-    fun onCurrencyChangeClick(isFiat: Boolean)
-
-    fun onMaxValueClick()
-
-    fun onAmountPasteTriggerDismiss()
-    // endregion
 
     // region Recipient
     fun onRecipientAddressValueChange(value: String, type: EnterAddressSource? = null)
