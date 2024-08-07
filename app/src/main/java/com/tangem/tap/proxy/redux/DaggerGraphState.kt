@@ -32,7 +32,6 @@ import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
-import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tester.api.TesterRouter
@@ -64,7 +63,6 @@ data class DaggerGraphState(
     val balanceHidingRepository: BalanceHidingRepository? = null,
     val walletsRepository: WalletsRepository? = null,
     val networksRepository: NetworksRepository? = null,
-    val sendFeatureToggles: SendFeatureToggles? = null,
     val sendRouter: SendRouter? = null,
     val qrScanningRouter: QrScanningRouter? = null,
     val currenciesRepository: CurrenciesRepository? = null,
