@@ -668,7 +668,6 @@
   <string name="staking_details_metrics_block_header">Метрики</string>
   <string name="staking_details_minimum_requirement">Мінімальні вимоги</string>
   <string name="staking_details_no_rewards_to_claim">Немає винагород, щоб отримати</string>
-  <string name="staking_details_on_stake">В стейкінгу</string>
   <string name="staking_details_reward_claiming">Отримати винагороду</string>
   <string name="staking_details_reward_claiming_info">Спосіб отримання винагороди за стейкінг. Його можна отримати автоматично або вручну.</string>
   <string name="staking_details_reward_schedule">Розклад винагород</string>

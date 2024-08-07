@@ -583,7 +583,6 @@
   <string name="staking_details_metrics_block_header">Métriques</string>
   <string name="staking_details_minimum_requirement">Minimum requis</string>
   <string name="staking_details_no_rewards_to_claim">Aucune récompense à réclamer</string>
-  <string name="staking_details_on_stake">En jeu</string>
   <string name="staking_details_reward_claiming">Réclamation de récompense</string>
   <string name="staking_details_reward_claiming_info">Un moyen de recevoir des récompenses de staking. Il peut être réclamé automatiquement ou manuellement.</string>
   <string name="staking_details_reward_schedule">Calendrier de récompenses</string>

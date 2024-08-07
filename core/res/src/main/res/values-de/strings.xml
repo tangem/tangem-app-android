@@ -658,7 +658,6 @@
   <string name="staking_details_metrics_block_header">Metriken</string>
   <string name="staking_details_minimum_requirement">Mindestanforderungen</string>
   <string name="staking_details_no_rewards_to_claim">Keine Belohnungen zu beanspruchen.</string>
-  <string name="staking_details_on_stake">Gestaked</string>
   <string name="staking_details_reward_claiming">Belohnungen beanspruchen</string>
   <string name="staking_details_reward_claiming_info">Eine Möglichkeit, Staking-Belohnungen zu erhalten. Es kann automatisch oder manuell beansprucht werden.</string>
   <string name="staking_details_reward_schedule">Belohnungszeitplan</string>
