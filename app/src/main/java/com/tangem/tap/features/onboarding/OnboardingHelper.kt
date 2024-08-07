@@ -32,26 +32,27 @@ import timber.log.Timber
  */
 object OnboardingHelper {
     suspend fun isOnboardingCase(response: ScanResponse): Boolean {
-        val onboardingManager = store.state.globalState.onboardingState.onboardingManager
+        val onboardingManager =
+            store.state.globalState.onboardingState.onboardingManager ?: OnboardingManager(response)
         val cardId = response.card.cardId
         return when {
             response.cardTypesResolver.isTangemTwins() -> {
                 if (!response.twinsIsTwinned()) {
                     true
                 } else {
-                    onboardingManager?.isActivationInProgress(cardId) ?: false
+                    onboardingManager.isActivationInProgress(cardId) ?: false
                 }
             }
 
             response.cardTypesResolver.isWallet2() || response.cardTypesResolver.isShibaWallet() -> {
                 val emptyWallets = response.card.wallets.isEmpty()
-                val activationInProgress = onboardingManager?.isActivationInProgress(cardId)
+                val activationInProgress = onboardingManager.isActivationInProgress(cardId)
                 val isNoBackup = response.card.backupStatus == CardDTO.BackupStatus.NoBackup &&
                     !DemoHelper.isDemoCard(response)
-                emptyWallets || activationInProgress == true || isNoBackup
+                emptyWallets || activationInProgress || isNoBackup
             }
 
-            response.card.wallets.isNotEmpty() -> onboardingManager?.isActivationInProgress(cardId) ?: false
+            response.card.wallets.isNotEmpty() -> onboardingManager.isActivationInProgress(cardId) ?: false
             else -> true
         }
     }
