@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.common.ui.amountScreen.AmountScreenContent
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -28,7 +30,6 @@ import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.state.previewdata.ConfirmStatePreviewData
 import com.tangem.features.send.impl.presentation.state.previewdata.SendStatesPreviewData
-import com.tangem.features.send.impl.presentation.ui.amount.SendAmountContent
 import com.tangem.features.send.impl.presentation.ui.fee.SendSpeedAndFeeContent
 import com.tangem.features.send.impl.presentation.ui.recipient.SendRecipientContent
 import com.tangem.features.send.impl.presentation.ui.send.SendContent
@@ -46,10 +47,10 @@ internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen)
     BackHandler(onBack = onBackClick)
     Column(
         modifier = Modifier
+            .background(color = TangemTheme.colors.background.tertiary)
             .fillMaxSize()
             .imePadding()
-            .systemBarsPadding()
-            .background(color = TangemTheme.colors.background.tertiary),
+            .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SendAppBar(
@@ -87,7 +88,7 @@ private fun SendAppBar(uiState: SendUiState, currentState: SendUiCurrentScreen) 
         -> resourceReference(R.string.common_fee_selector_title) to null
         SendUiStateType.Send -> if (uiState.sendState?.isSuccess == false) {
             resourceReference(R.string.send_summary_title, wrappedList(uiState.cryptoCurrencyName)) to
-                uiState.amountState?.walletName
+                (uiState.amountState as? AmountState.Data)?.walletName
         } else {
             null to null
         }
@@ -160,13 +161,13 @@ private fun SendScreenContent(uiState: SendUiState, currentState: SendUiCurrentS
             isTransitionAnimationRunning = transition.targetState != transition.currentState
 
             when (state.type) {
-                SendUiStateType.Amount -> SendAmountContent(
+                SendUiStateType.Amount -> AmountScreenContent(
                     amountState = uiState.amountState,
                     isBalanceHiding = uiState.isBalanceHidden,
                     clickIntents = uiState.clickIntents,
                 )
-                SendUiStateType.EditAmount -> SendAmountContent(
-                    amountState = uiState.editAmountState,
+                SendUiStateType.EditAmount -> AmountScreenContent(
+                    amountState = uiState.editAmountState!!,
                     isBalanceHiding = uiState.isBalanceHidden,
                     clickIntents = uiState.clickIntents,
                 )
