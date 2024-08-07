@@ -105,6 +105,7 @@ data class TxFee(
     val decimals: Int,
     val cryptoSymbol: String,
     val feeType: FeeType,
+    val gasPremium: Long?,
 )
 
 enum class FeeType {
