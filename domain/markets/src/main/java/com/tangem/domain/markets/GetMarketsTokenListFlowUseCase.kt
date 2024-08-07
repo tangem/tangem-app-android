@@ -16,6 +16,7 @@ class GetMarketsTokenListFlowUseCase(
             firstBatchSize = batchFlowType.firstBatchSize,
             nextBatchSize = batchFlowType.nextBatchSize,
         )
+        // TODO listen quotes updates flow and update them in other parts of the application
     }
 
     enum class BatchFlowType(
