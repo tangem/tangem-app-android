@@ -3,6 +3,7 @@ package com.tangem.core.featuretoggle.version
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import com.tangem.utils.StringsSigns.MINUS
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -34,6 +35,6 @@ internal class DefaultVersionProvider @Inject constructor(
     }
 
     private companion object {
-        const val VERSION_NAME_DELIMITER = "-"
+        const val VERSION_NAME_DELIMITER = MINUS
     }
 }
