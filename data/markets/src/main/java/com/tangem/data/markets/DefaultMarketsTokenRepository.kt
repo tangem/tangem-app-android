@@ -107,4 +107,13 @@ internal class DefaultMarketsTokenRepository(
 
         return tokenChartConverter.convert(interval, response.getOrThrow())
     }
+
+    override suspend fun getTokenInfo(fiatCurrencyCode: String, tokenId: String): TokenMarketInfo {
+        val response = marketsApi.getCoinMarketData(
+            currency = fiatCurrencyCode,
+            coinId = tokenId,
+        )
+
+        return TokenMarketInfoConverter().convert(response.getOrThrow())
+    }
 }
