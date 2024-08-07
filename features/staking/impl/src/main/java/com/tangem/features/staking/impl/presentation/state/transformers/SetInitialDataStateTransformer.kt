@@ -100,14 +100,14 @@ internal class SetInitialDataStateTransformer(
                 ),
             ),
             RoundedListWithDividersItemData(
-                id = R.string.staking_details_apy,
-                startText = TextReference.Res(R.string.staking_details_apy),
+                id = R.string.staking_details_annual_percentage_rate,
+                startText = TextReference.Res(R.string.staking_details_annual_percentage_rate),
                 endText = getAprRange(),
                 iconClick = { clickIntents.onInfoClick(InfoType.APY) },
             ),
             RoundedListWithDividersItemData(
-                id = R.string.staking_details_on_stake,
-                startText = TextReference.Res(R.string.staking_details_on_stake),
+                id = 0, // todo remove in merge
+                startText = TextReference.Res(0), // todo remove in merge
                 endText = TextReference.Str(
                     value = BigDecimalFormatter.formatCryptoAmount(
                         cryptoAmount = (yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero(),
