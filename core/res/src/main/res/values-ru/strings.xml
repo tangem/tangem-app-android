@@ -13,9 +13,6 @@
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">Выбранный кошелёк не поддерживает сеть %1$s</string>
   <string name="alert_manage_tokens_unsupported_curve_message">Для активации криптографии сети %1$s необходимо сбросить кошелек до заводских настроек. Пожалуйста, выведите свои средства, чтобы не потерять их, после сброса доступ к текущему кошельку будет невозможен.</string>
   <string name="alert_manage_tokens_unsupported_message">Токены в сети %1$s не поддерживаются этой картой из-за ограничений прошивки.</string>
-  <string name="alert_negative_app_rate_sent_message">Спасибо за ваш отзыв. Мы ответим в кратчайшие сроки.</string>
-  <string name="alert_negative_app_rate_sent_title">Ваши предложения отправлены</string>
-  <string name="alert_troubleshooting_scan_card_message">Пожалуйста, попробуйте приложить карту в точности, как показано на анимации, либо прочтите руководство по сканированию. Если проблема осталась, то запросите поддержку.</string>
   <string name="alert_troubleshooting_scan_card_title">У вас возникли трудности со сканированием карты?</string>
   <string name="alert_unsupported_card">Эта карта не предназначена для работы с этим приложением</string>
   <string name="app_settings_default_fee_footer">Подключите функцию комиссии по умолчанию и при формировании транзакции на отправку средств комиссия будет выставлена автоматически, а экран комиссии пропущен. Вы всегда сможете на него вернуться.</string>
@@ -30,8 +27,6 @@
   <string name="app_settings_theme_mode_dark">Тёмная</string>
   <string name="app_settings_theme_mode_light">Светлая</string>
   <string name="app_settings_theme_mode_system">Как в системе</string>
-  <string name="app_settings_theme_selection_footer">При выборе настройки как в системе приложение будет использовать тему в соответствии с настройками вашего устройства</string>
-  <string name="app_settings_theme_selection_system_short">Системная</string>
   <string name="app_settings_theme_selector_title">Тема</string>
   <string name="app_settings_title">Настройки приложения</string>
   <string name="balance_hidden_description">Чтобы скрыть или показать баланс, просто поверните ваше устройство вниз или отключите опцию его в разделе \"Настройки\"</string>
@@ -86,6 +81,7 @@
   <string name="common_buy_currency">Перейти на %1$s</string>
   <string name="common_camera_denied_alert_message">Вы не предоставили доступ к камере, пожалуйста, измените настройки конфиденциальности.</string>
   <string name="common_cancel">Отмена</string>
+  <string name="common_claim_rewards">Вывести награду</string>
   <string name="common_close">Закрыть</string>
   <string name="common_continue">Продолжить</string>
   <string name="common_copy">Копировать</string>
@@ -100,7 +96,6 @@
   </plurals>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
-  <string name="common_disconnect">Отключить</string>
   <string name="common_done">Готово</string>
   <string name="common_enable">Включить</string>
   <string name="common_enabled">Включено</string>
@@ -137,7 +132,6 @@
   <string name="common_reject">Отклонить</string>
   <string name="common_reload">Перезагрузить</string>
   <string name="common_rename">Переименовать</string>
-  <string name="common_retry">Повторить</string>
   <string name="common_save">Сохранить</string>
   <string name="common_save_changes">Сохранить изменения</string>
   <string name="common_search">Искать</string>
@@ -150,6 +144,7 @@
   <string name="common_share">Поделиться</string>
   <string name="common_sign">Подписать</string>
   <string name="common_sign_and_send">Подписать и отправить</string>
+  <string name="common_stake">Застейкать</string>
   <string name="common_staking">Стейкинг</string>
   <string name="common_start">Начать</string>
   <string name="common_submit">Отправить</string>
@@ -164,7 +159,7 @@
   <string name="common_understand">Я понял</string>
   <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
   <string name="common_unreachable">Недоступно</string>
-  <string name="common_warning">Предупреждение</string>
+  <string name="common_unstake">Завершить стейкинг</string>
   <string name="common_yes">Да</string>
   <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
   <string name="currency_subtitle_expanded">Доступные сети</string>
@@ -212,7 +207,6 @@
   <string name="details_row_title_flip_to_hide">Скрывать балансы жестом переворота</string>
   <string name="details_row_title_issuer">Эмитент</string>
   <string name="details_row_title_signed_hashes">Подписано</string>
-  <string name="details_security_management_warning">Если вы забудете код, то потеряете доступ к своим средствам. Восстановление кода невозможно.</string>
   <string name="details_send_feedback">Отправить отзыв</string>
   <string name="details_title">Подробности</string>
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
@@ -289,6 +283,7 @@
   <string name="give_permission_policy_type_footer">Укажите лимит доступа к выбранному токену</string>
   <string name="give_permission_rows_amount">Количество %s</string>
   <string name="give_permission_staking_footer">Функция подтверждения необходима для предоставления другому адресу разрешения на использование определенного количества ваших токенов.По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту StakeKit разрешение использовать ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете осуществить стейкинг токена.</string>
+  <string name="give_permission_staking_subtitle">Чтобы продолжить, вам необходимо разрешить смарт контракту StakeKit использовать ваш %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">Чтобы продолжить, вам нужно разрешить смарт-контракту %1s использовать ваш %2s</string>
   <string name="give_permission_title">Дать разрешение</string>
   <string name="give_permission_unlimited">Безлимитно</string>
@@ -514,7 +509,6 @@
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
-  <string name="send_dismiss_message">Вы действительно хотите закрыть экран отправки транзакции?</string>
   <string name="send_enter_address_field">Введите адрес</string>
   <string name="send_error_address_same_as_wallet">Адрес совпадает с адресом кошелька</string>
   <string name="send_extras_error_invalid_destination_tag">Недопустимый Tag. Он не будет добавлен в транзакцию.</string>
@@ -586,20 +580,49 @@
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
+  <string name="staking_active">Активно</string>
+  <string name="staking_active_footer">Для завершения стейкинга нажмите сюда</string>
   <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
-  <string name="staking_details_apy">APY</string>
-  <string name="staking_details_apy_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
+  <string name="staking_claim_unstaked">Забрать средства</string>
+  <string name="staking_details_annual_percentage_rate">APY</string>
+  <string name="staking_details_annual_percentage_rate_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
+  <string name="staking_details_apr">APR</string>
   <string name="staking_details_available">Доступно</string>
-  <string name="staking_details_estimated_profit">%s</string>
+  <string name="staking_details_average_reward_rate">Средння ставка вознаграждения</string>
+  <string name="staking_details_estimated_profit">%s оценка доходности</string>
+  <string name="staking_details_market_rating">Позиция в рынке</string>
+  <string name="staking_details_metrics_block_header">Метрики</string>
+  <string name="staking_details_minimum_requirement">Минимальное количество</string>
+  <string name="staking_details_no_rewards_to_claim">Нет вознаграждений к получению</string>
   <string name="staking_details_reward_claiming">Способ возраграждения</string>
-  <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Он может быть автоматическим или ручным.</string>
+  <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Он может быть автоматическим, при котором вознаграждение само зачисляется вам на адрес или в ручную, когда вознаграждение нужно вывести, создав транзакцию на её получение.</string>
   <string name="staking_details_reward_schedule">Период возрагражения</string>
   <string name="staking_details_reward_schedule_info">Это период, определяющий, когда участники стейкинга получат свои вознаграждения.</string>
+  <string name="staking_details_rewards_to_claim">Вознаграждение для получения: %s</string>
   <string name="staking_details_title">Стейкинг %s</string>
   <string name="staking_details_unbonding_period">Период вывода</string>
   <string name="staking_details_unbonding_period_info">Период, который необходимо подождать после запроса на вывод средств из стейкинга, прежде чем токены станут доступны.</string>
   <string name="staking_details_warmup_period">Период прогрева</string>
-  <string name="staking_details_warmup_period_info">Время, необходимое для начала процесса стейкинга.</string>
+  <string name="staking_details_warmup_period_info">Время, необходимое для начала процесса стейкинга и активации процесса начисления наград</string>
+  <string name="staking_initial_info_title">Застейкать %s</string>
+  <string name="staking_migrate">Переместить</string>
+  <string name="staking_native">Нативный стейкинг</string>
+  <string name="staking_notification_earn_rewards_text" formatted="false">Стейкинг дает возможность вам получать %1s. Награда будет зачисляться каждый %2s</string>
+  <string name="staking_notification_earn_rewards_title">Получите награду за стейкинг</string>
+  <string name="staking_notification_unstake_text">Награда перестанет начисляться сразу после завершения стейкинга. Процесс завершения длится %s.</string>
+  <string name="staking_restake">Повторный стейкинг</string>
+  <string name="staking_restake_rewards">Застейкать вознаграждения</string>
+  <string name="staking_revoke">Отозвать</string>
+  <string name="staking_revote">Переголосовать</string>
+  <string name="staking_rewards">Вознаграждения</string>
+  <string name="staking_stake_more">Застейкать еще</string>
+  <string name="staking_unlocked_locked">Разблокировать</string>
+  <string name="staking_unstaked">Выведено из стейкинга</string>
+  <string name="staking_unstaked_footer">Проверьте процесс завершения стейкинга, чтобы вывести свои средства.</string>
+  <string name="staking_unstaking">Завершение стейкинга</string>
+  <string name="staking_validator">Валидатор</string>
+  <string name="staking_vote">Проголосовать</string>
+  <string name="staking_withdraw">Вывод</string>
   <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
   <string name="story_awe_title">Революционный аппаратный кошелек</string>
   <string name="story_backup_description">До трех карт с одним кошельком</string>
@@ -639,7 +662,6 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">В данный момент продажа %s недоступна. Следите за нашими обновлениями.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">В данный момент стейкинг монеты %s недоступен. Следите за нашими обновлениями.</string>
-  <string name="token_details_choose_address">Выберите адрес</string>
   <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
   <string name="token_details_hide_alert_hide">Скрыть</string>
   <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
