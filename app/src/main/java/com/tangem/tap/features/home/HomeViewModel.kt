@@ -61,7 +61,7 @@ internal class HomeViewModel @Inject constructor(
         analyticsEventHandler.send(IntroductionProcess.ButtonTokensList())
 
         store.dispatch(TokensAction.SetArgs.ReadAccess)
-        store.dispatchNavigationAction { push(AppRoute.ManageTokens) }
+        store.dispatchNavigationAction { push(AppRoute.ManageTokens(readOnlyContent = true)) }
     }
 
     private fun scanCard() {
