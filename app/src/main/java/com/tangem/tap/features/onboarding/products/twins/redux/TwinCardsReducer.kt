@@ -1,7 +1,7 @@
 package com.tangem.tap.features.onboarding.products.twins.redux
 
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.getTwinCardNumber
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Action
 
@@ -35,7 +35,10 @@ private fun internalReduce(action: Action, state: AppState): TwinCardsState {
             )
         }
         is TwinCardsAction.SetStepOfScreen -> {
-            state = state.copy(currentStep = action.step)
+            state = state.copy(
+                currentStep = action.step,
+                welcomeOnlyScanResponse = (action.step as? TwinCardsStep.WelcomeOnly)?.scanResponse,
+            )
         }
         is TwinCardsAction.SetUserUnderstand -> {
             state = state.copy(userWasUnderstandIfWalletRecreate = action.isUnderstand)
