@@ -102,6 +102,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val shouldShowSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
@@ -169,6 +170,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             swapRepository = swapRepository,
             quotesRepository = quotesRepository,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            addCryptoCurrenciesUseCase = addCryptoCurrenciesUseCase,
             swapTransactionStatusStore = swapTransactionStatusStore,
             dispatchers = dispatchers,
             clickIntents = this,
@@ -728,7 +730,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onDismissBottomSheet() {
-        if (internalUiState.value.bottomSheetConfig?.content is ExchangeStatusBottomSheetConfig) {
+        val bsContent = internalUiState.value.bottomSheetConfig?.content
+        if (bsContent is ExchangeStatusBottomSheetConfig) {
             viewModelScope.launch(dispatchers.main) {
                 internalUiState.value = exchangeStatusFactory.removeTransactionOnBottomSheetClosed()
             }
@@ -747,6 +750,20 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onGoToProviderClick(url: String) {
+        router.openUrl(url)
+    }
+
+    override fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency) {
+        if (internalUiState.value.bottomSheetConfig?.content is ExchangeStatusBottomSheetConfig) {
+            viewModelScope.launch {
+                internalUiState.value = exchangeStatusFactory.removeTransactionOnBottomSheetClosed(true)
+            }
+        }
+        internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+        router.openTokenDetails(userWalletId, cryptoCurrency)
+    }
+
+    override fun onOpenUrlClick(url: String) {
         router.openUrl(url)
     }
 
