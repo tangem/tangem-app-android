@@ -3,13 +3,11 @@ package com.tangem.tap
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+import com.tangem.common.routing.AppRoute
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import kotlinx.coroutines.*
 import timber.log.Timber
 import kotlin.time.Duration
@@ -50,7 +48,7 @@ internal class LockUserWalletsTimer(
             start()
 
             if (shouldOpenWelcomeScreenOnResume) {
-                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
+                store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
                 settingsRepository.setShouldOpenWelcomeScreenOnResume(value = false)
             }
         }
@@ -128,7 +126,7 @@ internal class LockUserWalletsTimer(
                 if (wasApplicationStopped) {
                     settingsRepository.setShouldOpenWelcomeScreenOnResume(value = true)
                 } else {
-                    store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Welcome))
+                    store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
                 }
             }
         }
