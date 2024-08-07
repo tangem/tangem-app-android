@@ -17,6 +17,7 @@ import com.tangem.domain.wallets.models.UserWallet
  */
 class GetSelectedWalletSyncUseCase(private val userWalletsListManager: UserWalletsListManager) {
 
+    @Deprecated("You should provide the selected wallet via routing parameters due to the scalability of the features")
     operator fun invoke(): Either<GetUserWalletError, UserWallet> {
         return either {
             ensureNotNull(

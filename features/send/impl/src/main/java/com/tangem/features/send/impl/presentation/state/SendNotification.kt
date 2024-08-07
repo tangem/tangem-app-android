@@ -157,6 +157,14 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             ),
         )
 
+        data class TronAccountNotActivated(val tokenName: String) : Warning(
+            title = resourceReference(R.string.send_fee_unreachable_error_title),
+            subtitle = resourceReference(
+                R.string.send_tron_account_activation_error,
+                wrappedList(tokenName),
+            ),
+        )
+
         data class FeeCoverageNotification(val cryptoAmount: String, val fiatAmount: String) : Warning(
             title = resourceReference(R.string.send_network_fee_warning_title),
             subtitle = resourceReference(
