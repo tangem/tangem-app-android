@@ -4,6 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swaptx.ExchangeAnalyticsStatus
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
@@ -12,6 +13,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
@@ -38,6 +40,7 @@ internal class ExchangeStatusFactory(
     private val swapRepository: SwapRepository,
     private val quotesRepository: QuotesRepository,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val clickIntents: TokenDetailsClickIntents,
@@ -81,12 +84,13 @@ internal class ExchangeStatusFactory(
             }
     }
 
-    suspend fun removeTransactionOnBottomSheetClosed(): TokenDetailsState {
+    suspend fun removeTransactionOnBottomSheetClosed(isForceTerminal: Boolean = false): TokenDetailsState {
         val state = currentStateProvider()
         val bottomSheetConfig = state.bottomSheetConfig?.content as? ExchangeStatusBottomSheetConfig ?: return state
         val selectedTx = bottomSheetConfig.value
 
-        return if (selectedTx.activeStatus.isTerminal()) {
+        val shouldTerminate = selectedTx.activeStatus.isTerminal(selectedTx.isRefundTerminalStatus) || isForceTerminal
+        return if (shouldTerminate) {
             swapTransactionRepository.removeTransaction(
                 userWalletId = userWalletId,
                 fromCryptoCurrency = selectedTx.fromCryptoCurrency,
@@ -105,12 +109,20 @@ internal class ExchangeStatusFactory(
     suspend fun updateSwapTxStatuses(swapTxList: PersistentList<SwapTransactionsState>) = withContext(dispatchers.io) {
         swapTxList.map { tx ->
             async {
-                if (tx.activeStatus.isTerminal()) {
+                val statusModel = getExchangeStatus(tx.txId)
+                val isRefundTerminalStatus = statusModel?.refundNetwork == null &&
+                    statusModel?.refundContractAddress == null &&
+                    tx.provider.type != ExchangeProviderType.DEX_BRIDGE
+                if (tx.activeStatus.isTerminal(isRefundTerminalStatus)) {
                     tx
                 } else {
-                    val statusModel = getExchangeStatus(tx.txId)
-                    swapTransactionsStateConverter
-                        .updateTxStatus(tx, statusModel)
+                    val addedRefundToken = addRefundCurrencyIfNeeded(statusModel, tx.provider.type)
+                    swapTransactionsStateConverter.updateTxStatus(
+                        tx = tx,
+                        statusModel = statusModel,
+                        refundToken = addedRefundToken,
+                        isRefundTerminalStatus = isRefundTerminalStatus,
+                    )
                 }
             }
         }
@@ -143,6 +155,27 @@ internal class ExchangeStatusFactory(
         }
     }
 
+    /**
+     * For now do it only for dex-bridge provider
+     */
+    private suspend fun addRefundCurrencyIfNeeded(
+        status: ExchangeStatusModel?,
+        type: ExchangeProviderType,
+    ): CryptoCurrency? {
+        status ?: return null
+        if (type != ExchangeProviderType.DEX_BRIDGE) return null
+        val refundNetwork = status.refundNetwork
+        val refundContractAddress = status.refundContractAddress
+        if (refundNetwork != null && refundContractAddress != null) {
+            return addCryptoCurrenciesUseCase(
+                userWalletId = userWalletId,
+                contractAddress = refundContractAddress,
+                networkId = refundNetwork,
+            ).getOrNull()
+        }
+        return null
+    }
+
     private fun getExchangeStatusState(
         savedTransactions: List<SavedSwapTransactionListModel>?,
         quotes: Set<Quote>,
@@ -157,23 +190,31 @@ internal class ExchangeStatusFactory(
         )
     }
 
-    private fun ExchangeStatus?.isTerminal() =
-        this == ExchangeStatus.Refunded || this == ExchangeStatus.Finished || this == ExchangeStatus.Cancelled
+    private fun ExchangeStatus?.isTerminal(isRefundTerminal: Boolean): Boolean {
+        val needTerminalRefund = this == ExchangeStatus.Refunded && isRefundTerminal
+        return needTerminalRefund ||
+            this == ExchangeStatus.Finished ||
+            this == ExchangeStatus.Cancelled ||
+            this == ExchangeStatus.TxFailed ||
+            this == ExchangeStatus.Unknown
+    }
 
     private fun toAnalyticStatus(status: ExchangeStatus?): ExchangeAnalyticsStatus? {
         return when (status) {
             ExchangeStatus.New,
             ExchangeStatus.Waiting,
-            ExchangeStatus.WaitingTxHash,
             ExchangeStatus.Sending,
             ExchangeStatus.Confirming,
             ExchangeStatus.Exchanging,
             -> ExchangeAnalyticsStatus.InProgress
+            ExchangeStatus.WaitingTxHash -> ExchangeAnalyticsStatus.WaitingTxHash
             ExchangeStatus.Verifying -> ExchangeAnalyticsStatus.KYC
             ExchangeStatus.Failed -> ExchangeAnalyticsStatus.Fail
+            ExchangeStatus.TxFailed -> ExchangeAnalyticsStatus.FailTx
             ExchangeStatus.Finished -> ExchangeAnalyticsStatus.Done
             ExchangeStatus.Refunded -> ExchangeAnalyticsStatus.Refunded
             ExchangeStatus.Cancelled -> ExchangeAnalyticsStatus.Cancelled
+            ExchangeStatus.Unknown -> ExchangeAnalyticsStatus.Unknown
             else -> null
         }
     }
