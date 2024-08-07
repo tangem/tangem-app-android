@@ -24,6 +24,7 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.timber)
     implementation(deps.reKotlin)
+    implementation(deps.kotlin.serialization)
 
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
@@ -51,7 +52,8 @@ dependencies {
     implementation(projects.core.datasource)
 
     /** Common */
-    implementation(projects.common)
+    implementation(projects.common.ui)
+    implementation(projects.common.routing)
 
     /** Libs */
     implementation(projects.libs.crypto)
@@ -72,6 +74,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.feedback)
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.settings)

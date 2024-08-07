@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import com.tangem.core.ui.components.currency.tokenicon.LoadingIcon
+import com.tangem.core.ui.components.currency.icon.LoadingIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
 import kotlinx.coroutines.launch

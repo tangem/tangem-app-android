@@ -39,6 +39,7 @@ dependencies {
     implementation(projects.core.featuretoggles)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+    implementation(projects.core.navigation)
 
     /** Feature Apis */
     implementation(projects.features.tester.api)
