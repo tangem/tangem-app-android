@@ -60,7 +60,7 @@ internal sealed class SettingsItem(
     data class LinkMoreCards(
         override val onClick: () -> Unit,
     ) : SettingsItem(
-        iconResId = R.drawable.ic_more_cards,
+        iconResId = R.drawable.ic_more_cards_24,
         title = resourceReference(R.string.details_row_title_create_backup),
     )
 

@@ -4,7 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -123,14 +126,14 @@ internal fun HasMoreItem(moreCount: Int) {
     ) {
         Text(
             modifier = Modifier
-                .padding(TangemTheme.dimens.spacing4)
                 .align(Alignment.Center)
                 .drawWithContent { if (readyToDraw) drawContent() },
             text = "+$count",
             style = textStyle,
+            color = TangemTheme.colors.text.tertiary,
             overflow = TextOverflow.Clip,
             onTextLayout = { textLayoutResult ->
-                if (textLayoutResult.didOverflowHeight) {
+                if (textLayoutResult.hasVisualOverflow) {
                     textStyle = textStyle.copy(fontSize = textStyle.fontSize * 0.9)
                 } else {
                     readyToDraw = true

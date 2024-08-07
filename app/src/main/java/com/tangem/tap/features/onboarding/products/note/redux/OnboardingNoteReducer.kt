@@ -13,7 +13,7 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingNoteSt
 
     when (action) {
         is GlobalAction.Onboarding.Start -> {
-            state = OnboardingNoteState()
+            state = OnboardingNoteState(scanResponse = action.scanResponse)
         }
         is OnboardingNoteAction.SetArtworkUrl -> {
             state = state.copy(cardArtworkUrl = action.artworkUrl)
