@@ -5,7 +5,6 @@ import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.featuretoggle.WalletFeatureToggles
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
@@ -28,7 +27,6 @@ internal class MultiWalletContentLoader(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
@@ -42,7 +40,6 @@ internal class MultiWalletContentLoader(
                 walletWithFundsChecker = walletWithFundsChecker,
                 getTokenListUseCase = getTokenListUseCase,
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-                walletFeatureToggles = walletFeatureToggles,
                 applyTokenListSortingUseCase = applyTokenListSortingUseCase,
                 runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
             ),

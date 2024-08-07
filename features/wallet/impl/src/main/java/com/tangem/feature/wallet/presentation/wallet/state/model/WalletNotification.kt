@@ -6,7 +6,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.feature.wallet.impl.R
 import org.joda.time.DateTime
 
@@ -178,34 +177,6 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 onPrimaryClick = onLikeClick,
                 secondaryText = resourceReference(id = R.string.warning_button_could_be_better),
                 onSecondaryClick = onDislikeClick,
-            ),
-            onCloseClick = onCloseClick,
-        ),
-    )
-
-    data class TravalaPromo(
-        val startDateTime: DateTime,
-        val endDateTime: DateTime,
-        val bannerLink: String?,
-        val onBookNowButtonClick: (String?) -> Unit,
-        val onCloseClick: () -> Unit,
-    ) : WalletNotification(
-        config = NotificationConfig(
-            title = resourceReference(id = R.string.main_travala_promotion_title),
-            subtitle = resourceReference(
-                id = R.string.main_travala_promotion_description,
-                wrappedList(
-                    DateTimeFormatters.formatDate(startDateTime, DateTimeFormatters.dateMMMMd),
-                    DateTimeFormatters.formatDate(endDateTime, DateTimeFormatters.dateMMMMd),
-                ),
-            ),
-            // Stub. Travala has its own Composable implementation with correct img
-            iconResId = R.drawable.ic_star_24,
-            // Stub. Travala has its own Composable implementation with correct img
-            backgroundResId = R.drawable.ic_star_24,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                onClick = { onBookNowButtonClick(bannerLink) },
-                text = resourceReference(R.string.main_travala_promotion_button),
             ),
             onCloseClick = onCloseClick,
         ),

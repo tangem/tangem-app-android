@@ -1,5 +1,6 @@
 package com.tangem.core.ui.screen
 
+import android.app.Activity
 import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.domain.apptheme.model.AppThemeMode
 
 /**
@@ -50,14 +52,17 @@ internal interface ComposeScreen {
  * @param context The context.
  * @return A [ComposeView] instance with the defined screen content.
  */
-internal fun ComposeScreen.createComposeView(context: Context): ComposeView {
+internal fun ComposeScreen.createComposeView(context: Context, activity: Activity): ComposeView {
     return ComposeView(context).apply {
         setContent {
             val appThemeMode by uiDependencies.appThemeModeHolder.appThemeMode
+            val windowSize = rememberWindowSize(activity = activity)
 
             TangemTheme(
                 isDark = shouldUseDarkTheme(appThemeMode),
+                windowSize = windowSize,
                 hapticManager = uiDependencies.hapticManager,
+                snackbarHostState = uiDependencies.globalSnackbarHostState,
             ) {
                 ScreenContent(modifier = screenModifier)
             }
