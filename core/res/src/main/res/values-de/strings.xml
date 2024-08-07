@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
-  <string name="add_custom_token_title">Benutzerdefiniertes Token hinzufügen</string>
+  <string name="add_custom_token_title">Benutzerdef. Token hinzuf.</string>
   <string name="add_tokens_title">Token verwalten</string>
   <string name="address_qr_code_message_format">Sende nur %1$s ( %2$s ) vom %3$s -Netzwerk an diese Adresse. Die Verwendung anderer Token und Netzwerke kann zum Verlust von Geldern führen.</string>
   <string name="alert_button_how_to_scan">So scannt man</string>
@@ -23,7 +23,7 @@
   <string name="app_settings_off_saved_wallet_alert_message">Durch das Entfernen der gespeicherten Karte werden alle gespeicherten Wallets und deren Zugangscodes aus der App gelöscht.</string>
   <string name="app_settings_saved_access_codes">Zugangscode speichern</string>
   <string name="app_settings_saved_access_codes_footer">Bei Interaktionen mit deiner Karte wird anstelle des Zugangscodes eine biometrische Authentifizierung abgefragt.</string>
-  <string name="app_settings_saved_wallet">Behalten die Wallet in der App</string>
+  <string name="app_settings_saved_wallet">Behalte die Wallet in der App</string>
   <string name="app_settings_saved_wallet_footer">Aktiviere die Verknüpfung aller Wallets mit der Tangem-App. Die biometrische Authentifizierung ist zum Entsperren der App erforderlich. Das Signieren von Transaktionen erfordert das Antippen deiner Tangem-Karte.</string>
   <string name="app_settings_theme_mode_dark">Dunkel</string>
   <string name="app_settings_theme_mode_light">Hell</string>
@@ -46,7 +46,7 @@
   </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Deaktiviere diese Option, wenn du nicht möchtest, dass diese Karte zum Zurücksetzen von Zugangscodes auf anderen Karten in dieser Wallets verwendet wird. Bitte beachte, dass du dann auch den Zugangscode auf dieser Karte nicht zurücksetzen kannst.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Ermöglicht die Verwendung dieser Karte zum Zurücksetzen des Zugangscodes auf anderen Karten in dieser Brieftasche</string>
-  <string name="card_settings_access_code_recovery_title">Wiederherstellung des Zugangscodes</string>
+  <string name="card_settings_access_code_recovery_title">Zugangscodes wiederherstellen</string>
   <string name="card_settings_action_sheet_reset">Zurücksetzen</string>
   <string name="card_settings_action_sheet_title">Möchtest du das wirklich tun?</string>
   <string name="card_settings_change_access_code">Zugangscode ändern</string>
@@ -84,14 +84,14 @@
   <string name="common_cancel">Abbrechen</string>
   <string name="common_claim_rewards">Stakingbelohnungen beanstpruchen</string>
   <string name="common_close">Schließen</string>
-  <string name="common_continue">Weitermachen</string>
+  <string name="common_continue">Weiter</string>
   <string name="common_copy">Kopieren</string>
   <string name="common_copy_address">Adresse kopieren</string>
   <string name="common_create">Erstellen</string>
-  <string name="common_custom">Benutzerdefiniert</string>
+  <string name="common_custom">Benutzerdef.</string>
   <plurals name="common_days">
-    <item quantity="one">Tag</item>
-    <item quantity="other">Tage</item>
+    <item quantity="one">%d tag</item>
+    <item quantity="other">%d tage</item>
   </plurals>
   <string name="common_delete">Entfernen</string>
   <string name="common_disabled">Deaktiviert</string>
@@ -107,9 +107,10 @@
   <string name="common_fee_selector_option_fast">Schnell</string>
   <string name="common_fee_selector_option_market">Markt</string>
   <string name="common_fee_selector_option_slow">Langsam</string>
-  <string name="common_fee_selector_title">Geschwindigkeit und Gebühr</string>
+  <string name="common_fee_selector_title">Gebühren</string>
   <string name="common_generate_addresses">Adressen abrufen</string>
   <string name="common_go_to_provider">Zum Anbieter gehen</string>
+  <string name="common_go_to_token">Zum Token</string>
   <string name="common_import">Importieren</string>
   <string name="common_later">Später</string>
   <string name="common_locked">Gesperrt</string>
@@ -153,7 +154,7 @@
   <string name="common_today">Heute</string>
   <string name="common_transaction_failed">Transaktion fehlgeschlagen</string>
   <string name="common_transactions">Transaktionen</string>
-  <string name="common_transfer">Überweisen</string>
+  <string name="common_transfer">Überweisung</string>
   <string name="common_understand">Ich verstehe</string>
   <string name="common_unknown_error">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
   <string name="common_unreachable">Nicht erreichbar</string>
@@ -225,6 +226,8 @@
   <string name="express_exchange_by">Getauscht von %s</string>
   <string name="express_exchange_notification_failed_text">Besuche die Website des Anbieters, um dein Geld zurückzuerhalten</string>
   <string name="express_exchange_notification_failed_title">Fehler beim Vorgang durch Anbieter</string>
+  <string name="express_exchange_notification_refund_text">Der Transaktionsbetrag wurde aufgrund von OKX- oder Bridge-Regeln in %1$s auf deine Wallet zurückerstattet. %2$s</string>
+  <string name="express_exchange_notification_refund_title">Der Betrag wurde in %1$s (%2$s Netzwerk) zurückerstattet.</string>
   <string name="express_exchange_notification_verification_text">Besuche die Website des Anbieters zur Überprüfung</string>
   <string name="express_exchange_notification_verification_title">KYC-Überprüfung durch den Anbieter erforderlich</string>
   <string name="express_exchange_status_canceled">Abgebrochen</string>
@@ -426,7 +429,7 @@
   <string name="onboarding_button_backup_now">Jetzt sichern</string>
   <string name="onboarding_button_backup_origin">Scannen der Hauptkarte</string>
   <string name="onboarding_button_continue_wallet">Weiter zu meiner Wallet</string>
-  <string name="onboarding_button_finalize_backup">Abschließen der Sicherung</string>
+  <string name="onboarding_button_finalize_backup">Backup abschließen</string>
   <string name="onboarding_button_receive_crypto">Krypto empfangen</string>
   <string name="onboarding_button_scan_origin_card">Primärkarte scannen</string>
   <string name="onboarding_button_skip_backup">Für später überspringen</string>
@@ -436,7 +439,7 @@
   <string name="onboarding_create_wallet_header">Erstelle eine Wallet</string>
   <string name="onboarding_create_wallet_options_button_options">Andere Optionen</string>
   <string name="onboarding_create_wallet_options_message">Deine Schlüssel(private-keys) werden sicher im Inneren der Karte generiert. Es gibt keine Seed-Phrase, d. h. niemand kann sie exportieren oder stehlen.</string>
-  <string name="onboarding_create_wallet_options_title">Schlüssel privat generieren</string>
+  <string name="onboarding_create_wallet_options_title">Schlüssel anonym generieren</string>
   <string name="onboarding_done_body">Deine Karte ist aktiviert und einsatzbereit</string>
   <string name="onboarding_done_header">Erfolgreich!</string>
   <string name="onboarding_exit_alert_message">In diesem Fall musst du ganz von vorne anfangen.</string>
@@ -454,22 +457,22 @@
     <item quantity="one">leer</item>
     <item quantity="other">%d Wörter</item>
   </plurals>
-  <string name="onboarding_seed_import_message">Um deine Wallets zu importieren, gib bitte deineSeed-Phrase in das folgende Feld ein</string>
+  <string name="onboarding_seed_import_message">Um deine Wallets zu importieren, gib bitte deine Seed-Phrase in das folgende Feld ein</string>
   <string name="onboarding_seed_intro_button_generate">Seed-Phrase generieren</string>
   <string name="onboarding_seed_intro_button_import">Wallet importieren</string>
   <string name="onboarding_seed_intro_message">Eine Seed-Phrase ist eine Reihe von Wörtern, mit denen du deine Wallet wiederherstellen kannst. Im Gegensatz zu den von der Karte generierten Schlüsseln sind Seed-Phrasen ungeschützt und können kopiert und gestohlen werden. Die Verwendung dieser Option erfolgt auf eigene Gefahr.</string>
   <string name="onboarding_seed_intro_title">Seed-Phrase verwenden</string>
   <string name="onboarding_seed_mnemonic_invalid_checksum">Ungültige Seed-Phrase. Bitte überprüfe die Wortreihenfolge.</string>
   <string name="onboarding_seed_mnemonic_wrong_words">Ungültige Seed-Phrase. Bitte überprüfe die Rechtschreibung.</string>
-  <string name="onboarding_seed_phrase_intro_legacy">Altbestand</string>
+  <string name="onboarding_seed_phrase_intro_legacy">veralteter Standard</string>
   <string name="onboarding_seed_user_validation_message">Um zu überprüfen, ob du deine Seed-Phrase richtig aufgeschrieben hast, gib bitte das 2., 7. und 11 Wort ein.</string>
-  <string name="onboarding_seed_user_validation_title">Also, lass uns das überprüfen</string>
+  <string name="onboarding_seed_user_validation_title">Eine letzte Prüfung!</string>
   <string name="onboarding_subtitle_no_backup_cards">Um den Sicherungsvorgang zu starten, füge bis zu zwei Sicherungskarten hinzu.</string>
   <string name="onboarding_subtitle_one_backup_card">Du kannst eine weitere Karte hinzufügen oder den Sicherungsvorgang abschließen</string>
   <string name="onboarding_subtitle_scan_backup_card_format">Bereite die Sicherungskarte mit der Nummer %s vor.</string>
   <string name="onboarding_subtitle_scan_primary">Scanne die primär-Karte, um den Sicherungsvorgang zu starten.</string>
   <string name="onboarding_subtitle_scan_primary_card_format">Bereite die primäre Karte mit der Nummer %s vor.</string>
-  <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Deine Wallet-Karte ist konfiguriert und einsatzbereit.</string>
+  <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Deine Tangem-Karte ist konfiguriert und einsatzbereit.</string>
   <string name="onboarding_subtitle_two_backup_cards">Maximale Anzahl an Karten hinzugefügt. Schließe den Sicherungsvorgang ab.</string>
   <string name="onboarding_title">Karte aktivieren</string>
   <string name="onboarding_title_backup_card_format">Sicherungskarte Nr. %d</string>
@@ -496,7 +499,7 @@
   <string name="organize_tokens_group">Gruppe erstellen</string>
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
-  <string name="organize_tokens_ungroup">Gruppierung aufheben</string>
+  <string name="organize_tokens_ungroup">Gruppierung aufh.</string>
   <string name="qr_scanner_camera_denied_gallery_button">Wählen aus der Galerie aus</string>
   <string name="qr_scanner_camera_denied_settings_button">Einstellungen</string>
   <string name="qr_scanner_camera_denied_text">Du hast keinen Zugriff auf deine Kamera gewährt</string>
@@ -626,7 +629,7 @@
   <string name="send_summary_tap_hint">Berühre an beliebiger Stelle für Änderungen</string>
   <string name="send_summary_title">Versende %s</string>
   <string name="send_summary_transaction_description">Du sendest **%1$s** inklusive der Netzwerkgebühr %2$s</string>
-  <string name="send_summary_transaction_description_no_fiat_fee">Du sendest ** %1$s ** und %2$s</string>
+  <string name="send_summary_transaction_description_no_fiat_fee">Du sendest **%1$s** und %2$s</string>
   <string name="send_title_currency_format">Senden %s</string>
   <string name="send_total_label">Gesamt</string>
   <string name="send_total_subtitle_asset_format">%1$s und %2$s werden gesendet</string>
@@ -644,9 +647,10 @@
   <string name="staking_active">Aktiv</string>
   <string name="staking_active_footer">Um deine Kryptos zu unstaken, klick hier.</string>
   <string name="staking_amount_requirement_error">Die Anzahl der zu stakenden Krypros muss mindesten %s betragen</string>
+  <string name="staking_claim_unstaked">nicht gestakte beanspruche</string>
+  <string name="staking_details_annual_percentage_rate">Jährliche prozentuale Rendite</string>
+  <string name="staking_details_annual_percentage_rate_info">Die jährliche prozentuale Rendite, die du durch die Teilnahme am Staking erzielen kannst.</string>
   <string name="staking_details_apr">Effektiver Jahreszins</string>
-  <string name="staking_details_apy">Jährliche prozentuale Rendite</string>
-  <string name="staking_details_apy_info">Die jährliche prozentuale Rendite, die du durch die Teilnahme am Staking erzielen kannst.</string>
   <string name="staking_details_available">Verfügbar</string>
   <string name="staking_details_average_reward_rate">Durchschnittliche Belohnungsquote</string>
   <string name="staking_details_estimated_profit">%s geschätzter Profit</string>
@@ -654,7 +658,6 @@
   <string name="staking_details_metrics_block_header">Metriken</string>
   <string name="staking_details_minimum_requirement">Mindestanforderungen</string>
   <string name="staking_details_no_rewards_to_claim">Keine Belohnungen zu beanspruchen.</string>
-  <string name="staking_details_on_stake">Gestaked</string>
   <string name="staking_details_reward_claiming">Belohnungen beanspruchen</string>
   <string name="staking_details_reward_claiming_info">Eine Möglichkeit, Staking-Belohnungen zu erhalten. Es kann automatisch oder manuell beansprucht werden.</string>
   <string name="staking_details_reward_schedule">Belohnungszeitplan</string>
@@ -665,14 +668,28 @@
   <string name="staking_details_unbonding_period_info">Der Zeitraum, den du nach der Beantragung der Abhebung von Geldern aus dem Staking warten musst, bevor die Token verfügbar werden.</string>
   <string name="staking_details_warmup_period">Aufwärmphase</string>
   <string name="staking_details_warmup_period_info">Die zugewiesene Zeit für die Aktivierung der Teilnahme am Staking.</string>
+  <string name="staking_initial_info_title">Stake %s</string>
+  <string name="staking_migrate">Migrieren</string>
   <string name="staking_native">Natives Staking</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">Mit Staking kannst du %1s verdienen. Deine Staking-Belohnungen kommen alle ~%2s Tage.</string>
   <string name="staking_notification_earn_rewards_title">Verdiene Staking-Belohnungen</string>
+  <string name="staking_notification_unstake_text">Die Belohnungen werden sofort nach dem unstaken gestoppt. Der unstakingprozess dauert %s.</string>
+  <string name="staking_rebond">Erneut binden</string>
+  <string name="staking_restake">Erneut staken</string>
+  <string name="staking_restake_rewards">Belohnungen erneut staken</string>
+  <string name="staking_revoke">Widerrufen</string>
+  <string name="staking_revote">Neuwahl</string>
   <string name="staking_rewards">Belohnungen</string>
+  <string name="staking_stake_locked">Stake gesperrt</string>
   <string name="staking_stake_more">Mehr staken</string>
-  <string name="staking_unstaked">unstaken</string>
+  <string name="staking_unlocked_locked">gelocktes unlocken</string>
+  <string name="staking_unstaked">Unstaken</string>
   <string name="staking_unstaked_footer">Prüfe, was nicht eingesetzt wurde, um dein Vermögen zu beanspruchen</string>
+  <string name="staking_unstaking">Staking beenden</string>
   <string name="staking_validator">Validator/ Prüfer</string>
+  <string name="staking_vote">Abstimmung</string>
+  <string name="staking_vote_locked">Abstimmung gesperrt</string>
+  <string name="staking_withdraw">Zurückziehen</string>
   <string name="story_awe_description">Bewahre deine Krypto-Assets sicher auf, während die privaten Schlüssel auf deiner Karte bleiben</string>
   <string name="story_awe_title">Revolutionäre Hardware-Wallet</string>
   <string name="story_backup_description">Bis zu 3 physische Karten pro Wallet</string>
@@ -748,8 +765,8 @@
   <string name="twins_recreate_warning">Diese Aktion ist unumkehrbar. Du hast keinen Zugriff mehr auf die alte Wallet.</string>
   <string name="twins_scan_twin_with_number">Tippe auf die Doppelkarte mit der Nummer %s und entferne sie erst am Ende des Vorgangs.</string>
   <string name="unlock_wallet_description_full">Verwende %s oder scanne eine Karte, um Zugriff auf deine Wallet zu erhalten.</string>
-  <string name="user_push_notification_agreement_argument_one">Bleib  auf dem Laufenden mit den neuesten Funktionen und Neuigkeiten</string>
-  <string name="user_push_notification_agreement_argument_two">Sei  der Erste, der von neuen Aktionen erfährt</string>
+  <string name="user_push_notification_agreement_argument_one">Bleib auf dem Laufenden mit den neuesten Funktionen und Neuigkeiten</string>
+  <string name="user_push_notification_agreement_argument_two">Sei der Erste, der von neuen Aktionen erfährt</string>
   <string name="user_push_notification_agreement_header">Möchtest du Push-Benachrichtigungen verwenden?</string>
   <string name="user_wallet_list_add_button">Neues Wallet hinzufügen</string>
   <string name="user_wallet_list_delete_prompt">Möchtest du diese Wallet wirklich löschen?</string>
@@ -805,9 +822,9 @@
   <string name="warning_backup_errors_title">Aktivierungsfehler</string>
   <string name="warning_beacon_chain_retirement_content">Laut den Entwicklern des BNB-Netzes wird die Unterstützung für den BEP-2-Standard im Juni 2024 enden. Um den Verlust von Vermögenswerten mit diesem Standard zu vermeiden, konvertiere bitte in den BEP-20 Standard. Nutze gerne unseren Swap-Service, um sie auf das BNB Smart Chain Netzwerk zu übertragen.</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain wird abgeschaltet</string>
-  <string name="warning_button_could_be_better">Könnte besser sein</string>
+  <string name="warning_button_could_be_better">verbesserungswürdig</string>
   <string name="warning_button_like_it">Gefällt mir</string>
-  <string name="warning_button_ok">OK, ich hab\'s!</string>
+  <string name="warning_button_ok">OK, habe ich verstanden!</string>
   <string name="warning_button_really_cool">Echt toll!</string>
   <string name="warning_button_refresh">Aktualisieren</string>
   <string name="warning_demo_mode_message">Du befindest sich derzeit im Demo-Modus</string>
