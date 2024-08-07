@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.custom.BitcoinCustomFeeConverter
 import com.tangem.features.send.impl.presentation.state.fee.custom.EthereumCustomFeeConverter
+import com.tangem.features.send.impl.presentation.state.fee.custom.KaspaCustomFeeConverter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
@@ -37,6 +38,15 @@ internal class FeeConverter(
         )
     }
 
+    private val kaspaCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
+        KaspaCustomFeeConverter(
+            clickIntents = clickIntents,
+            stateRouterProvider = stateRouterProvider,
+            appCurrencyProvider = appCurrencyProvider,
+            feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
+        )
+    }
+
     override fun convert(value: FeeSelectorState.Content): Fee {
         return when (val fees = value.fees) {
             is TransactionFee.Choosable -> {
@@ -47,7 +57,12 @@ internal class FeeConverter(
                     FeeType.Custom -> convertCustom(value, fees)
                 }
             }
-            is TransactionFee.Single -> fees.normal
+            is TransactionFee.Single ->
+                when (value.selectedFee) {
+                    FeeType.Market -> fees.normal
+                    FeeType.Custom -> convertCustom(value, fees)
+                    else -> fees.normal
+                }
         }
     }
 
@@ -60,6 +75,7 @@ internal class FeeConverter(
             when (normalFee) {
                 is Fee.Ethereum -> ethereumCustomFeeConverter.convertBack(normalFee = normalFee, value = customValues)
                 is Fee.Bitcoin -> bitcoinCustomFeeConverter.convertBack(normalFee = normalFee, value = customValues)
+                is Fee.Kaspa -> kaspaCustomFeeConverter.convertBack(normalFee = normalFee, value = customValues)
                 else -> {
                     val customFee = customValues.firstOrNull()
                     Fee.Common(
