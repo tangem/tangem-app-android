@@ -37,7 +37,7 @@ object BigDecimalFormatter {
             maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
             minimumFractionDigits = 2
             isGroupingUsed = true
-            roundingMode = RoundingMode.DOWN
+            roundingMode = RoundingMode.HALF_UP
         }
 
         return formatter.format(cryptoAmount).let {

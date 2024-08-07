@@ -1,8 +1,6 @@
 package com.tangem.tap.common.url
 
 import android.content.Context
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-import android.content.Intent.FLAG_ACTIVITY_NO_HISTORY
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
@@ -35,9 +33,6 @@ internal class CustomTabsUrlOpener : UrlOpener {
                 if (MutableAppThemeModeHolder.isDarkThemeActive) COLOR_SCHEME_DARK else COLOR_SCHEME_LIGHT,
             )
             .build()
-
-        // Open CustomTabsActivity as new task without saving into the stack
-        customTabsIntent.intent.setFlags(FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_NO_HISTORY)
 
         customTabsIntent.launchUrl(context, Uri.parse(url))
     }
