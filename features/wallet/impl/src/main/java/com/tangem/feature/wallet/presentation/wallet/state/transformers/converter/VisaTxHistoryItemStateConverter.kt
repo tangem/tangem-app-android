@@ -9,6 +9,7 @@ import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.VisaWalletIntents
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import org.joda.time.DateTimeZone
 
@@ -20,7 +21,7 @@ internal class VisaTxHistoryItemStateConverter(
     override fun convert(value: VisaTxHistoryItem): TransactionState {
         val localDate = value.date.withZone(DateTimeZone.getDefault())
         val time = DateTimeFormatters.formatDate(localDate, DateTimeFormatters.timeFormatter)
-        val subtitle = "$time • ${value.status.capitalize()}"
+        val subtitle = "$time ${StringsSigns.DOT} ${value.status.capitalize()}"
 
         return TransactionState.Content(
             txHash = value.id,
