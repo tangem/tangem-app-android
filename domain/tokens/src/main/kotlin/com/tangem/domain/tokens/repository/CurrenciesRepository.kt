@@ -195,12 +195,15 @@ interface CurrenciesRepository {
     fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
 
     /**
-     * Determines whether the currency has pending transaction or currency network has pending transaction
+     * Determines whether the currency sending is blocked by network pending transaction
      *
      * @param cryptoCurrencyStatus currency status
      * @param coinStatus main currency status in [cryptoCurrencyStatus] network
      */
-    fun hasPendingTransactions(cryptoCurrencyStatus: CryptoCurrencyStatus, coinStatus: CryptoCurrencyStatus?): Boolean
+    fun isSendBlockedByPendingTransactions(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        coinStatus: CryptoCurrencyStatus?,
+    ): Boolean
 
     /**
      * Retrieves fee paid currency for specific [currency].
