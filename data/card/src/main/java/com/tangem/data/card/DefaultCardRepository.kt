@@ -80,22 +80,8 @@ internal class DefaultCardRepository(
         return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.IS_TANGEM_TOS_ACCEPTED_KEY, default = false)
     }
 
-    override suspend fun isStart2CoinTOSAccepted(cardId: String): Boolean {
-        return appPreferencesStore.getSyncOrDefault(
-            key = PreferencesKeys.getStart2CoinTOSAcceptedKey(region = getRegion(cardId)),
-            default = false,
-        )
-    }
-
     override suspend fun acceptTangemTOS() {
         return appPreferencesStore.store(key = PreferencesKeys.IS_TANGEM_TOS_ACCEPTED_KEY, true)
-    }
-
-    override suspend fun acceptStart2CoinTOS(cardId: String) {
-        appPreferencesStore.store(
-            key = PreferencesKeys.getStart2CoinTOSAcceptedKey(region = getRegion(cardId)),
-            value = true,
-        )
     }
 
     private suspend fun AppPreferencesStore.editUsedCards(cardId: String, update: (UsedCardInfo) -> UsedCardInfo) {
@@ -125,17 +111,6 @@ internal class DefaultCardRepository(
     private suspend fun getUsedCardSync(cardId: String): UsedCardInfo? {
         return appPreferencesStore.getObjectListSync<UsedCardInfo>(PreferencesKeys.USED_CARDS_INFO_KEY)
             .firstOrNull { it.cardId == cardId }
-    }
-
-    private fun getRegion(cardId: String): String? {
-        if (cardId.isEmpty()) return null
-
-        return when (cardId[1]) {
-            '0' -> "fr"
-            '1' -> "ch"
-            '2' -> "at"
-            else -> null
-        }
     }
 
     private fun createDefaultUsedCardInfo(cardId: String) = UsedCardInfo(cardId = cardId)
