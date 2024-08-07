@@ -21,16 +21,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.components.list.roundedListWithDividersItems
-import com.tangem.core.ui.components.text.HorizontalLinearGradientText
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
@@ -193,13 +194,16 @@ private fun BannerBlock(onClick: () -> Unit) {
             painter = painterResource(R.drawable.img_staking_banner),
             contentDescription = null,
         )
-        HorizontalLinearGradientText(
-            text = stringResource(R.string.staking_details_banner_text),
+        Text(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .padding(16.dp),
-            gradientColors = textGradientColors,
-            textStyle = TangemTheme.typography.h2,
+                .padding(TangemTheme.dimens.spacing16),
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(Brush.linearGradient(textGradientColors))) {
+                    append(stringResource(R.string.staking_details_banner_text))
+                }
+            },
+            style = TangemTheme.typography.h2,
         )
     }
 }
