@@ -901,7 +901,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         .movePointRight(Blockchain.Filecoin.decimals())
                         .toLong(),
                     gasLimit = fee.gasLimit.toLong(),
-                    gasPremium = requireNotNull(fee.gasPremium?.toLong()),
+                    gasPremium = requireNotNull(fee.gasPremium),
                 )
             }
             else -> Fee.Common(feeAmount)
