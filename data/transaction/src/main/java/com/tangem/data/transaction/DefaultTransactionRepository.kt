@@ -24,7 +24,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.math.BigDecimal
 import java.math.BigInteger
 import com.tangem.blockchain.blockchains.tron.TransactionType as SdkTransactionType
 
@@ -41,7 +40,6 @@ internal class DefaultTransactionRepository(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
-        isSwap: Boolean,
         txExtras: TransactionExtras?,
         hash: String?,
     ): TransactionData.Uncompiled? = withContext(coroutineDispatcherProvider.io) {
@@ -58,7 +56,6 @@ internal class DefaultTransactionRepository(
             memo = memo,
             destination = destination,
             network = network,
-            isSwap = isSwap,
             txExtras = txExtras,
             hash = hash,
         )
@@ -91,7 +88,6 @@ internal class DefaultTransactionRepository(
                 memo = memo,
                 destination = destination,
                 network = network,
-                isSwap = isSwap,
                 txExtras = txExtras,
                 hash = hash,
             )
@@ -158,23 +154,15 @@ internal class DefaultTransactionRepository(
         memo: String?,
         destination: String,
         network: Network,
-        isSwap: Boolean,
         txExtras: TransactionExtras?,
         hash: String?,
     ): TransactionData.Uncompiled {
-        // TODO: refactor workaround to use general mechanism in bsdk for build tx for DEX
-        val txAmount = if (isSwap) {
-            createAmountForSwap(amount)
-        } else {
-            amount
-        }
-
         if (txExtras != null && memo != null) {
             // throw error for now to avoid programmers errors when use extras
             error("Both txExtras and memo provided, use only one of them")
         }
         val extras = txExtras ?: getMemoExtras(network.id.value, memo)
-        return createTransaction(txAmount, fee, destination).copy(
+        return createTransaction(amount, fee, destination).copy(
             hash = hash,
             extras = extras,
         )
@@ -201,21 +189,6 @@ internal class DefaultTransactionRepository(
             Blockchain.Hedera -> HederaTransactionExtras(memo)
             Blockchain.Algorand -> AlgorandTransactionExtras(memo)
             else -> null
-        }
-    }
-
-    private fun createAmountForSwap(amount: Amount): Amount {
-        return when (amount.type) {
-            is AmountType.Coin -> amount
-            else -> {
-                // 1. when creates swap amount for NonNativeToken, amount should be ZERO
-                // 2. Amount has .Coin type, as workaround to use destinationAddress in bsdk, not contractAddress
-                Amount(
-                    currencySymbol = amount.currencySymbol,
-                    value = BigDecimal.ZERO,
-                    decimals = amount.decimals,
-                )
-            }
         }
     }
 }
