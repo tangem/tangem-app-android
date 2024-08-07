@@ -29,6 +29,7 @@ internal data class SwapTransactionsState(
     val fromFiatAmount: String,
     val fromCurrencyIcon: CurrencyIconState,
     val showProviderLink: Boolean,
+    val isRefundTerminalStatus: Boolean = true,
     val onClick: () -> Unit,
     val onGoToProviderClick: (String) -> Unit,
 )
