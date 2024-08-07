@@ -1,7 +1,6 @@
 package com.tangem.datasource.api.express.models.response
 
 import com.squareup.moshi.Json
-import java.math.BigDecimal
 
 data class ExchangeDataResponseWithTxDetails(
     val dataResponse: ExchangeDataResponse,
@@ -50,7 +49,10 @@ data class TxDetails(
     val txData: String?, // transaction data if DEX, null if CEX
 
     @Json(name = "txValue")
-    val txValue: BigDecimal, // amount (same as fromAmount)
+    val txValue: String, // amount (same as fromAmount for Coin, but for bridge equal to otherNativeFee)
+
+    @Json(name = "otherNativeFee")
+    val otherNativeFee: String?,
 
     @Json(name = "externalTxId")
     val externalTxId: String?, // null if DEX, provider transaction id if CEX
@@ -63,6 +65,9 @@ data class TxDetails(
 
     @Json(name = "txExtraId")
     val txExtraId: String?,
+
+    @Json(name = "gas")
+    val gas: String?,
 )
 
 enum class TxType {
