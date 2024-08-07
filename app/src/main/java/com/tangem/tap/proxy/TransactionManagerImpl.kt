@@ -96,18 +96,27 @@ class TransactionManagerImpl(
                 // for not EVM blockchains set gasLimit ZERO for now
                 when (fee.data) {
                     is TransactionFee.Single -> {
-                        val normalFee = (fee.data as TransactionFee.Single).normal
-                        val singleFee = if (normalFee as? Fee.CardanoToken != null) {
-                            ProxyFee.CardanoToken(
-                                gasLimit = BigInteger.ZERO,
-                                fee = convertToProxyAmount(amount = normalFee.amount),
-                                minAdaValue = normalFee.minAdaValue,
-                            )
-                        } else {
-                            ProxyFee.Common(
-                                gasLimit = BigInteger.ZERO,
-                                fee = convertToProxyAmount(amount = normalFee.amount),
-                            )
+                        val singleFee = when (val normalFee = (fee.data as TransactionFee.Single).normal) {
+                            is Fee.CardanoToken -> {
+                                ProxyFee.CardanoToken(
+                                    gasLimit = BigInteger.ZERO,
+                                    fee = convertToProxyAmount(amount = normalFee.amount),
+                                    minAdaValue = normalFee.minAdaValue,
+                                )
+                            }
+                            is Fee.Filecoin -> {
+                                ProxyFee.Filecoin(
+                                    gasLimit = BigInteger.ZERO,
+                                    fee = convertToProxyAmount(amount = normalFee.amount),
+                                    gasPremium = normalFee.gasPremium,
+                                )
+                            }
+                            else -> {
+                                ProxyFee.Common(
+                                    gasLimit = BigInteger.ZERO,
+                                    fee = convertToProxyAmount(amount = normalFee.amount),
+                                )
+                            }
                         }
 
                         ProxyFees.SingleFee(singleFee = singleFee)
