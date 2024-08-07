@@ -114,6 +114,7 @@
   <string name="common_fee_selector_title">Швидкість та комісія</string>
   <string name="common_generate_addresses">Отримати адреси</string>
   <string name="common_go_to_provider">Перейти до провайдера</string>
+  <string name="common_go_to_token">Перейти до токену</string>
   <string name="common_import">Імпортувати</string>
   <string name="common_later">Пізніше</string>
   <string name="common_locked">Заблокований</string>
@@ -229,6 +230,8 @@
   <string name="express_exchange_by">Обмін через %s</string>
   <string name="express_exchange_notification_failed_text">Щоб повернути ваші кошти, відвідайте сайт провайдера</string>
   <string name="express_exchange_notification_failed_title">Операція не виконана провайдером</string>
+  <string name="express_exchange_notification_refund_text">Сума транзакції була повернута в %1$s на ваш гаманець відповідно до правил OKX або мосту обміну. %2$s</string>
+  <string name="express_exchange_notification_refund_title">Сума була повернута в %1$s (%2$s мережі)</string>
   <string name="express_exchange_notification_verification_text">Відвідайте сайт провайдера для перевірки</string>
   <string name="express_exchange_notification_verification_title">Провайдер вимагає проходження KYC верифікації</string>
   <string name="express_exchange_status_canceled">Скасовано</string>
@@ -344,7 +347,7 @@
   <string name="markets_available_networks">Доступні мережі</string>
   <string name="markets_common_my_portfolio">Моє портфоліо</string>
   <string name="markets_common_title">Маркет</string>
-  <string name="markets_generate_addresses_notification">Щоб згенерувати адреси для обраних мереж, потрібно прикласти картку Tangem</string>
+  <string name="markets_generate_addresses_notification">Щоб згенерувати адреси для обраних мереж, потрібно відсканувати свою картку Tangem.</string>
   <string name="markets_loading_error_title">Не вдалося завантажити дані...</string>
   <string name="markets_quick_actions">Швидкі дії</string>
   <string name="markets_search_result_title">Результат</string>
@@ -464,7 +467,7 @@
   </plurals>
   <string name="onboarding_seed_import_message">Щоб імпортувати гаманець, введіть seed-фразу в поле нижче</string>
   <string name="onboarding_seed_intro_button_generate">Згенерувати seed-фразу</string>
-  <string name="onboarding_seed_intro_button_import">Імпортувати гаманець</string>
+  <string name="onboarding_seed_intro_button_import">Імпорт гаманця</string>
   <string name="onboarding_seed_intro_message">Seed-фраза — це набір слів, який дозволяє відновити ваш гаманець. На відміну від ключів, що генеруються карткою, seed-фраза не захищена і може бути скопійована та викрадена. Використовуйте цю опцію на свій власний ризик.</string>
   <string name="onboarding_seed_intro_title">Використовувати seed-фразу</string>
   <string name="onboarding_seed_mnemonic_invalid_checksum">Невірна seed-фраза. Будь ласка, перевірте порядок слів.</string>
@@ -637,15 +640,15 @@
   <string name="send_sending">Надсилання...</string>
   <string name="send_summary_tap_hint">Торкніться будь-якого поля, щоб змінити його</string>
   <string name="send_summary_title">Надіслати %s</string>
-  <string name="send_summary_transaction_description">Ви надсилаєте ** %1$s **, включно з комісію мережі %2$s</string>
-  <string name="send_summary_transaction_description_no_fiat_fee">Ви надсилаєте ** %1$s ** і %2$s</string>
+  <string name="send_summary_transaction_description">Ви надсилаєте **%1$s**, включно з комісію мережі %2$s</string>
+  <string name="send_summary_transaction_description_no_fiat_fee">Ви надсилаєте **%1$s** і %2$s</string>
   <string name="send_title_currency_format">Надсилання %s</string>
   <string name="send_total_label">Всього</string>
   <string name="send_total_subtitle_asset_format">%1$s та %2$s буде надіслано</string>
   <string name="send_total_subtitle_fiat_format">≈ %1$s (вкл. комісію: %2$s )</string>
   <string name="send_total_subtitle_format">%s буде надіслано</string>
   <string name="send_transaction_success">Транзакція успішно підписана і відправлена до блокчейну. Баланс гаманця буде оновлено через деякий час</string>
-  <string name="send_tron_account_activation_error">%1$s — це монета у мережі Tron. Щоб розрахувати комісію та здійснити транзакцію, вам необхідно внести певну кількість Tron(TRX) на свій рахунок.</string>
+  <string name="send_tron_account_activation_error">%1$s — це монета у мережі Tron. Щоб розрахувати комісію та здійснити транзакцію, вам необхідно внести певну кількість Tron (TRX) на свій рахунок.</string>
   <string name="send_validation_invalid_address">Недійсна адреса</string>
   <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Трансакцію надіслано</string>
@@ -656,9 +659,8 @@
   <string name="staking_active">Активний</string>
   <string name="staking_active_footer">Щоб вивести активи зі стейкінгу, натисніть тут.</string>
   <string name="staking_amount_requirement_error">Сума для стейкінгу має бути не менше %s</string>
+  <string name="staking_details_annual_percentage_rate_info">Річний відсоток, який ви можете отримати, беручи участь у стейкінгу.</string>
   <string name="staking_details_apr">APR</string>
-  <string name="staking_details_apy">APY</string>
-  <string name="staking_details_apy_info">Річний відсоток, який ви можете отримати, беручи участь у стейкінгу.</string>
   <string name="staking_details_available">Доступно</string>
   <string name="staking_details_average_reward_rate">Середня ставка винагороди</string>
   <string name="staking_details_estimated_profit">~ прибуток за %s</string>
@@ -666,7 +668,6 @@
   <string name="staking_details_metrics_block_header">Метрики</string>
   <string name="staking_details_minimum_requirement">Мінімальні вимоги</string>
   <string name="staking_details_no_rewards_to_claim">Немає винагород, щоб отримати</string>
-  <string name="staking_details_on_stake">В стейкінгу</string>
   <string name="staking_details_reward_claiming">Отримати винагороду</string>
   <string name="staking_details_reward_claiming_info">Спосіб отримання винагороди за стейкінг. Його можна отримати автоматично або вручну.</string>
   <string name="staking_details_reward_schedule">Розклад винагород</string>
@@ -677,6 +678,7 @@
   <string name="staking_details_unbonding_period_info">Період, який ви повинні чекати після запиту на виведення коштів зі стейкінгу, перш ніж токени стануть доступними.</string>
   <string name="staking_details_warmup_period">Період блокування</string>
   <string name="staking_details_warmup_period_info">Відведений час для активації участі в стейкінгу.</string>
+  <string name="staking_initial_info_title">Стейкінг %s</string>
   <string name="staking_native">Нативний стейкінг</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">Стейкінг дозволяє заробляти %1s. Ваші винагороди за стейкінг надходять кожні ~%2s днів.</string>
   <string name="staking_notification_earn_rewards_title">Отримуйте винагороду за стейкінг</string>
@@ -817,7 +819,7 @@
   <string name="warning_backup_errors_title">Помилка активації</string>
   <string name="warning_beacon_chain_retirement_content">За рішенням розробників мережі BNB стандарт BEP-2 перестане підтримуватись у червні 2024 року. Щоб не втратити свої активи, їх необхідно конвертувати у стандарт BEP-20. Використовуйте функцію обміну, щоб перевести їх у мережу BNB Smart Chain.</string>
   <string name="warning_beacon_chain_retirement_title">Відключення мережі BNB Beacon Chain</string>
-  <string name="warning_button_could_be_better">Могло б бути краще</string>
+  <string name="warning_button_could_be_better">Можна краще</string>
   <string name="warning_button_like_it">Вподобати</string>
   <string name="warning_button_ok">Зрозуміло!</string>
   <string name="warning_button_really_cool">Дуже круто!</string>
