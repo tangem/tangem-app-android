@@ -4,7 +4,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.tokens.model.Amount
 
 @Immutable
 internal sealed class SendTextField {
@@ -17,22 +16,6 @@ internal sealed class SendTextField {
 
     /** Keyboard options */
     abstract val keyboardOptions: KeyboardOptions
-
-    data class AmountField(
-        override val value: String,
-        override val onValueChange: (String) -> Unit,
-        override val keyboardOptions: KeyboardOptions,
-        val keyboardActions: KeyboardActions,
-        val cryptoAmount: Amount,
-        val fiatAmount: Amount,
-        val isFiatValue: Boolean,
-        val fiatValue: String,
-        val isFiatUnavailable: Boolean,
-        val isValuePasted: Boolean,
-        val onValuePastedTriggerDismiss: () -> Unit,
-        val isError: Boolean,
-        val error: TextReference,
-    ) : SendTextField()
 
     data class RecipientAddress(
         override val value: String,
