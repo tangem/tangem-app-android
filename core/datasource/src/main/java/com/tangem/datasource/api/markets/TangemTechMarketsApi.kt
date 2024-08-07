@@ -24,7 +24,7 @@ interface TangemTechMarketsApi {
     suspend fun getCoinMarketData(
         @Path("coin_id") coinId: String,
         @Query("currency") currency: String,
-    ): ApiResponse<TokenMarketDetailsResponse>
+    ): ApiResponse<TokenMarketInfoResponse>
 
     @GET("coins/{coin_id}/history")
     suspend fun getCoinChart(

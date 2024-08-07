@@ -18,7 +18,7 @@ import com.tangem.features.markets.details.impl.ui.entity.MarketsTokenDetailsUM
 import com.tangem.features.markets.tokenlist.impl.ui.components.UnableToLoadData
 
 @Composable
-fun MarketTokenDetailsChart(state: MarketsTokenDetailsUM.ChartState, modifier: Modifier = Modifier) {
+internal fun MarketTokenDetailsChart(state: MarketsTokenDetailsUM.ChartState, modifier: Modifier = Modifier) {
     val growingColor = TangemTheme.colors.icon.accent
     val fallingColor = TangemTheme.colors.icon.warning
 
