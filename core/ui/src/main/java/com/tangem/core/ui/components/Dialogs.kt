@@ -27,8 +27,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SelctorDialogParamsProvider.SelectorDialogParams
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.fields.SimpleDialogTextField
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -100,7 +100,7 @@ fun TextInputDialog(
     confirmButton: DialogButton,
     onDismissDialog: () -> Unit,
     onValueChange: (TextFieldValue) -> Unit,
-    textFieldParams: AdditionalTextInputDialogParams,
+    textFieldParams: AdditionalTextInputDialogParams = remember { AdditionalTextInputDialogParams() },
     title: String? = null,
     dismissButton: DialogButton? = null,
     isDismissable: Boolean = true,
@@ -128,7 +128,7 @@ fun TextInputDialog(
     confirmButton: DialogButton,
     onDismissDialog: () -> Unit,
     onValueChange: (String) -> Unit,
-    textFieldParams: AdditionalTextInputDialogParams,
+    textFieldParams: AdditionalTextInputDialogParams = remember { AdditionalTextInputDialogParams() },
     title: String? = null,
     dismissButton: DialogButton? = null,
     isDismissable: Boolean = true,
