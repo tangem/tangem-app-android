@@ -4,9 +4,9 @@ import android.content.Context
 import android.os.Build
 import android.os.Vibrator
 import android.os.VibratorManager
-import com.tangem.tap.common.haptic.DefaultHapticManager
-import com.tangem.core.ui.haptic.HapticManager
-import com.tangem.core.ui.haptic.MockHapticManager
+import com.tangem.tap.common.haptic.DefaultVibratorHapticManager
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.haptic.VibratorHapticManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,7 +20,7 @@ class HapticModule {
 
     @Provides
     @Singleton
-    fun provideHapticManager(@ApplicationContext context: Context): HapticManager {
+    fun provideHapticManager(@ApplicationContext context: Context): VibratorHapticManager {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
             vibratorManager.defaultVibrator
@@ -29,9 +29,12 @@ class HapticModule {
         }
 
         return if (vibrator.hasVibrator()) {
-            DefaultHapticManager(vibrator = vibrator)
+            DefaultVibratorHapticManager(vibrator = vibrator)
         } else {
-            MockHapticManager
+            // mock
+            object : VibratorHapticManager {
+                override fun performOneTime(effect: TangemHapticEffect.OneTime) = Unit
+            }
         }
     }
 }

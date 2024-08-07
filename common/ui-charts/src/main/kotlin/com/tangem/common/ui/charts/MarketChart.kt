@@ -11,11 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +50,8 @@ import com.tangem.common.ui.charts.layer.rememberTangemChartMarker
 import com.tangem.common.ui.charts.preview.MarketChartPreviewDataProvider
 import com.tangem.common.ui.charts.state.*
 import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.DateTimeFormatters
@@ -134,7 +134,8 @@ private fun rememberMarketVisibilityListener(
     canvasWidth: Int,
     state: MarketChartState,
 ): CartesianMarkerVisibilityListener {
-    val haptic = LocalHapticFeedback.current
+    val haptic = LocalHapticManager.current
+
     return remember(state, canvasWidth) {
         val maxCanvasXFloat = canvasWidth.toFloat().takeIf { it != 0f }
 
@@ -145,7 +146,7 @@ private fun rememberMarketVisibilityListener(
                 state.markerFraction = maxCanvasXFloat?.let { xCanvas / it }
                 state.markerVisibilityListener.onShown(marker, targets)
 
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                haptic.perform(TangemHapticEffect.View.ContextClick)
             }
 
             override fun onHidden(marker: CartesianMarker) {
@@ -158,7 +159,8 @@ private fun rememberMarketVisibilityListener(
 
                 state.markerFraction = maxCanvasXFloat?.let { xCanvas / it }
                 state.markerVisibilityListener.onUpdated(marker, targets)
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+
+                haptic.perform(TangemHapticEffect.View.TextHandleMove)
             }
         }
     }
