@@ -19,14 +19,9 @@ internal object InitialStakingStatePreview {
                 endText = TextReference.Str("15 SOL"),
             ),
             RoundedListWithDividersItemData(
-                id = R.string.staking_details_apy,
-                startText = TextReference.Res(R.string.staking_details_apy),
+                id = R.string.staking_details_annual_percentage_rate,
+                startText = TextReference.Res(R.string.staking_details_annual_percentage_rate),
                 endText = TextReference.Str("2.54-5.12%"),
-            ),
-            RoundedListWithDividersItemData(
-                id = R.string.staking_details_on_stake,
-                startText = TextReference.Res(R.string.staking_details_on_stake),
-                endText = TextReference.Str("0 SOL"),
             ),
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_unbonding_period,
