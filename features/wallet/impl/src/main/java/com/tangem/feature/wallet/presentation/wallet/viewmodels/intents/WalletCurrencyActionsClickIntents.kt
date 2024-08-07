@@ -13,7 +13,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.haptic.HapticManager
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
@@ -91,7 +92,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val reduxStateHolder: ReduxStateHolder,
-    private val hapticManager: HapticManager,
+    private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
     private val getYieldUseCase: GetYieldUseCase,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
@@ -192,7 +193,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         val addresses = networkAddress.availableAddresses.mapToAddressModels(cryptoCurrency).toImmutableList()
         val defaultAddress = addresses.firstOrNull()?.value ?: return null
 
-        hapticManager.vibrateMeduim()
+        vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
         clipboardManager.setText(text = defaultAddress)
         analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
         return resourceReference(R.string.wallet_notification_address_copied)
