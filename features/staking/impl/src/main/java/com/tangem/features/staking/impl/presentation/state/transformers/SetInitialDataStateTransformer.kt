@@ -9,7 +9,6 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.R
@@ -22,7 +21,6 @@ import com.tangem.features.staking.impl.presentation.state.converters.YieldBalan
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.Provider
-import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
@@ -91,7 +89,6 @@ internal class SetInitialDataStateTransformer(
         return listOfNotNull(
             createAvailableItem(cryptoCurrencyStatus),
             createApyItem(),
-            createOnStakeItem(cryptoCurrencyStatus, yieldBalance),
             createUnbondingPeriodItem(),
             createMinimumRequirementItem(cryptoCurrencyStatus),
             createRewardClaimingItem(),
@@ -116,27 +113,10 @@ internal class SetInitialDataStateTransformer(
 
     private fun createApyItem(): RoundedListWithDividersItemData {
         return RoundedListWithDividersItemData(
-            id = R.string.staking_details_apy,
-            startText = TextReference.Res(R.string.staking_details_apy),
+            id = R.string.staking_details_annual_percentage_rate,
+            startText = TextReference.Res(R.string.staking_details_annual_percentage_rate),
             endText = getAprRange(),
             iconClick = { clickIntents.onInfoClick(InfoType.APY) },
-        )
-    }
-
-    private fun createOnStakeItem(
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-        yieldBalance: YieldBalance?,
-    ): RoundedListWithDividersItemData {
-        return RoundedListWithDividersItemData(
-            id = R.string.staking_details_on_stake,
-            startText = TextReference.Res(R.string.staking_details_on_stake),
-            endText = TextReference.Str(
-                value = BigDecimalFormatter.formatCryptoAmount(
-                    cryptoAmount = (yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero(),
-                    cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-                    decimals = cryptoCurrencyStatus.currency.decimals,
-                ),
-            ),
         )
     }
 
