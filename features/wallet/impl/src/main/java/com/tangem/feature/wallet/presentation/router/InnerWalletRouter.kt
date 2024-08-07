@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.markets.component.MarketsListComponent
+import com.tangem.features.markets.component.MarketsEntryComponent
 import com.tangem.features.wallet.navigation.WalletRouter
 
 /**
@@ -24,7 +24,7 @@ internal interface InnerWalletRouter : WalletRouter {
      * @param onFinish finish activity callback
      */
     @Composable
-    fun Initialize(onFinish: () -> Unit, marketsListComponent: MarketsListComponent?)
+    fun Initialize(onFinish: () -> Unit, marketsEntryComponent: MarketsEntryComponent?)
 
     /** Pop back stack */
     fun popBackStack()
