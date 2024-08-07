@@ -189,7 +189,11 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data object ManageTokens : AppRoute(path = "/manage_tokens")
+    data class ManageTokens(
+        val readOnlyContent: Boolean,
+    ) : AppRoute(path = "/manage_tokens/$readOnlyContent"), RouteBundleParams {
+        override fun getBundle(): Bundle = bundle(serializer())
+    }
 
     @Serializable
     data object AddCustomToken : AppRoute(path = "/add_custom_token")
