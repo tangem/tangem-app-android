@@ -124,29 +124,81 @@ internal class DefaultNetworksRepository(
         }
     }
 
+    override suspend fun getNetworkAddress(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): CryptoCurrencyAddress = withContext(dispatchers.io) {
+        CryptoCurrencyAddress(
+            cryptoCurrency = currency,
+            address = walletManagersFacade.getAddresses(userWalletId, currency.network)
+                .firstOrNull { it.type == AddressType.Default }
+                ?.value.orEmpty(),
+        )
+    }
+
+    override fun getNetworkAddressFlow(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): Flow<CryptoCurrencyAddress> = channelFlow {
+        launch(dispatchers.io) {
+            send(getNetworkAddress(userWalletId, currency))
+        }
+    }
+
+    override suspend fun getNetworkAddresses(userWalletId: UserWalletId): List<CryptoCurrencyAddress> =
+        withContext(dispatchers.io) {
+            // Get list of currencies matching [network]
+            val currencies = getCurrencies(userWalletId)
+
+            // There is no currencies matching given [networks] in [userWalletId]
+            if (currencies.toList().isEmpty()) return@withContext emptyList()
+
+            currencies.toList().map { currency ->
+                CryptoCurrencyAddress(
+                    cryptoCurrency = currency,
+                    address = walletManagersFacade.getAddresses(userWalletId, currency.network)
+                        .firstOrNull { it.type == AddressType.Default }
+                        ?.value.orEmpty(),
+                )
+            }
+        }
+
+    override fun getNetworkAddressesFlow(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): Flow<List<CryptoCurrencyAddress>> = channelFlow {
+        launch(dispatchers.io) {
+            send(getNetworkAddresses(userWalletId, network))
+        }
+    }
+
+    override fun getNetworkAddressesFlow(userWalletId: UserWalletId): Flow<List<CryptoCurrencyAddress>> = channelFlow {
+        launch(dispatchers.io) {
+            send(getNetworkAddresses(userWalletId))
+        }
+    }
+
     private suspend fun fetchNetworksStatusesIfCacheExpired(
         userWalletId: UserWalletId,
         networks: Set<Network>,
         refresh: Boolean,
     ) {
-        try {
-            isNetworkStatusesFetching.update {
-                it + (userWalletId to true)
-            }
+        val currencies = getCurrencies(userWalletId, networks)
+        val networksDeferred = networks.mapNotNull { network ->
+            fetchNetworkStatusIfCacheExpired(userWalletId, network, currencies, refresh)
+        }
 
-            val currencies = getCurrencies(userWalletId, networks)
-            coroutineScope {
-                networks
-                    .map { network ->
-                        async {
-                            fetchNetworkStatusIfCacheExpired(userWalletId, network, currencies, refresh)
-                        }
-                    }
-                    .awaitAll()
-            }
-        } finally {
-            isNetworkStatusesFetching.update {
-                it - userWalletId
+        if (networksDeferred.isNotEmpty()) {
+            try {
+                isNetworkStatusesFetching.update {
+                    it + (userWalletId to true)
+                }
+
+                networksDeferred.awaitAll()
+            } finally {
+                isNetworkStatusesFetching.update {
+                    it - userWalletId
+                }
             }
         }
     }
@@ -172,12 +224,19 @@ internal class DefaultNetworksRepository(
         network: Network,
         currencies: Sequence<CryptoCurrency>,
         refresh: Boolean,
-    ) {
-        cacheRegistry.invokeOnExpire(
-            key = getNetworksStatusesCacheKey(userWalletId, network),
-            skipCache = refresh,
-            block = { fetchNetworkStatus(userWalletId, network, currencies) },
-        )
+    ): Deferred<Unit>? = coroutineScope {
+        val key = getNetworksStatusesCacheKey(userWalletId, network)
+        if (refresh || cacheRegistry.isExpired(key)) {
+            async {
+                cacheRegistry.invokeOnExpire(
+                    key = key,
+                    skipCache = refresh,
+                    block = { fetchNetworkStatus(userWalletId, network, currencies) },
+                )
+            }
+        } else {
+            null
+        }
     }
 
     private suspend fun fetchNetworkStatus(
