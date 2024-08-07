@@ -35,14 +35,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Disclaimer(
         val isTosAccepted: Boolean,
-    ) : AppRoute(path = "/disclaimer${if (isTosAccepted) "/tos_accepted" else ""}"), RouteBundleParams {
-
-        override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val IS_TOS_ACCEPTED_KEY = "isTosAccepted"
-        }
-    }
+    ) : AppRoute(path = "/disclaimer${if (isTosAccepted) "/tos_accepted" else ""}")
 
     @Serializable
     data object OnboardingNote : AppRoute(path = "/onboarding/note")
