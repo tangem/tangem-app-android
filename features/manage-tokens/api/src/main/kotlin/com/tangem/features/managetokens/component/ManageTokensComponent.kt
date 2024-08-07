@@ -5,7 +5,8 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 
 interface ManageTokensComponent : ComposableContentComponent {
 
-    class Params
+    data class Params(val mode: Mode)
 
+    enum class Mode { READ_ONLY, MANAGE, }
     interface Factory : ComponentFactory<Params, ManageTokensComponent>
 }
