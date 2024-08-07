@@ -19,8 +19,10 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             userWalletId = UserWalletId("011"),
             userWalletName = "My Wallet",
             isReferralAvailable = true,
+            isLinkMoreCardsAvailable = true,
             renameWallet = {},
             forgetWallet = {},
+            onLinkMoreCardsClick = {},
         ),
     )
 
