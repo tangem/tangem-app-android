@@ -17,9 +17,9 @@ import java.math.BigDecimal
 internal class TransactionDataToTxHistoryItemConverter(
     private val walletAddresses: Set<Address>,
     private val feePaidCurrency: FeePaidCurrency,
-) : Converter<TransactionData, TxHistoryItem?> {
+) : Converter<TransactionData.Uncompiled, TxHistoryItem?> {
 
-    override fun convert(value: TransactionData): TxHistoryItem? {
+    override fun convert(value: TransactionData.Uncompiled): TxHistoryItem? {
         val hash = value.hash ?: return null
         val millis = value.date?.timeInMillis ?: return null
         val amount = getTransactionAmountValue(value.amount, value.fee?.amount) ?: return null
