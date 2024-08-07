@@ -10,7 +10,6 @@ import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOt
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsReducer
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletReducer
 import com.tangem.tap.features.saveWallet.redux.SaveWalletReducer
-import com.tangem.tap.features.send.redux.reducers.SendScreenReducer
 import com.tangem.tap.features.tokens.legacy.redux.TokensReducer
 import com.tangem.tap.features.welcome.redux.WelcomeReducer
 import com.tangem.tap.proxy.AppStateHolder
@@ -28,7 +27,6 @@ fun appReducer(action: Action, state: AppState?, appStateHolder: AppStateHolder)
         onboardingWalletState = OnboardingWalletReducer.reduce(action, state),
         onboardingOtherCardsState = OnboardingOtherCardsReducer.reduce(action, state),
         twinCardsState = TwinCardsReducer.reduce(action, state),
-        sendState = SendScreenReducer.reduce(action, state.sendState),
         detailsState = DetailsReducer.reduce(action, state),
         disclaimerState = DisclaimerReducer.reduce(action, state),
         tokensState = TokensReducer.reduce(action, state),

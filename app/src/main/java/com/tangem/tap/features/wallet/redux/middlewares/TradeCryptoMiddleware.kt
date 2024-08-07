@@ -1,8 +1,6 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
-import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -17,11 +15,8 @@ import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
-import com.tangem.tap.features.send.redux.PrepareSendScreen
-import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.buyErc20TestnetTokens
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -45,9 +40,6 @@ object TradeCryptoMiddleware {
         }
     }
 
-    private val isSendRedesignedEnabled: Boolean
-        get() = store.inject(getDependency = DaggerGraphState::sendFeatureToggles).isRedesignedSendEnabled
-
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun handle(state: () -> AppState?, action: TradeCryptoAction) {
         if (DemoHelper.tryHandle(state, action)) return
@@ -62,20 +54,8 @@ object TradeCryptoMiddleware {
                 cryptoCurrencyId = action.cryptoCurrencyId,
                 yield = action.yield,
             )
-            is TradeCryptoAction.SendToken -> {
-                if (isSendRedesignedEnabled) {
-                    handleNewSendToken(action = action)
-                } else {
-                    handleSendToken(action = action)
-                }
-            }
-            is TradeCryptoAction.SendCoin -> {
-                if (isSendRedesignedEnabled) {
-                    handleNewSendCoin(action = action)
-                } else {
-                    handleSendCoin(action = action)
-                }
-            }
+            is TradeCryptoAction.SendToken -> handleNewSendToken(action = action)
+            is TradeCryptoAction.SendCoin -> handleNewSendCoin(action = action)
         }
     }
 
@@ -174,135 +154,6 @@ object TradeCryptoMiddleware {
                     yield = yield,
                 ),
             )
-        }
-    }
-
-    private fun handleSendToken(action: TradeCryptoAction.SendToken) {
-        val currency = action.tokenCurrency
-        val blockchain = Blockchain.fromId(currency.network.id.value)
-
-        scope.launch {
-            val walletManager = store.inject(DaggerGraphState::walletManagersFacade)
-                .getOrCreateWalletManager(
-                    userWalletId = action.userWallet.walletId,
-                    blockchain = blockchain,
-                    derivationPath = currency.network.derivationPath.value,
-                )
-
-            if (walletManager == null) {
-                val error = TapError.UnsupportedState(stateError = "WalletManager is null")
-                FirebaseCrashlytics.getInstance().recordException(IllegalStateException(error.stateError))
-                store.dispatchErrorNotification(error)
-                return@launch
-            }
-
-            val sendableAmount = walletManager.wallet.amounts.values.firstOrNull {
-                val amountType = it.type
-                amountType is AmountType.Token && amountType.token.contractAddress == currency.contractAddress
-            }
-
-            store.dispatchOnMain(
-                action = PrepareSendScreen(
-                    walletManager = walletManager,
-                    feePaidCurrency = walletManager.wallet.blockchain.feePaidCurrency(),
-                    currency = currency,
-                    coinAmount = walletManager.wallet.amounts[AmountType.Coin],
-                    coinRate = action.coinFiatRate,
-                    tokenAmount = sendableAmount,
-                    tokenRate = action.tokenFiatRate,
-                    feeCurrencyRate = action.feeCurrencyStatus?.value?.fiatRate,
-                    feeCurrencyDecimals = action.feeCurrencyStatus?.currency?.decimals ?: 0,
-                ),
-            )
-
-            val txInfo = action.transactionInfo
-            if (txInfo != null) {
-                store.dispatchOnMain(
-                    SendAction.SendSpecificTransaction(
-                        sendAmount = txInfo.amount,
-                        destinationAddress = txInfo.destinationAddress,
-                        transactionId = txInfo.transactionId,
-                    ),
-                )
-            }
-
-            val route = AppRoute.Send(
-                currency = currency,
-                userWalletId = action.userWallet.walletId,
-            )
-
-            store.dispatchNavigationAction { push(route) }
-        }
-    }
-
-    private fun handleSendCoin(action: TradeCryptoAction.SendCoin) {
-        if (action.transactionInfo?.tag != null) {
-            // avoid open old send if memo exists
-            return
-        }
-        val cryptoStatus = action.coinStatus
-        val currency = cryptoStatus.currency
-        val blockchain = Blockchain.fromId(currency.network.id.value)
-
-        scope.launch {
-            val walletManager = store.inject(DaggerGraphState::walletManagersFacade)
-                .getOrCreateWalletManager(
-                    userWalletId = action.userWallet.walletId,
-                    blockchain = blockchain,
-                    derivationPath = currency.network.derivationPath.value,
-                )
-
-            if (walletManager == null) {
-                val error = TapError.UnsupportedState(stateError = "WalletManager is null")
-                FirebaseCrashlytics.getInstance().recordException(IllegalStateException(error.stateError))
-                store.dispatchErrorNotification(error)
-                return@launch
-            }
-
-            val sendableAmounts = walletManager.wallet.amounts.values.filter { it.type == AmountType.Coin }
-            when (currency) {
-                is CryptoCurrency.Coin -> {
-                    val amountToSend = sendableAmounts.find { it.currencySymbol == currency.symbol }
-
-                    if (amountToSend == null) {
-                        val error = TapError.UnsupportedState(stateError = "Amount to send is null")
-                        FirebaseCrashlytics.getInstance()
-                            .recordException(IllegalStateException(error.stateError))
-                        store.dispatchErrorNotification(error)
-                        return@launch
-                    }
-
-                    store.dispatchOnMain(
-                        action = PrepareSendScreen(
-                            walletManager = walletManager,
-                            feePaidCurrency = walletManager.wallet.blockchain.feePaidCurrency(),
-                            currency = currency,
-                            coinAmount = amountToSend,
-                            coinRate = cryptoStatus.value.fiatRate,
-                            feeCurrencyRate = action.feeCurrencyStatus?.value?.fiatRate,
-                            feeCurrencyDecimals = action.feeCurrencyStatus?.currency?.decimals ?: 0,
-                        ),
-                    )
-                }
-                is CryptoCurrency.Token -> error("Action.tokenStatus.currency is Token")
-            }
-
-            val txInfo = action.transactionInfo
-            if (txInfo != null) {
-                store.dispatchOnMain(
-                    SendAction.SendSpecificTransaction(
-                        sendAmount = txInfo.amount,
-                        destinationAddress = txInfo.destinationAddress,
-                        transactionId = txInfo.transactionId,
-                    ),
-                )
-            }
-
-            val route = AppRoute.Send(
-                currency = currency,
-                userWalletId = action.userWallet.walletId,
-            )
-            store.dispatchNavigationAction { push(route) }
         }
     }
 
