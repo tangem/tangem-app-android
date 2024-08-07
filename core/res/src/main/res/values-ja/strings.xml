@@ -13,9 +13,6 @@
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">選択したものは%1$sネットワークをサポートしていません。</string>
   <string name="alert_manage_tokens_unsupported_curve_message">%1$sブロックチェーンの暗号化を有効にするには、ウォレットを工場出荷時の設定にリセットする必要があります。リセットする前に出金して、資金が失われないようにしてから、リセット処理を完了してください。リセット後は、現在のウォレットにアクセスできなくなります。</string>
   <string name="alert_manage_tokens_unsupported_message">%1$s ネットワークのトークンは、ファームウェアの制限により、このカードではサポートされていません。</string>
-  <string name="alert_negative_app_rate_sent_message">ご意見ありがとうございます。できるだけ早くご返信いたします。</string>
-  <string name="alert_negative_app_rate_sent_title">あなたの提案が送信されました</string>
-  <string name="alert_troubleshooting_scan_card_message">アニメーションに表示されているとおりにカードをタップするか、簡単なガイドをお読みください。それでも問題が解決しない場合は、サポートをご依頼ください。</string>
   <string name="alert_troubleshooting_scan_card_title">カードのスキャンに問題がありますか?</string>
   <string name="alert_unsupported_card">このカードはこのアプリでは使用できません。</string>
   <string name="app_settings_default_fee">デフォルト手数料</string>
@@ -31,8 +28,6 @@
   <string name="app_settings_theme_mode_dark">ダーク</string>
   <string name="app_settings_theme_mode_light">ライト</string>
   <string name="app_settings_theme_mode_system">システムのデフォルト</string>
-  <string name="app_settings_theme_selection_footer">システムを選択した場合、アプリはデバイスのシステム設定に基づいて自動調整されます。</string>
-  <string name="app_settings_theme_selection_system_short">システム</string>
   <string name="app_settings_theme_selector_title">テーマ</string>
   <string name="app_settings_title">アプリ設定</string>
   <string name="balance_hidden_description">残高を表示または非表示にするには、デバイスの画面を下向きにするか、設定でオフにしてください。</string>
@@ -94,11 +89,10 @@
   <string name="common_create">作成</string>
   <string name="common_custom">設定</string>
   <plurals name="common_days">
-    <item quantity="other">日</item>
+    <item quantity="other">%d 日</item>
   </plurals>
   <string name="common_delete">削除</string>
   <string name="common_disabled">無効</string>
-  <string name="common_disconnect">切断</string>
   <string name="common_done">完了</string>
   <string name="common_enable">有効にする</string>
   <string name="common_enabled">有効</string>
@@ -135,7 +129,6 @@
   <string name="common_reject">拒否</string>
   <string name="common_reload">リロード</string>
   <string name="common_rename">名前を変更</string>
-  <string name="common_retry">リトライ</string>
   <string name="common_save">保存</string>
   <string name="common_save_changes">変更内容を保存</string>
   <string name="common_search">検索</string>
@@ -151,7 +144,7 @@
   <string name="common_stake">ステーキング</string>
   <string name="common_staking">ステーキング</string>
   <string name="common_start">始める</string>
-  <string name="common_submit">提出する</string>
+  <string name="common_submit">送信</string>
   <string name="common_success">成功</string>
   <string name="common_support">サポート</string>
   <string name="common_swap">スワップ</string>
@@ -164,7 +157,6 @@
   <string name="common_unknown_error">エラーが発生しました。もう一度お試しください。</string>
   <string name="common_unreachable">アクセスできません</string>
   <string name="common_unstake">ステーキング解除</string>
-  <string name="common_warning">警告</string>
   <string name="common_yes">はい</string>
   <string name="contract_address_copied_message">コントラクトアドレスをコピーしました!</string>
   <string name="currency_subtitle_expanded">利用可能なネットワーク</string>
@@ -212,7 +204,6 @@
   <string name="details_row_title_flip_to_hide">フリップして残高を非表示にする</string>
   <string name="details_row_title_issuer">発行者</string>
   <string name="details_row_title_signed_hashes">署名済み</string>
-  <string name="details_security_management_warning">コードを忘れた場合、資金にアクセスできなくなります。コードの回復は不可能です。</string>
   <string name="details_send_feedback">フィードバックを送信</string>
   <string name="details_title">詳細</string>
   <string name="disclaimer_error_loading">インターネット接続を確認するか、別のネットワークに切り替えてください。</string>
@@ -347,7 +338,7 @@
   <string name="markets_available_networks">利用可能なネットワーク</string>
   <string name="markets_common_my_portfolio">私のポートフォリオ</string>
   <string name="markets_common_title">マーケット</string>
-  <string name="markets_generate_addresses_notification">選択したネットワークのアドレスを生成するには、Tangemカードをタップする必要があります</string>
+  <string name="markets_generate_addresses_notification">選択したネットワークのアドレスを生成するには、Tangemカードをスキャンする必要があります。</string>
   <string name="markets_loading_error_title">データを読み込めません…</string>
   <string name="markets_quick_actions">クイックアクション</string>
   <string name="markets_search_result_title">結果</string>
@@ -458,7 +449,7 @@
   </plurals>
   <string name="onboarding_seed_import_message">ウォレットをインポートするには、下のフィールドにシードフレーズを入力してください。</string>
   <string name="onboarding_seed_intro_button_generate">シードフレーズを生成する</string>
-  <string name="onboarding_seed_intro_button_import">ウォレットをインポートする</string>
+  <string name="onboarding_seed_intro_button_import">ウォレットをインポート</string>
   <string name="onboarding_seed_intro_message">シードフレーズは、ウォレットを復元できる一連の単語です。カードによって生成される秘密鍵とは異なり、シードフレーズは保護されていないため、コピーされて盗まれる可能性があります。このオプションは自己責任で使用してください。</string>
   <string name="onboarding_seed_intro_title">シードフレーズを使用する</string>
   <string name="onboarding_seed_mnemonic_invalid_checksum">無効なシードフレーズです。語順を確認してください。</string>
@@ -569,7 +560,6 @@
   <string name="send_date_format">%1$s 、 %2$s</string>
   <string name="send_destination_hint_address">アドレス</string>
   <string name="send_destination_tag_field">宛先タグ</string>
-  <string name="send_dismiss_message">送金画面を閉じてもよろしいですか?</string>
   <string name="send_enter_address_field">アドレスを入力</string>
   <string name="send_error_address_same_as_wallet">アドレスはウォレットアドレスと同じです</string>
   <string name="send_extras_error_invalid_destination_tag">無効なタグです。取引には追加されません。</string>
@@ -645,17 +635,18 @@
   <string name="staking_active">アクティブ</string>
   <string name="staking_active_footer">資産のステーキングを解除するには、ここをクリックしてください。</string>
   <string name="staking_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
+  <string name="staking_claim_unstaked">ステーキング解除分を請求する</string>
+  <string name="staking_details_annual_percentage_rate">APY</string>
+  <string name="staking_details_annual_percentage_rate_info">ステーキングに参加することで得られる年間収益率。</string>
   <string name="staking_details_apr">APR</string>
-  <string name="staking_details_apy">APY</string>
-  <string name="staking_details_apy_info">ステーキングに参加することで得られる年間収益率。</string>
   <string name="staking_details_available">利用可能</string>
   <string name="staking_details_average_reward_rate">平均報酬率</string>
+  <string name="staking_details_banner_text">ステーキングとは？</string>
   <string name="staking_details_estimated_profit">%s 推定利益</string>
   <string name="staking_details_market_rating">市場評価</string>
   <string name="staking_details_metrics_block_header">指標</string>
   <string name="staking_details_minimum_requirement">最低要件</string>
   <string name="staking_details_no_rewards_to_claim">請求できる報酬はありません</string>
-  <string name="staking_details_on_stake">ステーキング中</string>
   <string name="staking_details_reward_claiming">請求中の報酬</string>
   <string name="staking_details_reward_claiming_info">ステーキング報酬を受け取る方法。自動または手動で請求できます。</string>
   <string name="staking_details_reward_schedule">報酬スケジュール</string>
@@ -666,14 +657,28 @@
   <string name="staking_details_unbonding_period_info">ステーキングから資金の引き出しを要求した後、トークンが利用可能になるまでの待機期間。</string>
   <string name="staking_details_warmup_period">ウォームアップ期間</string>
   <string name="staking_details_warmup_period_info">ステーキングへの参加を有効にするために割り当てられた時間。</string>
+  <string name="staking_initial_info_title">%sをステーキングする</string>
+  <string name="staking_migrate">移行</string>
   <string name="staking_native">ネイティブステーキング</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">ステーキングにより%1sを獲得できます。ステーキング報酬は ~ %2s日ごとに届きます。</string>
   <string name="staking_notification_earn_rewards_title">ステーキング報酬を獲得</string>
+  <string name="staking_notification_unstake_text">ステーキング解除後、報酬の獲得はすぐに停止します。ステーキング解除プロセスには%sかかります。</string>
+  <string name="staking_rebond">再結束</string>
+  <string name="staking_restake">再度ステーキングする</string>
+  <string name="staking_restake_rewards">報酬をステーキングする</string>
+  <string name="staking_revoke">取り消す</string>
+  <string name="staking_revote">再投票</string>
   <string name="staking_rewards">報酬</string>
+  <string name="staking_stake_locked">ステーキングはロックされています</string>
   <string name="staking_stake_more">もっとステーキングする</string>
+  <string name="staking_unlocked_locked">ステーキング解除はロックされています</string>
   <string name="staking_unstaked">スタックされていない</string>
   <string name="staking_unstaked_footer">資産を請求するために、unstakedを確認してください</string>
+  <string name="staking_unstaking">ステーキング解除</string>
   <string name="staking_validator">バリデーター</string>
+  <string name="staking_vote">投票する</string>
+  <string name="staking_vote_locked">投票はロックされています</string>
+  <string name="staking_withdraw">引き出す</string>
   <string name="story_awe_description">カード内に秘密鍵を保管しながら暗号資産を安全に保管します</string>
   <string name="story_awe_title">革新的なハードウェアウォレット</string>
   <string name="story_backup_description">1つのウォレットに最大3枚のカード</string>
@@ -714,7 +719,6 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">ネットワーク%s内の保留中の取引が完了すると、送金が可能になります。</string>
   <string name="token_button_unavailability_reason_sell_unavailable">現在、 %sの売却はご利用いただけません。アップデート情報をご確認ください。</string>
   <string name="token_button_unavailability_reason_staking_unavailable">%s のステーキングは現在ご利用いただけません。最新情報をご確認ください。</string>
-  <string name="token_details_choose_address">アドレスを選択</string>
   <string name="token_details_generate_xpub">XPUBを生成する</string>
   <string name="token_details_hide_alert_hide">非表示</string>
   <string name="token_details_hide_alert_message">このトークンをメイン画面から非表示にします。トークンの管理ページからいつでも再度追加できます。</string>
