@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -23,13 +25,14 @@ import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
 import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet(
         config = config,
         containerColor = TangemTheme.colors.background.tertiary,
+        titleText = resourceReference(R.string.express_choose_providers_title),
     ) { content: ChooseProviderBottomSheetConfig ->
         ChooseProviderBottomSheetContent(content = content)
     }
@@ -39,13 +42,6 @@ fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetConfig) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = stringResource(R.string.express_choose_providers_title),
-            style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
-            modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing10),
-        )
         Text(
             text = stringResource(R.string.express_choose_providers_subtitle),
             style = TangemTheme.typography.caption2,
@@ -104,10 +100,12 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
     }
 }
 
-@Preview
+// region Preview
 @Composable
-private fun ChooseProviderBottomSheet_Preview() {
-    val providers = listOf(
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun Preview_ChooseProviderBottomSheet() {
+    val providers = persistentListOf(
         ProviderState.Content(
             id = "1",
             name = "1inch",
@@ -129,12 +127,18 @@ private fun ChooseProviderBottomSheet_Preview() {
             alertText = stringReference("Unavailable"),
         ),
     )
-    TangemThemePreview(isDark = false) {
-        ChooseProviderBottomSheetContent(
-            ChooseProviderBottomSheetConfig(
-                selectedProviderId = "1",
-                providers = providers.toImmutableList(),
+    val content = ChooseProviderBottomSheetConfig(
+        selectedProviderId = "1",
+        providers = providers,
+    )
+    TangemThemePreview {
+        ChooseProviderBottomSheet(
+            TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = {},
+                content = content,
             ),
         )
     }
 }
+// endregion Preview
