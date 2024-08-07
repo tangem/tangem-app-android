@@ -39,7 +39,7 @@ class TransactionManagerImpl(
     @Throws(IllegalStateException::class)
     override suspend fun getFee(
         networkId: String,
-        amountToSend: BigDecimal,
+        amountToSend: Amount,
         currencyToSend: Currency,
         destinationAddress: String,
         increaseBy: Int?,
@@ -52,7 +52,7 @@ class TransactionManagerImpl(
             if (walletManager is EthereumOptimisticRollupWalletManager) {
                 return getFeeForOptimismBlockchain(
                     walletManager = walletManager,
-                    amount = createAmount(amountToSend, currencyToSend, blockchain),
+                    amount = amountToSend,
                     destinationAddress = destinationAddress,
                     data = data,
                 )
@@ -61,7 +61,6 @@ class TransactionManagerImpl(
                 walletManager = walletManager,
                 blockchain = blockchain,
                 amountToSend = amountToSend,
-                currency = currencyToSend,
                 destinationAddress = destinationAddress,
                 data = data,
                 increaseBy = increaseBy,
@@ -70,8 +69,6 @@ class TransactionManagerImpl(
             return getFeeForBlockchain(
                 walletManager = walletManager,
                 amountToSend = amountToSend,
-                currency = currencyToSend,
-                blockchain = blockchain,
                 destinationAddress = destinationAddress,
             )
         }
@@ -87,13 +84,11 @@ class TransactionManagerImpl(
 
     private suspend fun getFeeForBlockchain(
         walletManager: WalletManager,
-        amountToSend: BigDecimal,
-        currency: Currency,
-        blockchain: Blockchain,
+        amountToSend: Amount,
         destinationAddress: String,
     ): ProxyFees {
         val fee = (walletManager as? TransactionSender)?.getFee(
-            amount = createAmount(amountToSend, currency, blockchain),
+            amount = amountToSend,
             destination = destinationAddress,
         ) ?: error("Cannot cast to TransactionSender")
         return when (fee) {
@@ -155,17 +150,14 @@ class TransactionManagerImpl(
     private suspend fun getFeeForEthereumBlockchain(
         walletManager: EthereumWalletManager,
         blockchain: Blockchain,
-        amountToSend: BigDecimal,
-        currency: Currency,
+        amountToSend: Amount,
         destinationAddress: String,
         data: String?,
         increaseBy: Int?,
     ): ProxyFees {
         val gasLimit = getGasLimit(
             evmWalletManager = walletManager,
-            blockchain = blockchain,
             amount = amountToSend,
-            currency = currency,
             destinationAddress = destinationAddress,
             data = data,
         ).increaseBigIntegerByPercents(increaseBy)
@@ -219,23 +211,20 @@ class TransactionManagerImpl(
         }
     }
 
-    @Suppress("LongParameterList")
     private suspend fun getGasLimit(
         evmWalletManager: EthereumWalletManager,
-        blockchain: Blockchain,
-        amount: BigDecimal,
-        currency: Currency,
+        amount: Amount,
         destinationAddress: String,
         data: String?,
     ): BigInteger {
         val result = if (data.isNullOrEmpty()) {
             evmWalletManager.getGasLimit(
-                amount = createAmount(amount, currency, blockchain),
+                amount = amount,
                 destination = destinationAddress,
             )
         } else {
             evmWalletManager.getGasLimit(
-                amount = createAmount(amount, currency, blockchain),
+                amount = amount,
                 destination = destinationAddress,
                 data = data,
             )
@@ -248,6 +237,18 @@ class TransactionManagerImpl(
                 error(result.error.message ?: result.error.customMessage)
             }
         }
+    }
+
+    override suspend fun getFeeForGas(networkId: String, gas: BigInteger, derivationPath: String?): ProxyFees {
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        val walletManager = getActualWalletManager(blockchain, derivationPath)
+        val gasPriceResult = (walletManager as? EthereumWalletManager)?.getGasPrice()
+            ?: error("not supported for $blockchain")
+        val gasPrice = when (gasPriceResult) {
+            is Result.Failure -> error("fail to receive gasPrice")
+            is Result.Success -> gasPriceResult.data
+        }
+        return createMultipleProxyFees(gasPrice, gas, blockchain)
     }
 
     private suspend fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
@@ -313,27 +314,6 @@ class TransactionManagerImpl(
             minFee = minFee,
             normalFee = normalFee,
             priorityFee = priorityFee,
-        )
-    }
-
-    private fun createAmount(amount: BigDecimal, currency: Currency, blockchain: Blockchain): Amount {
-        return when (currency) {
-            is Currency.NativeToken -> {
-                Amount(value = amount, blockchain = blockchain)
-            }
-            is Currency.NonNativeToken -> {
-                Amount(convertNonNativeToken(currency), amount)
-            }
-        }
-    }
-
-    private fun convertNonNativeToken(token: Currency.NonNativeToken): Token {
-        return Token(
-            name = token.name,
-            symbol = token.symbol,
-            contractAddress = token.contractAddress,
-            decimals = token.decimalCount,
-            id = token.id,
         )
     }
 

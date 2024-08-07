@@ -17,11 +17,12 @@ import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.CurrencyNotification
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
 
 @Composable
 internal fun ExchangeStatusBottomSheet(config: TangemBottomSheetConfig) {
@@ -29,16 +30,13 @@ internal fun ExchangeStatusBottomSheet(config: TangemBottomSheetConfig) {
         config = config,
         containerColor = TangemTheme.colors.background.tertiary,
     ) { content: ExchangeStatusBottomSheetConfig ->
-        ExchangeStatusBottomSheetContent(content = content)
+        ExchangeStatusBottomSheetContent(config = content.value)
     }
 }
 
 @Composable
-private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetConfig) {
-    val config = content.value
-    Column(
-        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
-    ) {
+private fun ExchangeStatusBottomSheetContent(config: SwapTransactionsState) {
+    Column(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16)) {
         SpacerH10()
         Text(
             text = stringResource(id = R.string.express_exchange_status_title),
@@ -80,25 +78,39 @@ private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetC
             showLink = config.showProviderLink,
             onClick = { config.onGoToProviderClick(config.txUrl.orEmpty()) },
         )
-        AnimatedContent(
-            targetState = config.notification,
-            label = "Exchange Status Notification Change",
-        ) {
-            it?.let {
-                val tint = when (config.activeStatus) {
-                    ExchangeStatus.Verifying -> TangemTheme.colors.icon.attention
-                    ExchangeStatus.Failed -> TangemTheme.colors.icon.warning
-                    else -> null
-                }
-                Notification(
-                    config = it.config,
-                    iconTint = tint,
+        if (config.notification != null) {
+            Notification(state = config.notification, activeStatus = config.activeStatus)
+        }
+        SpacerH24()
+    }
+}
+
+@Composable
+private fun Notification(state: ExchangeStatusNotifications, activeStatus: ExchangeStatus?) {
+    AnimatedContent(
+        targetState = state,
+        modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+        label = "Exchange Status Notification Change",
+    ) { notification ->
+        when (notification) {
+            is ExchangeStatusNotifications.CommonNotification -> {
+                com.tangem.core.ui.components.notifications.Notification(
+                    config = notification.config,
+                    iconTint = when (activeStatus) {
+                        ExchangeStatus.Verifying -> TangemTheme.colors.icon.attention
+                        ExchangeStatus.Failed -> TangemTheme.colors.icon.warning
+                        else -> null
+                    },
                     containerColor = TangemTheme.colors.background.action,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+                )
+            }
+            is ExchangeStatusNotifications.TokenRefunded -> {
+                CurrencyNotification(
+                    config = notification.config,
+                    containerColor = TangemTheme.colors.background.action,
                 )
             }
         }
-        SpacerH24()
     }
 }
 
