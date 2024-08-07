@@ -15,6 +15,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.analytics)
+    implementation(projects.domain.models)
 
     /** Other */
     implementation(deps.kotlin.coroutines)

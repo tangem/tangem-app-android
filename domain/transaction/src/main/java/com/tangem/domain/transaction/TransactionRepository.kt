@@ -18,7 +18,6 @@ interface TransactionRepository {
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
-        isSwap: Boolean,
         txExtras: TransactionExtras?,
         hash: String?,
     ): TransactionData.Uncompiled?

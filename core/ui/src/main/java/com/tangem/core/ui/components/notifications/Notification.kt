@@ -30,17 +30,19 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState as NotificationButtonsState
 
 /**
  * Notification component from Design system.
  * Use this for Notification with title, subtitle, clickable or not.
  *
- * @param config   component config
- * @param modifier modifier
- * @param iconTint icon tint
+ * @param config         component config
+ * @param modifier       modifier
+ * @param containerColor container color
+ * @param iconTint       icon tint
+ * @param isEnabled      flag that defines if component is clickable
  *
  * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=1045-807&t=6CVvYDJe0sB7wBKE-0"
  * >Figma component</a>
@@ -53,44 +55,33 @@ fun Notification(
     iconTint: Color? = null,
     isEnabled: Boolean = true,
 ) {
-    BaseContainer(
+    NotificationBaseContainer(
         buttonsState = config.buttonsState,
         onClick = config.onClick,
+        onCloseClick = config.onCloseClick,
         modifier = modifier,
         containerColor = containerColor,
         isEnabled = isEnabled,
     ) {
-        Column(
-            modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
-            verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
-        ) {
-            MainContent(
-                iconResId = config.iconResId,
-                iconTint = iconTint,
-                title = config.title,
-                subtitle = config.subtitle,
-                isClickableComponent = isEnabled && config.onClick != null,
-            )
-
-            Buttons(state = config.buttonsState, isEnabled = isEnabled)
-        }
-
-        CloseableIconButton(
-            onClick = config.onCloseClick,
-            modifier = Modifier.align(alignment = Alignment.TopEnd),
-            isEnabled = isEnabled,
+        MainContent(
+            iconResId = config.iconResId,
+            iconTint = iconTint,
+            title = config.title,
+            subtitle = config.subtitle,
+            isClickableComponent = isEnabled && config.onClick != null,
         )
     }
 }
 
 @Composable
-private fun BaseContainer(
+internal fun NotificationBaseContainer(
     buttonsState: NotificationConfig.ButtonsState?,
     onClick: (() -> Unit)?,
+    onCloseClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
     containerColor: Color? = null,
-    content: @Composable BoxScope.() -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     val tempContainerColor by rememberUpdatedState(
         newValue = if (buttonsState != null || onClick != null) {
@@ -109,7 +100,22 @@ private fun BaseContainer(
         shape = TangemTheme.shapes.roundedCornersXMedium,
         color = containerColor ?: tempContainerColor,
     ) {
-        Box(content = content)
+        Box {
+            Column(
+                modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
+                verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
+            ) {
+                content()
+
+                Buttons(state = buttonsState, isEnabled = isEnabled)
+            }
+
+            CloseableIconButton(
+                onClick = onCloseClick,
+                modifier = Modifier.align(alignment = Alignment.TopEnd),
+                isEnabled = isEnabled,
+            )
+        }
     }
 }
 

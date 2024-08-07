@@ -21,7 +21,8 @@ internal fun List<UserWallet>.toUiModels(
     isBalancesHidden: Boolean = false,
 ): ImmutableList<UserWalletUM> = this.map { model ->
     val balance = balances[model.walletId]
-    model.mapToUiModel(
+
+    model.toUiModel(
         balance = balance,
         appCurrency = appCurrency,
         isLoading = isLoading,
@@ -30,7 +31,7 @@ internal fun List<UserWallet>.toUiModels(
     )
 }.toImmutableList()
 
-private fun UserWallet.mapToUiModel(
+private fun UserWallet.toUiModel(
     balance: TotalFiatBalance?,
     appCurrency: AppCurrency?,
     isLoading: Boolean,
@@ -66,9 +67,9 @@ private fun UserWallet.getInfo(
     )
 
     return when {
+        isBalanceHidden -> combinedReference(cardCountRef, dividerRef, stringReference(STARS))
         isLocked -> combinedReference(cardCountRef, dividerRef, resourceReference(R.string.common_locked))
         isLoading -> cardCountRef
-        isBalanceHidden -> combinedReference(cardCountRef, dividerRef, stringReference(STARS))
         else -> getBalanceInfo(balance, appCurrency, cardCountRef, dividerRef)
     }
 }
@@ -80,7 +81,7 @@ private fun getBalanceInfo(
     dividerRef: TextReference,
 ): TextReference {
     val amount = when (balance) {
-        is TotalFiatBalance.Loaded -> balance.amount.takeIf { balance.isAllAmountsSummarized }
+        is TotalFiatBalance.Loaded -> balance.amount
         is TotalFiatBalance.Failed,
         is TotalFiatBalance.Loading,
         null,

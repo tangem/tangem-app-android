@@ -34,8 +34,8 @@ internal class DefaultRenameWalletComponent @AssistedInject constructor(
     private val stateFlow: MutableStateFlow<RenameWalletUM> = MutableStateFlow(
         value = RenameWalletUM(
             walletNameValue = TextFieldValue(text = params.currentName),
-            isNameCorrect = false,
             updateValue = ::updateValue,
+            isConfirmEnabled = false,
             onConfirm = { renameWallet(params.userWalletId) },
         ),
     )
@@ -58,12 +58,14 @@ internal class DefaultRenameWalletComponent @AssistedInject constructor(
         stateFlow.update {
             it.copy(
                 walletNameValue = value,
-                isNameCorrect = value.text.isNotBlank() && value.text != currentWalletName,
+                isConfirmEnabled = value.text.isNotBlank() && value.text != currentWalletName,
             )
         }
     }
 
     private fun renameWallet(userWalletId: UserWalletId) = componentScope.launch {
+        stateFlow.update { it.copy(isConfirmEnabled = false) }
+
         val newName = stateFlow.value.walletNameValue
         val maybeError = renameWalletUseCase(userWalletId, newName.text).leftOrNull()
 
@@ -71,9 +73,7 @@ internal class DefaultRenameWalletComponent @AssistedInject constructor(
             Timber.e("Unable to rename wallet: $maybeError")
 
             val message = when (maybeError) {
-                is UpdateWalletError.DataError -> resourceReference(
-                    id = R.string.common_unknown_error,
-                )
+                is UpdateWalletError.DataError -> resourceReference(id = R.string.common_unknown_error)
                 is UpdateWalletError.NameAlreadyExists -> resourceReference(
                     id = R.string.user_wallet_list_rename_popup_error_already_exists,
                     formatArgs = wrappedList(newName),

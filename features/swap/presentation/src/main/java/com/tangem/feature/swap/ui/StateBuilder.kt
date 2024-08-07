@@ -54,7 +54,11 @@ internal class StateBuilder(
         return SwapStateHolder(
             blockchainId = networkInfo.blockchainId,
             sendCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.Inputtable(actions.onAmountChanged, actions.onAmountSelected),
+                type = TransactionCardType.Inputtable(
+                    onAmountChanged = actions.onAmountChanged,
+                    onFocusChanged = actions.onAmountSelected,
+                    isError = false,
+                ),
                 amountEquivalent = null,
                 amountTextFieldValue = null,
                 token = null,
@@ -155,9 +159,13 @@ internal class StateBuilder(
         val canSelectReceiveToken = mainTokenId != toToken.id.value
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
+        val sendInput = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable).copy(
+            isError = false,
+            header = TextReference.Res(R.string.swapping_from_title),
+        )
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable),
+                type = sendInput,
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = null,
                 token = uiStateHolder.sendCardData.token,
@@ -225,9 +233,19 @@ internal class StateBuilder(
         val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
         val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
+        val isInsufficientFunds = isInsufficientFundsCondition(quoteModel)
+        val insufficientFundsHeader = if (isInsufficientFunds) {
+            TextReference.Res(R.string.swapping_insufficient_funds)
+        } else {
+            TextReference.Res(R.string.swapping_from_title)
+        }
+        val sendInput = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable).copy(
+            isError = isInsufficientFunds,
+            header = insufficientFundsHeader,
+        )
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable),
+                type = sendInput,
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = getFormattedFiatAmount(quoteModel.fromTokenInfo.amountFiat),
                 token = fromCurrencyStatus,
@@ -486,7 +504,7 @@ internal class StateBuilder(
         ) {
             warnings.add(
                 SwapWarning.PermissionNeeded(
-                    createPermissionNotificationConfig(providerName, fromToken.symbol),
+                    createPermissionNotificationConfig(fromToken.symbol, providerName),
                 ),
             )
         }
@@ -504,8 +522,8 @@ internal class StateBuilder(
                     warnings.add(
                         SwapWarning.GeneralWarning(
                             createNetworkFeeCoverageNotificationConfig(
-                                fee.feeCryptoFormatted,
-                                fee.feeFiatFormatted,
+                                fee.feeCryptoFormattedWithNative,
+                                fee.feeFiatFormattedWithNative,
                             ),
                         ),
                     )
@@ -558,11 +576,14 @@ internal class StateBuilder(
         warnings: MutableList<SwapWarning>,
     ) {
         // check isBalanceEnough, but for dex includeFeeInAmount always Excluded
-        if (!quoteModel.preparedSwapConfigState.isBalanceEnough &&
-            quoteModel.preparedSwapConfigState.includeFeeInAmount !is IncludeFeeInAmount.Included
-        ) {
+        if (isInsufficientFundsCondition(quoteModel)) {
             warnings.add(SwapWarning.InsufficientFunds)
         }
+    }
+
+    private fun isInsufficientFundsCondition(quoteModel: SwapState.QuotesLoadedState): Boolean {
+        return !quoteModel.preparedSwapConfigState.isBalanceEnough &&
+            quoteModel.preparedSwapConfigState.includeFeeInAmount !is IncludeFeeInAmount.Included
     }
 
     private fun getSwapButtonEnabled(quoteModel: SwapState.QuotesLoadedState): Boolean {
@@ -975,9 +996,9 @@ internal class StateBuilder(
         return FeeItemState.Content(
             feeType = feeType,
             title = resourceReference(R.string.common_network_fee_title),
-            amountCrypto = fee.feeCryptoFormatted,
+            amountCrypto = fee.feeCryptoFormattedWithNative, // display fee with native as workaround for okx
             symbolCrypto = fee.cryptoSymbol,
-            amountFiatFormatted = fee.feeFiatFormatted,
+            amountFiatFormatted = fee.feeFiatFormattedWithNative, // display fee with native as workaround for okx
             isClickable = isClickable,
             onClick = actions.onClickFee,
         )
@@ -1017,8 +1038,7 @@ internal class StateBuilder(
         val fromFiatAmount = getFormattedFiatAmount(fromCryptoCurrency.value.fiatRate?.multiply(fromAmount))
         val toFiatAmount = getFormattedFiatAmount(toCryptoCurrency.value.fiatRate?.multiply(toAmount))
 
-        val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName ||
-            providerState.type == ExchangeProviderType.DEX_BRIDGE.providerName
+        val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = swapTransactionState.timestamp,
@@ -1028,7 +1048,7 @@ internal class StateBuilder(
                 showStatusButton = shouldShowStatus,
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
-                fee = stringReference("${fee.feeCryptoFormatted} (${fee.feeFiatFormatted})"),
+                fee = stringReference("${fee.feeCryptoFormattedWithNative} (${fee.feeFiatFormattedWithNative})"),
                 fromTokenAmount = stringReference(swapTransactionState.fromAmount.orEmpty()),
                 toTokenAmount = stringReference(swapTransactionState.toAmount.orEmpty()),
                 fromTokenFiatAmount = stringReference(fromFiatAmount),
@@ -1375,18 +1395,18 @@ internal class StateBuilder(
             FeeItemState.Content(
                 feeType = this.normalFee.feeType,
                 title = resourceReference(R.string.common_network_fee_title),
-                amountCrypto = this.normalFee.feeCryptoFormatted,
+                amountCrypto = this.normalFee.feeCryptoFormattedWithNative,
                 symbolCrypto = this.normalFee.cryptoSymbol,
-                amountFiatFormatted = this.normalFee.feeFiatFormatted,
+                amountFiatFormatted = this.normalFee.feeFiatFormattedWithNative,
                 isClickable = true,
                 onClick = {},
             ),
             FeeItemState.Content(
                 feeType = this.priorityFee.feeType,
                 title = resourceReference(R.string.common_network_fee_title),
-                amountCrypto = this.priorityFee.feeCryptoFormatted,
+                amountCrypto = this.priorityFee.feeCryptoFormattedWithNative,
                 symbolCrypto = this.priorityFee.cryptoSymbol,
-                amountFiatFormatted = this.priorityFee.feeFiatFormatted,
+                amountFiatFormatted = this.priorityFee.feeFiatFormattedWithNative,
                 isClickable = true,
                 onClick = {},
             ),
@@ -1419,7 +1439,7 @@ internal class StateBuilder(
     }
 
     // region warnings
-    private fun createPermissionNotificationConfig(providerName: String, fromTokenSymbol: String): NotificationConfig {
+    private fun createPermissionNotificationConfig(fromTokenSymbol: String, providerName: String): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.express_provider_permission_needed),
             subtitle = resourceReference(
@@ -1621,7 +1641,7 @@ internal class StateBuilder(
             id = this.providerId,
             name = this.name,
             iconUrl = this.imageLarge,
-            type = this.type.toString(),
+            type = this.type.providerName,
             selectionType = selectionType,
             alertText = alertText,
             onProviderClick = onProviderClick,

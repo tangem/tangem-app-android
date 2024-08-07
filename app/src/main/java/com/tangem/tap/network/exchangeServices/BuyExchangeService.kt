@@ -1,5 +1,6 @@
 package com.tangem.tap.network.exchangeServices
 
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
@@ -32,7 +33,8 @@ internal class BuyExchangeService(
 
     override fun isSellAllowed(): Boolean = currentService.isSellAllowed()
 
-    override fun availableForBuy(currency: Currency): Boolean = currentService.availableForBuy(currency)
+    override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean =
+        currentService.availableForBuy(scanResponse, currency)
 
     override fun availableForSell(currency: Currency): Boolean = currentService.availableForSell(currency)
 

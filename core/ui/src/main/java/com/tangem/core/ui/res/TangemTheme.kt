@@ -8,10 +8,12 @@ import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.components.TangemShimmer
+import com.tangem.core.ui.haptic.DefaultHapticManager
 import com.tangem.core.ui.haptic.HapticManager
-import com.tangem.core.ui.haptic.MockHapticManager
+import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.windowsize.WindowSize
 import com.valentinilk.shimmer.Shimmer
 
@@ -21,7 +23,7 @@ fun TangemTheme(
     windowSize: WindowSize,
     typography: TangemTypography = TangemTheme.typography,
     dimens: TangemDimens = TangemTheme.dimens,
-    hapticManager: HapticManager = MockHapticManager,
+    vibratorHapticManager: VibratorHapticManager? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     content: @Composable () -> Unit,
 ) {
@@ -38,6 +40,12 @@ fun TangemTheme(
             darkIcons = !isDark,
             isNavigationBarContrastEnforced = false,
         )
+    }
+
+    val view = LocalView.current
+
+    val hapticManager = remember(view) {
+        DefaultHapticManager(view = view, vibratorHapticManager = vibratorHapticManager)
     }
 
     MaterialTheme(

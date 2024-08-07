@@ -35,14 +35,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Disclaimer(
         val isTosAccepted: Boolean,
-    ) : AppRoute(path = "/disclaimer${if (isTosAccepted) "/tos_accepted" else ""}"), RouteBundleParams {
-
-        override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val IS_TOS_ACCEPTED_KEY = "isTosAccepted"
-        }
-    }
+    ) : AppRoute(path = "/disclaimer${if (isTosAccepted) "/tos_accepted" else ""}")
 
     @Serializable
     data object OnboardingNote : AppRoute(path = "/onboarding/note")
@@ -177,19 +170,17 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data class AccessCodeRecovery(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/access_code_recovery/${userWalletId.stringValue}"), RouteBundleParams {
+    data object AccessCodeRecovery : AppRoute(path = "/access_code_recovery"), RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val USER_WALLET_ID_KEY = "userWalletId"
-        }
     }
 
     @Serializable
-    data object ManageTokens : AppRoute(path = "/manage_tokens")
+    data class ManageTokens(
+        val readOnlyContent: Boolean,
+    ) : AppRoute(path = "/manage_tokens/$readOnlyContent"), RouteBundleParams {
+        override fun getBundle(): Bundle = bundle(serializer())
+    }
 
     @Serializable
     data object AddCustomToken : AppRoute(path = "/add_custom_token")
