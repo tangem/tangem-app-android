@@ -14,7 +14,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.extensions.VoidCallback
-import com.tangem.core.navigation.NavigationAction
+import com.tangem.common.routing.AppRouter
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
@@ -36,7 +37,7 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackP
     }
 
     override fun handleOnBackPressed() {
-        store.dispatch(NavigationAction.PopBackTo())
+        store.dispatchNavigationAction(AppRouter::pop)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

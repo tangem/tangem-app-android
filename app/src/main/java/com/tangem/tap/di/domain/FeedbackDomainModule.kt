@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import android.content.Context
+import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.repository.FeedbackRepository
@@ -14,6 +15,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object FeedbackDomainModule {
+
+    @Provides
+    @Singleton
+    fun provideGetCardInfoUseCase(feedbackRepository: FeedbackRepository): GetCardInfoUseCase {
+        return GetCardInfoUseCase(feedbackRepository = feedbackRepository)
+    }
 
     @Provides
     @Singleton
