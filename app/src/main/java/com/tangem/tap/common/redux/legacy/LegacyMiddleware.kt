@@ -1,8 +1,11 @@
 package com.tangem.tap.common.redux.legacy
 
+import com.tangem.blockchain.common.AmountType
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.RateCanBeBetterEmail
 import com.tangem.tap.common.feedback.SendTransactionFailedEmail
@@ -20,10 +23,16 @@ internal object LegacyMiddleware {
             { action ->
                 when (action) {
                     is LegacyAction.SendEmailRateCanBeBetter -> {
-                        store.state.globalState.feedbackManager?.sendEmail(RateCanBeBetterEmail())
+                        store.state.globalState.feedbackManager?.sendEmail(
+                            feedbackData = RateCanBeBetterEmail(),
+                            scanResponse = action.scanResponse,
+                        )
                     }
                     is LegacyAction.SendEmailSupport -> {
-                        store.state.globalState.feedbackManager?.sendEmail(FeedbackEmail())
+                        store.state.globalState.feedbackManager?.sendEmail(
+                            feedbackData = FeedbackEmail(),
+                            scanResponse = action.scanResponse,
+                        )
                     }
                     is LegacyAction.StartOnboardingProcess -> {
                         store.dispatch(
@@ -32,8 +41,28 @@ internal object LegacyMiddleware {
                     }
                     is LegacyAction.SendEmailTransactionFailed -> {
                         if (store.inject(DaggerGraphState::feedbackManagerFeatureToggles).isLocalLogsEnabled) {
+
+                            val amount = action.amount?.convertToAmount(action.cryptoCurrency)
+                            store.inject(DaggerGraphState::saveBlockchainErrorUseCase).invoke(
+                                error = BlockchainErrorInfo(
+                                    errorMessage = action.errorMessage,
+                                    blockchainId = action.cryptoCurrency.network.id.value,
+                                    derivationPath = action.cryptoCurrency.network.derivationPath.value,
+                                    destinationAddress = action.destinationAddress.orEmpty(),
+                                    tokenSymbol = if (amount?.type is AmountType.Token) {
+                                        amount.currencySymbol
+                                    } else {
+                                        ""
+                                    },
+                                    amount = amount?.value?.stripZeroPlainString() ?: "unknown",
+                                    fee = action.fee?.convertToAmount(action.cryptoCurrency)
+                                        ?.value?.stripZeroPlainString() ?: "unknown",
+                                ),
+                            )
+
                             store.state.globalState.feedbackManager?.sendEmail(
-                                SendTransactionFailedEmail(action.errorMessage),
+                                feedbackData = SendTransactionFailedEmail(action.errorMessage),
+                                scanResponse = action.scanResponse,
                             )
                         } else {
                             scope.launch {
@@ -50,7 +79,8 @@ internal object LegacyMiddleware {
                                         )
                                     }
                                 store.state.globalState.feedbackManager?.sendEmail(
-                                    SendTransactionFailedEmail(action.errorMessage),
+                                    feedbackData = SendTransactionFailedEmail(action.errorMessage),
+                                    scanResponse = null,
                                 )
                             }
                         }

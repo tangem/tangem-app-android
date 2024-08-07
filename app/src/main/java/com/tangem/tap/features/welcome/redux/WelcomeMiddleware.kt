@@ -6,11 +6,12 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
@@ -98,7 +99,7 @@ internal class WelcomeMiddleware {
                     signInType = Basic.SignedIn.SignInType.Biometric,
                 )
 
-                store.dispatchWithMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                store.dispatchNavigationAction { push(AppRoute.Wallet) }
                 store.dispatchWithMain(WelcomeAction.ProceedWithBiometrics.Success)
                 store.onUserWalletSelected(userWallet = selectedUserWallet)
 
@@ -130,7 +131,7 @@ internal class WelcomeMiddleware {
                 .doOnSuccess {
                     sendSignedInAnalyticsEvent(scanResponse = scanResponse, signInType = Basic.SignedIn.SignInType.Card)
 
-                    store.dispatchWithMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                    store.dispatchNavigationAction { push(AppRoute.Wallet) }
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Success)
                     store.onUserWalletSelected(userWallet = userWallet)
 
@@ -170,7 +171,7 @@ internal class WelcomeMiddleware {
             }
             .doOnResult {
                 store.dispatchWithMain(WelcomeAction.CloseError)
-                store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
+                store.dispatchNavigationAction { popTo<AppRoute.Home>() }
             }
     }
 
