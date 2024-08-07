@@ -4,15 +4,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.rows.model.ChainRowUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.tokens.model.Network
-import com.tangem.features.managetokens.entity.CurrencyItemUM
-import com.tangem.features.managetokens.entity.CurrencyNetworkUM
-import com.tangem.features.managetokens.entity.ManageTokensUM
+import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.managetokens.entity.*
 import com.tangem.features.managetokens.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.mutate
@@ -24,17 +25,33 @@ import javax.inject.Inject
 
 @ComponentScoped
 internal class ManageTokensModel @Inject constructor(
+    paramsContainer: ParamsContainer,
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
+    private val params: ManageTokensComponent.Params = paramsContainer.require()
     private val changedItemsIds: MutableSet<String> = mutableSetOf()
     private var items = initItems()
 
-    val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(
-        value = ManageTokensUM(
+    val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(value = getInitialState(mode = params.mode))
+
+    private fun getInitialState(mode: ManageTokensComponent.Mode): ManageTokensUM {
+        return when (mode) {
+            ManageTokensComponent.Mode.READ_ONLY -> createReadContentModel()
+            ManageTokensComponent.Mode.MANAGE -> createManageContentModel()
+        }
+    }
+
+    private fun createReadContentModel(): ManageTokensUM.ReadContent {
+        return ManageTokensUM.ReadContent(
             popBack = router::pop,
-            items = items,
+            isLoading = false,
+            items = initItems(),
+            topBar = ManageTokensTopBarUM.ReadContent(
+                title = resourceReference(R.string.common_search_tokens),
+                onBackButtonClick = router::pop,
+            ),
             search = SearchBarUM(
                 placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
                 query = "",
@@ -42,20 +59,60 @@ internal class ManageTokensModel @Inject constructor(
                 isActive = false,
                 onActiveChange = ::toggleSearchBar,
             ),
+        )
+    }
+
+    private fun createManageContentModel(): ManageTokensUM.ManageContent {
+        return ManageTokensUM.ManageContent(
+            popBack = router::pop,
+            isLoading = false,
+            items = initItems(),
+            topBar = ManageTokensTopBarUM.ManageContent(
+                title = resourceReference(id = R.string.main_manage_tokens),
+                onBackButtonClick = router::pop,
+                endButton = TopAppBarButtonUM(
+                    iconRes = R.drawable.ic_plus_24,
+                    onIconClicked = ::onAddCustomToken,
+                ),
+            ),
+            search = SearchBarUM(
+                placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
+                query = "",
+                onQueryChange = ::searchCurrencies,
+                isActive = false,
+                onActiveChange = ::toggleSearchBar,
+            ),
+            onSaveClick = ::onSaveClick,
             hasChanges = false,
-            onSaveClick = {},
-            onAddCustomToken = {},
-        ),
-    )
+        )
+    }
+
+    private fun onAddCustomToken() {
+        // TODO: [REDACTED_JIRA]
+    }
+
+    private fun onSaveClick() {
+        // TODO: [REDACTED_JIRA]
+    }
 
     @Suppress("UnusedPrivateMember")
     private fun searchCurrencies(query: String) {
         // TODO: [REDACTED_JIRA]
+        val newItems = if (query.isBlank()) {
+            initItems()
+        } else {
+            state.value.items.filter { currency ->
+                currency.model.name.contains(query, ignoreCase = true)
+            }.toPersistentList()
+        }
+        state.update { state ->
+            state.copySealed(search = state.search.copy(query = query), items = newItems)
+        }
     }
 
     private fun toggleSearchBar(isActive: Boolean) {
         state.update { state ->
-            state.copy(
+            state.copySealed(
                 search = state.search.copy(isActive = isActive),
             )
         }
@@ -135,7 +192,7 @@ internal class ManageTokensModel @Inject constructor(
             items = items.mutate {
                 it[index] = updatedItem
             }
-            state.copy(items = items)
+            state.copySealed(items = items)
         }
     }
 
@@ -177,7 +234,7 @@ internal class ManageTokensModel @Inject constructor(
             items = items.mutate {
                 it[currencyIndex] = updatedItem
             }
-            state.copy(
+            state.copySealed(
                 items = items,
                 hasChanges = changedItemsIds.isNotEmpty(),
             )
