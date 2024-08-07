@@ -1,9 +1,11 @@
 package com.tangem.tap.features.customtoken.impl.presentation.routers
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.utils.popTo
 import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -12,11 +14,11 @@ import com.tangem.wallet.R
 internal class DefaultCustomTokenRouter : CustomTokenRouter {
 
     override fun popBackStack() {
-        store.dispatch(NavigationAction.PopBackTo())
+        store.dispatchNavigationAction(AppRouter::pop)
     }
 
     override fun openWalletScreen() {
-        store.dispatch(NavigationAction.PopBackTo(screen = AppScreen.Wallet))
+        store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
     }
 
     override fun openUnsupportedNetworkAlert(blockchain: Blockchain) {
@@ -32,7 +34,7 @@ internal class DefaultCustomTokenRouter : CustomTokenRouter {
         val alert = AppDialog.SimpleOkDialogRes(
             headerId = R.string.common_error,
             messageId = R.string.common_unknown_error,
-            onOk = { store.dispatch(NavigationAction.PopBackTo()) },
+            onOk = { store.dispatchNavigationAction(AppRouter::pop) },
         )
         store.dispatchDialogShow(alert)
     }
