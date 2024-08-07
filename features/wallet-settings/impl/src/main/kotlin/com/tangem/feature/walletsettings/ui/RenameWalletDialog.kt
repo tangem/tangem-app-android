@@ -23,7 +23,7 @@ internal fun RenameWalletDialog(model: RenameWalletUM, onDismiss: () -> Unit) {
         fieldValue = value,
         confirmButton = DialogButton(
             title = stringResource(id = R.string.common_ok),
-            enabled = model.isNameCorrect,
+            enabled = model.isConfirmEnabled,
             onClick = model.onConfirm,
         ),
         dismissButton = DialogButton(

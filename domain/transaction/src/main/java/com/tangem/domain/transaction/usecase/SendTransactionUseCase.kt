@@ -14,6 +14,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.tokens.model.Network
@@ -37,7 +38,10 @@ class SendTransactionUseCase(
         userWallet: UserWallet,
         network: Network,
     ): Either<SendTransactionError?, String> {
-        val signer = cardSdkConfigRepository.getCommonSigner(cardId = null)
+        val card = userWallet.scanResponse.card
+        val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
+
+        val signer = cardSdkConfigRepository.getCommonSigner(cardId = card.cardId.takeIf { isCardNotBackedUp })
 
         val linkedTerminal = cardSdkConfigRepository.isLinkedTerminal()
         if (userWallet.scanResponse.card.isStart2Coin) {
@@ -105,22 +109,7 @@ class SendTransactionUseCase(
         }
         val error = result.error as? BlockchainSdkError ?: return SendTransactionError.UnknownError()
         return when (error) {
-            is BlockchainSdkError.WrappedTangemError -> {
-                if (error.code == USER_CANCELLED_ERROR_CODE) {
-                    SendTransactionError.UserCancelledError
-                } else {
-                    val tangemError = error.tangemError
-                    if (tangemError is TangemSdkError) {
-                        val resource = tangemError.localizedDescriptionRes()
-                        val resId = resource.resId ?: R.string.common_unknown_error
-                        val resArgs = resource.args.map { it.value }
-                        val textReference = resourceReference(resId, wrappedList(resArgs))
-                        SendTransactionError.TangemSdkError(tangemError.code, textReference)
-                    } else {
-                        SendTransactionError.BlockchainSdkError(error.code, tangemError.customMessage)
-                    }
-                }
-            }
+            is BlockchainSdkError.WrappedTangemError -> parseWrappedError(error)
             is BlockchainSdkError.CreateAccountUnderfunded -> {
                 val minAmount = error.minReserve
                 val minValue = minAmount.value?.toFormattedString(minAmount.decimals).orEmpty()
@@ -131,6 +120,28 @@ class SendTransactionUseCase(
                     code = error.code,
                     message = error.customMessage,
                 )
+            }
+        }
+    }
+
+    private fun parseWrappedError(error: BlockchainSdkError.WrappedTangemError): SendTransactionError {
+        return if (error.code == USER_CANCELLED_ERROR_CODE) {
+            SendTransactionError.UserCancelledError
+        } else {
+            when (val tangemError = error.tangemError) {
+                is TangemSdkError -> {
+                    val resource = tangemError.localizedDescriptionRes()
+                    val resId = resource.resId ?: R.string.common_unknown_error
+                    val resArgs = resource.args.map { it.value }
+                    val textReference = resourceReference(resId, wrappedList(resArgs))
+                    SendTransactionError.TangemSdkError(tangemError.code, textReference)
+                }
+                is BlockchainSdkError.WrappedTangemError -> {
+                    parseWrappedError(tangemError) // todo remove when sdk errors are revised
+                }
+                else -> {
+                    SendTransactionError.BlockchainSdkError(error.code, tangemError.customMessage)
+                }
             }
         }
     }
