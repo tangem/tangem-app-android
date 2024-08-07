@@ -49,7 +49,8 @@ internal object MockTokenLists {
 
     val loadingUngroupedTokenList = with(failedUngroupedTokenList) {
         copy(
-            currencies = currencies.map { it.copy(value = CryptoCurrencyStatus.Loading) }.toNonEmptyListOrNull() ?: emptyList(),
+            currencies = currencies.map { it.copy(value = CryptoCurrencyStatus.Loading) }.toNonEmptyListOrNull()
+                ?: emptyList(),
             totalFiatBalance = TotalFiatBalance.Loading,
         )
     }
@@ -60,7 +61,9 @@ internal object MockTokenLists {
             groups = groups.map { group ->
                 group.copy(
                     currencies = group.currencies
-                        .map { it.copy(value = CryptoCurrencyStatus.Loading) },
+                        .map { it.copy(value = CryptoCurrencyStatus.Loading) }
+                        .toNonEmptyListOrNull()
+                        ?: emptyList(),
                 )
             }.toNonEmptyListOrNull()!!,
         )
@@ -109,7 +112,7 @@ internal object MockTokenLists {
 
     val sortedGroupedTokenList: TokenList.GroupedByNetwork
         get() {
-            val groups = sortedNetworksGroups
+            val groups = sortedNetworksGroups.toNonEmptyList()
 
             return unsortedGroupedTokenList.copy(
                 groups = groups,
