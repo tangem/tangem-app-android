@@ -87,6 +87,10 @@
   <string name="common_copy_address">Copier l\'adresse</string>
   <string name="common_create">Créer</string>
   <string name="common_custom">Personnalisé</string>
+  <plurals name="common_days">
+    <item quantity="one">%d jour</item>
+    <item quantity="other">%d jours</item>
+  </plurals>
   <string name="common_delete">Supprimer</string>
   <string name="common_disabled">Désactivé</string>
   <string name="common_done">Exécuté</string>
@@ -272,8 +276,8 @@
   <string name="give_permission_swap_subtitle" formatted="false">Pour continuer, accordez aux smart contracts de %1s l\'autorisation d\'utiliser votre %2s</string>
   <string name="give_permission_title">Donner l\'autorisation</string>
   <string name="give_permission_unlimited">Illimité</string>
-  <string name="home_button_order">Commander une carte</string>
-  <string name="home_button_scan">Scannez la carte</string>
+  <string name="home_button_order">Commandez</string>
+  <string name="home_button_scan">Scannez</string>
   <string name="initial_message_change_access_code_body">Touchez, pour modifier le code d\'accès</string>
   <string name="initial_message_change_passcode_body">Touchez, pour modifier le mot de passe</string>
   <string name="initial_message_create_wallet_body">Pour créer le portefeuille, appuyez sur la carte comme indiqué ci-dessus et ne la retirez pas jusqu\'à la fin de l\'opération</string>
@@ -324,6 +328,7 @@
   <string name="markets_add_to_portfolio_button">Ajouter au portfolio</string>
   <string name="markets_common_my_portfolio">Mon portfolio</string>
   <string name="markets_common_title">Marché</string>
+  <string name="markets_generate_addresses_notification">Pour générer des adresses pour les réseaux sélectionnés, vous devez scanner votre carte Tangem.</string>
   <string name="markets_select_wallet">Sélectionnez un portefeuille</string>
   <string name="markets_sort_by_title">Trier par</string>
   <string name="markets_token_details_insights">Idées</string>
@@ -371,7 +376,7 @@
   <string name="onboarding_exit_alert_title">Voulez-vous quitter le processus d\'activation ?</string>
   <string name="onboarding_getting_started">Initialiser</string>
   <string name="onboarding_linking_error_card_with_wallets">Un autre portefeuille a déjà été créé sur la carte que vous essayez d\'ajouter. Si vous avez des fonds dans ce portefeuille, veuillez les retirer, puis réinitialiser cette carte et l\'ajouter comme sauvegarde.</string>
-  <string name="onboarding_navbar_title_creating_backup">Création d\'une sauvegarde</string>
+  <string name="onboarding_navbar_title_creating_backup">Sauvegarde en cours</string>
   <string name="onboarding_seed_button_read_more">En savoir plus sur les seed phrases</string>
   <plurals name="onboarding_seed_generate_message_words_count">
     <item quantity="one">Empty</item>
@@ -384,7 +389,7 @@
   </plurals>
   <string name="onboarding_seed_import_message">Pour importer votre portefeuille, entrez votre seed phrase dans le champ ci-dessous</string>
   <string name="onboarding_seed_intro_button_generate">Générer une seed phrase</string>
-  <string name="onboarding_seed_intro_button_import">Importer un portefeuille</string>
+  <string name="onboarding_seed_intro_button_import">Importez</string>
   <string name="onboarding_seed_intro_message">Une seed phrase est une série de mots qui vous permet de récupérer votre portefeuille. Contrairement aux clés générées par la carte, les seed phrases ne sont pas protégées et peuvent être copiées et volées. Utilisez cette option à vos propres risques.</string>
   <string name="onboarding_seed_intro_title">Utiliser une seed phrase</string>
   <string name="onboarding_seed_mnemonic_invalid_checksum">Seed phrase invalide. Veuillez vérifier l\'ordre des mots.</string>
@@ -559,6 +564,7 @@
   <string name="send_total_subtitle_fiat_format">≈ %1$s (incl. les commissions : %2$s)</string>
   <string name="send_total_subtitle_format">Sera envoyé %s</string>
   <string name="send_transaction_success">La transaction a été signée avec succès et envoyée au nœud de blockchain. Le solde du portefeuille sera mis à jour après un certain temps</string>
+  <string name="send_tron_account_activation_error">%1$s est un actif du réseau Tron. Pour calculer les frais et effectuer une transaction, déposez du Tron (TRX) sur votre compte.</string>
   <string name="send_validation_invalid_address">Adresse incorrecte</string>
   <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Transaction envoyée</string>
@@ -568,9 +574,8 @@
   <string name="settings_wallet_name_title">Nom</string>
   <string name="staking_active">Actif</string>
   <string name="staking_active_footer">Afin d\'unstaker vos actifs, cliquez ici.</string>
+  <string name="staking_details_annual_percentage_rate_info">Le pourcentage de rendement annuel que vous pouvez gagner en participant au staking.</string>
   <string name="staking_details_apr">APR</string>
-  <string name="staking_details_apy">APY</string>
-  <string name="staking_details_apy_info">Le pourcentage de rendement annuel que vous pouvez gagner en participant au staking.</string>
   <string name="staking_details_available">Disponible</string>
   <string name="staking_details_average_reward_rate">Taux de récompense moyen</string>
   <string name="staking_details_estimated_profit">%s profit estimatif</string>
@@ -578,12 +583,11 @@
   <string name="staking_details_metrics_block_header">Métriques</string>
   <string name="staking_details_minimum_requirement">Minimum requis</string>
   <string name="staking_details_no_rewards_to_claim">Aucune récompense à réclamer</string>
-  <string name="staking_details_on_stake">En jeu</string>
   <string name="staking_details_reward_claiming">Réclamation de récompense</string>
   <string name="staking_details_reward_claiming_info">Un moyen de recevoir des récompenses de staking. Il peut être réclamé automatiquement ou manuellement.</string>
   <string name="staking_details_reward_schedule">Calendrier de récompenses</string>
   <string name="staking_details_reward_schedule_info">Il s\'agit d\'un calendrier qui détermine le moment où les participants au staking reçoivent leurs récompenses.</string>
-  <string name="staking_details_rewards_to_claim">Récompenses à réclamer : %s</string>
+  <string name="staking_details_rewards_to_claim">Récompenses à réclamer: %s</string>
   <string name="staking_details_title">Staking %s</string>
   <string name="staking_details_unbonding_period">Période de détachement</string>
   <string name="staking_details_unbonding_period_info">La période que vous devez attendre après avoir demandé le retrait des fonds du staking avant que les jetons ne soient disponibles.</string>
@@ -641,7 +645,7 @@
   <string name="token_details_hide_token">Masquer le jeton</string>
   <string name="token_details_staking_block_subtitle">Le Staking vous permet d\'en gagner %1$s et d\'obtenir des récompenses tous les %2$s jours</string>
   <string name="token_details_staking_block_title">Gagnez jusqu\'à %s récompense de mise par an</string>
-  <string name="token_details_token_type_subtitle">%1$s jeton dans %%image%% le réseau %2$s</string>
+  <string name="token_details_token_type_subtitle">%1$s jeton dans %%image%% %2$s le réseau</string>
   <string name="token_details_token_type_subtitle_no_standard">Jeton dans le %%image%% %1$s réseau</string>
   <string name="token_details_unable_hide_alert_message">Le jeton %1$s (%2$s) est la principale devise du réseau %3$s et ne peut pas être masqué tant que vous avez d\'autres jetons de ce réseau dans la liste</string>
   <string name="token_details_unable_hide_alert_title">Impossible de masquer %s</string>
@@ -669,6 +673,7 @@
   <string name="twins_scan_twin_with_number">Appuyez sur la carte jumelle avec le numéro %s et ne la retirez pas jusqu\'à la fin de l\'opération</string>
   <string name="unlock_wallet_description_full">Utilisez %s ou scannez une carte pour avoir accès à votre portefeuille</string>
   <string name="user_push_notification_agreement_argument_one">Restez à jour avec les dernières fonctionnalités et actualités</string>
+  <string name="user_push_notification_agreement_argument_two">Soyez le premier informé des nouvelles promotions</string>
   <string name="user_push_notification_agreement_header">Souhaitez-vous utiliser les notifications push?</string>
   <string name="user_wallet_list_add_button">Ajouter un nouveau portefeuille</string>
   <string name="user_wallet_list_delete_prompt">Êtes-vous sûr de vouloir supprimer ce portefeuille ?</string>
@@ -724,7 +729,7 @@
   <string name="warning_backup_errors_title">Erreur d\'activation</string>
   <string name="warning_beacon_chain_retirement_content">Selon les développeurs du réseau BNB, le support de la norme BEP-2\nprendra fin en juin 2024. Pour éviter de perdre des actifs avec cette norme, veuillez les convertir à la norme BEP-20. Utilisez notre service de d\'échange pour les transférer sur le réseau BNB Smart Chain.</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain va s\'arrêter de fonctionner</string>
-  <string name="warning_button_could_be_better">Pourrait être mieux</string>
+  <string name="warning_button_could_be_better">Pas terrible</string>
   <string name="warning_button_like_it">J\'aime</string>
   <string name="warning_button_ok">Ok, je l\'ai!</string>
   <string name="warning_button_really_cool">Vraiment cool !</string>
