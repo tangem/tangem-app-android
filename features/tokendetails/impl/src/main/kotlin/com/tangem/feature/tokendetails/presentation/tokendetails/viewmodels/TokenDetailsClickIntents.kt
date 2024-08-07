@@ -62,4 +62,8 @@ interface TokenDetailsClickIntents {
     fun onStakeBannerClick()
 
     fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig)
+
+    fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency)
+
+    fun onOpenUrlClick(url: String)
 }
