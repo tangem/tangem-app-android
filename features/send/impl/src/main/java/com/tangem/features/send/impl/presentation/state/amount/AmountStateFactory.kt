@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.amount
 
+import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.StateRouter
@@ -64,7 +65,7 @@ internal class AmountStateFactory(
 
     fun getOnAmountReduceByState(reduceAmountBy: BigDecimal, reduceAmountByDiff: BigDecimal) =
         amountReduceByConverter.convert(
-            SendAmountReduceByConverter.ReduceByData(
+            AmountReduceByTransformer.ReduceByData(
                 reduceAmountBy = reduceAmountBy,
                 reduceAmountByDiff = reduceAmountByDiff,
             ),

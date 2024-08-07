@@ -2,7 +2,7 @@ package com.tangem.core.ui.components.notifications
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.AnnotatedString
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 
 /**
@@ -18,7 +18,7 @@ import com.tangem.core.ui.extensions.TextReference
 data class CurrencyNotificationConfig(
     val title: TextReference,
     val subtitle: AnnotatedSubtitle,
-    val tokenIconState: TokenIconState,
+    val tokenIconState: CurrencyIconState,
     val buttonsState: NotificationConfig.ButtonsState,
 ) {
 

@@ -2,6 +2,7 @@ package com.tangem.domain.tokens
 
 import arrow.core.Either
 import arrow.core.raise.either
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
@@ -16,6 +17,7 @@ class GetFeePaidCryptoCurrencyStatusSyncUseCase(
     internal val currenciesRepository: CurrenciesRepository,
     internal val quotesRepository: QuotesRepository,
     internal val networksRepository: NetworksRepository,
+    internal val stakingRepository: StakingRepository,
     internal val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -30,6 +32,7 @@ class GetFeePaidCryptoCurrencyStatusSyncUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
         )
 
         return either {

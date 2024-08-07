@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.models
 
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -20,7 +20,7 @@ sealed class TokenToSelectState {
         val id: String,
         val name: String,
         val symbol: String,
-        val tokenIcon: TokenIconState,
+        val tokenIcon: CurrencyIconState,
         val available: Boolean = true,
         val addedTokenBalanceData: TokenBalanceData? = null,
     ) : TokenToSelectState()

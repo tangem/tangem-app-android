@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.mock.MockNetworks
 import com.tangem.domain.tokens.mock.MockQuotes
@@ -13,6 +14,7 @@ import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.repository.MockCurrenciesRepository
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.domain.tokens.repository.MockQuotesRepository
+import com.tangem.domain.tokens.repository.MockStakingRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import junit.framework.TestCase.assertEquals
@@ -121,6 +123,7 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
                     networkAddress = NetworkAddress.Single(
                         defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                     ),
+                    yieldBalance = YieldBalance.Error,
                 ),
             )
         }
@@ -171,5 +174,6 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
         ),
         quotesRepository = MockQuotesRepository(quotes),
         networksRepository = MockNetworksRepository(statuses),
+        stakingRepository = MockStakingRepository(),
     )
 }

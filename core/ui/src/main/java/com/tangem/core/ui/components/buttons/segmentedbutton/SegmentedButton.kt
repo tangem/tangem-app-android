@@ -4,14 +4,9 @@ import android.content.res.Configuration
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -21,8 +16,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.res.TangemThemePreview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -42,7 +39,7 @@ import kotlinx.collections.immutable.persistentListOf
  */
 @Composable
 inline fun <reified T> SegmentedButtons(
-    config: PersistentList<T>,
+    config: ImmutableList<T>,
     crossinline onClick: (T) -> Unit,
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.background.tertiary,
@@ -51,7 +48,7 @@ inline fun <reified T> SegmentedButtons(
     showIndication: Boolean = true,
     initialSelectedItem: T? = null,
     isEnabled: Boolean = true,
-    crossinline buttonContent: @Composable (T) -> Unit,
+    crossinline buttonContent: @Composable BoxScope.(T) -> Unit,
 ) {
     if (config.isEmpty() || config.size == 1) return
 
@@ -59,12 +56,14 @@ inline fun <reified T> SegmentedButtons(
         val index = if (initialSelectedItem == null) 0 else config.indexOf(initialSelectedItem)
         mutableIntStateOf(index)
     }
+    val shape = RoundedCornerShape(TangemTheme.dimens.radius26)
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius26))
+            .clip(shape)
             .background(dividerColor)
-            .padding(TangemTheme.dimens.spacing1),
+            .border(BorderStroke(1.dp, dividerColor), shape = shape)
+            .height(IntrinsicSize.Max),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing1),
     ) {
         repeat(config.size) { index ->
@@ -97,7 +96,7 @@ inline fun <reified T> SegmentedButtons(
                         onClick(config[index])
                     },
             ) {
-                buttonContent.invoke(config[index])
+                buttonContent.invoke(this, config[index])
             }
         }
     }

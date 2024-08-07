@@ -3,8 +3,8 @@ package com.tangem.lib.visa
 import com.ihsanbal.logging.Level
 import com.ihsanbal.logging.LoggingInterceptor
 import com.tangem.lib.visa.model.VisaContractInfo
-import com.tangem.lib.visa.utils.VisaConfig
-import com.tangem.lib.visa.utils.VisaConfig.NETWORK_LOGS_TAG
+import com.tangem.lib.visa.utils.Constants
+import com.tangem.lib.visa.utils.Constants.NETWORK_LOGS_TAG
 import com.tangem.lib.visa.utils.toHexString
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import okhttp3.OkHttpClient
@@ -24,16 +24,16 @@ interface VisaContractInfoProvider {
     suspend fun getContractInfo(walletAddress: String): VisaContractInfo
 
     class Builder(
+        private val useTestnetRpc: Boolean,
+        private val bridgeProcessorAddress: String,
+        private val paymentAccountRegistryAddress: String,
         private val isNetworkLoggingEnabled: Boolean,
         private val dispatchers: CoroutineDispatcherProvider,
-        private val baseUrl: String = VisaConfig.BASE_RPC_URL,
-        private val bridgeProcessorAddress: String = VisaConfig.BRIDGE_PROCESSOR_CONTRACT_ADDRESS,
-        private val paymentAccountRegistryAddress: String = VisaConfig.PAYMENT_ACCOUNT_REGISTRY_ADDRESS,
-        private val chainId: Long = VisaConfig.CHAIN_ID,
-        private val networkTimeoutSeconds: Long = VisaConfig.NETWORK_TIMEOUT_SECONDS,
-        private val decimals: Int = VisaConfig.DECIMALS,
-        private val gasLimit: Long = VisaConfig.GAS_LIMIT,
-        private val privateKey: String = ByteArray(VisaConfig.PRIVATE_KEY_LENGTH).toHexString(),
+        private val chainId: Long = Constants.CHAIN_ID,
+        private val decimals: Int = Constants.DECIMALS,
+        private val gasLimit: Long = Constants.GAS_LIMIT,
+        private val networkTimeoutSeconds: Long = Constants.NETWORK_TIMEOUT_SECONDS,
+        private val privateKey: String = ByteArray(Constants.PRIVATE_KEY_LENGTH).toHexString(),
     ) {
 
         fun build(): VisaContractInfoProvider {
@@ -52,6 +52,8 @@ interface VisaContractInfoProvider {
         }
 
         private fun createWeb3J(): Web3j {
+            val baseUrl: String = if (useTestnetRpc) Constants.TESTNET_RPC_URL else Constants.MAINNET_RPC_URL
+
             val httpClient = OkHttpClient.Builder().apply {
                 connectTimeout(networkTimeoutSeconds, TimeUnit.SECONDS)
                 readTimeout(networkTimeoutSeconds, TimeUnit.SECONDS)

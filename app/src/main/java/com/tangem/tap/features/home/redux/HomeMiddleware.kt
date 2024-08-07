@@ -6,11 +6,10 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.navigation.AppScreen
-import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
@@ -126,7 +125,7 @@ private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
             scope.launch { store.onUserWalletSelected(userWallet = userWallet) }
         }
         .doOnResult {
-            navigateTo(AppScreen.Wallet)
+            navigateTo(AppRoute.Wallet)
         }
 }
 
@@ -150,8 +149,8 @@ private fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
     }
 }
 
-private suspend fun navigateTo(appScreen: AppScreen) {
-    store.dispatchOnMain(NavigationAction.NavigateTo(appScreen))
+private suspend fun navigateTo(route: AppRoute) {
+    store.dispatchNavigationAction { push(route) }
     delay(HIDE_PROGRESS_DELAY)
     store.dispatch(HomeAction.ScanInProgress(scanInProgress = false))
 }
