@@ -28,13 +28,14 @@ import com.tangem.common.ui.R
 import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
-import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.containers.FooterContainer
+import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.collections.immutable.ImmutableList
@@ -136,33 +137,13 @@ private fun ApprovalBottomSheetInfo(data: GiveTxPermissionState.ReadyForRequest)
 
 @Composable
 private fun FeeItem(fee: TextReference) {
-    Row(
+    InputRowDefault(
+        title = resourceReference(R.string.common_network_fee_title),
+        text = fee,
         modifier = Modifier
-            .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
-            .padding(
-                top = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing16,
-                start = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing16,
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = stringResource(R.string.common_network_fee_title),
-            color = TangemTheme.colors.text.primary1,
-            style = TangemTheme.typography.subtitle1,
-            maxLines = 1,
-        )
-        EllipsisText(
-            text = fee.resolveReference(),
-            color = TangemTheme.colors.text.tertiary,
-            style = TangemTheme.typography.body1,
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
-        )
-    }
+            .background(TangemTheme.colors.background.action),
+    )
 }
 
 @Composable
@@ -193,7 +174,7 @@ private fun AmountItem(
                     top = TangemTheme.dimens.spacing16,
                     bottom = TangemTheme.dimens.spacing16,
                     start = TangemTheme.dimens.spacing12,
-                    end = TangemTheme.dimens.spacing16,
+                    end = TangemTheme.dimens.spacing12,
                 ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
@@ -204,6 +185,7 @@ private fun AmountItem(
                 style = TangemTheme.typography.subtitle1,
                 maxLines = 1,
             )
+            SpacerWMax()
             Text(
                 text = stringResource(
                     when (approveType) {
@@ -214,6 +196,12 @@ private fun AmountItem(
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.body1,
                 maxLines = 1,
+            )
+            Icon(
+                painter = rememberVectorPainter(ImageVector.vectorResource(id = R.drawable.ic_chevron_24)),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.informative,
+                modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
             )
         }
         DropdownSelector(
@@ -303,6 +291,7 @@ private fun DropdownSelector(
 @Composable
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, locale = "ru")
 private fun Preview_GiveTxPermissionBottomSheet() {
     TangemThemePreview {
         GiveTxPermissionBottomSheet(
@@ -321,12 +310,12 @@ private val previewData = GiveTxPermissionBottomSheetConfig(
         amount = "1",
         walletAddress = "",
         spenderAddress = "",
-        fee = TextReference.Str("2,14$"),
-        approveType = ApproveType.UNLIMITED,
+        fee = TextReference.Str("0.1233 BTC (2,14$)"),
+        approveType = ApproveType.LIMITED,
         approveButton = ApprovePermissionButton(true) {},
         cancelButton = CancelPermissionButton(true),
-        onChangeApproveType = { ApproveType.UNLIMITED },
-        subtitle = resourceReference(R.string.give_permission_staking_subtitle),
+        onChangeApproveType = { ApproveType.LIMITED },
+        subtitle = resourceReference(R.string.give_permission_staking_subtitle, wrappedList("1")),
         dialogText = resourceReference(R.string.give_permission_staking_footer),
     ),
     onCancel = {},
