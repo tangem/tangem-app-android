@@ -1,7 +1,6 @@
 package com.tangem.features.markets.details.impl.ui.components
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -15,11 +14,10 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.TooltipText
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.TangemAnimations
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
-import com.tangem.features.markets.details.impl.ui.entity.InfoPointUM
+import com.tangem.features.markets.details.impl.ui.state.InfoPointUM
 
 @Composable
 internal fun InfoPoint(infoPointUM: InfoPointUM, modifier: Modifier = Modifier) {
@@ -42,18 +40,11 @@ internal fun InfoPoint(infoPointUM: InfoPointUM, modifier: Modifier = Modifier) 
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        AnimatedContent(
-            modifier = Modifier,
-            targetState = infoPointUM.value,
-            transitionSpec = { TangemAnimations.transitionSpecs.textChange },
-            label = "insight block",
-        ) {
-            Text(
-                text = it,
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
-            )
-        }
+        Text(
+            text = infoPointUM.value,
+            style = TangemTheme.typography.body1,
+            color = TangemTheme.colors.text.primary1,
+        )
     }
 }
 

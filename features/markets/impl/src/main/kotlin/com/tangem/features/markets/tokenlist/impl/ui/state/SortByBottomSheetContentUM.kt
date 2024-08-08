@@ -1,4 +1,4 @@
-package com.tangem.features.markets.tokenlist.impl.ui.entity
+package com.tangem.features.markets.tokenlist.impl.ui.state
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 
