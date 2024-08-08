@@ -18,6 +18,8 @@ object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onPrevClick() {}
 
+    override fun onInitialInfoBannerClick() {}
+
     override fun onInfoClick(infoType: InfoType) {}
 
     override fun onAmountValueChange(value: String) {}
