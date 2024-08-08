@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.common.ui.navigationButtons.NavigationButtonsBlock
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
@@ -69,14 +68,6 @@ fun StakingBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
 
 @Composable
 private fun SendAppBar(uiState: StakingUiState) {
-    val titleRes = when (uiState.currentStep) {
-        StakingStep.Amount -> stringResource(id = R.string.send_amount_label)
-        StakingStep.InitialInfo,
-        StakingStep.RewardsValidators,
-        StakingStep.Validators,
-        StakingStep.Confirmation,
-        -> uiState.title.resolveReference()
-    }
     val backIcon = when (uiState.currentStep) {
         StakingStep.Amount,
         StakingStep.Validators,
@@ -91,7 +82,7 @@ private fun SendAppBar(uiState: StakingUiState) {
         }
     }
     AppBarWithBackButtonAndIcon(
-        text = titleRes,
+        text = uiState.title.resolveReference(),
         backIconRes = backIcon,
         onBackClick = uiState.clickIntents::onBackClick,
         backgroundColor = TangemTheme.colors.background.secondary,

@@ -665,7 +665,6 @@
   <string name="staking_details_unbonding_period_info">The period you must wait after requesting to withdraw funds from staking before the tokens become available.</string>
   <string name="staking_details_warmup_period">Warmup period</string>
   <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
-  <string name="staking_initial_info_title">Stake %s</string>
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">Staking allow you to earn %1s. Your staking rewards arrive every ~%2s days.</string>
@@ -688,11 +687,14 @@
   <string name="staking_rewards">Rewards</string>
   <string name="staking_stake_locked">Stake locked</string>
   <string name="staking_stake_more">Stake more</string>
+  <string name="staking_title_stake">Stake %s</string>
+  <string name="staking_title_unstake">Unstake %s</string>
   <string name="staking_unlocked_locked">Unlock locked</string>
   <string name="staking_unstaked">Unstaked</string>
   <string name="staking_unstaked_footer">Check unstaked to claim your assets</string>
   <string name="staking_unstaking">Unstaking</string>
   <string name="staking_validator">Validator</string>
+  <string name="staking_validators">Validators</string>
   <string name="staking_vote">Vote</string>
   <string name="staking_vote_locked">Vote locked</string>
   <string name="staking_withdraw">Withdraw</string>
