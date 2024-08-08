@@ -11,9 +11,9 @@ import com.tangem.domain.markets.TokenMarket
 import com.tangem.features.markets.component.BottomSheetState
 import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListUMStateManager
 import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListBatchFlowManager
-import com.tangem.features.markets.tokenlist.impl.ui.entity.ListUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListItemUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.SortByTypeUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -200,10 +200,12 @@ internal class MarketsListModel @Inject constructor(
 
         modelScope.launch {
             marketsListUMStateManager.searchQueryFlow
-                .filter { it.isNotEmpty() }
                 .debounce(timeoutMillis = SEARCH_QUERY_DEBOUNCE_MILLIS)
                 .distinctUntilChanged()
-                .filter { activeListManager == searchMarketsListManager }
+                .onEach {
+                    if (it.isEmpty()) searchMarketsListManager.clearStateAndStopAllActions()
+                }
+                .filter { it.isNotEmpty() && activeListManager == searchMarketsListManager }
                 .collectLatest {
                     searchMarketsListManager.reload(searchText = it)
                 }
@@ -229,6 +231,7 @@ internal class MarketsListModel @Inject constructor(
             }
         }
     }
+
     private fun CoroutineScope.loadQuotesWithTimer(timeMillis: Long) {
         launch {
             while (true) {
