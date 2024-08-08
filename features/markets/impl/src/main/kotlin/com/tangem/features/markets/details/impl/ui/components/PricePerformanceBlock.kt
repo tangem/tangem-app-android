@@ -26,7 +26,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
 import com.tangem.domain.markets.PriceChangeInterval
-import com.tangem.features.markets.details.impl.ui.entity.PricePerformanceUM
+import com.tangem.features.markets.details.impl.ui.state.PricePerformanceUM
 import com.tangem.features.markets.details.impl.ui.getText
 import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.persistentListOf
@@ -127,30 +127,18 @@ private fun Content(state: PricePerformanceUM.Value, modifier: Modifier = Modifi
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            AnimatedContent(
-                targetState = state.low,
-                transitionSpec = { TangemAnimations.transitionSpecs.textChange },
-                label = "Low price",
-            ) {
-                Text(
-                    text = it,
-                    style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.primary1,
-                )
-            }
+            Text(
+                text = state.low,
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+            )
             SpacerW8()
-            AnimatedContent(
-                targetState = state.high,
-                transitionSpec = { TangemAnimations.transitionSpecs.textChange },
-                label = "High price",
-            ) {
-                Text(
-                    text = it,
-                    style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.primary1,
-                    textAlign = TextAlign.End,
-                )
-            }
+            Text(
+                text = state.high,
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+                textAlign = TextAlign.End,
+            )
         }
     }
 }
