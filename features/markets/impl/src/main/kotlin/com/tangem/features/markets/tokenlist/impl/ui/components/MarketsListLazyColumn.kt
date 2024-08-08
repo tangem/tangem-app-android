@@ -9,10 +9,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
@@ -20,8 +16,9 @@ import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.disableNestedScroll
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.tokenlist.impl.ui.entity.ListUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
 import kotlinx.coroutines.launch
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
@@ -54,7 +51,7 @@ internal fun MarketsListLazyColumn(
 
     if (state is ListUM.Loading) {
         LazyColumn(
-            modifier = Modifier.nestedScroll(DisableParentConnection),
+            modifier = Modifier.disableNestedScroll(),
             state = rememberLazyListState(),
             contentPadding = PaddingValues(bottom = bottomBarHeight),
             userScrollEnabled = false,
@@ -65,7 +62,7 @@ internal fun MarketsListLazyColumn(
         }
     } else {
         LazyColumn(
-            modifier = modifier.nestedScroll(DisableParentConnection),
+            modifier = modifier.disableNestedScroll(),
             state = lazyListState,
             contentPadding = PaddingValues(bottom = bottomBarHeight),
             userScrollEnabled = true,
@@ -220,11 +217,5 @@ fun InfiniteListHandler(listState: LazyListState, onLoadMore: () -> Boolean, buf
         if (loadMore && !emitted) {
             emitted = onLoadMore()
         }
-    }
-}
-
-private object DisableParentConnection : NestedScrollConnection {
-    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-        return available.copy(x = 0f)
     }
 }
