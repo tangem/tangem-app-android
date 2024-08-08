@@ -3,24 +3,24 @@ package com.tangem.utils
 import java.util.Locale
 
 object SupportedLanguages {
-    const val LANG_ENGLISH = "en"
-    const val LANG_RUSSIAN = "ru"
-    const val LANG_GERMAN = "de"
-    const val LANG_FRANCH = "fr"
-    const val LANG_ITALIAN = "it"
-    const val LANG_JAPANESE = "ja"
-    const val LANG_UKRAINIAN = "uk"
-    const val LANG_CHINESE = "uk"
+    const val ENGLISH = "en"
+    const val RUSSIAN = "ru"
+    const val GERMAN = "de"
+    const val FRANCH = "fr"
+    const val ITALIAN = "it"
+    const val JAPANESE = "ja"
+    const val UKRAINIAN = "uk"
+    const val CHINESE = "uk"
 
     val supportedLangugeCodes = listOf(
-        LANG_ENGLISH,
-        LANG_RUSSIAN,
-        LANG_GERMAN,
-        LANG_FRANCH,
-        LANG_ITALIAN,
-        LANG_JAPANESE,
-        LANG_UKRAINIAN,
-        LANG_CHINESE,
+        ENGLISH,
+        RUSSIAN,
+        GERMAN,
+        FRANCH,
+        ITALIAN,
+        JAPANESE,
+        UKRAINIAN,
+        CHINESE,
     )
 
     fun getCurrentSupportedLanguageCode(): String {
@@ -29,7 +29,7 @@ object SupportedLanguages {
         return if (supportedLangugeCodes.contains(locale.language)) {
             locale.language
         } else {
-            LANG_ENGLISH
+            ENGLISH
         }
     }
 }
