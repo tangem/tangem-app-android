@@ -4,7 +4,7 @@ package com.tangem.features.markets.tokenlist.impl.ui.preview
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListItemUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
 import kotlinx.collections.immutable.persistentListOf
 
 internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvider<MarketsListItemUM>(
