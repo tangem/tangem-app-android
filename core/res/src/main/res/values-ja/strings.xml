@@ -641,12 +641,12 @@
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_available">利用可能</string>
   <string name="staking_details_average_reward_rate">平均報酬率</string>
+  <string name="staking_details_banner_text">ステーキングとは？</string>
   <string name="staking_details_estimated_profit">%s 推定利益</string>
   <string name="staking_details_market_rating">市場評価</string>
   <string name="staking_details_metrics_block_header">指標</string>
   <string name="staking_details_minimum_requirement">最低要件</string>
   <string name="staking_details_no_rewards_to_claim">請求できる報酬はありません</string>
-  <string name="staking_details_on_stake">ステーキング中</string>
   <string name="staking_details_reward_claiming">請求中の報酬</string>
   <string name="staking_details_reward_claiming_info">ステーキング報酬を受け取る方法。自動または手動で請求できます。</string>
   <string name="staking_details_reward_schedule">報酬スケジュール</string>
@@ -662,6 +662,7 @@
   <string name="staking_native">ネイティブステーキング</string>
   <string name="staking_notification_earn_rewards_text" formatted="false">ステーキングにより%1sを獲得できます。ステーキング報酬は ~ %2s日ごとに届きます。</string>
   <string name="staking_notification_earn_rewards_title">ステーキング報酬を獲得</string>
+  <string name="staking_notification_unstake_text">ステーキング解除後、報酬の獲得はすぐに停止します。ステーキング解除プロセスには%sかかります。</string>
   <string name="staking_rebond">再結束</string>
   <string name="staking_restake">再度ステーキングする</string>
   <string name="staking_restake_rewards">報酬をステーキングする</string>

@@ -106,7 +106,7 @@ class GetCryptoCurrencyActionsUseCase(
             return listOf(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
         }
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Unreachable) {
-            return getActionsForUnreachableCurrency(cryptoCurrencyStatus, needAssociateAsset)
+            return getActionsForUnreachableCurrency(userWallet, cryptoCurrencyStatus, needAssociateAsset)
         }
 
         val activeList = mutableListOf<TokenActionsState.ActionState>()
@@ -168,7 +168,7 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // buy
-        if (rampManager.availableForBuy(cryptoCurrency)) {
+        if (rampManager.availableForBuy(userWallet.scanResponse, cryptoCurrency)) {
             activeList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
         } else {
             disabledList.add(
@@ -222,6 +222,7 @@ class GetCryptoCurrencyActionsUseCase(
     }
 
     private fun getActionsForUnreachableCurrency(
+        userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         needAssociateAsset: Boolean,
     ): List<TokenActionsState.ActionState> {
@@ -230,7 +231,7 @@ class GetCryptoCurrencyActionsUseCase(
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
             actionsList.add(TokenActionsState.ActionState.CopyAddress(ScenarioUnavailabilityReason.None))
         }
-        if (rampManager.availableForBuy(cryptoCurrencyStatus.currency)) {
+        if (rampManager.availableForBuy(userWallet.scanResponse, cryptoCurrencyStatus.currency)) {
             actionsList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
         } else {
             actionsList.add(

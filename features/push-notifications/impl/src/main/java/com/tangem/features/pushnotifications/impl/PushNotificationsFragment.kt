@@ -26,10 +26,9 @@ internal class PushNotificationsFragment : ComposeFragment() {
         NavigationBar3ButtonsScrim()
         PushNotificationsScreen(
             onRequest = viewModel::onRequest,
-            onRequestLater = viewModel::onRequestLater,
+            onNeverRequest = viewModel::onNeverRequest,
             onAllowPermission = viewModel::onAllowPermission,
             onDenyPermission = viewModel::onDenyPermission,
-            onOpenSettings = viewModel::openSettings,
         )
     }
 

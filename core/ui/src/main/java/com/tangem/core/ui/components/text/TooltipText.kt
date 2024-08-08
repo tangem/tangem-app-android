@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,7 +29,7 @@ fun TooltipText(
     text: TextReference,
     onInfoClick: () -> Unit,
     modifier: Modifier = Modifier,
-    useSmallerText: Boolean = false,
+    textStyle: TextStyle = TangemTheme.typography.caption2,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -45,18 +46,16 @@ fun TooltipText(
         Text(
             modifier = Modifier.weight(1f, fill = false),
             text = text.resolveReference(),
-            style = if (useSmallerText) {
-                TangemTheme.typography.caption2
-            } else {
-                TangemTheme.typography.subtitle2
-            },
+            style = textStyle,
             color = TangemTheme.colors.text.tertiary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
 
         IconButton(
-            modifier = Modifier.requiredSize(TangemTheme.dimens.size24),
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.spacing4)
+                .requiredSize(TangemTheme.dimens.size16),
             interactionSource = interactionSource,
             onClick = onInfoClick,
         ) {

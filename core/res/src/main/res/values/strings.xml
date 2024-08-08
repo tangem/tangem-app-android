@@ -655,7 +655,6 @@
   <string name="staking_details_metrics_block_header">Metrics</string>
   <string name="staking_details_minimum_requirement">Minimum Requirement</string>
   <string name="staking_details_no_rewards_to_claim">No rewards to claim</string>
-  <string name="staking_details_on_stake">On stake</string>
   <string name="staking_details_reward_claiming">Reward claiming</string>
   <string name="staking_details_reward_claiming_info">A way to receive staking rewards. It can be claimed automatically or manually.</string>
   <string name="staking_details_reward_schedule">Reward schedule</string>

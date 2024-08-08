@@ -98,7 +98,7 @@ internal class HomeFragment : ComposeFragment(), StoreSubscriber<HomeState> {
                     viewModel.onSearchClick()
                 } else {
                     Analytics.send(IntroductionProcess.ButtonTokensList())
-                    store.dispatchNavigationAction { push(AppRoute.ManageTokens) }
+                    store.dispatchNavigationAction { push(AppRoute.ManageTokens(readOnlyContent = true)) }
                     store.dispatch(TokensAction.SetArgs.ReadAccess)
                 }
             },

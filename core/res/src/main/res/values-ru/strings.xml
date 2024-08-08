@@ -144,6 +144,7 @@
   <string name="common_share">Поделиться</string>
   <string name="common_sign">Подписать</string>
   <string name="common_sign_and_send">Подписать и отправить</string>
+  <string name="common_stake">Застейкать</string>
   <string name="common_staking">Стейкинг</string>
   <string name="common_start">Начать</string>
   <string name="common_submit">Отправить</string>
@@ -592,7 +593,7 @@
   <string name="staking_details_market_rating">Позиция в рынке</string>
   <string name="staking_details_metrics_block_header">Метрики</string>
   <string name="staking_details_minimum_requirement">Минимальное количество</string>
-  <string name="staking_details_on_stake">Застейкано</string>
+  <string name="staking_details_no_rewards_to_claim">Нет вознаграждений к получению</string>
   <string name="staking_details_reward_claiming">Способ возраграждения</string>
   <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Он может быть автоматическим, при котором вознаграждение само зачисляется вам на адрес или в ручную, когда вознаграждение нужно вывести, создав транзакцию на её получение.</string>
   <string name="staking_details_reward_schedule">Период возрагражения</string>
@@ -613,6 +614,7 @@
   <string name="staking_restake_rewards">Застейкать вознаграждения</string>
   <string name="staking_revoke">Отозвать</string>
   <string name="staking_revote">Переголосовать</string>
+  <string name="staking_rewards">Вознаграждения</string>
   <string name="staking_stake_more">Застейкать еще</string>
   <string name="staking_unlocked_locked">Разблокировать</string>
   <string name="staking_unstaked">Выведено из стейкинга</string>

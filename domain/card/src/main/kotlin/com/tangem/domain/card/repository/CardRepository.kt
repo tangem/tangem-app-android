@@ -26,10 +26,5 @@ interface CardRepository {
     @Throws
     suspend fun isTangemTOSAccepted(): Boolean
 
-    @Throws
-    suspend fun isStart2CoinTOSAccepted(cardId: String): Boolean
-
     suspend fun acceptTangemTOS()
-
-    suspend fun acceptStart2CoinTOS(cardId: String)
 }
