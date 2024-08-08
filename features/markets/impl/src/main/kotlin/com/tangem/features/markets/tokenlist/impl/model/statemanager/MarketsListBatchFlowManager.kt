@@ -6,9 +6,9 @@ import com.tangem.features.markets.tokenlist.impl.model.converters.MarketsTokenI
 import com.tangem.features.markets.tokenlist.impl.model.utils.logAction
 import com.tangem.features.markets.tokenlist.impl.model.utils.logStatus
 import com.tangem.features.markets.tokenlist.impl.model.utils.logUpdateResults
-import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListItemUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListUM.TrendInterval
-import com.tangem.features.markets.tokenlist.impl.ui.entity.SortByTypeUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM.TrendInterval
+import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
