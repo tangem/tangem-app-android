@@ -59,5 +59,15 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
                 wrappedList(currencyName, days),
             ),
         )
+
+        data class Unstake(
+            val cooldownPeriodDays: Int,
+        ) : Warning(
+            title = resourceReference(R.string.common_unstake),
+            subtitle = resourceReference(
+                R.string.staking_notification_unstake_text,
+                wrappedList(cooldownPeriodDays, cooldownPeriodDays),
+            ),
+        )
     }
 }

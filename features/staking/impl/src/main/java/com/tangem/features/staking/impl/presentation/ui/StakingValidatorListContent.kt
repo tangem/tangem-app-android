@@ -4,12 +4,10 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -47,23 +45,6 @@ internal fun StakingValidatorListContent(
         contentPadding = PaddingValues(bottom = bottomBarHeight),
         modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
-        item(key = "HEADER") {
-            Text(
-                text = stringResource(R.string.staking_validator),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(CornersToRound.TOP_2.getShape())
-                    .background(TangemTheme.colors.background.action)
-                    .padding(
-                        start = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing12,
-                        top = TangemTheme.dimens.spacing12,
-                        bottom = TangemTheme.dimens.spacing8,
-                    ),
-            )
-        }
         if (state is ValidatorState.Content) {
             val validators = state.availableValidators
             items(
@@ -93,10 +74,10 @@ internal fun StakingValidatorListContent(
                     onSelect = { clickIntents.onValidatorSelect(item) },
                     modifier = Modifier
                         .clip(
-                            if (index == validators.lastIndex) {
-                                CornersToRound.BOTTOM_2
-                            } else {
-                                CornersToRound.ZERO
+                            when (index) {
+                                0 -> CornersToRound.TOP_2
+                                validators.lastIndex -> CornersToRound.BOTTOM_2
+                                else -> CornersToRound.ZERO
                             }.getShape(),
                         )
                         .background(TangemTheme.colors.background.action),
