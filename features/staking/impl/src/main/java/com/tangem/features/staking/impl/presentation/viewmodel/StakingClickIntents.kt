@@ -22,6 +22,8 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onPrevClick()
 
+    fun onInitialInfoBannerClick()
+
     fun onInfoClick(infoType: InfoType)
 
     override fun onAmountNext() = onNextClick(actionType = null)
