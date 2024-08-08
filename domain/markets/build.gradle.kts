@@ -18,4 +18,5 @@ dependencies {
 
     implementation(deps.kotlin.serialization)
     implementation(projects.domain.tokens.models)
+    implementation(projects.core.utils)
 }
