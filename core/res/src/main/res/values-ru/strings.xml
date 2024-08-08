@@ -657,6 +657,8 @@
   <string name="staking_restake_rewards">Застейкать вознаграждения</string>
   <string name="staking_revoke">Отозвать</string>
   <string name="staking_revote">Переголосовать</string>
+  <string name="staking_reward_claiming_auto">Автоматически</string>
+  <string name="staking_reward_claiming_manual">Вручную</string>
   <string name="staking_reward_schedule_block">Блок</string>
   <string name="staking_reward_schedule_day">День</string>
   <string name="staking_reward_schedule_each_day">Каждый день</string>
