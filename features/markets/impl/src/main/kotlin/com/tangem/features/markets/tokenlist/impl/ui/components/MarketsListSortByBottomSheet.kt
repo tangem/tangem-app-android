@@ -19,8 +19,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.tokenlist.impl.ui.entity.SortByBottomSheetContentUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.SortByTypeUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.SortByBottomSheetContentUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
 
 @Composable
 fun MarketsListSortByBottomSheet(config: TangemBottomSheetConfig) {
