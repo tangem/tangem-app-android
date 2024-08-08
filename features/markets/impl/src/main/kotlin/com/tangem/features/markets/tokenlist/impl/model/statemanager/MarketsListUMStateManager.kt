@@ -7,11 +7,11 @@ import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.tokenlist.impl.ui.entity.SortByBottomSheetContentUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.ListUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListItemUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.SortByTypeUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.SortByBottomSheetContentUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
