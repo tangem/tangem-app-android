@@ -2,14 +2,13 @@ package com.tangem.features.staking.impl.presentation.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -17,8 +16,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -28,6 +31,7 @@ import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.components.list.roundedListWithDividersItems
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -44,9 +48,8 @@ import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
-// [REDACTED_TODO_COMMENT]
-// private const val METRICS_BLOCK_KEY = "MetricsBlock"
 
+private const val BANNER_BLOCK_KEY = "BannerBlock"
 private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
 private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
 
@@ -60,16 +63,16 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
             .background(TangemTheme.colors.background.secondary)
             .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
-// [REDACTED_TODO_COMMENT]
-        // https://www.figma.com/design/Vs6SkVsFnUPsSCNwlnVf5U?node-id=12484-35755#876661319
-        // if (state.yieldBalance == InnerYieldBalanceState.Empty) {
-        //     item(key = METRICS_BLOCK_KEY) {
-        //         Column(modifier = Modifier.animateItemPlacement()) {
-        //             MetricsBlock(state)
-        //             SpacerH12()
-        //         }
-        //     }
-        // }
+        if (state.yieldBalance == InnerYieldBalanceState.Empty) {
+            item(key = BANNER_BLOCK_KEY) {
+                Column(
+                    modifier = Modifier.animateItemPlacement(),
+                ) {
+                    BannerBlock(onClick = clickIntents::onInitialInfoBannerClick)
+                    SpacerH12()
+                }
+            }
+        }
 
         this.roundedListWithDividersItems(
             rows = state.infoItems,
@@ -101,66 +104,31 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
     }
 }
 
-@Suppress("UnusedPrivateMember")
 @Composable
-private fun MetricsBlock(state: StakingStates.InitialInfoState.Data) {
-    Column(
-        modifier = Modifier
-            .background(
-                color = TangemTheme.colors.background.primary,
-                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
-            )
-            .padding(TangemTheme.dimens.spacing12)
-            .fillMaxWidth(),
+private fun BannerBlock(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier.clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = rememberRipple(),
+            onClick = onClick,
+        ),
     ) {
-        Text(
-            text = stringResource(id = R.string.staking_details_metrics_block_header),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(R.drawable.img_staking_banner),
+            contentDescription = null,
         )
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.size8))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(modifier = Modifier.weight(1F)) {
-                Text(
-                    text = stringResource(id = R.string.staking_details_apr),
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
-                )
-                Text(
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
-                    text = state.aprRange.resolveReference(),
-                    style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.accent,
-                )
-            }
-            Column(modifier = Modifier.weight(1F)) {
-                Row {
-                    Text(
-                        modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
-                        text = stringResource(id = R.string.staking_details_market_rating),
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
-                    )
-                    Icon(
-                        modifier = Modifier
-                            .size(TangemTheme.dimens.size16)
-                            .align(Alignment.CenterVertically),
-                        painter = painterResource(id = R.drawable.ic_alert_24),
-                        contentDescription = null,
-                        tint = TangemTheme.colors.text.tertiary,
-                    )
+        Text(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(TangemTheme.dimens.spacing16),
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(Brush.linearGradient(textGradientColors))) {
+                    append(stringResource(R.string.staking_details_banner_text))
                 }
-                Text(
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
-                    text = "1", // TODO staking
-                    style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.accent,
-                )
-            }
-        }
+            },
+            style = TangemTheme.typography.h2,
+        )
     }
 }
 
@@ -269,6 +237,11 @@ private fun ActiveStakingBlock(groups: ImmutableList<BalanceGroupedState>, onCli
         }
     }
 }
+
+private val textGradientColors = listOf(
+    TangemColorPalette.White,
+    Color(0xff8fb4df),
+)
 
 // region preview
 
