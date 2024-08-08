@@ -9,7 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.charts.downsample.fastForEach
+import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SmallButtonShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
@@ -21,7 +21,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
-import com.tangem.features.markets.details.impl.ui.entity.LinksUM
+import com.tangem.features.markets.details.impl.ui.state.LinksUM
 import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -69,8 +69,8 @@ internal fun LinksBlock(state: LinksUM, modifier: Modifier = Modifier) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SubBlock(
-    links: ImmutableList<LinksUM.LinkUM>,
-    onLinkClick: (LinksUM.LinkUM) -> Unit,
+    links: ImmutableList<LinksUM.Link>,
+    onLinkClick: (LinksUM.Link) -> Unit,
     modifier: Modifier = Modifier,
     lastBlock: Boolean = false,
     title: String = "Official links",
@@ -166,36 +166,36 @@ private fun ContentPreview() {
         LinksBlock(
             state = LinksUM(
                 officialLinks = persistentListOf(
-                    LinksUM.LinkUM(
+                    LinksUM.Link(
                         title = stringReference("Website"),
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
-                    LinksUM.LinkUM(
+                    LinksUM.Link(
                         title = stringReference("Website"),
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
-                    LinksUM.LinkUM(
+                    LinksUM.Link(
                         title = stringReference("Website"),
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                 ),
                 social = persistentListOf(
-                    LinksUM.LinkUM(
+                    LinksUM.Link(
                         title = stringReference("Twitter"),
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
-                    LinksUM.LinkUM(
+                    LinksUM.Link(
                         title = stringReference("Facebook"),
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                 ),
                 repository = persistentListOf(
-                    LinksUM.LinkUM(
+                    LinksUM.Link(
                         title = stringReference("Github"),
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
