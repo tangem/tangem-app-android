@@ -7,6 +7,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
+import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -43,8 +44,9 @@ internal class MainViewModel @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val stakingFeatureToggles: StakingFeatureToggles,
+    stakingFeatureToggles: StakingFeatureToggles,
     private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
+    private val apiConfigsManager: ApiConfigsManager,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
 
@@ -82,6 +84,8 @@ internal class MainViewModel @Inject constructor(
     /** Loading the resources needed to run the application */
     private fun loadApplicationResources() {
         viewModelScope.launch(dispatchers.main) {
+            apiConfigsManager.initialize()
+
             blockchainSDKFactory.init()
             prepareSelectedWalletFeedback()
 
