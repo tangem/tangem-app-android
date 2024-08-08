@@ -50,9 +50,6 @@ import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 
-// TODO staking metrics block is temporary disabled
-// private const val METRICS_BLOCK_KEY = "MetricsBlock"
-
 private const val BANNER_BLOCK_KEY = "BannerBlock"
 private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
 private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
