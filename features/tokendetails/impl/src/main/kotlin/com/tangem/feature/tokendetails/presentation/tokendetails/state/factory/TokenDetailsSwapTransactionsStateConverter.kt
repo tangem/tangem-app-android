@@ -219,7 +219,6 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             isSending = isSending,
                             isSendingDone = isSendingDone,
                             isRefunded = isRefunded,
-                            hasFailed = hasFailed,
                         ),
                     )
                 }
@@ -302,8 +301,8 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         )
     }
 
-    private fun sendStep(isSending: Boolean, isSendingDone: Boolean, isRefunded: Boolean, hasFailed: Boolean) = when {
-        hasFailed || isRefunded -> ExchangeStatusState(
+    private fun sendStep(isSending: Boolean, isSendingDone: Boolean, isRefunded: Boolean) = when {
+        isRefunded -> ExchangeStatusState(
             status = ExchangeStatus.Refunded,
             text = TextReference.Res(R.string.express_exchange_status_refunded),
             isActive = false,
