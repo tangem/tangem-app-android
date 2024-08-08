@@ -657,10 +657,9 @@
   <string name="staking_details_unbonding_period_info">ステーキングから資金の引き出しを要求した後、トークンが利用可能になるまでの待機期間。</string>
   <string name="staking_details_warmup_period">ウォームアップ期間</string>
   <string name="staking_details_warmup_period_info">ステーキングへの参加を有効にするために割り当てられた時間。</string>
-  <string name="staking_initial_info_title">%sをステーキングする</string>
   <string name="staking_migrate">移行</string>
   <string name="staking_native">ネイティブステーキング</string>
-  <string name="staking_notification_earn_rewards_text" formatted="false">ステーキングにより%1sを獲得できます。ステーキング報酬は ~ %2s日ごとに届きます。</string>
+  <string name="staking_notification_earn_rewards_text">ステーキングにより%1$sを獲得できます。ステーキング報酬は ~ %2$s日ごとに届きます。</string>
   <string name="staking_notification_earn_rewards_title">ステーキング報酬を獲得</string>
   <string name="staking_notification_unstake_text">ステーキング解除後、報酬の獲得はすぐに停止します。ステーキング解除プロセスには%sかかります。</string>
   <string name="staking_rebond">再結束</string>
@@ -668,9 +667,20 @@
   <string name="staking_restake_rewards">報酬をステーキングする</string>
   <string name="staking_revoke">取り消す</string>
   <string name="staking_revote">再投票</string>
+  <string name="staking_reward_claiming_auto">自動</string>
+  <string name="staking_reward_claiming_manual">手動</string>
+  <string name="staking_reward_schedule_block">ブロック</string>
+  <string name="staking_reward_schedule_day">日</string>
+  <string name="staking_reward_schedule_epoch">エポック</string>
+  <string name="staking_reward_schedule_era">時代</string>
+  <string name="staking_reward_schedule_hour">時</string>
+  <string name="staking_reward_schedule_month">月</string>
+  <string name="staking_reward_schedule_week">週</string>
   <string name="staking_rewards">報酬</string>
   <string name="staking_stake_locked">ステーキングはロックされています</string>
   <string name="staking_stake_more">もっとステーキングする</string>
+  <string name="staking_title_stake">%sをステーキングする</string>
+  <string name="staking_title_unstake">%sのステーキング解除</string>
   <string name="staking_unlocked_locked">ステーキング解除はロックされています</string>
   <string name="staking_unstaked">スタックされていない</string>
   <string name="staking_unstaked_footer">資産を請求するために、unstakedを確認してください</string>

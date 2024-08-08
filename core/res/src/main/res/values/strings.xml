@@ -278,7 +278,7 @@
   <string name="feedback_subject_support">Feedback</string>
   <string name="feedback_subject_support_tangem">Tangem feedback</string>
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
-  <string name="give_permission_current_transaction">Current transaction</string>
+  <string name="give_permission_current_transaction">Transaction</string>
   <string name="give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="give_permission_policy_type_footer">Specify the approve limit for the selected token</string>
   <string name="give_permission_rows_amount">Amount %s</string>
@@ -667,7 +667,7 @@
   <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
-  <string name="staking_notification_earn_rewards_text" formatted="false">Staking allow you to earn %1s. Your staking rewards arrive every ~%2s days.</string>
+  <string name="staking_notification_earn_rewards_text">Staking allow you to earn %1$s. Your staking rewards arrive every ~%2$s days.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_notification_unstake_text">Rewards stop accruing immediately after you unstake. The unstaking process takes %s.</string>
   <string name="staking_rebond">Rebond</string>
@@ -679,6 +679,7 @@
   <string name="staking_reward_claiming_manual">Manual</string>
   <string name="staking_reward_schedule_block">Block</string>
   <string name="staking_reward_schedule_day">Day</string>
+  <string name="staking_reward_schedule_each_day">Each day</string>
   <string name="staking_reward_schedule_epoch">Epoch</string>
   <string name="staking_reward_schedule_era">Era</string>
   <string name="staking_reward_schedule_hour">Hour</string>
