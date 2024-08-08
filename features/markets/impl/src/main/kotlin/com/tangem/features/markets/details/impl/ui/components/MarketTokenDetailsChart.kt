@@ -10,11 +10,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import com.tangem.common.ui.charts.MarketChart
+import com.tangem.common.ui.charts.getMarketChartBottomAxisHeight
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.rememberMarketChartState
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.markets.details.impl.ui.entity.MarketsTokenDetailsUM
+import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.tokenlist.impl.ui.components.UnableToLoadData
 
 @Composable
@@ -34,6 +35,7 @@ internal fun MarketTokenDetailsChart(state: MarketsTokenDetailsUM.ChartState, mo
     )
 
     val backgroundColor = LocalMainBottomSheetColor.current.value
+    val bottomChartAxisHeight = getMarketChartBottomAxisHeight()
 
     Box(modifier) {
         MarketChart(
@@ -45,7 +47,8 @@ internal fun MarketTokenDetailsChart(state: MarketsTokenDetailsUM.ChartState, mo
             Box(
                 Modifier
                     .drawBehind { drawRect(backgroundColor) }
-                    .matchParentSize(),
+                    .matchParentSize()
+                    .padding(bottom = bottomChartAxisHeight),
             ) {
                 when (state.status) {
                     MarketsTokenDetailsUM.ChartState.Status.LOADING -> {
