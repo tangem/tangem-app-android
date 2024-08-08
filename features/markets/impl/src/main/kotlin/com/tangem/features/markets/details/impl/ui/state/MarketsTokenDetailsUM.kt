@@ -1,14 +1,14 @@
-package com.tangem.features.markets.details.impl.ui.entity
+package com.tangem.features.markets.details.impl.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.MarketChartLook
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.markets.PriceChangeInterval
 import java.math.BigDecimal
 
-@Immutable
 internal data class MarketsTokenDetailsUM(
     val tokenName: String,
     val priceText: String,
@@ -19,10 +19,10 @@ internal data class MarketsTokenDetailsUM(
     val selectedInterval: PriceChangeInterval,
     val chartState: ChartState,
     val onSelectedIntervalChange: (PriceChangeInterval) -> Unit,
-    // val info : Information TODO [REDACTED_TASK_KEY]
+    val infoBottomSheet: TangemBottomSheetConfig,
+    val body: Body,
 ) {
 
-    @Immutable
     data class ChartState(
         val status: Status,
         val dataProducer: MarketChartDataProducer,
@@ -30,18 +30,39 @@ internal data class MarketsTokenDetailsUM(
         val onLoadRetryClick: () -> Unit,
         val onMarkerPointSelected: (time: BigDecimal?, price: BigDecimal?) -> Unit,
     ) {
-        @Immutable
         enum class Status {
             LOADING, ERROR, DATA
         }
     }
 
-    @Immutable
-    data class Information(
+    data class InformationBlocks(
         val insights: InsightsUM?,
         val securityScore: SecurityScoreUM?,
         val metrics: MetricsUM?,
         val pricePerformance: PricePerformanceUM?,
         val links: LinksUM?,
+    )
+
+    @Immutable
+    sealed interface Body {
+
+        data class Error(
+            val onLoadRetryClick: () -> Unit,
+        ) : Body
+
+        data object Loading : Body
+
+        data class Content(
+            val description: Description?,
+            val infoBlocks: InformationBlocks,
+        ) : Body
+
+        data object Nothing : Body
+    }
+
+    data class Description(
+        val shortDescription: TextReference,
+        val fullDescription: TextReference?,
+        val onReadMoreClick: () -> Unit,
     )
 }
