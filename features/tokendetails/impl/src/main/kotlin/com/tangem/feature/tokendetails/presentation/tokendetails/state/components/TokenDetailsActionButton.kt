@@ -92,18 +92,4 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
         ),
     )
 
-    /**
-     * Staking
-     *
-     * @property dimContent determines whether the button content will be dimmed
-     * @property onClick lambda be invoked when Swap button is clicked
-     */
-    data class Stake(val dimContent: Boolean, override val onClick: () -> Unit) : TokenDetailsActionButton(
-        config = ActionButtonConfig(
-            text = TextReference.Res(id = R.string.common_stake),
-            iconResId = R.drawable.ic_staking_24,
-            onClick = onClick,
-            dimContent = dimContent,
-        ),
-    )
 }
