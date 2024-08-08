@@ -50,15 +50,13 @@ internal class TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, Tok
     }
 
     @JvmName("convertInsight")
-    private fun List<TokenMarketInfoResponse.Insight>.convert(): List<TokenMarketInfo.Insight> {
-        return map {
-            TokenMarketInfo.Insight(
-                holdersChange = it.holdersChange?.convert(),
-                liquidityChange = it.liquidityChange?.convert(),
-                buyPressureChange = it.buyPressureChange?.convert(),
-                experiencedBuyerChange = it.experiencedBuyerChange?.convert(),
-            )
-        }
+    private fun TokenMarketInfoResponse.Insights.convert(): TokenMarketInfo.Insights {
+        return TokenMarketInfo.Insights(
+            holdersChange = holdersChange?.convert(),
+            liquidityChange = liquidityChange?.convert(),
+            buyPressureChange = buyPressureChange?.convert(),
+            experiencedBuyerChange = experiencedBuyerChange?.convert(),
+        )
     }
 
     private fun TokenMarketInfoResponse.Change.convert(): TokenMarketInfo.Change {
