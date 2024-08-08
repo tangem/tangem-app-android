@@ -245,30 +245,33 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 tokenId = params.token.id,
             )
 
-            tokenMarketInfo.onRight { result ->
-                state.update {
-                    it.copy(
-                        body = MarketsTokenDetailsUM.Body.Content(
-                            description = descriptionConverter.convert(result),
-                            infoBlocks = infoConverter.convert(result),
-                        ),
-                    )
-                }
-            }.onLeft {
-                state.update {
-                    if (it.chartState.status == MarketsTokenDetailsUM.ChartState.Status.DATA) {
+            tokenMarketInfo.fold(
+                ifRight = { result ->
+                    state.update {
                         it.copy(
-                            body = MarketsTokenDetailsUM.Body.Error(
-                                onLoadRetryClick = ::onLoadRetryClicked,
+                            body = MarketsTokenDetailsUM.Body.Content(
+                                description = descriptionConverter.convert(result),
+                                infoBlocks = infoConverter.convert(result),
                             ),
                         )
-                    } else {
-                        it.copy(
-                            body = MarketsTokenDetailsUM.Body.Nothing,
-                        )
                     }
-                }
-            }
+                },
+                ifLeft = {
+                    state.update {
+                        if (it.chartState.status == MarketsTokenDetailsUM.ChartState.Status.DATA) {
+                            it.copy(
+                                body = MarketsTokenDetailsUM.Body.Error(
+                                    onLoadRetryClick = ::onLoadRetryClicked,
+                                ),
+                            )
+                        } else {
+                            it.copy(
+                                body = MarketsTokenDetailsUM.Body.Nothing,
+                            )
+                        }
+                    }
+                },
+            )
         }
     }
 
@@ -344,20 +347,22 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     }
 
     private fun showInfoBottomSheet(content: InfoBottomSheetContent) {
-        state.update { s ->
-            s.copy(
-                infoBottomSheet = s.infoBottomSheet.copy(
+        state.update { stateToUpdate ->
+            stateToUpdate.copy(
+                infoBottomSheet = stateToUpdate.infoBottomSheet.copy(
                     isShow = true,
-                    onDismissRequest = {
-                        state.update {
-                            it.copy(
-                                infoBottomSheet = it.infoBottomSheet.copy(
-                                    isShow = false,
-                                ),
-                            )
-                        }
-                    },
+                    onDismissRequest = ::hideInfoBottomSheet,
                     content = content,
+                ),
+            )
+        }
+    }
+
+    private fun hideInfoBottomSheet() {
+        state.update { stateToUpdate ->
+            stateToUpdate.copy(
+                infoBottomSheet = stateToUpdate.infoBottomSheet.copy(
+                    isShow = false,
                 ),
             )
         }
