@@ -5,6 +5,9 @@ import arrow.core.getOrElse
 import com.tangem.common.ui.charts.state.*
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -13,11 +16,16 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.GetTokenMarketInfoUseCase
 import com.tangem.domain.markets.GetTokenPriceChartUseCase
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.features.markets.details.api.MarketsTokenDetailsComponent
-import com.tangem.features.markets.details.impl.ui.entity.MarketsTokenDetailsUM
+import com.tangem.features.markets.details.impl.model.converters.DescriptionConverter
+import com.tangem.features.markets.details.impl.model.converters.TokenMarketInfoConverter
+import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
+import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -28,12 +36,15 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 
+@Suppress("LargeClass")
 @Stable
 internal class MarketsTokenDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
+    private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
+    private val urlOpener: UrlOpener,
 ) : Model() {
 
     val params = paramsContainer.require<MarketsTokenDetailsComponent.Params>()
@@ -46,6 +57,21 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = params.appCurrency,
         )
+
+    private val infoConverter = TokenMarketInfoConverter(
+        appCurrency = Provider { currentAppCurrency.value },
+        onInfoClick = {
+            showInfoBottomSheet(it)
+        },
+        onLinkClick = {
+            urlOpener.openUrl(it.url)
+        },
+    )
+    private val descriptionConverter = DescriptionConverter(
+        onReadModeClicked = {
+            showInfoBottomSheet(it)
+        },
+    )
 
     private val chartDataProducer = MarketChartDataProducer.build(dispatcher = dispatchers.default) {
         chartData = MarketChartData.NoData.Loading
@@ -89,19 +115,39 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             chartState = MarketsTokenDetailsUM.ChartState(
                 dataProducer = chartDataProducer,
                 chartLook = MarketChartLook(),
-                onLoadRetryClick = {},
+                onLoadRetryClick = ::onLoadRetryClicked,
                 status = MarketsTokenDetailsUM.ChartState.Status.LOADING,
                 onMarkerPointSelected = ::onMarkerPointSelected,
             ),
             selectedInterval = PriceChangeInterval.H24,
             onSelectedIntervalChange = ::onSelectedIntervalChange,
+            body = MarketsTokenDetailsUM.Body.Loading,
+            infoBottomSheet = TangemBottomSheetConfig(
+                isShow = false,
+                onDismissRequest = {},
+                content = TangemBottomSheetConfigContent.Empty,
+            ),
         ),
     )
 
     private val loadChartJobHolder = JobHolder()
 
     init {
-        loadChart(PriceChangeInterval.H24)
+        // reload screen if currency changed
+        modelScope.launch {
+            currentAppCurrency
+                .filter { it != params.appCurrency }
+                .collectLatest {
+                    initialLoad()
+                }
+        }
+
+        initialLoad()
+    }
+
+    private fun initialLoad() {
+        loadChart(state.value.selectedInterval)
+        loadInfo()
     }
 
     private fun onSelectedIntervalChange(interval: PriceChangeInterval) {
@@ -175,10 +221,58 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                         chartState = it.chartState.copy(
                             status = MarketsTokenDetailsUM.ChartState.Status.ERROR,
                         ),
+                        body = if (it.body is MarketsTokenDetailsUM.Body.Error) {
+                            MarketsTokenDetailsUM.Body.Nothing
+                        } else {
+                            it.body
+                        },
                     )
                 }
             }
         }.saveIn(loadChartJobHolder)
+    }
+
+    private fun loadInfo() {
+        state.update {
+            it.copy(
+                body = MarketsTokenDetailsUM.Body.Loading,
+            )
+        }
+
+        modelScope.launch {
+            val tokenMarketInfo = getTokenMarketInfoUseCase(
+                appCurrency = currentAppCurrency.value,
+                tokenId = params.token.id,
+            )
+
+            tokenMarketInfo.fold(
+                ifRight = { result ->
+                    state.update {
+                        it.copy(
+                            body = MarketsTokenDetailsUM.Body.Content(
+                                description = descriptionConverter.convert(result),
+                                infoBlocks = infoConverter.convert(result),
+                            ),
+                        )
+                    }
+                },
+                ifLeft = {
+                    state.update {
+                        if (it.chartState.status == MarketsTokenDetailsUM.ChartState.Status.DATA) {
+                            it.copy(
+                                body = MarketsTokenDetailsUM.Body.Error(
+                                    onLoadRetryClick = ::onLoadRetryClicked,
+                                ),
+                            )
+                        } else {
+                            it.copy(
+                                body = MarketsTokenDetailsUM.Body.Nothing,
+                            )
+                        }
+                    }
+                },
+            )
+        }
     }
 
     private fun getFormatterByInterval(interval: PriceChangeInterval): (BigDecimal) -> String {
@@ -249,6 +343,42 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             MarketChartLook.Type.Growing
         } else {
             MarketChartLook.Type.Falling
+        }
+    }
+
+    private fun showInfoBottomSheet(content: InfoBottomSheetContent) {
+        state.update { stateToUpdate ->
+            stateToUpdate.copy(
+                infoBottomSheet = stateToUpdate.infoBottomSheet.copy(
+                    isShow = true,
+                    onDismissRequest = ::hideInfoBottomSheet,
+                    content = content,
+                ),
+            )
+        }
+    }
+
+    private fun hideInfoBottomSheet() {
+        state.update { stateToUpdate ->
+            stateToUpdate.copy(
+                infoBottomSheet = stateToUpdate.infoBottomSheet.copy(
+                    isShow = false,
+                ),
+            )
+        }
+    }
+
+    private fun onLoadRetryClicked() {
+        val currentState = state.value
+
+        if (currentState.chartState.status == MarketsTokenDetailsUM.ChartState.Status.ERROR) {
+            loadChart(currentState.selectedInterval)
+        }
+
+        if (currentState.body is MarketsTokenDetailsUM.Body.Error ||
+            currentState.body is MarketsTokenDetailsUM.Body.Nothing
+        ) {
+            loadInfo()
         }
     }
 }
