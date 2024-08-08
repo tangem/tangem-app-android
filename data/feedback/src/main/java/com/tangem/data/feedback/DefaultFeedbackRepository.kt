@@ -8,7 +8,7 @@ import com.tangem.data.feedback.converters.BlockchainInfoConverter
 import com.tangem.data.feedback.converters.CardInfoConverter
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.repository.FeedbackRepository
@@ -99,7 +99,7 @@ internal class DefaultFeedbackRepository(
     }
 
     override suspend fun getAppLogs(): List<AppLogModel> {
-        return appPreferencesStore.getObjectMap<String>(key = PreferencesKeys.APP_LOGS_KEY)
+        return appPreferencesStore.getObjectMapSync<String>(key = PreferencesKeys.APP_LOGS_KEY)
             .map { AppLogModel(timestamp = it.key.toLong(), message = it.value) }
             .sortedBy(AppLogModel::timestamp)
     }
