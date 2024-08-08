@@ -27,7 +27,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
-import com.tangem.features.markets.details.impl.ui.entity.SecurityScoreUM
+import com.tangem.features.markets.details.impl.ui.state.SecurityScoreUM
 import com.tangem.features.markets.impl.R
 import kotlin.math.round
 
