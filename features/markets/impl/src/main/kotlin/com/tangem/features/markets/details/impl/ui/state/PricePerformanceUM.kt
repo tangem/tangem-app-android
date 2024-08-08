@@ -1,15 +1,12 @@
-package com.tangem.features.markets.details.impl.ui.entity
+package com.tangem.features.markets.details.impl.ui.state
 
 import androidx.annotation.FloatRange
-import androidx.compose.runtime.Immutable
 
-@Immutable
 internal data class PricePerformanceUM(
     val h24: Value,
     val month: Value,
     val all: Value,
 ) {
-    @Immutable
     data class Value(
         val low: String,
         val high: String,
