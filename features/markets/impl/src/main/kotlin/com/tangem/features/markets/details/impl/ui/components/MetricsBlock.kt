@@ -17,8 +17,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
-import com.tangem.features.markets.details.impl.ui.entity.InfoPointUM
-import com.tangem.features.markets.details.impl.ui.entity.MetricsUM
+import com.tangem.features.markets.details.impl.ui.state.InfoPointUM
+import com.tangem.features.markets.details.impl.ui.state.MetricsUM
 import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
