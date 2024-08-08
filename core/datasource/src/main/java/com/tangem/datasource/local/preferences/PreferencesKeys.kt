@@ -95,6 +95,8 @@ object PreferencesKeys {
         booleanPreferencesKey(name = "isTokenSwapPromoOkxShown")
     }
 
+    val apiConfigsEnvironmentKey by lazy { stringPreferencesKey(name = "apiConfigsEnvironment") }
+
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
 
