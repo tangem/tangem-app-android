@@ -27,7 +27,6 @@ import com.arkivanov.essenty.lifecycle.asEssentyLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
@@ -180,9 +179,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     internal lateinit var routingComponentFactory: RoutingComponent.Factory
-
-    @Inject
-    internal lateinit var appRouter: AppRouter
 
     @Inject
     lateinit var pushNotificationsRouter: PushNotificationsRouter
@@ -512,7 +508,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun navigateToInitialScreenIfNeeded(intentWhichStartedActivity: Intent?) {
-        val backStack = appRouter.stack
+        val backStack = appRouterConfig.stack ?: emptyList()
+        // TODO move inital navigation to navigation component ([REDACTED_JIRA])
+        val isOnlyInitialRoute = backStack.all { it is AppRoute.Initial }
         val isOnInitialScreen = backStack.all { it is AppRoute.Welcome || it is AppRoute.Home }
         val isNotScannedBefore = store.state.globalState.scanResponse == null
         val isOnboardingServiceNotActive = !store.state.globalState.onboardingState.onboardingStarted
@@ -524,6 +522,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             backStack.isEmpty() -> {
                 navigateToInitialScreen(intentWhichStartedActivity)
             }
+            isOnlyInitialRoute -> navigateToInitialScreen(intentWhichStartedActivity)
             else -> Unit
         }
     }
