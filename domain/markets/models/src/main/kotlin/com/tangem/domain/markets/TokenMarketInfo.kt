@@ -11,29 +11,29 @@ data class TokenMarketInfo(
     val networks: List<Network>?,
     val shortDescription: String?,
     val fullDescription: String?,
-    val insights: List<Insight>?,
+    val insights: Insights?,
     val metrics: Metrics?,
     val links: Links?,
     val pricePerformance: PricePerformance?,
 ) {
     data class PriceChangePercentage(
-        val day: Int?,
-        val week: Int?,
-        val month: Int?,
-        val threeMonths: Int?,
-        val sixMonths: Int?,
-        val year: Int?,
-        val allTime: Int?,
+        val day: BigDecimal?,
+        val week: BigDecimal?,
+        val month: BigDecimal?,
+        val threeMonths: BigDecimal?,
+        val sixMonths: BigDecimal?,
+        val year: BigDecimal?,
+        val allTime: BigDecimal?,
     )
 
     data class Network(
         val networkId: String,
         val exchangeable: Boolean,
-        val contractAddress: String,
-        val decimalCount: Int,
+        val contractAddress: String?,
+        val decimalCount: Int?,
     )
 
-    data class Insight(
+    data class Insights(
         val holdersChange: Change?,
         val liquidityChange: Change?,
         val buyPressureChange: Change?,
@@ -41,9 +41,9 @@ data class TokenMarketInfo(
     )
 
     data class Change(
-        val day: Int?,
-        val week: Int?,
-        val month: Int?,
+        val day: BigDecimal?,
+        val week: BigDecimal?,
+        val month: BigDecimal?,
     )
 
     data class Metrics(
@@ -75,7 +75,7 @@ data class TokenMarketInfo(
     )
 
     data class Range(
-        val low: Int?,
-        val high: Int?,
+        val low: BigDecimal?,
+        val high: BigDecimal?,
     )
 }
