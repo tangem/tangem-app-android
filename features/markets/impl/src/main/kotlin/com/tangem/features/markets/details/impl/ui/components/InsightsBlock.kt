@@ -20,8 +20,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
 import com.tangem.domain.markets.PriceChangeInterval
-import com.tangem.features.markets.details.impl.ui.entity.InfoPointUM
-import com.tangem.features.markets.details.impl.ui.entity.InsightsUM
+import com.tangem.features.markets.details.impl.ui.state.InfoPointUM
+import com.tangem.features.markets.details.impl.ui.state.InsightsUM
 import com.tangem.features.markets.details.impl.ui.getText
 import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.persistentListOf

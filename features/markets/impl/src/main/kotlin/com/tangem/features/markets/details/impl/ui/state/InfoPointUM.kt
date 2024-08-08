@@ -1,9 +1,7 @@
-package com.tangem.features.markets.details.impl.ui.entity
+package com.tangem.features.markets.details.impl.ui.state
 
-import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
-@Immutable
 internal data class InfoPointUM(
     val title: TextReference,
     val value: String,

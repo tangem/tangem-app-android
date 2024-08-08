@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.resolveAsTypeface
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
@@ -71,7 +73,6 @@ private const val GUIDELINES_COUNT = 3
  * @param splitChartSegmentColor The color of the grayed by marker chart segment.
  * @param backgroundSplitChartSegmentColorAlpha The alpha of the background the [splitChartSegmentColor]
  * @param backgroundColorAlpha The alpha of the background color of the chart.
- * @param noChartContent A composable function that defines the content to be displayed when there is no data to display.
  */
 @Composable
 fun MarketChart(
@@ -108,7 +109,7 @@ fun MarketChart(
 
     // we need to calculate what the overall height should be in order to get the correct height of the graph
     val bottomAxisHeight = with(LocalDensity.current) {
-        TangemTheme.typography.caption2.fontSize.toPx().toInt() + TangemTheme.dimens.spacing26.toPx().toInt()
+        getMarketChartBottomAxisHeight().toPx().toInt()
     }
 
     CartesianChartHost(
@@ -120,6 +121,10 @@ fun MarketChart(
                 } else {
                     0
                 }
+            }
+            // Sometimes the chart is not drawn correctly (ex. in LazyLayout), so we need to force the redraw
+            .drawBehind {
+                state.markerFraction
             },
         chart = chart,
         modelProducer = state.modelProducer,
@@ -127,6 +132,13 @@ fun MarketChart(
         zoomState = rememberVicoZoomState(initialZoom = Zoom.Content, zoomEnabled = false),
         animationSpec = null,
     )
+}
+
+@Composable
+fun getMarketChartBottomAxisHeight(): Dp {
+    return with(LocalDensity.current) {
+        TangemTheme.typography.caption2.fontSize.toDp() + TangemTheme.dimens.spacing26
+    }
 }
 
 @Composable

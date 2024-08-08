@@ -21,7 +21,7 @@ data class TokenMarketInfoResponse(
     @Json(name = "full_description")
     val fullDescription: String?,
     @Json(name = "insights")
-    val insights: List<Insight>?,
+    val insights: Insights?,
     @Json(name = "metrics")
     val metrics: Metrics?,
     @Json(name = "links")
@@ -32,33 +32,33 @@ data class TokenMarketInfoResponse(
 
     data class PriceChangePercentage(
         @Json(name = "24h")
-        val day: Int?,
+        val day: BigDecimal?,
         @Json(name = "1w")
-        val week: Int?,
+        val week: BigDecimal?,
         @Json(name = "1m")
-        val month: Int?,
+        val month: BigDecimal?,
         @Json(name = "3m")
-        val threeMonths: Int?,
+        val threeMonths: BigDecimal?,
         @Json(name = "6m")
-        val sixMonths: Int?,
+        val sixMonths: BigDecimal?,
         @Json(name = "1y")
-        val year: Int?,
+        val year: BigDecimal?,
         @Json(name = "all_time")
-        val allTime: Int?,
+        val allTime: BigDecimal?,
     )
 
     data class Network(
         @Json(name = "network_id")
         val networkId: String,
         @Json(name = "exchangeable")
-        val exchangeable: Boolean,
+        val exchangeable: Boolean = false,
         @Json(name = "contract_address")
-        val contractAddress: String,
+        val contractAddress: String?,
         @Json(name = "decimal_count")
-        val decimalCount: Int,
+        val decimalCount: Int?,
     )
 
-    data class Insight(
+    data class Insights(
         @Json(name = "holders_change")
         val holdersChange: Change?,
         @Json(name = "liquidity_change")
@@ -71,11 +71,11 @@ data class TokenMarketInfoResponse(
 
     data class Change(
         @Json(name = "24h")
-        val day: Int?,
+        val day: BigDecimal?,
         @Json(name = "1w")
-        val week: Int?,
+        val week: BigDecimal?,
         @Json(name = "1m")
-        val month: Int?,
+        val month: BigDecimal?,
     )
 
     data class Metrics(
@@ -123,9 +123,9 @@ data class TokenMarketInfoResponse(
     )
 
     data class Range(
-        @Json(name = "low")
-        val low: Int?,
-        @Json(name = "high")
-        val high: Int?,
+        @Json(name = "low_price")
+        val low: BigDecimal?,
+        @Json(name = "high_price")
+        val high: BigDecimal?,
     )
 }

@@ -7,8 +7,8 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
-import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListItemUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListUM.TrendInterval
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM.TrendInterval
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -70,10 +70,11 @@ internal class MarketsTokenItemConverter(
     private fun TokenMarket.getMarketCap(): String? {
         val value = marketCap?.takeIf { marketCap != BigDecimal.ZERO } ?: return null
 
-        return BigDecimalFormatter.formatCompactAmount(
-            value,
+        return BigDecimalFormatter.formatCompactFiatAmount(
+            amount = value,
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
+            threeDigitsMethod = true,
         )
     }
 
