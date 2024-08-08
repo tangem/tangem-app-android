@@ -232,10 +232,10 @@ internal class SetInitialDataStateTransformer(
         private val EQUALITY_THRESHOLD = BigDecimal(1E-10)
 
         private val rewardScheduleResources = mapOf(
-            Yield.Metadata.RewardSchedule.BLOCK to R.string.staking_reward_schedule_block,
+            Yield.Metadata.RewardSchedule.BLOCK to R.string.staking_reward_schedule_each_day,
             Yield.Metadata.RewardSchedule.WEEK to R.string.staking_reward_schedule_week,
             Yield.Metadata.RewardSchedule.HOUR to R.string.staking_reward_schedule_hour,
-            Yield.Metadata.RewardSchedule.DAY to R.string.staking_reward_schedule_day,
+            Yield.Metadata.RewardSchedule.DAY to R.string.staking_reward_schedule_each_day,
             Yield.Metadata.RewardSchedule.MONTH to R.string.staking_reward_schedule_month,
             Yield.Metadata.RewardSchedule.ERA to R.string.staking_reward_schedule_era,
             Yield.Metadata.RewardSchedule.EPOCH to R.string.staking_reward_schedule_epoch,
