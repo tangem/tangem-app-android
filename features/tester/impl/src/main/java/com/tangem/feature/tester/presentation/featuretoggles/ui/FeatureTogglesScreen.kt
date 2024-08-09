@@ -3,11 +3,7 @@ package com.tangem.feature.tester.presentation.featuretoggles.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Switch
@@ -26,6 +22,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Screen with feature toggles list
@@ -56,7 +53,8 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesContentState) {
             PrimaryButton(
                 text = stringResource(id = R.string.apply_changes),
                 onClick = state.onApplyChangesClick,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(TangemTheme.dimens.spacing16),
             )
         }
@@ -98,7 +96,7 @@ private fun PreviewFeatureTogglesScreen() {
     TangemThemePreview {
         FeatureTogglesScreen(
             state = FeatureTogglesContentState(
-                featureToggles = listOf(
+                featureToggles = persistentListOf(
                     TesterFeatureToggle(name = "FEATURE_TOGGLE_1", isEnabled = true),
                     TesterFeatureToggle(name = "FEATURE_TOGGLE_2", isEnabled = false),
                 ),
