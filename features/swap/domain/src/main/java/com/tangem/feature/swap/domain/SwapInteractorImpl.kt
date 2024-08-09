@@ -888,6 +888,21 @@ internal class SwapInteractorImpl @Inject constructor(
                     gasLimit = fee.gasLimit.toLong(),
                 )
             }
+            blockchain == Blockchain.Filecoin -> {
+                val gasUnitPrice = fee.feeValue.divide(
+                    BigDecimal(fee.gasLimit),
+                    Blockchain.Filecoin.decimals(),
+                    RoundingMode.HALF_UP,
+                )
+                Fee.Filecoin(
+                    amount = feeAmount,
+                    gasUnitPrice = gasUnitPrice
+                        .movePointRight(Blockchain.Filecoin.decimals())
+                        .toLong(),
+                    gasLimit = fee.gasLimit.toLong(),
+                    gasPremium = requireNotNull(fee.gasPremium),
+                )
+            }
             else -> Fee.Common(feeAmount)
         }
     }
@@ -1579,6 +1594,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 decimals = minFee.fee.decimals,
                 cryptoSymbol = minFee.fee.currencySymbol,
                 feeType = FeeType.NORMAL,
+                gasPremium = (minFee as? ProxyFee.Filecoin)?.gasPremium,
             ),
             priorityFee = TxFee(
                 feeValue = priorityFeeValue,
@@ -1591,6 +1607,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 decimals = normalFee.fee.decimals,
                 cryptoSymbol = normalFee.fee.currencySymbol,
                 feeType = FeeType.PRIORITY,
+                gasPremium = (normalFee as? ProxyFee.Filecoin)?.gasPremium,
             ),
         )
     }
@@ -1633,6 +1650,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 decimals = singleFee.fee.decimals,
                 cryptoSymbol = singleFee.fee.currencySymbol,
                 feeType = FeeType.NORMAL,
+                gasPremium = (singleFee as? ProxyFee.Filecoin)?.gasPremium,
             ),
         )
     }
@@ -1688,6 +1706,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         decimals = normalFee.amount.decimals,
                         cryptoSymbol = normalFee.amount.currencySymbol,
                         feeType = FeeType.NORMAL,
+                        gasPremium = (normalFee as? Fee.Filecoin)?.gasPremium,
                     ),
                     priorityFee = TxFee(
                         feeValue = feePriority,
@@ -1700,6 +1719,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         decimals = priorityFee.amount.decimals,
                         cryptoSymbol = priorityFee.amount.currencySymbol,
                         feeType = FeeType.PRIORITY,
+                        gasPremium = (priorityFee as? Fee.Filecoin)?.gasPremium,
                     ),
                 )
             }
@@ -1731,6 +1751,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         decimals = normal.amount.decimals,
                         cryptoSymbol = normal.amount.currencySymbol,
                         feeType = FeeType.NORMAL,
+                        gasPremium = (normal as? Fee.Filecoin)?.gasPremium,
                     ),
                 )
             }
@@ -1778,6 +1799,7 @@ internal class SwapInteractorImpl @Inject constructor(
             is Fee.Ethereum -> gasLimit.toInt()
             is Fee.VeChain -> gasLimit.toInt()
             is Fee.Aptos -> gasLimit.toInt()
+            is Fee.Filecoin -> gasLimit.toInt()
             else -> 0
         }
     }
