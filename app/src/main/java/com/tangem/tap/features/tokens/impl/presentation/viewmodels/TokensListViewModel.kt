@@ -24,8 +24,8 @@ import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.tap.common.extensions.fullNameWithoutTestnet
-import com.tangem.tap.common.extensions.getNetworkName
+import com.tangem.tap.common.extensions.networkNameWithoutTestnet
+import com.tangem.tap.common.extensions.getNetworkStandardName
 import com.tangem.tap.features.customtoken.impl.presentation.models.SupportBlockchainType
 import com.tangem.tap.features.tokens.impl.domain.TokensListInteractor
 import com.tangem.tap.features.tokens.impl.domain.models.Token
@@ -185,7 +185,7 @@ internal class TokensListViewModel @Inject constructor(
 
     private fun createManageNetworkContent(network: Network): NetworkItemState.ManageContent {
         return NetworkItemState.ManageContent(
-            name = network.blockchain.fullNameWithoutTestnet.uppercase(),
+            name = network.blockchain.networkNameWithoutTestnet.uppercase(),
             protocolName = getNetworkProtocolName(network),
             iconResId = mutableIntStateOf(value = getNetworkIconResId(network.address, network.blockchain)),
             isMainNetwork = isMainNetwork(network),
@@ -214,7 +214,7 @@ internal class TokensListViewModel @Inject constructor(
 
     private fun createReadNetworkContent(network: Network): NetworkItemState.ReadContent {
         return NetworkItemState.ReadContent(
-            name = network.blockchain.fullNameWithoutTestnet.uppercase(),
+            name = network.blockchain.networkNameWithoutTestnet.uppercase(),
             protocolName = getNetworkProtocolName(network),
             iconResId = mutableIntStateOf(value = getNetworkIconResId(network.address, network.blockchain)),
             isMainNetwork = isMainNetwork(network),
@@ -227,7 +227,7 @@ internal class TokensListViewModel @Inject constructor(
         return if (network.address == null) {
             MAIN_NETWORK_LABEL
         } else {
-            network.blockchain.getNetworkName().uppercase()
+            network.blockchain.getNetworkStandardName().uppercase()
         }
     }
 
@@ -361,7 +361,7 @@ internal class TokensListViewModel @Inject constructor(
                     router.openUnableHideMainTokenAlert(
                         tokenName = blockchain.name,
                         tokenSymbol = blockchain.currency,
-                        networkName = blockchain.fullName,
+                        networkName = blockchain.getNetworkName(),
                     )
                 } else if (isAddedOnMainScreen) {
                     router.openRemoveWalletAlert(
@@ -431,7 +431,7 @@ internal class TokensListViewModel @Inject constructor(
             } else {
                 when (isUnsupportedToken(token.blockchain)) {
                     SupportTokensState.NetworkTokensUnsupported -> {
-                        router.openNetworkTokensNotSupportAlert(token.blockchain.fullName)
+                        router.openNetworkTokensNotSupportAlert(token.blockchain.getNetworkName())
                     }
                     SupportTokensState.SupportedToken -> {
                         analyticsSender.sendWhenTokenAdded(token.token)
