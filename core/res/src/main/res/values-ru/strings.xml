@@ -650,7 +650,10 @@
   <string name="staking_details_warmup_period_info">Время, необходимое для начала процесса стейкинга и активации процесса начисления наград</string>
   <string name="staking_migrate">Переместить</string>
   <string name="staking_native">Нативный стейкинг</string>
-  <string name="staking_notification_earn_rewards_text">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый %2$s</string>
+  <string name="staking_notification_earn_rewards_text_period_day">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый день.</string>
+  <string name="staking_notification_earn_rewards_text_period_hour">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый час.</string>
+  <string name="staking_notification_earn_rewards_text_period_month">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый месяц.</string>
+  <string name="staking_notification_earn_rewards_text_period_week">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждую неделю.</string>
   <string name="staking_notification_earn_rewards_title">Получите награду за стейкинг</string>
   <string name="staking_notification_unstake_text">Награда перестанет начисляться сразу после завершения стейкинга. Процесс завершения длится %s.</string>
   <string name="staking_restake">Повторный стейкинг</string>

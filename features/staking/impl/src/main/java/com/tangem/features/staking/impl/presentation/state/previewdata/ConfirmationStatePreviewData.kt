@@ -3,9 +3,9 @@ package com.tangem.features.staking.impl.presentation.state.previewdata
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType.Coin
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -82,7 +82,7 @@ internal object ConfirmationStatePreviewData {
         notifications = persistentListOf(
             StakingNotification.Warning.EarnRewards(
                 currencyName = "Solana",
-                period = stringReference("days"),
+                subtitleStringId = R.string.staking_notification_earn_rewards_text_period_day,
             ),
         ),
         transactionDoneState = TransactionDoneState.Empty,

@@ -683,7 +683,10 @@
   <string name="staking_details_warmup_period_info">Відведений час для активації участі в стейкінгу.</string>
   <string name="staking_migrate">Перемістити</string>
   <string name="staking_native">Нативний стейкінг</string>
-  <string name="staking_notification_earn_rewards_text">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг надходять кожні %2$s.</string>
+  <string name="staking_notification_earn_rewards_text_period_day">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються щодня.</string>
+  <string name="staking_notification_earn_rewards_text_period_hour">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються кожну годину.</string>
+  <string name="staking_notification_earn_rewards_text_period_month">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються щомісяця.</string>
+  <string name="staking_notification_earn_rewards_text_period_week">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються щотиждня.</string>
   <string name="staking_notification_earn_rewards_title">Отримуйте винагороду за стейкінг</string>
   <string name="staking_notification_unstake_text">Винагороди припиняють нараховуватися одразу після того, як ви знімаєте ставку. Процес зняття займає %s.</string>
   <string name="staking_rebond">Зʼєднати ще раз</string>
