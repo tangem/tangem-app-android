@@ -1,12 +1,9 @@
 package com.tangem.feature.tester.presentation.menu.ui
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -27,6 +24,8 @@ import com.tangem.feature.tester.presentation.menu.state.TesterMenuContentState
  */
 @Composable
 internal fun TesterMenuScreen(state: TesterMenuContentState) {
+    BackHandler(onBack = state.onBackClick)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -36,6 +35,7 @@ internal fun TesterMenuScreen(state: TesterMenuContentState) {
             onBackClick = state.onBackClick,
             text = stringResource(id = R.string.tester_menu),
         )
+
         Column(
             modifier = Modifier
                 .padding(
@@ -50,12 +50,13 @@ internal fun TesterMenuScreen(state: TesterMenuContentState) {
                 onClick = state.onFeatureTogglesClick,
                 modifier = Modifier.fillMaxWidth(),
             )
+
             PrimaryButton(
-                text = stringResource(R.string.stand_toggles),
-                onClick = state.onFeatureTogglesClick,
+                text = stringResource(R.string.environment_toggles),
+                onClick = state.onEnvironmentTogglesClick,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = false,
             )
+
             PrimaryButton(
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(id = R.string.tester_actions),
@@ -74,6 +75,7 @@ private fun PreviewTesterMenuScreen() {
             state = TesterMenuContentState(
                 onBackClick = {},
                 onFeatureTogglesClick = {},
+                onEnvironmentTogglesClick = {},
                 onTesterActionsClick = {},
             ),
         )
