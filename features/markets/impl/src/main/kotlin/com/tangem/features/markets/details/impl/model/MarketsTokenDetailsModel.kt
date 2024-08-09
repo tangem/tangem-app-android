@@ -480,6 +480,6 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     }
 
     private companion object {
-        const val QUOTES_UPDATE_INTERVAL_MILLIS = 5000L // 60000L
+        const val QUOTES_UPDATE_INTERVAL_MILLIS = 60000L
     }
 }
