@@ -4,15 +4,11 @@ import java.math.BigDecimal
 
 data class TokenQuotes(
     val currentPrice: BigDecimal,
-    private val priceChanges: Map<PriceChangeInterval, BigDecimal>,
-) {
-    init {
-        require(priceChanges.containsKey(PriceChangeInterval.H24))
-        require(priceChanges.containsKey(PriceChangeInterval.WEEK))
-        require(priceChanges.containsKey(PriceChangeInterval.MONTH))
-    }
-
-    fun h24Percent() = priceChanges[PriceChangeInterval.H24]!!
-    fun weekPercent() = priceChanges[PriceChangeInterval.WEEK]!!
-    fun monthPercent() = priceChanges[PriceChangeInterval.MONTH]!!
-}
+    val h24ChangePercent: BigDecimal?,
+    val weekChangePercent: BigDecimal?,
+    val monthChangePercent: BigDecimal?,
+    val m3ChangePercent: BigDecimal?,
+    val m6ChangePercent: BigDecimal?,
+    val yearChangePercent: BigDecimal?,
+    val allTimeChangePercent: BigDecimal?,
+)

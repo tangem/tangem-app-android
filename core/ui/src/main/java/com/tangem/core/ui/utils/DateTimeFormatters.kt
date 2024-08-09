@@ -10,8 +10,6 @@ import java.util.Locale
 @Suppress("MagicNumber")
 object DateTimeFormatters {
 
-    private const val DDMMYYYY = "dd.MM.yyyy"
-
     /**
      * Two SS means, SHORT style for date and time.
      * If pattern contains "a", it means time is in 12 hour format.
@@ -51,7 +49,7 @@ object DateTimeFormatters {
 
     val dateDDMMYYYY: DateTimeFormatter by lazy {
         DateTimeFormatterBuilder()
-            .appendPattern(DDMMYYYY)
+            .appendPattern("dd.MM.yyyy")
             .toFormatter()
             .withLocale(Locale.getDefault())
     }
@@ -59,18 +57,12 @@ object DateTimeFormatters {
     /**
      * In API version < 24, there may be some problems with getting the best date and time format pattern.
      */
-    val dateMMMMd: DateTimeFormatter by lazy {
-        DateTimeFormatterBuilder()
-            .appendPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), "dd MMM"))
-            .toFormatter()
-            .withLocale(Locale.getDefault())
+    val dateMMMdd: DateTimeFormatter by lazy {
+        getBestFormatterBySkeleton("dd MMM")
     }
 
     val dateYYYY: DateTimeFormatter by lazy {
-        DateTimeFormatterBuilder()
-            .appendPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), "yyyy"))
-            .toFormatter()
-            .withLocale(Locale.getDefault())
+        getBestFormatterBySkeleton("yyyy")
     }
 
     val dateTimeFormatter: DateTimeFormatter by lazy {
@@ -79,5 +71,12 @@ object DateTimeFormatters {
 
     fun formatDate(date: DateTime, formatter: DateTimeFormatter = dateFormatter): String {
         return formatter.print(date)
+    }
+
+    fun getBestFormatterBySkeleton(skeleton: String): DateTimeFormatter {
+        return DateTimeFormatterBuilder()
+            .appendPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), skeleton))
+            .toFormatter()
+            .withLocale(Locale.getDefault())
     }
 }
