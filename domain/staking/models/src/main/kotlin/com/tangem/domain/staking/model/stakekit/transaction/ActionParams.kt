@@ -12,6 +12,7 @@ data class ActionParams(
     val address: String,
     val validatorAddress: String,
     val token: Token,
+    val publicKey: String? = null,
     val passthrough: String? = null,
     val type: StakingActionType? = null,
 )
