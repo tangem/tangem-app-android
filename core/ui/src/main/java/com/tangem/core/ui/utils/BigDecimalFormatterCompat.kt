@@ -7,16 +7,32 @@ import java.util.Locale
 internal object BigDecimalFormatterCompat {
 
     /**
-     * Formats value as [BigDecimalFormatter.formatCompactAmount] does using only "T","B","M","K" suffixes
+     * Formats value as [BigDecimalFormatter.formatCompactFiatAmount] does using only "T","B","M","K" suffixes
      * Used for < API24 compatibility
      */
     @Suppress("MagicNumber", "UnnecessaryParentheses")
-    fun formatCompactAmountNoLocaleContext(
+    fun formatCompactFiatAmountNoLocaleContext(
         amount: BigDecimal,
         fiatCurrencyCode: String,
         fiatCurrencySymbol: String,
         locale: Locale = Locale.getDefault(),
     ): String {
+        val formatted = formatCompactAmountNoLocaleContext(amount)
+
+        return BigDecimalFormatter.addCurrencySymbolToStringAmount(
+            amount = formatted,
+            fiatCurrencyCode = fiatCurrencyCode,
+            fiatCurrencySymbol = fiatCurrencySymbol,
+            locale = locale,
+        )
+    }
+
+    /**
+     * Formats value as [BigDecimalFormatter.formatCompactAmount] does using only "T","B","M","K" suffixes
+     * Used for < API24 compatibility
+     */
+    @Suppress("MagicNumber", "UnnecessaryParentheses")
+    fun formatCompactAmountNoLocaleContext(amount: BigDecimal): String {
         val value = amount.setScale(0, RoundingMode.HALF_UP).longValueExact()
 
         val formatted = when {
@@ -42,11 +58,6 @@ internal object BigDecimalFormatterCompat {
             else -> return value.toString()
         }
 
-        return BigDecimalFormatter.addCurrencySymbolToStringAmount(
-            amount = formatted,
-            fiatCurrencyCode = fiatCurrencyCode,
-            fiatCurrencySymbol = fiatCurrencySymbol,
-            locale = locale,
-        )
+        return formatted
     }
 }
