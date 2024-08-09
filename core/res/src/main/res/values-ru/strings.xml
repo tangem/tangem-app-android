@@ -128,6 +128,7 @@
   <string name="common_passphrase">Парольная фраза</string>
   <string name="common_paste">Вставить</string>
   <string name="common_range">%1$s-%2$s</string>
+  <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Подробнее</string>
   <string name="common_receive">Получить</string>
   <string name="common_reject">Отклонить</string>
@@ -628,7 +629,6 @@
   <string name="staking_active_footer">Для завершения стейкинга нажмите сюда</string>
   <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_claim_unstaked">Забрать средства</string>
-  <string name="staking_details_annual_percentage_rate">APY</string>
   <string name="staking_details_annual_percentage_rate_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_available">Доступно</string>
