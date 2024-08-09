@@ -16,18 +16,20 @@ interface TangemTechMarketsApi {
         @Query("offset") offset: Int,
         @Query("limit") limit: Int,
         @Query("order") order: String,
-        @Query("general_coins") generalCoins: Boolean,
         @Query("search") search: String?,
+        @Query("timestamp") timestamp: Long?,
     ): ApiResponse<TokenMarketListResponse>
 
     @GET("coins/{coin_id}")
     suspend fun getCoinMarketData(
         @Path("coin_id") coinId: String,
         @Query("currency") currency: String,
-    ): ApiResponse<TokenMarketDetailsResponse>
+        @Query("language") language: String,
+    ): ApiResponse<TokenMarketInfoResponse>
 
     @GET("coins/{coin_id}/history")
     suspend fun getCoinChart(
+        @Path("coin_id") coinId: String,
         @Query("currency") currency: String,
         @Query("interval") interval: String,
     ): ApiResponse<TokenMarketChartResponse>
