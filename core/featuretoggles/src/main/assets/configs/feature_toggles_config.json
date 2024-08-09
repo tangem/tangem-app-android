@@ -4,10 +4,6 @@
         "version": "undefined"
     },
     {
-        "name": "REDESIGNED_SEND_SCREEN_ENABLED",
-        "version": "5.10.0"
-    },
-    {
         "name": "LOCAL_USER_LOGS_ENABLED",
         "version": "5.13.0"
     },
@@ -37,6 +33,14 @@
     },
     {
         "name": "MARKETS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "HOME_SCREEN_CALLBACKS_REFACTORING_ENABLED",
+        "version": "5.14.0"
+    },
+    {
+        "name": "NEW_MANAGE_TOKENS",
         "version": "undefined"
     }
 ]
