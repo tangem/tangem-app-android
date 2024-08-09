@@ -20,8 +20,8 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
@@ -447,7 +447,7 @@ internal class SendNotificationFactory(
         val sendingCurrency = cryptoCurrencyStatusProvider().currency
 
         validateTransactionUseCase(
-            amount = sendingAmount.convertToAmount(sendingCurrency),
+            amount = sendingAmount.convertToSdkAmount(sendingCurrency),
             fee = fee ?: return,
             memo = state.recipientState?.memoTextField?.value,
             destination = requireNotNull(state.recipientState?.addressTextField?.value),
