@@ -51,12 +51,12 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
     ) {
         data class EarnRewards(
             val currencyName: String,
-            val days: Int,
+            val period: TextReference,
         ) : Warning(
             title = resourceReference(R.string.staking_notification_earn_rewards_title),
             subtitle = resourceReference(
                 R.string.staking_notification_earn_rewards_text,
-                wrappedList(currencyName, days),
+                wrappedList(currencyName, period),
             ),
         )
 
