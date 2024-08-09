@@ -1,5 +1,8 @@
 package com.tangem.domain.appcurrency.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class AppCurrency(
     val code: String,
     val name: String,
