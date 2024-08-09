@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -15,24 +16,57 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+private const val ROUNDED_LIST_WITH_DIVIDERS_HEADER_KEY = "ROUNDED_LIST_WITH_DIVIDERS_HEADER_KEY"
+private const val ROUNDED_LIST_WITH_DIVIDERS_FOOTER_KEY = "ROUNDED_LIST_WITH_DIVIDERS_FOOTER_KEY"
+
 @Composable
-fun RoundedListWithDividers(rows: List<RoundedListWithDividersItemData>, modifier: Modifier = Modifier) {
+fun RoundedListWithDividers(
+    rows: ImmutableList<RoundedListWithDividersItemData>,
+    modifier: Modifier = Modifier,
+    headerContent: (@Composable () -> Unit)? = null,
+    footerContent: (@Composable () -> Unit)? = null,
+) {
     LazyColumn(modifier = modifier) {
-        itemsIndexed(
-            items = rows,
-            key = { _, item -> item.id },
-        ) { index, row ->
-            InitialInfoContentRow(
-                startText = row.startText.resolveReference(),
-                endText = row.endText.resolveReference(),
-                cornersToRound = getCornersToRound(index, rows.size),
-                iconClick = row.iconClick,
-            )
-            if (index < rows.lastIndex) {
-                RoundedListDivider()
-            }
+        this.roundedListWithDividersItems(
+            rows = rows,
+            headerContent = headerContent,
+            footerContent = footerContent,
+        )
+    }
+}
+
+fun LazyListScope.roundedListWithDividersItems(
+    rows: ImmutableList<RoundedListWithDividersItemData>,
+    headerContent: (@Composable () -> Unit)? = null,
+    footerContent: (@Composable () -> Unit)? = null,
+) {
+    if (headerContent != null) {
+        item(key = ROUNDED_LIST_WITH_DIVIDERS_HEADER_KEY) {
+            headerContent()
+        }
+    }
+
+    itemsIndexed(
+        items = rows,
+        key = { _, item -> item.id },
+    ) { index, row ->
+        InitialInfoContentRow(
+            startText = row.startText.resolveReference(),
+            endText = row.endText.resolveReference(),
+            cornersToRound = getCornersToRound(index, rows.size),
+            iconClick = row.iconClick,
+        )
+        if (index < rows.lastIndex) {
+            RoundedListDivider()
+        }
+    }
+
+    if (footerContent != null) {
+        item(key = ROUNDED_LIST_WITH_DIVIDERS_FOOTER_KEY) {
+            footerContent()
         }
     }
 }
