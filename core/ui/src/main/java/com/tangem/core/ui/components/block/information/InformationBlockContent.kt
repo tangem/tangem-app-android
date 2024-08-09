@@ -44,7 +44,6 @@ inline fun <T : Any> InformationBlockContentScope.GridItems(
     items: ImmutableList<T>,
     itemContent: @Composable BoxScope.(T) -> Unit,
     modifier: Modifier = Modifier,
-    itemPadding: PaddingValues = PaddingValues(all = TangemTheme.dimens.spacing0),
     verticalAlignment: Alignment.Vertical = Alignment.Top,
     horizontalArragement: Arrangement.Horizontal = Arrangement.Start,
 ) {
@@ -59,7 +58,6 @@ inline fun <T : Any> InformationBlockContentScope.GridItems(
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
     ) {
         rowItems.fastForEach { row ->
@@ -70,10 +68,7 @@ inline fun <T : Any> InformationBlockContentScope.GridItems(
             ) {
                 row.fastForEach { item ->
                     Box(
-                        modifier = Modifier
-                            .padding(itemPadding)
-                            .weight(1f),
-                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.weight(1f),
                     ) {
                         itemContent(item)
                     }
