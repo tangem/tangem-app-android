@@ -6,6 +6,8 @@ import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.delay
 
 /**
@@ -16,14 +18,20 @@ class GetStakingTransactionUseCase(
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
-    suspend operator fun invoke(params: ActionParams): Either<StakingError, StakingTransaction> {
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        network: Network,
+        params: ActionParams,
+    ): Either<StakingError, StakingTransaction> {
         return Either.catch {
-            val createAction = stakingRepository.createAction(params)
+            val createAction = stakingRepository.createAction(userWalletId, network, params)
 
             // workaround, sometimes transaction is not created immediately after actions/enter
             delay(PATCH_TRANSACTION_REQUEST_DELAY)
 
-            val createdTransaction = createAction.transactions?.get(0) ?: error("No available transaction to patch")
+            val createdTransaction = createAction.transactions
+                ?.get(createAction.currentStepIndex)
+                ?: error("No available transaction to patch")
             val patchedTransaction = stakingRepository.constructTransaction(createdTransaction.id)
 
             patchedTransaction
