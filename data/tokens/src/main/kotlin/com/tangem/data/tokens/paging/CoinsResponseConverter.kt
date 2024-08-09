@@ -32,7 +32,7 @@ internal object CoinsResponseConverter : Converter<CoinsData, List<Token>> {
                     Token.Network(
                         networkId = network.networkId,
                         standardType = getNetworkStandardType(blockchain).name,
-                        name = blockchain.fullName,
+                        name = blockchain.getNetworkName(),
                         address = network.contractAddress,
                         iconUrl = getIconUrl(network.networkId, value.imageHost),
                         decimalCount = network.decimalCount?.toInt(),
