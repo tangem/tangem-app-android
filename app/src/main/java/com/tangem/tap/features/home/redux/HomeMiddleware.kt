@@ -29,7 +29,7 @@ import org.rekotlin.Action
 import org.rekotlin.Middleware
 import timber.log.Timber
 
-private const val HIDE_PROGRESS_DELAY = 400L
+internal const val HIDE_PROGRESS_DELAY = 400L
 
 object HomeMiddleware {
     val handler = homeMiddleware
@@ -51,8 +51,7 @@ private fun handleHomeAction(action: Action) {
         is HomeAction.OnCreate -> {
             Analytics.eraseContext()
             Analytics.send(IntroductionProcess.ScreenOpened())
-        }
-        is HomeAction.Init -> {
+
             store.dispatch(GlobalAction.RestoreAppCurrency)
             store.dispatch(GlobalAction.ExchangeManager.Init)
             store.dispatch(GlobalAction.FetchUserCountry)

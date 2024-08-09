@@ -125,7 +125,7 @@ suspend inline fun <reified V> AppPreferencesStore.storeObjectMap(
 }
 
 /** Get map with [String] key and value [V] by string [key], or empty if data is not found */
-suspend inline fun <reified V> AppPreferencesStore.getObjectMap(key: Preferences.Key<String>): Map<String, V> {
+suspend inline fun <reified V> AppPreferencesStore.getObjectMapSync(key: Preferences.Key<String>): Map<String, V> {
     val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
     val adapter = moshi.adapter<Map<String, V>>(type)
 
@@ -133,6 +133,14 @@ suspend inline fun <reified V> AppPreferencesStore.getObjectMap(key: Preferences
         ?.get(key)
         ?.let(adapter::fromJson)
         .orEmpty()
+}
+
+/** Get flow of map with [String] key and value [V] by string [key], or empty if data is not found */
+inline fun <reified V> AppPreferencesStore.getObjectMap(key: Preferences.Key<String>): Flow<Map<String, V>> {
+    val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
+    val adapter = moshi.adapter<Map<String, V>>(type)
+
+    return data.map { it[key]?.let(adapter::fromJson) ?: emptyMap() }
 }
 
 /** Get set of data [T] by string [key], or empty if data is not found */

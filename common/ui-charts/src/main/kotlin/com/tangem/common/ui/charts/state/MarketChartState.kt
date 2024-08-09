@@ -2,7 +2,6 @@ package com.tangem.common.ui.charts.state
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerVisibilityListener
@@ -20,24 +19,20 @@ import java.math.BigDecimal
 @Composable
 fun rememberMarketChartState(
     dataProducer: MarketChartDataProducer = remember { MarketChartDataProducer.build {} },
-    colorMapper: (MarketChartLook.Type) -> Color = {
-        when (it) {
-            MarketChartLook.Type.Growing -> Color.Green
-            MarketChartLook.Type.Falling -> Color.Red
+    colorMapper: (MarketChartLook.Type) -> Color = remember {
+        {
+            when (it) {
+                MarketChartLook.Type.Growing -> Color.Green
+                MarketChartLook.Type.Falling -> Color.Red
+            }
         }
     },
     onMarkerShown: (x: BigDecimal?, y: BigDecimal?) -> Unit = { _, _ -> },
 ): MarketChartState {
-    val lookState = dataProducer.lookState.collectAsStateWithLifecycle()
+    val lookState = dataProducer.lookState.collectAsState()
 
     val state = remember(dataProducer, lookState, colorMapper, onMarkerShown) {
         MarketChartState(dataProducer, lookState, colorMapper, onMarkerShown)
-    }
-
-    LaunchedEffect(Unit) {
-        dataProducer.startDrawingAnimation.collect {
-            state.startDrawingAnimation()
-        }
     }
 
     return state
@@ -59,7 +54,6 @@ class MarketChartState internal constructor(
     private val colorMapper: (MarketChartLook.Type) -> Color,
     private val markerCallback: (x: BigDecimal?, y: BigDecimal?) -> Unit,
 ) {
-    internal val startDrawingAnimationState = mutableStateOf(false)
     internal val modelProducer = dataProducer.modelProducer
 
     internal val chartColor by derivedStateOf {
@@ -70,29 +64,29 @@ class MarketChartState internal constructor(
         lookState.value.markerHighlightRightSide
     }
 
-    internal val xValueFormatter by derivedStateOf {
-        CartesianValueFormatter { value, _, _ ->
-            val state = dataProducer.dataState.value as? MarketChartData.Data
-                ?: return@CartesianValueFormatter value.toString()
+    internal val xValueFormatter = CartesianValueFormatter { value, _, _ ->
+        val formatter = dataProducer.lookState.value.xAxisFormatter
 
-            lookState.value.xAxisFormatter.format(
-                value = dataProducer.pointsValuesConverter.prepareRawXForFormat(value, state),
-            )
-        }
+        val state = dataProducer.dataState.value as? MarketChartData.Data
+            ?: return@CartesianValueFormatter value.toString()
+
+        formatter.format(
+            value = dataProducer.pointsValuesConverter.prepareRawXForFormat(value, state),
+        )
     }
 
-    internal val yValueFormatter by derivedStateOf {
-        CartesianValueFormatter { value, _, _ ->
-            val state = dataProducer.dataState.value as? MarketChartData.Data
-                ?: return@CartesianValueFormatter value.toString()
+    internal val yValueFormatter = CartesianValueFormatter { value, _, _ ->
+        val formatter = dataProducer.lookState.value.yAxisFormatter
 
-            lookState.value.yAxisFormatter.format(
-                value = dataProducer.pointsValuesConverter.prepareRawYForFormat(value, state),
-            )
-        }
+        val state = dataProducer.dataState.value as? MarketChartData.Data
+            ?: return@CartesianValueFormatter value.toString()
+
+        formatter.format(
+            value = dataProducer.pointsValuesConverter.prepareRawYForFormat(value, state),
+        )
     }
 
-    internal var markerFraction: Float? by mutableStateOf(null)
+    internal var markerFraction by mutableStateOf<Float?>(null)
 
     internal val markerVisibilityListener = object : CartesianMarkerVisibilityListener {
         override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
@@ -116,24 +110,17 @@ class MarketChartState internal constructor(
         }
     }
 
-    val isDrawingAnimationInProgress: Boolean by derivedStateOf {
-        startDrawingAnimationState.value
-    }
-
     private fun getPoint(targets: List<CartesianMarker.Target>): Pair<BigDecimal, BigDecimal>? {
         val entry = (targets[0] as LineCartesianLayerMarkerTarget).points[0].entry
         val entryIndex = dataProducer.entries.value.indexOf(entry).takeIf { it != -1 } ?: return null
         val state = dataProducer.dataState.value as? MarketChartData.Data ?: return null
-        val x = state.x.getOrNull(entryIndex) ?: return null
-        val y = state.y.getOrNull(entryIndex) ?: return null
+        val rawData = dataProducer.rawData.value ?: return null
+
+        val originalIndex = rawData.originalIndexes?.getOrNull(entryIndex)
+        val index = originalIndex ?: entryIndex
+
+        val x = state.x.getOrNull(index) ?: return null
+        val y = state.y.getOrNull(index) ?: return null
         return x to y
-    }
-
-    fun startDrawingAnimation() {
-        startDrawingAnimationState.value = true
-    }
-
-    fun stopDrawingAnimation() {
-        startDrawingAnimationState.value = false
     }
 }

@@ -7,7 +7,7 @@ sealed class TokenMarketUpdateRequest {
     ) : TokenMarketUpdateRequest()
 
     data class UpdateChart(
-        val interval: PriceChangeInterval,
+        val interval: TokenMarketListConfig.Interval,
         val currency: String,
     ) : TokenMarketUpdateRequest()
 }

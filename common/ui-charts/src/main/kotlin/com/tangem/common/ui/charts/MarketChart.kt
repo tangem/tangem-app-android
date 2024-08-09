@@ -3,7 +3,6 @@ package com.tangem.common.ui.charts
 import android.content.res.Configuration
 import androidx.annotation.FloatRange
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,45 +10,55 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.resolveAsTypeface
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.patrykandpatrick.vico.compose.cartesian.*
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberCustomStartAxis
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.of
 import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
 import com.patrykandpatrick.vico.core.cartesian.Zoom
-import com.patrykandpatrick.vico.core.cartesian.axis.*
+import com.patrykandpatrick.vico.core.cartesian.axis.AxisPosition
+import com.patrykandpatrick.vico.core.cartesian.axis.BaseAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerVisibilityListener
 import com.patrykandpatrick.vico.core.cartesian.marker.LineCartesianLayerMarkerTarget
 import com.patrykandpatrick.vico.core.common.Dimensions
 import com.patrykandpatrick.vico.core.common.component.LineComponent
 import com.patrykandpatrick.vico.core.common.shape.Shape
+import com.tangem.common.ui.charts.layer.TimeItemPlacer
 import com.tangem.common.ui.charts.layer.rememberMarketChartLayer
-import com.tangem.common.ui.charts.marker.rememberTangemChartMarker
+import com.tangem.common.ui.charts.layer.rememberTangemChartMarker
 import com.tangem.common.ui.charts.preview.MarketChartPreviewDataProvider
 import com.tangem.common.ui.charts.state.*
 import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -64,79 +73,92 @@ private const val GUIDELINES_COUNT = 3
  * @param splitChartSegmentColor The color of the grayed by marker chart segment.
  * @param backgroundSplitChartSegmentColorAlpha The alpha of the background the [splitChartSegmentColor]
  * @param backgroundColorAlpha The alpha of the background color of the chart.
- * @param noChartContent A composable function that defines the content to be displayed when there is no data to display.
  */
 @Composable
 fun MarketChart(
     modifier: Modifier = Modifier,
     state: MarketChartState = rememberMarketChartState(),
-    splitChartSegmentColor: Color,
-    @FloatRange(from = 0.0, to = 1.0) backgroundSplitChartSegmentColorAlpha: Float,
-    @FloatRange(from = 0.0, to = 1.0) backgroundColorAlpha: Float,
-    noChartContent: @Composable BoxScope.() -> Unit,
+    splitChartSegmentColor: Color = TangemTheme.colors.icon.inactive,
+    @FloatRange(from = 0.0, to = 1.0) backgroundSplitChartSegmentColorAlpha: Float = 0.24f,
+    @FloatRange(from = 0.0, to = 1.0) backgroundColorAlpha: Float = 0.24f,
 ) {
     var canvasWidth by remember { mutableIntStateOf(0) }
-    var canvasHeight by remember { mutableIntStateOf(0) }
+    var chartHeight by remember { mutableIntStateOf(0) }
 
-    val layer = rememberLayerFromState(
-        state = state,
-        splitChartSegmentColor = splitChartSegmentColor,
-        backgroundColorAlpha = backgroundColorAlpha,
-        backgroundSplitChartSegmentColorAlpha = backgroundSplitChartSegmentColorAlpha,
-        canvasHeight = canvasHeight,
+    val layer = rememberMarketChartLayer(
+        lineColor = state.chartColor,
+        backgroundLineColor = state.chartColor.copy(alpha = backgroundColorAlpha),
+        secondLineColor = splitChartSegmentColor,
+        backgroundSecondLineColor = splitChartSegmentColor.copy(alpha = backgroundSplitChartSegmentColorAlpha),
+        secondColorOnTheRightSide = state.markerHighlightRightSide.not(),
+        markerFraction = state.markerFraction,
+        axisValueOverrider = AxisValueOverrider.fixed(),
+        canvasHeight = chartHeight,
     )
+
+    val marker = rememberTangemChartMarker(color = state.chartColor)
+
     val chart = rememberCartesianChart(
         layer,
-        startAxis = rememberMarketChartStartAxis(
-            yValueFormatter = state.yValueFormatter,
-        ),
-        bottomAxis = rememberMarketChartBottomAxis(
-            xValueFormatter = state.xValueFormatter,
-        ),
+        startAxis = rememberMarketChartStartAxis(state.yValueFormatter),
+        bottomAxis = rememberMarketChartBottomAxis(state.xValueFormatter),
+        horizontalLayout = HorizontalLayout.FullWidth(),
+        markerVisibilityListener = rememberMarketVisibilityListener(canvasWidth, state),
+        marker = marker,
     )
-    val marker = rememberTangemChartMarker(
-        color = state.chartColor,
-        innerCircleColor = Color.White,
-    )
-    val density = LocalDensity.current
+
+    // we need to calculate what the overall height should be in order to get the correct height of the graph
+    val bottomAxisHeight = with(LocalDensity.current) {
+        getMarketChartBottomAxisHeight().toPx().toInt()
+    }
 
     CartesianChartHost(
-        modifier = modifier.onGloballyPositioned {
-            with(density) {
+        modifier = modifier
+            .onGloballyPositioned {
                 canvasWidth = it.size.width
-                canvasHeight = if (it.size.height != 0) {
-// [REDACTED_TODO_COMMENT]
-                    it.size.height - 20.dp.toPx().toInt() - 27.dp.toPx().toInt()
+                chartHeight = if (it.size.height != 0) {
+                    it.size.height - bottomAxisHeight
                 } else {
                     0
                 }
             }
-        },
+            // Sometimes the chart is not drawn correctly (ex. in LazyLayout), so we need to force the redraw
+            .drawBehind {
+                state.markerFraction
+            },
         chart = chart,
         modelProducer = state.modelProducer,
         scrollState = rememberVicoScrollState(scrollEnabled = false),
         zoomState = rememberVicoZoomState(initialZoom = Zoom.Content, zoomEnabled = false),
-        horizontalLayout = HorizontalLayout.fullWidth(),
-        markerVisibilityListener = state.rememberMarketVisibilityListener(canvasWidth = canvasWidth),
-        diffAnimationSpec = null,
-        marker = marker,
-        placeholder = noChartContent,
+        animationSpec = null,
     )
 }
 
 @Composable
-private fun MarketChartState.rememberMarketVisibilityListener(canvasWidth: Int): CartesianMarkerVisibilityListener {
-    val state = this
-    return remember(state.markerVisibilityListener, canvasWidth) {
+fun getMarketChartBottomAxisHeight(): Dp {
+    return with(LocalDensity.current) {
+        TangemTheme.typography.caption2.fontSize.toDp() + TangemTheme.dimens.spacing26
+    }
+}
+
+@Composable
+private fun rememberMarketVisibilityListener(
+    canvasWidth: Int,
+    state: MarketChartState,
+): CartesianMarkerVisibilityListener {
+    val haptic = LocalHapticManager.current
+
+    return remember(state, canvasWidth) {
         val maxCanvasXFloat = canvasWidth.toFloat().takeIf { it != 0f }
 
         object : CartesianMarkerVisibilityListener {
             override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
-                state.stopDrawingAnimation()
                 val xCanvas = (targets[0] as LineCartesianLayerMarkerTarget).canvasX
 
                 state.markerFraction = maxCanvasXFloat?.let { xCanvas / it }
                 state.markerVisibilityListener.onShown(marker, targets)
+
+                haptic.perform(TangemHapticEffect.View.ContextClick)
             }
 
             override fun onHidden(marker: CartesianMarker) {
@@ -149,38 +171,30 @@ private fun MarketChartState.rememberMarketVisibilityListener(canvasWidth: Int):
 
                 state.markerFraction = maxCanvasXFloat?.let { xCanvas / it }
                 state.markerVisibilityListener.onUpdated(marker, targets)
+
+                haptic.perform(TangemHapticEffect.View.TextHandleMove)
             }
         }
     }
 }
 
 @Composable
-private fun rememberLayerFromState(
-    state: MarketChartState,
-    splitChartSegmentColor: Color,
-    @FloatRange(from = 0.0, to = 1.0) backgroundColorAlpha: Float,
-    @FloatRange(from = 0.0, to = 1.0) backgroundSplitChartSegmentColorAlpha: Float,
-    canvasHeight: Int,
-): LineCartesianLayer {
-    return rememberMarketChartLayer(
-        lineColor = state.chartColor,
-        backgroundLineColor = state.chartColor.copy(alpha = backgroundColorAlpha),
-        secondLineColor = splitChartSegmentColor,
-        backgroundSecondLineColor = splitChartSegmentColor.copy(alpha = backgroundSplitChartSegmentColorAlpha),
-        secondColorOnTheRightSide = state.markerHighlightRightSide.not(),
-        startDrawingAnimation = state.startDrawingAnimationState,
-        markerFraction = state.markerFraction,
-        axisValueOverrider = AxisValueOverrider.adaptiveYValues(yFraction = 1.2f, round = true), // FIXME ?
-        canvasHeight = canvasHeight,
-    )
-}
-
-@Composable
 private fun rememberMarketChartStartAxis(
     yValueFormatter: CartesianValueFormatter,
 ): VerticalAxis<AxisPosition.Vertical.Start> {
+    val textStyle = TangemTheme.typography.caption2
+    val resolver = LocalFontFamilyResolver.current
+    val typeface by remember(resolver, textStyle) {
+        resolver.resolveAsTypeface(
+            fontFamily = textStyle.fontFamily,
+            fontWeight = textStyle.fontWeight ?: FontWeight.Normal,
+            fontStyle = textStyle.fontStyle ?: FontStyle.Normal,
+            fontSynthesis = textStyle.fontSynthesis ?: FontSynthesis.All,
+        )
+    }
+
     return rememberCustomStartAxis(
-        axis = null,
+        line = null,
         tick = null,
         guideline = null,
         labelGuideline = rememberChartAxisGuidelineComponent(
@@ -194,38 +208,44 @@ private fun rememberMarketChartStartAxis(
                 end = TangemTheme.dimens.spacing4,
             ),
             textSize = TangemTheme.typography.caption2.fontSize,
-            typeface = TangemTheme.typography.caption2.toGraphicsTypeFace(),
+            typeface = typeface,
         ),
         horizontalLabelPosition = VerticalAxis.HorizontalLabelPosition.Inside,
         verticalLabelPosition = VerticalAxis.VerticalLabelPosition.Center,
-        itemPlacer = AxisItemPlacer.Vertical.count({ GUIDELINES_COUNT }, false),
+        itemPlacer = VerticalAxis.ItemPlacer.count({ GUIDELINES_COUNT }, false),
         valueFormatter = yValueFormatter,
     )
 }
 
 @Composable
-fun rememberMarketChartBottomAxis(
+private fun rememberMarketChartBottomAxis(
     xValueFormatter: CartesianValueFormatter,
 ): HorizontalAxis<AxisPosition.Horizontal.Bottom> {
+    val textStyle = TangemTheme.typography.caption2
+
+    val resolver = LocalFontFamilyResolver.current
+
+    val typeface by remember(resolver, textStyle) {
+        resolver.resolveAsTypeface(
+            fontFamily = textStyle.fontFamily,
+            fontWeight = textStyle.fontWeight ?: FontWeight.Normal,
+            fontStyle = textStyle.fontStyle ?: FontStyle.Normal,
+            fontSynthesis = textStyle.fontSynthesis ?: FontSynthesis.All,
+        )
+    }
+
     return rememberBottomAxis(
         label = rememberAxisLabelComponent(
             color = TangemTheme.colors.text.tertiary,
             textSize = TangemTheme.typography.caption2.fontSize,
-            padding = Dimensions.of(top = TangemTheme.dimens.spacing20),
-            typeface = TangemTheme.typography.caption2.toGraphicsTypeFace(),
+            padding = Dimensions.of(top = TangemTheme.dimens.spacing26),
+            typeface = typeface,
         ),
         tick = null,
-        axis = null,
+        line = null,
         guideline = null,
-        sizeConstraint = BaseAxis.SizeConstraint.Exact(sizeDp = 37f), // FIXME ?
-        itemPlacer = remember {
-            AxisItemPlacer.Horizontal.default(
-                spacing = 25, // FIXME ?
-                offset = 60, // FIXME ?
-                shiftExtremeTicks = false,
-                addExtremeLabelPadding = false,
-            )
-        },
+        sizeConstraint = BaseAxis.SizeConstraint.Auto(),
+        itemPlacer = remember { TimeItemPlacer() },
         valueFormatter = xValueFormatter,
     )
 }
@@ -245,19 +265,6 @@ private fun rememberChartAxisGuidelineComponent(color: Color): LineComponent {
     )
 }
 
-@Composable
-internal fun TextStyle.toGraphicsTypeFace(): android.graphics.Typeface {
-    val resolver = LocalFontFamilyResolver.current
-    return remember(resolver, this) {
-        resolver.resolveAsTypeface(
-            fontFamily = this.fontFamily,
-            fontWeight = this.fontWeight ?: FontWeight.Normal,
-            fontStyle = this.fontStyle ?: FontStyle.Normal,
-            fontSynthesis = this.fontSynthesis ?: FontSynthesis.All,
-        )
-    }.value
-}
-
 // region Preview
 
 @Suppress("LongMethod")
@@ -275,7 +282,6 @@ private fun MarketChartPreview(
             chartLook = MarketChartLook(
                 type = MarketChartLook.Type.Growing,
                 markerHighlightRightSide = true,
-                animationOnDataChange = true,
             )
         }
     }
@@ -283,8 +289,8 @@ private fun MarketChartPreview(
     LaunchedEffect(key1 = Unit) {
         dataProducer.runTransactionSuspend {
             chartData = MarketChartData.Data(
-                x = x,
-                y = y,
+                x = x.toImmutableList(),
+                y = y.toImmutableList(),
             )
             updateLook {
                 it.copy(
@@ -338,13 +344,9 @@ private fun MarketChartPreview(
                 splitChartSegmentColor = TangemTheme.colors.icon.inactive,
                 backgroundSplitChartSegmentColorAlpha = 0.24f,
                 backgroundColorAlpha = 0.24f,
-                noChartContent = { },
             )
             SpacerH16()
 
-            Button(onClick = { chartState.startDrawingAnimation() }) {
-                Text("Start drawing animation")
-            }
             Button(
                 onClick = {
                     dataProducer.runTransaction {
@@ -358,41 +360,38 @@ private fun MarketChartPreview(
                     text = "Change marker highlight side",
                 )
             }
-            Button(onClick = {
-                coroutineScope.launch {
-                    dataProducer.runTransactionSuspend {
-                        updateData {
-                            MarketChartData.Data(
-                                x = it.x,
-                                y = it.y.reversed(),
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        dataProducer.runTransactionSuspend {
+                            updateData {
+                                MarketChartData.Data(
+                                    x = it.x,
+                                    y = it.y.reversed().toImmutableList(),
+                                )
+                            }
+                        }
+                    }
+                },
+            ) {
+                Text("Change Data")
+            }
+
+            Button(
+                onClick = {
+                    dataProducer.runTransaction {
+                        updateLook {
+                            it.copy(
+                                type = if (it.type == MarketChartLook.Type.Growing) {
+                                    MarketChartLook.Type.Falling
+                                } else {
+                                    MarketChartLook.Type.Growing
+                                },
                             )
                         }
                     }
-                }
-            },) {
-                Text("Change Data")
-            }
-            Button(onClick = {
-                dataProducer.runTransaction {
-                    updateLook { it.copy(animationOnDataChange = it.animationOnDataChange.not()) }
-                }
-            },) {
-                Text("Change animationOnDataChange = ${look.animationOnDataChange}")
-            }
-
-            Button(onClick = {
-                dataProducer.runTransaction {
-                    updateLook {
-                        it.copy(
-                            type = if (it.type == MarketChartLook.Type.Growing) {
-                                MarketChartLook.Type.Falling
-                            } else {
-                                MarketChartLook.Type.Growing
-                            },
-                        )
-                    }
-                }
-            },) {
+                },
+            ) {
                 Text("Change color type")
             }
         }

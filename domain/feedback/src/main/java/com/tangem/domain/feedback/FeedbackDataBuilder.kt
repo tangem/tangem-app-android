@@ -16,7 +16,8 @@ internal class FeedbackDataBuilder {
     fun addCardInfo(cardInfo: CardInfo) {
         builder.appendKeyValue("Card ID", cardInfo.cardId)
         builder.appendKeyValue("Firmware version", cardInfo.firmwareVersion)
-        builder.appendKeyValue("Imported wallet", if (cardInfo.isImported) "yes" else "no")
+        builder.appendKeyValue("Linked cards count:", cardInfo.cardsCount)
+        builder.appendKeyValue("Has seed phrase:", cardInfo.isImported.toString())
         builder.appendKeyValue("Card Blockchain", cardInfo.cardBlockchain)
         builder.appendSignedHashes(cardInfo.signedHashesList)
     }
@@ -34,12 +35,14 @@ internal class FeedbackDataBuilder {
             builder.appendKeyValue("Outputs count", outputsCount)
 
             if (tokens.isNotEmpty()) {
-                builder.append("Tokens:")
                 builder.breakLine()
                 tokens.forEach { token ->
-                    builder.appendKeyValue("ID", token.id ?: "[custom token]")
+                    builder.appendKeyValue("Token ID", token.id ?: "[custom token]")
                     builder.appendKeyValue("Name", token.name)
                     builder.appendKeyValue("Contract address", token.contractAddress)
+                    builder.appendKeyValue("Decimals", token.decimals)
+
+                    builder.breakLine()
                 }
             }
 
