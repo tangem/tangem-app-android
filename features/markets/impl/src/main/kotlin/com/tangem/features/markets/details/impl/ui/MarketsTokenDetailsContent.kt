@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
@@ -141,7 +140,9 @@ private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) 
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Column {
+        Column(
+            Modifier.weight(1f),
+        ) {
             TokenPriceText(
                 price = state.priceText,
                 triggerPriceChange = state.triggerPriceChange,
@@ -161,7 +162,7 @@ private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) 
         }
         SpacerW4()
         CoinIcon(
-            modifier = Modifier.size(TangemTheme.dimens.size48),
+            modifier = Modifier.requiredSize(TangemTheme.dimens.size48),
             url = state.iconUrl,
             alpha = 1f,
             colorFilter = null,
@@ -198,9 +199,7 @@ private fun TokenPriceText(
         modifier = modifier,
         text = price,
         color = color.value,
-        maxLines = 1,
         style = TangemTheme.typography.head,
-        overflow = TextOverflow.Visible,
     )
 }
 
