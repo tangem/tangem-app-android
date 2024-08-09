@@ -8,16 +8,14 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.formatAsDateTime
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.features.markets.impl.R
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 import java.math.BigDecimal
 
 internal object MarketsDateTimeFormatters {
 
     private const val H24_MILLIS = 24L * 60 * 60 * 1000
     private const val WEEK_MILLIS = 7L * H24_MILLIS
-    private const val MONTH_MILLIS = 30L * H24_MILLIS
-    private const val MONTH3_MILLIS = 3L * MONTH_MILLIS
-    private const val MONTH6_MILLIS = 6L * MONTH_MILLIS
-    private const val YEAR_MILLIS = 365L * H24_MILLIS
 
     private val dateTimeMMMFormatter by lazy {
         DateTimeFormatters.getBestFormatterBySkeleton("dd MMM hh:mm")
@@ -117,17 +115,24 @@ internal object MarketsDateTimeFormatters {
         }
     }
 
+    @Suppress("MagicNumber")
     fun getStartTimestampByInterval(interval: PriceChangeInterval, currentTimestamp: Long): Long {
-        val minus = when (interval) {
-            PriceChangeInterval.H24 -> H24_MILLIS
-            PriceChangeInterval.WEEK -> WEEK_MILLIS
-            PriceChangeInterval.MONTH -> MONTH_MILLIS
-            PriceChangeInterval.MONTH3 -> MONTH3_MILLIS
-            PriceChangeInterval.MONTH6 -> MONTH6_MILLIS
-            PriceChangeInterval.YEAR -> YEAR_MILLIS
-            PriceChangeInterval.ALL_TIME -> return 0
+        return when (interval) {
+            PriceChangeInterval.H24 -> currentTimestamp - H24_MILLIS
+            PriceChangeInterval.WEEK -> currentTimestamp - WEEK_MILLIS
+            PriceChangeInterval.MONTH -> {
+                DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(1).millis
+            }
+            PriceChangeInterval.MONTH3 -> {
+                DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(3).millis
+            }
+            PriceChangeInterval.MONTH6 -> {
+                DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(6).millis
+            }
+            PriceChangeInterval.YEAR -> {
+                DateTime(currentTimestamp, DateTimeZone.UTC).minusYears(1).millis
+            }
+            PriceChangeInterval.ALL_TIME -> 0
         }
-
-        return currentTimestamp - minus
     }
 }
