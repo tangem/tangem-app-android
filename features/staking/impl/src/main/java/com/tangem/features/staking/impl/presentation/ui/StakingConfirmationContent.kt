@@ -18,8 +18,8 @@ import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.RouteType
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
@@ -34,15 +34,14 @@ internal fun StakingConfirmationContent(
     amountState: AmountState,
     state: StakingStates.ConfirmationState,
     clickIntents: StakingClickIntents,
-    type: RouteType,
+    type: StakingActionCommonType,
 ) {
     if (state !is StakingStates.ConfirmationState.Data) return
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
             .background(TangemTheme.colors.background.tertiary)
-            .padding(TangemTheme.dimens.spacing16)
+            .padding(horizontal = TangemTheme.dimens.spacing16)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
@@ -62,7 +61,7 @@ internal fun StakingConfirmationContent(
             isEditingDisabled = true,
             onClick = {},
         )
-        if (type == RouteType.STAKE) {
+        if (type == StakingActionCommonType.ENTER) {
             ValidatorBlock(validatorState = state.validatorState, onClick = clickIntents::openValidators)
         }
         StakingFeeBlock(feeState = state.feeState)
@@ -93,7 +92,7 @@ private fun Preview_StakingConfirmationContent() {
                 amountState = AmountStatePreviewData.amountState,
                 state = ConfirmationStatePreviewData.assentStakingState,
                 clickIntents = StakingClickIntentsStub,
-                type = RouteType.STAKE,
+                type = StakingActionCommonType.ENTER,
             )
         }
     }

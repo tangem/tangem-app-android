@@ -1,6 +1,6 @@
 package com.tangem.data.markets
 
-import com.tangem.data.markets.converters.TokenListChartConverter
+import com.tangem.data.markets.converters.TokenChartConverter
 import com.tangem.data.markets.converters.TokenMarketChartsConverter
 import com.tangem.data.markets.converters.TokenQuotesConverter
 import com.tangem.data.markets.converters.toRequestParam
@@ -21,7 +21,7 @@ internal class MarketsBatchUpdateFetcher(
     private val tangemTechApi: TangemTechApi,
 ) : BatchUpdateFetcher<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
 
-    private val tokenListChartsConverter = TokenMarketChartsConverter(TokenListChartConverter())
+    private val tokenListChartsConverter = TokenMarketChartsConverter(TokenChartConverter())
     private val tokenQuotesConverter = TokenQuotesConverter()
 
     override suspend fun BatchUpdateFetcher.UpdateContext<Int, List<TokenMarket>>.fetchUpdateAsync(
