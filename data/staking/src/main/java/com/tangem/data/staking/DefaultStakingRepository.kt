@@ -1,8 +1,10 @@
 package com.tangem.data.staking
 
+import android.util.Base64
 import arrow.core.raise.catch
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.common.extensions.toCompressedPublicKey
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.staking.converters.*
 import com.tangem.data.staking.converters.action.ActionStatusConverter
@@ -23,7 +25,10 @@ import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
-import com.tangem.domain.staking.model.*
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
+import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
@@ -37,10 +42,11 @@ import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.toFormattedString
+import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -55,6 +61,7 @@ internal class DefaultStakingRepository(
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
     private val stakingFeatureToggle: StakingFeatureToggles,
+    private val walletManagersFacade: WalletManagersFacade,
 ) : StakingRepository {
 
     private val stakingNetworkTypeConverter = StakingNetworkTypeConverter()
@@ -129,7 +136,7 @@ internal class DefaultStakingRepository(
             val yield = getYield(cryptoCurrencyId, symbol)
 
             StakingEntryInfo(
-                interestRate = yield.apy,
+                interestRate = requireNotNull(yield.validators.maxByOrNull { it.apr.orZero() }?.apr),
                 periodInDays = yield.metadata.cooldownPeriod.days,
                 tokenSymbol = yield.token.symbol,
             )
@@ -160,12 +167,30 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun createAction(params: ActionParams): StakingAction {
+    override suspend fun createAction(
+        userWalletId: UserWalletId,
+        network: Network,
+        params: ActionParams,
+    ): StakingAction {
         return withContext(dispatchers.io) {
             val response = when (params.actionCommonType) {
-                StakingActionCommonType.ENTER -> stakeKitApi.createEnterAction(createActionRequestBody(params))
-                StakingActionCommonType.EXIT -> stakeKitApi.createExitAction(createActionRequestBody(params))
-                StakingActionCommonType.PENDING -> stakeKitApi.createPendingAction(
+                StakingActionCommonType.ENTER -> stakeKitApi.createEnterAction(
+                    createActionRequestBody(
+                        userWalletId,
+                        network,
+                        params,
+                    ),
+                )
+                StakingActionCommonType.EXIT -> stakeKitApi.createExitAction(
+                    createActionRequestBody(
+                        userWalletId,
+                        network,
+                        params,
+                    ),
+                )
+                StakingActionCommonType.PENDING_OTHER,
+                StakingActionCommonType.PENDING_REWARDS,
+                -> stakeKitApi.createPendingAction(
                     createPendingActionRequestBody(params),
                 )
             }
@@ -174,12 +199,30 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun estimateGas(params: ActionParams): StakingGasEstimate {
+    override suspend fun estimateGas(
+        userWalletId: UserWalletId,
+        network: Network,
+        params: ActionParams,
+    ): StakingGasEstimate {
         return withContext(dispatchers.io) {
             val gasEstimateDTO = when (params.actionCommonType) {
-                StakingActionCommonType.ENTER -> stakeKitApi.estimateGasOnEnter(createActionRequestBody(params))
-                StakingActionCommonType.EXIT -> stakeKitApi.estimateGasOnExit(createActionRequestBody(params))
-                StakingActionCommonType.PENDING -> stakeKitApi.estimateGasOnPending(
+                StakingActionCommonType.ENTER -> stakeKitApi.estimateGasOnEnter(
+                    createActionRequestBody(
+                        userWalletId,
+                        network,
+                        params,
+                    ),
+                )
+                StakingActionCommonType.EXIT -> stakeKitApi.estimateGasOnExit(
+                    createActionRequestBody(
+                        userWalletId,
+                        network,
+                        params,
+                    ),
+                )
+                StakingActionCommonType.PENDING_REWARDS,
+                StakingActionCommonType.PENDING_OTHER,
+                -> stakeKitApi.estimateGasOnPending(
                     createPendingActionRequestBody(params),
                 )
             }
@@ -435,12 +478,19 @@ internal class DefaultStakingRepository(
         }
     }
 
-    private fun createActionRequestBody(params: ActionParams): ActionRequestBody {
+    private suspend fun createActionRequestBody(
+        userWalletId: UserWalletId,
+        network: Network,
+        params: ActionParams,
+    ): ActionRequestBody {
         return ActionRequestBody(
             integrationId = params.integrationId,
-            addresses = Address(params.address),
+            addresses = Address(
+                address = params.address,
+                additionalAddresses = createAdditionalAddresses(userWalletId, network, params),
+            ),
             args = ActionRequestBodyArgs(
-                amount = params.amount.toFormattedString(params.token.decimals),
+                amount = params.amount.toPlainString(),
                 inputToken = tokenConverter.convertBack(params.token),
                 validatorAddress = params.validatorAddress,
             ),
@@ -453,10 +503,27 @@ internal class DefaultStakingRepository(
             type = params.type ?: StakingActionType.UNKNOWN,
             passthrough = params.passthrough.orEmpty(),
             args = ActionRequestBodyArgs(
-                amount = params.amount.toFormattedString(params.token.decimals),
+                amount = params.amount.toPlainString(),
                 validatorAddress = params.validatorAddress,
             ),
         )
+    }
+
+    private suspend fun createAdditionalAddresses(
+        userWalletId: UserWalletId,
+        network: Network,
+        params: ActionParams,
+    ): Address.AdditionalAddresses? {
+        val selectedWallet = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
+        return when (params.token.network) {
+            NetworkType.COSMOS -> Address.AdditionalAddresses(
+                cosmosPubKey = Base64.encodeToString(
+                    /* input = */ selectedWallet?.wallet?.publicKey?.blockchainKey?.toCompressedPublicKey(),
+                    /* flags = */ Base64.NO_WRAP,
+                ),
+            )
+            else -> null
+        }
     }
 
     override fun isStakeMoreAvailable(networkId: Network.ID): Boolean {
@@ -502,23 +569,24 @@ internal class DefaultStakingRepository(
         const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
         const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
         const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
-        const val BINANCE_INTEGRATION_ID = "binance-bnb-native-staking"
+        const val BINANCE_INTEGRATION_ID = "bsc-bnb-native-staking"
         const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
         const val NEAR_INTEGRATION_ID = "near-near-native-staking"
         const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
 
+        // uncomment items as implementation is ready
         val integrationIdMap = mapOf(
             Blockchain.Solana.toCoinId() to SOLANA_INTEGRATION_ID,
             Blockchain.Cosmos.toCoinId() to COSMOS_INTEGRATION_ID,
-            Blockchain.Polkadot.toCoinId() to POLKADOT_INTEGRATION_ID,
-            Blockchain.Polygon.toCoinId() to ETHEREUM_INTEGRATION_ID,
-            Blockchain.Avalanche.toCoinId() to AVALANCHE_INTEGRATION_ID,
-            Blockchain.Tron.toCoinId() to TRON_INTEGRATION_ID,
-            Blockchain.Cronos.toCoinId() to CRONOS_INTEGRATION_ID,
-            Blockchain.Binance.toCoinId() to BINANCE_INTEGRATION_ID,
-            Blockchain.Kava.toCoinId() to KAVA_INTEGRATION_ID,
-            Blockchain.Near.toCoinId() to NEAR_INTEGRATION_ID,
-            Blockchain.Tezos.toCoinId() to TEZOS_INTEGRATION_ID,
+            // Blockchain.Polkadot.toCoinId() to POLKADOT_INTEGRATION_ID,
+            // Blockchain.Polygon.toCoinId() to ETHEREUM_INTEGRATION_ID,
+            // Blockchain.Avalanche.toCoinId() to AVALANCHE_INTEGRATION_ID,
+            // Blockchain.Tron.toCoinId() to TRON_INTEGRATION_ID,
+            // Blockchain.Cronos.toCoinId() to CRONOS_INTEGRATION_ID,
+            // Blockchain.BSC.toCoinId() to BINANCE_INTEGRATION_ID,
+            // Blockchain.Kava.toCoinId() to KAVA_INTEGRATION_ID,
+            // Blockchain.Near.toCoinId() to NEAR_INTEGRATION_ID,
+            // Blockchain.Tezos.toCoinId() to TEZOS_INTEGRATION_ID,
         )
     }
 }
