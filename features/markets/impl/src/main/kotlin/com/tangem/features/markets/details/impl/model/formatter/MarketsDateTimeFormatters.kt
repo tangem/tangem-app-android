@@ -120,18 +120,10 @@ internal object MarketsDateTimeFormatters {
         return when (interval) {
             PriceChangeInterval.H24 -> currentTimestamp - H24_MILLIS
             PriceChangeInterval.WEEK -> currentTimestamp - WEEK_MILLIS
-            PriceChangeInterval.MONTH -> {
-                DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(1).millis
-            }
-            PriceChangeInterval.MONTH3 -> {
-                DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(3).millis
-            }
-            PriceChangeInterval.MONTH6 -> {
-                DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(6).millis
-            }
-            PriceChangeInterval.YEAR -> {
-                DateTime(currentTimestamp, DateTimeZone.UTC).minusYears(1).millis
-            }
+            PriceChangeInterval.MONTH -> DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(1).millis
+            PriceChangeInterval.MONTH3 -> DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(3).millis
+            PriceChangeInterval.MONTH6 -> DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(6).millis
+            PriceChangeInterval.YEAR -> DateTime(currentTimestamp, DateTimeZone.UTC).minusYears(1).millis
             PriceChangeInterval.ALL_TIME -> 0
         }
     }
