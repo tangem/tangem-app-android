@@ -11,10 +11,11 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.BalanceType
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -31,9 +32,11 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
@@ -136,39 +139,28 @@ internal class TokenDetailsLoadedBalanceConverter(
 
     private fun getYieldBalance(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM {
         val yieldBalance = status.value.yieldBalance as? YieldBalance.Data
-
         val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance()
-        val stakingRewardAmount = yieldBalance?.getRewardStakingBalance()
-        val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
 
-        return if (stakingCryptoAmount.isNullOrZero()) {
-            StakingBlockUM.Loading(state.tokenInfoBlockState.iconState)
-        } else {
-            StakingBlockUM.Staked(
-                cryptoAmount = stakingCryptoAmount,
-                fiatAmount = stakingFiatAmount,
-                cryptoValue = stringReference(
-                    BigDecimalFormatter.formatCryptoAmount(stakingCryptoAmount, symbol, decimals),
-                ),
-                fiatValue = stringReference(
-                    BigDecimalFormatter.formatFiatAmount(
-                        stakingFiatAmount,
-                        appCurrencyProvider().code,
-                        appCurrencyProvider().symbol,
-                    ),
-                ),
-                rewardValue = resourceReference(
-                    R.string.staking_details_rewards_to_claim,
-                    wrappedList(
-                        BigDecimalFormatter.formatFiatAmount(
-                            stakingRewardAmount,
-                            appCurrencyProvider().code,
-                            appCurrencyProvider().symbol,
-                        ),
-                    ),
-                ),
-                onStakeClicked = clickIntents::onStakeBannerClick,
-            )
+        val stakingEntryInfo = stakingEntryInfoProvider.invoke()
+        val iconState = state.tokenInfoBlockState.iconState
+
+        return when {
+            stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null -> {
+                getStakeAvailableState(stakingEntryInfo, iconState)
+            }
+            stakingCryptoAmount.isNullOrZero() && stakingEntryInfo == null -> {
+                StakingBlockUM.Error(iconState = iconState)
+            }
+            else -> {
+                val stakingRewardAmount = yieldBalance?.getRewardStakingBalance()
+                val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
+
+                getStakedState(
+                    stakingCryptoAmount = stakingCryptoAmount,
+                    stakingFiatAmount = stakingFiatAmount,
+                    stakingRewardAmount = stakingRewardAmount,
+                )
+            }
         }
     }
 
@@ -193,6 +185,54 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.NoAmount,
             -> status.toContentConfig(currencySymbol)
         }
+    }
+
+    private fun getStakeAvailableState(
+        stakingEntryInfo: StakingEntryInfo,
+        iconState: IconState,
+    ): StakingBlockUM.StakeAvailable {
+        return StakingBlockUM.StakeAvailable(
+            interestRate = BigDecimalFormatter.formatPercent(
+                percent = stakingEntryInfo.interestRate,
+                useAbsoluteValue = true,
+            ),
+            periodInDays = stakingEntryInfo.periodInDays,
+            tokenSymbol = stakingEntryInfo.tokenSymbol,
+            iconState = iconState,
+            onStakeClicked = clickIntents::onStakeBannerClick,
+        )
+    }
+
+    private fun getStakedState(
+        stakingCryptoAmount: BigDecimal?,
+        stakingFiatAmount: BigDecimal?,
+        stakingRewardAmount: BigDecimal?,
+    ): StakingBlockUM.Staked {
+        return StakingBlockUM.Staked(
+            cryptoAmount = stakingCryptoAmount,
+            fiatAmount = stakingFiatAmount,
+            cryptoValue = stringReference(
+                BigDecimalFormatter.formatCryptoAmount(stakingCryptoAmount, symbol, decimals),
+            ),
+            fiatValue = stringReference(
+                BigDecimalFormatter.formatFiatAmount(
+                    stakingFiatAmount,
+                    appCurrencyProvider().code,
+                    appCurrencyProvider().symbol,
+                ),
+            ),
+            rewardValue = resourceReference(
+                R.string.staking_details_rewards_to_claim,
+                wrappedList(
+                    BigDecimalFormatter.formatFiatAmount(
+                        stakingRewardAmount,
+                        appCurrencyProvider().code,
+                        appCurrencyProvider().symbol,
+                    ),
+                ),
+            ),
+            onStakeClicked = clickIntents::onStakeBannerClick,
+        )
     }
 
     private fun CryptoCurrencyStatus.Value.toContentConfig(currencySymbol: String): MarketPriceBlockState.Content {
