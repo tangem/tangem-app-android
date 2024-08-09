@@ -263,7 +263,7 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
         Column {
             Text(
                 text = stringResource(R.string.express_provider),
-                style = TangemTheme.typography.caption2,
+                style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.secondary,
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
             )
