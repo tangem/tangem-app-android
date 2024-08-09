@@ -22,11 +22,11 @@ import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
-import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionType
 import com.tangem.domain.transaction.usecase.*
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -216,7 +216,7 @@ internal class SwapInteractorImpl @Inject constructor(
             permissionOptions.approveData.approveData
         }
         val approveTransaction = createTransactionUseCase(
-            amount = BigDecimal.ZERO.convertToAmount(permissionOptions.fromToken),
+            amount = BigDecimal.ZERO.convertToSdkAmount(permissionOptions.fromToken),
             fee = getFeeForTransaction(
                 fee = permissionOptions.txFee,
                 blockchain = Blockchain.fromId(permissionOptions.fromToken.network.id.value),
@@ -518,7 +518,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
 
         validateTransactionUseCase(
-            amount = amount.value.convertToAmount(fromToken),
+            amount = amount.value.convertToSdkAmount(fromToken),
             fee = fee,
             memo = null,
             destination = getTokenAddress(fromToken),
@@ -791,7 +791,7 @@ internal class SwapInteractorImpl @Inject constructor(
         if (demoConfig.isDemoCardId(cardId)) return SwapTransactionState.UnknownError
 
         val txData = createTransactionUseCase(
-            amount = amount.value.convertToAmount(currencyToSend.currency),
+            amount = amount.value.convertToSdkAmount(currencyToSend.currency),
             fee = getFeeForTransaction(
                 fee = txFee,
                 blockchain = Blockchain.fromId(currencyToSend.currency.network.id.value),
