@@ -25,7 +25,7 @@ internal class DefaultCustomTokenRouter : CustomTokenRouter {
         val alert = AppDialog.SimpleOkDialogRes(
             headerId = R.string.common_warning,
             messageId = R.string.alert_manage_tokens_unsupported_curve_message,
-            args = listOf(blockchain.fullName),
+            args = listOf(blockchain.getNetworkName()),
         )
         store.dispatchDialogShow(alert)
     }
