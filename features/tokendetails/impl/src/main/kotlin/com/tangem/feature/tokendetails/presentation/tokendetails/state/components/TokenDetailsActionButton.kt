@@ -91,5 +91,4 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
             dimContent = dimContent,
         ),
     )
-
 }
