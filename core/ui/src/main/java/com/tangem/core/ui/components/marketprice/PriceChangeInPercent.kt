@@ -23,7 +23,7 @@ fun PriceChangeInPercent(
     modifier: Modifier = Modifier,
     textStyle: TextStyle = TangemTheme.typography.body2,
 ) {
-    if (valueInPercent == "") {
+    if (valueInPercent.isBlank()) {
         Box(modifier)
         return
     }
