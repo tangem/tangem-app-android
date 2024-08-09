@@ -6,6 +6,7 @@ data class CardInfo(
     val userWalletId: UserWalletId?,
     val cardId: String,
     val firmwareVersion: String,
+    val cardsCount: String,
     val cardBlockchain: String?,
     val signedHashesList: List<SignedHashes>,
     val isImported: Boolean,
