@@ -13,6 +13,8 @@ import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureToggle
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -64,9 +66,10 @@ internal class FeatureTogglesViewModel @Inject constructor(
         }
     }
 
-    private fun MutableFeatureTogglesManager.getTesterFeatureToggles(): List<TesterFeatureToggle> {
+    private fun MutableFeatureTogglesManager.getTesterFeatureToggles(): ImmutableList<TesterFeatureToggle> {
         return this
             .getFeatureToggles()
             .map { TesterFeatureToggle(it.key, it.value) }
+            .toImmutableList()
     }
 }
