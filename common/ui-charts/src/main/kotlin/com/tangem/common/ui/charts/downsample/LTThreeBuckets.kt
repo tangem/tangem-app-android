@@ -238,7 +238,7 @@ private data class Area(
     }
 }
 
-inline fun <T> List<T>.fastForEach(action: (T) -> Unit) {
+private inline fun <T> List<T>.fastForEach(action: (T) -> Unit) {
     for (index in indices) {
         val item = get(index)
         action(item)

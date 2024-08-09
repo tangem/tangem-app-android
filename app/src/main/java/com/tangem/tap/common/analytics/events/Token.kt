@@ -22,44 +22,6 @@ sealed class Token(
         class ButtonShareAddress : Receive("Button - Share Address")
     }
 
-    sealed class Send(
-        event: String,
-        params: Map<String, String> = mapOf(),
-        error: Throwable? = null,
-    ) : Token("Token / Send", event, params, error) {
-
-        class ScreenOpened : Send(event = "Send Screen Opened")
-        class ButtonPaste : Send(event = "Button - Paste")
-        class ButtonQRCode : Send(event = "Button - QR Code")
-        class ButtonSwapCurrency : Send(event = "Button - Swap Currency")
-
-        class AddressEntered(sourceType: SourceType, validationResult: ValidationResult) : Send(
-            event = "Address Entered",
-            params = mapOf(
-                "Source" to sourceType.name,
-                "Validation" to validationResult.name,
-            ),
-        ) {
-            enum class SourceType {
-                QRCode, PasteButton, PastePopup
-            }
-
-            enum class ValidationResult {
-                Success, Fail
-            }
-        }
-
-        class SelectedCurrency(currency: CurrencyType) : Send(
-            event = "Selected Currency",
-            params = mapOf("Type" to currency.value),
-        ) {
-
-            enum class CurrencyType(val value: String) {
-                Token(value = "Token"), AppCurrency(value = "App Currency")
-            }
-        }
-    }
-
     sealed class Topup(
         event: String,
         params: Map<String, String> = mapOf(),

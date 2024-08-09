@@ -38,10 +38,10 @@ import com.tangem.features.markets.component.BottomSheetState
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListLazyColumn
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListSortByBottomSheet
-import com.tangem.features.markets.tokenlist.impl.ui.entity.ListUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.MarketsListUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.SortByBottomSheetContentUM
-import com.tangem.features.markets.tokenlist.impl.ui.entity.SortByTypeUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.SortByBottomSheetContentUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
 import com.tangem.features.markets.tokenlist.impl.ui.preview.MarketChartListItemPreviewDataProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
