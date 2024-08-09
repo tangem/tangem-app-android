@@ -75,7 +75,7 @@ fun InputRowRecipient(
             AnimatedContent(targetState = titleText, label = "Title Change") {
                 Text(
                     text = it.resolveReference(),
-                    style = TangemTheme.typography.caption2,
+                    style = TangemTheme.typography.subtitle2,
                     color = color,
                 )
             }
