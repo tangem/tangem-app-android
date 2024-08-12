@@ -384,11 +384,11 @@ private fun MarketChartPreview(
                     dataProducer.runTransaction {
                         updateLook {
                             it.copy(
-                                type = when(it.type) {
+                                type = when (it.type) {
                                     MarketChartLook.Type.Growing -> MarketChartLook.Type.Falling
                                     MarketChartLook.Type.Falling -> MarketChartLook.Type.Neutral
                                     MarketChartLook.Type.Neutral -> MarketChartLook.Type.Growing
-                                }
+                                },
                             )
                         }
                     }
