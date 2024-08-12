@@ -58,7 +58,7 @@ internal class SetInitialDataStateTransformer(
     override fun transform(prevState: StakingUiState): StakingUiState {
         return prevState.copy(
             title = TextReference.Res(
-                R.string.staking_initial_info_title,
+                R.string.staking_title_stake,
                 wrappedList(cryptoCurrencyStatusProvider().currency.name),
             ),
             clickIntents = clickIntents,
