@@ -49,7 +49,7 @@ internal class SetConfirmationStateLoadingTransformer(
                     subtitleResourceId = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
                 )
             },
-        ),
+        )
     }
 
     private fun getEarnRewardsPeriod(rewardSchedule: Yield.Metadata.RewardSchedule): Int {
