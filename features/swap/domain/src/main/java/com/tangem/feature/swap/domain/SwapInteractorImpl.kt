@@ -1911,7 +1911,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 } else {
                     SwapFeeState.NotEnough(
                         feeCurrency = fromTokenStatus.currency,
-                        currencyName = fromTokenStatus.currency.network.name,
+                        currencyName = fromTokenStatus.currency.name,
                         currencySymbol = fromTokenStatus.currency.symbol,
                     )
                 }
