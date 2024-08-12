@@ -156,4 +156,16 @@ internal object StakingDomainModule {
             stakingErrorResolver = stakingErrorResolver,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideIsApproveNeededUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): IsApproveNeededUseCase {
+        return IsApproveNeededUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
+    }
 }
