@@ -1,7 +1,11 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionStatus
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
+import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
@@ -209,7 +213,11 @@ class MockStakingRepository : StakingRepository {
         )
     }
 
-    override suspend fun constructTransaction(transactionId: String): StakingTransaction = StakingTransaction(
+    override suspend fun constructTransaction(
+        networkId: String,
+        fee: Fee,
+        transactionId: String,
+    ): Pair<StakingTransaction, TransactionData.Compiled> = StakingTransaction(
         id = "id",
         network = NetworkType.SOLANA,
         status = StakingTransactionStatus.SIGNED,
@@ -224,6 +232,9 @@ class MockStakingRepository : StakingRepository {
         explorerUrl = null,
         ledgerHwAppId = null,
         isMessage = false,
+    ) to TransactionData.Compiled(
+        value = TransactionData.Compiled.Data.RawString(""),
+        status = TransactionStatus.Unconfirmed,
     )
 
     override suspend fun submitHash(transactionId: String, transactionHash: String) {
@@ -240,5 +251,5 @@ class MockStakingRepository : StakingRepository {
 
     override fun isStakeMoreAvailable(networkId: Network.ID): Boolean = true
 
-    override fun isApproveNeeded(cryptoCurrency: CryptoCurrency): Boolean = true
+    override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval = StakingApproval.Empty
 }
