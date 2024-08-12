@@ -88,6 +88,7 @@ internal sealed class StakingStates {
             val footerText: String,
             val transactionDoneState: TransactionDoneState,
             val pendingActionInProgress: PendingAction? = null,
+            val isApprovalNeeded: Boolean,
         ) : ConfirmationState()
 
         data class Empty(
