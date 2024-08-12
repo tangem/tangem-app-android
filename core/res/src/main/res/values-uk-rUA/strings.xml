@@ -90,6 +90,7 @@
   <string name="common_copy">Копіювати</string>
   <string name="common_copy_address">Скопіювати адресу</string>
   <string name="common_create">Створити</string>
+  <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Власна</string>
   <plurals name="common_days">
     <item quantity="one">%d день</item>
@@ -651,7 +652,6 @@
   <string name="send_transaction_success">Транзакція успішно підписана і відправлена до блокчейну. Баланс гаманця буде оновлено через деякий час</string>
   <string name="send_tron_account_activation_error">%1$s — це монета у мережі Tron. Щоб розрахувати комісію та здійснити транзакцію, вам необхідно внести певну кількість Tron (TRX) на свій рахунок.</string>
   <string name="send_validation_invalid_address">Недійсна адреса</string>
-  <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Трансакцію надіслано</string>
   <string name="settings_card_settings_footer">Підготуйтеся до сканування картку, яку потрібно налаштувати.</string>
   <string name="settings_forget_wallet">Забути гаманець</string>
