@@ -6,8 +6,7 @@ data class TokenMarketInfo(
     val id: String,
     val name: String,
     val symbol: String,
-    val currentPrice: BigDecimal,
-    val priceChangePercentage: PriceChangePercentage?,
+    val quotes: TokenQuotes,
     val networks: List<Network>?,
     val shortDescription: String?,
     val fullDescription: String?,
@@ -16,16 +15,6 @@ data class TokenMarketInfo(
     val links: Links?,
     val pricePerformance: PricePerformance?,
 ) {
-    data class PriceChangePercentage(
-        val day: BigDecimal?,
-        val week: BigDecimal?,
-        val month: BigDecimal?,
-        val threeMonths: BigDecimal?,
-        val sixMonths: BigDecimal?,
-        val year: BigDecimal?,
-        val allTime: BigDecimal?,
-    )
-
     data class Network(
         val networkId: String,
         val exchangeable: Boolean,

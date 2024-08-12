@@ -4,7 +4,7 @@ import com.tangem.datasource.api.markets.models.response.TokenMarketChartRespons
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenChart
 
-class TokenChartConverter {
+internal object TokenChartConverter {
 
     fun convert(interval: PriceChangeInterval, value: TokenMarketChartResponse): TokenChart {
         return TokenChart(
