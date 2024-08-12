@@ -46,7 +46,7 @@
   </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Deaktiviere diese Option, wenn du nicht möchtest, dass diese Karte zum Zurücksetzen von Zugangscodes auf anderen Karten in dieser Wallets verwendet wird. Bitte beachte, dass du dann auch den Zugangscode auf dieser Karte nicht zurücksetzen kannst.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Ermöglicht die Verwendung dieser Karte zum Zurücksetzen des Zugangscodes auf anderen Karten in dieser Brieftasche</string>
-  <string name="card_settings_access_code_recovery_title">Zugangscodes wiederherstellen</string>
+  <string name="card_settings_access_code_recovery_title">Zugangspin resetten</string>
   <string name="card_settings_action_sheet_reset">Zurücksetzen</string>
   <string name="card_settings_action_sheet_title">Möchtest du das wirklich tun?</string>
   <string name="card_settings_change_access_code">Zugangscode ändern</string>
@@ -653,6 +653,7 @@
   <string name="staking_details_apr">Effektiver Jahreszins</string>
   <string name="staking_details_available">Verfügbar</string>
   <string name="staking_details_average_reward_rate">Durchschnittliche Belohnungsquote</string>
+  <string name="staking_details_banner_text">Was sit Staking?</string>
   <string name="staking_details_estimated_profit">%s geschätzter Profit</string>
   <string name="staking_details_market_rating">Marktbewertung</string>
   <string name="staking_details_metrics_block_header">Metriken</string>
@@ -668,10 +669,9 @@
   <string name="staking_details_unbonding_period_info">Der Zeitraum, den du nach der Beantragung der Abhebung von Geldern aus dem Staking warten musst, bevor die Token verfügbar werden.</string>
   <string name="staking_details_warmup_period">Aufwärmphase</string>
   <string name="staking_details_warmup_period_info">Die zugewiesene Zeit für die Aktivierung der Teilnahme am Staking.</string>
-  <string name="staking_initial_info_title">Stake %s</string>
   <string name="staking_migrate">Migrieren</string>
   <string name="staking_native">Natives Staking</string>
-  <string name="staking_notification_earn_rewards_text" formatted="false">Mit Staking kannst du %1s verdienen. Deine Staking-Belohnungen kommen alle ~%2s Tage.</string>
+  <string name="staking_notification_earn_rewards_text">Mit Staking kannst du %1$s verdienen. Deine Staking-Belohnungen kommen alle ~%2$s Tage.</string>
   <string name="staking_notification_earn_rewards_title">Verdiene Staking-Belohnungen</string>
   <string name="staking_notification_unstake_text">Die Belohnungen werden sofort nach dem unstaken gestoppt. Der unstakingprozess dauert %s.</string>
   <string name="staking_rebond">Erneut binden</string>
@@ -679,14 +679,26 @@
   <string name="staking_restake_rewards">Belohnungen erneut staken</string>
   <string name="staking_revoke">Widerrufen</string>
   <string name="staking_revote">Neuwahl</string>
+  <string name="staking_reward_claiming_auto">automatisch</string>
+  <string name="staking_reward_claiming_manual">händisch</string>
+  <string name="staking_reward_schedule_block">Block</string>
+  <string name="staking_reward_schedule_day">Tag</string>
+  <string name="staking_reward_schedule_epoch">Epoche</string>
+  <string name="staking_reward_schedule_era">Ära</string>
+  <string name="staking_reward_schedule_hour">Stunde</string>
+  <string name="staking_reward_schedule_month">Monat</string>
+  <string name="staking_reward_schedule_week">Woche</string>
   <string name="staking_rewards">Belohnungen</string>
   <string name="staking_stake_locked">Stake gesperrt</string>
   <string name="staking_stake_more">Mehr staken</string>
+  <string name="staking_title_stake">Stake %s</string>
+  <string name="staking_title_unstake">Staking beenden%s</string>
   <string name="staking_unlocked_locked">gelocktes unlocken</string>
   <string name="staking_unstaked">Unstaken</string>
   <string name="staking_unstaked_footer">Prüfe, was nicht eingesetzt wurde, um dein Vermögen zu beanspruchen</string>
   <string name="staking_unstaking">Staking beenden</string>
   <string name="staking_validator">Validator/ Prüfer</string>
+  <string name="staking_validators">Validatoren</string>
   <string name="staking_vote">Abstimmung</string>
   <string name="staking_vote_locked">Abstimmung gesperrt</string>
   <string name="staking_withdraw">Zurückziehen</string>
@@ -822,7 +834,7 @@
   <string name="warning_backup_errors_title">Aktivierungsfehler</string>
   <string name="warning_beacon_chain_retirement_content">Laut den Entwicklern des BNB-Netzes wird die Unterstützung für den BEP-2-Standard im Juni 2024 enden. Um den Verlust von Vermögenswerten mit diesem Standard zu vermeiden, konvertiere bitte in den BEP-20 Standard. Nutze gerne unseren Swap-Service, um sie auf das BNB Smart Chain Netzwerk zu übertragen.</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain wird abgeschaltet</string>
-  <string name="warning_button_could_be_better">verbesserungswürdig</string>
+  <string name="warning_button_could_be_better">ausbaufähig</string>
   <string name="warning_button_like_it">Gefällt mir</string>
   <string name="warning_button_ok">OK, habe ich verstanden!</string>
   <string name="warning_button_really_cool">Echt toll!</string>

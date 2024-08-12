@@ -594,7 +594,7 @@
   <string name="staking_details_warmup_period">Période d\'échauffement</string>
   <string name="staking_details_warmup_period_info">Le temps imparti pour activer la participation au staking.</string>
   <string name="staking_native">Native staking</string>
-  <string name="staking_notification_earn_rewards_text" formatted="false">Le staking vous permet d\'en gagner %1s. Vos récompenses de staking arrivent tous les ~%2s jours.</string>
+  <string name="staking_notification_earn_rewards_text">Le staking vous permet d\'en gagner %1$s. Vos récompenses de staking arrivent tous les ~%2$s jours.</string>
   <string name="staking_notification_earn_rewards_title">Gagnez des récompenses de staking</string>
   <string name="staking_rewards">Récompenses</string>
   <string name="staking_stake_more">Staker plus</string>
