@@ -295,7 +295,7 @@ private fun MarketChartPreview(
             updateLook {
                 it.copy(
                     xAxisFormatter = { value ->
-                        value.toLong().toTimeFormat(DateTimeFormatters.dateMMMMd)
+                        value.toLong().toTimeFormat(DateTimeFormatters.dateMMMdd)
                     },
                     yAxisFormatter = { value ->
                         value.setScale(3, RoundingMode.HALF_UP).toPlainString()
