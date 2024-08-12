@@ -3,7 +3,11 @@ package com.tangem.data.staking
 import android.util.Base64
 import arrow.core.raise.catch
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionStatus
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toCompressedPublicKey
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.staking.converters.*
@@ -25,6 +29,7 @@ import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
+import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
@@ -231,14 +236,26 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun constructTransaction(transactionId: String): StakingTransaction {
+    override suspend fun constructTransaction(
+        networkId: String,
+        fee: Fee,
+        transactionId: String,
+    ): Pair<StakingTransaction, TransactionData.Compiled> {
         return withContext(dispatchers.io) {
             val transactionResponse = stakeKitApi.constructTransaction(
                 transactionId = transactionId,
                 body = ConstructTransactionRequestBody(),
             )
 
-            transactionConverter.convert(transactionResponse.getOrThrow())
+            val transaction = transactionConverter.convert(transactionResponse.getOrThrow())
+            val unsignedTransaction = transaction.unsignedTransaction ?: error("No unsigned transaction available")
+            val transactionData = TransactionData.Compiled(
+                value = getTransactionDataType(networkId, unsignedTransaction),
+                fee = fee,
+                status = TransactionStatus.Unconfirmed,
+            )
+
+            transaction to transactionData
         }
     }
 
@@ -530,10 +547,24 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override fun isApproveNeeded(cryptoCurrency: CryptoCurrency): Boolean {
+    override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval {
         return when (cryptoCurrency.id.getIntegrationKey()) {
-            Blockchain.Ethereum.id.plus(Blockchain.Polygon.toCoinId()) -> true
-            else -> false
+            Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() -> {
+                StakingApproval.Needed(ETHEREUM_POLYGON_APPROVE_SPENDER)
+            }
+            else -> StakingApproval.Empty
+        }
+    }
+
+    private fun getTransactionDataType(networkId: String, unsignedTransaction: String): TransactionData.Compiled.Data {
+        val blockchain = Blockchain.fromId(networkId)
+        return when (blockchain) {
+            Blockchain.Solana,
+            Blockchain.Cosmos,
+            -> TransactionData.Compiled.Data.Bytes(unsignedTransaction.hexToBytes())
+            Blockchain.Ethereum,
+            -> TransactionData.Compiled.Data.RawString(unsignedTransaction)
+            else -> error("Unsupported blockchain")
         }
     }
 
@@ -578,6 +609,8 @@ internal class DefaultStakingRepository(
         const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
         const val NEAR_INTEGRATION_ID = "near-near-native-staking"
         const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
+
+        const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
 
         // uncomment items as implementation is ready
         val integrationIdMap = mapOf(
