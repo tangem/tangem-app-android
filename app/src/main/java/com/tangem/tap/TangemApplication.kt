@@ -59,7 +59,6 @@ import com.tangem.tap.common.log.TimberFormatStrategy
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
@@ -228,8 +227,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
             )
         }
 
-        initWarningMessagesManager()
-
         loadNativeLibraries()
 
         if (LogConfig.network.blockchainSdkNetwork) {
@@ -376,9 +373,5 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
             getFeedbackEmailUseCase = getFeedbackEmailUseCase,
         )
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
-    }
-
-    private fun initWarningMessagesManager() {
-        store.dispatch(GlobalAction.SetWarningManager(WarningMessagesManager()))
     }
 }
