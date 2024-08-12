@@ -5,6 +5,7 @@ import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.markets.PriceChangeInterval
 import java.math.BigDecimal
@@ -17,9 +18,11 @@ internal data class MarketsTokenDetailsUM(
     val priceChangePercentText: String,
     val priceChangeType: PriceChangeType,
     val selectedInterval: PriceChangeInterval,
+    val markerSet: Boolean,
     val chartState: ChartState,
     val onSelectedIntervalChange: (PriceChangeInterval) -> Unit,
     val infoBottomSheet: TangemBottomSheetConfig,
+    val triggerPriceChange: StateEvent<PriceChangeType>,
     val body: Body,
 ) {
 
