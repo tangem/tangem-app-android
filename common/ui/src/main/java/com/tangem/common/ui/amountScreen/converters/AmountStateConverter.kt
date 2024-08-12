@@ -54,7 +54,7 @@ class AmountStateConverter(
 
         return AmountState.Data(
             walletName = userWallet.name,
-            walletBalance = resourceReference(R.string.send_wallet_balance_format, wrappedList(crypto, fiat)),
+            walletBalance = resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat)),
             tokenIconState = iconStateConverter.convert(status),
             amountTextField = amountFieldConverter.convert(value),
             isPrimaryButtonEnabled = false,
