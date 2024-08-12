@@ -22,7 +22,7 @@ internal class SetConfirmationStateLoadingTransformer(
                 innerState = InnerConfirmationStakingState.ASSENT,
                 feeState = FeeState.Loading,
                 validatorState = ValidatorState.Content(
-                    isClickable = false,
+                    isClickable = true,
                     chosenValidator = chosenValidator,
                     availableValidators = yield.validators,
                 ),
@@ -43,6 +43,7 @@ internal class SetConfirmationStateLoadingTransformer(
                 transactionDoneState = TransactionDoneState.Empty,
                 pendingActions = persistentListOf(),
                 pendingActionInProgress = null,
+                isApprovalNeeded = false,
             ),
         )
     }

@@ -36,6 +36,10 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onActiveStake(activeStake: BalanceState)
 
+    fun showApprovalBottomSheet()
+
+    fun onApprovalClick()
+
     fun onExploreClick()
 
     fun onShareClick()

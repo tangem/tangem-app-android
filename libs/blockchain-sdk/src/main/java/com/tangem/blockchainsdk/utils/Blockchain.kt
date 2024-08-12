@@ -121,6 +121,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "filecoin" -> Blockchain.Filecoin
         "blast" -> Blockchain.Blast
         "blast/test" -> Blockchain.BlastTestnet
+        "cyber" -> Blockchain.Cyber
+        "cyber/test" -> Blockchain.CyberTestnet
         else -> null
     }
 }
@@ -243,9 +245,14 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Filecoin -> "filecoin"
         Blockchain.Blast -> "blast"
         Blockchain.BlastTestnet -> "blast/test"
+        Blockchain.Cyber -> "cyber"
+        Blockchain.CyberTestnet -> "cyber/test"
     }
 }
 
+/**
+ * CoinId is id from tangem backend response coin "id" field
+ */
 @Suppress("ComplexMethod", "LongMethod")
 fun Blockchain.toCoinId(): String {
     return when (this) {
@@ -321,6 +328,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Bittensor -> "bittensor"
         Blockchain.Filecoin -> "filecoin"
         Blockchain.Blast, Blockchain.BlastTestnet -> "blast"
+        Blockchain.Cyber, Blockchain.CyberTestnet -> "cyberconnect"
     }
 }
 

@@ -35,10 +35,11 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
     }
 
     override fun onNeverAskPushPermission(isUserDismissed: Boolean) {
-        if (!isUserDismissedDialog) return
-        isUserDismissedDialog = isUserDismissed
+        if (isUserDismissedDialog != isUserDismissed) return
         viewModelScope.launch {
-            PushNotificationAnalyticEvents.ButtonCancel(AnalyticsParam.ScreensSources.Main)
+            analyticsEventHandler.send(
+                PushNotificationAnalyticEvents.ButtonCancel(AnalyticsParam.ScreensSources.Main),
+            )
             neverRequestPermissionUseCase(PUSH_PERMISSION)
         }
     }

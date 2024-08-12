@@ -52,7 +52,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@Suppress("LargeClass", "LongParameterList")
+@Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val appPreferencesStore: AppPreferencesStore,
@@ -99,8 +99,8 @@ internal class DefaultStakingRepository(
         value = emptyMap<UserWalletId, Boolean>(),
     )
 
-    override fun isStakingSupported(currencyId: String): Boolean {
-        return integrationIdMap.containsKey(currencyId)
+    override fun isStakingSupported(integrationKey: String): Boolean {
+        return integrationIdMap.containsKey(integrationKey)
     }
 
     override suspend fun fetchEnabledYields(refresh: Boolean) {
@@ -153,7 +153,7 @@ internal class DefaultStakingRepository(
             val yields = getEnabledYields() ?: return@withContext StakingAvailability.Unavailable
 
             val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, symbol)
-            val isSupported = isStakingSupported(rawCurrencyId)
+            val isSupported = isStakingSupported(cryptoCurrencyId.getIntegrationKey())
 
             when {
                 prefetchedYield != null && isSupported -> {
@@ -250,10 +250,7 @@ internal class DefaultStakingRepository(
         if (!stakingFeatureToggle.isStakingEnabled) return@withContext
 
         val cryptoCurrency = address.cryptoCurrency
-        val rawCurrencyId =
-            cryptoCurrency.id.rawCurrencyId ?: error("Staking custom tokens is not available")
-
-        val integrationId = integrationIdMap[rawCurrencyId] ?: return@withContext
+        val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()] ?: return@withContext
 
         cacheRegistry.invokeOnExpire(
             key = getYieldBalancesKey(userWalletId),
@@ -284,7 +281,7 @@ internal class DefaultStakingRepository(
             send(YieldBalance.Empty)
         } else {
             launch(dispatchers.io) {
-                val integrationId = integrationIdMap[address.cryptoCurrency.id.rawCurrencyId]
+                val integrationId = integrationIdMap[address.cryptoCurrency.id.getIntegrationKey()]
                     ?: error("Could not get integrationId")
                 stakingBalanceStore.get(integrationId)
                     .collectLatest {
@@ -317,7 +314,7 @@ internal class DefaultStakingRepository(
         } else {
             fetchSingleYieldBalance(userWalletId, address)
 
-            val integrationId = integrationIdMap[address.cryptoCurrency.id.rawCurrencyId]
+            val integrationId = integrationIdMap[address.cryptoCurrency.id.getIntegrationKey()]
                 ?: error("Could not get integrationId")
             val result = stakingBalanceStore.getSyncOrNull(integrationId) ?: return@withContext YieldBalance.Error
             yieldBalanceConverter.convert(
@@ -347,8 +344,7 @@ internal class DefaultStakingRepository(
                         addresses
                             .mapNotNull { networkAddress ->
                                 val cryptoCurrency = networkAddress.cryptoCurrency
-                                val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: error("Currency raw id is null")
-                                val integrationId = integrationIdMap[rawCurrencyId]
+                                val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()]
 
                                 if (integrationId != null) {
                                     networkAddress.address to integrationId
@@ -534,6 +530,13 @@ internal class DefaultStakingRepository(
         }
     }
 
+    override fun isApproveNeeded(cryptoCurrency: CryptoCurrency): Boolean {
+        return when (cryptoCurrency.id.getIntegrationKey()) {
+            Blockchain.Ethereum.id.plus(Blockchain.Polygon.toCoinId()) -> true
+            else -> false
+        }
+    }
+
     private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {
         return yields.find { it.token.coinGeckoId == currencyId && it.token.symbol == symbol }
     }
@@ -559,13 +562,15 @@ internal class DefaultStakingRepository(
 
     private fun getYieldBalancesKey(userWalletId: UserWalletId) = "yield_balance_${userWalletId.stringValue}"
 
+    private fun CryptoCurrency.ID.getIntegrationKey(): String = rawNetworkId.plus(rawCurrencyId)
+
     private companion object {
         const val YIELDS_STORE_KEY = "yields"
 
         const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
         const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
+        const val ETHEREUM_POLYGON_INTEGRATION_ID = "ethereum-matic-native-staking"
         const val POLKADOT_INTEGRATION_ID = "polkadot-dot-validator-staking"
-        const val ETHEREUM_INTEGRATION_ID = "ethereum-matic-native-staking"
         const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
         const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
         const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
@@ -576,17 +581,17 @@ internal class DefaultStakingRepository(
 
         // uncomment items as implementation is ready
         val integrationIdMap = mapOf(
-            Blockchain.Solana.toCoinId() to SOLANA_INTEGRATION_ID,
-            Blockchain.Cosmos.toCoinId() to COSMOS_INTEGRATION_ID,
-            // Blockchain.Polkadot.toCoinId() to POLKADOT_INTEGRATION_ID,
-            // Blockchain.Polygon.toCoinId() to ETHEREUM_INTEGRATION_ID,
-            // Blockchain.Avalanche.toCoinId() to AVALANCHE_INTEGRATION_ID,
-            // Blockchain.Tron.toCoinId() to TRON_INTEGRATION_ID,
-            // Blockchain.Cronos.toCoinId() to CRONOS_INTEGRATION_ID,
-            // Blockchain.BSC.toCoinId() to BINANCE_INTEGRATION_ID,
-            // Blockchain.Kava.toCoinId() to KAVA_INTEGRATION_ID,
-            // Blockchain.Near.toCoinId() to NEAR_INTEGRATION_ID,
-            // Blockchain.Tezos.toCoinId() to TEZOS_INTEGRATION_ID,
+            Blockchain.Solana.run { id + toCoinId() } to SOLANA_INTEGRATION_ID,
+            Blockchain.Cosmos.run { id + toCoinId() } to COSMOS_INTEGRATION_ID,
+            Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
+            // Blockchain.Polkadot.run { id + toCoinId() } to POLKADOT_INTEGRATION_ID,
+            // Blockchain.Avalanche.run { id + toCoinId() } to AVALANCHE_INTEGRATION_ID,
+            // Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
+            // Blockchain.Cronos.run { id + toCoinId() } to CRONOS_INTEGRATION_ID,
+            // Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
+            // Blockchain.Kava.run { id + toCoinId() } to KAVA_INTEGRATION_ID,
+            // Blockchain.Near.run { id + toCoinId() } to NEAR_INTEGRATION_ID,
+            // Blockchain.Tezos.run { id + toCoinId() } to TEZOS_INTEGRATION_ID,
         )
     }
 }
