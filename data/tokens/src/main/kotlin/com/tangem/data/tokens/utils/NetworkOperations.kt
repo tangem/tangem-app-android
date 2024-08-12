@@ -24,7 +24,7 @@ internal fun getNetwork(
     return Network(
         id = Network.ID(blockchain.id),
         backendId = blockchain.toNetworkId(),
-        name = blockchain.fullName,
+        name = blockchain.getNetworkName(),
         isTestnet = blockchain.isTestnet(),
         derivationPath = getNetworkDerivationPath(blockchain, extraDerivationPath, derivationStyleProvider),
         currencySymbol = blockchain.currency,
