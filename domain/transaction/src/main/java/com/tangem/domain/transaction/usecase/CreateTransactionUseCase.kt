@@ -26,17 +26,15 @@ class CreateTransactionUseCase(
         txExtras: TransactionExtras? = null,
         hash: String? = null,
     ) = Either.catch {
-        requireNotNull(
-            transactionRepository.createTransaction(
-                amount = amount,
-                fee = fee,
-                memo = memo,
-                destination = destination,
-                userWalletId = userWalletId,
-                network = network,
-                txExtras = txExtras,
-                hash = hash,
-            ),
-        ) { "Failed to create transaction" }
+        transactionRepository.createTransaction(
+            amount = amount,
+            fee = fee,
+            memo = memo,
+            destination = destination,
+            userWalletId = userWalletId,
+            network = network,
+            txExtras = txExtras,
+            hash = hash,
+        )
     }
 }
