@@ -25,6 +25,13 @@ object BigDecimalFormatter {
     private const val FIAT_MARKET_DEFAULT_DIGITS = 2
     private const val FIAT_MARKET_EXTENDED_DIGITS = 6
 
+    private val bigDecimal01 = BigDecimal("0.1")
+    private val bigDecimal001 = BigDecimal("0.01")
+    private val bigDecimal0001 = BigDecimal("0.001")
+    private val bigDecimal00001 = BigDecimal("0.0001")
+    private val bigDecimal000001 = BigDecimal("0.00001")
+    private val bigDecimal0000001 = BigDecimal("0.000001")
+
     fun formatCryptoAmount(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: String,
@@ -161,6 +168,28 @@ object BigDecimalFormatter {
         val formatter = NumberFormat.getCurrencyInstance(locale).apply {
             currency = formatterCurrency
             maximumFractionDigits = digits
+            minimumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
+            roundingMode = RoundingMode.HALF_UP
+        }
+
+        return formatter.format(fiatAmount)
+            .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+    }
+
+    fun formatFiatPriceUncapped(
+        fiatAmount: BigDecimal?,
+        fiatCurrencyCode: String,
+        fiatCurrencySymbol: String,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        if (fiatAmount == null) return EMPTY_BALANCE_SIGN
+        val formatterCurrency = getCurrency(fiatCurrencyCode)
+
+        val decimals = getProperFiatPriceDecimals(fiatAmount)
+
+        val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+            currency = formatterCurrency
+            maximumFractionDigits = decimals
             minimumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
             roundingMode = RoundingMode.HALF_UP
         }
@@ -330,4 +359,18 @@ object BigDecimalFormatter {
     }
 
     private fun BigDecimal.isLessThanThreshold() = this > BigDecimal.ZERO && this < FIAT_FORMAT_THRESHOLD
+
+    @Suppress("MagicNumber")
+    fun getProperFiatPriceDecimals(price: BigDecimal): Int {
+        return when {
+            price >= BigDecimal.ONE -> 2
+            price >= bigDecimal01 -> 3
+            price >= bigDecimal001 -> 4
+            price >= bigDecimal0001 -> 6
+            price >= bigDecimal00001 -> 8
+            price >= bigDecimal000001 -> 10
+            price >= bigDecimal0000001 -> 12
+            else -> price.stripTrailingZeros().scale()
+        }
+    }
 }
