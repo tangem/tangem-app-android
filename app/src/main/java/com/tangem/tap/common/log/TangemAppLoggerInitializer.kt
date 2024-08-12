@@ -20,25 +20,29 @@ class TangemAppLoggerInitializer(
 
     /** Initialize */
     fun initialize() {
-        if (BuildConfig.LOG_ENABLED) {
+        if (IS_LOG_ENABLED) {
             Logger.addLogAdapter(AndroidLogAdapter(TimberFormatStrategy()))
-            Timber.plant(tree = createTimberTree(isDebug = true))
-        } else {
-            Timber.plant(tree = createTimberTree(isDebug = false))
         }
+
+        Timber.plant(tree = createTimberTree())
     }
 
-    private fun createTimberTree(isDebug: Boolean): Timber.Tree {
+    private fun createTimberTree(): Timber.Tree {
         return object : Timber.DebugTree() {
             override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-                if (isDebug) {
+                if (IS_LOG_ENABLED) {
                     Logger.log(priority, tag, message, t)
                 }
 
-                if (priority == Log.ERROR || priority == Log.INFO) {
+                if (PERMITTED_PRIORITY.contains(priority)) {
                     settingsRepository.saveLogMessage(message)
                 }
             }
         }
+    }
+
+    private companion object {
+        val IS_LOG_ENABLED: Boolean = BuildConfig.LOG_ENABLED
+        val PERMITTED_PRIORITY = listOf(Log.ERROR, Log.INFO)
     }
 }
