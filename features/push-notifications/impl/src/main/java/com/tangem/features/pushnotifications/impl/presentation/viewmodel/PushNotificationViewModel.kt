@@ -30,7 +30,7 @@ internal class PushNotificationViewModel @Inject constructor(
 
     override fun onNeverRequest() {
         analyticHandler.send(
-            PushNotificationAnalyticEvents.ButtonCancel(AnalyticsParam.ScreensSources.Stories),
+            PushNotificationAnalyticEvents.ButtonLater(AnalyticsParam.ScreensSources.Stories),
         )
         viewModelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
