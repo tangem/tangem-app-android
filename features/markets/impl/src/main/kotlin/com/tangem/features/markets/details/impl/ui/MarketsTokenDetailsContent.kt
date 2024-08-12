@@ -1,10 +1,13 @@
 package com.tangem.features.markets.details.impl.ui
 
+import androidx.compose.animation.Animatable
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -23,6 +26,9 @@ import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.event.EventEffect
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -134,11 +140,12 @@ private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) 
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Column {
-            Text(
-                text = state.priceText,
-                style = TangemTheme.typography.head,
-                color = TangemTheme.colors.text.primary1,
+        Column(
+            Modifier.weight(1f),
+        ) {
+            TokenPriceText(
+                price = state.priceText,
+                triggerPriceChange = state.triggerPriceChange,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
                 Text(
@@ -155,13 +162,45 @@ private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) 
         }
         SpacerW4()
         CoinIcon(
-            modifier = Modifier.size(TangemTheme.dimens.size48),
+            modifier = Modifier.requiredSize(TangemTheme.dimens.size48),
             url = state.iconUrl,
             alpha = 1f,
             colorFilter = null,
             fallbackResId = R.drawable.ic_custom_token_44,
         )
     }
+}
+
+@Composable
+private fun TokenPriceText(
+    price: String,
+    triggerPriceChange: StateEvent<PriceChangeType>,
+    modifier: Modifier = Modifier,
+) {
+    val growColor = TangemTheme.colors.text.accent
+    val fallColor = TangemTheme.colors.text.warning
+    val generalColor = TangemTheme.colors.text.primary1
+
+    val color = remember { Animatable(generalColor) }
+
+    EventEffect(triggerPriceChange) {
+        val nextColor = when (it) {
+            PriceChangeType.UP,
+            -> growColor
+            PriceChangeType.DOWN -> fallColor
+            PriceChangeType.NEUTRAL -> return@EventEffect
+        }
+
+        color.animateTo(nextColor, snap())
+        color.animateTo(generalColor, tween(durationMillis = 500))
+    }
+
+    Text(
+        modifier = modifier,
+        text = price,
+        color = color.value,
+        style = TangemTheme.typography.head,
+    )
 }
 
 @Composable
@@ -224,9 +263,9 @@ private fun Preview() {
             modifier = Modifier.background(TangemTheme.colors.background.tertiary),
             state = MarketsTokenDetailsUM(
                 tokenName = "Token Name",
-                priceText = "Price",
-                dateTimeText = stringReference("Date Time"),
-                priceChangePercentText = "Price Change",
+                priceText = "$0.00000000324",
+                dateTimeText = stringReference("Today"),
+                priceChangePercentText = "52.00%",
                 iconUrl = "",
                 priceChangeType = PriceChangeType.UP,
                 chartState = MarketsTokenDetailsUM.ChartState(
@@ -244,6 +283,8 @@ private fun Preview() {
                     onDismissRequest = {},
                     content = TangemBottomSheetConfigContent.Empty,
                 ),
+                markerSet = false,
+                triggerPriceChange = consumedEvent(),
             ),
             onHeaderSizeChange = {},
             onBackClick = {},
