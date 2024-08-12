@@ -314,6 +314,7 @@ private fun MarketChartPreview(
     TangemThemePreview {
         val growingColor = TangemTheme.colors.icon.accent
         val fallingColor = TangemTheme.colors.icon.warning
+        val neutralColor = TangemTheme.colors.icon.informative
 
         val chartState = rememberMarketChartState(
             dataProducer = dataProducer,
@@ -324,7 +325,7 @@ private fun MarketChartPreview(
                 when (it) {
                     MarketChartLook.Type.Growing -> growingColor
                     MarketChartLook.Type.Falling -> fallingColor
-                    MarketChartLook.Type.Neutral -> fallingColor
+                    MarketChartLook.Type.Neutral -> neutralColor
                 }
             },
         )
@@ -383,11 +384,11 @@ private fun MarketChartPreview(
                     dataProducer.runTransaction {
                         updateLook {
                             it.copy(
-                                type = if (it.type == MarketChartLook.Type.Growing) {
-                                    MarketChartLook.Type.Falling
-                                } else {
-                                    MarketChartLook.Type.Growing
-                                },
+                                type = when(it.type) {
+                                    MarketChartLook.Type.Growing -> MarketChartLook.Type.Falling
+                                    MarketChartLook.Type.Falling -> MarketChartLook.Type.Neutral
+                                    MarketChartLook.Type.Neutral -> MarketChartLook.Type.Growing
+                                }
                             )
                         }
                     }
