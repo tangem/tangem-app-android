@@ -30,10 +30,10 @@ fun TokenMarket.toSerializable(): TokenMarketSerializable {
         symbol = symbol,
         marketCap = marketCap,
         tokenQuotes = TokenMarketSerializable.Quotes(
-            currentPrice = tokenQuotes.currentPrice,
-            h24Percent = tokenQuotes.h24Percent(),
-            weekPercent = tokenQuotes.weekPercent(),
-            monthPercent = tokenQuotes.monthPercent(),
+            currentPrice = tokenQuotesShort.currentPrice,
+            h24Percent = tokenQuotesShort.h24ChangePercent,
+            weekPercent = tokenQuotesShort.weekChangePercent,
+            monthPercent = tokenQuotesShort.monthChangePercent,
         ),
         imageUrl = imageUrlLarge,
     )
