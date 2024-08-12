@@ -4,7 +4,6 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.staking.impl.R
 
 internal sealed class StakingNotification(val config: NotificationConfig) {
@@ -55,8 +54,7 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
         ) : Warning(
             title = resourceReference(R.string.staking_notification_earn_rewards_title),
             subtitle = resourceReference(
-                R.string.staking_notification_earn_rewards_text,
-                wrappedList(currencyName, days),
+                R.string.common_error, // FIXME
             ),
         )
     }
