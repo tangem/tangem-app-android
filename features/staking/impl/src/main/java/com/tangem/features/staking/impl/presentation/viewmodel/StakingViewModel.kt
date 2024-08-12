@@ -11,6 +11,9 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -36,9 +39,13 @@ import com.tangem.features.staking.impl.presentation.state.transformers.amount.A
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountCurrencyChangeStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountMaxValueStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountPasteDismissStateTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetApprovalBottomSheetInProgressTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.approval.ShowApprovalBottomSheetTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.*
@@ -64,14 +71,16 @@ internal class StakingViewModel @Inject constructor(
     private val submitHashUseCase: SubmitHashUseCase,
     private val isStakeMoreAvailableUseCase: IsStakeMoreAvailableUseCase,
     private val stakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
+    private val isApproveNeededUseCase: IsApproveNeededUseCase,
+    private val clipboardManager: ClipboardManager,
+    private val vibratorHapticManager: VibratorHapticManager,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
 
     val uiState: StateFlow<StakingUiState> = stateController.uiState
     val value: StakingUiState get() = uiState.value
 
-    var stakingStateRouter: StakingStateRouter by Delegates.notNull()
-        private set
+    private var stakingStateRouter: StakingStateRouter by Delegates.notNull()
 
     private val cryptoCurrencyId: CryptoCurrency.ID =
         savedStateHandle.get<Bundle>(AppRoute.Staking.CRYPTO_CURRENCY_ID_KEY)
@@ -91,6 +100,10 @@ internal class StakingViewModel @Inject constructor(
     private var innerRouter: InnerStakingRouter by Delegates.notNull()
     private var userWallet: UserWallet by Delegates.notNull()
     private var appCurrency: AppCurrency by Delegates.notNull()
+
+    private var isApprovalNeeded: Boolean = false
+
+    private var approvalJobHolder: JobHolder = JobHolder()
 
     init {
         subscribeOnSelectedAppCurrency()
@@ -254,6 +267,29 @@ internal class StakingViewModel @Inject constructor(
         onNextClick(actionType, activeStake.pendingActions)
     }
 
+    override fun showApprovalBottomSheet() {
+        stateController.update(
+            ShowApprovalBottomSheetTransformer(
+                appCurrencyProvider = Provider { appCurrency },
+                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+            ) {
+                stateController.update(DismissBottomSheetStateTransformer())
+            },
+        )
+    }
+
+    override fun onApprovalClick() {
+        viewModelScope.launch {
+            stateController.update(
+                SetApprovalBottomSheetInProgressTransformer {
+                    stateController.update(DismissBottomSheetStateTransformer())
+                },
+            )
+
+            // todo staking polygon
+        }.saveIn(approvalJobHolder)
+    }
+
     override fun onExploreClick() {
         val confirmationDataState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
         val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
@@ -265,12 +301,25 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onShareClick() {
-        // TODO add hash to clipboard and send analytics event
+        val confirmationDataState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
+        val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
+        val txUrl = transactionDoneState?.txUrl
+
+        if (txUrl != null) {
+            vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
+            clipboardManager.setText(text = txUrl)
+        }
+
+        // TODO staking [REDACTED_TASK_KEY]
     }
 
     fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
         innerRouter = router
         this.stakingStateRouter = stateRouter
+    }
+
+    private fun setupApprovalNeeded() {
+        isApprovalNeeded = isApproveNeededUseCase(cryptoCurrencyStatus.currency).getOrElse { false }
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -286,6 +335,8 @@ internal class StakingViewModel @Inject constructor(
             getCryptoCurrencyStatusSyncUseCase(userWalletId, cryptoCurrencyId).fold(
                 ifRight = {
                     cryptoCurrencyStatus = it
+
+                    setupApprovalNeeded()
 
                     val networkId = cryptoCurrencyStatus.currency.network.id
                     val isStakeMoreAvailable = isStakeMoreAvailableUseCase(networkId)
