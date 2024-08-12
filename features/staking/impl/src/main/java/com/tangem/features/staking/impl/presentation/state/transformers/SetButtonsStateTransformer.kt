@@ -135,27 +135,35 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
                 }
             }
 
-            StakingStep.Confirmation -> {
-                if (confirmationState is StakingStates.ConfirmationState.Data) {
-                    if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
-                        resourceReference(R.string.common_close)
-                    } else {
-                        when (actionType) {
-                            StakingActionCommonType.ENTER -> resourceReference(R.string.common_stake)
-                            StakingActionCommonType.EXIT -> resourceReference(R.string.common_unstake)
-                            StakingActionCommonType.PENDING_OTHER,
-                            StakingActionCommonType.PENDING_REWARDS,
-                            -> getPendingActionTitle(confirmationState.pendingActions.firstOrNull()?.type)
-                        }
-                    }
-                } else {
-                    resourceReference(R.string.common_close)
-                }
-            }
+            StakingStep.Confirmation -> getConfirmationButtonText()
             StakingStep.Validators -> resourceReference(R.string.common_continue)
             StakingStep.Amount,
             StakingStep.RewardsValidators,
             -> resourceReference(R.string.common_next)
+        }
+    }
+
+    private fun StakingUiState.getConfirmationButtonText(): TextReference {
+        return if (confirmationState is StakingStates.ConfirmationState.Data) {
+            if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
+                resourceReference(R.string.common_close)
+            } else {
+                when (actionType) {
+                    StakingActionCommonType.ENTER -> {
+                        if (confirmationState.isApprovalNeeded) {
+                            resourceReference(R.string.give_permission_title)
+                        } else {
+                            resourceReference(R.string.common_stake)
+                        }
+                    }
+                    StakingActionCommonType.EXIT -> resourceReference(R.string.common_unstake)
+                    StakingActionCommonType.PENDING_OTHER,
+                    StakingActionCommonType.PENDING_REWARDS,
+                    -> getPendingActionTitle(confirmationState.pendingActions.firstOrNull()?.type)
+                }
+            }
+        } else {
+            resourceReference(R.string.common_close)
         }
     }
 
@@ -169,18 +177,27 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
             StakingStep.Validators,
             StakingStep.Amount,
             -> clickIntents.onNextClick()
-            StakingStep.Confirmation -> {
-                if (confirmationState is StakingStates.ConfirmationState.Data) {
-                    if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
-                        clickIntents.onBackClick()
-                    } else {
-                        clickIntents.onActionClick(confirmationState.pendingActions.firstOrNull())
-                    }
+            StakingStep.Confirmation -> onConfirmationClick()
+            StakingStep.RewardsValidators -> Unit
+        }
+    }
+
+    private fun StakingUiState.onConfirmationClick() {
+        if (confirmationState is StakingStates.ConfirmationState.Data) {
+            if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
+                clickIntents.onBackClick()
+            } else {
+                val isEnterAction = actionType == StakingActionCommonType.ENTER
+                val isApproveNeeded = confirmationState.isApprovalNeeded
+
+                if (isEnterAction && isApproveNeeded) {
+                    clickIntents.showApprovalBottomSheet()
                 } else {
-                    clickIntents.onBackClick()
+                    clickIntents.onActionClick(confirmationState.pendingActions.firstOrNull())
                 }
             }
-            StakingStep.RewardsValidators -> Unit
+        } else {
+            clickIntents.onBackClick()
         }
     }
 
