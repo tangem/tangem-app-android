@@ -93,10 +93,12 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
         PrimaryButtonIconEnd(
             text = stringResource(id = R.string.common_approve),
             iconResId = R.drawable.ic_tangem_24,
+            showProgress = data.approveButton.loading,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens.spacing16),
             onClick = data.approveButton.onClick,
+            enabled = data.approveButton.enabled,
         )
 
         SpacerH12()
@@ -107,6 +109,7 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens.spacing16),
             onClick = content.onCancel,
+            enabled = data.cancelButton.enabled,
         )
 
         SpacerH16()
@@ -151,7 +154,7 @@ private fun AmountItem(
     currency: String,
     approveType: ApproveType,
     approveItems: ImmutableList<ApproveType>,
-    onChangeApproveType: (ApproveType) -> Unit,
+    onChangeApproveType: ((ApproveType) -> Unit)?,
 ) {
     var isExpandSelector by remember { mutableStateOf(false) }
     var amountSize by remember { mutableStateOf(IntSize.Zero) }
@@ -208,8 +211,10 @@ private fun AmountItem(
             isExpanded = isExpandSelector,
             onDismiss = { isExpandSelector = false },
             onItemClick = { approveType ->
-                isExpandSelector = false
-                onChangeApproveType.invoke(approveType)
+                onChangeApproveType?.let {
+                    isExpandSelector = false
+                    onChangeApproveType.invoke(approveType)
+                }
             },
             items = approveItems,
             selectedType = approveType,
