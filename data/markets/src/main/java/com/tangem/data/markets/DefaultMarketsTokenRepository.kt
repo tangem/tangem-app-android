@@ -19,9 +19,6 @@ internal class DefaultMarketsTokenRepository(
     private val dispatcherProvider: CoroutineDispatcherProvider,
 ) : MarketsTokenRepository {
 
-    private val tokenListConverter = TokenMarketListConverter()
-    private val tokenChartConverter = TokenChartConverter()
-
     private fun createTokenMarketsFetcher(firstBatchSize: Int, nextBatchSize: Int) = LimitOffsetBatchFetcher(
         prefetchDistance = firstBatchSize,
         batchSize = nextBatchSize,
@@ -65,7 +62,7 @@ internal class DefaultMarketsTokenRepository(
                 val last = res.tokens.size < request.limit
 
                 return BatchFetchResult.Success(
-                    data = tokenListConverter.convert(res),
+                    data = TokenMarketListConverter.convert(res),
                     last = last,
                     empty = res.tokens.isEmpty(),
                 )
@@ -105,7 +102,7 @@ internal class DefaultMarketsTokenRepository(
             interval = interval.toRequestParam(),
         )
 
-        return tokenChartConverter.convert(interval, response.getOrThrow())
+        return TokenChartConverter.convert(interval, response.getOrThrow())
     }
 
     override suspend fun getTokenInfo(
@@ -119,6 +116,17 @@ internal class DefaultMarketsTokenRepository(
             language = languageCode,
         )
 
-        return TokenMarketInfoConverter().convert(response.getOrThrow())
+        return TokenMarketInfoConverter.convert(response.getOrThrow())
+    }
+
+    override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String): TokenQuotes {
+// [REDACTED_TODO_COMMENT]
+        val response = marketsApi.getCoinMarketData(
+            currency = fiatCurrencyCode,
+            coinId = tokenId,
+            language = "en",
+        )
+
+        return TokenMarketInfoConverter.convert(response.getOrThrow()).quotes
     }
 }

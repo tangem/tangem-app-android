@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.GetTokenMarketInfoUseCase
 import com.tangem.domain.markets.GetTokenPriceChartUseCase
+import com.tangem.domain.markets.GetTokenQuotesUseCase
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import dagger.Module
 import dagger.Provides
@@ -32,5 +33,11 @@ object MarketsDomainModule {
     @Singleton
     fun provideGetTokenMarketInfoUseCase(marketsTokenRepository: MarketsTokenRepository): GetTokenMarketInfoUseCase {
         return GetTokenMarketInfoUseCase(marketsTokenRepository = marketsTokenRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetTokenQuotesUseCase(marketsTokenRepository: MarketsTokenRepository): GetTokenQuotesUseCase {
+        return GetTokenQuotesUseCase(marketsTokenRepository = marketsTokenRepository)
     }
 }

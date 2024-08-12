@@ -1,7 +1,6 @@
 package com.tangem.features.markets.details.impl.ui.components
 
 import android.content.res.Configuration
-import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text

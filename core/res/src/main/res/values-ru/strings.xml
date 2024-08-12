@@ -47,7 +47,7 @@
   </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Отключите эту опцию, если не хотите, чтобы эта карта использовалась для сброса кодов доступа на другие карты этого кошелька. Обратите внимание, сброс кода также не будет доступен на этой карте.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Использовать эту карту для сброса кода доступа на других картах в этом кошельке</string>
-  <string name="card_settings_access_code_recovery_title">Восстановление кода доступа</string>
+  <string name="card_settings_access_code_recovery_title">Восстановление доступа</string>
   <string name="card_settings_action_sheet_reset">Сбросить</string>
   <string name="card_settings_action_sheet_title">Вы уверены, что хотите это сделать?</string>
   <string name="card_settings_change_access_code">Смена кода доступа</string>
@@ -128,6 +128,7 @@
   <string name="common_passphrase">Парольная фраза</string>
   <string name="common_paste">Вставить</string>
   <string name="common_range">%1$s-%2$s</string>
+  <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Подробнее</string>
   <string name="common_receive">Получить</string>
   <string name="common_reject">Отклонить</string>
@@ -628,7 +629,6 @@
   <string name="staking_active_footer">Для завершения стейкинга нажмите сюда</string>
   <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_claim_unstaked">Забрать средства</string>
-  <string name="staking_details_annual_percentage_rate">APY</string>
   <string name="staking_details_annual_percentage_rate_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_available">Доступно</string>
@@ -650,13 +650,26 @@
   <string name="staking_details_warmup_period_info">Время, необходимое для начала процесса стейкинга и активации процесса начисления наград</string>
   <string name="staking_migrate">Переместить</string>
   <string name="staking_native">Нативный стейкинг</string>
-  <string name="staking_notification_earn_rewards_text">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый %2$s</string>
+  <string name="staking_notification_earn_rewards_text_period_day">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый день.</string>
+  <string name="staking_notification_earn_rewards_text_period_hour">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый час.</string>
+  <string name="staking_notification_earn_rewards_text_period_month">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый месяц.</string>
+  <string name="staking_notification_earn_rewards_text_period_week">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждую неделю.</string>
   <string name="staking_notification_earn_rewards_title">Получите награду за стейкинг</string>
   <string name="staking_notification_unstake_text">Награда перестанет начисляться сразу после завершения стейкинга. Процесс завершения длится %s.</string>
   <string name="staking_restake">Повторный стейкинг</string>
   <string name="staking_restake_rewards">Застейкать вознаграждения</string>
   <string name="staking_revoke">Отозвать</string>
   <string name="staking_revote">Переголосовать</string>
+  <string name="staking_reward_claiming_auto">Автоматически</string>
+  <string name="staking_reward_claiming_manual">Вручную</string>
+  <string name="staking_reward_schedule_block">Блок</string>
+  <string name="staking_reward_schedule_day">День</string>
+  <string name="staking_reward_schedule_each_day">Каждый день</string>
+  <string name="staking_reward_schedule_epoch">Эпоха</string>
+  <string name="staking_reward_schedule_era">Эра</string>
+  <string name="staking_reward_schedule_hour">Час</string>
+  <string name="staking_reward_schedule_month">Месяц</string>
+  <string name="staking_reward_schedule_week">Неделя</string>
   <string name="staking_rewards">Вознаграждения</string>
   <string name="staking_stake_more">Застейкать еще</string>
   <string name="staking_title_stake">Застейкать %s</string>

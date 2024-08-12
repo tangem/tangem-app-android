@@ -42,8 +42,9 @@ internal class PricePerformanceConverter(
 
     private fun BigDecimal?.convert(): String {
         val currency = appCurrency()
-        return BigDecimalFormatter.formatCompactFiatAmount(
-            amount = this,
+
+        return BigDecimalFormatter.formatFiatPriceUncapped(
+            fiatAmount = this,
             fiatCurrencyCode = currency.code,
             fiatCurrencySymbol = currency.symbol,
         )

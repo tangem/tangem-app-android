@@ -48,17 +48,17 @@ internal class MarketsTokenItemConverter(
             ratingPosition = new.marketRating?.toString(),
             marketCap = ifChanged(prev.marketCap, new.marketCap, prevUI.marketCap) { new.getMarketCap() },
             iconUrl = new.imageUrlLarge,
-            price = ifChanged(prev = prev.tokenQuotes, new = new.tokenQuotes, prevR = prevUI.price) {
+            price = ifChanged(prev = prev.tokenQuotesShort, new = new.tokenQuotesShort, prevR = prevUI.price) {
                 new.getCurrentPrice(
                     prev = prev,
                 )
             },
             trendPercentText = ifChanged(
-                prev.tokenQuotes,
-                new.tokenQuotes,
+                prev.tokenQuotesShort,
+                new.tokenQuotesShort,
                 prevUI.trendPercentText,
             ) { new.getTrendPercent() },
-            trendType = ifChanged(prev.tokenQuotes, new.tokenQuotes, prevUI.trendType) { new.getTrendType() },
+            trendType = ifChanged(prev.tokenQuotesShort, new.tokenQuotesShort, prevUI.trendType) { new.getTrendType() },
             chardData = ifChanged(prev.tokenCharts, new.tokenCharts, prevUI.chardData) { new.getChartData() },
         )
     }
@@ -79,16 +79,16 @@ internal class MarketsTokenItemConverter(
     }
 
     private fun TokenMarket.getCurrentPrice(prev: TokenMarket? = null): MarketsListItemUM.Price {
-        val prevPrice = prev?.tokenQuotes?.currentPrice
+        val prevPrice = prev?.tokenQuotesShort?.currentPrice
 
-        val priceText = BigDecimalFormatter.formatFiatAmountUncapped(
-            fiatAmount = tokenQuotes.currentPrice,
+        val priceText = BigDecimalFormatter.formatFiatPriceUncapped(
+            fiatAmount = tokenQuotesShort.currentPrice,
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
         )
 
         val changeType = if (prevPrice != null) {
-            if (tokenQuotes.currentPrice > prevPrice) {
+            if (tokenQuotesShort.currentPrice > prevPrice) {
                 PriceChangeType.UP
             } else {
                 PriceChangeType.DOWN
@@ -122,9 +122,9 @@ internal class MarketsTokenItemConverter(
 
     private fun TokenMarket.getTrendType(): PriceChangeType {
         val percent = when (currentTrendInterval) {
-            TrendInterval.H24 -> tokenQuotes.h24Percent()
-            TrendInterval.D7 -> tokenQuotes.weekPercent()
-            TrendInterval.M1 -> tokenQuotes.monthPercent()
+            TrendInterval.H24 -> tokenQuotesShort.h24ChangePercent
+            TrendInterval.D7 -> tokenQuotesShort.weekChangePercent
+            TrendInterval.M1 -> tokenQuotesShort.monthChangePercent
         }.setScale(2, RoundingMode.UP)
 
         return when (percent.compareTo(BigDecimal.ZERO)) {
@@ -136,9 +136,9 @@ internal class MarketsTokenItemConverter(
 
     private fun TokenMarket.getTrendPercent(): String {
         val percent = when (currentTrendInterval) {
-            TrendInterval.H24 -> tokenQuotes.h24Percent()
-            TrendInterval.D7 -> tokenQuotes.weekPercent()
-            TrendInterval.M1 -> tokenQuotes.monthPercent()
+            TrendInterval.H24 -> tokenQuotesShort.h24ChangePercent
+            TrendInterval.D7 -> tokenQuotesShort.weekChangePercent
+            TrendInterval.M1 -> tokenQuotesShort.monthChangePercent
         }
 
         return BigDecimalFormatter.formatPercent(
