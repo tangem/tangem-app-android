@@ -5,11 +5,20 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.joda.time.DateTime
 
 internal class DefaultSettingsRepository(
     private val appPreferencesStore: AppPreferencesStore,
+    dispatchers: CoroutineDispatcherProvider,
 ) : SettingsRepository {
+
+    private val scope = CoroutineScope(dispatchers.io)
+    private val mutex = Mutex()
 
     override suspend fun shouldShowSaveUserWalletScreen(): Boolean {
         return appPreferencesStore.getSyncOrDefault(
@@ -36,13 +45,17 @@ internal class DefaultSettingsRepository(
         )
     }
 
-    override suspend fun updateAppLogs(message: String) {
+    override fun saveLogMessage(message: String) {
         val newLogs = DateTime.now().millis.toString() to message
 
-        appPreferencesStore.editData { preferences ->
-            val savedLogs = preferences.getObjectMap<String>(PreferencesKeys.APP_LOGS_KEY)
+        scope.launch {
+            mutex.withLock {
+                appPreferencesStore.editData { preferences ->
+                    val savedLogs = preferences.getObjectMap<String>(PreferencesKeys.APP_LOGS_KEY)
 
-            preferences.setObjectMap(key = PreferencesKeys.APP_LOGS_KEY, value = savedLogs + newLogs)
+                    preferences.setObjectMap(key = PreferencesKeys.APP_LOGS_KEY, value = savedLogs + newLogs)
+                }
+            }
         }
     }
 
