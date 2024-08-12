@@ -190,7 +190,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 )
                 DerivationPathSelectorType.BLOCKCHAIN -> SelectorItem.TitleWithSubtitle(
                     title = TextReference.Str(derivationPath),
-                    subtitle = TextReference.Str(blockchain.fullName),
+                    subtitle = TextReference.Str(blockchain.getNetworkName()),
                     blockchain = blockchain,
                 )
             }
@@ -204,7 +204,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 )
             } else {
                 SelectorItem.Title(
-                    title = TextReference.Str(blockchain.fullName),
+                    title = TextReference.Str(blockchain.getNetworkName()),
                     blockchain = blockchain,
                 )
             }
@@ -501,7 +501,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
         return buildSet {
             if (!isSupportedToken && !isContractAddressFieldEmpty) {
-                add(AddCustomTokenWarning.UnsupportedToken(networkSelectorValue.fullName))
+                add(AddCustomTokenWarning.UnsupportedToken(networkSelectorValue.getNetworkName()))
             }
             if (isCustomTokenAlreadyAdded()) {
                 add(AddCustomTokenWarning.TokenAlreadyAdded)

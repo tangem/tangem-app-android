@@ -44,7 +44,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private fun getInitialRoute(): AppRoute = AppRoute.Initial
 
     private fun child(route: AppRoute, context: ComponentContext): Child {
-        return childFactory.createChild(route, { childByContext(context) })
+        return childFactory.createChild(route) { childByContext(context) }
     }
 
     @AssistedFactory

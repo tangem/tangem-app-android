@@ -126,7 +126,6 @@
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Paste</string>
   <string name="common_range">%1$s-%2$s</string>
-  <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
   <string name="common_reject">Reject</string>
@@ -680,7 +679,6 @@
   <string name="staking_reward_claiming_manual">Manual</string>
   <string name="staking_reward_schedule_block">Block</string>
   <string name="staking_reward_schedule_day">Day</string>
-  <string name="staking_reward_schedule_each_day">Each day</string>
   <string name="staking_reward_schedule_epoch">Epoch</string>
   <string name="staking_reward_schedule_era">Era</string>
   <string name="staking_reward_schedule_hour">Hour</string>
