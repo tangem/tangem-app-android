@@ -26,7 +26,7 @@ internal class StakingStateController @Inject constructor() {
     val uiState: StateFlow<StakingUiState> get() = mutableUiState.asStateFlow()
 
     private val buttonsTransformer = SetButtonsStateTransformer()
-    private val titleTransformer = SetTitleTransformer()
+    private val titleTransformer = SetTitleTransformer
 
     fun update(function: (StakingUiState) -> StakingUiState) {
         mutableUiState.update(function = function)

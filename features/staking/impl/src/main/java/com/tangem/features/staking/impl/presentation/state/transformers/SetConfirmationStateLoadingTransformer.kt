@@ -38,7 +38,7 @@ internal class SetConfirmationStateLoadingTransformer(
     }
 
     private fun getNotifications(prevState: StakingUiState): ImmutableList<StakingNotification> {
-        persistentListOf(
+        return persistentListOf(
             if (prevState.actionType == StakingActionCommonType.EXIT) {
                 StakingNotification.Warning.Unstake(
                     cooldownPeriodDays = yield.metadata.cooldownPeriod.days,
