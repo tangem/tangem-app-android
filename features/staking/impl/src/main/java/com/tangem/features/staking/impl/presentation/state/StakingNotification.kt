@@ -50,12 +50,12 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
         ),
     ) {
         data class EarnRewards(
-            val subtitleStringId: Int,
+            val subtitleResourceId: Int,
             val currencyName: String,
         ) : Warning(
             title = resourceReference(R.string.staking_notification_earn_rewards_title),
             subtitle = resourceReference(
-                subtitleStringId,
+                subtitleResourceId,
                 wrappedList(currencyName),
             ),
         )

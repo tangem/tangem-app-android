@@ -35,7 +35,7 @@ internal class SetConfirmationStateLoadingTransformer(
                     } else {
                         StakingNotification.Warning.EarnRewards(
                             currencyName = yield.token.name,
-                            subtitleStringId = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
+                            subtitleResourceId = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
                         )
                     },
                 ),

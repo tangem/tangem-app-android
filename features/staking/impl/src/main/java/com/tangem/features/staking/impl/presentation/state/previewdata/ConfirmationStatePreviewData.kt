@@ -82,7 +82,7 @@ internal object ConfirmationStatePreviewData {
         notifications = persistentListOf(
             StakingNotification.Warning.EarnRewards(
                 currencyName = "Solana",
-                subtitleStringId = R.string.staking_notification_earn_rewards_text_period_day,
+                subtitleResourceId = R.string.staking_notification_earn_rewards_text_period_day,
             ),
         ),
         transactionDoneState = TransactionDoneState.Empty,
