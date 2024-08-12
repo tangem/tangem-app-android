@@ -16,14 +16,14 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.common.ui.R
+import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.rows.SelectorRowItem
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
-import com.tangem.common.ui.R
-import com.tangem.common.ui.amountScreen.utils.getCryptoReference
-import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.staking.impl.presentation.state.FeeState
 import java.math.BigDecimal
@@ -53,7 +53,14 @@ internal fun StakingFeeBlock(feeState: FeeState) {
                     SelectorRowItem(
                         titleRes = title,
                         iconRes = icon,
-                        preDot = getCryptoReference(feeAmount, feeState.isFeeApproximate),
+                        preDot = stringReference(
+                            BigDecimalFormatter.formatCryptoFeeAmount(
+                                cryptoAmount = feeAmount?.value,
+                                cryptoCurrency = feeAmount?.currencySymbol.orEmpty(),
+                                decimals = feeAmount?.decimals ?: 0,
+                                canBeLower = feeState.isFeeApproximate,
+                            ),
+                        ),
                         postDot = if (feeState.isFeeConvertibleToFiat) {
                             getFiatReference(feeAmount?.value, feeState.rate, feeState.appCurrency)
                         } else {
