@@ -15,9 +15,10 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
+@Suppress("TooManyFunctions")
 interface StakingRepository {
 
-    fun isStakingSupported(currencyId: String): Boolean
+    fun isStakingSupported(integrationKey: String): Boolean
 
     suspend fun fetchEnabledYields(refresh: Boolean)
 
@@ -75,4 +76,7 @@ interface StakingRepository {
 
     /** Returns whether additional staking is possible if there is already active staking */
     fun isStakeMoreAvailable(networkId: Network.ID): Boolean
+
+    /** Returns whether approve is needed before staking */
+    fun isApproveNeeded(cryptoCurrency: CryptoCurrency): Boolean
 }

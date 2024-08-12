@@ -2,11 +2,13 @@ package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
-import com.tangem.domain.staking.model.*
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
-import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.transaction.*
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -237,4 +239,6 @@ class MockStakingRepository : StakingRepository {
     }
 
     override fun isStakeMoreAvailable(networkId: Network.ID): Boolean = true
+
+    override fun isApproveNeeded(cryptoCurrency: CryptoCurrency): Boolean = true
 }
