@@ -1,10 +1,7 @@
 package com.tangem.core.ui.components.marketprice
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +23,11 @@ fun PriceChangeInPercent(
     modifier: Modifier = Modifier,
     textStyle: TextStyle = TangemTheme.typography.body2,
 ) {
+    if (valueInPercent.isBlank()) {
+        Box(modifier)
+        return
+    }
+
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
