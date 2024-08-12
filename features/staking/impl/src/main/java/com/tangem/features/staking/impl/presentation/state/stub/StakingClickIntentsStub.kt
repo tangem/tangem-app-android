@@ -38,6 +38,10 @@ object StakingClickIntentsStub : StakingClickIntents {
 
     override fun openRewardsValidators() {}
 
+    override fun showApprovalBottomSheet() {}
+
+    override fun onApprovalClick() {}
+
     override fun onExploreClick() {}
 
     override fun onShareClick() {}
