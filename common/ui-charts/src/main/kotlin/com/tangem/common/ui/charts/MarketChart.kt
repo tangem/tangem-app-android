@@ -324,6 +324,7 @@ private fun MarketChartPreview(
                 when (it) {
                     MarketChartLook.Type.Growing -> growingColor
                     MarketChartLook.Type.Falling -> fallingColor
+                    MarketChartLook.Type.Neutral -> fallingColor
                 }
             },
         )

@@ -73,6 +73,7 @@ object DateTimeFormatters {
         return formatter.print(date)
     }
 
+    // TODO add Locale provider based on Context.configuration
     fun getBestFormatterBySkeleton(skeleton: String): DateTimeFormatter {
         return DateTimeFormatterBuilder()
             .appendPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), skeleton))

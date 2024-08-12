@@ -2,6 +2,7 @@ package com.tangem.features.markets.details.impl.model.converters
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketInfo
@@ -43,6 +44,14 @@ internal class InsightsConverter(
                     liquidityChange = liquidityChange?.month,
                     buyPressureChange = buyPressureChange?.month,
                 ),
+                onInfoClick = {
+                    onInfoClick(
+                        InfoBottomSheetContent(
+                            title = resourceReference(R.string.markets_token_details_insights),
+                            body = stringReference("//TODO"),
+                        ),
+                    )
+                },
             )
         }
     }
@@ -57,6 +66,7 @@ internal class InsightsConverter(
             InfoPointUM(
                 title = resourceReference(R.string.markets_token_details_experienced_buyers),
                 value = experiencedBuyerChange.convertChange(),
+                change = experiencedBuyerChange.changeType(),
                 onInfoClick = {
                     onInfoClick(
                         InfoBottomSheetContent(
@@ -69,6 +79,7 @@ internal class InsightsConverter(
             InfoPointUM(
                 title = resourceReference(R.string.markets_token_details_buy_pressure),
                 value = buyPressureChange.convertChange(isFiatValue = true),
+                change = buyPressureChange.changeType(),
                 onInfoClick = {
                     onInfoClick(
                         InfoBottomSheetContent(
@@ -81,6 +92,7 @@ internal class InsightsConverter(
             InfoPointUM(
                 title = resourceReference(R.string.markets_token_details_holders),
                 value = holdersChange.convertChange(),
+                change = holdersChange.changeType(),
                 onInfoClick = {
                     onInfoClick(
                         InfoBottomSheetContent(
@@ -93,6 +105,7 @@ internal class InsightsConverter(
             InfoPointUM(
                 title = resourceReference(R.string.markets_token_details_liquidity),
                 value = liquidityChange.convertChange(),
+                change = liquidityChange.changeType(),
                 onInfoClick = {
                     onInfoClick(
                         InfoBottomSheetContent(
@@ -103,6 +116,15 @@ internal class InsightsConverter(
                 },
             ),
         )
+    }
+
+    private fun BigDecimal?.changeType(): InfoPointUM.ChangeType? {
+        return when {
+            this == null -> null
+            this > BigDecimal.ZERO -> InfoPointUM.ChangeType.UP
+            this < BigDecimal.ZERO -> InfoPointUM.ChangeType.DOWN
+            else -> null
+        }
     }
 
     private fun BigDecimal?.convertChange(isFiatValue: Boolean = false): String {
