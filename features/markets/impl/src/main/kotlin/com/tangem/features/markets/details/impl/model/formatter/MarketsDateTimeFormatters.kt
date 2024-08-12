@@ -18,7 +18,7 @@ internal object MarketsDateTimeFormatters {
     private const val WEEK_MILLIS = 7L * H24_MILLIS
 
     private val dateTimeMMMFormatter by lazy {
-        DateTimeFormatters.getBestFormatterBySkeleton("dd MMM hh:mm")
+        DateTimeFormatters.getBestFormatterBySkeleton("dd MMM Hm")
     }
 
     private val dateFormatter = DateTimeFormatters.dateDDMMYYYY

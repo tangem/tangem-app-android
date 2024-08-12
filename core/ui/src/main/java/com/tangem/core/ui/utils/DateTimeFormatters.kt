@@ -15,8 +15,11 @@ object DateTimeFormatters {
      * If pattern contains "a", it means time is in 12 hour format.
      * [Documentation](https://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html)
      */
+    val is12HourFormat by lazy {
+        DateTimeFormat.patternForStyle("SS", Locale.getDefault()).contains("a")
+    }
+
     val timeFormatter: DateTimeFormatter by lazy {
-        val is12HourFormat = DateTimeFormat.patternForStyle("SS", Locale.getDefault()).contains("a")
         if (is12HourFormat) {
             DateTimeFormatterBuilder()
                 .appendClockhourOfHalfday(1)
@@ -58,7 +61,7 @@ object DateTimeFormatters {
      * In API version < 24, there may be some problems with getting the best date and time format pattern.
      */
     val dateMMMdd: DateTimeFormatter by lazy {
-        getBestFormatterBySkeleton("dd MMM")
+        getBestFormatterBySkeleton("MMM dd")
     }
 
     val dateYYYY: DateTimeFormatter by lazy {
@@ -73,11 +76,20 @@ object DateTimeFormatters {
         return formatter.print(date)
     }
 
-    // TODO add Locale provider based on Context.configuration
     fun getBestFormatterBySkeleton(skeleton: String): DateTimeFormatter {
+        val skeletonWithLocale = skeleton.replaceHourLetters()
+
         return DateTimeFormatterBuilder()
-            .appendPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), skeleton))
+            .appendPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), skeletonWithLocale))
             .toFormatter()
             .withLocale(Locale.getDefault())
+    }
+
+    private fun String.replaceHourLetters(): String {
+        return if (is12HourFormat) {
+            this.replace('H', 'h').replace('k', 'K')
+        } else {
+            this.replace('h', 'H').replace('K', 'k')
+        }
     }
 }
