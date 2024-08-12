@@ -88,6 +88,7 @@
   <string name="common_copy">Kopieren</string>
   <string name="common_copy_address">Adresse kopieren</string>
   <string name="common_create">Erstellen</string>
+  <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Eigen</string>
   <plurals name="common_days">
     <item quantity="one">%d tag</item>
@@ -639,7 +640,6 @@
   <string name="send_transaction_success">Die Transaktion wurde erfolgreich signiert und an den Blockchain-Knoten gesendet. Die Walletbilanz wird aktualisiert</string>
   <string name="send_tron_account_activation_error">%1$s ist ein Vermögenswert im Tron-Netzwerk. Um die Gebühr zu berechnen und eine Transaktion durchzuführen, musst du etwas Tron (TRX) auf deinem Konto einzahlen.</string>
   <string name="send_validation_invalid_address">Ungültige Adresse</string>
-  <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Transaktion gesendet</string>
   <string name="settings_card_settings_footer">Bereite das Scannen der Karte vor, die du einrichten möchtest.</string>
   <string name="settings_forget_wallet">Entferne diese Wallet</string>
