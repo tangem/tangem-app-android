@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.tangem.common.ui.amountScreen.AmountScreenContent
+import com.tangem.common.ui.bottomsheet.permission.GiveTxPermissionBottomSheet
+import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.common.ui.navigationButtons.NavigationButtonsBlock
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -64,6 +66,7 @@ fun StakingBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
     if (bottomSheetConfig == null) return
     when (bottomSheetConfig.content) {
         is StakingInfoBottomSheetConfig -> StakingInfoBottomSheet(bottomSheetConfig)
+        is GiveTxPermissionBottomSheetConfig -> GiveTxPermissionBottomSheet(bottomSheetConfig)
     }
 }
 
