@@ -130,6 +130,7 @@
   <string name="common_passphrase">Парольна фраза</string>
   <string name="common_paste">Вставити</string>
   <string name="common_range">%1$s-%2$s</string>
+  <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Детальніше</string>
   <string name="common_receive">Отримати</string>
   <string name="common_reject">Відхилити</string>
@@ -282,7 +283,7 @@
   <string name="feedback_subject_support">Звернення в підтримку</string>
   <string name="feedback_subject_support_tangem">Звернення в підтримку Tangem</string>
   <string name="feedback_subject_tx_failed">Не вдається відправити транзакцію</string>
-  <string name="give_permission_current_transaction">Поточна транзакція</string>
+  <string name="give_permission_current_transaction">Транзакція</string>
   <string name="give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="give_permission_policy_type_footer">Вкажіть ліміт доступу для обраного токена</string>
   <string name="give_permission_rows_amount">Кількість %s</string>
@@ -347,7 +348,7 @@
   <string name="markets_available_networks">Доступні мережі</string>
   <string name="markets_common_my_portfolio">Моє портфоліо</string>
   <string name="markets_common_title">Маркет</string>
-  <string name="markets_generate_addresses_notification">Щоб згенерувати адреси для обраних мереж, потрібно відсканувати свою картку Tangem.</string>
+  <string name="markets_generate_addresses_notification">Щоб згенерувати адреси для обраних мереж, потрібно відсканувати свою картку Tangem</string>
   <string name="markets_loading_error_title">Не вдалося завантажити дані...</string>
   <string name="markets_quick_actions">Швидкі дії</string>
   <string name="markets_search_result_title">Результат</string>
@@ -682,7 +683,10 @@
   <string name="staking_details_warmup_period_info">Відведений час для активації участі в стейкінгу.</string>
   <string name="staking_migrate">Перемістити</string>
   <string name="staking_native">Нативний стейкінг</string>
-  <string name="staking_notification_earn_rewards_text">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг надходять кожні ~%2$s днів.</string>
+  <string name="staking_notification_earn_rewards_text_period_day">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються щодня.</string>
+  <string name="staking_notification_earn_rewards_text_period_hour">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються кожну годину.</string>
+  <string name="staking_notification_earn_rewards_text_period_month">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються щомісяця.</string>
+  <string name="staking_notification_earn_rewards_text_period_week">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються щотиждня.</string>
   <string name="staking_notification_earn_rewards_title">Отримуйте винагороду за стейкінг</string>
   <string name="staking_notification_unstake_text">Винагороди припиняють нараховуватися одразу після того, як ви знімаєте ставку. Процес зняття займає %s.</string>
   <string name="staking_rebond">Зʼєднати ще раз</string>
