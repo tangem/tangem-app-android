@@ -2,9 +2,10 @@ package com.tangem.data.markets.converters
 
 import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
 import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.markets.TokenQuotes
 import com.tangem.utils.converter.Converter
 
-internal class TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, TokenMarketInfo> {
+internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, TokenMarketInfo> {
 
     override fun convert(value: TokenMarketInfoResponse): TokenMarketInfo {
         return with(value) {
@@ -12,8 +13,7 @@ internal class TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, Tok
                 id = id,
                 name = name,
                 symbol = symbol,
-                currentPrice = currentPrice,
-                priceChangePercentage = priceChangePercentage?.convert(),
+                quotes = getQuotes(),
                 networks = networks?.convert(),
                 shortDescription = shortDescription,
                 fullDescription = fullDescription,
@@ -25,15 +25,16 @@ internal class TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, Tok
         }
     }
 
-    private fun TokenMarketInfoResponse.PriceChangePercentage.convert(): TokenMarketInfo.PriceChangePercentage {
-        return TokenMarketInfo.PriceChangePercentage(
-            day = day,
-            week = week,
-            month = month,
-            threeMonths = threeMonths,
-            sixMonths = sixMonths,
-            year = year,
-            allTime = allTime,
+    private fun TokenMarketInfoResponse.getQuotes(): TokenQuotes {
+        return TokenQuotes(
+            currentPrice = currentPrice,
+            h24ChangePercent = priceChangePercentage?.day?.movePointLeft(2),
+            weekChangePercent = priceChangePercentage?.week?.movePointLeft(2),
+            monthChangePercent = priceChangePercentage?.month?.movePointLeft(2),
+            m3ChangePercent = priceChangePercentage?.threeMonths?.movePointLeft(2),
+            m6ChangePercent = priceChangePercentage?.sixMonths?.movePointLeft(2),
+            yearChangePercent = priceChangePercentage?.year?.movePointLeft(2),
+            allTimeChangePercent = priceChangePercentage?.allTime?.movePointLeft(2),
         )
     }
 
