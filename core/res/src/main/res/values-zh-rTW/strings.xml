@@ -9,9 +9,6 @@
   <string name="alert_failed_to_send_transaction_message">原因：%s</string>
   <string name="alert_failed_to_send_transaction_title">無法發送交易</string>
   <string name="alert_manage_tokens_unsupported_message">此卡不支持%1$s網路上的代幣因為韌體限制</string>
-  <string name="alert_negative_app_rate_sent_message">感謝您的反饋。我們會盡快回复</string>
-  <string name="alert_negative_app_rate_sent_title">你的建議已送出</string>
-  <string name="alert_troubleshooting_scan_card_message">請嘗試完全按照動畫中顯示的方式點擊卡片或請求支持</string>
   <string name="alert_troubleshooting_scan_card_title">有困難在掃描卡上嗎？</string>
   <string name="alert_unsupported_card">此卡不適用於此app</string>
   <string name="app_settings_enable_biometrics_description">轉到設置以在 Tangem App 中啟用生物識別身份驗證</string>
@@ -56,7 +53,6 @@
   <string name="common_create">創造</string>
   <string name="common_delete">刪除</string>
   <string name="common_disabled">禁用</string>
-  <string name="common_disconnect">斷開連接</string>
   <string name="common_done">完成</string>
   <string name="common_enable">允許</string>
   <string name="common_enabled">啟用</string>
@@ -69,7 +65,6 @@
   <string name="common_origin_card">主卡片</string>
   <string name="common_reject">拒絕</string>
   <string name="common_rename">重新命名</string>
-  <string name="common_retry">重試</string>
   <string name="common_save_changes">保存設置</string>
   <string name="common_search">搜索</string>
   <string name="common_search_tokens">搜尋代幣</string>
@@ -88,7 +83,6 @@
   <string name="common_transactions">交易</string>
   <string name="common_understand">我了解</string>
   <string name="common_unreachable">無法觸達</string>
-  <string name="common_warning">警告</string>
   <string name="common_yes">是</string>
   <string name="contract_address_copied_message">已複製代幣地址</string>
   <string name="currency_subtitle_expanded">支持的網路</string>
@@ -121,7 +115,6 @@
   <string name="details_row_title_currency">App Currency</string>
   <string name="details_row_title_issuer">發行人</string>
   <string name="details_row_title_signed_hashes">簽署</string>
-  <string name="details_security_management_warning">如果您忘記密碼，您將無法使用您的資金。無法恢復代碼</string>
   <string name="details_title">更多</string>
   <string name="disclaimer_error_loading">檢查您的網路連接或切換到其他網絡</string>
   <string name="disclaimer_title">服務條款</string>
