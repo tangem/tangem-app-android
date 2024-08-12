@@ -86,5 +86,6 @@ internal object ConfirmationStatePreviewData {
         ),
         transactionDoneState = TransactionDoneState.Empty,
         pendingActions = persistentListOf(),
+        isApprovalNeeded = false,
     )
 }
