@@ -14,7 +14,6 @@ import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runCatching
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
@@ -86,57 +85,49 @@ class GetCurrencyWarningsUseCase(
         currencyStatus: CryptoCurrencyStatus,
     ): Flow<CryptoCurrencyWarning?> {
         val currency = currencyStatus.currency
-        val cryptoStatuses = operations.getCurrenciesStatusesSync()
+        val cryptoCurrencyStatuses = operations.getCurrenciesStatusesSync().getOrNull() ?: emptyList()
         val promoBanner = promoRepository.getOkxPromoBanner()
+        val pairs = swapRepository.getPairsOnly(
+            LeastTokenInfo(
+                contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
+                network = currency.network.backendId,
+            ),
+            cryptoCurrencyStatuses.map { it.currency },
+        ).pairs
         return combine(
             showSwapPromoTokenUseCase().conflate(),
             flowOf(marketCryptoCurrencyRepository.isExchangeable(userWalletId, currency)).conflate(),
         ) { shouldShowSwapPromo, isExchangeable ->
             promoBanner ?: return@combine null
-            val showPromo = promoBanner.isActive && shouldShowSwapPromo
-            if (showPromo && isExchangeable && currencyStatus.value !is CryptoCurrencyStatus.Unreachable) {
-                cryptoStatuses.fold(
-                    ifLeft = { null },
-                    ifRight = { cryptoCurrencyStatuses ->
-                        val pairs = runCatching(dispatchers.io) {
-                            swapRepository.getPairsOnly(
-                                LeastTokenInfo(
-                                    contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
-                                    network = currency.network.backendId,
-                                ),
-                                cryptoCurrencyStatuses.map { it.currency },
-                            )
-                        }.getOrNull()?.pairs ?: emptyList()
-
-                        val filteredCurrencies = cryptoCurrencyStatuses.filterNot {
-                            it.currency.id == currency.id
+            val showPromoBannerActive = promoBanner.isActive && shouldShowSwapPromo
+            if (showPromoBannerActive && isExchangeable && currencyStatus.value !is CryptoCurrencyStatus.Unreachable) {
+                val filteredCurrencies = cryptoCurrencyStatuses.filterNot {
+                    it.currency.id == currency.id
+                }
+                val currencyPairs = pairs.filter {
+                    it.from.network == currency.network.backendId ||
+                        it.to.network == currency.network.backendId
+                }
+                val showPromoForPair = currencyPairs.any { pair ->
+                    val availablePair = if (currencyStatus.value.amount.isNullOrZero()) {
+                        filteredCurrencies.filterNot { it.value.amount.isNullOrZero() }
+                    } else {
+                        filteredCurrencies
+                    }
+                    availablePair
+                        .any {
+                            it.currency.network.backendId == pair.to.network ||
+                                it.currency.network.backendId == pair.from.network
                         }
-                        val currencyPairs = pairs.filter {
-                            it.from.network == currency.network.backendId ||
-                                it.to.network == currency.network.backendId
-                        }
-                        val showPromo = currencyPairs.any { pair ->
-                            val availablePair = if (currencyStatus.value.amount.isNullOrZero()) {
-                                filteredCurrencies.filterNot { it.value.amount.isNullOrZero() }
-                            } else {
-                                filteredCurrencies
-                            }
-                            availablePair
-                                .any {
-                                    it.currency.network.backendId == pair.to.network ||
-                                        it.currency.network.backendId == pair.from.network
-                                }
-                        }
-                        if (showPromo) {
-                            CryptoCurrencyWarning.SwapPromo(
-                                startDateTime = promoBanner.bannerState.timeline.start,
-                                endDateTime = promoBanner.bannerState.timeline.end,
-                            )
-                        } else {
-                            null
-                        }
-                    },
-                )
+                }
+                if (showPromoForPair) {
+                    CryptoCurrencyWarning.SwapPromo(
+                        startDateTime = promoBanner.bannerState.timeline.start,
+                        endDateTime = promoBanner.bannerState.timeline.end,
+                    )
+                } else {
+                    null
+                }
             } else {
                 null
             }
