@@ -2,8 +2,10 @@ package com.tangem.data.staking.converters
 
 import com.tangem.datasource.api.stakekit.models.response.model.AddressArgumentDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
+import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
 import com.tangem.domain.staking.model.stakekit.AddressArgument
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.Yield.Metadata.RewardSchedule
 import com.tangem.utils.converter.Converter
 
 class YieldConverter(
@@ -127,18 +129,16 @@ class YieldConverter(
         }
     }
 
-    private fun convertRewardSchedule(
-        rewardTypeDTO: YieldDTO.MetadataDTO.RewardScheduleDTO,
-    ): Yield.Metadata.RewardSchedule {
+    private fun convertRewardSchedule(rewardTypeDTO: RewardScheduleDTO): RewardSchedule {
         return when (rewardTypeDTO) {
-            YieldDTO.MetadataDTO.RewardScheduleDTO.BLOCK -> Yield.Metadata.RewardSchedule.BLOCK
-            YieldDTO.MetadataDTO.RewardScheduleDTO.WEEK -> Yield.Metadata.RewardSchedule.WEEK
-            YieldDTO.MetadataDTO.RewardScheduleDTO.HOUR -> Yield.Metadata.RewardSchedule.HOUR
-            YieldDTO.MetadataDTO.RewardScheduleDTO.DAY -> Yield.Metadata.RewardSchedule.DAY
-            YieldDTO.MetadataDTO.RewardScheduleDTO.MONTH -> Yield.Metadata.RewardSchedule.MONTH
-            YieldDTO.MetadataDTO.RewardScheduleDTO.ERA -> Yield.Metadata.RewardSchedule.ERA
-            YieldDTO.MetadataDTO.RewardScheduleDTO.EPOCH -> Yield.Metadata.RewardSchedule.EPOCH
-            else -> Yield.Metadata.RewardSchedule.UNKNOWN
+            RewardScheduleDTO.BLOCK -> RewardSchedule.BLOCK
+            RewardScheduleDTO.WEEK -> RewardSchedule.WEEK
+            RewardScheduleDTO.HOUR -> RewardSchedule.HOUR
+            RewardScheduleDTO.DAY -> RewardSchedule.DAY
+            RewardScheduleDTO.MONTH -> RewardSchedule.MONTH
+            RewardScheduleDTO.ERA -> RewardSchedule.ERA
+            RewardScheduleDTO.EPOCH -> RewardSchedule.EPOCH
+            else -> RewardSchedule.UNKNOWN
         }
     }
 

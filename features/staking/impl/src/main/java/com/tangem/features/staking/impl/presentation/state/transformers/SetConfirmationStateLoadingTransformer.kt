@@ -26,8 +26,7 @@ internal class SetConfirmationStateLoadingTransformer(
                     chosenValidator = chosenValidator,
                     availableValidators = yield.validators,
                 ),
-                notifications =
-                persistentListOf(
+                notifications = persistentListOf(
                     if (prevState.actionType == StakingActionCommonType.EXIT) {
                         StakingNotification.Warning.Unstake(
                             cooldownPeriodDays = yield.metadata.cooldownPeriod.days,

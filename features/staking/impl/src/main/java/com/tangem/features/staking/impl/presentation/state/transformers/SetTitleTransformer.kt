@@ -7,7 +7,7 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.utils.transformer.Transformer
 
-internal class SetTitleTransformer : Transformer<StakingUiState> {
+internal object SetTitleTransformer : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         val actionType = prevState.actionType
