@@ -5,6 +5,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.utils.transformer.Transformer
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 internal class SetConfirmationStateLoadingTransformer(
@@ -26,18 +27,7 @@ internal class SetConfirmationStateLoadingTransformer(
                     chosenValidator = chosenValidator,
                     availableValidators = yield.validators,
                 ),
-                notifications = persistentListOf(
-                    if (prevState.actionType == StakingActionCommonType.EXIT) {
-                        StakingNotification.Warning.Unstake(
-                            cooldownPeriodDays = yield.metadata.cooldownPeriod.days,
-                        )
-                    } else {
-                        StakingNotification.Warning.EarnRewards(
-                            currencyName = yield.token.name,
-                            subtitleResourceId = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
-                        )
-                    },
-                ),
+                notifications = getNotifications(prevState),
                 footerText = "",
                 transactionDoneState = TransactionDoneState.Empty,
                 pendingActions = persistentListOf(),
@@ -45,6 +35,21 @@ internal class SetConfirmationStateLoadingTransformer(
                 isApprovalNeeded = false,
             ),
         )
+    }
+
+    private fun getNotifications(prevState: StakingUiState): ImmutableList<StakingNotification> {
+        persistentListOf(
+            if (prevState.actionType == StakingActionCommonType.EXIT) {
+                StakingNotification.Warning.Unstake(
+                    cooldownPeriodDays = yield.metadata.cooldownPeriod.days,
+                )
+            } else {
+                StakingNotification.Warning.EarnRewards(
+                    currencyName = yield.token.name,
+                    subtitleResourceId = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
+                )
+            },
+        ),
     }
 
     private fun getEarnRewardsPeriod(rewardSchedule: Yield.Metadata.RewardSchedule): Int {
