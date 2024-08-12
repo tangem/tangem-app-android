@@ -35,7 +35,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             getUpdateContentAction(currentState, wallets, selectedWallet)
         }
 
-        Timber.d("Resolved action: $action")
+        Timber.i("Resolved action: $action")
 
         return action
     }
