@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.common.extensions.hexToBytes
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -18,15 +18,20 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.staking.*
+import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
+import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionType
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
+import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
@@ -40,6 +45,7 @@ import com.tangem.features.staking.impl.presentation.state.transformers.amount.A
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountMaxValueStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountPasteDismissStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetApprovalBottomSheetInProgressTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetConfirmationStateAssentApprovalTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.approval.ShowApprovalBottomSheetTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
 import com.tangem.utils.Provider
@@ -51,6 +57,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -64,6 +71,7 @@ internal class StakingViewModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getStakingTransactionUseCase: GetStakingTransactionUseCase,
+    private val getConstructedStakingTransactionUseCase: GetConstructedStakingTransactionUseCase,
     private val estimateGasUseCase: EstimateGasUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -71,6 +79,9 @@ internal class StakingViewModel @Inject constructor(
     private val submitHashUseCase: SubmitHashUseCase,
     private val isStakeMoreAvailableUseCase: IsStakeMoreAvailableUseCase,
     private val stakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
+    private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
+    private val getAllowanceUseCase: GetAllowanceUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
     private val isApproveNeededUseCase: IsApproveNeededUseCase,
     private val clipboardManager: ClipboardManager,
     private val vibratorHapticManager: VibratorHapticManager,
@@ -101,7 +112,7 @@ internal class StakingViewModel @Inject constructor(
     private var userWallet: UserWallet by Delegates.notNull()
     private var appCurrency: AppCurrency by Delegates.notNull()
 
-    private var isApprovalNeeded: Boolean = false
+    private var stakingApproval: StakingApproval = StakingApproval.Empty
 
     private var approvalJobHolder: JobHolder = JobHolder()
 
@@ -121,7 +132,7 @@ internal class StakingViewModel @Inject constructor(
         }
         stakingStateRouter.onNextClick()
         if (isAssentState()) {
-            estimateGas(pendingActions)
+            getFee(pendingActions)
         }
     }
 
@@ -139,6 +150,9 @@ internal class StakingViewModel @Inject constructor(
                     value.confirmationState as? StakingStates.ConfirmationState.Data ?: error("No confirmation state")
                 val validatorState = confirmationState.validatorState as? ValidatorState.Content
                     ?: error("No validator provided")
+                val amountState = value.amountState as? AmountState.Data ?: error("No amount provided")
+                val amountValue = amountState.amountTextField.cryptoAmount.value ?: error("No amount value")
+                val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: error("No fee provided")
 
                 val stakingTransaction = getStakingTransactionUseCase(
                     userWalletId = userWalletId,
@@ -146,8 +160,7 @@ internal class StakingViewModel @Inject constructor(
                     params = ActionParams(
                         actionCommonType = value.actionType,
                         integrationId = yield.id,
-                        amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
-                            ?: error("No amount provided"),
+                        amount = amountValue,
                         address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
                             ?: error("No available address"),
                         validatorAddress = validatorState.chosenValidator.address,
@@ -159,19 +172,27 @@ internal class StakingViewModel @Inject constructor(
                     error(it)
                 }
 
-                stakingTransaction.unsignedTransaction?.let {
-                    sendStakingTransaction(
-                        transactionId = stakingTransaction.id,
-                        gasEstimate = stakingTransaction.gasEstimate ?: error("No gas estimate available"),
-                        txData = TransactionData.Compiled(value = it.hexToBytes()),
-                        pendingActionList = confirmationState.pendingActions,
-                    )
-                } ?: error("No unsigned transaction available")
+                stakingTransaction
+                    .filterNot { it.type == StakingTransactionType.APPROVAL }
+                    .forEach { transaction ->
+                        val (constructedTransaction, transactionData) = getConstructedStakingTransactionUseCase(
+                            networkId = cryptoCurrencyStatus.currency.network.id.value,
+                            fee = fee,
+                            transactionId = transaction.id,
+                        ).getOrNull() ?: error("No constructed transaction")
+
+                        sendStakingTransaction(
+                            transactionId = constructedTransaction.id,
+                            gasEstimate = constructedTransaction.gasEstimate ?: error("No gas estimate available"),
+                            txData = transactionData,
+                            pendingActionList = confirmationState.pendingActions,
+                        )
+                    }
             }
         }
     }
 
-    private fun estimateGas(pendingActions: ImmutableList<PendingAction>) {
+    private fun getFee(pendingActions: ImmutableList<PendingAction>) {
         viewModelScope.launch {
             stateController.update(
                 SetConfirmationStateLoadingTransformer(
@@ -184,36 +205,97 @@ internal class StakingViewModel @Inject constructor(
             val validatorState = confirmationState.validatorState as? ValidatorState.Content
                 ?: error("No validator provided")
 
-            val pendingAction = pendingActions.firstOrNull()
-            val stakingGasEstimate = estimateGasUseCase(
-                userWalletId = userWalletId,
-                network = cryptoCurrencyStatus.currency.network,
-                params = ActionParams(
-                    actionCommonType = value.actionType,
-                    integrationId = yield.id,
-                    amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
-                        ?: error("No amount provided"),
-                    address = cryptoCurrencyValue.networkAddress?.defaultAddress?.value
-                        ?: error("No available address"),
-                    validatorAddress = validatorState.chosenValidator.address,
-                    token = yield.token,
-                    passthrough = pendingAction?.passthrough,
-                    type = pendingAction?.type,
-                ),
-            ).getOrElse {
-                stateController.update(AddStakingErrorTransformer(it))
-                return@launch
-            }
+            val amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                ?: error("No amount provided")
+            val sourceAddress = cryptoCurrencyValue.networkAddress?.defaultAddress?.value
+                ?: error("No available address")
+            val validatorAddress = validatorState.chosenValidator.address
 
-            stateController.update(
-                SetConfirmationStateAssentTransformer(
-                    appCurrencyProvider = Provider { appCurrency },
-                    cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-                    stakingGasEstimate = stakingGasEstimate,
-                    pendingActionList = pendingActions,
-                ),
-            )
+            val approval = stakingApproval as? StakingApproval.Needed
+            if (approval != null) {
+                val allowance = getAllowanceUseCase(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    spenderAddress = approval.spenderAddress,
+                ).getOrElse { BigDecimal.ZERO }
+
+                if (allowance < amount) {
+                    getApproveFee(
+                        amount = amount,
+                        validatorAddress = validatorAddress,
+                    )
+                } else {
+                    estimateGas(
+                        pendingActions = pendingActions,
+                        amount = amount,
+                        sourceAddress = sourceAddress,
+                        validatorAddress = validatorAddress,
+                    )
+                }
+            } else {
+                estimateGas(
+                    pendingActions = pendingActions,
+                    amount = amount,
+                    sourceAddress = sourceAddress,
+                    validatorAddress = validatorAddress,
+                )
+            }
         }
+    }
+
+    private suspend fun estimateGas(
+        pendingActions: ImmutableList<PendingAction>,
+        amount: BigDecimal,
+        sourceAddress: String,
+        validatorAddress: String,
+    ) {
+        val pendingAction = pendingActions.firstOrNull()
+        val stakingGasEstimate = estimateGasUseCase(
+            userWalletId = userWalletId,
+            network = cryptoCurrencyStatus.currency.network,
+            params = ActionParams(
+                actionCommonType = value.actionType,
+                integrationId = yield.id,
+                amount = amount,
+                address = sourceAddress,
+                validatorAddress = validatorAddress,
+                token = yield.token,
+                passthrough = pendingAction?.passthrough,
+                type = pendingAction?.type,
+            ),
+        ).getOrElse {
+            stateController.update(AddStakingErrorTransformer(it))
+            return
+        }
+
+        stateController.update(
+            SetConfirmationStateAssentTransformer(
+                appCurrencyProvider = Provider { appCurrency },
+                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                stakingGasEstimate = stakingGasEstimate,
+                pendingActionList = pendingActions,
+            ),
+        )
+    }
+
+    private suspend fun getApproveFee(amount: BigDecimal, validatorAddress: String) {
+        val approvalFee = getFeeUseCase(
+            amount = amount,
+            destination = validatorAddress,
+            userWallet = userWallet,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+        ).getOrElse {
+            // TODO staking error
+            return
+        }
+
+        stateController.update(
+            SetConfirmationStateAssentApprovalTransformer(
+                appCurrencyProvider = Provider { appCurrency },
+                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                fee = approvalFee,
+            ),
+        )
     }
 
     override fun onPrevClick() {
@@ -286,7 +368,60 @@ internal class StakingViewModel @Inject constructor(
                 },
             )
 
-            // todo staking polygon
+            val tokenCryptoCurrency =
+                cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: error("No token currency")
+            val amountValue = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                ?: error("No amount provided")
+
+            val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
+                ?: error("No confirmation state")
+            val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: error("No fee provided")
+            val approval = stakingApproval as? StakingApproval.Needed ?: error("No staking approve spender address")
+
+            val approvalTransaction = createApprovalTransactionUseCase(
+                amount = amountValue,
+                contractAddress = tokenCryptoCurrency.contractAddress,
+                spenderAddress = approval.spenderAddress,
+                fee = fee,
+                cryptoCurrency = tokenCryptoCurrency,
+                userWalletId = userWalletId,
+            ).fold(
+                ifLeft = { error ->
+                    Timber.e(error.toString())
+                    stateController.update(
+                        SetConfirmationStateAssentApprovalTransformer(
+                            appCurrencyProvider = Provider { appCurrency },
+                            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                            fee = TransactionFee.Single(fee),
+                        ),
+                    )
+                    // TODO staking error
+                    return@launch
+                },
+                ifRight = { it },
+            )
+
+            sendTransactionUseCase(
+                txData = approvalTransaction,
+                userWallet = userWallet,
+                network = tokenCryptoCurrency.network,
+            ).fold(
+                ifLeft = { error ->
+                    Timber.e(error.toString())
+                    stateController.update(
+                        SetConfirmationStateAssentApprovalTransformer(
+                            appCurrencyProvider = Provider { appCurrency },
+                            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                            fee = TransactionFee.Single(fee),
+                        ),
+                    )
+                    // TODO staking error
+                },
+                ifRight = {
+                    getFee(confirmationState.pendingActions)
+                    stateController.update(DismissBottomSheetStateTransformer())
+                },
+            )
         }.saveIn(approvalJobHolder)
     }
 
@@ -319,7 +454,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private fun setupApprovalNeeded() {
-        isApprovalNeeded = isApproveNeededUseCase(cryptoCurrencyStatus.currency).getOrElse { false }
+        stakingApproval = isApproveNeededUseCase(cryptoCurrencyStatus.currency).getOrElse { StakingApproval.Empty }
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
