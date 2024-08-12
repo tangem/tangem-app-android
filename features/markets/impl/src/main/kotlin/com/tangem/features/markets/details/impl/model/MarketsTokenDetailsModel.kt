@@ -9,19 +9,22 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
-import com.tangem.core.ui.utils.DateTimeFormatters
-import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.markets.GetTokenMarketInfoUseCase
-import com.tangem.domain.markets.GetTokenPriceChartUseCase
-import com.tangem.domain.markets.PriceChangeInterval
+import com.tangem.domain.markets.*
+import com.tangem.features.markets.component.BottomSheetState
 import com.tangem.features.markets.details.api.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.impl.model.converters.DescriptionConverter
 import com.tangem.features.markets.details.impl.model.converters.TokenMarketInfoConverter
+import com.tangem.features.markets.details.impl.model.formatter.*
+import com.tangem.features.markets.details.impl.model.formatter.formatAsPrice
+import com.tangem.features.markets.details.impl.model.formatter.getChangePercentBetween
+import com.tangem.features.markets.details.impl.model.formatter.getPercentByInterval
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
@@ -30,13 +33,15 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import org.joda.time.DateTime
 import java.math.BigDecimal
-import java.math.RoundingMode
 import javax.inject.Inject
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 @Stable
 internal class MarketsTokenDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -44,10 +49,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
+    private val getTokenQuotesUseCase: GetTokenQuotesUseCase,
     private val urlOpener: UrlOpener,
 ) : Model() {
 
-    val params = paramsContainer.require<MarketsTokenDetailsComponent.Params>()
+    private var quotesJob = JobHolder()
+    private val params = paramsContainer.require<MarketsTokenDetailsComponent.Params>()
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase()
         .map { maybeAppCurrency ->
@@ -77,13 +84,13 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         chartData = MarketChartData.NoData.Loading
 
         updateLook {
+            val percentChangeType = params.token.tokenQuotes.h24Percent.percentChangeType()
+
             it.copy(
-                type = getChartTypeByPercent(params.token.tokenQuotes.h24Percent),
-                xAxisFormatter = { value ->
-                    value.toLong().toTimeFormat(DateTimeFormatters.timeFormatter)
-                },
+                type = percentChangeType.toChartType(),
+                xAxisFormatter = MarketsDateTimeFormatters.getChartXFormatterByInterval(PriceChangeInterval.H24),
                 yAxisFormatter = { value ->
-                    BigDecimalFormatter.formatFiatAmountUncapped(
+                    BigDecimalFormatter.formatFiatPriceUncapped(
                         fiatAmount = value,
                         fiatCurrencyCode = currentAppCurrency.value.code,
                         fiatCurrencySymbol = "",
@@ -93,10 +100,28 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
     }
 
+    private val currentQuotes = MutableStateFlow(
+        TokenQuotes(
+            currentPrice = params.token.tokenQuotes.currentPrice,
+            h24ChangePercent = params.token.tokenQuotes.h24Percent,
+            weekChangePercent = params.token.tokenQuotes.weekPercent,
+            monthChangePercent = params.token.tokenQuotes.monthPercent,
+            m3ChangePercent = null,
+            m6ChangePercent = null,
+            yearChangePercent = null,
+            allTimeChangePercent = null,
+        ),
+    )
+
+    private var lastUpdatedTimestamp: Long = DateTime.now().millis
+
+    val containerBottomSheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
+    val isVisibleOnScreen = MutableStateFlow(false)
+
     val state = MutableStateFlow(
         MarketsTokenDetailsUM(
             tokenName = params.token.name,
-            priceText = BigDecimalFormatter.formatFiatAmountUncapped(
+            priceText = BigDecimalFormatter.formatFiatPriceUncapped(
                 fiatAmount = params.token.tokenQuotes.currentPrice,
                 fiatCurrencyCode = currentAppCurrency.value.code,
                 fiatCurrencySymbol = currentAppCurrency.value.symbol,
@@ -121,7 +146,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             ),
             selectedInterval = PriceChangeInterval.H24,
             onSelectedIntervalChange = ::onSelectedIntervalChange,
+            markerSet = false,
             body = MarketsTokenDetailsUM.Body.Loading,
+            triggerPriceChange = consumedEvent(),
             infoBottomSheet = TangemBottomSheetConfig(
                 isShow = false,
                 onDismissRequest = {},
@@ -146,21 +173,22 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     }
 
     private fun initialLoad() {
-        loadChart(state.value.selectedInterval)
         loadInfo()
+        loadChart(state.value.selectedInterval)
+        modelScope.loadQuotesWithTimer(QUOTES_UPDATE_INTERVAL_MILLIS)
     }
 
-    private fun onSelectedIntervalChange(interval: PriceChangeInterval) {
-        if (state.value.selectedInterval == interval) return
-
-        state.update {
-            it.copy(
-                selectedInterval = interval,
-                priceChangeType = PriceChangeType.UP,
+    private fun loadQuotes() {
+        modelScope.launch {
+            val result = getTokenQuotesUseCase(
+                tokenId = params.token.id,
+                appCurrency = currentAppCurrency.value,
             )
-        }
 
-        loadChart(interval)
+            result.onRight { res ->
+                updateQuotes(res)
+            }
+        }
     }
 
     private fun loadChart(interval: PriceChangeInterval) {
@@ -192,7 +220,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 )
             }
 
-            val xAxisFormatter = getFormatterByInterval(state.value.selectedInterval)
+            val xAxisFormatter = MarketsDateTimeFormatters.getChartXFormatterByInterval(state.value.selectedInterval)
 
             chart.onRight {
                 chartDataProducer.runTransactionSuspend {
@@ -204,6 +232,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     updateLook {
                         it.copy(
                             xAxisFormatter = xAxisFormatter,
+                            type = state.value.priceChangeType.toChartType(),
                         )
                     }
                 }
@@ -247,8 +276,15 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
             tokenMarketInfo.fold(
                 ifRight = { result ->
+                    currentQuotes.value = result.quotes
+                    val percent = result.quotes.getPercentByInterval(interval = state.value.selectedInterval)
                     state.update {
                         it.copy(
+                            priceText = result.quotes.currentPrice.formatAsPrice(currentAppCurrency.value),
+                            priceChangePercentText = result.quotes.getFormattedPercentByInterval(
+                                interval = it.selectedInterval,
+                            ),
+                            priceChangeType = percent.percentChangeType(),
                             body = MarketsTokenDetailsUM.Body.Content(
                                 description = descriptionConverter.convert(result),
                                 infoBlocks = infoConverter.convert(result),
@@ -275,57 +311,101 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
     }
 
-    private fun getFormatterByInterval(interval: PriceChangeInterval): (BigDecimal) -> String {
-        return when (interval) {
-            PriceChangeInterval.H24 -> { value: BigDecimal ->
-                value.toLong().toTimeFormat(DateTimeFormatters.timeFormatter)
-            }
-            PriceChangeInterval.WEEK,
-            PriceChangeInterval.MONTH,
-            PriceChangeInterval.MONTH3,
-            PriceChangeInterval.MONTH6,
-            -> { value ->
-                value.toLong().toTimeFormat(DateTimeFormatters.dateMMMMd)
-            }
-            PriceChangeInterval.YEAR -> { value ->
-                value.toLong().toTimeFormat(DateTimeFormatters.dateMMMMd)
-            }
-            PriceChangeInterval.ALL_TIME -> { value ->
-                value.toLong().toTimeFormat(DateTimeFormatters.dateYYYY)
-            }
+    private suspend fun updateQuotes(newQuotes: TokenQuotes) {
+        val triggerPriceChangeType = getFormattedPriceChange(
+            currentPrice = currentQuotes.value.currentPrice,
+            updatedPrice = newQuotes.currentPrice,
+        )
+        val trigger = if (triggerPriceChangeType != PriceChangeType.NEUTRAL) {
+            triggeredEvent(
+                data = triggerPriceChangeType,
+                onConsume = {
+                    state.update { it.copy(triggerPriceChange = consumedEvent()) }
+                },
+            )
+        } else {
+            consumedEvent()
+        }
+
+        val percent = newQuotes.getPercentByInterval(interval = state.value.selectedInterval)
+        val priceChangeType = percent.percentChangeType()
+
+        // wait until marker is removed
+        state.first { it.markerSet.not() }
+
+        currentQuotes.value = newQuotes
+        lastUpdatedTimestamp = DateTime.now().millis
+
+        state.update { stateToUpdate ->
+            stateToUpdate.copy(
+                priceText = newQuotes.currentPrice.formatAsPrice(currentAppCurrency.value),
+                priceChangePercentText = newQuotes.getFormattedPercentByInterval(
+                    interval = stateToUpdate.selectedInterval,
+                ),
+                priceChangeType = priceChangeType,
+                triggerPriceChange = trigger,
+                dateTimeText = getDefaultDateTimeString(stateToUpdate.selectedInterval),
+            )
+        }
+    }
+
+    private fun onSelectedIntervalChange(interval: PriceChangeInterval) {
+        if (state.value.selectedInterval == interval) return
+
+        val quotes = currentQuotes.value
+        val priceChangePercent = quotes.getFormattedPercentByInterval(interval)
+
+        state.update {
+            it.copy(
+                priceChangePercentText = priceChangePercent,
+                selectedInterval = interval,
+                priceChangeType = quotes.getPercentByInterval(interval)?.percentChangeType()
+                    ?: PriceChangeType.NEUTRAL,
+                dateTimeText = getDefaultDateTimeString(interval),
+            )
+        }
+
+        loadChart(interval)
+
+        if (priceChangePercent.isEmpty()) {
+            loadQuotes()
         }
     }
 
     @Suppress("MagicNumber")
-    private fun onMarkerPointSelected(time: BigDecimal?, price: BigDecimal?) {
-        val timeText = time?.toLong()?.toTimeFormat(DateTimeFormatters.dateTimeFormatter)?.let {
-            resourceReference(R.string.common_range, wrappedList(it, resourceReference(R.string.common_now)))
-        } ?: resourceReference(R.string.common_today)
+    private fun onMarkerPointSelected(markerTimestamp: BigDecimal?, price: BigDecimal?) {
+        val currentState = state.value
 
-        val percent = price?.subtract(params.token.tokenQuotes.currentPrice)
-            ?.divide(params.token.tokenQuotes.currentPrice, 4, RoundingMode.HALF_UP)
-            ?.multiply(BigDecimal(-100))
-            ?: params.token.tokenQuotes.h24Percent
+        val dateTimeText = markerTimestamp?.let {
+            MarketsDateTimeFormatters.formatDateByIntervalWithMarker(
+                interval = currentState.selectedInterval,
+                markerTimestamp = it,
+            )
+        } ?: getDefaultDateTimeString(currentState.selectedInterval)
 
-        val percentText = BigDecimalFormatter.formatPercent(
-            percent = percent,
-            useAbsoluteValue = true,
-        )
+        val priceText = (price ?: currentQuotes.value.currentPrice).formatAsPrice(currentAppCurrency.value)
 
-        state.update {
-            it.copy(
-                dateTimeText = timeText,
-                priceText = BigDecimalFormatter.formatFiatAmountUncapped(
-                    fiatAmount = price ?: params.token.tokenQuotes.currentPrice,
-                    fiatCurrencyCode = currentAppCurrency.value.code,
-                    fiatCurrencySymbol = currentAppCurrency.value.symbol,
-                ),
+        val percent = price?.let {
+            getChangePercentBetween(
+                previousPrice = it,
+                currentPrice = currentQuotes.value.currentPrice,
+            )
+        } ?: currentQuotes.value.getPercentByInterval(currentState.selectedInterval)
+
+        val percentText = percent?.let {
+            BigDecimalFormatter.formatPercent(
+                percent = it,
+                useAbsoluteValue = true,
+            )
+        } ?: ""
+
+        state.update { stateToUpdate ->
+            stateToUpdate.copy(
+                markerSet = markerTimestamp != null,
+                dateTimeText = dateTimeText,
+                priceText = priceText,
                 priceChangePercentText = percentText,
-                priceChangeType = when {
-                    percent < BigDecimal.ZERO -> PriceChangeType.DOWN
-                    percent > BigDecimal.ZERO -> PriceChangeType.UP
-                    else -> PriceChangeType.NEUTRAL
-                },
+                priceChangeType = percent.percentChangeType(),
             )
         }
 
@@ -335,14 +415,6 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     type = getChartTypeByPercent(percent),
                 )
             }
-        }
-    }
-
-    private fun getChartTypeByPercent(percent: BigDecimal): MarketChartLook.Type {
-        return if (percent >= BigDecimal.ZERO) {
-            MarketChartLook.Type.Growing
-        } else {
-            MarketChartLook.Type.Falling
         }
     }
 
@@ -379,6 +451,35 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             currentState.body is MarketsTokenDetailsUM.Body.Nothing
         ) {
             loadInfo()
+            modelScope.loadQuotesWithTimer(QUOTES_UPDATE_INTERVAL_MILLIS)
         }
+    }
+
+    private fun CoroutineScope.loadQuotesWithTimer(timeMillis: Long) {
+        launch {
+            while (true) {
+                delay(timeMillis)
+                // Update quotes only when the container bottom sheet is in the expanded state
+                containerBottomSheetState.first { it == BottomSheetState.EXPANDED }
+                // and is visible on the screen
+                isVisibleOnScreen.first { it }
+
+                loadQuotes()
+            }
+        }.saveIn(quotesJob)
+    }
+
+    private fun getDefaultDateTimeString(interval: PriceChangeInterval): TextReference {
+        return MarketsDateTimeFormatters.formatDateByInterval(
+            interval = interval,
+            startTimestamp = MarketsDateTimeFormatters.getStartTimestampByInterval(
+                interval = interval,
+                currentTimestamp = lastUpdatedTimestamp,
+            ),
+        )
+    }
+
+    private companion object {
+        const val QUOTES_UPDATE_INTERVAL_MILLIS = 60000L
     }
 }
