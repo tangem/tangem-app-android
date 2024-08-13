@@ -10,14 +10,12 @@ import kotlinx.collections.immutable.ImmutableSet
  * @property apiInfoList         environment toggles list
  * @property onEnvironmentSelect the lambda to be invoked when button is pressed
  * @property onBackClick         the lambda to be invoked when back button is pressed
- * @property onApplyChangesClick the lambda to be invoked when apply changes button is pressed
  */
 internal data class EnvironmentTogglesScreenUM(
     @StringRes val title: Int,
     val apiInfoList: ImmutableSet<ApiInfoUM>,
     val onEnvironmentSelect: (id: String, environment: String) -> Unit,
     val onBackClick: () -> Unit,
-    val onApplyChangesClick: () -> Unit,
 ) {
 
     /**
