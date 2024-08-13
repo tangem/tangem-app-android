@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
@@ -55,6 +56,7 @@ internal class TokenItemStateConverter(
             ),
             fiatAmountState = TokenItemState.FiatAmountState.Content(
                 text = getFormattedFiatAmount(),
+                hasStaked = !getStakedBalance().isZero(),
             ),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = getFormattedAmount()),
             cryptoPriceState = getCryptoPriceState(),
@@ -64,20 +66,21 @@ internal class TokenItemStateConverter(
     }
 
     private fun CryptoCurrencyStatus.getFormattedAmount(): String {
-        val yieldBalance = (value.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero()
-        val amount = value.amount?.plus(yieldBalance) ?: return DASH_SIGN
+        val amount = value.amount?.plus(getStakedBalance()) ?: return DASH_SIGN
 
         return BigDecimalFormatter.formatCryptoAmount(amount, currency.symbol, currency.decimals)
     }
 
     private fun CryptoCurrencyStatus.getFormattedFiatAmount(): String {
-        val yieldBalance = (value.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero()
-        val fiatYieldBalance = value.fiatRate?.times(yieldBalance).orZero()
+        val fiatYieldBalance = value.fiatRate?.times(getStakedBalance()).orZero()
         val fiatAmount = value.fiatAmount?.plus(fiatYieldBalance) ?: return DASH_SIGN
         val appCurrency = appCurrencyProvider()
 
         return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
     }
+
+    private fun CryptoCurrencyStatus.getStakedBalance() =
+        (value.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero()
 
     private fun CryptoCurrencyStatus.mapToUnreachableTokenItemState() = TokenItemState.Unreachable(
         id = currency.id.value,
