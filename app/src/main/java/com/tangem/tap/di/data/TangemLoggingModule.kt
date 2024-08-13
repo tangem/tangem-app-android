@@ -3,9 +3,11 @@ package com.tangem.tap.di.data
 import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.TangemSdkLogger
+import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.common.log.TangemCardSDKLogger
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.tap.data.TangemBlockchainSDKLogger
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,14 +16,17 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object CardSDKLoggerModule {
+internal object TangemLoggingModule {
 
     @Provides
     @Singleton
-    fun provideCardSDKLogger(
-        settingsRepository: SettingsRepository,
-        dispatchers: CoroutineDispatcherProvider,
-    ): TangemSdkLogger {
+    fun provideAppLoggerInitializer(settingsRepository: SettingsRepository): TangemAppLoggerInitializer {
+        return TangemAppLoggerInitializer(settingsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCardSDKLogger(settingsRepository: SettingsRepository): TangemSdkLogger {
         val logLevels = listOf(
             Log.Level.ApduCommand,
             Log.Level.Apdu,
@@ -40,7 +45,12 @@ internal object CardSDKLoggerModule {
             levels = logLevels,
             messageFormatter = LogFormat.StairsFormatter(),
             settingsRepository = settingsRepository,
-            dispatchers = dispatchers,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideBlockchainSDKLogger(settingsRepository: SettingsRepository): BlockchainSDKLogger {
+        return TangemBlockchainSDKLogger(settingsRepository)
     }
 }

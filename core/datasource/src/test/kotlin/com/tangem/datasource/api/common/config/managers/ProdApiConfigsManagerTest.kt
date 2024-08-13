@@ -61,16 +61,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         private fun createTangemTechModel(): Model {
             return Model(
                 id = ApiConfig.ID.TangemTech,
-                expected = when (BuildConfig.BUILD_TYPE) {
-                    DEBUG_BUILD_TYPE,
-                    INTERNAL_BUILD_TYPE,
-                    -> "https://devapi.tangem-tech.com/v1/"
-                    MOCKED_BUILD_TYPE,
-                    EXTERNAL_BUILD_TYPE,
-                    RELEASE_BUILD_TYPE,
-                    -> "https://api.tangem-tech.com/v1/"
-                    else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
-                },
+                expected = "https://api.tangem-tech.com/v1/",
             )
         }
     }
