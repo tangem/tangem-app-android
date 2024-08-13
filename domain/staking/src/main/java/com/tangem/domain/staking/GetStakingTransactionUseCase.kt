@@ -22,19 +22,14 @@ class GetStakingTransactionUseCase(
         userWalletId: UserWalletId,
         network: Network,
         params: ActionParams,
-    ): Either<StakingError, StakingTransaction> {
+    ): Either<StakingError, List<StakingTransaction>> {
         return Either.catch {
             val createAction = stakingRepository.createAction(userWalletId, network, params)
 
             // workaround, sometimes transaction is not created immediately after actions/enter
             delay(PATCH_TRANSACTION_REQUEST_DELAY)
 
-            val createdTransaction = createAction.transactions
-                ?.get(createAction.currentStepIndex)
-                ?: error("No available transaction to patch")
-            val patchedTransaction = stakingRepository.constructTransaction(createdTransaction.id)
-
-            patchedTransaction
+            createAction.transactions ?: error("No available transaction to patch")
         }.mapLeft {
             stakingErrorResolver.resolve(it)
         }
