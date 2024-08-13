@@ -48,7 +48,7 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
     /** Setup navigation state property by router [router] */
     fun setupNavigation(router: InnerTesterRouter) {
         _uiState.update {
-            it.copy(onBackClick = router::back, onApplyChangesClick = router::back)
+            it.copy(onBackClick = router::back)
         }
     }
 
@@ -85,7 +85,6 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
             apiInfoList = persistentSetOf(),
             onEnvironmentSelect = ::onToggleValueChange,
             onBackClick = {},
-            onApplyChangesClick = {},
         )
     }
 
