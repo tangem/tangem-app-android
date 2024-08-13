@@ -3,13 +3,14 @@ package com.tangem.datasource.api.common.config
 /**
  * Api config
  *
- * @property currentEnvironment current api environment
- *
  * @see <a href="https://www.notion.so/tangem/API-eacb264e7daf420a88b419a8a26f5b26?pvs=4">API configuration</a>
  *
 [REDACTED_AUTHOR]
  */
-sealed class ApiConfig(open val currentEnvironment: ApiEnvironment) {
+sealed class ApiConfig {
+
+    /** Default environment */
+    abstract val defaultEnvironment: ApiEnvironment
 
     /** Available environments with base url */
     abstract val environments: Map<ApiEnvironment, String>
@@ -20,14 +21,6 @@ sealed class ApiConfig(open val currentEnvironment: ApiEnvironment) {
     enum class ID {
         Express,
         TangemTech,
-    }
-
-    /** Copy method for sealed class [ApiConfig] */
-    fun copySealed(currentEnvironment: ApiEnvironment): ApiConfig {
-        return when (this) {
-            is Express -> copy(currentEnvironment = currentEnvironment)
-            is TangemTech -> copy(currentEnvironment = currentEnvironment)
-        }
     }
 
     private fun initializeId(): ID {
