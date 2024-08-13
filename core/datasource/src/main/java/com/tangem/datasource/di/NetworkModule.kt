@@ -4,6 +4,7 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiConfigs
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
@@ -42,13 +43,14 @@ class NetworkModule {
     @Provides
     @Singleton
     fun provideApiConfigManager(
+        apiConfigs: ApiConfigs,
         appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
     ): ApiConfigsManager {
         return if (BuildConfig.TESTER_MENU_ENABLED) {
-            DevApiConfigsManager(appPreferencesStore, dispatchers)
+            DevApiConfigsManager(apiConfigs, appPreferencesStore, dispatchers)
         } else {
-            ProdApiConfigsManager()
+            ProdApiConfigsManager(apiConfigs)
         }
     }
 
