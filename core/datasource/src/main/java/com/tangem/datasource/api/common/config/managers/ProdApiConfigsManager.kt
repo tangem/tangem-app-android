@@ -9,10 +9,10 @@ internal class ProdApiConfigsManager : ApiConfigsManager {
         val config = ApiConfig.values().firstOrNull { it.id == id }
             ?: error("Api config with id [$id] not found. Check ApiConfig implementations")
 
-        return config.environments[config.currentEnvironment]
+        return config.environments[config.defaultEnvironment]
             ?: error(
                 "Api config with id [$id] doesn't contain " +
-                    "environment [${config.currentEnvironment}]. Check ApiConfig implementations",
+                    "environment [${config.defaultEnvironment}]. Check ApiConfig implementations",
             )
     }
 }
