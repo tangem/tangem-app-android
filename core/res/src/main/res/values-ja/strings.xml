@@ -87,7 +87,6 @@
   <string name="common_copy">コピー</string>
   <string name="common_copy_address">アドレスをコピー</string>
   <string name="common_create">作成</string>
-  <string name="common_crypto_fiat_format">%1$s ( %2$s )</string>
   <string name="common_custom">設定</string>
   <plurals name="common_days">
     <item quantity="other">%d 日</item>
@@ -125,7 +124,6 @@
   <string name="common_passphrase">パスフレーズ</string>
   <string name="common_paste">ペースト</string>
   <string name="common_range">%1$s-%2$s</string>
-  <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">続きを読む</string>
   <string name="common_receive">受け取る</string>
   <string name="common_reject">拒否</string>
@@ -628,6 +626,7 @@
   <string name="send_transaction_success">取引は正常に署名され、ブロックチェーンノードに送信されました。ウォレットの残高はしばらくして更新されます。</string>
   <string name="send_tron_account_activation_error">%1$sはTronネットワークのアセットです。手数料を計算して取引を行うには、アカウントにTron（TRX）を入金する必要があります。</string>
   <string name="send_validation_invalid_address">無効なアドレス</string>
+  <string name="send_wallet_balance_format">%1$s ( %2$s )</string>
   <string name="sent_transaction_sent_title">取引が送信されました</string>
   <string name="settings_card_settings_footer">セットアップしたいカードをスキャンするために準備してください。</string>
   <string name="settings_forget_wallet">ウォレット削除</string>
@@ -637,7 +636,6 @@
   <string name="staking_active_footer">資産のステーキングを解除するには、ここをクリックしてください。</string>
   <string name="staking_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
   <string name="staking_claim_unstaked">ステーキング解除分を請求する</string>
-  <string name="staking_details_annual_percentage_rate">年率</string>
   <string name="staking_details_annual_percentage_rate_info">ステーキングに参加することで得られる年間収益率。</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_available">利用可能</string>
@@ -660,10 +658,6 @@
   <string name="staking_details_warmup_period_info">ステーキングへの参加を有効にするために割り当てられた時間。</string>
   <string name="staking_migrate">移行</string>
   <string name="staking_native">ネイティブステーキング</string>
-  <string name="staking_notification_earn_rewards_text_period_day">ステーキングにより%1$sを獲得できます。ステーキング報酬は毎日受け取れます。</string>
-  <string name="staking_notification_earn_rewards_text_period_hour">ステーキングにより%1$sを獲得できます。ステーキング報酬は1時間ごとに受け取れます。</string>
-  <string name="staking_notification_earn_rewards_text_period_month">ステーキングにより%1$sを獲得できます。ステーキング報酬は毎月受け取れます。</string>
-  <string name="staking_notification_earn_rewards_text_period_week">ステーキングにより%1$sを獲得できます。ステーキング報酬は毎週受け取れます。</string>
   <string name="staking_notification_earn_rewards_title">ステーキング報酬を獲得</string>
   <string name="staking_notification_unstake_text">ステーキング解除後、報酬の獲得はすぐに停止します。ステーキング解除プロセスには%sかかります。</string>
   <string name="staking_rebond">再結束</string>

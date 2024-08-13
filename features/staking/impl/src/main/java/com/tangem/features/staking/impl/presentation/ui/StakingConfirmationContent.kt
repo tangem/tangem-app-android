@@ -40,7 +40,7 @@ internal fun StakingConfirmationContent(
 
     Column(
         modifier = Modifier
-            .background(TangemTheme.colors.background.tertiary)
+            .background(TangemTheme.colors.background.secondary)
             .padding(horizontal = TangemTheme.dimens.spacing16)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
