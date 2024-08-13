@@ -16,8 +16,8 @@ internal class FeedbackDataBuilder {
     fun addCardInfo(cardInfo: CardInfo) {
         builder.appendKeyValue("Card ID", cardInfo.cardId)
         builder.appendKeyValue("Firmware version", cardInfo.firmwareVersion)
-        builder.appendKeyValue("Linked cards count:", cardInfo.cardsCount)
-        builder.appendKeyValue("Has seed phrase:", cardInfo.isImported.toString())
+        builder.appendKeyValue("Linked cards count", cardInfo.cardsCount)
+        builder.appendKeyValue("Has seed phrase", cardInfo.isImported.toString())
         builder.appendKeyValue("Card Blockchain", cardInfo.cardBlockchain)
         builder.appendSignedHashes(cardInfo.signedHashesList)
     }
