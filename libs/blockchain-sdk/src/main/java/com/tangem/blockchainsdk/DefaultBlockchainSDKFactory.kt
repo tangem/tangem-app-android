@@ -74,7 +74,7 @@ internal class DefaultBlockchainSDKFactory(
                 return@launch
             }
 
-            Timber.d("Update BlockchainSDKConfig")
+            Timber.i("Update BlockchainSDKConfig")
 
             configStore.store(
                 value = BlockchainSDKConfigConverter.convert(value = config),
@@ -91,7 +91,7 @@ internal class DefaultBlockchainSDKFactory(
                 return@launch
             }
 
-            Timber.d("Update BlockchainProviderTypes")
+            Timber.i("Update BlockchainProviderTypes")
 
             blockchainProviderTypesStore.store(
                 value = BlockchainProviderTypesConverter.convert(response),
