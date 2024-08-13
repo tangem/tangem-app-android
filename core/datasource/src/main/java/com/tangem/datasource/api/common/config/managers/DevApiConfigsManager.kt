@@ -7,10 +7,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 
 /**
  * Implementation of [ApiConfigsManager] in DEV environment
@@ -23,9 +20,9 @@ internal class DevApiConfigsManager(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MutableApiConfigsManager {
 
-    override val configs: Flow<List<ApiConfig>> get() = _apiConfigs
+    override val configs: Flow<Map<ApiConfig, ApiEnvironment>> get() = _apiConfigs
 
-    private val _apiConfigs = MutableStateFlow(value = ApiConfig.values())
+    private val _apiConfigs = MutableStateFlow(value = ApiConfig.values().associateWith { it.defaultEnvironment })
 
     override suspend fun initialize() {
         // We can't use appPreferencesStore.getObjectMap as base flow,
@@ -33,13 +30,11 @@ internal class DevApiConfigsManager(
         // See [getBaseUrl]
         appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
             .onEach { savedEnvironments ->
-                _apiConfigs.value = _apiConfigs.value.map { config ->
-                    val savedEnvironment = savedEnvironments[config.id.name]
+                _apiConfigs.update { apiConfigs ->
+                    apiConfigs.mapValues {
+                        val (config, currentEnvironment) = it
 
-                    if (savedEnvironment != null) {
-                        config.copySealed(currentEnvironment = savedEnvironment)
-                    } else {
-                        config
+                        savedEnvironments[config.id.name] ?: currentEnvironment
                     }
                 }
             }
@@ -47,14 +42,16 @@ internal class DevApiConfigsManager(
     }
 
     override fun getBaseUrl(id: ApiConfig.ID): String {
-        val config = _apiConfigs.value.firstOrNull { it.id == id }
-            ?: error("Api config with id [$id] not found. Check ApiConfig implementations")
+        val apiConfigs = _apiConfigs.value
 
-        return config.environments[config.currentEnvironment]
-            ?: error(
-                "Api config with id [$id] doesn't contain environment [${config.currentEnvironment}]. " +
-                    "Check ApiConfig implementations",
-            )
+        val config = apiConfigs.map { it }.firstOrNull { it.key.id == id }?.key
+            ?: error("Api config with id [$id] not found")
+
+        val currentEnvironment = apiConfigs[config]
+            ?: error("Current environment of api config with id [$id] not found")
+
+        return config.environments[currentEnvironment]
+            ?: error("Api config with id [$id] doesn't contain environment [$currentEnvironment]")
     }
 
     override suspend fun changeEnvironment(id: String, environment: ApiEnvironment) {
