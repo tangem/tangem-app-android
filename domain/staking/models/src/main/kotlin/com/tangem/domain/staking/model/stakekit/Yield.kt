@@ -74,10 +74,10 @@ data class Yield(
         val token: Token,
         val tokens: List<Token>,
         val type: String,
-        val rewardSchedule: String,
+        val rewardSchedule: RewardSchedule,
         val cooldownPeriod: Period,
         val warmupPeriod: Period,
-        val rewardClaiming: String,
+        val rewardClaiming: RewardClaiming,
         val defaultValidator: String?,
         val minimumStake: Int?,
         val supportsMultipleValidators: Boolean,
@@ -94,6 +94,25 @@ data class Yield(
         data class Enabled(
             val enabled: Boolean,
         )
+
+        enum class RewardSchedule {
+            BLOCK,
+            WEEK,
+            HOUR,
+            DAY,
+            MONTH,
+            ERA,
+            EPOCH,
+
+            UNKNOWN,
+        }
+
+        enum class RewardClaiming {
+            AUTO,
+            MANUAL,
+
+            UNKNOWN,
+        }
     }
 
     enum class RewardType {
