@@ -2,14 +2,10 @@ package com.tangem.datasource.api.common.config
 
 import com.tangem.datasource.BuildConfig
 
-/**
- * Express [ApiConfig]
- *
- * @property currentEnvironment current api environment
- */
-internal data class Express(
-    override val currentEnvironment: ApiEnvironment = initializeCurrentEnvironment(),
-) : ApiConfig(currentEnvironment) {
+/** Express [ApiConfig] */
+internal class Express : ApiConfig() {
+
+    override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environments: Map<ApiEnvironment, String> = mapOf(
         ApiEnvironment.DEV to "[REDACTED_ENV_URL]",
@@ -19,7 +15,7 @@ internal data class Express(
 
     private companion object {
 
-        fun initializeCurrentEnvironment(): ApiEnvironment {
+        fun getInitialEnvironment(): ApiEnvironment {
             return when (BuildConfig.BUILD_TYPE) {
                 DEBUG_BUILD_TYPE -> ApiEnvironment.DEV
                 INTERNAL_BUILD_TYPE,
