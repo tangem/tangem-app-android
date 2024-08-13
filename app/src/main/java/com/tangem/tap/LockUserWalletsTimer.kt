@@ -35,7 +35,7 @@ internal class LockUserWalletsTimer(
             val wasApplicationStopped = settingsRepository.wasApplicationStopped()
             val shouldOpenWelcomeScreenOnResume = settingsRepository.shouldOpenWelcomeScreenOnResume()
 
-            Timber.d(
+            Timber.i(
                 """
                 Owner resumed
                 |- Was stopped: $wasApplicationStopped
@@ -55,7 +55,7 @@ internal class LockUserWalletsTimer(
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        Timber.d("Owner stopped")
+        Timber.i("Owner stopped")
 
         owner.lifecycleScope.launch {
             settingsRepository.setWasApplicationStopped(value = true)
@@ -63,13 +63,13 @@ internal class LockUserWalletsTimer(
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
-        Timber.d("Owner destroyed")
+        Timber.i("Owner destroyed")
         stop()
     }
 
     fun restart() {
         if (delayJob == null) return
-        Timber.d(
+        Timber.i(
             """
                 Timer restart
                 |- Duration millis: ${duration.inWholeMilliseconds}
@@ -80,7 +80,7 @@ internal class LockUserWalletsTimer(
 
     private fun start(log: Boolean = true) {
         if (log) {
-            Timber.d(
+            Timber.i(
                 """
                     Timer start
                     |- Duration millis: ${duration.inWholeMilliseconds}
@@ -92,7 +92,7 @@ internal class LockUserWalletsTimer(
 
     private fun stop(log: Boolean = true) {
         if (log) {
-            Timber.d(
+            Timber.i(
                 """
                     Timer stop
                     |- Was started: ${delayJob?.isActive ?: false}
@@ -114,7 +114,7 @@ internal class LockUserWalletsTimer(
                 val currentTime = System.currentTimeMillis()
                 val wasApplicationStopped = settingsRepository.wasApplicationStopped()
 
-                Timber.d(
+                Timber.i(
                     """
                         Finished
                         |- App is stopped: $wasApplicationStopped
