@@ -86,7 +86,6 @@
   <string name="common_copy">Copier</string>
   <string name="common_copy_address">Copier l\'adresse</string>
   <string name="common_create">Créer</string>
-  <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Personnalisé</string>
   <plurals name="common_days">
     <item quantity="one">%d jour</item>
@@ -271,7 +270,7 @@
   <string name="feedback_subject_support">Commentaires</string>
   <string name="feedback_subject_support_tangem">Commentaires sur Tangem</string>
   <string name="feedback_subject_tx_failed">Impossible d\'envoyer une transaction</string>
-  <string name="give_permission_current_transaction">Transaction</string>
+  <string name="give_permission_current_transaction">Transaction </string>
   <string name="give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="give_permission_policy_type_footer">Spécifiez la limite approuvée pour le jeton sélectionné</string>
   <string name="give_permission_rows_amount">Montant %s</string>
@@ -568,6 +567,7 @@
   <string name="send_transaction_success">La transaction a été signée avec succès et envoyée au nœud de blockchain. Le solde du portefeuille sera mis à jour après un certain temps</string>
   <string name="send_tron_account_activation_error">%1$s est un actif du réseau Tron. Pour calculer les frais et effectuer une transaction, déposez du Tron (TRX) sur votre compte.</string>
   <string name="send_validation_invalid_address">Adresse incorrecte</string>
+  <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Transaction envoyée</string>
   <string name="settings_card_settings_footer">Préparez-vous à numériser la carte que vous souhaitez configurer.</string>
   <string name="settings_forget_wallet">Oublier le portefeuille</string>
