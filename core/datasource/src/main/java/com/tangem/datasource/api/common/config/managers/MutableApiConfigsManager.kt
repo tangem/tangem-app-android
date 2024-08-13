@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.Flow
  */
 interface MutableApiConfigsManager : ApiConfigsManager {
 
-    /** Configs */
-    val configs: Flow<List<ApiConfig>>
+    /** Api configs with current [ApiEnvironment] */
+    val configs: Flow<Map<ApiConfig, ApiEnvironment>>
 
     /** Change api environment [environment] by [id] */
     suspend fun changeEnvironment(id: String, environment: ApiEnvironment)
