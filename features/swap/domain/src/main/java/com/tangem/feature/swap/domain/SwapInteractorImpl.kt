@@ -268,6 +268,17 @@ internal class SwapInteractorImpl @Inject constructor(
         amountToSwap: String,
         selectedFee: FeeType,
     ): Map<SwapProvider, SwapState> {
+        Timber.i(
+            """
+               Find the best quote
+               |- fromToken: $fromToken
+               |- toToken: $toToken
+               |- providers: $providers
+               |- amountToSwap: $amountToSwap
+               |- selectedFee: $selectedFee
+            """.trimIndent(),
+        )
+
         return providers.map { provider ->
             val amountDecimal = toBigDecimalOrNull(amountToSwap)
             if (amountDecimal == null || amountDecimal.signum() == 0) {
@@ -311,7 +322,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         isBalanceWithoutFeeEnough: Boolean,
     ): Pair<SwapProvider, SwapState> {
-        val quotes = repository.findBestQuote(
+        val maybeQuotes = repository.findBestQuote(
             fromContractAddress = fromToken.currency.getContractAddress(),
             fromNetwork = fromToken.currency.network.backendId,
             toContractAddress = toToken.currency.getContractAddress(),
@@ -324,7 +335,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
 
         val fromTokenAddress = getTokenAddress(fromToken.currency)
-        val isAllowedToSpend = quotes.fold(
+        val isAllowedToSpend = maybeQuotes.fold(
             ifRight = { quotes ->
                 quotes.allowanceContract?.let {
                     isAllowedToSpend(networkId, fromToken.currency, amount, it)
@@ -352,7 +363,7 @@ internal class SwapInteractorImpl @Inject constructor(
         } else {
             provider to getQuotesState(
                 provider = provider,
-                quoteDataModel = quotes,
+                quoteDataModel = maybeQuotes,
                 amount = amount,
                 fromToken = fromToken,
                 toToken = toToken,
@@ -573,6 +584,19 @@ internal class SwapInteractorImpl @Inject constructor(
         includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
     ): SwapTransactionState {
+        Timber.i(
+            """
+               Swap
+               |- swapProvider: $swapProvider
+               |- swapData: $swapData
+               |- currencyToSend: $currencyToSend
+               |- currencyToGet: $currencyToGet
+               |- amountToSwap: $amountToSwap
+               |- includeFeeInAmount: $includeFeeInAmount
+               |- fee: $fee
+            """.trimIndent(),
+        )
+
         val cardId = getSelectedWallet()?.scanResponse?.card?.cardId ?: return SwapTransactionState.UnknownError
         if (isDemoCardUseCase(cardId)) return SwapTransactionState.DemoMode
 

@@ -165,10 +165,10 @@ internal class GeneralUserWalletsListManager(
                 }
 
                 if (possibleManager == implementation.value) {
-                    Timber.e("Switch to same manager ${possibleManager::class.simpleName}")
+                    Timber.e("Switch to the same manager ${possibleManager::class.simpleName}")
                 }
 
-                Timber.d("Switch to ${possibleManager::class.simpleName}")
+                Timber.i("Switch to ${possibleManager::class.simpleName}")
 
                 val previousManager = implementation.value
                 implementation.value = copySelectedUserWallet(
