@@ -62,12 +62,14 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun List<ApiConfig>.toUiModel(): ImmutableSet<EnvironmentTogglesScreenUM.ApiInfoUM> {
-        return map { config ->
+    private fun Map<ApiConfig, ApiEnvironment>.toUiModel(): ImmutableSet<EnvironmentTogglesScreenUM.ApiInfoUM> {
+        return map {
+            val (config, currentEnvironment) = it
+
             EnvironmentTogglesScreenUM.ApiInfoUM(
                 name = config.id.name,
-                select = config.currentEnvironment.name,
-                url = config.environments[config.currentEnvironment]
+                select = currentEnvironment.name,
+                url = config.environments[currentEnvironment]
                     ?: error("Current environment's url isn't found"),
                 environments = config.environments
                     .map { environment -> environment.key.name }
