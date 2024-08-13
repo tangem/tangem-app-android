@@ -20,7 +20,7 @@ import org.junit.runners.Parameterized
 @RunWith(Parameterized::class)
 internal class ProdApiConfigsManagerTest(private val model: Model) {
 
-    private val manager = ProdApiConfigsManager()
+    private val manager = ProdApiConfigsManager(API_CONFIGS)
 
     @Test
     fun test_getBaseUrl() {
@@ -33,9 +33,16 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
 
     private companion object {
 
+        val API_CONFIGS = setOf(
+            Express(),
+            TangemTech(),
+
+            // Don't forget to add new config
+        )
+
         @JvmStatic
         @Parameterized.Parameters
-        fun data(): Collection<Model> = ApiConfig.values().map {
+        fun data(): Collection<Model> = API_CONFIGS.map {
             when (it) {
                 is Express -> createExpressModel()
                 is TangemTech -> createTangemTechModel()
