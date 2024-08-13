@@ -88,7 +88,7 @@ private fun BoxScope.FeeLoading(feeState: FeeState) {
             RectangleShimmer(
                 radius = TangemTheme.dimens.radius3,
                 modifier = Modifier.size(
-                    height = TangemTheme.dimens.size12,
+                    height = TangemTheme.dimens.size24,
                     width = TangemTheme.dimens.size90,
                 ),
             )
@@ -107,7 +107,7 @@ private fun BoxScope.FeeError(feeState: FeeState) {
             Text(
                 text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
                 color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.body2,
+                style = TangemTheme.typography.body1,
             )
         }
     }
@@ -117,7 +117,7 @@ private fun BoxScope.FeeError(feeState: FeeState) {
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) value: FeeState.Content) {
+private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) value: FeeState) {
     TangemThemePreview {
         StakingFeeBlock(
             feeState = value,
@@ -125,11 +125,13 @@ private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) va
     }
 }
 
-private class FeeBlockPreviewProvider : PreviewParameterProvider<FeeState.Content> {
+private class FeeBlockPreviewProvider : PreviewParameterProvider<FeeState> {
 
-    override val values: Sequence<FeeState.Content>
+    override val values: Sequence<FeeState>
         get() = sequenceOf(
-            feeState,
+            contentState,
+            FeeState.Loading,
+            FeeState.Error,
         )
 
     private val fee = Fee.Common(
@@ -141,7 +143,7 @@ private class FeeBlockPreviewProvider : PreviewParameterProvider<FeeState.Conten
         ),
     )
 
-    private val feeState = FeeState.Content(
+    private val contentState = FeeState.Content(
         fee = fee,
         rate = BigDecimal.ONE,
         appCurrency = AppCurrency.Default,
