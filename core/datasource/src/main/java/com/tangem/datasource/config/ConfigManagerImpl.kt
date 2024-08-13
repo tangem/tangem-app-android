@@ -1,7 +1,6 @@
 package com.tangem.datasource.config
 
 import com.tangem.blockchain.common.*
-import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.config.ConfigManager.Companion.IS_CREATING_TWIN_CARDS_ALLOWED
 import com.tangem.datasource.config.ConfigManager.Companion.IS_TOP_UP_ENABLED
 import com.tangem.datasource.config.models.Config
@@ -109,7 +108,8 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
             sprinklr = configValues.sprinklr,
             walletConnectProjectId = configValues.walletConnectProjectId,
             tangemComAuthorization = configValues.tangemComAuthorization,
-            express = if (BuildConfig.ENVIRONMENT == "dev") configValues.devExpress else configValues.express,
+            express = configValues.express,
+            devExpress = configValues.devExpress,
             stakeKitApiKey = configValues.stakeKitApiKey,
         )
     }
