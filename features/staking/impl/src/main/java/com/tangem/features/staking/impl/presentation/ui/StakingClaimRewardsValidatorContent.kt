@@ -31,7 +31,7 @@ internal fun StakingClaimRewardsValidatorContent(
     if (state !is StakingStates.RewardsValidatorsState.Data) return
     Column(
         modifier = Modifier // Do not put fillMaxSize() in here
-            .background(TangemTheme.colors.background.tertiary)
+            .background(TangemTheme.colors.background.secondary)
             .padding(horizontal = TangemTheme.dimens.spacing12)
             .verticalScroll(rememberScrollState()),
     ) {
