@@ -3,7 +3,7 @@ package com.tangem.datasource.utils
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.api.common.SwitchBaseUrlInterceptor
+import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
@@ -67,7 +67,7 @@ internal fun OkHttpClient.Builder.addEnvironmentSwitcher(
 ): OkHttpClient.Builder {
     return if (BuildConfig.TESTER_MENU_ENABLED) {
         addInterceptor(
-            interceptor = SwitchBaseUrlInterceptor(
+            interceptor = SwitchEnvironmentInterceptor(
                 id = id,
                 apiConfigsManager = apiConfigsManager,
             ),

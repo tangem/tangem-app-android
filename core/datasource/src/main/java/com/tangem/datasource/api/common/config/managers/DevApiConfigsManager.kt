@@ -3,6 +3,7 @@ package com.tangem.datasource.api.common.config.managers
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfigs
 import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMap
@@ -44,7 +45,7 @@ internal class DevApiConfigsManager(
             .launchIn(CoroutineScope(dispatchers.main))
     }
 
-    override fun getBaseUrl(id: ApiConfig.ID): String {
+    override fun getEnvironmentConfig(id: ApiConfig.ID): ApiEnvironmentConfig {
         val apiConfigs = _apiConfigs.value
 
         val config = apiConfigs.map { it }.firstOrNull { it.key.id == id }?.key
@@ -53,7 +54,7 @@ internal class DevApiConfigsManager(
         val currentEnvironment = apiConfigs[config]
             ?: error("Current environment of api config with id [$id] not found")
 
-        return config.environments[currentEnvironment]
+        return config.environmentConfigs.firstOrNull { it.environment == currentEnvironment }
             ?: error("Api config with id [$id] doesn't contain environment [$currentEnvironment]")
     }
 

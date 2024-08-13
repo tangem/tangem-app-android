@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.common.config.managers
 
 import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
 
 /**
  * Api configs manager
@@ -12,6 +13,6 @@ interface ApiConfigsManager {
     /** Initialize resources */
     suspend fun initialize() {}
 
-    /** Get base url of api by [id] */
-    fun getBaseUrl(id: ApiConfig.ID): String
+    /** Get environment config by [id] */
+    fun getEnvironmentConfig(id: ApiConfig.ID): ApiEnvironmentConfig
 }
