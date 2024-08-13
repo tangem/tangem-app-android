@@ -6,8 +6,6 @@ import android.content.pm.PackageManager
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.chuckerteam.chucker.api.ChuckerInterceptor
-import com.orhanobut.logger.AndroidLogAdapter
-import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.TangemSdkLogger
@@ -54,8 +52,8 @@ import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandle
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
+import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.common.log.TangemLogCollector
-import com.tangem.tap.common.log.TimberFormatStrategy
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -69,7 +67,6 @@ import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
 import kotlinx.coroutines.runBlocking
 import org.rekotlin.Store
-import timber.log.Timber
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
 
 lateinit var store: Store<AppState>
@@ -191,6 +188,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles
         get() = entryPoint.getPushNotificationsFeatureToggles()
+
+    private val tangemAppLoggerInitializer: TangemAppLoggerInitializer
+        get() = entryPoint.getTangemAppLogger()
     // endregion
 
     override fun onCreate() {
@@ -202,16 +202,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     fun init() {
         store = createReduxStore()
 
-        if (BuildConfig.LOG_ENABLED) {
-            Logger.addLogAdapter(AndroidLogAdapter(TimberFormatStrategy()))
-            Timber.plant(
-                object : Timber.DebugTree() {
-                    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-                        Logger.log(priority, tag, message, t)
-                    }
-                },
-            )
-        }
+        tangemAppLoggerInitializer.initialize()
 
         foregroundActivityObserver = ForegroundActivityObserver()
         activityResultCaller = foregroundActivityObserver
