@@ -1,94 +1,87 @@
 package com.tangem.domain.managetokens.model
 
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
+
 sealed class ManagedCryptoCurrency {
 
     abstract val id: ID
     abstract val name: String
     abstract val symbol: String
+    abstract val iconUrl: String?
 
-    data class Custom(
-        override val id: ID,
-        override val name: String,
-        override val symbol: String,
-        val contractAddress: String?,
-        val network: SourceNetwork,
-    ) : ManagedCryptoCurrency()
+    sealed class Custom : ManagedCryptoCurrency() {
+
+        abstract val currencyId: CryptoCurrency.ID
+        abstract val network: Network
+
+        override val id: ID
+            get() = ID(currencyId.value)
+
+        data class Token(
+            override val currencyId: CryptoCurrency.ID,
+            override val name: String,
+            override val symbol: String,
+            override val iconUrl: String?,
+            override val network: Network,
+            val contractAddress: String,
+        ) : Custom()
+
+        data class Coin(
+            override val currencyId: CryptoCurrency.ID,
+            override val name: String,
+            override val symbol: String,
+            override val iconUrl: String?,
+            override val network: Network,
+        ) : Custom()
+    }
 
     data class Token(
         override val id: ID,
         override val name: String,
         override val symbol: String,
-        val iconUrl: String,
+        override val iconUrl: String,
         val availableNetworks: List<SourceNetwork>,
-        val addedIn: Set<SourceNetwork.ID>,
+        val addedIn: Set<Network.ID>,
     ) : ManagedCryptoCurrency() {
 
         val isAdded: Boolean = addedIn.isNotEmpty()
     }
 
     @JvmInline
-    value class ID(val value: String) {
+    value class ID(val value: String)
 
-        constructor(
-            networkId: SourceNetwork.ID,
-            contractAddress: String?,
-            derivationPath: String?,
-        ) : this(
-            value = buildString {
-                if (contractAddress.isNullOrBlank()) {
-                    append(CUSTOM_COIN_PREFIX)
-                } else {
-                    append(CUSTOM_TOKEN_PREFIX)
+    sealed class SourceNetwork {
+
+        abstract val network: Network
+
+        val id: Network.ID
+            get() = network.id
+
+        val typeName: String
+            get() = when (this) {
+                is Main -> MAIN_NETWORK_TYPE_NAME
+                is Default -> when (network.standardType) {
+                    is Network.StandardType.BEP2,
+                    is Network.StandardType.BEP20,
+                    is Network.StandardType.ERC20,
+                    is Network.StandardType.TRC20,
+                    -> network.standardType.name
+                    is Network.StandardType.Unspecified -> ""
                 }
+            }
 
-                append(DIVIDER)
-                append(networkId.value)
+        data class Main(
+            override val network: Network,
+        ) : SourceNetwork()
 
-                if (!contractAddress.isNullOrBlank()) {
-                    append(DIVIDER)
-                    append(contractAddress)
-                }
+        data class Default(
+            override val network: Network,
+            val contractAddress: String,
+        ) : SourceNetwork()
 
-                if (!derivationPath.isNullOrBlank()) {
-                    append(DIVIDER)
-                    append(derivationPath.hashCode())
-                }
-            },
-        )
-
-        companion object {
-
-            const val CUSTOM_TOKEN_PREFIX = "custom_token"
-            const val CUSTOM_COIN_PREFIX = "custom_coin"
-            const val DIVIDER = "_"
-        }
-    }
-
-    data class SourceNetwork(
-        val id: ID,
-        val name: String,
-        val iconUrl: String,
-        val type: Type,
-    ) {
-
-        @JvmInline
-        value class ID(val value: String)
-
-        sealed class Type(val name: String?) {
-
-            open val contractAddress: String? = null
-
-            data object MAIN : Type(name = "MAIN")
-
-            data class ERC20(override val contractAddress: String) : Type(name = "ERC20")
-
-            data class TRC20(override val contractAddress: String) : Type(name = "TRC20")
-
-            data class BEP20(override val contractAddress: String) : Type(name = "BEP20")
-
-            data class BEP2(override val contractAddress: String) : Type(name = "BEP2")
-
-            data class Other(override val contractAddress: String) : Type(name = null)
+        private companion object {
+            const val MAIN_NETWORK_TYPE_NAME = "MAIN"
         }
     }
 }
