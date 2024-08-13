@@ -1,5 +1,7 @@
 package com.tangem.datasource.api.common.config
 
+typealias ApiConfigs = Set<@JvmSuppressWildcards ApiConfig>
+
 /**
  * Api config
  *
@@ -36,8 +38,5 @@ sealed class ApiConfig {
         internal const val MOCKED_BUILD_TYPE = "mocked"
         internal const val EXTERNAL_BUILD_TYPE = "external"
         internal const val RELEASE_BUILD_TYPE = "release"
-
-        /** All api configs */
-        fun values() = listOf(Express(), TangemTech())
     }
 }
