@@ -221,7 +221,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onInitialInfoBannerClick() {
-        innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
+        // innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
     }
 
     override fun onInfoClick(infoType: InfoType) {
