@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.common.config.managers
 
 import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiConfigs
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -12,17 +13,19 @@ import kotlinx.coroutines.flow.*
 /**
  * Implementation of [ApiConfigsManager] in DEV environment
  *
+ * @param apiConfigs             api configs
  * @property appPreferencesStore app preferences store
  * @property dispatchers         coroutine dispatcher provider
  */
 internal class DevApiConfigsManager(
+    apiConfigs: ApiConfigs,
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MutableApiConfigsManager {
 
     override val configs: Flow<Map<ApiConfig, ApiEnvironment>> get() = _apiConfigs
 
-    private val _apiConfigs = MutableStateFlow(value = ApiConfig.values().associateWith { it.defaultEnvironment })
+    private val _apiConfigs = MutableStateFlow(value = apiConfigs.associateWith { it.defaultEnvironment })
 
     override suspend fun initialize() {
         // We can't use appPreferencesStore.getObjectMap as base flow,
