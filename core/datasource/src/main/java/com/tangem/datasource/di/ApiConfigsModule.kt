@@ -3,6 +3,7 @@ package com.tangem.datasource.di
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.Express
 import com.tangem.datasource.api.common.config.TangemTech
+import com.tangem.datasource.config.ConfigManager
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.utils.version.AppVersionProvider
 import dagger.Module
@@ -18,10 +19,11 @@ internal object ApiConfigsModule {
     @Provides
     @IntoSet
     fun provideExpressConfig(
+        configManager: ConfigManager,
         expressAuthProvider: ExpressAuthProvider,
         appVersionProvider: AppVersionProvider,
     ): ApiConfig {
-        return Express(expressAuthProvider, appVersionProvider)
+        return Express(configManager, expressAuthProvider, appVersionProvider)
     }
 
     @Provides
