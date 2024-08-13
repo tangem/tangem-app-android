@@ -1,11 +1,16 @@
 package com.tangem.domain.transaction
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.CommonSigner
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionSendResult
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.models.TransactionType
 import com.tangem.domain.wallets.models.UserWalletId
+import java.math.BigDecimal
 import java.math.BigInteger
 
 interface TransactionRepository {
@@ -20,7 +25,18 @@ interface TransactionRepository {
         network: Network,
         txExtras: TransactionExtras?,
         hash: String?,
-    ): TransactionData.Uncompiled?
+    ): TransactionData.Uncompiled
+
+    @Suppress("LongParameterList")
+    suspend fun createApprovalTransaction(
+        amount: Amount,
+        fee: Fee,
+        contractAddress: String,
+        spenderAddress: String,
+        userWalletId: UserWalletId,
+        network: Network,
+        hash: String?,
+    ): TransactionData.Uncompiled
 
     @Suppress("LongParameterList")
     suspend fun validateTransaction(
@@ -49,4 +65,10 @@ interface TransactionRepository {
         nonce: BigInteger?,
         gasLimit: BigInteger?,
     ): TransactionExtras
+
+    suspend fun getAllowance(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency.Token,
+        spenderAddress: String,
+    ): BigDecimal
 }
