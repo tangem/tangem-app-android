@@ -1,13 +1,9 @@
 package com.tangem.datasource.api.common.config
 
-/**
- * TangemTech [ApiConfig]
- *
- * @property currentEnvironment current api environment
- */
-internal data class TangemTech(
-    override val currentEnvironment: ApiEnvironment = ApiEnvironment.PROD,
-) : ApiConfig(currentEnvironment) {
+/** TangemTech [ApiConfig] */
+internal class TangemTech : ApiConfig() {
+
+    override val defaultEnvironment: ApiEnvironment = ApiEnvironment.PROD
 
     override val environments: Map<ApiEnvironment, String> = mapOf(
         ApiEnvironment.DEV to "https://devapi.tangem-tech.com/v1/",
