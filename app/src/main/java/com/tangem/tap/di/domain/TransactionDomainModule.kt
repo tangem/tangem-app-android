@@ -100,4 +100,18 @@ internal object TransactionDomainModule {
     ): IsUtxoConsolidationAvailableUseCase {
         return IsUtxoConsolidationAvailableUseCase(walletManagersFacade)
     }
+
+    @Provides
+    @Singleton
+    fun provideCreateApproveTransactionUseCase(
+        transactionRepository: TransactionRepository,
+    ): CreateApprovalTransactionUseCase {
+        return CreateApprovalTransactionUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetAllowanceUseCase(transactionRepository: TransactionRepository): GetAllowanceUseCase {
+        return GetAllowanceUseCase(transactionRepository)
+    }
 }
