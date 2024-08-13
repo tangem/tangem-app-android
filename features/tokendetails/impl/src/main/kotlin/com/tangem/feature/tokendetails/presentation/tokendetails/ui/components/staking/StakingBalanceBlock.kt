@@ -33,7 +33,7 @@ internal fun StakingBalanceBlock(state: StakingBlockUM.Staked, modifier: Modifie
         modifier = modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors.background.primary)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(),
