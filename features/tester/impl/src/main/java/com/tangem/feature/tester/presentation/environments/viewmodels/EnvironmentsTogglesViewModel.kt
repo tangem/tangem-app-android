@@ -69,10 +69,10 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
             EnvironmentTogglesScreenUM.ApiInfoUM(
                 name = config.id.name,
                 select = currentEnvironment.name,
-                url = config.environments[currentEnvironment]
+                url = config.environmentConfigs.firstOrNull { it.environment == currentEnvironment }?.baseUrl
                     ?: error("Current environment's url isn't found"),
-                environments = config.environments
-                    .map { environment -> environment.key.name }
+                environments = config.environmentConfigs
+                    .map { environmentConfig -> environmentConfig.environment.name }
                     .toImmutableSet(),
             )
         }
