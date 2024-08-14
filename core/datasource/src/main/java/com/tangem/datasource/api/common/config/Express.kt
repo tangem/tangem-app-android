@@ -1,17 +1,49 @@
 package com.tangem.datasource.api.common.config
 
 import com.tangem.datasource.BuildConfig
+import com.tangem.datasource.utils.RequestHeader
+import com.tangem.lib.auth.ExpressAuthProvider
+import com.tangem.utils.Provider
+import com.tangem.utils.version.AppVersionProvider
 
 /** Express [ApiConfig] */
-internal class Express : ApiConfig() {
+internal class Express(
+    private val expressAuthProvider: ExpressAuthProvider,
+    private val appVersionProvider: AppVersionProvider,
+) : ApiConfig() {
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
-    override val environments: Map<ApiEnvironment, String> = mapOf(
-        ApiEnvironment.DEV to "[REDACTED_ENV_URL]",
-        ApiEnvironment.STAGE to "[REDACTED_ENV_URL]",
-        ApiEnvironment.PROD to "https://express.tangem.com/v1/",
+    override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
+        createDevEnvironment(),
+        createStageEnvironment(),
+        createProdEnvironment(),
     )
+
+    private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.DEV,
+        baseUrl = "[REDACTED_ENV_URL]",
+        headers = createHeaders(),
+    )
+
+    private fun createStageEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.STAGE,
+        baseUrl = "[REDACTED_ENV_URL]",
+        headers = createHeaders(),
+    )
+
+    private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.PROD,
+        baseUrl = "https://express.tangem.com/v1/",
+        headers = createHeaders(),
+    )
+
+    private fun createHeaders() = buildMap {
+        put(key = "api-key", value = Provider(expressAuthProvider::getApiKey))
+        put(key = "user-id", value = Provider(expressAuthProvider::getUserId))
+        put(key = "session-id", value = Provider(expressAuthProvider::getSessionId))
+        putAll(from = RequestHeader.AppVersionPlatformHeaders(appVersionProvider).values)
+    }
 
     private companion object {
 
