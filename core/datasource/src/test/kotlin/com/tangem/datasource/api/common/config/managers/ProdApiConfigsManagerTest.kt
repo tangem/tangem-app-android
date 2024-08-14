@@ -36,7 +36,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
 
         val API_CONFIGS = setOf(
             Express(mockk(), mockk(), mockk()),
-            TangemTech(),
+            TangemTech(mockk()),
 
             // Don't forget to add new config
         )
