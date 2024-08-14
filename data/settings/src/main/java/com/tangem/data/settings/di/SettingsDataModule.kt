@@ -9,6 +9,7 @@ import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.settings.repositories.PromoSettingsRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,8 +22,11 @@ internal object SettingsDataModule {
 
     @Provides
     @Singleton
-    fun provideSettingsRepository(appPreferencesStore: AppPreferencesStore): SettingsRepository {
-        return DefaultSettingsRepository(appPreferencesStore = appPreferencesStore)
+    fun provideSettingsRepository(
+        appPreferencesStore: AppPreferencesStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): SettingsRepository {
+        return DefaultSettingsRepository(appPreferencesStore = appPreferencesStore, dispatchers = dispatchers)
     }
 
     @Provides

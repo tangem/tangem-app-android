@@ -11,11 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.ui.amountScreen.utils.getCryptoReference
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.rows.SelectorRowItem
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseToBigDecimal
@@ -52,7 +52,14 @@ internal fun SendSpeedSelectorItem(
                 iconRes = iconRes,
                 onSelect = onSelect,
                 modifier = modifier,
-                preDot = getCryptoReference(amount, state.isFeeApproximate),
+                preDot = stringReference(
+                    BigDecimalFormatter.formatCryptoFeeAmount(
+                        cryptoAmount = amount?.value,
+                        cryptoCurrency = amount?.currencySymbol.orEmpty(),
+                        decimals = amount?.decimals ?: 0,
+                        canBeLower = state.isFeeApproximate,
+                    ),
+                ),
                 postDot = if (state.isFeeConvertibleToFiat) {
                     getFiatReference(amount?.value, state.rate, state.appCurrency)
                 } else {
