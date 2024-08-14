@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.converters
 
-import com.tangem.data.tokens.utils.ResponseCryptoCurrenciesFactory
-import com.tangem.data.tokens.utils.UserTokensResponseFactory
+import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
+import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
