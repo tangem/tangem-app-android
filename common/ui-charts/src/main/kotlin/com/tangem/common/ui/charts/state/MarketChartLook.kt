@@ -24,5 +24,6 @@ data class MarketChartLook(
     enum class Type {
         Growing,
         Falling,
+        Neutral,
     }
 }
