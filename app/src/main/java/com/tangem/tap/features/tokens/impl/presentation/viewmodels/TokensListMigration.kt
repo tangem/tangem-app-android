@@ -4,7 +4,6 @@ import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.utils.popTo
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -126,7 +125,7 @@ internal class TokensListMigration(
         val isNothingToDoWithBlockchain = blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
         if (isNothingToDoWithTokens && isNothingToDoWithBlockchain) {
             store.dispatchDebugErrorNotification(message = "Nothing to save")
-            store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
+            navigateToWallet()
             return
         }
 
@@ -135,9 +134,21 @@ internal class TokensListMigration(
         derivePublicKeysUseCase(userWalletId = currentUserWallet.walletId, currencies = currencyList)
             .onRight {
                 addCryptoCurrenciesUseCase(userWalletId = currentUserWallet.walletId, currencies = currencyList)
-                store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
+                navigateToWallet()
             }
             .onLeft { Timber.e(it, "Failed to derive public keys") }
+    }
+
+    private fun navigateToWallet() {
+        store.dispatchNavigationAction {
+            val route = AppRoute.Wallet
+
+            if (route in stack) {
+                popTo(route)
+            } else {
+                replaceAll(route)
+            }
+        }
     }
 
     private suspend fun removeCurrenciesIfNeeded(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
