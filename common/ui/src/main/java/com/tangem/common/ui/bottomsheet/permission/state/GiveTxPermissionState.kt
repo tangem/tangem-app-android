@@ -22,7 +22,7 @@ sealed class GiveTxPermissionState {
         val approveItems: ImmutableList<ApproveType> = ApproveType.entries.toImmutableList(),
         val approveButton: ApprovePermissionButton,
         val cancelButton: CancelPermissionButton,
-        val onChangeApproveType: (ApproveType) -> Unit,
+        val onChangeApproveType: ((ApproveType) -> Unit)? = null,
     ) : GiveTxPermissionState()
 }
 
