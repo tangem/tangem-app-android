@@ -688,6 +688,26 @@
                     "networkId": "base/test"
                 }
             ]
+        },
+        {
+            "id": "blast-ethereum",
+            "name": "Blast",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "blast/test"
+                }
+            ]
+        },
+        {
+            "id": "cyberconnect",
+            "name": "Cyber",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "cyber/test"
+                }
+            ]
         }
     ]
 }
