@@ -34,19 +34,12 @@ fun MarketsListItemPlaceholder() {
         SpacerW12()
 
         Column(modifier = Modifier.weight(1f)) {
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = TangemTheme.dimens.spacing4),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                contentAlignment = Alignment.CenterStart,
             ) {
-                RectangleShimmer(
-                    modifier = Modifier
-                        .width(TangemTheme.dimens.size70)
-                        .height(sp12),
-                    radius = TangemTheme.dimens.radius3,
-                )
-                SpacerW8()
                 RectangleShimmer(
                     modifier = Modifier
                         .width(TangemTheme.dimens.size70)
@@ -57,19 +50,12 @@ fun MarketsListItemPlaceholder() {
 
             SpacerH(height = TangemTheme.dimens.spacing2)
 
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = TangemTheme.dimens.spacing2),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom,
+                contentAlignment = Alignment.CenterStart,
             ) {
-                RectangleShimmer(
-                    modifier = Modifier
-                        .width(TangemTheme.dimens.size52)
-                        .height(sp12),
-                    radius = TangemTheme.dimens.radius3,
-                )
                 RectangleShimmer(
                     modifier = Modifier
                         .width(TangemTheme.dimens.size52)

@@ -7,13 +7,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.block.information.GridItems
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
+import com.tangem.core.ui.components.text.TooltipText
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -34,13 +33,10 @@ internal fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
     InformationBlock(
         modifier = modifier,
         title = {
-            Text(
-                modifier = Modifier,
-                text = stringResource(R.string.markets_token_details_insights),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            TooltipText(
+                text = resourceReference(R.string.markets_token_details_insights),
+                textStyle = TangemTheme.typography.subtitle2,
+                onInfoClick = state.onInfoClick,
             )
         },
         action = {
@@ -180,6 +176,7 @@ private fun ContentPreview() {
                         value = "1 000",
                     ),
                 ),
+                onInfoClick = {},
             ),
         )
     }
