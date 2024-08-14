@@ -88,12 +88,12 @@ internal fun OkHttpClient.Builder.addLoggers(context: Context? = null): OkHttpCl
 }
 
 /**
- * Add environment switcher
+ * Apply api config
  *
  * @param id                class of [ApiConfig]
  * @param apiConfigsManager api configs manager
  */
-internal fun OkHttpClient.Builder.addEnvironmentSwitcher(
+internal fun OkHttpClient.Builder.applyApiConfig(
     id: ApiConfig.ID,
     apiConfigsManager: ApiConfigsManager,
 ): OkHttpClient.Builder {
@@ -105,6 +105,8 @@ internal fun OkHttpClient.Builder.addEnvironmentSwitcher(
             ),
         )
     } else {
-        this
+        val headers = apiConfigsManager.getEnvironmentConfig(id).headers
+
+        this.addHeaders(headers)
     }
 }
