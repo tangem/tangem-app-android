@@ -36,6 +36,7 @@ data class BalanceItem(
     val amount: BigDecimal,
     val pricePerShare: BigDecimal,
     val rawCurrencyId: String?,
+    val rawNetworkId: String,
     val validatorAddress: String?,
     val pendingActions: List<PendingAction>,
 )
