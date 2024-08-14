@@ -7,7 +7,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
 
-import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.derivationStyleProvider
