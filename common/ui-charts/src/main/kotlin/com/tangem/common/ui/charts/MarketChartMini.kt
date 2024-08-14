@@ -36,6 +36,7 @@ fun MarketChartMini(
     type: MarketChartLook.Type = MarketChartLook.Type.Growing,
     growingColor: Color = TangemTheme.colors.icon.accent,
     fallingColor: Color = TangemTheme.colors.icon.warning,
+    neutralColor: Color = TangemTheme.colors.icon.informative,
 ) {
     val model = remember(rawData) {
         CartesianChartModel(LineCartesianLayerModel.build { series(rawData.y) })
@@ -44,6 +45,7 @@ fun MarketChartMini(
     val lineColor = when (type) {
         MarketChartLook.Type.Growing -> growingColor
         MarketChartLook.Type.Falling -> fallingColor
+        MarketChartLook.Type.Neutral -> neutralColor
     }
 
     val lineSpec = rememberLine(
@@ -85,6 +87,8 @@ private fun Preview() {
             MarketChartMini(rawData = data, type = MarketChartLook.Type.Growing)
             SpacerH16()
             MarketChartMini(rawData = data, type = MarketChartLook.Type.Falling)
+            SpacerH16()
+            MarketChartMini(rawData = data, type = MarketChartLook.Type.Neutral)
         }
     }
 }

@@ -12,6 +12,7 @@ import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
+import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.*
 
 @Stable
 internal class MarketsListUMStateManager(
+    private val currentVisibleIds: Provider<List<String>>,
     private val onLoadMoreUiItems: () -> Unit,
     private val visibleItemsChanged: (itemsKeys: List<String>) -> Unit,
     private val onRetryButtonClicked: () -> Unit,
@@ -129,9 +131,11 @@ internal class MarketsListUMStateManager(
             }
         }
 
+        val itemsWithFilteredPriceChange = items.filterPriceChangeByVisibility()
+
         return currentState.copy(
             list = ListUM.Content(
-                items = items,
+                items = itemsWithFilteredPriceChange,
                 loadMore = onLoadMoreUiItems,
                 visibleIdsChanged = visibleItemsChanged,
                 showUnder100kTokens = isInSearchState.not() || isNextPageInSearch,
@@ -155,6 +159,22 @@ internal class MarketsListUMStateManager(
                 onItemClick = onTokenClick,
             ),
         )
+    }
+
+    // Show price change animation for visible items only
+    private fun ImmutableList<MarketsListItemUM>.filterPriceChangeByVisibility(): ImmutableList<MarketsListItemUM> {
+        val visibleItemIds = currentVisibleIds()
+        return map {
+            it.copy(
+                price = it.price.copy(
+                    changeType = if (visibleItemIds.contains(it.id)) {
+                        it.price.changeType
+                    } else {
+                        null
+                    },
+                ),
+            )
+        }.toImmutableList()
     }
 
     private fun generalContentState(newItems: ImmutableList<MarketsListItemUM>): ListUM.Content {

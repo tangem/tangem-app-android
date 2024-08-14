@@ -20,10 +20,9 @@ data class MarketsListItemUM(
     val isUnder100kMarketCap: Boolean = false,
 ) {
     val chartType: MarketChartLook.Type = when (trendType) {
-        PriceChangeType.UP,
-        PriceChangeType.NEUTRAL,
-        -> MarketChartLook.Type.Growing
+        PriceChangeType.UP -> MarketChartLook.Type.Growing
         PriceChangeType.DOWN -> MarketChartLook.Type.Falling
+        PriceChangeType.NEUTRAL -> MarketChartLook.Type.Neutral
     }
 
     @Immutable
