@@ -19,7 +19,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.haptic.HapticManager
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -34,6 +35,7 @@ import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
@@ -119,7 +121,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val associateAssetUseCase: AssociateAssetUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    private val hapticManager: HapticManager,
+    private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     tokenDetailsFeatureToggles: TokenDetailsFeatureToggles,
@@ -144,15 +146,16 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val refreshStateJobHolder = JobHolder()
     private val warningsJobHolder = JobHolder()
     private val swapTxJobHolder = JobHolder()
-    private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
-
-    private var swapTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<SwapTransactionsState>>()
-
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
+
+    private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
+    private var stakingEntryInfo: StakingEntryInfo? = null
+    private var swapTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<SwapTransactionsState>>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        stakingEntryInfoProvider = Provider { stakingEntryInfo },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
@@ -399,7 +402,8 @@ internal class TokenDetailsViewModel @Inject constructor(
                     cryptoCurrencyId = cryptoCurrency.id,
                     symbol = cryptoCurrency.symbol,
                 )
-                internalUiState.value = stateFactory.getStateWithStaking(stakingInfo)
+
+                stakingEntryInfo = stakingInfo.getOrNull()
             }
         }
     }
@@ -568,7 +572,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             val extendedKey = getExtendedPublicKeyForCurrencyUseCase(
                 userWalletId,
-                cryptoCurrency.network.derivationPath,
+                cryptoCurrency.network,
             ).fold(
                 ifLeft = {
                     Timber.e(it.cause?.localizedMessage.orEmpty())
@@ -577,7 +581,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 ifRight = { it },
             )
             if (extendedKey.isNotBlank()) {
-                hapticManager.vibrateMeduim()
+                vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
                 clipboardManager.setText(text = extendedKey)
                 internalUiState.value = stateFactory.getStateAndTriggerEvent(
                     state = internalUiState.value,
@@ -799,7 +803,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         val addresses = networkAddress.availableAddresses.mapToAddressModels(cryptoCurrency).toImmutableList()
         val defaultAddress = addresses.firstOrNull()?.value ?: return null
 
-        hapticManager.vibrateMeduim()
+        vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
         clipboardManager.setText(text = defaultAddress)
         analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
         return resourceReference(R.string.wallet_notification_address_copied)
