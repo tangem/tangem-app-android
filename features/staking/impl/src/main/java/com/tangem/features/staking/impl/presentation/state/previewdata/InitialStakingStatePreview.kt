@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.presentation.state.previewdata
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
@@ -59,11 +60,12 @@ internal object InitialStakingStatePreview {
             rewardsFiat = "100 $",
             rewardsCrypto = "100 SOL",
             isRewardsToClaim = false,
-            balance = listOf(
+            balance = persistentListOf(
                 BalanceGroupedState(
                     title = stringReference("Staked"),
                     footer = null,
-                    type = BalanceGroupType.ACTIVE,
+                    type = BalanceType.STAKED,
+                    isClickable = true,
                     items = persistentListOf(
                         BalanceState(
                             cryptoValue = "100",
