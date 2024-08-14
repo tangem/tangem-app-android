@@ -10,6 +10,7 @@ import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 internal class DefaultMarketsTokenRepository(
@@ -17,8 +18,6 @@ internal class DefaultMarketsTokenRepository(
     private val tangemTechApi: TangemTechApi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
 ) : MarketsTokenRepository {
-
-    private val tokenListConverter = TokenMarketListConverter()
 
     private fun createTokenMarketsFetcher(firstBatchSize: Int, nextBatchSize: Int) = LimitOffsetBatchFetcher(
         prefetchDistance = firstBatchSize,
@@ -41,9 +40,9 @@ internal class DefaultMarketsTokenRepository(
                         interval = request.params.priceChangeInterval.toRequestParam(),
                         order = request.params.order.toRequestParam(),
                         search = searchText,
-                        generalCoins = request.params.showUnder100kMarketCapTokens.not(),
                         offset = request.offset,
                         limit = request.limit,
+                        timestamp = if (isFirstBatchFetching) null else requestTimeStamp.get(),
                     ).getOrThrow()
                 }
 
@@ -57,13 +56,13 @@ internal class DefaultMarketsTokenRepository(
                 }
 
                 if (isFirstBatchFetching) {
-                    requestTimeStamp.set(0) // TODO when backend is ready
+                    requestTimeStamp.set(res.timestamp ?: 0)
                 }
 
                 val last = res.tokens.size < request.limit
 
                 return BatchFetchResult.Success(
-                    data = tokenListConverter.convert(res),
+                    data = TokenMarketListConverter.convert(res),
                     last = last,
                     empty = res.tokens.isEmpty(),
                 )
@@ -81,12 +80,53 @@ internal class DefaultMarketsTokenRepository(
             marketsApi = marketsApi,
         )
 
+        val atomicInteger = AtomicInteger(0)
+
         return BatchListSource(
             fetchDispatcher = dispatcherProvider.io,
             context = batchingContext,
-            generateNewKey = { it.size },
+            generateNewKey = { atomicInteger.getAndIncrement() },
             batchFetcher = createTokenMarketsFetcher(firstBatchSize = firstBatchSize, nextBatchSize = nextBatchSize),
             updateFetcher = tokenMarketsUpdateFetcher,
         ).toBatchFlow()
+    }
+
+    override suspend fun getChart(
+        fiatCurrencyCode: String,
+        interval: PriceChangeInterval,
+        tokenId: String,
+    ): TokenChart {
+        val response = marketsApi.getCoinChart(
+            currency = fiatCurrencyCode,
+            coinId = tokenId,
+            interval = interval.toRequestParam(),
+        )
+
+        return TokenChartConverter.convert(interval, response.getOrThrow())
+    }
+
+    override suspend fun getTokenInfo(
+        fiatCurrencyCode: String,
+        tokenId: String,
+        languageCode: String,
+    ): TokenMarketInfo {
+        val response = marketsApi.getCoinMarketData(
+            currency = fiatCurrencyCode,
+            coinId = tokenId,
+            language = languageCode,
+        )
+
+        return TokenMarketInfoConverter.convert(response.getOrThrow())
+    }
+
+    override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String): TokenQuotes {
+        // TODO change method when backend is ready
+        val response = marketsApi.getCoinMarketData(
+            currency = fiatCurrencyCode,
+            coinId = tokenId,
+            language = "en",
+        )
+
+        return TokenMarketInfoConverter.convert(response.getOrThrow()).quotes
     }
 }
