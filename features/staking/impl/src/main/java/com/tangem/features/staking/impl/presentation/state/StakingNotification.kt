@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.presentation.state
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.staking.impl.R
 
@@ -23,7 +24,15 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
             onCloseClick = onCloseClick,
         ),
     ) {
-        // TODO staking
+        data class StakedPositionNotFoundError(val message: String) : Error(
+            title = stringReference(message),
+            subtitle = stringReference(message),
+        )
+
+        data class Common(val subtitle: TextReference) : Error(
+            title = resourceReference(R.string.common_error),
+            subtitle = subtitle,
+        )
     }
 
     sealed class Warning(
@@ -41,13 +50,23 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
         ),
     ) {
         data class EarnRewards(
+            val subtitleResourceId: Int,
             val currencyName: String,
-            val days: Int,
         ) : Warning(
             title = resourceReference(R.string.staking_notification_earn_rewards_title),
             subtitle = resourceReference(
-                R.string.staking_notification_earn_rewards_text,
-                wrappedList(currencyName, days),
+                subtitleResourceId,
+                wrappedList(currencyName),
+            ),
+        )
+
+        data class Unstake(
+            val cooldownPeriodDays: Int,
+        ) : Warning(
+            title = resourceReference(R.string.common_unstake),
+            subtitle = resourceReference(
+                R.string.staking_notification_unstake_text,
+                wrappedList(cooldownPeriodDays, cooldownPeriodDays),
             ),
         )
     }
