@@ -147,17 +147,20 @@ private fun BalanceButtons(state: TokenDetailsBalanceBlockState) {
             .padding(top = TangemTheme.dimens.spacing11)
             .width(IntrinsicSize.Min),
     ) { config ->
+        val style = if (state.selectedBalanceType == config.type) {
+            TangemTheme.typography.caption1
+        } else {
+            TangemTheme.typography.caption2
+        }
         Text(
             text = config.title.resolveReference(),
             color = TangemTheme.colors.text.primary1,
-            style = TangemTheme.typography.caption1,
+            style = style,
             maxLines = 1,
             modifier = Modifier
                 .padding(
-                    start = TangemTheme.dimens.spacing5,
-                    end = TangemTheme.dimens.spacing5,
-                    top = TangemTheme.dimens.spacing3,
-                    bottom = TangemTheme.dimens.spacing3,
+                    horizontal = TangemTheme.dimens.spacing4,
+                    vertical = TangemTheme.dimens.spacing6,
                 )
                 .align(Alignment.Center),
         )
