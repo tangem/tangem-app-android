@@ -123,6 +123,7 @@
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Coller</string>
   <string name="common_range">%1$s-%2$s</string>
+  <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">En savoir plus</string>
   <string name="common_receive">Recevoir</string>
   <string name="common_reject">Rejeter</string>
@@ -269,7 +270,7 @@
   <string name="feedback_subject_support">Commentaires</string>
   <string name="feedback_subject_support_tangem">Commentaires sur Tangem</string>
   <string name="feedback_subject_tx_failed">Impossible d\'envoyer une transaction</string>
-  <string name="give_permission_current_transaction">Transaction en cours</string>
+  <string name="give_permission_current_transaction">Transaction </string>
   <string name="give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="give_permission_policy_type_footer">Spécifiez la limite approuvée pour le jeton sélectionné</string>
   <string name="give_permission_rows_amount">Montant %s</string>
@@ -328,7 +329,7 @@
   <string name="markets_add_to_portfolio_button">Ajouter au portfolio</string>
   <string name="markets_common_my_portfolio">Mon portfolio</string>
   <string name="markets_common_title">Marché</string>
-  <string name="markets_generate_addresses_notification">Pour générer des adresses pour les réseaux sélectionnés, vous devez scanner votre carte Tangem.</string>
+  <string name="markets_generate_addresses_notification">Pour générer des adresses pour les réseaux sélectionnés, vous devez scanner votre carte Tangem</string>
   <string name="markets_select_wallet">Sélectionnez un portefeuille</string>
   <string name="markets_sort_by_title">Trier par</string>
   <string name="markets_token_details_insights">Idées</string>
@@ -594,7 +595,6 @@
   <string name="staking_details_warmup_period">Période d\'échauffement</string>
   <string name="staking_details_warmup_period_info">Le temps imparti pour activer la participation au staking.</string>
   <string name="staking_native">Native staking</string>
-  <string name="staking_notification_earn_rewards_text">Le staking vous permet d\'en gagner %1$s. Vos récompenses de staking arrivent tous les ~%2$s jours.</string>
   <string name="staking_notification_earn_rewards_title">Gagnez des récompenses de staking</string>
   <string name="staking_rewards">Récompenses</string>
   <string name="staking_stake_more">Staker plus</string>
