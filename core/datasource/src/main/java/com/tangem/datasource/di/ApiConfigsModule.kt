@@ -2,9 +2,11 @@ package com.tangem.datasource.di
 
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.Express
+import com.tangem.datasource.api.common.config.StakeKit
 import com.tangem.datasource.api.common.config.TangemTech
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.lib.auth.ExpressAuthProvider
+import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.version.AppVersionProvider
 import dagger.Module
 import dagger.Provides
@@ -24,6 +26,12 @@ internal object ApiConfigsModule {
         appVersionProvider: AppVersionProvider,
     ): ApiConfig {
         return Express(configManager, expressAuthProvider, appVersionProvider)
+    }
+
+    @Provides
+    @IntoSet
+    fun provideStakeKitConfig(stakeKitAuthProvider: StakeKitAuthProvider): ApiConfig {
+        return StakeKit(stakeKitAuthProvider)
     }
 
     @Provides
