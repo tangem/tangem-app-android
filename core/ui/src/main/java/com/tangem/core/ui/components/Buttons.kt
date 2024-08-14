@@ -10,6 +10,7 @@ import androidx.compose.material.ButtonColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.common.*
@@ -26,6 +27,7 @@ fun TextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     colors: ButtonColors = TangemButtonsDefaults.defaultTextButtonColors,
+    textStyle: TextStyle = TangemTheme.typography.button,
     enabled: Boolean = true,
 ) {
     TangemButton(
@@ -37,6 +39,7 @@ fun TextButton(
         showProgress = false,
         colors = colors,
         size = TangemButtonSize.Text,
+        textStyle = textStyle,
     )
 }
 

@@ -27,7 +27,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
 ) {
 
     fun create(config: BlockchainSdkConfig, blockchainProviderTypes: BlockchainProviderTypes): WalletManagerFactory {
-        Timber.d("Create WalletManagerFactory")
+        Timber.i("Create WalletManagerFactory")
 
         return WalletManagerFactory(
             config = config,
