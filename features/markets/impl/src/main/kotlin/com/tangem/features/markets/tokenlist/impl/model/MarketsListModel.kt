@@ -48,6 +48,7 @@ internal class MarketsListModel @Inject constructor(
     private val visibleItemIds = MutableStateFlow<List<String>>(emptyList())
 
     private val marketsListUMStateManager = MarketsListUMStateManager(
+        currentVisibleIds = Provider { visibleItemIds.value },
         onLoadMoreUiItems = { activeListManager.loadMore() },
         visibleItemsChanged = { visibleItemIds.value = it },
         onRetryButtonClicked = { activeListManager.reload() },

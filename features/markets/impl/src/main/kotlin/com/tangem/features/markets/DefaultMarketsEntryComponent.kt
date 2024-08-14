@@ -87,7 +87,26 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
             }
         }
 
+        // order of LaunchedEffects is important here
+
         val activeChild = stackState.value.active.configuration
+
+        LaunchedEffect(activeChild) {
+            when (activeChild) {
+                is MarketsEntryChildFactory.Child.TokenDetails -> {
+                    backgroundColor.animateTo(
+                        secondary,
+                        animationSpec = tween(durationMillis = 500),
+                    )
+                }
+                MarketsEntryChildFactory.Child.TokenList -> {
+                    backgroundColor.animateTo(
+                        primary,
+                        animationSpec = tween(durationMillis = 500),
+                    )
+                }
+            }
+        }
 
         LaunchedEffect(bottomSheetState.value) {
             if (activeChild is MarketsEntryChildFactory.Child.TokenDetails) {
@@ -104,23 +123,6 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
                             animationSpec = tween(durationMillis = 100),
                         )
                     }
-                }
-            }
-        }
-
-        LaunchedEffect(activeChild) {
-            when (activeChild) {
-                is MarketsEntryChildFactory.Child.TokenDetails -> {
-                    backgroundColor.animateTo(
-                        secondary,
-                        animationSpec = tween(durationMillis = 500),
-                    )
-                }
-                MarketsEntryChildFactory.Child.TokenList -> {
-                    backgroundColor.animateTo(
-                        primary,
-                        animationSpec = tween(durationMillis = 500),
-                    )
                 }
             }
         }
