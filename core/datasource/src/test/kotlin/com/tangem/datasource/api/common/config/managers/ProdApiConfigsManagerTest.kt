@@ -10,6 +10,7 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
 import com.tangem.datasource.api.common.config.Express
 import com.tangem.datasource.api.common.config.TangemTech
+import io.mockk.mockk
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -24,7 +25,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
 
     @Test
     fun test_getBaseUrl() {
-        val actual = manager.getBaseUrl(id = model.id)
+        val actual = manager.getEnvironmentConfig(id = model.id).baseUrl
 
         Truth.assertThat(actual).isEqualTo(model.expected)
     }
@@ -34,7 +35,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
     private companion object {
 
         val API_CONFIGS = setOf(
-            Express(),
+            Express(mockk(), mockk()),
             TangemTech(),
 
             // Don't forget to add new config
