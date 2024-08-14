@@ -22,4 +22,5 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
+    implementation(deps.kotlin.immutable.collections)
 }

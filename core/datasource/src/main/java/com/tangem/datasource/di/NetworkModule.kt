@@ -3,6 +3,11 @@ package com.tangem.datasource.di
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.BuildConfig
+import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiConfigs
+import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
+import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
@@ -10,12 +15,14 @@ import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApiV2
 import com.tangem.datasource.api.tangemTech.TangemTechServiceApi
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.RequestHeader
 import com.tangem.datasource.utils.RequestHeader.*
+import com.tangem.datasource.utils.addEnvironmentSwitcher
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.addLoggers
-import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.version.AppVersionProvider
 import dagger.Module
 import dagger.Provides
@@ -34,25 +41,35 @@ class NetworkModule {
 
     @Provides
     @Singleton
+    fun provideApiConfigManager(
+        apiConfigs: ApiConfigs,
+        appPreferencesStore: AppPreferencesStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): ApiConfigsManager {
+        return if (BuildConfig.TESTER_MENU_ENABLED) {
+            DevApiConfigsManager(apiConfigs, appPreferencesStore, dispatchers)
+        } else {
+            ProdApiConfigsManager(apiConfigs)
+        }
+    }
+
+    @Provides
+    @Singleton
     fun provideExpressApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        expressAuthProvider: ExpressAuthProvider,
-        appVersionProvider: AppVersionProvider,
+        apiConfigsManager: ApiConfigsManager,
     ): TangemExpressApi {
-        val url = if (BuildConfig.ENVIRONMENT == "dev") {
-            STAGE_EXPRESS_BASE_URL
-        } else {
-            PROD_EXPRESS_BASE_URL
-        }
+        val environmentConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.Express)
+
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
-            .baseUrl(url)
+            .baseUrl(environmentConfig.baseUrl)
             .client(
                 OkHttpClient.Builder()
-                    .addHeaders(Express(expressAuthProvider))
-                    .addHeaders(AppVersionPlatformHeaders(appVersionProvider))
+                    .addEnvironmentSwitcher(ApiConfig.ID.Express, apiConfigsManager)
+                    .addHeaders(environmentConfig.headers)
                     .addLoggers(context)
                     .build(),
             )
@@ -87,8 +104,15 @@ class NetworkModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appVersionProvider: AppVersionProvider,
+        apiConfigsManager: ApiConfigsManager,
     ): TangemTechApi {
-        return provideTangemTechApiInternal(moshi, context, appVersionProvider, PROD_V1_TANGEM_TECH_BASE_URL)
+        return provideTangemTechApiInternal(
+            moshi = moshi,
+            context = context,
+            appVersionProvider = appVersionProvider,
+            apiConfigsManager = apiConfigsManager,
+            baseUrl = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemTech).baseUrl,
+        )
     }
 
     @Provides
@@ -97,8 +121,15 @@ class NetworkModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appVersionProvider: AppVersionProvider,
+        apiConfigsManager: ApiConfigsManager,
     ): TangemTechApiV2 {
-        return provideTangemTechApiInternal(moshi, context, appVersionProvider, PROD_V2_TANGEM_TECH_BASE_URL)
+        return provideTangemTechApiInternal(
+            moshi = moshi,
+            context = context,
+            appVersionProvider = appVersionProvider,
+            apiConfigsManager = apiConfigsManager,
+            baseUrl = PROD_V2_TANGEM_TECH_BASE_URL,
+        )
     }
 
     @Provides
@@ -108,8 +139,15 @@ class NetworkModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appVersionProvider: AppVersionProvider,
+        apiConfigsManager: ApiConfigsManager,
     ): TangemTechApi {
-        return provideTangemTechApiInternal(moshi, context, appVersionProvider, DEV_V1_TANGEM_TECH_BASE_URL)
+        return provideTangemTechApiInternal(
+            moshi = moshi,
+            context = context,
+            appVersionProvider = appVersionProvider,
+            apiConfigsManager = apiConfigsManager,
+            baseUrl = DEV_V1_TANGEM_TECH_BASE_URL,
+        )
     }
 
     @Provides
@@ -118,12 +156,14 @@ class NetworkModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appVersionProvider: AppVersionProvider,
+        apiConfigsManager: ApiConfigsManager,
     ): TangemTechServiceApi {
         return provideTangemTechApiInternal(
             moshi = moshi,
             context = context,
             appVersionProvider = appVersionProvider,
-            baseUrl = PROD_V1_TANGEM_TECH_BASE_URL,
+            apiConfigsManager = apiConfigsManager,
+            baseUrl = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemTech).baseUrl,
             timeouts = Timeouts(
                 callTimeoutSeconds = TANGEM_TECH_SERVICE_TIMEOUT_SECONDS,
             ),
@@ -138,11 +178,13 @@ class NetworkModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appVersionProvider: AppVersionProvider,
+        apiConfigsManager: ApiConfigsManager,
     ): TangemTechMarketsApi {
         return provideTangemTechApiInternal(
             moshi = moshi,
             context = context,
             appVersionProvider = appVersionProvider,
+            apiConfigsManager = apiConfigsManager,
             baseUrl = DEV_V1_TANGEM_TECH_BASE_URL,
             timeouts = Timeouts(
                 callTimeoutSeconds = TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS,
@@ -157,11 +199,13 @@ class NetworkModule {
         moshi: Moshi,
         context: Context,
         appVersionProvider: AppVersionProvider,
+        apiConfigsManager: ApiConfigsManager,
         baseUrl: String,
         timeouts: Timeouts = Timeouts(),
         requestHeaders: List<RequestHeader> = listOf(CacheControlHeader, AppVersionPlatformHeaders(appVersionProvider)),
     ): T {
         val client = OkHttpClient.Builder()
+            .addEnvironmentSwitcher(id = ApiConfig.ID.TangemTech, apiConfigsManager = apiConfigsManager)
             .let { builder ->
                 var b = builder
                 if (timeouts.callTimeoutSeconds != null) {
@@ -204,13 +248,9 @@ class NetworkModule {
 
     private companion object {
         const val STAKEKIT_BASE_URL = "https://api.stakek.it/v1/"
-        const val PROD_EXPRESS_BASE_URL = "https://express.tangem.com/v1/"
-        const val STAGE_EXPRESS_BASE_URL = "[REDACTED_ENV_URL]"
-        const val DEV_EXPRESS_BASE_URL = "[REDACTED_ENV_URL]"
 
         const val DEV_V1_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
 
-        const val PROD_V1_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v1/"
         const val PROD_V2_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v2/"
 
         const val TANGEM_TECH_SERVICE_TIMEOUT_SECONDS = 5L
