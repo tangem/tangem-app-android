@@ -21,7 +21,6 @@ import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addEnvironmentSwitcher
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.addLoggers
-import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.version.AppVersionProvider
@@ -59,19 +58,18 @@ class NetworkModule {
     fun provideExpressApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        expressAuthProvider: ExpressAuthProvider,
-        appVersionProvider: AppVersionProvider,
         apiConfigsManager: ApiConfigsManager,
     ): TangemExpressApi {
+        val environmentConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.Express)
+
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
-            .baseUrl(apiConfigsManager.getBaseUrl(id = ApiConfig.ID.Express))
+            .baseUrl(environmentConfig.baseUrl)
             .client(
                 OkHttpClient.Builder()
                     .addEnvironmentSwitcher(ApiConfig.ID.Express, apiConfigsManager)
-                    .addHeaders(Express(expressAuthProvider))
-                    .addHeaders(AppVersionPlatformHeaders(appVersionProvider))
+                    .addHeaders(environmentConfig.headers)
                     .addLoggers(context)
                     .build(),
             )
@@ -113,7 +111,7 @@ class NetworkModule {
             context = context,
             appVersionProvider = appVersionProvider,
             apiConfigsManager = apiConfigsManager,
-            baseUrl = apiConfigsManager.getBaseUrl(id = ApiConfig.ID.TangemTech),
+            baseUrl = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemTech).baseUrl,
         )
     }
 
@@ -165,7 +163,7 @@ class NetworkModule {
             context = context,
             appVersionProvider = appVersionProvider,
             apiConfigsManager = apiConfigsManager,
-            baseUrl = apiConfigsManager.getBaseUrl(id = ApiConfig.ID.TangemTech),
+            baseUrl = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemTech).baseUrl,
             timeouts = Timeouts(
                 callTimeoutSeconds = TANGEM_TECH_SERVICE_TIMEOUT_SECONDS,
             ),
