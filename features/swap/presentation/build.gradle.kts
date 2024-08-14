@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
+    implementation(projects.core.decompose) // For Route supertype
 
     /** Domain modules **/
     implementation(projects.domain.appCurrency)
