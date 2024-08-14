@@ -22,6 +22,7 @@ import com.tangem.features.markets.tokenlist.impl.ui.components.UnableToLoadData
 internal fun MarketTokenDetailsChart(state: MarketsTokenDetailsUM.ChartState, modifier: Modifier = Modifier) {
     val growingColor = TangemTheme.colors.icon.accent
     val fallingColor = TangemTheme.colors.icon.warning
+    val neutralColor = TangemTheme.colors.icon.informative
 
     val chartState = rememberMarketChartState(
         dataProducer = state.dataProducer,
@@ -29,6 +30,7 @@ internal fun MarketTokenDetailsChart(state: MarketsTokenDetailsUM.ChartState, mo
             when (it) {
                 MarketChartLook.Type.Growing -> growingColor
                 MarketChartLook.Type.Falling -> fallingColor
+                MarketChartLook.Type.Neutral -> neutralColor
             }
         },
         onMarkerShown = state.onMarkerPointSelected,
