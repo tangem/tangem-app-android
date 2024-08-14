@@ -118,6 +118,11 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "koinos/test" -> Blockchain.KoinosTestnet
         "joystream" -> Blockchain.Joystream
         "bittensor" -> Blockchain.Bittensor
+        "filecoin" -> Blockchain.Filecoin
+        "blast" -> Blockchain.Blast
+        "blast/test" -> Blockchain.BlastTestnet
+        "cyber" -> Blockchain.Cyber
+        "cyber/test" -> Blockchain.CyberTestnet
         else -> null
     }
 }
@@ -237,9 +242,17 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.KoinosTestnet -> "koinos/test"
         Blockchain.Joystream -> "joystream"
         Blockchain.Bittensor -> "bittensor"
+        Blockchain.Filecoin -> "filecoin"
+        Blockchain.Blast -> "blast"
+        Blockchain.BlastTestnet -> "blast/test"
+        Blockchain.Cyber -> "cyber"
+        Blockchain.CyberTestnet -> "cyber/test"
     }
 }
 
+/**
+ * CoinId is id from tangem backend response coin "id" field
+ */
 @Suppress("ComplexMethod", "LongMethod")
 fun Blockchain.toCoinId(): String {
     return when (this) {
@@ -313,6 +326,9 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Koinos, Blockchain.KoinosTestnet -> "koinos"
         Blockchain.Joystream -> "joystream"
         Blockchain.Bittensor -> "bittensor"
+        Blockchain.Filecoin -> "filecoin"
+        Blockchain.Blast, Blockchain.BlastTestnet -> "blast"
+        Blockchain.Cyber, Blockchain.CyberTestnet -> "cyberconnect"
     }
 }
 
@@ -325,7 +341,9 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
         Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(NODL_AMOUNT_TO_CREATE_ACCOUNT) else BigDecimal.ONE
         Blockchain.XRP -> BigDecimal.TEN
         Blockchain.Near, Blockchain.NearTestnet -> 0.00182.toBigDecimal()
-        Blockchain.Aptos, Blockchain.AptosTestnet -> BigDecimal.ZERO
+        Blockchain.Aptos, Blockchain.AptosTestnet,
+        Blockchain.Filecoin,
+        -> BigDecimal.ZERO
         else -> null
     }
 }
@@ -341,6 +359,5 @@ private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
-    Blockchain.Mantle,
-    Blockchain.MantleTestnet,
+    Blockchain.Filecoin,
 )
