@@ -28,5 +28,5 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
-    fun provideTangemTechConfig(): ApiConfig = TangemTech()
+    fun provideTangemTechConfig(appVersionProvider: AppVersionProvider): ApiConfig = TangemTech(appVersionProvider)
 }
