@@ -56,6 +56,8 @@ internal class QuotesUnsupportedCurrenciesIdAdapter {
             "polygon-zkevm-ethereum" to "ethereum",
             "aurora-ethereum" to "ethereum",
             "base-ethereum" to "ethereum",
+            "cyberconnect" to "ethereum",
+            "blast" to "ethereum",
         )
     }
 }
