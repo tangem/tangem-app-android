@@ -14,13 +14,10 @@ import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApiV2
-import com.tangem.datasource.api.tangemTech.TangemTechServiceApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.utils.RequestHeader
-import com.tangem.datasource.utils.RequestHeader.*
-import com.tangem.datasource.utils.addEnvironmentSwitcher
-import com.tangem.datasource.utils.addHeaders
-import com.tangem.datasource.utils.addLoggers
+import com.tangem.datasource.utils.*
+import com.tangem.datasource.utils.RequestHeader.AppVersionPlatformHeaders
+import com.tangem.datasource.utils.RequestHeader.StakeKit
 import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.version.AppVersionProvider
@@ -103,16 +100,24 @@ class NetworkModule {
     fun provideTangemTechApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        appVersionProvider: AppVersionProvider,
         apiConfigsManager: ApiConfigsManager,
     ): TangemTechApi {
-        return provideTangemTechApiInternal(
-            moshi = moshi,
-            context = context,
-            appVersionProvider = appVersionProvider,
-            apiConfigsManager = apiConfigsManager,
-            baseUrl = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemTech).baseUrl,
-        )
+        val environmentConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemTech)
+
+        return Retrofit.Builder()
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
+            .baseUrl(environmentConfig.baseUrl)
+            .client(
+                OkHttpClient.Builder()
+                    .addEnvironmentSwitcher(id = ApiConfig.ID.TangemTech, apiConfigsManager = apiConfigsManager)
+                    .addHeaders(environmentConfig.headers)
+                    .applyTimeoutAnnotations()
+                    .addLoggers(context)
+                    .build(),
+            )
+            .build()
+            .create(TangemTechApi::class.java)
     }
 
     @Provides
@@ -151,27 +156,6 @@ class NetworkModule {
     }
 
     @Provides
-    @Singleton
-    fun provideTangemTechServiceApi(
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-        appVersionProvider: AppVersionProvider,
-        apiConfigsManager: ApiConfigsManager,
-    ): TangemTechServiceApi {
-        return provideTangemTechApiInternal(
-            moshi = moshi,
-            context = context,
-            appVersionProvider = appVersionProvider,
-            apiConfigsManager = apiConfigsManager,
-            baseUrl = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemTech).baseUrl,
-            timeouts = Timeouts(
-                callTimeoutSeconds = TANGEM_TECH_SERVICE_TIMEOUT_SECONDS,
-            ),
-            requestHeaders = listOf(AppVersionPlatformHeaders(appVersionProvider)),
-        )
-    }
-
-    @Provides
     @DevTangemApi
     @Singleton
     fun provideTangemTechMarketsApi(
@@ -202,10 +186,11 @@ class NetworkModule {
         apiConfigsManager: ApiConfigsManager,
         baseUrl: String,
         timeouts: Timeouts = Timeouts(),
-        requestHeaders: List<RequestHeader> = listOf(CacheControlHeader, AppVersionPlatformHeaders(appVersionProvider)),
+        requestHeaders: List<RequestHeader> = listOf(AppVersionPlatformHeaders(appVersionProvider)),
     ): T {
         val client = OkHttpClient.Builder()
             .addEnvironmentSwitcher(id = ApiConfig.ID.TangemTech, apiConfigsManager = apiConfigsManager)
+            .applyTimeoutAnnotations()
             .let { builder ->
                 var b = builder
                 if (timeouts.callTimeoutSeconds != null) {
@@ -253,7 +238,6 @@ class NetworkModule {
 
         const val PROD_V2_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v2/"
 
-        const val TANGEM_TECH_SERVICE_TIMEOUT_SECONDS = 5L
         const val TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS = 60L
     }
 }
