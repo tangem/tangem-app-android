@@ -29,5 +29,12 @@ fun Long.toDateFormatWithTodayYesterday(formatter: DateTimeFormatter = DateTimeF
  * Returns formatted time according to [formatter].
  */
 fun Long.toTimeFormat(formatter: DateTimeFormatter = DateTimeFormatters.timeFormatter): String {
+    return formatAsDateTime(formatter)
+}
+
+/**
+ * Returns formatted date-time according to [formatter].
+ */
+fun Long.formatAsDateTime(formatter: DateTimeFormatter): String {
     return DateTimeFormatters.formatDate(date = DateTime(this, DateTimeZone.getDefault()), formatter = formatter)
 }

@@ -18,11 +18,11 @@ internal class ShowInfoBottomSheetStateTransformer(
                 onDismissRequest = onDismiss,
                 isShow = true,
                 content = when (infoType) {
-                    InfoType.APY -> StakingInfoBottomSheetConfig(
+                    InfoType.ANNUAL_PERCENTAGE_RATE -> StakingInfoBottomSheetConfig(
                         title = resourceReference(R.string.staking_details_annual_percentage_rate),
                         text = resourceReference(R.string.staking_details_annual_percentage_rate_info),
                     )
-                    InfoType.UNBOUNDING_PERIOD -> StakingInfoBottomSheetConfig(
+                    InfoType.UNBONDING_PERIOD -> StakingInfoBottomSheetConfig(
                         title = resourceReference(R.string.staking_details_unbonding_period),
                         text = resourceReference(R.string.staking_details_unbonding_period_info),
                     )
@@ -45,8 +45,8 @@ internal class ShowInfoBottomSheetStateTransformer(
 }
 
 enum class InfoType {
-    APY,
-    UNBOUNDING_PERIOD,
+    ANNUAL_PERCENTAGE_RATE,
+    UNBONDING_PERIOD,
     REWARD_CLAIMING,
     WARMUP_PERIOD,
     REWARD_SCHEDULE,

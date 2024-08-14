@@ -24,7 +24,12 @@ internal object BlockchainInfoConverter : Converter<WalletManager, BlockchainInf
             addresses = value.wallet.mapAddresses(Address::value),
             explorerLinks = value.wallet.mapAddresses { value.wallet.getExploreUrl(it.value) },
             tokens = value.cardTokens.map { token ->
-                BlockchainInfo.TokenInfo(id = token.id, name = token.name, contractAddress = token.contractAddress)
+                BlockchainInfo.TokenInfo(
+                    id = token.id,
+                    name = token.name,
+                    contractAddress = token.contractAddress,
+                    decimals = token.decimals.toString(),
+                )
             },
         )
     }

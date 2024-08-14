@@ -16,6 +16,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.models.TransactionType
@@ -24,6 +25,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.math.BigDecimal
 import java.math.BigInteger
 import com.tangem.blockchain.blockchains.tron.TransactionType as SdkTransactionType
 
@@ -42,21 +44,63 @@ internal class DefaultTransactionRepository(
         network: Network,
         txExtras: TransactionExtras?,
         hash: String?,
-    ): TransactionData.Uncompiled? = withContext(coroutineDispatcherProvider.io) {
+    ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
         val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
-        )
+        ) ?: error("Wallet manager not found")
 
-        return@withContext walletManager?.createTransactionDataInternal(
+        return@withContext walletManager.createTransactionDataInternal(
             amount = amount,
             fee = fee,
             memo = memo,
             destination = destination,
             network = network,
             txExtras = txExtras,
+            hash = hash,
+        )
+    }
+
+    override suspend fun createApprovalTransaction(
+        amount: Amount,
+        fee: Fee,
+        contractAddress: String,
+        spenderAddress: String,
+        userWalletId: UserWalletId,
+        network: Network,
+        hash: String?,
+    ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: error("Wallet manager not found")
+        val approver = walletManager as? Approver ?: error("Cannot cast to Approver")
+
+        val approvalData = approver.getApproveData(
+            spenderAddress = spenderAddress,
+            value = amount,
+        )
+
+        val extras = createTransactionDataExtras(
+            data = approvalData,
+            network = network,
+            transactionType = TransactionType.APPROVE,
+            nonce = null,
+            gasLimit = null,
+        )
+
+        return@withContext createTransaction(
+            amount = amount,
+            fee = fee,
+            memo = null,
+            destination = contractAddress,
+            userWalletId = userWalletId,
+            network = network,
+            txExtras = extras,
             hash = hash,
         )
     }
@@ -139,6 +183,28 @@ internal class DefaultTransactionRepository(
             }
             else -> error("Data extras not supported for $blockchain")
         }
+    }
+
+    override suspend fun getAllowance(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency.Token,
+        spenderAddress: String,
+    ): BigDecimal {
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, cryptoCurrency.network)
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        val allowanceResult = (walletManager as? Approver)?.getAllowance(
+            spenderAddress,
+            Token(
+                symbol = blockchain.currency,
+                contractAddress = cryptoCurrency.contractAddress,
+                decimals = cryptoCurrency.decimals,
+            ),
+        ) ?: error("Cannot cast to Approver")
+
+        return allowanceResult.fold(
+            onSuccess = { it },
+            onFailure = { error(it) },
+        )
     }
 
     private fun convertToSdkTransactionType(transactionType: TransactionType): SdkTransactionType {

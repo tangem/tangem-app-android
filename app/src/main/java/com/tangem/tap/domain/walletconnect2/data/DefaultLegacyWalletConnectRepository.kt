@@ -62,7 +62,7 @@ internal class DefaultLegacyWalletConnectRepository(
             application = application,
             metaData = appMetaData,
         ) { error ->
-            Timber.d("Error while initializing client: $error")
+            Timber.e("Error while initializing client: $error")
             scope.launch {
                 _events.emit(
                     WalletConnectEvents.SessionApprovalError(
@@ -73,7 +73,7 @@ internal class DefaultLegacyWalletConnectRepository(
         }
 
         Web3Wallet.initialize(Wallet.Params.Init(core = CoreClient)) { error ->
-            Timber.d("Error while initializing Web3Wallet: $error")
+            Timber.e("Error while initializing Web3Wallet: $error")
             scope.launch {
                 _events.emit(
                     WalletConnectEvents.SessionApprovalError(
@@ -94,11 +94,11 @@ internal class DefaultLegacyWalletConnectRepository(
                 verifyContext: Wallet.Model.VerifyContext,
             ) {
                 // Triggered when wallet receives the session proposal sent by a Dapp
-                Timber.d("sessionProposal: $sessionProposal")
+                Timber.i("sessionProposal: $sessionProposal")
                 this@DefaultLegacyWalletConnectRepository.sessionProposal = sessionProposal
 
                 if (sessionProposal.name in unsupportedDApps) {
-                    Timber.w("Unsupported DApp")
+                    Timber.i("Unsupported DApp")
                     scope.launch {
                         _events.emit(
                             WalletConnectEvents.SessionApprovalError(
@@ -115,7 +115,7 @@ internal class DefaultLegacyWalletConnectRepository(
                 )
 
                 if (missingNetworks.isNotEmpty()) {
-                    Timber.w("Not added blockchains: $missingNetworks")
+                    Timber.i("Not added blockchains: $missingNetworks")
                     scope.launch {
                         _events.emit(
                             WalletConnectEvents.SessionApprovalError(
@@ -150,12 +150,12 @@ internal class DefaultLegacyWalletConnectRepository(
                 verifyContext: Wallet.Model.VerifyContext,
             ) {
                 // Triggered when a Dapp sends SessionRequest to sign a transaction or a message
-                Timber.d("sessionRequest: $sessionRequest")
+                Timber.i("sessionRequest: $sessionRequest")
                 val request = wcRequestDeserializer.deserialize(
                     method = sessionRequest.request.method,
                     params = sessionRequest.request.params,
                 )
-                Timber.d("sessionRequestParsed: $request")
+                Timber.i("sessionRequestParsed: $request")
 
                 when (request) {
                     is WcRequest.AddChain -> {
@@ -193,7 +193,7 @@ internal class DefaultLegacyWalletConnectRepository(
                 verifyContext: Wallet.Model.VerifyContext,
             ) {
                 // Triggered when Dapp / Requester makes an authorization request
-                Timber.d("onAuthRequest: $authRequest")
+                Timber.i("onAuthRequest: $authRequest")
             }
 
             override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
@@ -204,12 +204,12 @@ internal class DefaultLegacyWalletConnectRepository(
                         updateSessionsInternal().join()
                     }
                 }
-                Timber.d("onSessionDelete: $sessionDelete")
+                Timber.i("onSessionDelete: $sessionDelete")
             }
 
             override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {
                 // Triggered when wallet receives the session settlement response from Dapp
-                Timber.d("onSessionSettleResponse: $settleSessionResponse")
+                Timber.i("onSessionSettleResponse: $settleSessionResponse")
                 if (settleSessionResponse is Wallet.Model.SettledSessionResponse.Result) {
                     scope.launch {
                         _events.emit(
@@ -225,19 +225,19 @@ internal class DefaultLegacyWalletConnectRepository(
 
             override fun onSessionUpdateResponse(sessionUpdateResponse: Wallet.Model.SessionUpdateResponse) {
                 // Triggered when wallet receives the session update response from Dapp
-                Timber.d("onSessionUpdateResponse: $sessionUpdateResponse")
+                Timber.i("onSessionUpdateResponse: $sessionUpdateResponse")
                 updateSessionsInternal()
             }
 
             override fun onConnectionStateChange(state: Wallet.Model.ConnectionState) {
                 // Triggered whenever the connection state is changed
-                Timber.d("onConnectionStateChange: $state")
+                Timber.i("onConnectionStateChange: $state")
                 if (state.isAvailable) updateSessionsInternal()
             }
 
             override fun onError(error: Wallet.Model.Error) {
                 // Triggered whenever there is an issue inside the SDK
-                Timber.d("onError: $error")
+                Timber.i("onError: $error")
             }
         }
     }
@@ -299,12 +299,12 @@ internal class DefaultLegacyWalletConnectRepository(
             },
         )
 
-        Timber.d("Session approval is prepared for sending: $sessionApproval")
+        Timber.i("Session approval is prepared for sending: $sessionApproval")
 
         Web3Wallet.approveSession(
             params = sessionApproval,
             onSuccess = {
-                Timber.d("Approved successfully: $it")
+                Timber.i("Approved successfully: $it")
                 analyticsHandler.send(
                     WalletConnect.NewSessionEstablished(
                         dAppName = sessionProposal.name,
@@ -313,7 +313,7 @@ internal class DefaultLegacyWalletConnectRepository(
                 )
             },
             onError = {
-                Timber.d("Error while approving: $it")
+                Timber.e("Error while approving: $it")
                 scope.launch {
                     _events.emit(
                         WalletConnectEvents.SessionApprovalError(
@@ -370,10 +370,10 @@ internal class DefaultLegacyWalletConnectRepository(
                 ),
             ),
             onSuccess = { response ->
-                Timber.d("Session request responded successfully: $response")
+                Timber.i("Session request responded successfully: $response")
             },
             onError = { error ->
-                Timber.d(error.throwable, "Error while responging session request")
+                Timber.e(error.throwable, "Error while responging session request")
 
                 WalletConnect.RequestHandledParams(
                     dAppName = session?.name ?: "",
@@ -427,10 +427,10 @@ internal class DefaultLegacyWalletConnectRepository(
                 reason = "",
             ),
             onSuccess = {
-                Timber.d("Rejected successfully: $it")
+                Timber.i("Rejected successfully: $it")
             },
             onError = {
-                Timber.d("Error while rejecting: $it")
+                Timber.e("Error while rejecting: $it")
             },
         )
     }
@@ -447,10 +447,10 @@ internal class DefaultLegacyWalletConnectRepository(
                     ),
                 )
                 updateSessionsInternal()
-                Timber.d("Disconnected successfully: $it")
+                Timber.i("Disconnected successfully: $it")
             },
             onError = {
-                Timber.d("Error while disconnecting: $it")
+                Timber.e("Error while disconnecting: $it")
             },
         )
     }
@@ -483,7 +483,7 @@ internal class DefaultLegacyWalletConnectRepository(
                     url = it.metaData?.url,
                 )
             }
-        Timber.d("Available sessions: $availableSessions")
+        Timber.i("Available sessions: $availableSessions")
         currentSessions = availableSessions
         _activeSessions.emit(availableSessions)
     }

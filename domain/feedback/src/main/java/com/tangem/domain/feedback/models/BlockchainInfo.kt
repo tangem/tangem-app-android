@@ -24,5 +24,6 @@ data class BlockchainInfo(
         val id: String?,
         val name: String,
         val contractAddress: String,
+        val decimals: String,
     )
 }

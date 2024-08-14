@@ -4,7 +4,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
-import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
@@ -75,7 +75,7 @@ class DefaultSwapTransactionRepository(
         scanResponse: ScanResponse,
     ): Flow<List<SavedSwapTransactionListModel>?> {
         return withContext(dispatchers.io) {
-            val txStatuses = appPreferencesStore.getObjectMap<ExchangeStatusModel>(
+            val txStatuses = appPreferencesStore.getObjectMapSync<ExchangeStatusModel>(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
             )
             appPreferencesStore.getObjectList<SavedSwapTransactionListModelInner>(
