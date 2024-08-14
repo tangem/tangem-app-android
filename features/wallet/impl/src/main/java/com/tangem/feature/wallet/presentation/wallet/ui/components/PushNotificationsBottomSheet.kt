@@ -76,7 +76,7 @@ private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetC
             ),
         ) {
             SecondaryButton(
-                text = stringResource(R.string.common_cancel),
+                text = stringResource(R.string.common_later),
                 onClick = {
                     content.onNeverRequest()
                     onDismiss()
