@@ -51,7 +51,7 @@ internal fun PushNotificationsScreen(
             },
         ),
         secondaryButton = ShowcaseButtonModel(
-            buttonText = resourceReference(R.string.common_cancel),
+            buttonText = resourceReference(R.string.common_later),
             onClick = onNeverRequest,
         ),
         modifier = Modifier.systemBarsPadding(),
