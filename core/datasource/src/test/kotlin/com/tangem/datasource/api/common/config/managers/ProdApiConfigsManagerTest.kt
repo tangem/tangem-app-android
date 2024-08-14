@@ -9,6 +9,7 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.INTERNAL_BUIL
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
 import com.tangem.datasource.api.common.config.Express
+import com.tangem.datasource.api.common.config.StakeKit
 import com.tangem.datasource.api.common.config.TangemTech
 import io.mockk.mockk
 import org.junit.Test
@@ -37,6 +38,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         val API_CONFIGS = setOf(
             Express(mockk(), mockk(), mockk()),
             TangemTech(mockk()),
+            StakeKit(mockk()),
 
             // Don't forget to add new config
         )
@@ -47,6 +49,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
             when (it) {
                 is Express -> createExpressModel()
                 is TangemTech -> createTangemTechModel()
+                is StakeKit -> createStakeKitModel()
             }
         }
 
@@ -70,6 +73,13 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
             return Model(
                 id = ApiConfig.ID.TangemTech,
                 expected = "https://api.tangem-tech.com/v1/",
+            )
+        }
+
+        private fun createStakeKitModel(): Model {
+            return Model(
+                id = ApiConfig.ID.StakeKit,
+                expected = "https://api.stakek.it/v1/",
             )
         }
     }
