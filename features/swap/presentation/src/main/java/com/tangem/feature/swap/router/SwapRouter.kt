@@ -33,12 +33,18 @@ internal class SwapRouter(
     }
 
     fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
-        router.push(
-            AppRoute.CurrencyDetails(
-                userWalletId = userWalletId,
-                currency = currency,
-            ),
+        val route = AppRoute.CurrencyDetails(
+            userWalletId = userWalletId,
+            currency = currency,
         )
+
+        if (route in router.stack) {
+            router.popTo(route)
+        } else {
+            router.pop {
+                router.push(route)
+            }
+        }
     }
 }
 
