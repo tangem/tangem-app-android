@@ -14,8 +14,8 @@ sealed class ApiConfig {
     /** Default environment */
     abstract val defaultEnvironment: ApiEnvironment
 
-    /** Available environments with base url */
-    abstract val environments: Map<ApiEnvironment, String>
+    /** Available environments */
+    abstract val environmentConfigs: List<ApiEnvironmentConfig>
 
     /** Unique id */
     val id: ID = initializeId()
