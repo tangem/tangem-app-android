@@ -1,4 +1,4 @@
-package com.tangem.data.tokens.utils
+package com.tangem.data.common.currency
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
