@@ -1,7 +1,6 @@
 package com.tangem.datasource.utils
 
 import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.Provider
 import com.tangem.utils.version.AppVersionProvider
 
@@ -25,10 +24,5 @@ sealed class RequestHeader(vararg pairs: Pair<String, Provider<String>>) {
     class AppVersionPlatformHeaders(appVersionProvider: AppVersionProvider) : RequestHeader(
         "version" to Provider(appVersionProvider::versionName),
         "platform" to Provider { "android" },
-    )
-
-    class StakeKit(stakeKitAuthProvider: StakeKitAuthProvider) : RequestHeader(
-        "X-API-KEY" to Provider(stakeKitAuthProvider::getApiKey),
-        "accept" to Provider { "application/json" },
     )
 }
