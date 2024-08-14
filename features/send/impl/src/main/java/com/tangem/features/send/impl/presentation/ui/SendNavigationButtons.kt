@@ -22,7 +22,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.ui.SendDoneButtons
-import com.tangem.common.ui.amountScreen.utils.getCryptoReference
 import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.Keyboard
@@ -34,6 +33,7 @@ import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
@@ -186,16 +186,6 @@ private fun SendingText(
                 fiatCurrencySymbol = feeState.appCurrency.symbol,
                 fiatCurrencyCode = feeState.appCurrency.code,
             )
-            val feeValue = if (feeState.isFeeConvertibleToFiat) {
-                getFiatString(
-                    value = feeState.fee?.amount?.value,
-                    rate = feeState.rate,
-                    appCurrency = feeState.appCurrency,
-                )
-            } else {
-                getCryptoReference(feeState.fee?.amount, feeState.isFeeApproximate)?.resolveReference().orEmpty()
-            }
-
             val textResource = remember(uiState) {
                 resourceReference(
                     id = if (feeState.isFeeConvertibleToFiat) {
@@ -203,7 +193,7 @@ private fun SendingText(
                     } else {
                         R.string.send_summary_transaction_description_no_fiat_fee
                     },
-                    formatArgs = wrappedList(sendingValue, feeValue),
+                    formatArgs = wrappedList(sendingValue, feeState.getFiatValue()),
                 )
             }
             Text(
@@ -217,6 +207,22 @@ private fun SendingText(
             )
         }
     }
+}
+
+private fun SendStates.FeeState.getFiatValue() = if (isFeeConvertibleToFiat) {
+    getFiatString(
+        value = fee?.amount?.value,
+        rate = rate,
+        appCurrency = appCurrency,
+    )
+} else {
+    val amount = fee?.amount
+    BigDecimalFormatter.formatCryptoFeeAmount(
+        cryptoAmount = amount?.value,
+        cryptoCurrency = amount?.currencySymbol.orEmpty(),
+        decimals = amount?.decimals ?: 0,
+        canBeLower = isFeeApproximate,
+    )
 }
 
 private fun getButtonData(
@@ -245,11 +251,11 @@ private fun getButtonData(
 
 private fun isButtonEnabled(currentState: SendUiCurrentScreen, uiState: SendUiState): Boolean {
     return when (currentState.type) {
-        SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled
+        SendUiStateType.Amount -> uiState.amountState.isPrimaryButtonEnabled
         SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled
         SendUiStateType.Fee -> uiState.feeState?.isPrimaryButtonEnabled
         SendUiStateType.Send -> uiState.sendState?.isPrimaryButtonEnabled
-        SendUiStateType.EditAmount -> uiState.editAmountState?.isPrimaryButtonEnabled
+        SendUiStateType.EditAmount -> uiState.editAmountState.isPrimaryButtonEnabled
         SendUiStateType.EditRecipient -> uiState.editRecipientState?.isPrimaryButtonEnabled
         SendUiStateType.EditFee -> uiState.editFeeState?.isPrimaryButtonEnabled
         else -> true
