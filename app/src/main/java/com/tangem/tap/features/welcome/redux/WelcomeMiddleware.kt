@@ -99,7 +99,7 @@ internal class WelcomeMiddleware {
                     signInType = Basic.SignedIn.SignInType.Biometric,
                 )
 
-                store.dispatchNavigationAction { push(AppRoute.Wallet) }
+                store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
                 store.dispatchWithMain(WelcomeAction.ProceedWithBiometrics.Success)
                 store.onUserWalletSelected(userWallet = selectedUserWallet)
 
@@ -131,7 +131,7 @@ internal class WelcomeMiddleware {
                 .doOnSuccess {
                     sendSignedInAnalyticsEvent(scanResponse = scanResponse, signInType = Basic.SignedIn.SignInType.Card)
 
-                    store.dispatchNavigationAction { push(AppRoute.Wallet) }
+                    store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Success)
                     store.onUserWalletSelected(userWallet = userWallet)
 
