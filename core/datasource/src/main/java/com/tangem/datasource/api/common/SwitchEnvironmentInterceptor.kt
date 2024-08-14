@@ -2,21 +2,23 @@ package com.tangem.datasource.api.common
 
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.utils.Provider
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
+import okhttp3.Request
 import okhttp3.Response
 import okio.IOException
 
 /**
- * Switch base url [Interceptor]
+ * Switch api environment [Interceptor]
  *
  * @property id                api config id [ApiConfig.ID]
  * @property apiConfigsManager api configs manager
  *
 [REDACTED_AUTHOR]
  */
-internal class SwitchBaseUrlInterceptor(
+internal class SwitchEnvironmentInterceptor(
     private val id: ApiConfig.ID,
     private val apiConfigsManager: ApiConfigsManager,
 ) : Interceptor {
@@ -26,18 +28,27 @@ internal class SwitchBaseUrlInterceptor(
         var request = chain.request()
         val builder = request.newBuilder()
 
+        val environmentConfig = apiConfigsManager.getEnvironmentConfig(id)
+
         request = builder
-            .url(url = request.url.adjustBaseUrl())
+            .url(url = request.url.adjustBaseUrl(environmentConfig.baseUrl))
+            .addHeaders(headers = environmentConfig.headers)
             .build()
 
         return chain.proceed(request)
     }
 
-    private fun HttpUrl.adjustBaseUrl(): HttpUrl {
-        val host = apiConfigsManager.getBaseUrl(id).toHttpUrl().host
-
+    private fun HttpUrl.adjustBaseUrl(url: String): HttpUrl {
         return this.newBuilder()
-            .host(host)
+            .host(host = url.toHttpUrl().host)
             .build()
+    }
+
+    private fun Request.Builder.addHeaders(headers: Map<String, Provider<String>>): Request.Builder {
+        headers.forEach { (name, valueProvider) ->
+            addHeader(name = name, value = valueProvider())
+        }
+
+        return this
     }
 }
