@@ -6,4 +6,5 @@ internal data class InsightsUM(
     val h24Info: ImmutableList<InfoPointUM>,
     val weekInfo: ImmutableList<InfoPointUM>,
     val monthInfo: ImmutableList<InfoPointUM>,
+    val onInfoClick: () -> Unit,
 )
