@@ -6,15 +6,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.util.fastForEachIndexed
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.components.rows.model.ChainRowUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.tokens.model.Network
 import com.tangem.features.managetokens.component.ManageTokensComponent
-import com.tangem.features.managetokens.entity.CurrencyItemUM
-import com.tangem.features.managetokens.entity.CurrencyNetworkUM
-import com.tangem.features.managetokens.entity.ManageTokensUM
+import com.tangem.features.managetokens.entity.*
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.ui.ManageTokensScreen
 import kotlinx.collections.immutable.mutate
@@ -28,11 +27,18 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
     private val changedItemsIds: MutableSet<String> = mutableSetOf()
 
     private var items = initItems()
-
     private val previewState = MutableStateFlow(
-        value = ManageTokensUM(
+        value = ManageTokensUM.ManageContent(
             popBack = {},
             items = items,
+            topBar = ManageTokensTopBarUM.ManageContent(
+                title = resourceReference(id = R.string.main_manage_tokens),
+                onBackButtonClick = {},
+                endButton = TopAppBarButtonUM(
+                    iconRes = R.drawable.ic_plus_24,
+                    onIconClicked = {},
+                ),
+            ),
             search = SearchBarUM(
                 placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
                 query = "",
@@ -41,8 +47,8 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
                 onActiveChange = ::toggleSearchBar,
             ),
             hasChanges = false,
+            isLoading = false,
             onSaveClick = {},
-            onAddCustomToken = {},
         ),
     )
 
@@ -129,14 +135,11 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
 
     private fun getCurrencyNetworks(currencyIndex: Int) = List(size = 3) { networkIndex ->
         CurrencyNetworkUM(
-            id = networkIndex.toString(),
-            model = BlockchainRowUM(
-                name = "NETWORK$networkIndex",
-                type = "N$networkIndex",
-                iconResId = R.drawable.ic_eth_16,
-                isMainNetwork = networkIndex == 0,
-                isSelected = false,
-            ),
+            id = Network.ID(networkIndex.toString()),
+            name = "NETWORK$networkIndex",
+            type = "N$networkIndex",
+            iconResId = R.drawable.ic_eth_16,
+            isMainNetwork = networkIndex == 0,
             isSelected = false,
             onSelectedStateChange = { toggleNetwork(currencyIndex, networkIndex, isSelected = it) },
         )
@@ -171,14 +174,11 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
                             it.fastForEachIndexed { index, network ->
                                 if (index == networkIndex) {
                                     it[index] = network.copy(
-                                        model = network.model.copy(
-                                            iconResId = if (isSelected) {
-                                                R.drawable.img_eth_22
-                                            } else {
-                                                R.drawable.ic_eth_16
-                                            },
-                                            isSelected = isSelected,
-                                        ),
+                                        iconResId = if (isSelected) {
+                                            R.drawable.img_eth_22
+                                        } else {
+                                            R.drawable.ic_eth_16
+                                        },
                                         isSelected = isSelected,
                                     )
                                 }
