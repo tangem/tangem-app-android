@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
-import com.tangem.datasource.api.tangemTech.TangemTechServiceApi
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.config.models.ProviderModel
@@ -24,7 +24,7 @@ import org.junit.Test
 @OptIn(ExperimentalStdlibApi::class)
 internal class BlockchainProvidersResponseLoaderTest {
 
-    private val tangemTechServiceApi = mockk<TangemTechServiceApi>()
+    private val tangemTechServiceApi = mockk<TangemTechApi>()
     private val assetReader = mockk<AssetReader>()
     private val moshi = mockk<Moshi>()
     private val jsonAdapter = mockk<JsonAdapter<BlockchainProvidersResponse>>()
