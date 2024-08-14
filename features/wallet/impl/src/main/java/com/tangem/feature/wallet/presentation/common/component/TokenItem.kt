@@ -403,7 +403,10 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
                 text = "PolygonPolygonPolygonPolygonPolygonPolygon",
                 hasPending = true,
             ),
-            fiatAmountState = TokenItemState.FiatAmountState.Content(text = "3213123123321312312312312312 $"),
+            fiatAmountState = TokenItemState.FiatAmountState.Content(
+                text = "3213123123321312312312312312 $",
+                hasStaked = true,
+            ),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,4123123213123123123123123123 MATIC"),
             cryptoPriceState = TokenItemState.CryptoPriceState.Content(
                 price = "312 USD",
