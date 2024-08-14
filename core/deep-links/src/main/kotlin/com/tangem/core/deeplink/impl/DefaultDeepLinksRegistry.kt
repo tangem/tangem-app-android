@@ -18,7 +18,7 @@ internal class DefaultDeepLinksRegistry : DeepLinksRegistry {
         val received = intent.data ?: return false
         var hasMatch = false
 
-        Timber.d(
+        Timber.i(
             """
                 Received deep link intent
                 |- Received URI: $received
@@ -33,7 +33,7 @@ internal class DefaultDeepLinksRegistry : DeepLinksRegistry {
 
             val params = getParams(expected, received)
 
-            Timber.d(
+            Timber.i(
                 """
                     Matched deep link
                     |- Expected URI: $expected
@@ -45,7 +45,7 @@ internal class DefaultDeepLinksRegistry : DeepLinksRegistry {
         }
 
         if (!hasMatch) {
-            Timber.d(
+            Timber.i(
                 """
                     No match found for deep link
                     |- Received URI: $received
