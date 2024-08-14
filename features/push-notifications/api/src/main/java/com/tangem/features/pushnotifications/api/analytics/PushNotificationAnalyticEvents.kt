@@ -26,6 +26,15 @@ sealed class PushNotificationAnalyticEvents(
         ),
     )
 
+    data class ButtonLater(
+        val source: AnalyticsParam.ScreensSources,
+    ) : PushNotificationAnalyticEvents(
+        event = "Button - Later",
+        params = mapOf(
+            AnalyticsParam.SOURCE to source.value,
+        ),
+    )
+
     data class PermissionStatus(
         val isAllowed: Boolean,
     ) : PushNotificationAnalyticEvents(
