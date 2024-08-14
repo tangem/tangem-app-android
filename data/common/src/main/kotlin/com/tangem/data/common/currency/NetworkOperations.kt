@@ -1,4 +1,4 @@
-package com.tangem.data.tokens.utils
+package com.tangem.data.common.currency
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.FeePaidCurrency
@@ -7,14 +7,14 @@ import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.tokens.model.Network
 import timber.log.Timber
 
-internal fun getBlockchain(networkId: Network.ID): Blockchain {
+fun getBlockchain(networkId: Network.ID): Blockchain {
     return Blockchain.fromId(networkId.value)
 }
 
-internal fun getNetwork(
+fun getNetwork(
     blockchain: Blockchain,
     extraDerivationPath: String?,
-    derivationStyleProvider: DerivationStyleProvider,
+    derivationStyleProvider: DerivationStyleProvider?,
 ): Network? {
     if (blockchain == Blockchain.Unknown) {
         Timber.e("Unable to convert Unknown blockchain to the domain network model")
@@ -36,8 +36,12 @@ internal fun getNetwork(
 private fun getNetworkDerivationPath(
     blockchain: Blockchain,
     extraDerivationPath: String?,
-    cardDerivationStyleProvider: DerivationStyleProvider,
+    cardDerivationStyleProvider: DerivationStyleProvider?,
 ): Network.DerivationPath {
+    if (cardDerivationStyleProvider == null) {
+        return Network.DerivationPath.None
+    }
+
     val defaultDerivationPath = getDefaultDerivationPath(blockchain, cardDerivationStyleProvider)
 
     return if (extraDerivationPath.isNullOrBlank()) {
@@ -55,7 +59,7 @@ private fun getNetworkDerivationPath(
     }
 }
 
-internal fun getNetworkStandardType(blockchain: Blockchain): Network.StandardType {
+fun getNetworkStandardType(blockchain: Blockchain): Network.StandardType {
     return when (blockchain) {
         Blockchain.Ethereum, Blockchain.EthereumTestnet -> Network.StandardType.ERC20
         Blockchain.BSC, Blockchain.BSCTestnet -> Network.StandardType.BEP20
