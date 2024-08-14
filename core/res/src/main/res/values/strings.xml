@@ -88,6 +88,7 @@
   <string name="common_copy">Copy</string>
   <string name="common_copy_address">Copy address</string>
   <string name="common_create">Create</string>
+  <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Custom</string>
   <plurals name="common_days">
     <item quantity="one">%d day</item>
@@ -126,6 +127,7 @@
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Paste</string>
   <string name="common_range">%1$s-%2$s</string>
+  <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
   <string name="common_reject">Reject</string>
@@ -634,7 +636,6 @@
   <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
   <string name="send_tron_account_activation_error">%1$s is an asset in the Tron network. To calculate the fee and make a transaction you need to deposit some Tron (TRX) in your account.</string>
   <string name="send_validation_invalid_address">Invalid address</string>
-  <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
   <string name="settings_card_settings_footer">Prepare to scan card you want to setup.</string>
   <string name="settings_forget_wallet">Forget wallet</string>
@@ -667,7 +668,10 @@
   <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
-  <string name="staking_notification_earn_rewards_text">Staking allow you to earn %1$s. Your staking rewards arrive every ~%2$s days.</string>
+  <string name="staking_notification_earn_rewards_text_period_day">Staking allow you to earn %1$s. Your staking rewards arrive every day.</string>
+  <string name="staking_notification_earn_rewards_text_period_hour">Staking allow you to earn %1$s. Your staking rewards arrive every hour.</string>
+  <string name="staking_notification_earn_rewards_text_period_month">Staking allow you to earn %1$s. Your staking rewards arrive every month.</string>
+  <string name="staking_notification_earn_rewards_text_period_week">Staking allow you to earn %1$s. Your staking rewards arrive every week.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_notification_unstake_text">Rewards stop accruing immediately after you unstake. The unstaking process takes %s.</string>
   <string name="staking_rebond">Rebond</string>
@@ -679,6 +683,7 @@
   <string name="staking_reward_claiming_manual">Manual</string>
   <string name="staking_reward_schedule_block">Block</string>
   <string name="staking_reward_schedule_day">Day</string>
+  <string name="staking_reward_schedule_each_day">Each day</string>
   <string name="staking_reward_schedule_epoch">Epoch</string>
   <string name="staking_reward_schedule_era">Era</string>
   <string name="staking_reward_schedule_hour">Hour</string>

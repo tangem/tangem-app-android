@@ -12,12 +12,12 @@ fun FragmentManager.showFragmentAllowingStateLoss(name: String, fragmentProvider
         val currentFragmentName = getBackStackEntryAt(backStackEntryCount - 1).name
 
         if (name == currentFragmentName) {
-            Timber.d("Fragment $name is already at the top of the stack")
+            Timber.i("Fragment $name is already at the top of the stack")
             return
         }
     }
 
-    Timber.d("Showing $name route")
+    Timber.i("Showing $name route")
 
     val isPoppedBack = popBackStackImmediate(name, 0)
 
@@ -30,9 +30,9 @@ fun FragmentManager.showFragmentAllowingStateLoss(name: String, fragmentProvider
             fragment.showFragment(fragmentManager = this, name)
         }
 
-        Timber.d("Route $name is shown")
+        Timber.i("Route $name is shown")
     } else {
-        Timber.d("Route $name is found in backstack and shown")
+        Timber.i("Route $name is found in backstack and shown")
     }
 }
 
