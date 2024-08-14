@@ -33,7 +33,7 @@ import com.tangem.wallet.R
 import kotlin.math.max
 
 @Composable
-fun StoriesScreen(
+internal fun StoriesScreen(
     homeState: MutableState<HomeState>,
     onScanButtonClick: () -> Unit,
     onShopButtonClick: () -> Unit,

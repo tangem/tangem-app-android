@@ -33,14 +33,20 @@ data class Yield(
         @Serializable
         data class Enter(
             val addresses: Addresses,
-            val args: Map<String, AddressArgument>,
+            val args: Map<ArgType, AddressArgument>,
         ) {
 
             @Serializable
             data class Addresses(
                 val address: AddressArgument,
-                val additionalAddresses: Map<String, AddressArgument>? = null,
+                val additionalAddresses: Map<ArgType, AddressArgument>? = null,
             )
+        }
+
+        enum class ArgType {
+            ADDRESS,
+            AMOUNT,
+            UNKNOWN,
         }
     }
 
@@ -68,10 +74,10 @@ data class Yield(
         val token: Token,
         val tokens: List<Token>,
         val type: String,
-        val rewardSchedule: String,
+        val rewardSchedule: RewardSchedule,
         val cooldownPeriod: Period,
         val warmupPeriod: Period,
-        val rewardClaiming: String,
+        val rewardClaiming: RewardClaiming,
         val defaultValidator: String?,
         val minimumStake: Int?,
         val supportsMultipleValidators: Boolean,
@@ -88,6 +94,25 @@ data class Yield(
         data class Enabled(
             val enabled: Boolean,
         )
+
+        enum class RewardSchedule {
+            BLOCK,
+            WEEK,
+            HOUR,
+            DAY,
+            MONTH,
+            ERA,
+            EPOCH,
+
+            UNKNOWN,
+        }
+
+        enum class RewardClaiming {
+            AUTO,
+            MANUAL,
+
+            UNKNOWN,
+        }
     }
 
     enum class RewardType {
@@ -113,6 +138,6 @@ data class Token(
 data class AddressArgument(
     val required: Boolean,
     val network: String? = null,
-    val minimum: Double? = null,
-    val maximum: Double? = null,
+    val minimum: SerializedBigDecimal? = null,
+    val maximum: SerializedBigDecimal? = null,
 )
