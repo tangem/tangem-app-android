@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
@@ -29,6 +30,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
     titleAction: TopAppBarButtonUM? = null,
     containerColor: Color = TangemTheme.colors.background.primary,
     addBottomInsets: Boolean = true,
+    skipPartiallyExpanded: Boolean = true,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
     TangemBottomSheet(
@@ -36,6 +38,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
         containerColor = containerColor,
         addBottomInsets = addBottomInsets,
         title = { TangemBottomSheetTitle(title = titleText, endButton = titleAction) },
+        skipPartiallyExpanded = skipPartiallyExpanded,
         content = content,
     )
 }
@@ -48,6 +51,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
     config: TangemBottomSheetConfig,
     containerColor: Color = TangemTheme.colors.background.primary,
     addBottomInsets: Boolean = true,
+    skipPartiallyExpanded: Boolean = true,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
@@ -60,6 +64,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
             addBottomInsets = addBottomInsets,
             title = title,
             content = content,
+            skipPartiallyExpanded = skipPartiallyExpanded,
         )
     } else {
         DefaultBottomSheet<T>(
@@ -68,6 +73,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
             addBottomInsets = addBottomInsets,
             title = title,
             content = content,
+            skipPartiallyExpanded = skipPartiallyExpanded,
         )
     }
 }
@@ -78,11 +84,12 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultBottomSheet(
     config: TangemBottomSheetConfig,
     containerColor: Color,
     addBottomInsets: Boolean,
+    skipPartiallyExpanded: Boolean = true,
     crossinline title: @Composable (BoxScope.(T) -> Unit),
     crossinline content: @Composable (ColumnScope.(T) -> Unit),
 ) {
     var isVisible by remember { mutableStateOf(value = config.isShow) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
 
     if (isVisible && config.content is T) {
         BasicBottomSheet<T>(
@@ -110,13 +117,15 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewBottomSheet(
     config: TangemBottomSheetConfig,
     containerColor: Color,
     addBottomInsets: Boolean,
+    skipPartiallyExpanded: Boolean = true,
     crossinline title: @Composable (BoxScope.(T) -> Unit),
     crossinline content: @Composable (ColumnScope.(T) -> Unit),
 ) {
     BasicBottomSheet<T>(
+        modifier = Modifier.width(360.dp),
         config = config,
         sheetState = SheetState(
-            skipPartiallyExpanded = true,
+            skipPartiallyExpanded = skipPartiallyExpanded,
             initialValue = Expanded,
             density = LocalDensity.current,
         ),
@@ -137,6 +146,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
     addBottomInsets: Boolean,
     crossinline title: @Composable (BoxScope.(T) -> Unit),
     crossinline content: @Composable (ColumnScope.(T) -> Unit),
+    modifier: Modifier = Modifier,
 ) {
     val model = config.content as? T ?: return
 
@@ -145,7 +155,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
 
     ModalBottomSheet(
         // FIXME temporary solution to fix height of the bottom sheet
-        modifier = Modifier.sizeIn(maxHeight = LocalWindowSize.current.height - statusBarHeight),
+        modifier = modifier.heightIn(max = LocalWindowSize.current.height - statusBarHeight),
         onDismissRequest = config.onDismissRequest,
         sheetState = sheetState,
         containerColor = containerColor,
