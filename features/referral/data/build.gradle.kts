@@ -17,7 +17,7 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Data modules */
-    implementation(projects.data.tokens)
+    implementation(projects.data.common)
 
     /** Domain modules */
     implementation(projects.domain.legacy)
