@@ -20,6 +20,10 @@ internal object CardInfoConverter : Converter<ScanResponse, CardInfo> {
             CardInfo(
                 userWalletId = createUserWalletId(scanResponse = value),
                 cardId = card.cardId,
+                cardsCount = when (val status = value.card.backupStatus) {
+                    is CardDTO.BackupStatus.Active -> status.cardCount.toString()
+                    else -> "0"
+                },
                 firmwareVersion = card.firmwareVersion.stringValue,
                 cardBlockchain = walletData?.blockchain,
                 signedHashesList = card.wallets.map {

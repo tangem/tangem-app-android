@@ -1,20 +1,21 @@
 package com.tangem.feature.swap.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.SpacerH24
-import com.tangem.core.ui.components.rows.SimpleActionRow
-import com.tangem.core.ui.extensions.resolveReference
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.models.states.FeeItemState
+import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.preview.FeeItemStatePreview
 
 @Composable
 fun FeeItemBlock(state: FeeItemState) {
@@ -25,53 +26,37 @@ fun FeeItemBlock(state: FeeItemState) {
 
 @Composable
 fun FeeItem(state: FeeItemState.Content) {
-    Box(
+    val description = "${state.amountCrypto} ${state.symbolCrypto} (${state.amountFiatFormatted})"
+    val icon = R.drawable.ic_chevron_right_24.takeIf { state.isClickable }
+    InputRowDefault(
+        title = state.title,
+        text = stringReference(description),
+        iconRes = icon,
         modifier = Modifier
-            .background(
-                color = TangemTheme.colors.background.action,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
-            )
             .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
+            .background(color = TangemTheme.colors.background.action)
             .clickable(
+                enabled = state.isClickable,
                 onClick = state.onClick,
-            )
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = TangemTheme.dimens.size68),
-    ) {
-        val description = "${state.amountCrypto} ${state.symbolCrypto} (${state.amountFiatFormatted})"
-        SimpleActionRow(
-            modifier = Modifier.padding(
-                start = TangemTheme.dimens.spacing12,
-                top = TangemTheme.dimens.spacing12,
             ),
-            title = state.title.resolveReference(),
-            description = description,
-            isClickable = state.isClickable,
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun FeeItemPreview() {
-    val state = FeeItemState.Content(
-        feeType = FeeType.NORMAL,
-        title = stringReference("Fee"),
-        amountCrypto = "1000",
-        symbolCrypto = "MATIC",
-        amountFiatFormatted = "(1000$)",
-        isClickable = false,
-        onClick = {},
     )
-    Column {
-        TangemThemePreview(isDark = false) {
-            FeeItem(state = state)
-        }
+}
 
-        SpacerH24()
-
-        TangemThemePreview(isDark = true) {
-            FeeItem(state = state)
-        }
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun FeeItem_Preview(@PreviewParameter(FeeItemPreviewProvider::class) data: FeeItemState.Content) {
+    TangemThemePreview {
+        FeeItem(data)
     }
 }
+
+private class FeeItemPreviewProvider : PreviewParameterProvider<FeeItemState.Content> {
+    override val values: Sequence<FeeItemState.Content>
+        get() = sequenceOf(
+            FeeItemStatePreview.state,
+            FeeItemStatePreview.state.copy(isClickable = true),
+        )
+}
+// endregion
