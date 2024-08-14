@@ -24,6 +24,7 @@ fun rememberMarketChartState(
             when (it) {
                 MarketChartLook.Type.Growing -> Color.Green
                 MarketChartLook.Type.Falling -> Color.Red
+                MarketChartLook.Type.Neutral -> Color.Gray
             }
         }
     },
