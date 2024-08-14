@@ -291,6 +291,14 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                             ),
                         )
                     }
+
+                    chartDataProducer.runTransaction {
+                        updateLook {
+                            it.copy(
+                                type = getChartTypeByPercent(percent),
+                            )
+                        }
+                    }
                 },
                 ifLeft = {
                     state.update {
@@ -346,6 +354,14 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 triggerPriceChange = trigger,
                 dateTimeText = getDefaultDateTimeString(stateToUpdate.selectedInterval),
             )
+        }
+
+        chartDataProducer.runTransaction {
+            updateLook {
+                it.copy(
+                    type = getChartTypeByPercent(percent),
+                )
+            }
         }
     }
 
