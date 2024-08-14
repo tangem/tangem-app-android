@@ -145,7 +145,10 @@ internal class CurrenciesStatusesLceOperations(
         currencies.map { currency ->
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
-            val yieldBalance = (yieldBalances as? YieldBalanceList.Data)?.getBalance(currency.id.rawCurrencyId)
+            val yieldBalance = (yieldBalances as? YieldBalanceList.Data)?.getBalance(
+                rawCurrencyId = currency.id.rawCurrencyId,
+                networkName = currency.network.name,
+            )
 
             createCurrencyStatus(
                 currency = currency,
