@@ -8,7 +8,7 @@ import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.*
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
