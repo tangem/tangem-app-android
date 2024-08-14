@@ -105,13 +105,13 @@ data class YieldDTO(
         @Json(name = "type")
         val type: String,
         @Json(name = "rewardSchedule")
-        val rewardSchedule: String,
+        val rewardSchedule: RewardScheduleDTO,
         @Json(name = "cooldownPeriod")
         val cooldownPeriod: PeriodDTO,
         @Json(name = "warmupPeriod")
         val warmupPeriod: PeriodDTO,
         @Json(name = "rewardClaiming")
-        val rewardClaiming: String,
+        val rewardClaiming: RewardClaimingDTO,
         @Json(name = "defaultValidator")
         val defaultValidator: String?,
         @Json(name = "minimumStake")
@@ -135,6 +135,41 @@ data class YieldDTO(
             @Json(name = "enabled")
             val enabled: Boolean,
         )
+
+        enum class RewardScheduleDTO {
+            @Json(name = "block")
+            BLOCK,
+
+            @Json(name = "week")
+            WEEK,
+
+            @Json(name = "hour")
+            HOUR,
+
+            @Json(name = "day")
+            DAY,
+
+            @Json(name = "month")
+            MONTH,
+
+            @Json(name = "era")
+            ERA,
+
+            @Json(name = "epoch")
+            EPOCH,
+
+            UNKNOWN,
+        }
+
+        enum class RewardClaimingDTO {
+            @Json(name = "auto")
+            AUTO,
+
+            @Json(name = "manual")
+            MANUAL,
+
+            UNKNOWN,
+        }
     }
 
     enum class RewardTypeDTO {

@@ -1,6 +1,5 @@
 package com.tangem.tap.common.extensions
 
-import com.tangem.common.extensions.isZero
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -24,21 +23,5 @@ fun BigDecimal.toFormattedString(
 }
 
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
-
-// 0.00 -> 0.00
-// 0.00002345 -> 0.00002
-// 1.00002345 -> 1.00
-// 1.45002345 -> 1.45
-fun BigDecimal.scaleToFiat(applyPrecision: Boolean = false): BigDecimal {
-    if (this.isZero()) return this
-
-    val scaledFiat = this.setScale(2, RoundingMode.DOWN)
-    return if (scaledFiat.isZero() && applyPrecision) this.setPrecision(1) else scaledFiat
-}
-
-fun BigDecimal.setPrecision(precision: Int, roundingMode: RoundingMode = RoundingMode.DOWN): BigDecimal {
-    if (precision == precision() || scale() <= precision) return this
-    return this.setScale(scale() - precision() + precision, roundingMode)
-}
 
 fun BigDecimal.isPositive(): Boolean = this.signum() == 1

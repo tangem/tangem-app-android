@@ -16,6 +16,7 @@ dependencies {
 
     /** Compose */
     implementation(deps.compose.material)
+    implementation(deps.compose.material3)
     implementation(deps.compose.foundation)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
@@ -33,9 +34,11 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
 
     /** Core modules */
+    implementation(projects.core.datasource)
     implementation(projects.core.featuretoggles)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
@@ -45,5 +48,6 @@ dependencies {
     implementation(projects.features.tester.api)
 
     /** Other modules */
+    implementation(projects.common.routing)
     implementation(projects.libs.crypto)
 }
