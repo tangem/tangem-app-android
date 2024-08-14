@@ -17,8 +17,6 @@ import com.tangem.datasource.api.tangemTech.TangemTechApiV2
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.*
 import com.tangem.datasource.utils.RequestHeader.AppVersionPlatformHeaders
-import com.tangem.datasource.utils.RequestHeader.StakeKit
-import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.version.AppVersionProvider
 import dagger.Module
@@ -65,8 +63,7 @@ class NetworkModule {
             .baseUrl(environmentConfig.baseUrl)
             .client(
                 OkHttpClient.Builder()
-                    .addEnvironmentSwitcher(ApiConfig.ID.Express, apiConfigsManager)
-                    .addHeaders(environmentConfig.headers)
+                    .applyApiConfig(ApiConfig.ID.Express, apiConfigsManager)
                     .addLoggers(context)
                     .build(),
             )
@@ -79,15 +76,17 @@ class NetworkModule {
     fun provideStakeKitApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        stakeKitAuthProvider: StakeKitAuthProvider,
+        apiConfigsManager: ApiConfigsManager,
     ): StakeKitApi {
+        val environmentConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.StakeKit)
+
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
-            .baseUrl(STAKEKIT_BASE_URL)
+            .baseUrl(environmentConfig.baseUrl)
             .client(
                 OkHttpClient.Builder()
-                    .addHeaders(StakeKit(stakeKitAuthProvider))
+                    .applyApiConfig(id = ApiConfig.ID.StakeKit, apiConfigsManager = apiConfigsManager)
                     .addLoggers(context)
                     .build(),
             )
@@ -110,8 +109,7 @@ class NetworkModule {
             .baseUrl(environmentConfig.baseUrl)
             .client(
                 OkHttpClient.Builder()
-                    .addEnvironmentSwitcher(id = ApiConfig.ID.TangemTech, apiConfigsManager = apiConfigsManager)
-                    .addHeaders(environmentConfig.headers)
+                    .applyApiConfig(id = ApiConfig.ID.TangemTech, apiConfigsManager = apiConfigsManager)
                     .applyTimeoutAnnotations()
                     .addLoggers(context)
                     .build(),
@@ -189,7 +187,7 @@ class NetworkModule {
         requestHeaders: List<RequestHeader> = listOf(AppVersionPlatformHeaders(appVersionProvider)),
     ): T {
         val client = OkHttpClient.Builder()
-            .addEnvironmentSwitcher(id = ApiConfig.ID.TangemTech, apiConfigsManager = apiConfigsManager)
+            .applyApiConfig(id = ApiConfig.ID.TangemTech, apiConfigsManager = apiConfigsManager)
             .applyTimeoutAnnotations()
             .let { builder ->
                 var b = builder
@@ -232,8 +230,6 @@ class NetworkModule {
     )
 
     private companion object {
-        const val STAKEKIT_BASE_URL = "https://api.stakek.it/v1/"
-
         const val DEV_V1_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
 
         const val PROD_V2_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v2/"
