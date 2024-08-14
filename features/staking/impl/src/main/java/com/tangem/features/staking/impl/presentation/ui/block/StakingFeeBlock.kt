@@ -16,14 +16,14 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.common.ui.R
+import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.rows.SelectorRowItem
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
-import com.tangem.common.ui.R
-import com.tangem.common.ui.amountScreen.utils.getCryptoReference
-import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.staking.impl.presentation.state.FeeState
 import java.math.BigDecimal
@@ -39,7 +39,7 @@ internal fun StakingFeeBlock(feeState: FeeState) {
     ) {
         Text(
             text = stringResource(R.string.common_network_fee_title),
-            style = TangemTheme.typography.caption2,
+            style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.secondary,
         )
 
@@ -53,7 +53,14 @@ internal fun StakingFeeBlock(feeState: FeeState) {
                     SelectorRowItem(
                         titleRes = title,
                         iconRes = icon,
-                        preDot = getCryptoReference(feeAmount, feeState.isFeeApproximate),
+                        preDot = stringReference(
+                            BigDecimalFormatter.formatCryptoFeeAmount(
+                                cryptoAmount = feeAmount?.value,
+                                cryptoCurrency = feeAmount?.currencySymbol.orEmpty(),
+                                decimals = feeAmount?.decimals ?: 0,
+                                canBeLower = feeState.isFeeApproximate,
+                            ),
+                        ),
                         postDot = if (feeState.isFeeConvertibleToFiat) {
                             getFiatReference(feeAmount?.value, feeState.rate, feeState.appCurrency)
                         } else {
@@ -88,7 +95,7 @@ private fun BoxScope.FeeLoading(feeState: FeeState) {
             RectangleShimmer(
                 radius = TangemTheme.dimens.radius3,
                 modifier = Modifier.size(
-                    height = TangemTheme.dimens.size12,
+                    height = TangemTheme.dimens.size24,
                     width = TangemTheme.dimens.size90,
                 ),
             )
@@ -107,7 +114,7 @@ private fun BoxScope.FeeError(feeState: FeeState) {
             Text(
                 text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
                 color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.body2,
+                style = TangemTheme.typography.body1,
             )
         }
     }
@@ -117,7 +124,7 @@ private fun BoxScope.FeeError(feeState: FeeState) {
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) value: FeeState.Content) {
+private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) value: FeeState) {
     TangemThemePreview {
         StakingFeeBlock(
             feeState = value,
@@ -125,11 +132,13 @@ private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) va
     }
 }
 
-private class FeeBlockPreviewProvider : PreviewParameterProvider<FeeState.Content> {
+private class FeeBlockPreviewProvider : PreviewParameterProvider<FeeState> {
 
-    override val values: Sequence<FeeState.Content>
+    override val values: Sequence<FeeState>
         get() = sequenceOf(
-            feeState,
+            contentState,
+            FeeState.Loading,
+            FeeState.Error,
         )
 
     private val fee = Fee.Common(
@@ -141,7 +150,7 @@ private class FeeBlockPreviewProvider : PreviewParameterProvider<FeeState.Conten
         ),
     )
 
-    private val feeState = FeeState.Content(
+    private val contentState = FeeState.Content(
         fee = fee,
         rate = BigDecimal.ONE,
         appCurrency = AppCurrency.Default,
