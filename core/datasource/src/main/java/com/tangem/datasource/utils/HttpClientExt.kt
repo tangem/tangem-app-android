@@ -3,10 +3,11 @@ package com.tangem.datasource.utils
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.api.common.SwitchBaseUrlInterceptor
+import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
+import com.tangem.utils.Provider
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 
@@ -16,8 +17,21 @@ internal fun OkHttpClient.Builder.addHeaders(vararg requestHeaders: RequestHeade
         Interceptor { chain ->
             val request = chain.request().newBuilder().apply {
                 requestHeaders
-                    .flatMap(RequestHeader::values)
+                    .flatMap { it.values.toList() }
                     .forEach { addHeader(it.first, it.second.invoke()) }
+            }.build()
+
+            chain.proceed(request)
+        },
+    )
+}
+
+/** Extension for adding headers [requestHeaders] to every [OkHttpClient] request */
+internal fun OkHttpClient.Builder.addHeaders(requestHeaders: Map<String, Provider<String>>): OkHttpClient.Builder {
+    return addInterceptor(
+        Interceptor { chain ->
+            val request = chain.request().newBuilder().apply {
+                requestHeaders.forEach { addHeader(it.key, it.value.invoke()) }
             }.build()
 
             chain.proceed(request)
@@ -53,7 +67,7 @@ internal fun OkHttpClient.Builder.addEnvironmentSwitcher(
 ): OkHttpClient.Builder {
     return if (BuildConfig.TESTER_MENU_ENABLED) {
         addInterceptor(
-            interceptor = SwitchBaseUrlInterceptor(
+            interceptor = SwitchEnvironmentInterceptor(
                 id = id,
                 apiConfigsManager = apiConfigsManager,
             ),
