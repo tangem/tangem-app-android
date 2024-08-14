@@ -1,15 +1,14 @@
 package com.tangem.features.staking.impl.presentation.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -17,123 +16,122 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
-import com.tangem.core.ui.components.list.RoundedListWithDividers
+import com.tangem.core.ui.components.list.roundedListWithDividersItems
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.BalanceGroupedState
+import com.tangem.features.staking.impl.presentation.state.BalanceState
+import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
+import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.previewdata.InitialStakingStatePreview
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.extensions.orZero
+import kotlinx.collections.immutable.ImmutableList
 
+private const val BANNER_BLOCK_KEY = "BannerBlock"
+private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
+private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, clickIntents: StakingClickIntents) {
     if (state !is StakingStates.InitialInfoState.Data) return
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-        modifier = Modifier // Do not put fillMaxSize() in here
-            .background(TangemTheme.colors.background.tertiary)
-            .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing16,
-            ),
+    LazyColumn(
+        modifier = Modifier
+            .background(TangemTheme.colors.background.secondary)
+            .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
-        AnimatedVisibility(state.yieldBalance == InnerYieldBalanceState.Empty) {
-            MetricsBlock(state)
-        }
-        RoundedListWithDividers(state.infoItems)
-        AnimatedContent(targetState = state.yieldBalance, label = "Rewards block visibility animation") {
-            if (it is InnerYieldBalanceState.Data) {
-                StakingRewardBlock(
-                    rewardCrypto = it.rewardsCrypto,
-                    rewardFiat = it.rewardsFiat,
-                    isRewardsToClaim = it.isRewardsToClaim,
-                    onRewardsClick = clickIntents::openRewardsValidators,
-                )
+        if (state.yieldBalance == InnerYieldBalanceState.Empty) {
+            item(key = BANNER_BLOCK_KEY) {
+                Column(
+                    modifier = Modifier.animateItemPlacement(),
+                ) {
+                    BannerBlock(onClick = clickIntents::onInitialInfoBannerClick)
+                    SpacerH12()
+                }
             }
         }
-        AnimatedContent(targetState = state.yieldBalance, label = "Rewards block visibility animation") {
-            if (it is InnerYieldBalanceState.Data) {
-                ActiveStakingBlock(it.balance, clickIntents::onActiveStake)
+
+        this.roundedListWithDividersItems(
+            rows = state.infoItems,
+            footerContent = { SpacerH12() },
+        )
+
+        if (state.yieldBalance is InnerYieldBalanceState.Data) {
+            item(key = STAKING_REWARD_BLOCK_KEY) {
+                Column(modifier = Modifier.animateItemPlacement()) {
+                    StakingRewardBlock(
+                        rewardCrypto = state.yieldBalance.rewardsCrypto,
+                        rewardFiat = state.yieldBalance.rewardsFiat,
+                        isRewardsToClaim = state.yieldBalance.isRewardsToClaim,
+                        onRewardsClick = clickIntents::openRewardsValidators,
+                    )
+                    SpacerH12()
+                }
+            }
+        }
+
+        if (state.yieldBalance is InnerYieldBalanceState.Data) {
+            item(key = ACTIVE_STAKING_BLOCK_KEY) {
+                Column(modifier = Modifier.animateItemPlacement()) {
+                    ActiveStakingBlock(state.yieldBalance.balance, clickIntents::onActiveStake)
+                    SpacerH12()
+                }
             }
         }
     }
 }
 
 @Composable
-private fun MetricsBlock(state: StakingStates.InitialInfoState.Data) {
-    Column(
+private fun BannerBlock(onClick: () -> Unit) {
+    Box(
         modifier = Modifier
-            .background(
-                color = TangemTheme.colors.background.primary,
-                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
-            )
-            .padding(TangemTheme.dimens.spacing12)
-            .fillMaxWidth(),
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(),
+                onClick = onClick,
+            ),
     ) {
-        Text(
-            text = stringResource(id = R.string.staking_details_metrics_block_header),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillWidth,
+            painter = painterResource(R.drawable.img_staking_banner),
+            contentDescription = null,
         )
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.size8))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(modifier = Modifier.weight(1F)) {
-                Text(
-                    text = stringResource(id = R.string.staking_details_apr),
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
-                )
-                Text(
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
-                    text = state.aprRange.resolveReference(),
-                    style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.accent,
-                )
-            }
-            Column(modifier = Modifier.weight(1F)) {
-                Row {
-                    Text(
-                        modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
-                        text = stringResource(id = R.string.staking_details_market_rating),
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
-                    )
-                    Icon(
-                        modifier = Modifier
-                            .size(TangemTheme.dimens.size16)
-                            .align(Alignment.CenterVertically),
-                        painter = painterResource(id = R.drawable.ic_alert_24),
-                        contentDescription = null,
-                        tint = TangemTheme.colors.text.tertiary,
-                    )
+        Text(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(TangemTheme.dimens.spacing16),
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(Brush.linearGradient(textGradientColors))) {
+                    append(stringResource(R.string.staking_details_banner_text))
                 }
-                Text(
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
-                    text = "1", // TODO staking
-                    style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.accent,
-                )
-            }
-        }
+            },
+            style = TangemTheme.typography.h2,
+        )
     }
 }
 
@@ -160,7 +158,7 @@ private fun StakingRewardBlock(
     InputRowDefault(
         title = resourceReference(R.string.staking_rewards),
         text = text,
-        iconRes = R.drawable.ic_chevron_right_24,
+        iconRes = R.drawable.ic_chevron_right_24.takeIf { isRewardsToClaim },
         textColor = textColor,
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
@@ -168,13 +166,14 @@ private fun StakingRewardBlock(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(),
+                enabled = isRewardsToClaim,
                 onClick = onRewardsClick,
             ),
     )
 }
 
 @Composable
-private fun ActiveStakingBlock(groups: List<BalanceGroupedState>, onClick: (BalanceState) -> Unit) {
+private fun ActiveStakingBlock(groups: ImmutableList<BalanceGroupedState>, onClick: (BalanceState) -> Unit) {
     Column(
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
@@ -192,18 +191,20 @@ private fun ActiveStakingBlock(groups: List<BalanceGroupedState>, onClick: (Bala
                     ) {
                         group.items.forEachIndexed { index, balance ->
                             key(balance.validator.address) {
-                                val caption = combinedReference(
-                                    if (group.type == BalanceGroupType.UNSTAKED) {
-                                        resourceReference(R.string.staking_details_unbonding_period)
+                                val caption = if (group.type == BalanceType.UNSTAKING) {
+                                    combinedReference(
+                                        resourceReference(R.string.staking_details_unbonding_period),
                                         annotatedReference {
                                             appendSpace()
                                             appendColored(
                                                 text = balance.unbondingPeriod.resolveReference(),
                                                 color = TangemTheme.colors.text.accent,
                                             )
-                                        }
-                                    } else {
-                                        resourceReference(R.string.app_name)
+                                        },
+                                    )
+                                } else {
+                                    combinedReference(
+                                        resourceReference(R.string.app_name),
                                         annotatedReference {
                                             appendSpace()
                                             appendColored(
@@ -213,20 +214,21 @@ private fun ActiveStakingBlock(groups: List<BalanceGroupedState>, onClick: (Bala
                                                 ),
                                                 color = TangemTheme.colors.text.accent,
                                             )
-                                        }
-                                    },
-                                )
+                                        },
+                                    )
+                                }
                                 InputRowImageInfo(
                                     title = group.title.takeIf { index == 0 },
                                     subtitle = stringReference(balance.validator.name),
                                     caption = caption,
-                                    isGrayscaleImage = group.type == BalanceGroupType.UNSTAKED,
+                                    isGrayscaleImage = group.type == BalanceType.UNSTAKING,
                                     infoTitle = balance.fiatAmount,
                                     infoSubtitle = balance.cryptoAmount,
                                     imageUrl = balance.validator.image.orEmpty(),
                                     modifier = Modifier.clickable(
                                         interactionSource = remember { MutableInteractionSource() },
                                         indication = rememberRipple(),
+                                        enabled = group.isClickable,
                                         onClick = { onClick(balance) },
                                     ),
                                 )
@@ -238,6 +240,11 @@ private fun ActiveStakingBlock(groups: List<BalanceGroupedState>, onClick: (Bala
         }
     }
 }
+
+private val textGradientColors = listOf(
+    TangemColorPalette.White,
+    Color(0xff8fb4df),
+)
 
 // region preview
 

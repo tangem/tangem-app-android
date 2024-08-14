@@ -276,7 +276,7 @@
   <string name="feedback_subject_support">フィードバック</string>
   <string name="feedback_subject_support_tangem">Tangemへのフィードバック</string>
   <string name="feedback_subject_tx_failed">取引を送信できません</string>
-  <string name="give_permission_current_transaction">現在の取引</string>
+  <string name="give_permission_current_transaction">取引</string>
   <string name="give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="give_permission_policy_type_footer">選択したトークンの承認制限を指定します</string>
   <string name="give_permission_rows_amount">金額%s</string>
@@ -636,7 +636,6 @@
   <string name="staking_active_footer">資産のステーキングを解除するには、ここをクリックしてください。</string>
   <string name="staking_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
   <string name="staking_claim_unstaked">ステーキング解除分を請求する</string>
-  <string name="staking_details_annual_percentage_rate">APY</string>
   <string name="staking_details_annual_percentage_rate_info">ステーキングに参加することで得られる年間収益率。</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_available">利用可能</string>
@@ -659,7 +658,6 @@
   <string name="staking_details_warmup_period_info">ステーキングへの参加を有効にするために割り当てられた時間。</string>
   <string name="staking_migrate">移行</string>
   <string name="staking_native">ネイティブステーキング</string>
-  <string name="staking_notification_earn_rewards_text">ステーキングにより%1$sを獲得できます。ステーキング報酬は ~ %2$s日ごとに届きます。</string>
   <string name="staking_notification_earn_rewards_title">ステーキング報酬を獲得</string>
   <string name="staking_notification_unstake_text">ステーキング解除後、報酬の獲得はすぐに停止します。ステーキング解除プロセスには%sかかります。</string>
   <string name="staking_rebond">再結束</string>
@@ -671,6 +669,7 @@
   <string name="staking_reward_claiming_manual">手動</string>
   <string name="staking_reward_schedule_block">ブロック</string>
   <string name="staking_reward_schedule_day">日</string>
+  <string name="staking_reward_schedule_each_day">毎日</string>
   <string name="staking_reward_schedule_epoch">エポック</string>
   <string name="staking_reward_schedule_era">時代</string>
   <string name="staking_reward_schedule_hour">時</string>
@@ -686,6 +685,7 @@
   <string name="staking_unstaked_footer">資産を請求するために、unstakedを確認してください</string>
   <string name="staking_unstaking">ステーキング解除</string>
   <string name="staking_validator">バリデーター</string>
+  <string name="staking_validators">バリデーター</string>
   <string name="staking_vote">投票する</string>
   <string name="staking_vote_locked">投票はロックされています</string>
   <string name="staking_withdraw">引き出す</string>
