@@ -131,7 +131,7 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
                 if (initialState?.yieldBalance is InnerYieldBalanceState.Data) {
                     resourceReference(R.string.staking_stake_more)
                 } else {
-                    resourceReference(R.string.common_next)
+                    resourceReference(R.string.common_stake)
                 }
             }
 
