@@ -23,12 +23,14 @@ sealed class ApiConfig {
     enum class ID {
         Express,
         TangemTech,
+        StakeKit,
     }
 
     private fun initializeId(): ID {
         return when (this) {
             is Express -> ID.Express
             is TangemTech -> ID.TangemTech
+            is StakeKit -> ID.StakeKit
         }
     }
 
