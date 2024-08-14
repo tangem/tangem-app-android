@@ -129,7 +129,7 @@ internal object TokenDetailsPreviewData {
         onBalanceSelect = {},
         displayCryptoBalance = "966,96 XLM",
         displayFiatBalance = "91,50$",
-        isBalanceSelectorEnabled = false,
+        isBalanceSelectorEnabled = true,
     )
     val balanceError = TokenDetailsBalanceBlockState.Error(
         actionButtons = actionButtons,
