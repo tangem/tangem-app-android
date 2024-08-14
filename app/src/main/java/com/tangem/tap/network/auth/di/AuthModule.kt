@@ -29,14 +29,8 @@ class AuthModule {
 
     @Provides
     @Singleton
-    fun provideExpressAuthProvider(
-        userWalletsStore: UserWalletsStore,
-        configManager: ConfigManager,
-    ): ExpressAuthProvider {
-        return DefaultExpressAuthProvider(
-            userWalletsStore = userWalletsStore,
-            configManager = configManager,
-        )
+    fun provideExpressAuthProvider(userWalletsStore: UserWalletsStore): ExpressAuthProvider {
+        return DefaultExpressAuthProvider(userWalletsStore = userWalletsStore)
     }
 
     @Provides
