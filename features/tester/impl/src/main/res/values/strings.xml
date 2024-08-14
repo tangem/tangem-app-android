@@ -3,7 +3,7 @@
     <string name="tester_menu" translatable="false">Tester menu</string>
     <string name="feature_toggles" translatable="false">Feature toggles</string>
     <string name="apply_changes" translatable="false">Apply changes</string>
-    <string name="stand_toggles" translatable="false">Stand toggles</string>
+    <string name="environment_toggles" translatable="false">Environment toggles</string>
     <string name="tester_actions" translatable="false">Tester actions</string>
     <string name="hide_all_currencies" translatable="false">Hide all currencies</string>
     <string name="toggle_app_theme" translatable="false">Toggle app theme - %s</string>
