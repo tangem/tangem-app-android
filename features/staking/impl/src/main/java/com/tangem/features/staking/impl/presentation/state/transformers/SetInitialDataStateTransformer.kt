@@ -13,24 +13,27 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.features.staking.impl.presentation.state.ValidatorState
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
-import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 internal class SetInitialDataStateTransformer(
     private val clickIntents: StakingClickIntents,
     private val yield: Yield,
     private val isStakeMoreAvailable: Boolean,
+    private val isApprovalNeeded: Boolean,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -202,12 +205,17 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createInitialConfirmationState(): StakingStates.ConfirmationState {
-        return ConfirmationStatePreviewData.assentStakingState.copy(
-            validatorState = ValidatorState.Content(
-                isClickable = true,
-                chosenValidator = yield.validators.first(),
-                availableValidators = yield.validators,
-            ),
+        return StakingStates.ConfirmationState.Data(
+            isPrimaryButtonEnabled = false,
+            innerState = InnerConfirmationStakingState.ASSENT,
+            feeState = FeeState.Loading,
+            validatorState = ValidatorState.Loading,
+            notifications = persistentListOf(),
+            footerText = "",
+            transactionDoneState = TransactionDoneState.Empty,
+            pendingActions = persistentListOf(),
+            pendingActionInProgress = null,
+            isApprovalNeeded = isApprovalNeeded,
         )
     }
 
