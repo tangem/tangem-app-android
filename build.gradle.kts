@@ -94,6 +94,11 @@ val generateComposeMetrics by tasks.registering {
                     "-P",
                     "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$outputDirectory",
                 )
+                // Compose strong skipping mode
+                // freeCompilerArgs.addAll(
+                //     "-P",
+                //     "plugin:androidx.compose.compiler.plugins.kotlin:experimentalStrongSkipping=true",
+                // )
             }
         }
     }

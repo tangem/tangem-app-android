@@ -1,18 +1,22 @@
 package com.tangem.feature.tester.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeActivity
 import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
 import com.tangem.feature.tester.presentation.actions.TesterActionsViewModel
+import com.tangem.feature.tester.presentation.environments.ui.EnvironmentTogglesScreen
+import com.tangem.feature.tester.presentation.environments.viewmodels.EnvironmentsTogglesViewModel
 import com.tangem.feature.tester.presentation.featuretoggles.ui.FeatureTogglesScreen
 import com.tangem.feature.tester.presentation.featuretoggles.viewmodels.FeatureTogglesViewModel
 import com.tangem.feature.tester.presentation.menu.state.TesterMenuContentState
@@ -37,6 +41,9 @@ internal class TesterActivity : ComposeActivity() {
     @Inject
     lateinit var appFinisher: AppFinisher
 
+    @Inject
+    lateinit var appRouter: AppRouter
+
     private val innerTesterRouter: InnerTesterRouter
         get() = requireNotNull(testerRouter as? InnerTesterRouter) {
             "TesterRouter must be InnerTesterRouter for tester feature"
@@ -60,8 +67,9 @@ internal class TesterActivity : ComposeActivity() {
             composable(route = TesterScreen.MENU.name) {
                 TesterMenuScreen(
                     state = TesterMenuContentState(
-                        onBackClick = innerTesterRouter::back,
+                        onBackClick = { appRouter.pop { finish() } },
                         onFeatureTogglesClick = { innerTesterRouter.open(TesterScreen.FEATURE_TOGGLES) },
+                        onEnvironmentTogglesClick = { innerTesterRouter.open(TesterScreen.ENVIRONMENTS_TOGGLES) },
                         onTesterActionsClick = { innerTesterRouter.open(TesterScreen.TESTER_ACTIONS) },
                     ),
                 )
@@ -73,6 +81,16 @@ internal class TesterActivity : ComposeActivity() {
                 }
 
                 FeatureTogglesScreen(state = viewModel.uiState)
+            }
+
+            composable(route = TesterScreen.ENVIRONMENTS_TOGGLES.name) {
+                val viewModel = hiltViewModel<EnvironmentsTogglesViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+
+                EnvironmentTogglesScreen(
+                    uiModel = viewModel.uiState.collectAsState().value,
+                )
             }
 
             composable(route = TesterScreen.TESTER_ACTIONS.name) {
