@@ -4,7 +4,6 @@ import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
@@ -12,7 +11,10 @@ import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.JobHolder
@@ -124,7 +126,7 @@ internal class SaveWalletMiddleware {
         )
 
         store.dispatchWithMain(SaveWalletAction.AllowToUseBiometrics.Success)
-        store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
+        store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
     }
 
     private fun dismiss(state: SaveWalletState) {
