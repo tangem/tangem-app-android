@@ -44,6 +44,7 @@ class FetchCardTokenListUseCase(
                 val yieldBalances = async {
                     fetchYieldBalances(
                         userWalletId = userWalletId,
+                        currencies = currencies,
                         refresh = refresh,
                     )
                 }
@@ -77,10 +78,13 @@ class FetchCardTokenListUseCase(
         )
     }
 
-    private suspend fun fetchYieldBalances(userWalletId: UserWalletId, refresh: Boolean) {
-        val networkAddresses = networksRepository.getNetworkAddresses(userWalletId)
+    private suspend fun fetchYieldBalances(
+        userWalletId: UserWalletId,
+        currencies: List<CryptoCurrency>,
+        refresh: Boolean,
+    ) {
         catch(
-            block = { stakingRepository.fetchMultiYieldBalance(userWalletId, networkAddresses, refresh) },
+            block = { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies, refresh) },
             catch = { /* Ignore error */ },
         )
     }

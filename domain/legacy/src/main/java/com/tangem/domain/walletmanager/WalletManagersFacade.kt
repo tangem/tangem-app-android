@@ -117,20 +117,18 @@ interface WalletManagersFacade {
     suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager>
 
     /**
-     * Returns ordered list of addresses for selected wallet for given currency
+     * Returns default network address for selected wallet in given network
      *
      * @param userWalletId selected wallet id
      * @param network network of currency
      */
-    @Deprecated("Use NetworkAddress from CryptoCurrencyStatus")
-    suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address>
+    suspend fun getDefaultAddress(userWalletId: UserWalletId, network: Network): String?
 
     /** Returns list of all addresses for all currencies in selected wallet
      *
      * @param userWalletId selected wallet id
      * @param network required to create wallet manager
      */
-    @Deprecated("Use NetworkAddress from CryptoCurrencyStatus")
     suspend fun getAddresses(userWalletId: UserWalletId, network: Network): Set<Address>
 
     /**
