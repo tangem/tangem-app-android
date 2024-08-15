@@ -144,4 +144,8 @@ internal class MockCurrenciesRepository(
     ): CryptoCurrency.Token {
         error("not implemented")
     }
+
+    override suspend fun hasTokens(userWalletId: UserWalletId, network: Network): Boolean {
+        return false
+    }
 }
