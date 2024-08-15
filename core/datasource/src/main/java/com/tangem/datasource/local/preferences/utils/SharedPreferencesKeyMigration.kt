@@ -1,9 +1,6 @@
 package com.tangem.datasource.local.preferences.utils
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.DoNotInline
-import androidx.annotation.RequiresApi
 import androidx.datastore.core.DataMigration
 import androidx.datastore.preferences.core.*
 import java.io.File
@@ -72,27 +69,11 @@ internal class SharedPreferencesKeyMigration(
     }
 
     private fun deleteSharedPreferences(context: Context, name: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            if (!Api24Impl.deleteSharedPreferences(context, name)) {
-                throw IOException("Unable to delete SharedPreferences: $name")
-            }
-        } else {
-            val prefsFile = getSharedPrefsFile(context, name)
-            val prefsBackup = getSharedPrefsBackup(prefsFile)
+        val prefsFile = getSharedPrefsFile(context, name)
+        val prefsBackup = getSharedPrefsBackup(prefsFile)
 
-            prefsFile.delete()
-            prefsBackup.delete()
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.N)
-    private object Api24Impl {
-
-        @JvmStatic
-        @DoNotInline
-        fun deleteSharedPreferences(context: Context, name: String): Boolean {
-            return context.deleteSharedPreferences(name)
-        }
+        prefsFile.delete()
+        prefsBackup.delete()
     }
 
     private fun getSharedPrefsFile(context: Context, name: String): File {
