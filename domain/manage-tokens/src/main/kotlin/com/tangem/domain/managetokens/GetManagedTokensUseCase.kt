@@ -9,6 +9,6 @@ class GetManagedTokensUseCase(
 ) {
 
     operator fun invoke(context: ManageTokensListBatchingContext, batchSize: Int = 40): ManageTokensListBatchFlow {
-        return repository.tokensFlow(context, batchSize)
+        return repository.getTokenListBatchFlow(context, batchSize)
     }
 }
