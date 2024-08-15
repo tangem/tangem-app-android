@@ -79,12 +79,13 @@ private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, b
             isDebuggable = true
             isMinifyEnabled = false
         }
-        BuildType.External -> {
+        BuildType.Internal,
+        BuildType.External,
+        -> {
             initWith(appExtension.buildTypes.getByName(BuildType.Release.id))
             matchingFallbacks.add(BuildType.Release.id)
             signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
         }
-        BuildType.Internal,
         BuildType.Mocked -> {
             initWith(appExtension.buildTypes.getByName(BuildType.Release.id))
             matchingFallbacks.add(BuildType.Release.id)
