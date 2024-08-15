@@ -11,18 +11,20 @@ internal sealed class ManageTokensUM {
     abstract val isInitialBatchLoading: Boolean
     abstract val isNextBatchLoading: Boolean
     abstract val items: ImmutableList<CurrencyItemUM>
-    abstract val topBar: ManageTokensTopBarUM
+    abstract val topBar: ManageTokensTopBarUM?
     abstract val search: SearchBarUM
     abstract val loadMore: () -> Boolean
+    abstract val applyContentInnerPadding: Boolean
 
     data class ReadContent(
         override val popBack: () -> Unit,
         override val isInitialBatchLoading: Boolean,
         override val isNextBatchLoading: Boolean,
         override val items: ImmutableList<CurrencyItemUM>,
-        override val topBar: ManageTokensTopBarUM,
+        override val topBar: ManageTokensTopBarUM?,
         override val search: SearchBarUM,
         override val loadMore: () -> Boolean,
+        override val applyContentInnerPadding: Boolean,
     ) : ManageTokensUM()
 
     data class ManageContent(
@@ -30,9 +32,10 @@ internal sealed class ManageTokensUM {
         override val isInitialBatchLoading: Boolean,
         override val isNextBatchLoading: Boolean,
         override val items: ImmutableList<CurrencyItemUM>,
-        override val topBar: ManageTokensTopBarUM,
+        override val topBar: ManageTokensTopBarUM?,
         override val search: SearchBarUM,
         override val loadMore: () -> Boolean,
+        override val applyContentInnerPadding: Boolean,
         val saveChanges: () -> Unit,
         val hasChanges: Boolean,
     ) : ManageTokensUM()

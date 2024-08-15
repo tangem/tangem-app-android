@@ -28,6 +28,8 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
@@ -368,9 +370,19 @@ private fun NetworksList(
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Preview(showBackground = true, widthDp = 360, heightDp = 800, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ManageTokens() {
+private fun Preview_ManageTokens(
+    @PreviewParameter(ManageTokensComponentParamsProvider::class) params: ManageTokensComponent.Params,
+) {
     TangemThemePreview {
-        PreviewManageTokensComponent().Content(Modifier.fillMaxWidth())
+        PreviewManageTokensComponent(params).Content(Modifier.fillMaxWidth())
     }
 }
+
+private class ManageTokensComponentParamsProvider : CollectionPreviewParameterProvider<ManageTokensComponent.Params>(
+    collection = listOf(
+        ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.Manage(showToolbar = true)),
+        ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.Manage(showToolbar = false)),
+        ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true))
+    )
+)
 // endregion Preview

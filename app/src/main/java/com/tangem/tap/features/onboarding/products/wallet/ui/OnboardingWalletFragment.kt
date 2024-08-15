@@ -10,12 +10,16 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.transition.TransitionManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
+import com.arkivanov.decompose.defaultComponentContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayoutMediator
 import com.tangem.common.CardIdFormatter
@@ -25,13 +29,19 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.ui.extensions.setStatusBarColor
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseRouter
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseViewModel
+import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.sdk.ui.widget.leapfrogWidget.PropertyCalculator
 import com.tangem.tap.common.analytics.events.Onboarding
@@ -49,23 +59,48 @@ import com.tangem.tap.store
 import com.tangem.utils.Provider
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentOnboardingWalletBinding
+import com.tangem.wallet.databinding.LayoutOnboardingManageTokensBinding
 import com.tangem.wallet.databinding.LayoutOnboardingSeedPhraseBinding
 import com.tangem.wallet.databinding.ViewOnboardingProgressBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
 @Suppress("LargeClass", "MagicNumber")
 @AndroidEntryPoint
-class OnboardingWalletFragment :
-    BaseFragment(R.layout.fragment_onboarding_wallet),
-    StoreSubscriber<OnboardingWalletState>,
-    FragmentOnBackPressedHandler {
+class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_wallet),
+    StoreSubscriber<OnboardingWalletState>, FragmentOnBackPressedHandler {
+
+    @Inject
+    internal lateinit var manageTokensComponentFactory: ManageTokensComponent.Factory
+
+    @Inject
+    @RootAppComponentContext
+    internal lateinit var rootComponentContext: AppComponentContext
+
+    private val manageTokensComponent by lazy(mode = LazyThreadSafetyMode.NONE) {
+        val componentContext = rootComponentContext.childByContext(
+            componentContext = defaultComponentContext(onBackPressedDispatcher = null),
+        )
+
+        manageTokensComponentFactory.create(
+            context = componentContext,
+            params = ManageTokensComponent.Params(
+                mode = ManageTokensComponent.Mode.Manage(
+                    showToolbar = false,
+                    onSaved = ::manageTokensCurrenciesSaved,
+                ),
+                applyInnerContentPadding = false,
+            ),
+        )
+    }
 
     internal val binding: FragmentOnboardingWalletBinding by viewBinding(FragmentOnboardingWalletBinding::bind)
     internal val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
 
     internal val bindingSeedPhrase: LayoutOnboardingSeedPhraseBinding by lazy { binding.onboardingSeedPhraseContainer }
+    private val bindingManageTokens: LayoutOnboardingManageTokensBinding by lazy { binding.onboardingManageTokensContainer }
 
     private val canSkipBackup by lazy { arguments?.getBoolean(AppRoute.OnboardingWallet.CAN_SKIP_BACKUP_KEY) ?: true }
 
@@ -221,12 +256,31 @@ class OnboardingWalletFragment :
     internal fun handleOnboardingStep(state: OnboardingWalletState) {
         when (state.step) {
             OnboardingWalletStep.CreateWallet -> setupCreateWalletState()
-            OnboardingWalletStep.Backup -> setBackupState(
-                state = state.backupState,
-            )
-
+            OnboardingWalletStep.Backup -> setBackupState(state = state.backupState)
+            OnboardingWalletStep.ManageTokens -> setManageTokensState()
+            OnboardingWalletStep.Done -> showSuccess()
             else -> {}
         }
+    }
+
+    private fun setManageTokensState() {
+        pbBinding.pbState.show()
+        binding.onboardingWalletContainer.hide()
+        bindingSeedPhrase.onboardingSeedPhraseContainer.hide()
+        bindingManageTokens.onboardingManageTokensContainer.show()
+        binding.toolbar.title = getText(R.string.onboarding_add_tokens)
+        bindingManageTokens.onboardingManageTokensContainer.setContent {
+            TangemTheme(
+                isDark = isSystemInDarkTheme(),
+                windowSize = rememberWindowSize(activity = requireActivity()),
+            ) {
+                manageTokensComponent.Content(modifier = Modifier.fillMaxSize())
+            }
+        }
+    }
+
+    private fun manageTokensCurrenciesSaved() {
+        store.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
     }
 
     private fun setupCreateWalletState() = with(binding) {
@@ -455,6 +509,8 @@ class OnboardingWalletFragment :
         tvBody.show()
         viewPagerBackupInfo.hide()
         tabLayoutBackupInfo.hide()
+        onboardingWalletContainer.show()
+        bindingManageTokens.onboardingManageTokensContainer.hide()
 
         tvBody.text = getText(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
         layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_continue_wallet)

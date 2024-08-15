@@ -25,7 +25,7 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
-internal class PreviewManageTokensComponent : ManageTokensComponent {
+internal class PreviewManageTokensComponent(params: ManageTokensComponent.Params) : ManageTokensComponent {
 
     private val changedItemsIds: MutableSet<String> = mutableSetOf()
 
@@ -34,14 +34,24 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
         value = ManageTokensUM.ManageContent(
             popBack = {},
             items = items,
-            topBar = ManageTokensTopBarUM.ManageContent(
-                title = resourceReference(id = R.string.main_manage_tokens),
-                onBackButtonClick = {},
-                endButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_plus_24,
-                    onIconClicked = {},
-                ),
-            ),
+            topBar = if (params.mode.showToolbar) {
+                when (params.mode) {
+                    is ManageTokensComponent.Mode.Manage -> ManageTokensTopBarUM.ManageContent(
+                        title = resourceReference(id = R.string.main_manage_tokens),
+                        onBackButtonClick = {},
+                        endButton = TopAppBarButtonUM(
+                            iconRes = R.drawable.ic_plus_24,
+                            onIconClicked = {},
+                        ),
+                    )
+                    is ManageTokensComponent.Mode.ReadOnly -> ManageTokensTopBarUM.ReadContent(
+                        title = resourceReference(R.string.common_search_tokens),
+                        onBackButtonClick = {},
+                    )
+                }
+            } else {
+                null
+            },
             search = SearchBarUM(
                 placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
                 query = "",
@@ -49,6 +59,7 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
                 isActive = false,
                 onActiveChange = ::toggleSearchBar,
             ),
+            applyContentInnerPadding = params.applyInnerContentPadding,
             hasChanges = false,
             isInitialBatchLoading = false,
             isNextBatchLoading = true,

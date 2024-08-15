@@ -93,3 +93,7 @@ sealed class BackupAction : Action {
 
     data class ResetBackupCard(val cardId: String) : BackupAction()
 }
+
+internal sealed class OnboardingManageTokensAction : OnboardingWalletAction() {
+    data object CurrenciesSaved : OnboardingManageTokensAction()
+}

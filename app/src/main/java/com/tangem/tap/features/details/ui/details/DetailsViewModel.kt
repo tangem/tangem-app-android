@@ -170,7 +170,7 @@ internal class DetailsViewModel(
         }
         val scanResponse = selectedUserWallet.scanResponse
         Analytics.addContext(scanResponse)
-        store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
+        store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = true))
         store.dispatchNavigationAction { push(AppRoute.OnboardingWallet()) }
     }
 

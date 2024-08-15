@@ -178,7 +178,8 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class ManageTokens(
         val userWalletId: UserWalletId? = null,
-    ) : AppRoute(path = "/manage_tokens/$userWalletId"), RouteBundleParams {
+        val showToolbar: Boolean,
+    ) : AppRoute(path = "/manage_tokens/userWalletId=$userWalletId/showToolbar=$showToolbar"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
 

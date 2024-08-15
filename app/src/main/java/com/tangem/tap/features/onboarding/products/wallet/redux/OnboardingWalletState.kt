@@ -19,14 +19,14 @@ data class OnboardingWalletState(
 
     @Suppress("MagicNumber")
     fun getMaxProgress(): Int {
-        val baseProgress = 6
+        val baseProgress = 7
         return getWallet2Progress() + baseProgress
     }
 
     @Suppress("ComplexMethod", "MagicNumber")
     fun getProgressStep(): Int {
         val progressByStep = when (step) {
-            OnboardingWalletStep.CreateWallet -> 1
+            OnboardingWalletStep.CreateWallet, OnboardingWalletStep.None -> 1
             OnboardingWalletStep.Backup -> {
                 when (backupState.backupStep) {
                     BackupStep.InitBackup -> 2
@@ -39,8 +39,8 @@ data class OnboardingWalletState(
                     BackupStep.Finished -> getMaxProgress()
                 }
             }
+            OnboardingWalletStep.ManageTokens -> 6
             OnboardingWalletStep.Done -> getMaxProgress()
-            else -> 1
         }
 
         return getWallet2Progress() + progressByStep
@@ -54,7 +54,7 @@ data class OnboardingWallet2State(
 )
 
 enum class OnboardingWalletStep {
-    None, CreateWallet, Backup, Done
+    None, CreateWallet, Backup, ManageTokens, Done
 }
 
 data class BackupState(

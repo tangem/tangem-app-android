@@ -162,16 +162,7 @@ private fun handleWalletAction(action: Action) {
         }
         is OnboardingWalletAction.FinishOnboarding -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
-
-            if (scanResponse == null) {
-                action.scope.launch {
-                    readCard { newScanResponse ->
-                        handleFinishOnboardind(newScanResponse)
-                    }
-                }
-            } else {
-                handleFinishOnboardind(scanResponse)
-            }
+            navigateToWalletScreen()
         }
         is OnboardingWalletAction.ResumeBackup -> {
             val newAction = when (val backupState = backupService.currentState) {
@@ -195,15 +186,26 @@ private fun handleWalletAction(action: Action) {
     }
 }
 
-private fun handleFinishOnboardind(scanResponse: ScanResponse) {
+private fun handleFinishBackup(scanResponse: ScanResponse) {
     val backupState = store.state.onboardingWalletState.backupState
     val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
-    OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(
+    OnboardingHelper.saveWallet(
         scanResponse = updatedScanResponse,
         accessCode = backupState.accessCode,
         backupCardsIds = backupState.backupCardIds,
         hasBackupError = backupState.hasBackupError,
     )
+}
+
+private fun navigateToWalletScreen() {
+    mainScope.launch {
+        val settingsRepository = store.inject(DaggerGraphState::settingsRepository)
+        store.dispatchNavigationAction { push(AppRoute.Wallet) }
+        if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
+            delay(timeMillis = 1_800)
+            store.dispatchNavigationAction { push(AppRoute.SaveWallet) }
+        }
+    }
 }
 
 private suspend fun readCard(onSuccess: (ScanResponse) -> Unit) {
@@ -574,6 +576,15 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     cardIds = gatherCardIds(backupState, card),
                 )
             }
+            if (scanResponse == null) {
+                scope.launch {
+                    readCard { newScanResponse ->
+                        handleFinishBackup(newScanResponse)
+                    }
+                }
+            } else {
+                handleFinishBackup(scanResponse)
+            }
         }
         is BackupAction.FinishBackup -> {
             scope.launch {
@@ -619,6 +630,15 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 Analytics.send(Onboarding.Finished())
 
                 store.state.globalState.onboardingState.onboardingManager?.finishActivation(notActivatedCardIds)
+                if (scanResponse == null) {
+                    launch {
+                        readCard { newScanResponse ->
+                            handleFinishBackup(newScanResponse)
+                        }
+                    }
+                } else {
+                    handleFinishBackup(scanResponse)
+                }
             }
         }
 
