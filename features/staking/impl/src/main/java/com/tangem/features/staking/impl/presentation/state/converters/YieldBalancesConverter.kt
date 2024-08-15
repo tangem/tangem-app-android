@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.converters
 
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -34,7 +35,9 @@ internal class YieldBalancesConverter(
             val cryptoRewardsValue = yieldBalance.getRewardStakingBalance()
             val fiatRewardsValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoRewardsValue)
             val groupedBalances = getGroupedBalance(yieldBalance.balance)
-
+            val isRewardsClaimable = yieldBalance.balance.items
+                .filter { it.type == BalanceType.REWARDS }
+                .any { it.pendingActions.isNotEmpty() }
             InnerYieldBalanceState.Data(
                 rewardsCrypto = BigDecimalFormatter.formatCryptoAmount(
                     cryptoAmount = cryptoRewardsValue,
@@ -46,6 +49,7 @@ internal class YieldBalancesConverter(
                     fiatCurrencySymbol = appCurrency.symbol,
                 ),
                 isRewardsToClaim = !cryptoRewardsValue.isNullOrZero(),
+                isRewardsClaimable = isRewardsClaimable,
                 balance = groupedBalances,
             )
         } else {
@@ -69,47 +73,50 @@ internal class YieldBalancesConverter(
                 )
             }
         }
+        .filterNot { it.items.isEmpty() }
         .toPersistentList()
 
     private fun List<BalanceItem>.mapBalances(): List<BalanceState> {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
-        return this.mapNotNull { balance ->
-            val validator = yield.validators.firstOrNull {
-                balance.validatorAddress?.contains(it.address, ignoreCase = true) == true
-            }
-            val cryptoAmount = balance.amount * balance.pricePerShare
-            val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
-            val unbondingPeriod = yield.metadata.cooldownPeriod.days
-            validator?.let {
-                BalanceState(
-                    validator = validator,
-                    cryptoValue = cryptoAmount.parseBigDecimal(cryptoCurrency.decimals),
-                    cryptoDecimal = cryptoAmount,
-                    cryptoAmount = stringReference(
-                        BigDecimalFormatter.formatCryptoAmount(
-                            cryptoAmount = cryptoAmount,
-                            cryptoCurrency = cryptoCurrency,
+        return this
+            .filterNot { it.amount.isZero() }
+            .mapNotNull { balance ->
+                val validator = yield.validators.firstOrNull {
+                    balance.validatorAddress?.contains(it.address, ignoreCase = true) == true
+                }
+                val cryptoAmount = balance.amount
+                val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
+                val unbondingPeriod = yield.metadata.cooldownPeriod.days
+                validator?.let {
+                    BalanceState(
+                        validator = validator,
+                        cryptoValue = cryptoAmount.parseBigDecimal(cryptoCurrency.decimals),
+                        cryptoDecimal = cryptoAmount,
+                        cryptoAmount = stringReference(
+                            BigDecimalFormatter.formatCryptoAmount(
+                                cryptoAmount = cryptoAmount,
+                                cryptoCurrency = cryptoCurrency,
+                            ),
                         ),
-                    ),
-                    fiatAmount = stringReference(
-                        BigDecimalFormatter.formatFiatAmount(
-                            fiatAmount = fiatAmount,
-                            fiatCurrencyCode = appCurrency.code,
-                            fiatCurrencySymbol = appCurrency.symbol,
+                        fiatAmount = stringReference(
+                            BigDecimalFormatter.formatFiatAmount(
+                                fiatAmount = fiatAmount,
+                                fiatCurrencyCode = appCurrency.code,
+                                fiatCurrencySymbol = appCurrency.symbol,
+                            ),
                         ),
-                    ),
-                    rawCurrencyId = balance.rawCurrencyId,
-                    unbondingPeriod = pluralReference(
-                        id = R.plurals.common_days,
-                        count = unbondingPeriod,
-                        formatArgs = wrappedList(unbondingPeriod),
-                    ),
-                    pendingActions = balance.pendingActions.toPersistentList(),
-                )
+                        rawCurrencyId = balance.rawCurrencyId,
+                        unbondingPeriod = pluralReference(
+                            id = R.plurals.common_days,
+                            count = unbondingPeriod,
+                            formatArgs = wrappedList(unbondingPeriod),
+                        ),
+                        pendingActions = balance.pendingActions.toPersistentList(),
+                    )
+                }
             }
-        }
     }
 
     private fun BalanceType.toGroup() = when (this) {
