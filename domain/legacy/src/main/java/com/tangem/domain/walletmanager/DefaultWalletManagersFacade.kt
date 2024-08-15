@@ -376,15 +376,12 @@ class DefaultWalletManagersFacade(
         return walletManagersStore.getAllSync(userWalletId)
     }
 
-    @Deprecated(
-        "Use NetworkAddress from CryptoCurrencyStatus",
-        ReplaceWith("cryptoCurrencyStatus.value.networkAddress"),
-    )
-    override suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address> {
-        return getAddresses(userWalletId, network).sortedBy { it.type }
+    override suspend fun getDefaultAddress(userWalletId: UserWalletId, network: Network): String? {
+        return getAddresses(userWalletId, network)
+            .firstOrNull { it.type == AddressType.Default }
+            ?.value
     }
 
-    @Deprecated("Use NetworkAddress from CryptoCurrencyStatus")
     override suspend fun getAddresses(userWalletId: UserWalletId, network: Network): Set<Address> {
         val manager = getOrCreateWalletManager(
             userWalletId = userWalletId,
