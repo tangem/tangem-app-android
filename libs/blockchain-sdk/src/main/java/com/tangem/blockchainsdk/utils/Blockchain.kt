@@ -327,7 +327,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Joystream -> "joystream"
         Blockchain.Bittensor -> "bittensor"
         Blockchain.Filecoin -> "filecoin"
-        Blockchain.Blast, Blockchain.BlastTestnet -> "blast"
+        Blockchain.Blast, Blockchain.BlastTestnet -> "blast-ethereum"
         Blockchain.Cyber, Blockchain.CyberTestnet -> "cyberconnect"
     }
 }
