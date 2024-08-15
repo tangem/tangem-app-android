@@ -6,7 +6,7 @@ import arrow.core.raise.either
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.tokens.model.CryptoCurrencyAddress
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 
 class FetchStakingYieldBalanceUseCase(
@@ -16,7 +16,7 @@ class FetchStakingYieldBalanceUseCase(
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
-        address: CryptoCurrencyAddress,
+        cryptoCurrency: CryptoCurrency,
         refresh: Boolean = false,
     ): Either<StakingError, Unit> {
         return either {
@@ -24,7 +24,7 @@ class FetchStakingYieldBalanceUseCase(
                 block = {
                     stakingRepository.fetchSingleYieldBalance(
                         userWalletId = userWalletId,
-                        address = address,
+                        cryptoCurrency = cryptoCurrency,
                         refresh = refresh,
                     )
                 },
