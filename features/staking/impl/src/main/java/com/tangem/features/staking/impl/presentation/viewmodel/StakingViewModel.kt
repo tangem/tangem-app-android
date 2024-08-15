@@ -480,6 +480,7 @@ internal class StakingViewModel @Inject constructor(
                             clickIntents = this@StakingViewModel,
                             yield = yield,
                             isStakeMoreAvailable = isStakeMoreAvailable.getOrElse { false },
+                            isApprovalNeeded = stakingApproval is StakingApproval.Needed,
                             cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                             userWalletProvider = Provider { userWallet },
                             appCurrencyProvider = Provider { appCurrency },
