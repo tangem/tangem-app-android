@@ -12,7 +12,7 @@ import com.tangem.utils.transformer.Transformer
 
 internal class SetConfirmationStateAssentApprovalTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
     private val fee: TransactionFee,
 ) : Transformer<StakingUiState> {
 
@@ -25,12 +25,13 @@ internal class SetConfirmationStateAssentApprovalTransformer(
 
     private fun StakingStates.ConfirmationState.copyWrapped(): StakingStates.ConfirmationState {
         return if (this is StakingStates.ConfirmationState.Data) {
+            val isFeeConvertibleToFiat = feeCryptoCurrencyStatus?.currency?.network?.hasFiatFeeRate == true
             copy(
                 innerState = InnerConfirmationStakingState.ASSENT,
                 feeState = FeeState.Content(
                     fee = fee.normal,
-                    rate = cryptoCurrencyStatusProvider().value.fiatRate,
-                    isFeeConvertibleToFiat = cryptoCurrencyStatusProvider().currency.network.hasFiatFeeRate,
+                    rate = feeCryptoCurrencyStatus?.value?.fiatRate,
+                    isFeeConvertibleToFiat = isFeeConvertibleToFiat,
                     appCurrency = appCurrencyProvider(),
                     isFeeApproximate = false,
                 ),
