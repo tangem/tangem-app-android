@@ -89,6 +89,7 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
                         rewardCrypto = state.yieldBalance.rewardsCrypto,
                         rewardFiat = state.yieldBalance.rewardsFiat,
                         isRewardsToClaim = state.yieldBalance.isRewardsToClaim,
+                        isRewardsClaimable = state.yieldBalance.isRewardsClaimable,
                         onRewardsClick = clickIntents::openRewardsValidators,
                     )
                     SpacerH12()
@@ -143,6 +144,7 @@ private fun StakingRewardBlock(
     rewardCrypto: String,
     rewardFiat: String,
     isRewardsToClaim: Boolean,
+    isRewardsClaimable: Boolean,
     onRewardsClick: () -> Unit,
 ) {
     val (text, textColor) = if (isRewardsToClaim) {
@@ -161,7 +163,7 @@ private fun StakingRewardBlock(
     InputRowDefault(
         title = resourceReference(R.string.staking_rewards),
         text = text,
-        iconRes = R.drawable.ic_chevron_right_24.takeIf { isRewardsToClaim },
+        iconRes = R.drawable.ic_chevron_right_24.takeIf { isRewardsToClaim && isRewardsClaimable },
         textColor = textColor,
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
@@ -169,7 +171,7 @@ private fun StakingRewardBlock(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(),
-                enabled = isRewardsToClaim,
+                enabled = isRewardsToClaim && isRewardsClaimable,
                 onClick = onRewardsClick,
             ),
     )
