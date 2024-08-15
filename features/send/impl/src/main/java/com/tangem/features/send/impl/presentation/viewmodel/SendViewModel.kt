@@ -161,7 +161,6 @@ internal class SendViewModel @Inject constructor(
         clickIntents = this,
         stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState.value },
-        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         feeStateFactory = feeStateFactory,
     )
 
