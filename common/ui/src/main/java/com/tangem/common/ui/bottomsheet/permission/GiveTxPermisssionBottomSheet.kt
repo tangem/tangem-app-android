@@ -164,6 +164,7 @@ private fun AmountItem(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .clickable(
+                enabled = onChangeApproveType != null,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(),
                 onClick = { isExpandSelector = true },
@@ -190,36 +191,35 @@ private fun AmountItem(
             )
             SpacerWMax()
             Text(
-                text = stringResource(
-                    when (approveType) {
-                        ApproveType.LIMITED -> R.string.give_permission_current_transaction
-                        ApproveType.UNLIMITED -> R.string.give_permission_unlimited
-                    },
-                ),
+                text = approveType.text.resolveReference(),
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.body1,
                 maxLines = 1,
             )
-            Icon(
-                painter = rememberVectorPainter(ImageVector.vectorResource(id = R.drawable.ic_chevron_24)),
-                contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
+            if (onChangeApproveType != null) {
+                Icon(
+                    painter = rememberVectorPainter(ImageVector.vectorResource(id = R.drawable.ic_chevron_24)),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.icon.informative,
+                    modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
+                )
+            }
+        }
+        if (onChangeApproveType != null) {
+            DropdownSelector(
+                isExpanded = isExpandSelector,
+                onDismiss = { isExpandSelector = false },
+                onItemClick = { approveType ->
+                    onChangeApproveType.let {
+                        isExpandSelector = false
+                        onChangeApproveType.invoke(approveType)
+                    }
+                },
+                items = approveItems,
+                selectedType = approveType,
+                amountSize = amountSize,
             )
         }
-        DropdownSelector(
-            isExpanded = isExpandSelector,
-            onDismiss = { isExpandSelector = false },
-            onItemClick = { approveType ->
-                onChangeApproveType?.let {
-                    isExpandSelector = false
-                    onChangeApproveType.invoke(approveType)
-                }
-            },
-            items = approveItems,
-            selectedType = approveType,
-            amountSize = amountSize,
-        )
     }
 }
 
