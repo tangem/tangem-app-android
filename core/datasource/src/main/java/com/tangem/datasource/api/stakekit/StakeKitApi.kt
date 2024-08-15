@@ -34,7 +34,7 @@ interface StakeKitApi {
     @POST("yields/balances")
     suspend fun getMultipleYieldBalances(
         @Body body: List<YieldBalanceRequestBody>,
-    ): ApiResponse<List<YieldBalanceWrapperDTO>>
+    ): ApiResponse<Set<YieldBalanceWrapperDTO>>
 
     @POST("yields/{integrationId}/balances")
     suspend fun getSingleYieldBalance(
