@@ -16,7 +16,6 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.*
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -118,7 +117,7 @@ class MockStakingRepository : StakingRepository {
 
     override suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
-        address: CryptoCurrencyAddress,
+        cryptoCurrency: CryptoCurrency,
         refresh: Boolean,
     ) {
         /* no-op */
@@ -126,19 +125,19 @@ class MockStakingRepository : StakingRepository {
 
     override fun getSingleYieldBalanceFlow(
         userWalletId: UserWalletId,
-        address: CryptoCurrencyAddress,
+        cryptoCurrency: CryptoCurrency,
     ): Flow<YieldBalance> = channelFlow {
         send(YieldBalance.Error)
     }
 
     override suspend fun getSingleYieldBalanceSync(
         userWalletId: UserWalletId,
-        address: CryptoCurrencyAddress,
+        cryptoCurrency: CryptoCurrency,
     ): YieldBalance = YieldBalance.Error
 
     override suspend fun fetchMultiYieldBalance(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
         refresh: Boolean,
     ) {
         /* no-op */
@@ -146,7 +145,7 @@ class MockStakingRepository : StakingRepository {
 
     override fun getMultiYieldBalanceFlow(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> = channelFlow {
         send(
             YieldBalanceList.Data(
@@ -157,7 +156,7 @@ class MockStakingRepository : StakingRepository {
 
     override fun getMultiYieldBalanceLce(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): LceFlow<Throwable, YieldBalanceList> = lceFlow {
         send(
             YieldBalanceList.Data(
@@ -168,7 +167,7 @@ class MockStakingRepository : StakingRepository {
 
     override suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): YieldBalanceList = YieldBalanceList.Data(
         balances = listOf(YieldBalance.Error),
     )
