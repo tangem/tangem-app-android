@@ -31,6 +31,7 @@ import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
 import com.tangem.utils.Provider
+import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -60,14 +61,15 @@ internal class SendNotificationFactory(
         .map {
             val state = currentStateProvider()
             val isEditState = stateRouterProvider().isEditState
-            val balance = cryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
+            val balance = cryptoCurrencyStatusProvider().value.amount.orZero()
             val sendState = state.sendState ?: return@map persistentListOf()
             val feeState = state.getFeeState(isEditState) ?: return@map persistentListOf()
             val amountState = state.getAmountState(isEditState) as? AmountState.Data ?: return@map persistentListOf()
 
-            val amountValue = amountState.amountTextField.cryptoAmount.value ?: BigDecimal.ZERO
-            val feeValue = feeState.fee?.amount?.value ?: BigDecimal.ZERO
-            val reduceAmountBy = sendState.reduceAmountBy ?: BigDecimal.ZERO
+            val recipientAddress = state.recipientState?.addressTextField?.value.orEmpty()
+            val amountValue = amountState.amountTextField.cryptoAmount.value.orZero()
+            val feeValue = feeState.fee?.amount?.value.orZero()
+            val reduceAmountBy = sendState.reduceAmountBy.orZero()
             val isFeeCoverage = checkFeeCoverage(
                 isSubtractAvailable = isSubtractAvailableProvider(),
                 balance = balance,
@@ -89,6 +91,7 @@ internal class SendNotificationFactory(
                 addExceedsBalanceNotification(feeState.fee)
                 addDustWarningNotificationForSpecificBlockchains(feeValue, sendingAmount)
                 addTransactionLimitErrorNotification(feeValue, sendingAmount)
+                addReserveAmountErrorNotification(recipientAddress, sendingAmount)
 
                 // warnings
                 addExistentialWarningNotification(feeValue, amountValue)
@@ -155,27 +158,30 @@ internal class SendNotificationFactory(
             add(SendNotification.Error.TotalExceedsBalance)
         }
     }
-// [REDACTED_TODO_COMMENT]
-    // private suspend fun MutableList<SendNotification>.addReserveAmountErrorNotification(recipientAddress: String) {
-    //     val userWalletId = userWalletProvider().walletId
-    //     val cryptoCurrency = cryptoCurrencyStatusProvider().currency
-    //     val isAccountFunded = currencyChecksRepository.checkIfAccountFunded(
-    //         userWalletId,
-    //         cryptoCurrency.network,
-    //         recipientAddress,
-    //     )
-    //     val minimumAmount = currencyChecksRepository.getReserveAmount(userWalletId, cryptoCurrency.network)
-    //     if (!isAccountFunded && minimumAmount != null && minimumAmount > BigDecimal.ZERO) {
-    //         add(
-    //             SendNotification.Error.ReserveAmountError(
-    //                 BigDecimalFormatter.formatCryptoAmount(
-    //                     cryptoAmount = minimumAmount,
-    //                     cryptoCurrency = cryptoCurrency,
-    //                 ),
-    //             ),
-    //         )
-    //     }
-    // }
+
+    private suspend fun MutableList<SendNotification>.addReserveAmountErrorNotification(
+        recipientAddress: String,
+        sendingAmount: BigDecimal,
+    ) {
+        val userWalletId = userWalletProvider().walletId
+        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
+        val isAccountFunded = currencyChecksRepository.checkIfAccountFunded(
+            userWalletId,
+            cryptoCurrency.network,
+            recipientAddress,
+        )
+        val minimumAmount = currencyChecksRepository.getReserveAmount(userWalletId, cryptoCurrency.network)
+        if (!isAccountFunded && minimumAmount != null && minimumAmount > sendingAmount) {
+            add(
+                SendNotification.Error.ReserveAmount(
+                    BigDecimalFormatter.formatCryptoAmount(
+                        cryptoAmount = minimumAmount,
+                        cryptoCurrency = cryptoCurrency,
+                    ),
+                ),
+            )
+        }
+    }
 
     private suspend fun MutableList<SendNotification>.addTransactionLimitErrorNotification(
         feeAmount: BigDecimal,
