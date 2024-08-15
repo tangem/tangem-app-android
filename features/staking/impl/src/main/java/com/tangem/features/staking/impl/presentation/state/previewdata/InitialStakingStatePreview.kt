@@ -60,6 +60,7 @@ internal object InitialStakingStatePreview {
             rewardsFiat = "100 $",
             rewardsCrypto = "100 SOL",
             isRewardsToClaim = false,
+            isRewardsClaimable = false,
             balance = persistentListOf(
                 BalanceGroupedState(
                     title = stringReference("Staked"),
