@@ -35,6 +35,8 @@ import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -56,6 +58,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -75,6 +78,8 @@ internal class SendViewModel @Inject constructor(
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
+    private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
+    private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
@@ -193,7 +198,7 @@ internal class SendViewModel @Inject constructor(
             cryptoCurrencyProvider = Provider { cryptoCurrency },
         )
     }
-// [REDACTED_TODO_COMMENT]
+
     val uiState: MutableStateFlow<SendUiState> = MutableStateFlow(
         value = stateFactory.getInitialState(),
     )
@@ -931,11 +936,28 @@ internal class SendViewModel @Inject constructor(
         coroutineScope.launch {
             // we should update network to find pending tx after 1 sec
             fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrency.network))
-            // we should update network for new balance
+            // we should update tx history and network for new balance
+            updateTxHistory()
             updateDelayedCurrencyStatusUseCase(
                 userWalletId = userWallet.walletId,
                 network = cryptoCurrency.network,
                 delayMillis = BALANCE_UPDATE_DELAY,
+                refresh = true,
+            )
+        }
+    }
+
+    private suspend fun updateTxHistory() {
+        delay(BALANCE_UPDATE_DELAY)
+        val txHistoryItemsCountEither = getTxHistoryItemsCountUseCase(
+            userWalletId = userWalletId,
+            currency = cryptoCurrency,
+        )
+
+        txHistoryItemsCountEither.onRight {
+            getTxHistoryItemsUseCase(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
                 refresh = true,
             )
         }
