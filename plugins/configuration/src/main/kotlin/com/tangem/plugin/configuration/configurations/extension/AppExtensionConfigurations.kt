@@ -1,6 +1,7 @@
 package com.tangem.plugin.configuration.configurations.extension
 
 import com.android.build.gradle.AppExtension
+import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.tangem.plugin.configuration.model.AppConfig
 import com.tangem.plugin.configuration.model.BuildType
 import com.tangem.plugin.configuration.utils.BuildConfigFieldFactory
@@ -9,15 +10,15 @@ import com.android.build.gradle.internal.dsl.BuildType as AndroidBuildType
 
 internal fun AppExtension.configure(project: Project) {
     configureCompileSdk()
-    configureDefaultConfig(project)
+    val defaultConfig = configureDefaultConfig(project)
     configureBuildFeatures()
-    configureBuildTypes()
+    configureBuildTypes(defaultConfig)
     configurePackagingOptions()
     configureCompose(project)
     configureCompilerOptions()
 }
 
-private fun AppExtension.configureDefaultConfig(project: Project) {
+private fun AppExtension.configureDefaultConfig(project: Project): DefaultConfig {
     defaultConfig {
         applicationId = AppConfig.packageName
         minSdk = AppConfig.minSdkVersion
@@ -39,6 +40,8 @@ private fun AppExtension.configureDefaultConfig(project: Project) {
 
         testInstrumentationRunner = "com.tangem.common.HiltTestRunner"
     }
+
+    return defaultConfig
 }
 
 // TODO: [REDACTED_JIRA]
@@ -48,43 +51,57 @@ private fun AppExtension.configureBuildFeatures() {
     }
 }
 
-private fun AppExtension.configureBuildTypes() {
+private fun AppExtension.configureBuildTypes(defaultConfig: DefaultConfig) {
     buildTypes {
-        BuildType.values().forEach { buildVariant ->
-            maybeCreate(buildVariant.id).apply {
-                configureBuildVariant(extension = this@configureBuildTypes, buildVariant)
+        BuildType.values().forEach { buildType ->
+            maybeCreate(buildType.id).apply {
+                configureBuildVariant(
+                    appExtension = this@configureBuildTypes,
+                    buildType = buildType,
+                    defaultConfig = defaultConfig
+                )
 
                 BuildConfigFieldFactory(
-                    fields = buildVariant.configFields,
+                    fields = buildType.configFields,
                     builder = ::buildConfigField,
                 ).create()
             }
         }
     }
+    testBuildType = BuildType.Mocked.id
 }
 
-private fun AndroidBuildType.configureBuildVariant(extension: AppExtension, buildType: BuildType) {
+private fun AndroidBuildType.configureBuildVariant(
+    appExtension: AppExtension,
+    buildType: BuildType,
+    defaultConfig: DefaultConfig,
+) {
     when (buildType) {
         BuildType.Release -> {
             isDebuggable = false
             isMinifyEnabled = false
-            proguardFiles(extension.getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            proguardFiles(appExtension.getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
         }
         BuildType.Debug -> {
             isDebuggable = true
             isMinifyEnabled = false
         }
         BuildType.External -> {
-            initWith(extension.buildTypes.getByName(BuildType.Release.id))
+            initWith(appExtension.buildTypes.getByName(BuildType.Release.id))
             matchingFallbacks.add(BuildType.Release.id)
-            signingConfig = extension.signingConfigs.getByName(BuildType.Debug.id)
+            signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
         }
-        BuildType.Internal,
-        BuildType.Mocked,
-        -> {
-            initWith(extension.buildTypes.getByName(BuildType.Release.id))
+        BuildType.Internal -> {
+            initWith(appExtension.buildTypes.getByName(BuildType.Release.id))
             matchingFallbacks.add(BuildType.Release.id)
-            signingConfig = extension.signingConfigs.getByName(BuildType.Debug.id)
+            signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
+            isDebuggable = true
+        }
+        BuildType.Mocked -> {
+            defaultConfig.versionName = LARGE_VERSION_NAME
+            initWith(appExtension.buildTypes.getByName(BuildType.Release.id))
+            matchingFallbacks.add(BuildType.Mocked.id)
+            signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
             isDebuggable = true
         }
     }
@@ -103,3 +120,5 @@ private fun AppExtension.configurePackagingOptions() {
         }
     }
 }
+
+private const val LARGE_VERSION_NAME = "100.0.0"
