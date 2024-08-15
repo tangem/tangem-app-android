@@ -19,6 +19,7 @@ import com.tangem.utils.transformer.Transformer
 internal class ShowApprovalBottomSheetTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
     private val onDismiss: () -> Unit,
 ) : Transformer<StakingUiState> {
     override fun transform(prevState: StakingUiState): StakingUiState {
@@ -29,15 +30,17 @@ internal class ShowApprovalBottomSheetTransformer(
         val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data ?: return prevState
         val validatorState = confirmationState.validatorState as? ValidatorState.Content ?: return prevState
         val feeState = confirmationState.feeState as? FeeState.Content ?: return prevState
+        val fee = feeState.fee ?: return prevState
 
         val walletAddress = cryptoCurrencyValue.networkAddress?.defaultAddress?.value.orEmpty()
         val validatorAddress = validatorState.chosenValidator.address
         val feeCryptoValue = BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = feeState.fee?.amount?.value,
-            cryptoCurrency = cryptoCurrency,
+            cryptoAmount = fee.amount.value,
+            cryptoCurrency = fee.amount.currencySymbol,
+            decimals = fee.amount.decimals,
         )
         val feeFiatValue = BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = feeState.fee?.amount?.maxValue,
+            fiatAmount = feeCryptoCurrencyStatus?.value?.fiatRate?.multiply(fee.amount.value),
             fiatCurrencyCode = appCurrencyProvider().code,
             fiatCurrencySymbol = appCurrencyProvider().symbol,
         )
