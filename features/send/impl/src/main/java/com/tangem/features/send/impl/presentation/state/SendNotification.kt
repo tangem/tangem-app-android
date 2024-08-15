@@ -105,6 +105,14 @@ internal sealed class SendNotification(val config: NotificationConfig) {
                 onClick = onConfirmClick,
             ),
         )
+
+        data class ReserveAmount(val amount: String) : Error(
+            title = resourceReference(
+                id = R.string.send_notification_invalid_reserve_amount_title,
+                wrappedList(amount),
+            ),
+            subtitle = resourceReference(id = R.string.send_notification_invalid_reserve_amount_text),
+        )
     }
 
     sealed class Warning(
