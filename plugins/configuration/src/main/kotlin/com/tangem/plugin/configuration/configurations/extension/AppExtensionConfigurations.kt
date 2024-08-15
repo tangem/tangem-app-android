@@ -1,7 +1,6 @@
 package com.tangem.plugin.configuration.configurations.extension
 
 import com.android.build.gradle.AppExtension
-import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.tangem.plugin.configuration.model.AppConfig
 import com.tangem.plugin.configuration.model.BuildType
 import com.tangem.plugin.configuration.utils.BuildConfigFieldFactory
@@ -10,15 +9,15 @@ import com.android.build.gradle.internal.dsl.BuildType as AndroidBuildType
 
 internal fun AppExtension.configure(project: Project) {
     configureCompileSdk()
-    val defaultConfig = configureDefaultConfig(project)
+    configureDefaultConfig(project)
     configureBuildFeatures()
-    configureBuildTypes(defaultConfig)
+    configureBuildTypes()
     configurePackagingOptions()
     configureCompose(project)
     configureCompilerOptions()
 }
 
-private fun AppExtension.configureDefaultConfig(project: Project): DefaultConfig {
+private fun AppExtension.configureDefaultConfig(project: Project) {
     defaultConfig {
         applicationId = AppConfig.packageName
         minSdk = AppConfig.minSdkVersion
@@ -41,7 +40,6 @@ private fun AppExtension.configureDefaultConfig(project: Project): DefaultConfig
         testInstrumentationRunner = "com.tangem.common.HiltTestRunner"
     }
 
-    return defaultConfig
 }
 
 // TODO: [REDACTED_JIRA]
@@ -51,14 +49,13 @@ private fun AppExtension.configureBuildFeatures() {
     }
 }
 
-private fun AppExtension.configureBuildTypes(defaultConfig: DefaultConfig) {
+private fun AppExtension.configureBuildTypes() {
     buildTypes {
         BuildType.values().forEach { buildType ->
             maybeCreate(buildType.id).apply {
                 configureBuildVariant(
                     appExtension = this@configureBuildTypes,
                     buildType = buildType,
-                    defaultConfig = defaultConfig
                 )
 
                 BuildConfigFieldFactory(
@@ -71,11 +68,7 @@ private fun AppExtension.configureBuildTypes(defaultConfig: DefaultConfig) {
     testBuildType = BuildType.Mocked.id
 }
 
-private fun AndroidBuildType.configureBuildVariant(
-    appExtension: AppExtension,
-    buildType: BuildType,
-    defaultConfig: DefaultConfig,
-) {
+private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, buildType: BuildType) {
     when (buildType) {
         BuildType.Release -> {
             isDebuggable = false
@@ -91,16 +84,10 @@ private fun AndroidBuildType.configureBuildVariant(
             matchingFallbacks.add(BuildType.Release.id)
             signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
         }
-        BuildType.Internal -> {
+        BuildType.Internal,
+        BuildType.Mocked -> {
             initWith(appExtension.buildTypes.getByName(BuildType.Release.id))
             matchingFallbacks.add(BuildType.Release.id)
-            signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
-            isDebuggable = true
-        }
-        BuildType.Mocked -> {
-            defaultConfig.versionName = LARGE_VERSION_NAME
-            initWith(appExtension.buildTypes.getByName(BuildType.Release.id))
-            matchingFallbacks.add(BuildType.Mocked.id)
             signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
             isDebuggable = true
         }
@@ -120,5 +107,3 @@ private fun AppExtension.configurePackagingOptions() {
         }
     }
 }
-
-private const val LARGE_VERSION_NAME = "100.0.0"
