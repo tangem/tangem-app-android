@@ -1,7 +1,6 @@
 package com.tangem.core.ui.utils
 
 import android.icu.text.CompactDecimalFormat
-import android.os.Build
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.LOWER_SIGN
@@ -366,10 +365,6 @@ object BigDecimalFormatter {
         threeDigitsMethod: Boolean = false,
         scale: Int = 0,
     ): String {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            return BigDecimalFormatterCompat.formatCompactAmountNoLocaleContext(amount = amount)
-        }
-
         if (threeDigitsMethod) {
             val scaledAmount = amount.setScale(scale, RoundingMode.HALF_UP)
             val digitsCount = scaledAmount.longValueExact().toString().count()
