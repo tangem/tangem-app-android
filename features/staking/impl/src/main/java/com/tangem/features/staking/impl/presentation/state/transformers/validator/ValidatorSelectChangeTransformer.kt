@@ -11,13 +11,17 @@ internal class ValidatorSelectChangeTransformer(
 ) : Transformer<StakingUiState> {
     override fun transform(prevState: StakingUiState): StakingUiState {
         val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data ?: return prevState
-        val validatorState = confirmationState.validatorState as? ValidatorState.Content ?: return prevState
+        val validatorState = (confirmationState.validatorState as? ValidatorState.Content)?.copy(
+            chosenValidator = selectedValidator,
+        ) ?: ValidatorState.Content(
+            isClickable = false,
+            availableValidators = emptyList(),
+            chosenValidator = selectedValidator,
+        )
 
         return prevState.copy(
             confirmationState = confirmationState.copy(
-                validatorState = validatorState.copy(
-                    chosenValidator = selectedValidator,
-                ),
+                validatorState = validatorState,
             ),
         )
     }
