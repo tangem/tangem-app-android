@@ -13,6 +13,7 @@ sealed class InnerYieldBalanceState {
         val rewardsCrypto: String,
         val rewardsFiat: String,
         val isRewardsToClaim: Boolean,
+        val isRewardsClaimable: Boolean,
         val balance: ImmutableList<BalanceGroupedState>,
     ) : InnerYieldBalanceState()
 
