@@ -223,4 +223,6 @@ interface CurrenciesRepository {
         contractAddress: String,
         networkId: String,
     ): CryptoCurrency.Token
+
+    suspend fun hasTokens(userWalletId: UserWalletId, network: Network): Boolean
 }
