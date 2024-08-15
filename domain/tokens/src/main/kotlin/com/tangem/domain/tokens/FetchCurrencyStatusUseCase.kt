@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -29,6 +30,7 @@ class FetchCurrencyStatusUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val networksRepository: NetworksRepository,
     private val quotesRepository: QuotesRepository,
+    private val stakingRepository: StakingRepository,
 ) {
 
     /**
@@ -80,8 +82,11 @@ class FetchCurrencyStatusUseCase(
         val fetchQuote = async {
             fetchQuote(currency.id, refresh)
         }
+        val fetchStakingBalance = async {
+            fetchStakingBalance(userWalletId, currency, refresh)
+        }
 
-        awaitAll(fetchStatus, fetchQuote)
+        awaitAll(fetchStatus, fetchQuote, fetchStakingBalance)
     }
 
     private suspend fun Raise<CurrencyStatusError>.getCurrency(
@@ -118,6 +123,18 @@ class FetchCurrencyStatusUseCase(
     private suspend fun Raise<CurrencyStatusError>.fetchQuote(currencyId: CryptoCurrency.ID, refresh: Boolean) {
         catch(
             block = { quotesRepository.getQuotesSync(setOf(currencyId), refresh) },
+        ) {
+            raise(CurrencyStatusError.DataError(it))
+        }
+    }
+
+    private suspend fun Raise<CurrencyStatusError>.fetchStakingBalance(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+        refresh: Boolean,
+    ) {
+        catch(
+            block = { stakingRepository.fetchSingleYieldBalance(userWalletId, cryptoCurrency, refresh) },
         ) {
             raise(CurrencyStatusError.DataError(it))
         }
