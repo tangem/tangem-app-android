@@ -250,4 +250,5 @@ include(":data:qr-scanning")
 include(":data:staking")
 include(":data:wallet-connect")
 include(":data:markets")
+include(":data:manage-tokens")
 // endregion Data modules
