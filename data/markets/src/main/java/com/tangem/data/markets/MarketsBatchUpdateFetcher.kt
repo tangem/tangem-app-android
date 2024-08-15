@@ -1,9 +1,9 @@
 package com.tangem.data.markets
 
+import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.converters.TokenMarketChartsConverter
 import com.tangem.data.markets.converters.TokenQuotesShortConverter
 import com.tangem.data.markets.converters.toRequestParam
-import com.tangem.data.markets.utils.retryOnError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketChartListResponse
@@ -13,7 +13,9 @@ import com.tangem.domain.markets.TokenMarketUpdateRequest
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchUpdateFetcher
 import com.tangem.pagination.BatchUpdateResult
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 internal class MarketsBatchUpdateFetcher(
     private val marketsApi: TangemTechMarketsApi,
