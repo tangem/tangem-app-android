@@ -5,5 +5,5 @@ import com.tangem.domain.managetokens.model.ManageTokensListBatchingContext
 
 interface ManageTokensRepository {
 
-    fun tokensFlow(context: ManageTokensListBatchingContext, batchSize: Int): ManageTokensListBatchFlow
+    fun getTokenListBatchFlow(context: ManageTokensListBatchingContext, batchSize: Int): ManageTokensListBatchFlow
 }
