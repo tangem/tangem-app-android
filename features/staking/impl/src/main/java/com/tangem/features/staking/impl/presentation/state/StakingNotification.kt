@@ -69,5 +69,10 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
                 wrappedList(cooldownPeriodDays, cooldownPeriodDays),
             ),
         )
+
+        data class TransactionInProgress(
+            val title: TextReference,
+            val description: TextReference,
+        ) : Warning(title = title, subtitle = description)
     }
 }
