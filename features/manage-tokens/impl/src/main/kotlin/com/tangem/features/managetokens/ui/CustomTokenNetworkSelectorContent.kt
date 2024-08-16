@@ -102,7 +102,7 @@ private fun NetworkItem(model: CurrencyNetworkUM, modifier: Modifier = Modifier)
                 icon = CurrencyIconState.CoinIcon(
                     url = null,
                     fallbackResId = model.iconResId,
-                    isGrayscale = false,
+                    isGrayscale = !model.isSelected,
                     showCustomBadge = false,
                 ),
                 showCustom = false,
