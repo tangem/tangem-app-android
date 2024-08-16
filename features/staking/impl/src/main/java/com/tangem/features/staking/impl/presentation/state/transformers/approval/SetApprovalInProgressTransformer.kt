@@ -12,11 +12,11 @@ internal object SetApprovalInProgressTransformer : Transformer<StakingUiState> {
     override fun transform(prevState: StakingUiState): StakingUiState {
         val state = prevState.confirmationState as? StakingStates.ConfirmationState.Data
         val notifications = state?.notifications?.toMutableList() ?: mutableListOf()
-// [REDACTED_TODO_COMMENT]
+
         notifications.add(
             StakingNotification.Warning.TransactionInProgress(
-                title = resourceReference(R.string.warning_express_approval_in_progress_title),
-                description = resourceReference(R.string.warning_express_approval_in_progress_message),
+                title = resourceReference(R.string.warning_approval_in_progress_title),
+                description = resourceReference(R.string.warning_approval_in_progress_message),
             ),
         )
 
