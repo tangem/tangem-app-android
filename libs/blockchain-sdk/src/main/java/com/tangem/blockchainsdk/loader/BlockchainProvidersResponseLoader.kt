@@ -4,7 +4,7 @@ import androidx.core.util.PatternsCompat
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
 import com.tangem.blockchainsdk.utils.createPrivateProviderType
-import com.tangem.datasource.api.tangemTech.TangemTechServiceApi
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.config.models.ProviderModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -24,7 +24,7 @@ import javax.inject.Singleton
  */
 @Singleton
 internal class BlockchainProvidersResponseLoader @Inject constructor(
-    private val tangemTechServiceApi: TangemTechServiceApi,
+    private val tangemTechServiceApi: TangemTechApi,
     private val assetLoader: AssetLoader,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
