@@ -6,7 +6,7 @@ class DeleteDeprecatedLogsUseCase(
     private val settingsRepository: SettingsRepository,
 ) {
 
-    suspend operator fun invoke() {
+    operator fun invoke() {
         settingsRepository.deleteDeprecatedLogs(maxSize = MAX_LOGS_SIZE)
     }
 

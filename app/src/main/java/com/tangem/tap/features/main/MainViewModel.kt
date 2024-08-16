@@ -37,7 +37,7 @@ internal class MainViewModel @Inject constructor(
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val router: AppRouter,
     private val fetchAppCurrenciesUseCase: FetchAppCurrenciesUseCase,
-    private val deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
+    deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
     private val incrementAppLaunchCounterUseCase: IncrementAppLaunchCounterUseCase,
     private val blockchainSDKFactory: BlockchainSDKFactory,
     private val userWalletsListManager: UserWalletsListManager,
@@ -76,9 +76,7 @@ internal class MainViewModel @Inject constructor(
             fetchStakingTokens()
         }
 
-        viewModelScope.launch(dispatchers.main) {
-            deleteDeprecatedLogsUseCase()
-        }
+        deleteDeprecatedLogsUseCase()
     }
 
     /** Loading the resources needed to run the application */
