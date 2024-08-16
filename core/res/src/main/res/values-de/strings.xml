@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
-  <string name="add_custom_token_title">Token hinzuf.</string>
+  <string name="add_custom_token_title">Token anlegen</string>
   <string name="add_tokens_title">Token verwalten</string>
   <string name="address_qr_code_message_format">Sende nur %1$s ( %2$s ) vom %3$s -Netzwerk an diese Adresse. Die Verwendung anderer Token und Netzwerke kann zum Verlust von Geldern führen.</string>
   <string name="alert_button_how_to_scan">So scannt man</string>
@@ -88,6 +88,7 @@
   <string name="common_copy">Kopieren</string>
   <string name="common_copy_address">Adresse kopieren</string>
   <string name="common_create">Erstellen</string>
+  <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Eigen</string>
   <plurals name="common_days">
     <item quantity="one">%d tag</item>
@@ -279,7 +280,7 @@
   <string name="feedback_subject_support">Rückmeldung</string>
   <string name="feedback_subject_support_tangem">Feedback zu Tangem</string>
   <string name="feedback_subject_tx_failed">Eine Transaktion kann nicht gesendet werden</string>
-  <string name="give_permission_current_transaction">diese Transaktion</string>
+  <string name="give_permission_current_transaction">Nur diese</string>
   <string name="give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Sie die Verwendung Ihres Tokens für den Swap genehmigen.</string>
   <string name="give_permission_policy_type_footer">Gib das Genehmigungslimit für das ausgewählte Token an</string>
   <string name="give_permission_rows_amount">Betrag %s</string>
@@ -447,7 +448,7 @@
   <string name="onboarding_exit_alert_title">Möchtest du den Aktivierungsprozess abbrechen?</string>
   <string name="onboarding_getting_started">Erste Schritte</string>
   <string name="onboarding_linking_error_card_with_wallets">Für die Karte, die du hinzufügen möchtest, wurde bereits eine andere Wallets erstellt. Wenn du Guthaben auf dieser Wallets hast, hebe es bitte ab, setze diese Karte zurück und füge sie als Backup hinzu.</string>
-  <string name="onboarding_navbar_title_creating_backup">Backups erstellen</string>
+  <string name="onboarding_navbar_title_creating_backup">Backups anlegen</string>
   <string name="onboarding_seed_button_read_more">Lese mehr über die Seed-Phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
     <item quantity="one">leer</item>
@@ -500,7 +501,7 @@
   <string name="organize_tokens_group">Gruppe erstellen</string>
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
-  <string name="organize_tokens_ungroup">Grup. entf.</string>
+  <string name="organize_tokens_ungroup">Gruppe löschen</string>
   <string name="qr_scanner_camera_denied_gallery_button">Wählen aus der Galerie aus</string>
   <string name="qr_scanner_camera_denied_settings_button">Einstellungen</string>
   <string name="qr_scanner_camera_denied_text">Du hast keinen Zugriff auf deine Kamera gewährt</string>
@@ -639,7 +640,6 @@
   <string name="send_transaction_success">Die Transaktion wurde erfolgreich signiert und an den Blockchain-Knoten gesendet. Die Walletbilanz wird aktualisiert</string>
   <string name="send_tron_account_activation_error">%1$s ist ein Vermögenswert im Tron-Netzwerk. Um die Gebühr zu berechnen und eine Transaktion durchzuführen, musst du etwas Tron (TRX) auf deinem Konto einzahlen.</string>
   <string name="send_validation_invalid_address">Ungültige Adresse</string>
-  <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Transaktion gesendet</string>
   <string name="settings_card_settings_footer">Bereite das Scannen der Karte vor, die du einrichten möchtest.</string>
   <string name="settings_forget_wallet">Entferne diese Wallet</string>
@@ -648,7 +648,7 @@
   <string name="staking_active">Aktiv</string>
   <string name="staking_active_footer">Um deine Kryptos zu unstaken, klick hier.</string>
   <string name="staking_amount_requirement_error">Die Anzahl der zu stakenden Krypros muss mindesten %s betragen</string>
-  <string name="staking_claim_unstaked">nicht gestakte beanspruche</string>
+  <string name="staking_claim_unstaked">Nicht gestakte beanspruche</string>
   <string name="staking_details_annual_percentage_rate">Jährliche prozentuale Rendite</string>
   <string name="staking_details_annual_percentage_rate_info">Die jährliche prozentuale Rendite, die du durch die Teilnahme am Staking erzielen kannst.</string>
   <string name="staking_details_apr">Effektiver Jahreszins</string>
@@ -672,6 +672,10 @@
   <string name="staking_details_warmup_period_info">Die zugewiesene Zeit für die Aktivierung der Teilnahme am Staking.</string>
   <string name="staking_migrate">Migrieren</string>
   <string name="staking_native">Natives Staking</string>
+  <string name="staking_notification_earn_rewards_text_period_day">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jeden tag.</string>
+  <string name="staking_notification_earn_rewards_text_period_hour">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jede Stunde.</string>
+  <string name="staking_notification_earn_rewards_text_period_month">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jeden Monat.</string>
+  <string name="staking_notification_earn_rewards_text_period_week">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jede Woche.</string>
   <string name="staking_notification_earn_rewards_title">Verdiene Staking-Belohnungen</string>
   <string name="staking_notification_unstake_text">Die Belohnungen werden sofort nach dem unstaken gestoppt. Der unstakingprozess dauert %s.</string>
   <string name="staking_rebond">Erneut binden</string>
@@ -679,8 +683,8 @@
   <string name="staking_restake_rewards">Belohnungen erneut staken</string>
   <string name="staking_revoke">Widerrufen</string>
   <string name="staking_revote">Neuwahl</string>
-  <string name="staking_reward_claiming_auto">automatisch</string>
-  <string name="staking_reward_claiming_manual">händisch</string>
+  <string name="staking_reward_claiming_auto">Automatisch</string>
+  <string name="staking_reward_claiming_manual">Händisch</string>
   <string name="staking_reward_schedule_block">Block</string>
   <string name="staking_reward_schedule_day">Tag</string>
   <string name="staking_reward_schedule_each_day">Täglich</string>
@@ -694,7 +698,7 @@
   <string name="staking_stake_more">Mehr staken</string>
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">Staking beenden%s</string>
-  <string name="staking_unlocked_locked">gelocktes unlocken</string>
+  <string name="staking_unlocked_locked">Gelocktes unlocken</string>
   <string name="staking_unstaked">Unstaken</string>
   <string name="staking_unstaked_footer">Prüfe, was nicht eingesetzt wurde, um dein Vermögen zu beanspruchen</string>
   <string name="staking_unstaking">Staking beenden</string>
