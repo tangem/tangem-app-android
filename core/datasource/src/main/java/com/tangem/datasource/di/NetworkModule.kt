@@ -14,6 +14,7 @@ import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApiV2
+import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.*
 import com.tangem.datasource.utils.RequestHeader.AppVersionPlatformHeaders
@@ -58,12 +59,18 @@ internal object NetworkModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         apiConfigsManager: ApiConfigsManager,
+        appLogsStore: AppLogsStore,
     ): TangemExpressApi {
         return createApi(
             id = ApiConfig.ID.Express,
             moshi = moshi,
             context = context,
             apiConfigsManager = apiConfigsManager,
+            clientBuilder = {
+                addInterceptor(
+                    NetworkLogsSaveInterceptor(appLogsStore),
+                )
+            },
         )
     }
 
@@ -73,12 +80,18 @@ internal object NetworkModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         apiConfigsManager: ApiConfigsManager,
+        appLogsStore: AppLogsStore,
     ): StakeKitApi {
         return createApi(
             id = ApiConfig.ID.StakeKit,
             moshi = moshi,
             context = context,
             apiConfigsManager = apiConfigsManager,
+            clientBuilder = {
+                addInterceptor(
+                    NetworkLogsSaveInterceptor(appLogsStore),
+                )
+            },
         )
     }
 
@@ -94,6 +107,7 @@ internal object NetworkModule {
             moshi = moshi,
             context = context,
             apiConfigsManager = apiConfigsManager,
+            clientBuilder = { applyTimeoutAnnotations() },
         )
     }
 
@@ -200,6 +214,7 @@ internal object NetworkModule {
         moshi: Moshi,
         context: Context,
         apiConfigsManager: ApiConfigsManager,
+        clientBuilder: OkHttpClient.Builder.() -> OkHttpClient.Builder = { this },
     ): T {
         val environmentConfig = apiConfigsManager.getEnvironmentConfig(id)
 
@@ -210,8 +225,8 @@ internal object NetworkModule {
             .client(
                 OkHttpClient.Builder()
                     .applyApiConfig(id, apiConfigsManager)
-                    .applyTimeoutAnnotations()
                     .addLoggers(context)
+                    .clientBuilder()
                     .build(),
             )
             .build()
