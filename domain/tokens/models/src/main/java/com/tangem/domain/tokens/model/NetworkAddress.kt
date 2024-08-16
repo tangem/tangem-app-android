@@ -1,7 +1,5 @@
 package com.tangem.domain.tokens.model
 
-import timber.log.Timber
-
 /**
  * Represents a network address configuration.
  */
@@ -46,12 +44,6 @@ sealed class NetworkAddress {
 
         enum class Type {
             Primary, Secondary,
-        }
-
-        init {
-            if (value.isEmpty()) {
-                Timber.w("Address value is blank")
-            }
         }
     }
 }
