@@ -110,7 +110,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
             BasicDialog(
                 title = state.alert.title?.resolveReference(),
                 message = message,
-                confirmButton = DialogButton(
+                confirmButton = DialogButtonUM(
                     title = stringResource(id = R.string.common_ok),
                     onClick = state.alert.onClick,
                 ),
