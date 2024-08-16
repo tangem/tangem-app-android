@@ -52,7 +52,7 @@ internal fun RecipientBlock(
 private fun AddressBlock(address: SendTextField.RecipientAddress) {
     Text(
         text = address.label.resolveReference(),
-        style = TangemTheme.typography.caption2,
+        style = TangemTheme.typography.subtitle2,
         color = TangemTheme.colors.text.secondary,
     )
     Row(

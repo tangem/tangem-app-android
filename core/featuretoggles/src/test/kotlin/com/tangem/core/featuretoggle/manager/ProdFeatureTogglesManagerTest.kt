@@ -6,21 +6,13 @@ import com.tangem.core.featuretoggle.storage.FeatureToggle
 import com.tangem.core.featuretoggle.storage.FeatureTogglesStorage
 import com.tangem.core.featuretoggle.utils.associateToggles
 import com.tangem.core.featuretoggle.version.VersionProvider
-import io.mockk.Runs
-import io.mockk.coEvery
-import io.mockk.coVerifyOrder
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.verifyAll
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 /**
 * [REDACTED_AUTHOR]
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class ProdFeatureTogglesManagerTest {
 
     private val localFeatureTogglesStorage = mockk<FeatureTogglesStorage>()

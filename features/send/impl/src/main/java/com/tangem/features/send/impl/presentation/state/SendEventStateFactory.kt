@@ -3,7 +3,6 @@ package com.tangem.features.send.impl.presentation.state
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
@@ -22,13 +21,11 @@ import java.math.BigDecimal
 internal class SendEventStateFactory(
     private val stateRouterProvider: Provider<StateRouter>,
     private val currentStateProvider: Provider<SendUiState>,
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val clickIntents: SendClickIntents,
     private val feeStateFactory: FeeStateFactory,
 ) {
     private val sendTransactionErrorConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendTransactionAlertConverter(
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
             clickIntents = clickIntents,
         )
     }

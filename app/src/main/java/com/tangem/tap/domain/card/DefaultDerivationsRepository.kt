@@ -8,12 +8,10 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -46,40 +44,22 @@ internal class DefaultDerivationsRepository(
                 return
             }
 
+        derivePublicKeys(userWalletId = userWalletId, derivations = derivations)
+    }
+
+    override suspend fun derivePublicKeys(userWalletId: UserWalletId, derivations: Derivations): DerivedKeys {
         tangemSdkManager.derivePublicKeys(cardId = null, derivations = derivations)
             .doOnSuccess { response ->
                 updatePublicKeys(userWalletId = userWalletId, keys = response.entries)
                     .doOnSuccess {
                         validateDerivations(scanResponse = it.scanResponse, derivations = derivations)
-                        return
+                        return response.entries
                     }
                     .doOnFailure { throw it }
             }
             .doOnFailure { throw it }
 
         error("This code should never be reached")
-    }
-
-    override suspend fun deriveExtendedPublicKey(
-        userWalletId: UserWalletId,
-        derivation: DerivationPath,
-    ): ExtendedPublicKey? {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
-        val walletCard = userWallet.scanResponse.card.wallets.firstOrNull {
-            UserWalletIdBuilder.scanResponse(userWallet.scanResponse).build()?.value
-                .contentEquals(userWallet.walletId.value)
-        } ?: return null
-
-        val result = tangemSdkManager.deriveExtendedPublicKey(
-            cardId = null,
-            walletPublicKey = walletCard.publicKey,
-            derivation = derivation,
-        )
-
-        return when (result) {
-            is CompletionResult.Failure -> throw result.error
-            is CompletionResult.Success -> result.data
-        }
     }
 
     /**

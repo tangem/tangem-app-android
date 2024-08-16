@@ -2,12 +2,13 @@ package com.tangem.core.ui.haptic
 
 import androidx.compose.runtime.Stable
 
+/**
+ * Haptic feedback.
+ * @see [TangemHapticEffect.OneTime] for one-time effects.
+ * @see [TangemHapticEffect.View] for view effects.
+ */
 @Stable
 interface HapticManager {
 
-    fun vibrateShort()
-
-    fun vibrateMeduim()
-
-    fun vibrateLong()
+    fun perform(effect: TangemHapticEffect)
 }
