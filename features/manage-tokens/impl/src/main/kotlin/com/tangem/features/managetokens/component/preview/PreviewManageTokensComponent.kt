@@ -9,11 +9,14 @@ import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.components.rows.model.ChainRowUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.features.managetokens.component.ManageTokensComponent
-import com.tangem.features.managetokens.entity.*
+import com.tangem.features.managetokens.entity.CurrencyItemUM
+import com.tangem.features.managetokens.entity.CurrencyNetworkUM
+import com.tangem.features.managetokens.entity.ManageTokensTopBarUM
+import com.tangem.features.managetokens.entity.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.ui.ManageTokensScreen
 import kotlinx.collections.immutable.mutate
@@ -47,8 +50,10 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
                 onActiveChange = ::toggleSearchBar,
             ),
             hasChanges = false,
-            isLoading = false,
-            onSaveClick = {},
+            isInitialBatchLoading = false,
+            isNextBatchLoading = true,
+            loadMore = { false },
+            saveChanges = {},
         ),
     )
 
@@ -58,7 +63,7 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
                 initItems()
             } else {
                 items.filter { currency ->
-                    currency.model.name.contains(query, ignoreCase = true)
+                    currency.name.contains(query, ignoreCase = true)
                 }.toPersistentList()
             }
 
@@ -96,34 +101,28 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
     }.toPersistentList()
 
     private fun getCustomItem(index: Int) = CurrencyItemUM.Custom(
-        id = index.toString(),
-        model = ChainRowUM(
-            name = "Custom token $index",
-            type = "CT$index",
-            icon = CurrencyIconState.CustomTokenIcon(
-                tint = Color.White,
-                background = Color.Black,
-                topBadgeIconResId = R.drawable.img_eth_22,
-                isGrayscale = false,
-                showCustomBadge = true,
-            ),
-            showCustom = true,
+        id = ManagedCryptoCurrency.ID(index.toString()),
+        name = "Custom token $index",
+        symbol = "CT$index",
+        icon = CurrencyIconState.CustomTokenIcon(
+            tint = Color.White,
+            background = Color.Black,
+            topBadgeIconResId = R.drawable.img_eth_22,
+            isGrayscale = false,
+            showCustomBadge = true,
         ),
         onRemoveClick = {},
     )
 
     private fun getBasicItem(index: Int) = CurrencyItemUM.Basic(
-        id = index.toString(),
-        model = ChainRowUM(
-            name = "Currency $index",
-            type = "C$index",
-            icon = CurrencyIconState.CoinIcon(
-                url = null,
-                fallbackResId = R.drawable.img_btc_22,
-                isGrayscale = false,
-                showCustomBadge = false,
-            ),
-            showCustom = false,
+        id = ManagedCryptoCurrency.ID(index.toString()),
+        name = "Currency $index",
+        symbol = "C$index",
+        icon = CurrencyIconState.CoinIcon(
+            url = null,
+            fallbackResId = R.drawable.img_btc_22,
+            isGrayscale = false,
+            showCustomBadge = false,
         ),
         networks = if (index == 2) {
             CurrencyItemUM.Basic.NetworksUM.Expanded(getCurrencyNetworks(index))
