@@ -17,7 +17,7 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
         is GlobalAction.Onboarding -> ReducerForGlobalAction.reduce(action, state)
         is BackupAction -> state.copy(
             step = OnboardingStepReducer.reduce(action = action, state = state),
-            backupState = BackupReducer.reduce(action = action, state = state.backupState)
+            backupState = BackupReducer.reduce(action = action, state = state.backupState),
         )
         is OnboardingWallet2Action -> OnboardingWallet2Reducer.reduce(action, state)
         is OnboardingWalletAction.GetToCreateWalletStep -> state.copy(

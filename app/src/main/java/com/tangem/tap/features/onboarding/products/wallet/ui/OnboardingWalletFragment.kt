@@ -59,7 +59,6 @@ import com.tangem.tap.store
 import com.tangem.utils.Provider
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentOnboardingWalletBinding
-import com.tangem.wallet.databinding.LayoutOnboardingManageTokensBinding
 import com.tangem.wallet.databinding.LayoutOnboardingSeedPhraseBinding
 import com.tangem.wallet.databinding.ViewOnboardingProgressBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -69,8 +68,10 @@ import javax.inject.Inject
 
 @Suppress("LargeClass", "MagicNumber")
 @AndroidEntryPoint
-class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_wallet),
-    StoreSubscriber<OnboardingWalletState>, FragmentOnBackPressedHandler {
+class OnboardingWalletFragment :
+    BaseFragment(R.layout.fragment_onboarding_wallet),
+    StoreSubscriber<OnboardingWalletState>,
+    FragmentOnBackPressedHandler {
 
     @Inject
     internal lateinit var manageTokensComponentFactory: ManageTokensComponent.Factory
@@ -100,7 +101,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
     internal val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
 
     internal val bindingSeedPhrase: LayoutOnboardingSeedPhraseBinding by lazy { binding.onboardingSeedPhraseContainer }
-    private val bindingManageTokens: LayoutOnboardingManageTokensBinding by lazy { binding.onboardingManageTokensContainer }
+    private val bindingManageTokens by lazy { binding.onboardingManageTokensContainer }
 
     private val canSkipBackup by lazy { arguments?.getBoolean(AppRoute.OnboardingWallet.CAN_SKIP_BACKUP_KEY) ?: true }
 

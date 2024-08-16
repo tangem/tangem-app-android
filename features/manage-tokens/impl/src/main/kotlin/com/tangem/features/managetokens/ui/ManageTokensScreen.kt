@@ -382,7 +382,7 @@ private class ManageTokensComponentParamsProvider : CollectionPreviewParameterPr
     collection = listOf(
         ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.Manage(showToolbar = true)),
         ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.Manage(showToolbar = false)),
-        ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true))
-    )
+        ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true)),
+    ),
 )
 // endregion Preview
