@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.routing.AppRoute
-import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
