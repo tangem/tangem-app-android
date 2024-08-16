@@ -67,6 +67,7 @@ dependencies {
     implementation(projects.domain.staking)
     implementation(projects.domain.walletConnect)
     implementation(projects.domain.markets)
+    implementation(projects.domain.manageTokens)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -103,6 +104,7 @@ dependencies {
     implementation(projects.data.staking)
     implementation(projects.data.walletConnect)
     implementation(projects.data.markets)
+    implementation(projects.data.manageTokens)
 
     /** Features */
     implementation(projects.features.onboarding)
