@@ -112,14 +112,14 @@ object OnboardingHelper {
                             backupCardsIds = backupCardsIds?.toSet(),
                         ),
                     )
-                    store.dispatchNavigationAction { push(AppRoute.Wallet) }
+                    store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
                     delay(timeMillis = 1_800)
                     store.dispatchNavigationAction { push(AppRoute.SaveWallet) }
                 }
                 // If device has no biometry and save wallet screen has been shown, then go through old scenario
                 else -> {
                     proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
-                    store.dispatchNavigationAction { push(AppRoute.Wallet) }
+                    store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
                 }
             }
         }
