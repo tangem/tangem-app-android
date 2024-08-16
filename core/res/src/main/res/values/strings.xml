@@ -100,6 +100,7 @@
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
   <string name="common_error">Error</string>
+  <string name="common_exchange">Exchange</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore transaction history</string>
   <string name="common_explorer">Explorer</string>
@@ -135,7 +136,7 @@
   <string name="common_rename">Rename</string>
   <string name="common_save">Save</string>
   <string name="common_save_changes">Save changes</string>
-  <string name="common_search">Search through the market</string>
+  <string name="common_search">Search</string>
   <string name="common_search_tokens">Search tokens</string>
   <string name="common_seed_phrase">Seed phrase</string>
   <string name="common_select_action">Select action</string>
@@ -339,7 +340,7 @@
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is not available</string>
   <string name="markets_add_to_portfolio_button">Add to portfolio</string>
-  <string name="markets_add_token">Add token</string>
+  <string name="markets_add_token">Add</string>
   <string name="markets_available_networks">Available networks</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
@@ -832,6 +833,8 @@
   <string name="wallet_settings_title">Wallet settings</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Use %s or scan a card to unlock access to your wallet</string>
+  <string name="warning_approval_in_progress_message">The permission-granting process is currently underway and will be completed shortly</string>
+  <string name="warning_approval_in_progress_title">Approval in Progress</string>
   <string name="warning_backup_errors_message">It seems that the card activation was not completed correctly. This could be due to an issue with your device\'s NFC module or incorrect tapping of the card to your device. Please contact our Support team for assistance.</string>
   <string name="warning_backup_errors_title">Activation error</string>
   <string name="warning_beacon_chain_retirement_content">According to BNB network developers, support for the BEP-2 standard will end in June 2024. To avoid losing assets with this standard, please convert them to the BEP-20 standard. Use our swap service or third-party services to transfer funds to the BNB Smart Chain network.</string>
@@ -857,6 +860,8 @@
   <string name="warning_express_not_enough_fee_for_token_tx_description">To make a transaction you need to deposit some %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Unable to cover %s fee</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">The amount to receive must be at least %s</string>
+  <string name="warning_express_pair_unavailable_message">This may occur because the provider is currently unable to exchange your selected pair. Please wait a moment and try again. (Code %@)</string>
+  <string name="warning_express_pair_unavailable_title">Selected pair temporarily unavailable</string>
   <string name="warning_express_refresh_required_title">Service temporarily unavailable</string>
   <string name="warning_express_too_maximum_amount_title">The amount of tokens to be swapped must not exceed %s</string>
   <string name="warning_express_too_minimal_amount_title">The amount to swap must be at least %s</string>
