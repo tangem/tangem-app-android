@@ -14,7 +14,7 @@ import com.tangem.utils.transformer.Transformer
 
 internal class SetConfirmationStateCompletedTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
     private val stakingGasEstimate: StakingGasEstimate,
     private val txUrl: String,
 ) : Transformer<StakingUiState> {
@@ -29,6 +29,7 @@ internal class SetConfirmationStateCompletedTransformer(
         gasEstimate: StakingGasEstimate,
     ): StakingStates.ConfirmationState {
         if (this is StakingStates.ConfirmationState.Data) {
+            val isFeeConvertibleToFiat = feeCryptoCurrencyStatus?.currency?.network?.hasFiatFeeRate == true
             return copy(
                 isPrimaryButtonEnabled = true,
                 innerState = InnerConfirmationStakingState.COMPLETED,
@@ -40,8 +41,8 @@ internal class SetConfirmationStateCompletedTransformer(
                             decimals = gasEstimate.token.decimals,
                         ),
                     ),
-                    rate = cryptoCurrencyStatusProvider().value.fiatRate,
-                    isFeeConvertibleToFiat = cryptoCurrencyStatusProvider().currency.network.hasFiatFeeRate,
+                    rate = feeCryptoCurrencyStatus?.value?.fiatRate,
+                    isFeeConvertibleToFiat = isFeeConvertibleToFiat,
                     appCurrency = appCurrencyProvider(),
                     isFeeApproximate = false,
                 ),
