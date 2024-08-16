@@ -4,6 +4,7 @@ import com.tangem.data.settings.DefaultAppRatingRepository
 import com.tangem.data.settings.DefaultPermissionRepository
 import com.tangem.data.settings.DefaultPromoSettingsRepository
 import com.tangem.data.settings.DefaultSettingsRepository
+import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
@@ -21,8 +22,11 @@ internal object SettingsDataModule {
 
     @Provides
     @Singleton
-    fun provideSettingsRepository(appPreferencesStore: AppPreferencesStore): SettingsRepository {
-        return DefaultSettingsRepository(appPreferencesStore = appPreferencesStore)
+    fun provideSettingsRepository(
+        appPreferencesStore: AppPreferencesStore,
+        appLogsStore: AppLogsStore,
+    ): SettingsRepository {
+        return DefaultSettingsRepository(appPreferencesStore = appPreferencesStore, appLogsStore = appLogsStore)
     }
 
     @Provides

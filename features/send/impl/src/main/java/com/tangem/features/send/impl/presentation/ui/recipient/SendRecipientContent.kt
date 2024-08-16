@@ -141,7 +141,7 @@ private fun LazyListScope.memoField(memoField: SendTextField.RecipientMemo?, onM
                 onValueChange = memoField.onValueChange,
                 onPasteClick = onMemoChange,
                 modifier = Modifier.padding(top = TangemTheme.dimens.spacing20),
-                labelStyle = TangemTheme.typography.caption2,
+                labelStyle = TangemTheme.typography.subtitle2,
                 isError = memoField.isError,
                 error = memoField.error,
                 isReadOnly = !memoField.isEnabled,
