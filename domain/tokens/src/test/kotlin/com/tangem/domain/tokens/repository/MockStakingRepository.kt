@@ -1,12 +1,18 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionStatus
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
-import com.tangem.domain.staking.model.*
+import com.tangem.domain.staking.model.StakingApproval
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
-import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.transaction.*
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -91,10 +97,10 @@ class MockStakingRepository : StakingRepository {
             ),
             tokens = listOf(),
             type = "auto",
-            rewardSchedule = "1",
+            rewardSchedule = Yield.Metadata.RewardSchedule.DAY,
             cooldownPeriod = Yield.Metadata.Period(days = 1),
             warmupPeriod = Yield.Metadata.Period(days = 1),
-            rewardClaiming = "1",
+            rewardClaiming = Yield.Metadata.RewardClaiming.AUTO,
             defaultValidator = null,
             minimumStake = null,
             supportsMultipleValidators = false,
@@ -167,7 +173,11 @@ class MockStakingRepository : StakingRepository {
         balances = listOf(YieldBalance.Error),
     )
 
-    override suspend fun createAction(params: ActionParams): StakingAction {
+    override suspend fun createAction(
+        userWalletId: UserWalletId,
+        network: Network,
+        params: ActionParams,
+    ): StakingAction {
         return StakingAction(
             id = "quis",
             integrationId = "persequeris",
@@ -182,7 +192,11 @@ class MockStakingRepository : StakingRepository {
         )
     }
 
-    override suspend fun estimateGas(params: ActionParams): StakingGasEstimate {
+    override suspend fun estimateGas(
+        userWalletId: UserWalletId,
+        network: Network,
+        params: ActionParams,
+    ): StakingGasEstimate {
         return StakingGasEstimate(
             amount = BigDecimal(0.0001),
             token = Token(
@@ -199,7 +213,11 @@ class MockStakingRepository : StakingRepository {
         )
     }
 
-    override suspend fun constructTransaction(transactionId: String): StakingTransaction = StakingTransaction(
+    override suspend fun constructTransaction(
+        networkId: String,
+        fee: Fee,
+        transactionId: String,
+    ): Pair<StakingTransaction, TransactionData.Compiled> = StakingTransaction(
         id = "id",
         network = NetworkType.SOLANA,
         status = StakingTransactionStatus.SIGNED,
@@ -214,6 +232,9 @@ class MockStakingRepository : StakingRepository {
         explorerUrl = null,
         ledgerHwAppId = null,
         isMessage = false,
+    ) to TransactionData.Compiled(
+        value = TransactionData.Compiled.Data.RawString(""),
+        status = TransactionStatus.Unconfirmed,
     )
 
     override suspend fun submitHash(transactionId: String, transactionHash: String) {
@@ -229,4 +250,6 @@ class MockStakingRepository : StakingRepository {
     }
 
     override fun isStakeMoreAvailable(networkId: Network.ID): Boolean = true
+
+    override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval = StakingApproval.Empty
 }

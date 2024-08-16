@@ -44,7 +44,7 @@ internal class RewardsValidatorStateConverter(
             val validator = yield.validators.firstOrNull {
                 it.address.contains(balance.validatorAddress.orEmpty(), ignoreCase = true)
             }
-            val cryptoValue = balance.amount.times(balance.pricePerShare)
+            val cryptoValue = balance.amount
             val fiatValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoValue)
             val unbondingPeriod = yield.metadata.cooldownPeriod.days
             validator?.toBalanceState(
