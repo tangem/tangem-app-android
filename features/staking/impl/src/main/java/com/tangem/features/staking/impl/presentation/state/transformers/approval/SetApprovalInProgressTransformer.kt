@@ -13,11 +13,10 @@ internal object SetApprovalInProgressTransformer : Transformer<StakingUiState> {
         val state = prevState.confirmationState as? StakingStates.ConfirmationState.Data
         val notifications = state?.notifications?.toMutableList() ?: mutableListOf()
 
-        // todo staking [REDACTED_TASK_KEY] replace with correct text
         notifications.add(
             StakingNotification.Warning.TransactionInProgress(
-                title = resourceReference(R.string.warning_express_approval_in_progress_title),
-                description = resourceReference(R.string.warning_express_approval_in_progress_message),
+                title = resourceReference(R.string.warning_approval_in_progress_title),
+                description = resourceReference(R.string.warning_approval_in_progress_message),
             ),
         )
 
