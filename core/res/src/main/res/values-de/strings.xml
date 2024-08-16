@@ -835,6 +835,8 @@
   <string name="wallet_settings_title">Wallet-Einstellungen</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Verwende %s oder scanne eine Karte, um den Zugriff auf deine Wallet freizuschalten.</string>
+  <string name="warning_approval_in_progress_message">Die Genehmigung des Swaps ist im Gange und wird in Kürze abgeschlossen sein.</string>
+  <string name="warning_approval_in_progress_title">Genehmigung in Arbeit</string>
   <string name="warning_backup_errors_message">Es scheint, dass die Aktivierung der Karte nicht korrekt abgeschlossen wurde. Dies kann an einem Problem mit dem NFC-Modul deines Gerätes oder an einem falschen Tippen der Karte auf dein Gerät liegen. Bitte wende dich  an unser Support-Team, um Unterstützung zu erhalten.</string>
   <string name="warning_backup_errors_title">Aktivierungsfehler</string>
   <string name="warning_beacon_chain_retirement_content">Laut den Entwicklern des BNB-Netzes wird die Unterstützung für den BEP-2-Standard im Juni 2024 enden. Um den Verlust von Vermögenswerten mit diesem Standard zu vermeiden, konvertiere bitte in den BEP-20 Standard. Nutze gerne unseren Swap-Service, um sie auf das BNB Smart Chain Netzwerk zu übertragen.</string>
@@ -852,8 +854,6 @@
   <string name="warning_existential_deposit_title">Netzwerk erfordert eine Mindesteinzahlung</string>
   <string name="warning_express_active_transaction_message">Der Swap wird nach Abschluss der Transaktion %s verfügbar sein.</string>
   <string name="warning_express_active_transaction_title">Du hast aktive Transaktion</string>
-  <string name="warning_express_approval_in_progress_message">Die Genehmigung des Swaps ist im Gange und wird in Kürze abgeschlossen sein.</string>
-  <string name="warning_express_approval_in_progress_title">Genehmigung in Arbeit</string>
   <string name="warning_express_dust_message">Der Mindestbetrag für den Tausch beträgt %1$s. Bitte stelle sicher, dass der Restsaldo nach dem Swap nicht unter %2$s liegt.</string>
   <string name="warning_express_no_exchangeable_coins_description">Du hast keine %s Coins in deiner Liste</string>
   <string name="warning_express_no_exchangeable_coins_title">Keine Token zum Tauschen verfügbar</string>
