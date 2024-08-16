@@ -5,9 +5,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.NetworkStatusFactory
-import com.tangem.data.tokens.utils.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -100,7 +100,7 @@ internal class DefaultNetworksRepository(
 
     override fun isNeedToCreateAccountWithoutReserve(network: Network): Boolean {
         val blockchain = Blockchain.fromNetworkId(network.id.value)
-        return blockchain == Blockchain.Aptos
+        return REQUIRED_ACCOUNT_WITHOUT_RESERVE_BLOCKCHAINS.contains(blockchain)
     }
 
     override suspend fun getNetworkAddresses(
@@ -344,5 +344,10 @@ internal class DefaultNetworksRepository(
 
     private fun getNetworksStatusesCacheKey(userWalletId: UserWalletId, network: Network): String {
         return "network_status_${userWalletId}_${network.id.value}_${network.derivationPath.value}"
+    }
+
+    private companion object {
+
+        val REQUIRED_ACCOUNT_WITHOUT_RESERVE_BLOCKCHAINS = listOf(Blockchain.Aptos, Blockchain.Filecoin)
     }
 }
