@@ -2,7 +2,7 @@ package com.tangem.tap.network.exchangeServices
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.extensions.inject
