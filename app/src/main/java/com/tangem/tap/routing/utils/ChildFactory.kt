@@ -126,13 +126,7 @@ internal class ChildFactory @Inject constructor(
                 if (manageTokensToggles.isFeatureEnabled) {
                     route.asComponentChild(
                         contextProvider = contextProvider(route, contextFactory),
-                        params = ManageTokensComponent.Params(
-                            mode = if (route.readOnlyContent) {
-                                ManageTokensComponent.Mode.READ_ONLY
-                            } else {
-                                ManageTokensComponent.Mode.MANAGE
-                            },
-                        ),
+                        params = ManageTokensComponent.Params(route.userWalletId),
                         componentFactory = manageTokensComponentFactory,
                     )
                 } else {
