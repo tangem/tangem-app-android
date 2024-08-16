@@ -1,7 +1,6 @@
 package com.tangem.features.managetokens.ui
 
 import android.content.res.Configuration
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -10,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
@@ -20,6 +20,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,14 +39,17 @@ import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.components.rows.BlockchainRow
 import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
+import com.tangem.core.ui.components.rows.model.ChainRowUM
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.managetokens.component.preview.PreviewManageTokensComponent
 import com.tangem.features.managetokens.entity.CurrencyItemUM
 import com.tangem.features.managetokens.entity.CurrencyItemUM.Basic.NetworksUM
@@ -51,18 +60,30 @@ import kotlinx.collections.immutable.ImmutableList
 
 private const val CHEVRON_ROTATION_EXPANDED = 180f
 private const val CHEVRON_ROTATION_COLLAPSED = 0f
+private const val LOAD_ITEMS_BUFFER = 10
 
 @Composable
 internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modifier) {
-    BackHandler(onBack = state.popBack)
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                keyboardController?.hide()
+
+                return super.onPreScroll(available, source)
+            }
+        }
+    }
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.nestedScroll(nestedScrollConnection),
         containerColor = TangemTheme.colors.background.primary,
+        contentWindowInsets = WindowInsetsZero,
         topBar = {
             ManageTokensTopBar(
                 modifier = Modifier.statusBarsPadding(),
                 topBar = state.topBar,
+                search = state.search,
             )
         },
         content = { innerPadding ->
@@ -70,10 +91,7 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize(),
-                search = state.search,
-                items = state.items,
-                isLoading = state.isLoading,
-                hasChanges = state is ManageTokensUM.ManageContent && state.hasChanges,
+                state = state,
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -81,10 +99,11 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
             if (state is ManageTokensUM.ManageContent) {
                 SaveChangesButton(
                     modifier = Modifier
+                        .navigationBarsPadding()
                         .padding(horizontal = TangemTheme.dimens.spacing16)
                         .fillMaxWidth(),
                     isVisible = state.hasChanges,
-                    onClick = state.onSaveClick,
+                    onClick = state.saveChanges,
                 )
             }
         },
@@ -92,16 +111,26 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
 }
 
 @Composable
-private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM, modifier: Modifier = Modifier) {
-    TangemTopAppBar(
-        modifier = modifier,
-        title = topBar.title.resolveReference(),
-        startButton = TopAppBarButtonUM.Back(topBar.onBackButtonClick),
-        endButton = when (topBar) {
-            is ManageTokensTopBarUM.ManageContent -> topBar.endButton
-            is ManageTokensTopBarUM.ReadContent -> null
-        },
-    )
+private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM, search: SearchBarUM, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.background(TangemTheme.colors.background.primary),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+    ) {
+        TangemTopAppBar(
+            title = topBar.title.resolveReference(),
+            startButton = TopAppBarButtonUM.Back(topBar.onBackButtonClick),
+            endButton = when (topBar) {
+                is ManageTokensTopBarUM.ManageContent -> topBar.endButton
+                is ManageTokensTopBarUM.ReadContent -> null
+            },
+        )
+        SearchBar(
+            modifier = Modifier
+                .padding(bottom = TangemTheme.dimens.spacing12)
+                .padding(horizontal = TangemTheme.dimens.spacing16),
+            state = search,
+        )
+    }
 }
 
 @Composable
@@ -122,80 +151,59 @@ private fun SaveChangesButton(isVisible: Boolean, onClick: () -> Unit, modifier:
 }
 
 @Composable
-private fun LoadingContent() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = TangemTheme.colors.background.primary),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator(color = TangemTheme.colors.icon.accent)
-    }
-}
-
-@Composable
-private fun Content(
-    search: SearchBarUM,
-    items: ImmutableList<CurrencyItemUM>,
-    isLoading: Boolean,
-    hasChanges: Boolean,
-    modifier: Modifier = Modifier,
-) {
+private fun Content(state: ManageTokensUM, modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
         Currencies(
             modifier = Modifier.fillMaxSize(),
-            items = items,
-            search = search,
+            items = state.items,
+            showLoadingItem = state.isNextBatchLoading,
+            onLoadMore = state.loadMore,
+            isEditable = state is ManageTokensUM.ManageContent,
         )
 
-        AnimatedVisibility(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth(),
-            visible = hasChanges,
-            label = "bottom_fade_visibility",
-        ) {
-            BottomFade()
-        }
+        BottomFade(modifier = Modifier.align(Alignment.BottomCenter))
     }
 
-    Crossfade(targetState = isLoading, label = "ManageTokensLoadingContent") {
-        if (it) {
-            LoadingContent()
+    Crossfade(targetState = state.isInitialBatchLoading, label = "ManageTokensLoadingContent") { isVisible ->
+        if (isVisible) {
+            ProgressIndicator(
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun Currencies(items: ImmutableList<CurrencyItemUM>, search: SearchBarUM, modifier: Modifier = Modifier) {
+private fun Currencies(
+    items: ImmutableList<CurrencyItemUM>,
+    showLoadingItem: Boolean,
+    isEditable: Boolean,
+    onLoadMore: () -> Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val bottomBarHeight = with(LocalDensity.current) {
+        WindowInsets.systemBars.getBottom(density = this).toDp()
+    }
+    val listState = rememberLazyListState()
+
     LazyColumn(
         modifier = modifier,
+        state = listState,
+        contentPadding = PaddingValues(
+            bottom = TangemTheme.dimens.spacing76 + bottomBarHeight,
+        ),
     ) {
-        stickyHeader(key = "search") {
-            Column(
-                modifier = Modifier
-                    .background(TangemTheme.colors.background.primary)
-                    .padding(
-                        top = TangemTheme.dimens.spacing16,
-                        bottom = TangemTheme.dimens.spacing12,
-                    )
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .fillMaxWidth(),
-            ) {
-                SearchBar(state = search)
-            }
-        }
-
         items(
             items = items,
-            key = CurrencyItemUM::id,
+            key = { it.id.value },
         ) { item ->
             when (item) {
                 is CurrencyItemUM.Basic -> {
                     BasicCurrencyItem(
                         modifier = Modifier.fillMaxWidth(),
                         item = item,
+                        isEditable = isEditable,
                     )
                 }
                 is CurrencyItemUM.Custom -> {
@@ -206,6 +214,34 @@ private fun Currencies(items: ImmutableList<CurrencyItemUM>, search: SearchBarUM
                 }
             }
         }
+
+        item(key = "loading_indicator") {
+            AnimatedVisibility(
+                modifier = Modifier
+                    .padding(vertical = TangemTheme.dimens.spacing16)
+                    .fillMaxWidth(),
+                visible = showLoadingItem,
+                label = "loading_indicator_visibility",
+            ) {
+                ProgressIndicator()
+            }
+        }
+    }
+
+    InfiniteListHandler(
+        listState = listState,
+        buffer = LOAD_ITEMS_BUFFER,
+        onLoadMore = onLoadMore,
+    )
+}
+
+@Composable
+private fun ProgressIndicator(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(color = TangemTheme.colors.background.primary),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(color = TangemTheme.colors.icon.informative)
     }
 }
 
@@ -213,7 +249,14 @@ private fun Currencies(items: ImmutableList<CurrencyItemUM>, search: SearchBarUM
 private fun CustomCurrencyItem(item: CurrencyItemUM.Custom, modifier: Modifier = Modifier) {
     ChainRow(
         modifier = modifier,
-        model = item.model,
+        model = with(item) {
+            ChainRowUM(
+                name = name,
+                type = symbol,
+                icon = icon,
+                showCustom = true,
+            )
+        },
         action = {
             SecondarySmallButton(
                 config = SmallButtonConfig(
@@ -226,13 +269,20 @@ private fun CustomCurrencyItem(item: CurrencyItemUM.Custom, modifier: Modifier =
 }
 
 @Composable
-private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, modifier: Modifier = Modifier) {
+private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, isEditable: Boolean, modifier: Modifier = Modifier) {
     val isExpanded = item.networks is NetworksUM.Expanded
 
     Column(modifier = modifier) {
         ChainRow(
             modifier = Modifier.clickable(onClick = item.onExpandClick),
-            model = item.model,
+            model = with(item) {
+                ChainRowUM(
+                    name = name,
+                    type = symbol,
+                    icon = icon,
+                    showCustom = false,
+                )
+            },
             action = {
                 val rotation by animateFloatAsState(
                     targetValue = if (isExpanded) {
@@ -260,13 +310,19 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, modifier: Modifier = M
                 end = TangemTheme.dimens.spacing8,
             ),
             networks = item.networks,
-            currencyId = item.id,
+            currencyId = item.id.value,
+            isEditable = isEditable,
         )
     }
 }
 
 @Composable
-private fun NetworksList(networks: NetworksUM, currencyId: String, modifier: Modifier = Modifier) {
+private fun NetworksList(
+    networks: NetworksUM,
+    currencyId: String,
+    isEditable: Boolean,
+    modifier: Modifier = Modifier,
+) {
     AnimatedVisibility(
         modifier = modifier,
         visible = networks is NetworksUM.Expanded,
@@ -297,10 +353,12 @@ private fun NetworksList(networks: NetworksUM, currencyId: String, modifier: Mod
                                 )
                             },
                             action = {
-                                TangemSwitch(
-                                    checked = network.isSelected,
-                                    onCheckedChange = network.onSelectedStateChange,
-                                )
+                                if (isEditable) {
+                                    TangemSwitch(
+                                        checked = network.isSelected,
+                                        onCheckedChange = network.onSelectedStateChange,
+                                    )
+                                }
                             },
                         )
                     },
