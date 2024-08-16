@@ -39,6 +39,7 @@ private fun AppExtension.configureDefaultConfig(project: Project) {
 
         testInstrumentationRunner = "com.tangem.common.HiltTestRunner"
     }
+
 }
 
 // TODO: [REDACTED_JIRA]
@@ -50,41 +51,45 @@ private fun AppExtension.configureBuildFeatures() {
 
 private fun AppExtension.configureBuildTypes() {
     buildTypes {
-        BuildType.values().forEach { buildVariant ->
-            maybeCreate(buildVariant.id).apply {
-                configureBuildVariant(extension = this@configureBuildTypes, buildVariant)
+        BuildType.values().forEach { buildType ->
+            maybeCreate(buildType.id).apply {
+                configureBuildVariant(
+                    appExtension = this@configureBuildTypes,
+                    buildType = buildType,
+                )
 
                 BuildConfigFieldFactory(
-                    fields = buildVariant.configFields,
+                    fields = buildType.configFields,
                     builder = ::buildConfigField,
                 ).create()
             }
         }
     }
+    testBuildType = BuildType.Mocked.id
 }
 
-private fun AndroidBuildType.configureBuildVariant(extension: AppExtension, buildType: BuildType) {
+private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, buildType: BuildType) {
     when (buildType) {
         BuildType.Release -> {
             isDebuggable = false
             isMinifyEnabled = false
-            proguardFiles(extension.getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            proguardFiles(appExtension.getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
         }
         BuildType.Debug -> {
             isDebuggable = true
             isMinifyEnabled = false
         }
-        BuildType.External -> {
-            initWith(extension.buildTypes.getByName(BuildType.Release.id))
-            matchingFallbacks.add(BuildType.Release.id)
-            signingConfig = extension.signingConfigs.getByName(BuildType.Debug.id)
-        }
         BuildType.Internal,
-        BuildType.Mocked,
+        BuildType.External,
         -> {
-            initWith(extension.buildTypes.getByName(BuildType.Release.id))
+            initWith(appExtension.buildTypes.getByName(BuildType.Release.id))
             matchingFallbacks.add(BuildType.Release.id)
-            signingConfig = extension.signingConfigs.getByName(BuildType.Debug.id)
+            signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
+        }
+        BuildType.Mocked -> {
+            initWith(appExtension.buildTypes.getByName(BuildType.Release.id))
+            matchingFallbacks.add(BuildType.Release.id)
+            signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
             isDebuggable = true
         }
     }
