@@ -37,7 +37,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
 
     /** Data */
-    implementation(projects.data.tokens)
+    implementation(projects.data.common)
 
     /** Tangem SDKs */
     implementation(deps.tangem.blockchain)
