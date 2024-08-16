@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import com.tangem.common.ui.amountScreen.AmountScreenContent
+import com.tangem.common.ui.bottomsheet.permission.GiveTxPermissionBottomSheet
+import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
+import com.tangem.common.ui.navigationButtons.NavigationButtonsBlock
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -29,10 +32,10 @@ import kotlinx.coroutines.flow.withIndex
 
 @Composable
 internal fun StakingScreen(uiState: StakingUiState) {
-    BackHandler(onBack = uiState.clickIntents::onBackClick)
+    BackHandler(onBack = uiState.clickIntents::onPrevClick)
     Column(
         modifier = Modifier
-            .background(color = TangemTheme.colors.background.tertiary)
+            .background(color = TangemTheme.colors.background.secondary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),
@@ -45,8 +48,13 @@ internal fun StakingScreen(uiState: StakingUiState) {
             uiState = uiState,
             modifier = Modifier.weight(1f),
         )
-        StakingNavigationButtons(
-            uiState = uiState,
+        NavigationButtonsBlock(
+            buttonState = uiState.buttonsState,
+            modifier = Modifier.padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
+            ),
         )
         StakingBottomSheet(bottomSheetConfig = uiState.bottomSheetConfig)
     }
@@ -57,19 +65,12 @@ fun StakingBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
     if (bottomSheetConfig == null) return
     when (bottomSheetConfig.content) {
         is StakingInfoBottomSheetConfig -> StakingInfoBottomSheet(bottomSheetConfig)
+        is GiveTxPermissionBottomSheetConfig -> GiveTxPermissionBottomSheet(bottomSheetConfig)
     }
 }
 
 @Composable
 private fun SendAppBar(uiState: StakingUiState) {
-    val titleRes = when (uiState.currentStep) {
-        StakingStep.Amount -> stringResource(id = R.string.send_amount_label)
-        StakingStep.InitialInfo,
-        StakingStep.RewardsValidators,
-        StakingStep.Validators,
-        StakingStep.Confirmation,
-        -> stringResource(id = R.string.common_stake)
-    }
     val backIcon = when (uiState.currentStep) {
         StakingStep.Amount,
         StakingStep.Validators,
@@ -84,10 +85,10 @@ private fun SendAppBar(uiState: StakingUiState) {
         }
     }
     AppBarWithBackButtonAndIcon(
-        text = titleRes,
+        text = uiState.title.resolveReference(),
         backIconRes = backIcon,
         onBackClick = uiState.clickIntents::onBackClick,
-        backgroundColor = TangemTheme.colors.background.tertiary,
+        backgroundColor = TangemTheme.colors.background.secondary,
         modifier = Modifier.height(TangemTheme.dimens.size56),
     )
 }
@@ -155,7 +156,7 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                     amountState = uiState.amountState,
                     state = uiState.confirmationState,
                     clickIntents = uiState.clickIntents,
-                    type = uiState.routeType,
+                    type = uiState.actionType,
                 )
                 StakingStep.Validators -> {
                     val confirmState = uiState.confirmationState
