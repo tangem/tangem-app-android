@@ -9,7 +9,6 @@ android {
     namespace = "com.tangem.domain.staking"
 }
 
-
 dependencies {
     api(projects.domain.staking.models)
 
@@ -20,4 +19,8 @@ dependencies {
     implementation(projects.domain.wallets.models)
 
     implementation(projects.features.staking.api)
+
+    implementation(deps.tangem.blockchain) {
+        exclude(module = "joda-time")
+    }
 }
