@@ -129,7 +129,10 @@ internal sealed class TokenItemState {
 
     @Immutable
     sealed class FiatAmountState {
-        data class Content(val text: String) : FiatAmountState()
+        data class Content(
+            val text: String,
+            val hasStaked: Boolean = false,
+        ) : FiatAmountState()
 
         object Loading : FiatAmountState()
 
