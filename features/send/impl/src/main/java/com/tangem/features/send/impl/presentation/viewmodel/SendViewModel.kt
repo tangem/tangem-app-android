@@ -34,9 +34,9 @@ import com.tangem.domain.transaction.error.ValidateAddressError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
-import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -57,10 +57,8 @@ import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.Locale
@@ -934,16 +932,24 @@ internal class SendViewModel @Inject constructor(
 
     private fun scheduleUpdates() {
         coroutineScope.launch {
-            // we should update network to find pending tx after 1 sec
-            fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrency.network))
-            // we should update tx history and network for new balance
-            updateTxHistory()
-            updateDelayedCurrencyStatusUseCase(
-                userWalletId = userWallet.walletId,
-                network = cryptoCurrency.network,
-                delayMillis = BALANCE_UPDATE_DELAY,
-                refresh = true,
-            )
+            listOf(
+                // we should update network to find pending tx after 1 sec
+                async {
+                    fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrency.network))
+                },
+                // we should update tx history and network for new balance
+                async {
+                    updateTxHistory()
+                },
+                async {
+                    updateDelayedCurrencyStatusUseCase(
+                        userWalletId = userWallet.walletId,
+                        network = cryptoCurrency.network,
+                        delayMillis = BALANCE_UPDATE_DELAY,
+                        refresh = true,
+                    )
+                },
+            ).awaitAll()
         }
     }
 
