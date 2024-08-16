@@ -1,4 +1,4 @@
-package com.tangem.data.markets.utils
+package com.tangem.data.common.utils
 
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -8,7 +8,7 @@ import timber.log.Timber
 import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("UnconditionalJumpStatementInLoop")
-internal suspend fun <T> retryOnError(priority: Boolean = false, call: suspend () -> T): T {
+suspend fun <T> retryOnError(priority: Boolean = false, call: suspend () -> T): T {
     while (true) {
         return try {
             call()
@@ -16,11 +16,14 @@ internal suspend fun <T> retryOnError(priority: Boolean = false, call: suspend (
             if (e is CancellationException) {
                 currentCoroutineContext().ensureActive()
             }
-            Timber.e(e)
+
+            Timber.e(e, "Error occurred during retryOnError block")
+
             if (priority.not()) {
                 yield()
                 delay(timeMillis = 500)
             }
+
             continue
         }
     }
