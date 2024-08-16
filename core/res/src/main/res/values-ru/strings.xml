@@ -135,7 +135,7 @@
   <string name="common_rename">Переименовать</string>
   <string name="common_save">Сохранить</string>
   <string name="common_save_changes">Сохранить изменения</string>
-  <string name="common_search">Поиск на маркете</string>
+  <string name="common_search">Поиск</string>
   <string name="common_search_tokens">Поиск токенов</string>
   <string name="common_seed_phrase">Seed-фраза</string>
   <string name="common_select_action">Выберите действие</string>
