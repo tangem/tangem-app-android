@@ -29,12 +29,14 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.ValidateAddressError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -55,9 +57,8 @@ import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.Locale
@@ -75,6 +76,8 @@ internal class SendViewModel @Inject constructor(
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
+    private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
+    private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
@@ -161,7 +164,6 @@ internal class SendViewModel @Inject constructor(
         clickIntents = this,
         stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState.value },
-        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         feeStateFactory = feeStateFactory,
     )
 
@@ -195,7 +197,6 @@ internal class SendViewModel @Inject constructor(
         )
     }
 
-    // todo convert to StateFlow
     val uiState: MutableStateFlow<SendUiState> = MutableStateFlow(
         value = stateFactory.getInitialState(),
     )
@@ -856,7 +857,7 @@ internal class SendViewModel @Inject constructor(
 
         viewModelScope.launch {
             createTransactionUseCase(
-                amount = receivingAmount.convertToAmount(cryptoCurrency),
+                amount = receivingAmount.convertToSdkAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
                 destination = recipient,
@@ -931,13 +932,38 @@ internal class SendViewModel @Inject constructor(
 
     private fun scheduleUpdates() {
         coroutineScope.launch {
-            // we should update network to find pending tx after 1 sec
-            fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrency.network))
-            // we should update network for new balance
-            updateDelayedCurrencyStatusUseCase(
-                userWalletId = userWallet.walletId,
-                network = cryptoCurrency.network,
-                delayMillis = BALANCE_UPDATE_DELAY,
+            listOf(
+                // we should update network to find pending tx after 1 sec
+                async {
+                    fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrency.network))
+                },
+                // we should update tx history and network for new balance
+                async {
+                    updateTxHistory()
+                },
+                async {
+                    updateDelayedCurrencyStatusUseCase(
+                        userWalletId = userWallet.walletId,
+                        network = cryptoCurrency.network,
+                        delayMillis = BALANCE_UPDATE_DELAY,
+                        refresh = true,
+                    )
+                },
+            ).awaitAll()
+        }
+    }
+
+    private suspend fun updateTxHistory() {
+        delay(BALANCE_UPDATE_DELAY)
+        val txHistoryItemsCountEither = getTxHistoryItemsCountUseCase(
+            userWalletId = userWalletId,
+            currency = cryptoCurrency,
+        )
+
+        txHistoryItemsCountEither.onRight {
+            getTxHistoryItemsUseCase(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
                 refresh = true,
             )
         }
