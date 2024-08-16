@@ -6,10 +6,10 @@
   <string name="address_qr_code_message_format">Envoyez uniquement %1$s (%2$s) depuis les réseaux %3$s à cette adresse. L\'utilisation d\'autres jetons et réseaux peut entraîner une perte de fonds.</string>
   <string name="alert_button_how_to_scan">Comment scanner</string>
   <string name="alert_button_request_support">Demander de l\'aide</string>
-  <string name="alert_button_try_again">Réessayer</string>
+  <string name="alert_button_try_again">Réessayez</string>
   <string name="alert_demo_feature_disabled">Cette fonctionnalité est désactivée en mode démo</string>
   <string name="alert_failed_to_send_transaction_message">Raison : %s</string>
-  <string name="alert_failed_to_send_transaction_title">Impossible d\'envoyer une transaction</string>
+  <string name="alert_failed_to_send_transaction_title">Impossible d\'effectuer une transaction</string>
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">Le sélectionné ne prend pas en charge le réseau %1$s</string>
   <string name="alert_manage_tokens_unsupported_curve_message">Pour activer le cryptage de la blockchain %1$s, vous devrez réinitialiser le portefeuille aux paramètres d\'usine. Veuillez retirer vos fonds avant de le faire pour vous assurer de ne pas les perdre, puis terminez le processus de réinitialisation. L\'accès au portefeuille actuel ne sera pas possible après la réinitialisation.</string>
   <string name="alert_manage_tokens_unsupported_message">Les jetons du réseau %1$s ne sont pas pris en charge par cette carte en raison d\'une limitation du micrologiciel.</string>
@@ -17,7 +17,7 @@
   <string name="alert_unsupported_card">Cette carte n\'est pas conçue pour fonctionner avec Tangem</string>
   <string name="app_settings_default_fee">Frais par défaut</string>
   <string name="app_settings_default_fee_footer">Activez les frais par défaut pour définir automatiquement les frais de transaction et ignorer la page Frais lors de l\'envoi de fonds. Vous pouvez toujours revenir sur cette page si nécessaire.</string>
-  <string name="app_settings_enable_biometrics_description">Allez dans les paramètres pour activer l\'authentification biométrique dans le Tangem App</string>
+  <string name="app_settings_enable_biometrics_description">Accédez aux paramètres pour activer l\'authentification biométrique dans l\'application Tangem</string>
   <string name="app_settings_enable_biometrics_title">Activer l\'authentification biométrique</string>
   <string name="app_settings_off_saved_access_code_alert_message">Cela supprimera tous les codes d\'accès des portefeuilles enregistrés. Toute opération ultérieure avec le portefeuille nécessitera la soumission du code d\'accès.</string>
   <string name="app_settings_off_saved_wallet_alert_message">La suppression de la carte enregistrée supprime de l\'application tous les portefeuilles enregistrés et leurs codes d\'accès.</string>
@@ -35,7 +35,7 @@
   <string name="balance_hidden_got_it_button">Compris</string>
   <string name="balance_hidden_title">Les soldes sont masqués</string>
   <string name="biometric_lockout_permanent_warning_description">Veuillez scanner la carte</string>
-  <string name="biometric_lockout_warning_description">Veuillez réessayer dans 30 secondes ou scanner la carte</string>
+  <string name="biometric_lockout_warning_description">Veuillez réessayer dans 30 secondes ou scannez la carte</string>
   <string name="biometric_lockout_warning_title">Trop de tentatives</string>
   <string name="biometric_unavailable_warning">Vous avez désactivé l\'authentification biométrique sur votre téléphone et ne pourrez pas enregistrer de portefeuilles dans l\'application. Pour enregistrer des portefeuilles, veuillez activer la fonction d\'authentification biométrique dans les paramètres de votre téléphone.</string>
   <string name="button_start_backup_process">Démarrer le processus de sauvegarde</string>
@@ -86,6 +86,7 @@
   <string name="common_copy">Copier</string>
   <string name="common_copy_address">Copier l\'adresse</string>
   <string name="common_create">Créer</string>
+  <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Personnalisé</string>
   <plurals name="common_days">
     <item quantity="one">%d jour</item>
@@ -97,7 +98,7 @@
   <string name="common_enable">Activer</string>
   <string name="common_enabled">Activé</string>
   <string name="common_error">Erreur</string>
-  <string name="common_explore">Explorer</string>
+  <string name="common_explore">Explorez</string>
   <string name="common_explore_transaction_history">Explorez l\'historique des transactions</string>
   <string name="common_explorer">Explorateur</string>
   <string name="common_fee_label">Commissions</string>
@@ -134,13 +135,13 @@
   <string name="common_search">Rechercher</string>
   <string name="common_search_tokens">Rechercher des jetons</string>
   <string name="common_seed_phrase">Seed phrase</string>
-  <string name="common_select_action">Sélectionner une action</string>
+  <string name="common_select_action">Sélectionnez une action</string>
   <string name="common_sell">Vendre</string>
   <string name="common_send">Envoyer</string>
   <string name="common_server_unavailable">Le serveur n\'est pas disponible, veuillez réessayer plus tard</string>
   <string name="common_share">Partager</string>
-  <string name="common_sign">Signer</string>
-  <string name="common_sign_and_send">Signer et envoyer</string>
+  <string name="common_sign">Signez</string>
+  <string name="common_sign_and_send">Signez et envoyez</string>
   <string name="common_stake">Enjeu</string>
   <string name="common_staking">Staking</string>
   <string name="common_start">Démarrer</string>
@@ -237,7 +238,7 @@
   <string name="express_exchange_status_receiving">En attente du dépôt</string>
   <string name="express_exchange_status_receiving_active">En attente du dépôt</string>
   <string name="express_exchange_status_refunded">Remboursé</string>
-  <string name="express_exchange_status_sending">Je vous envoie</string>
+  <string name="express_exchange_status_sending">Transfert à votre compte</string>
   <string name="express_exchange_status_sending_active">En cours d\'envoi</string>
   <string name="express_exchange_status_sent">Envoyé</string>
   <string name="express_exchange_status_subtitle">Données fournies par le fournisseur. Le montant estimé est sujet à modification en raison des conditions du marché.</string>
@@ -269,8 +270,8 @@
   <string name="feedback_subject_scan_failed">Impossible de scanner une carte</string>
   <string name="feedback_subject_support">Commentaires</string>
   <string name="feedback_subject_support_tangem">Commentaires sur Tangem</string>
-  <string name="feedback_subject_tx_failed">Impossible d\'envoyer une transaction</string>
-  <string name="give_permission_current_transaction">Transaction </string>
+  <string name="feedback_subject_tx_failed">Impossible d\'effectuer une transaction</string>
+  <string name="give_permission_current_transaction">Cette transaction</string>
   <string name="give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="give_permission_policy_type_footer">Spécifiez la limite approuvée pour le jeton sélectionné</string>
   <string name="give_permission_rows_amount">Montant %s</string>
@@ -284,7 +285,7 @@
   <string name="initial_message_create_wallet_body">Pour créer le portefeuille, appuyez sur la carte comme indiqué ci-dessus et ne la retirez pas jusqu\'à la fin de l\'opération</string>
   <string name="initial_message_reset_backup_card_header">Appuyez sur la carte n°%s du portefeuille</string>
   <string name="initial_message_scan_header">Posez pour scanner</string>
-  <string name="initial_message_sign_header">Touchez pour signer</string>
+  <string name="initial_message_sign_header">Tapez pour signer</string>
   <string name="initial_message_tap_header">Posez la carte</string>
   <string name="key_invalidated_warning_description">Vous avez mis à jour vos données biométriques, scannez votre carte pour entrer</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Votre solde doit être supérieur à la valeur des frais pour effectuer un transfert</string>
@@ -327,11 +328,20 @@
   <string name="markets_add_to_my_portfolio_description">Pour commencer à acheter, échanger ou recevoir cet actif, ajoutez ce jeton à au moins 1 réseau</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est pas disponible</string>
   <string name="markets_add_to_portfolio_button">Ajouter au portfolio</string>
+  <string name="markets_add_token">Ajoutez un jeton</string>
+  <string name="markets_available_networks">Réseaux disponibles</string>
   <string name="markets_common_my_portfolio">Mon portfolio</string>
   <string name="markets_common_title">Marché</string>
   <string name="markets_generate_addresses_notification">Pour générer des adresses pour les réseaux sélectionnés, vous devez scanner votre carte Tangem</string>
+  <string name="markets_loading_error_title">Impossible de charger les données…</string>
+  <string name="markets_search_result_title">Résultat</string>
+  <string name="markets_search_see_tokens_under_100k">Voir les jetons de moins de 100 000 $ de capitalisation boursière</string>
+  <string name="markets_search_show_tokens">Afficher les jetons</string>
+  <string name="markets_search_token_no_result_title">Aucun résultat</string>
+  <string name="markets_select_network">Sélectionnez un réseau</string>
   <string name="markets_select_wallet">Sélectionnez un portefeuille</string>
   <string name="markets_sort_by_title">Trier par</string>
+  <string name="markets_token_details_about_token_title">À propos de %s</string>
   <string name="markets_token_details_insights">Idées</string>
   <string name="markets_token_details_links">Liens</string>
   <string name="markets_token_details_metrics">Métriques</string>
@@ -363,7 +373,7 @@
   <string name="onboarding_button_finalize_backup">Finaliser la sauvegarde</string>
   <string name="onboarding_button_receive_crypto">Recevoir des crypto-monnaies</string>
   <string name="onboarding_button_scan_origin_card">Scannez la carte principale</string>
-  <string name="onboarding_button_skip_backup">Ignorer pour plus tard</string>
+  <string name="onboarding_button_skip_backup">Finir plus tard</string>
   <string name="onboarding_button_what_does_it_mean">Comment ça marche ?</string>
   <string name="onboarding_create_wallet_body">Générons toutes les clés sur votre carte et créons un portefeuille sécurisé</string>
   <string name="onboarding_create_wallet_button_create_wallet">Créer un portefeuille</string>
@@ -375,7 +385,7 @@
   <string name="onboarding_done_header">Succès !</string>
   <string name="onboarding_exit_alert_message">Dans ce cas, vous devrez recommencer depuis le début.</string>
   <string name="onboarding_exit_alert_title">Voulez-vous quitter le processus d\'activation ?</string>
-  <string name="onboarding_getting_started">Initialiser</string>
+  <string name="onboarding_getting_started">Initialisation en cours</string>
   <string name="onboarding_linking_error_card_with_wallets">Un autre portefeuille a déjà été créé sur la carte que vous essayez d\'ajouter. Si vous avez des fonds dans ce portefeuille, veuillez les retirer, puis réinitialiser cette carte et l\'ajouter comme sauvegarde.</string>
   <string name="onboarding_navbar_title_creating_backup">Sauvegarde en cours</string>
   <string name="onboarding_seed_button_read_more">En savoir plus sur les seed phrases</string>
@@ -489,7 +499,7 @@
   <string name="send_alert_fee_too_low_text">Vous avez spécifié une commission inférieure au montant recommandé, ce qui pourrait entraîner un retard dans votre transaction. Continuer?</string>
   <string name="send_alert_transaction_failed_text">Raison : %1$s\nCode : %2$s</string>
   <string name="send_alert_transaction_failed_title">La transaction est incomplète</string>
-  <string name="send_amount_label">Somme</string>
+  <string name="send_amount_label">Montant</string>
   <string name="send_bitcoin_custom_fee_footer">Vous pouvez définir vos frais de transaction en ajustant la valeur dans le champ Satoshi par vByte.</string>
   <string name="send_custom_amount_fee_footer">Les frais qui seront facturés pour votre transaction. Vous pouvez définir votre propre valeur.</string>
   <string name="send_custom_evm_max_fee">Frais maximum</string>
@@ -500,7 +510,7 @@
   <string name="send_custom_kaspa_per_utxo_title">KAS pour UTXO</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Adresse</string>
-  <string name="send_destination_tag_field">Destination Tag</string>
+  <string name="send_destination_tag_field">ID de destination</string>
   <string name="send_enter_address_field">Entrez l\'adresse</string>
   <string name="send_error_address_same_as_wallet">L\'adresse est la même que celle de votre portefeuille</string>
   <string name="send_extras_error_invalid_destination_tag">Tag invalide. Il ne sera pas ajouté à la transaction.</string>
@@ -558,7 +568,7 @@
   <string name="send_summary_tap_hint">Appuyez sur n\'importe quel champ pour le modifier</string>
   <string name="send_summary_title">Envoyer %s</string>
   <string name="send_summary_transaction_description">Vous envoyez **%1$s** incluant des frais de réseau de %2$s</string>
-  <string name="send_summary_transaction_description_no_fiat_fee">Vous envoyez **%1$s** and %2$s</string>
+  <string name="send_summary_transaction_description_no_fiat_fee">Vous envoyez **%1$s** et %2$s</string>
   <string name="send_title_currency_format">Envoi de %s</string>
   <string name="send_total_label">Total</string>
   <string name="send_total_subtitle_asset_format">Sera envoyé %1$s et %2$s</string>
@@ -567,9 +577,8 @@
   <string name="send_transaction_success">La transaction a été signée avec succès et envoyée au nœud de blockchain. Le solde du portefeuille sera mis à jour après un certain temps</string>
   <string name="send_tron_account_activation_error">%1$s est un actif du réseau Tron. Pour calculer les frais et effectuer une transaction, déposez du Tron (TRX) sur votre compte.</string>
   <string name="send_validation_invalid_address">Adresse incorrecte</string>
-  <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Transaction envoyée</string>
-  <string name="settings_card_settings_footer">Préparez-vous à numériser la carte que vous souhaitez configurer.</string>
+  <string name="settings_card_settings_footer">Scannez la carte que vous souhaitez configurer.</string>
   <string name="settings_forget_wallet">Oublier le portefeuille</string>
   <string name="settings_forget_wallet_footer">Cela supprimera le portefeuille de l\'application. Le portefeuille lui-même peut être ajouté à nouveau.</string>
   <string name="settings_wallet_name_title">Nom</string>
@@ -597,6 +606,7 @@
   <string name="staking_native">Native staking</string>
   <string name="staking_notification_earn_rewards_title">Gagnez des récompenses de staking</string>
   <string name="staking_rewards">Récompenses</string>
+  <string name="staking_stake_locked">Stake verrouillé</string>
   <string name="staking_stake_more">Staker plus</string>
   <string name="staking_unstaked">Non-staké</string>
   <string name="staking_unstaked_footer">Vérifiez non-stakés pour réclamer vos actifs</string>
@@ -611,12 +621,13 @@
   <string name="story_finish_title">Le portefeuille pour tous</string>
   <string name="story_meet_title">Découvrez Tangem</string>
   <string name="story_web3_description">Échangez, achetez des NFT, faites des prêts et des dépôts dans plus de 100 services décentralisés différents</string>
-  <string name="story_web3_title">Compatible Web 3.0</string>
+  <string name="story_web3_title">Compatible avec Web 3.0</string>
   <string name="swapping_alert_cex_description">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %s depuis l\'échange vers l\'adresse de l\'utilisateur.</string>
   <string name="swapping_alert_dex_description">Le montant comprend les frais du fournisseur de services.</string>
   <string name="swapping_alert_title">Frais</string>
   <string name="swapping_approve_information_text">Tous les échanges décentralisés nécessitent des approbations pour empêcher les smart contracts d\'accéder à votre portefeuille sans votre permission. Par conception, les smart contracts ne peuvent pas accéder à vos jetons sans votre approbation. En « déverrouillant » vos jetons, vous autorisez le smart contract 1-inch à les dépenser. Les mineurs du réseau reçoivent des frais de gaz (payés par vous) pour enregistrer cette action sur la blockchain. Vous pouvez échanger votre jeton après avoir donné votre approbation.</string>
   <string name="swapping_approve_information_title">Approuver</string>
+  <string name="swapping_fee_estimation_error_text">Erreur d\'estimation des frais. Veuillez envoyer vos commentaires à l\'équide de support.</string>
   <string name="swapping_from_title">Vous échangez</string>
   <string name="swapping_high_price_impact_description">Échanger ce montant de jetons sélectionnés aura un impact significatif sur les prix et réduira votre résultat.</string>
   <string name="swapping_insufficient_funds">Fonds insuffisants</string>
@@ -660,6 +671,7 @@
   <string name="transaction_history_operation">Opération</string>
   <string name="transaction_history_transaction_from_address">de : %s</string>
   <string name="transaction_history_transaction_to_address">à : %s</string>
+  <string name="try_to_load_data_again_button_title">Réessayez</string>
   <string name="twin_error_same_card">Vous avez scanné la même carte. Pour créer un portefeuille jumeau, vous devez scanner la carte portant le numéro %d</string>
   <string name="twin_error_wrong_twin">Vous avez scanné une mauvaise carte jumelle. S\'il vous plaît, essayez-en un autre</string>
   <string name="twins_onboarding_description_format">Celle que vous tenez dans vos mains et l\'autre portant le numéro %s\n\nLes deux cartes peuvent être utilisées pour extraire des fonds de ce portefeuille.</string>
@@ -692,7 +704,7 @@
   <string name="wallet_connect_bnb_transaction_message">Détails de la transaction :\nDe : %1$s\nÀ :  %2$s\nMontant : %3$s</string>
   <string name="wallet_connect_clipboard_alert">Le presse-papiers contient un code WalletConnect. Utilisez la valeur copiée ou scannez le QR-code</string>
   <string name="wallet_connect_create_tx_message">Demande de création d\'une transaction pour %1$s\n%2$s\n\nMontant : %3$s\nFrais : %4$s\nTotal : %5$s\nSolde : %6$s</string>
-  <string name="wallet_connect_create_tx_not_enough_funds">Impossible d\'envoyer la transaction. Fonds insuffisants.</string>
+  <string name="wallet_connect_create_tx_not_enough_funds">Impossible d\'effectuer la transaction. Fonds insuffisants.</string>
   <string name="wallet_connect_error_failed_to_connect">Échec de l\'établissement de la session WalletConnect. Veuillez réessayer plus tard.</string>
   <string name="wallet_connect_error_sing_failed">Échec de la signature du message. Veuillez réessayer</string>
   <string name="wallet_connect_error_timeout">Échec de l\'établissement de la session WalletConnect : erreur de délai d\'attente. Veuillez réessayer plus tard.</string>
@@ -731,7 +743,7 @@
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain va s\'arrêter de fonctionner</string>
   <string name="warning_button_could_be_better">Pas terrible</string>
   <string name="warning_button_like_it">J\'aime</string>
-  <string name="warning_button_ok">Ok, je l\'ai!</string>
+  <string name="warning_button_ok">Ok, compris!</string>
   <string name="warning_button_really_cool">Vraiment cool !</string>
   <string name="warning_button_refresh">Rafraîchir</string>
   <string name="warning_demo_mode_message">Vous êtes actuellement en mode démo</string>
@@ -750,6 +762,7 @@
   <string name="warning_express_not_enough_fee_for_token_tx_description">Pour effectuer une transaction, vous devez déposer %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Impossible de couvrir %s frais</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">Le montant à recevoir doit être d\'au moins %s</string>
+  <string name="warning_express_pair_unavailable_message">Cela peut se produire car le fournisseur n\'est actuellement pas en mesure d\'échanger la paire que vous avez sélectionnée. Veuillez patienter un instant et réessayer. (Code %@)</string>
   <string name="warning_express_refresh_required_title">Service temporairement indisponible</string>
   <string name="warning_express_too_maximum_amount_title">Le nombre de jetons à échanger ne doit pas dépasser %s</string>
   <string name="warning_express_too_minimal_amount_title">Le montant à échanger doit être d\'au moins %s</string>
