@@ -8,26 +8,32 @@ import kotlinx.collections.immutable.ImmutableList
 internal sealed class ManageTokensUM {
 
     abstract val popBack: () -> Unit
-    abstract val isLoading: Boolean
+    abstract val isInitialBatchLoading: Boolean
+    abstract val isNextBatchLoading: Boolean
     abstract val items: ImmutableList<CurrencyItemUM>
     abstract val topBar: ManageTokensTopBarUM
     abstract val search: SearchBarUM
+    abstract val loadMore: () -> Boolean
 
     data class ReadContent(
         override val popBack: () -> Unit,
-        override val isLoading: Boolean,
+        override val isInitialBatchLoading: Boolean,
+        override val isNextBatchLoading: Boolean,
         override val items: ImmutableList<CurrencyItemUM>,
         override val topBar: ManageTokensTopBarUM,
         override val search: SearchBarUM,
+        override val loadMore: () -> Boolean,
     ) : ManageTokensUM()
 
     data class ManageContent(
         override val popBack: () -> Unit,
-        override val isLoading: Boolean,
+        override val isInitialBatchLoading: Boolean,
+        override val isNextBatchLoading: Boolean,
         override val items: ImmutableList<CurrencyItemUM>,
         override val topBar: ManageTokensTopBarUM,
         override val search: SearchBarUM,
-        val onSaveClick: () -> Unit,
+        override val loadMore: () -> Boolean,
+        val saveChanges: () -> Unit,
         val hasChanges: Boolean,
     ) : ManageTokensUM()
 
@@ -35,10 +41,23 @@ internal sealed class ManageTokensUM {
         search: SearchBarUM = this.search,
         items: ImmutableList<CurrencyItemUM> = this.items,
         hasChanges: Boolean = this is ManageContent && this.hasChanges,
+        isInitialBatchLoading: Boolean = this.isInitialBatchLoading,
+        isNextBatchLoading: Boolean = this.isNextBatchLoading,
     ): ManageTokensUM {
         return when (this) {
-            is ManageContent -> copy(search = search, items = items, hasChanges = hasChanges)
-            is ReadContent -> copy(search = search, items = items)
+            is ManageContent -> copy(
+                search = search,
+                items = items,
+                hasChanges = hasChanges,
+                isInitialBatchLoading = isInitialBatchLoading,
+                isNextBatchLoading = isNextBatchLoading,
+            )
+            is ReadContent -> copy(
+                search = search,
+                items = items,
+                isInitialBatchLoading = isInitialBatchLoading,
+                isNextBatchLoading = isNextBatchLoading,
+            )
         }
     }
 }
