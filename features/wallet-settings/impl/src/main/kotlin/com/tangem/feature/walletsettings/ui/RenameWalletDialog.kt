@@ -6,8 +6,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.AdditionalTextInputDialogParams
-import com.tangem.core.ui.components.DialogButton
+import com.tangem.core.ui.components.AdditionalTextInputDialogUM
+import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.TextInputDialog
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.walletsettings.component.preview.PreviewRenameWalletComponent
@@ -21,18 +21,18 @@ internal fun RenameWalletDialog(model: RenameWalletUM, onDismiss: () -> Unit) {
     TextInputDialog(
         title = stringResource(id = R.string.user_wallet_list_rename_popup_title),
         fieldValue = value,
-        confirmButton = DialogButton(
+        confirmButton = DialogButtonUM(
             title = stringResource(id = R.string.common_ok),
             enabled = model.isConfirmEnabled,
             onClick = model.onConfirm,
         ),
-        dismissButton = DialogButton(
+        dismissButton = DialogButtonUM(
             title = stringResource(id = R.string.common_cancel),
             onClick = onDismiss,
         ),
         onDismissDialog = onDismiss,
         onValueChange = model.updateValue,
-        textFieldParams = AdditionalTextInputDialogParams(
+        textFieldParams = AdditionalTextInputDialogUM(
             label = stringResource(id = R.string.user_wallet_list_rename_popup_placeholder),
         ),
     )
