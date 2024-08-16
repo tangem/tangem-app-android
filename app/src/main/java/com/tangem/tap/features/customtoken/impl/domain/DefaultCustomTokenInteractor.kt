@@ -4,7 +4,7 @@ import arrow.core.getOrElse
 import arrow.core.raise.result
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
