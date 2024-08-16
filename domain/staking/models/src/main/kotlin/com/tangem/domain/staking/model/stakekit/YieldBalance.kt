@@ -11,13 +11,13 @@ sealed class YieldBalance {
         fun getTotalStakingBalance(): BigDecimal {
             return balance.items
                 .filterNot { it.type == BalanceType.REWARDS }
-                .sumOf { it.amount * it.pricePerShare }
+                .sumOf { it.amount }
         }
 
         fun getRewardStakingBalance(): BigDecimal {
             return balance.items
                 .filter { it.type == BalanceType.REWARDS }
-                .sumOf { it.amount * it.pricePerShare }
+                .sumOf { it.amount }
         }
     }
 
@@ -36,6 +36,7 @@ data class BalanceItem(
     val amount: BigDecimal,
     val pricePerShare: BigDecimal,
     val rawCurrencyId: String?,
+    val rawNetworkId: String,
     val validatorAddress: String?,
     val pendingActions: List<PendingAction>,
 )
