@@ -40,6 +40,7 @@ import java.math.BigDecimal
  * @param subtitleColor subtitle text color
  * @param captionColor caption text color
  * @param isSelected true if selected
+ * @param selectorContent selector content
  */
 @Composable
 fun InputRowImageSelector(
@@ -51,6 +52,7 @@ fun InputRowImageSelector(
     subtitleColor: Color = TangemTheme.colors.text.primary1,
     captionColor: Color = TangemTheme.colors.text.tertiary,
     isSelected: Boolean = false,
+    selectorContent: @Composable ((isSelected: Boolean, isEnabled: Boolean, onSelect: () -> Unit) -> Unit),
 ) {
     InputRowImageBase(
         subtitle = subtitle,
@@ -67,7 +69,7 @@ fun InputRowImageSelector(
             .padding(TangemTheme.dimens.spacing12),
     ) {
         SpacerWMax()
-        TangemRadioButton(isSelected = isSelected, isEnabled = false, onClick = onSelect)
+        selectorContent(isSelected, false, onSelect)
     }
 }
 
@@ -98,6 +100,9 @@ private fun InputRowImageSelectorPreview(
             imageUrl = "",
             isSelected = false,
             onSelect = {},
+            selectorContent = { isSelected, isEnabled, onSelect ->
+                TangemRadioButton(isSelected = isSelected, isEnabled = isEnabled, onClick = onSelect)
+            },
         )
     }
 }

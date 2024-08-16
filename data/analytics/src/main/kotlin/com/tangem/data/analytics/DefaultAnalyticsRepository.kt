@@ -3,7 +3,7 @@ package com.tangem.data.analytics
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
-import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.domain.analytics.model.WalletBalanceState
 import com.tangem.domain.analytics.repository.AnalyticsRepository
 import com.tangem.domain.wallets.models.UserWalletId
@@ -29,7 +29,7 @@ internal class DefaultAnalyticsRepository(
     }
 
     override suspend fun getWalletBalanceState(userWalletId: UserWalletId): WalletBalanceState? {
-        val walletsBalanceState = appPreferencesStore.getObjectMap<WalletBalanceState>(
+        val walletsBalanceState = appPreferencesStore.getObjectMapSync<WalletBalanceState>(
             key = PreferencesKeys.WALLETS_BALANCES_STATES_KEY,
         )
 
@@ -41,7 +41,7 @@ internal class DefaultAnalyticsRepository(
             val walletsBalanceState = it.getObjectMap<WalletBalanceState>(
                 key = PreferencesKeys.WALLETS_BALANCES_STATES_KEY,
             )
-            val updatedWalletsBalanceState = walletsBalanceState.orEmpty()
+            val updatedWalletsBalanceState = walletsBalanceState
                 .plus(pair = userWalletId.stringValue to balanceState)
 
             it.setObjectMap(PreferencesKeys.WALLETS_BALANCES_STATES_KEY, updatedWalletsBalanceState)

@@ -3,7 +3,10 @@ package com.tangem.datasource.api.tangemTech
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
 import com.tangem.datasource.api.tangemTech.models.*
+import com.tangem.datasource.api.utils.ReadTimeout
+import com.tangem.datasource.config.models.ProviderModel
 import retrofit2.http.*
+import java.util.concurrent.TimeUnit
 
 /**
  * Interface of Tangem Tech API
@@ -15,6 +18,7 @@ interface TangemTechApi {
 
     @GET("coins")
     suspend fun getCoins(
+        @Header("Cache-Control") cacheControl: String = "max-age=600",
         @Query("contractAddress") contractAddress: String? = null,
         @Query("exchangeable") exchangeable: Boolean? = null,
         @Query("networkIds") networkIds: String? = null,
@@ -29,7 +33,9 @@ interface TangemTechApi {
     suspend fun getRates(@Query("currencyId") currencyId: String, @Query("coinIds") coinIds: String): RatesResponse
 
     @GET("currencies")
-    suspend fun getCurrencyList(): ApiResponse<CurrenciesResponse>
+    suspend fun getCurrencyList(
+        @Header("Cache-Control") cacheControl: String = "max-age=600",
+    ): ApiResponse<CurrenciesResponse>
 
     @GET("geo")
     suspend fun getUserCountryCode(): GeoResponse
@@ -59,15 +65,6 @@ interface TangemTechApi {
         @Body startReferralBody: StartReferralBody,
     ): ReferralResponse
 
-    @GET("shops")
-    suspend fun getShopInfo(@Query(value = "name") name: String): ShopResponse
-
-    @GET("sales")
-    suspend fun getSalesInfo(
-        @Query(value = "locale") locale: String,
-        @Query(value = "shops") shops: String,
-    ): SalesResponse
-
     @GET("quotes")
     suspend fun getQuotes(
         @Query("currencyId") currencyId: String,
@@ -76,7 +73,10 @@ interface TangemTechApi {
     ): ApiResponse<QuotesResponse>
 
     @GET("promotion")
-    suspend fun getPromotionInfo(@Query("programName") name: String): ApiResponse<PromotionInfoResponse>
+    suspend fun getPromotionInfo(
+        @Query("programName") name: String,
+        @Header("Cache-Control") cacheControl: String = "max-age=600",
+    ): ApiResponse<PromotionInfoResponse>
 
     @GET("settings/{wallet_id}")
     suspend fun getUserTokensSettings(
@@ -131,4 +131,8 @@ interface TangemTechApi {
 
     @GET("features")
     suspend fun getFeatures(): ApiResponse<FeaturesResponse>
+
+    @ReadTimeout(duration = 5, unit = TimeUnit.SECONDS)
+    @GET("networks/providers")
+    suspend fun getBlockchainProviders(): Map<String, List<ProviderModel>>
 }
