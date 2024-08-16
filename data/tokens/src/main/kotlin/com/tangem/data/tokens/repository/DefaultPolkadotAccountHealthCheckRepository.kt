@@ -9,7 +9,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys.POLKADOT_HEALTH_CHECKED_IMMUTABLE_ACCOUNTS_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.POLKADOT_HEALTH_CHECKED_RESET_ACCOUNTS_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.POLKADOT_HEALTH_CHECK_LAST_INDEXED_TX_KEY
-import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.datasource.local.preferences.utils.getObjectSetSync
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
@@ -97,7 +97,7 @@ internal class DefaultPolkadotAccountHealthCheckRepository(
         runCatching {
             do {
                 // Getting batch of extrinsics to check
-                val lastChecked = appPreferencesStore.getObjectMap<Long>(POLKADOT_HEALTH_CHECK_LAST_INDEXED_TX_KEY)
+                val lastChecked = appPreferencesStore.getObjectMapSync<Long>(POLKADOT_HEALTH_CHECK_LAST_INDEXED_TX_KEY)
                 val lastExtrinsic = lastChecked[address]
                 val extrinsicListResult = accountCheckerProvider.getExtrinsicList(afterExtrinsicId = lastExtrinsic)
                 extrinsicListResult.extrinsic
