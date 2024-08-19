@@ -2,6 +2,8 @@ package com.tangem.features.markets.portfolio.impl.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -66,10 +69,16 @@ private fun Content(state: AddToPortfolioBSContentUM, modifier: Modifier = Modif
     Box(modifier = modifier) {
         Column(
             modifier = Modifier
-                .verticalScroll(scrollState)
+                .verticalScroll(state = scrollState)
                 .padding(horizontal = TangemTheme.dimens.spacing16),
         ) {
-            UserWalletItem(state.selectedWallet)
+            UserWalletItem(
+                state = state.selectedWallet,
+                blockColors = TangemBlockCardColors.copy(
+                    containerColor = TangemTheme.colors.background.action,
+                    disabledContainerColor = TangemTheme.colors.background.action,
+                ),
+            )
 
             SpacerH12()
 
@@ -92,7 +101,7 @@ private fun Content(state: AddToPortfolioBSContentUM, modifier: Modifier = Modif
                 // Scroll to the bottom when the notification appears and the scroll is at the bottom
                 LaunchedEffect(Unit) {
                     if (scrollState.canScrollForward.not()) {
-                        delay(timeMillis = 250)
+                        delay(timeMillis = 500)
                         scrollState.animateScrollTo(scrollState.maxValue)
                     }
                 }
@@ -101,34 +110,51 @@ private fun Content(state: AddToPortfolioBSContentUM, modifier: Modifier = Modif
             SpacerH(with(density) { continueButtonAreaHeight.toDp() })
         }
 
-        BottomFade(Modifier.align(Alignment.BottomCenter))
+        AnimatedVisibility(
+            visible = scrollState.canScrollForward,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter),
+        ) {
+            BottomFade(Modifier.align(Alignment.BottomCenter))
+        }
 
-        TangemButton(
-            enabled = state.continueButtonEnabled,
+        ContinueButton(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .onGloballyPositioned {
                     continueButtonAreaHeight = it.size.height
-                }
-                .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    bottom = TangemTheme.dimens.spacing16,
-                )
-                .navigationBarsPadding()
-                .fillMaxWidth(),
-            text = stringResource(R.string.common_continue),
-            icon = if (state.continueButtonEnabled) {
-                TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
-            } else {
-                TangemButtonIconPosition.None
-            },
-            showProgress = false,
-            size = TangemButtonSize.Default,
-            colors = TangemButtonsDefaults.primaryButtonColors,
+                },
+            enabled = state.continueButtonEnabled,
             onClick = state.onContinueButtonClick,
         )
     }
+}
+
+@Composable
+private fun ContinueButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemButton(
+        enabled = enabled,
+        modifier = modifier
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
+            )
+            .navigationBarsPadding()
+            .fillMaxWidth(),
+        text = stringResource(R.string.common_continue),
+        icon = if (enabled) {
+            TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
+        } else {
+            TangemButtonIconPosition.None
+        },
+        showProgress = false,
+        size = TangemButtonSize.Default,
+        colors = TangemButtonsDefaults.primaryButtonColors,
+        onClick = onClick,
+        animateContentChange = true,
+    )
 }
 
 @Suppress("LongMethod")
@@ -226,6 +252,7 @@ private fun ScanWalletWarning(modifier: Modifier = Modifier) {
         Icon(
             modifier = Modifier.requiredSize(TangemTheme.dimens.size20),
             imageVector = ImageVector.vectorResource(R.drawable.ic_tangem_24),
+            tint = TangemTheme.colors.icon.primary1,
             contentDescription = null,
         )
         Text(
@@ -297,20 +324,24 @@ private fun PreviewContentTestOnDevice(
         var isShow by remember { mutableStateOf(false) }
 
         var contentState by remember {
-            mutableStateOf(
-                content.copy(
-                    continueButtonEnabled = true,
-                ),
-            )
+            mutableStateOf(content)
         }
 
         LaunchedEffect(Unit) {
-            contentState = contentState.copy(
+            contentState = content.copy(
                 onContinueButtonClick = {
                     contentState = contentState.copy(
                         isScanCardNotificationVisible = !contentState.isScanCardNotificationVisible,
                     )
                 },
+                continueButtonEnabled = true,
+                selectedWallet = content.selectedWallet.copy(
+                    onClick = {
+                        contentState = contentState.copy(
+                            continueButtonEnabled = !contentState.continueButtonEnabled,
+                        )
+                    },
+                ),
             )
         }
 
