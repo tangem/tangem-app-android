@@ -21,10 +21,10 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     @Suppress("UnusedPrivateMember")
     fun setTokenNetworks(networks: List<TokenMarketInfo.Network>) {
-        // TODO
+        // TODO AND-7986
     }
 
     fun setNoNetworksAvailable() {
-        // TODO
+        // TODO AND-7986
     }
 }

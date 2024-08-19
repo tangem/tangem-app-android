@@ -2,7 +2,7 @@ package com.tangem.features.markets.details.impl.model.state
 
 import com.tangem.domain.markets.TokenMarketInfo
 
-sealed class TokenNetworksState {
+internal sealed class TokenNetworksState {
 
     data object Loading : TokenNetworksState()
 
