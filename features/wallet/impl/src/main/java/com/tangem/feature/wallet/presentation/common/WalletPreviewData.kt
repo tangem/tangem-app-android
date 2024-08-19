@@ -2,13 +2,12 @@ package com.tangem.feature.wallet.presentation.common
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
@@ -66,119 +65,19 @@ internal object WalletPreviewData {
         )
     }
 
-    val coinIconState
-        get() = CurrencyIconState.CoinIcon(
-            url = null,
-            fallbackResId = R.drawable.img_polygon_22,
-            isGrayscale = false,
-            showCustomBadge = false,
-        )
-
-    private val tokenIconState
-        get() = CurrencyIconState.TokenIcon(
-            url = null,
-            topBadgeIconResId = R.drawable.img_polygon_22,
-            fallbackTint = TangemColorPalette.Black,
-            fallbackBackground = TangemColorPalette.Meadow,
-            isGrayscale = false,
-            showCustomBadge = false,
-        )
-
-    private val customTokenIconState
-        get() = CurrencyIconState.CustomTokenIcon(
-            tint = TangemColorPalette.Black,
-            background = TangemColorPalette.Meadow,
-            topBadgeIconResId = R.drawable.img_polygon_22,
-            isGrayscale = false,
-        )
-
-    val tokenItemVisibleState by lazy {
-        TokenItemState.Content(
-            id = UUID.randomUUID().toString(),
-            iconState = coinIconState,
-            titleState = TokenItemState.TitleState.Content(text = "Polygon", hasPending = true),
-            fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = true),
-            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
-            cryptoPriceState = TokenItemState.CryptoPriceState.Unknown,
-            onItemClick = {},
-            onItemLongClick = {},
-        )
-    }
-
-    val testnetTokenItemVisibleState by lazy {
-        tokenItemVisibleState.copy(
-            titleState = TokenItemState.TitleState.Content(text = "Polygon testnet"),
-            iconState = tokenIconState.copy(isGrayscale = true),
-        )
-    }
-
-    val tokenItemHiddenState by lazy {
-        TokenItemState.Content(
-            id = UUID.randomUUID().toString(),
-            iconState = tokenIconState,
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
-            fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = false),
-            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
-            cryptoPriceState = TokenItemState.CryptoPriceState.Content(
-                price = "312 USD",
-                priceChangePercent = "2.0%",
-                type = PriceChangeType.UP,
-            ),
-            onItemClick = {},
-            onItemLongClick = {},
-        )
-    }
-
-    val tokenItemDragState by lazy {
+    private val tokenItemDragState by lazy {
         TokenItemState.Draggable(
             id = UUID.randomUUID().toString(),
-            iconState = tokenIconState,
+            iconState = CurrencyIconState.TokenIcon(
+                url = null,
+                topBadgeIconResId = R.drawable.img_polygon_22,
+                fallbackTint = TangemColorPalette.Black,
+                fallbackBackground = TangemColorPalette.Meadow,
+                isGrayscale = false,
+                showCustomBadge = false,
+            ),
             titleState = TokenItemState.TitleState.Content(text = "Polygon"),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "3 172,14 $"),
-        )
-    }
-
-    val tokenItemUnreachableState by lazy {
-        TokenItemState.Unreachable(
-            id = UUID.randomUUID().toString(),
-            iconState = tokenIconState,
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
-            onItemClick = {},
-            onItemLongClick = {},
-        )
-    }
-
-    val tokenItemNoAddressState by lazy {
-        TokenItemState.NoAddress(
-            id = UUID.randomUUID().toString(),
-            iconState = tokenIconState,
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
-            onItemLongClick = {},
-        )
-    }
-
-    val customTokenItemVisibleState by lazy {
-        tokenItemVisibleState.copy(
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
-            iconState = customTokenIconState.copy(
-                tint = TangemColorPalette.White,
-                background = TangemColorPalette.Black,
-            ),
-        )
-    }
-
-    val customTestnetTokenItemVisibleState by lazy {
-        tokenItemVisibleState.copy(
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
-            iconState = customTokenIconState.copy(isGrayscale = true),
-        )
-    }
-
-    val loadingTokenItemState by lazy {
-        TokenItemState.Loading(
-            id = "Loading#1",
-            iconState = customTokenIconState.copy(isGrayscale = true),
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
         )
     }
 
