@@ -1,5 +1,3 @@
-import com.android.ide.common.resources.generateLocaleList
-
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
@@ -42,6 +40,7 @@ dependencies {
     implementation(deps.compose.coil)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.reorderable)
 
     /** Other libraries */
     implementation(deps.compose.accompanist.systemUiController)
