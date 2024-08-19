@@ -43,6 +43,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.events.StakingEventFactory
 import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountChangeStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountCurrencyChangeStateTransformer
@@ -64,7 +65,7 @@ import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LargeClass", "LongParameterList")
+@Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 @HiltViewModel
 internal class StakingViewModel @Inject constructor(
     private val stateController: StakingStateController,
@@ -122,6 +123,13 @@ internal class StakingViewModel @Inject constructor(
     private var userWallet: UserWallet by Delegates.notNull()
     private var appCurrency: AppCurrency by Delegates.notNull()
 
+    private val stakingEventFactory: StakingEventFactory
+        get() = StakingEventFactory(
+            stateController = stateController,
+            popBackStack = stakingStateRouter::onBackClick,
+            onFailedTxEmailClick = ::onFailedTxEmailClick,
+        )
+
     private var stakingApproval: StakingApproval = StakingApproval.Empty
     private val allowanceTaskScheduler = SingleTaskScheduler<BigDecimal>()
 
@@ -164,6 +172,8 @@ internal class StakingViewModel @Inject constructor(
                 val amountState = value.amountState as? AmountState.Data ?: error("No amount provided")
                 val amountValue = amountState.amountTextField.cryptoAmount.value ?: error("No amount value")
                 val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: error("No fee provided")
+                val defaultAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                    ?: error("No available address")
 
                 val stakingTransaction = getStakingTransactionUseCase(
                     userWalletId = userWalletId,
@@ -172,15 +182,16 @@ internal class StakingViewModel @Inject constructor(
                         actionCommonType = value.actionType,
                         integrationId = yield.id,
                         amount = amountValue,
-                        address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-                            ?: error("No available address"),
+                        address = defaultAddress,
                         validatorAddress = validatorState.chosenValidator.address,
                         token = yield.token,
                         passthrough = pendingAction?.passthrough,
                         type = pendingAction?.type,
                     ),
                 ).getOrElse {
-                    error(it)
+                    Timber.e(it.toString())
+                    stakingEventFactory.createStakingErrorAlert(it)
+                    return@launch
                 }
 
                 stakingTransaction
@@ -190,8 +201,11 @@ internal class StakingViewModel @Inject constructor(
                             networkId = cryptoCurrencyStatus.currency.network.id.value,
                             fee = fee,
                             transactionId = transaction.id,
-                        ).getOrNull() ?: error("No constructed transaction")
-
+                        ).getOrElse {
+                            Timber.e(it.toString())
+                            stakingEventFactory.createStakingErrorAlert(it)
+                            return@launch
+                        }
                         sendStakingTransaction(
                             transactionId = constructedTransaction.id,
                             gasEstimate = constructedTransaction.gasEstimate ?: error("No gas estimate available"),
@@ -296,8 +310,7 @@ internal class StakingViewModel @Inject constructor(
             userWallet = userWallet,
             cryptoCurrency = cryptoCurrencyStatus.currency,
         ).getOrElse {
-            // TODO staking error
-            return
+            return stakingEventFactory.createGenericErrorAlert(it.toString())
         }
 
         stateController.update(
@@ -407,7 +420,7 @@ internal class StakingViewModel @Inject constructor(
                             fee = TransactionFee.Single(fee),
                         ),
                     )
-                    // TODO staking error
+                    stakingEventFactory.createGenericErrorAlert(error.message ?: error.toString())
                     return@launch
                 },
                 ifRight = { it },
@@ -427,7 +440,7 @@ internal class StakingViewModel @Inject constructor(
                             fee = TransactionFee.Single(fee),
                         ),
                     )
-                    // TODO staking error
+                    stakingEventFactory.createSendTransactionErrorAlert(error)
                 },
                 ifRight = {
                     stateController.update(SetApprovalInProgressTransformer)
@@ -489,6 +502,10 @@ internal class StakingViewModel @Inject constructor(
         // TODO staking AND-7208
     }
 
+    override fun onFailedTxEmailClick(errorMessage: String) {
+        // TODO staking sending feedback email AND-7991
+    }
+
     fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
         innerRouter = router
         this.stakingStateRouter = stateRouter
@@ -505,7 +522,8 @@ internal class StakingViewModel @Inject constructor(
                     userWallet = wallet
                 },
                 ifLeft = {
-                    // TODO staking error
+                    Timber.e(it.toString())
+                    stakingEventFactory.createGenericErrorAlert(it.toString())
                 },
             )
             getCryptoCurrencyStatusSyncUseCase(userWalletId, cryptoCurrencyId).fold(
@@ -530,7 +548,8 @@ internal class StakingViewModel @Inject constructor(
                     )
                 },
                 ifLeft = {
-                    // TODO staking error
+                    Timber.e(it.toString())
+                    stakingEventFactory.createGenericErrorAlert(it.toString())
                 },
             )
         }
@@ -579,7 +598,7 @@ internal class StakingViewModel @Inject constructor(
                         pendingActionList = pendingActionList,
                     ),
                 )
-                // todo add error dialog
+                stakingEventFactory.createSendTransactionErrorAlert(error)
             },
             ifRight = { txHash ->
                 submitHash(transactionId, txHash)

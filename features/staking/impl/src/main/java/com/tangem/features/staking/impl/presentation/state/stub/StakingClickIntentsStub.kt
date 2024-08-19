@@ -8,6 +8,7 @@ import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import kotlinx.collections.immutable.ImmutableList
 
+@Suppress("TooManyFunctions")
 object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onBackClick() {}
@@ -45,6 +46,8 @@ object StakingClickIntentsStub : StakingClickIntents {
     override fun onExploreClick() {}
 
     override fun onShareClick() {}
+
+    override fun onFailedTxEmailClick(errorMessage: String) {}
 
     override fun onActiveStake(activeStake: BalanceState) {}
 }

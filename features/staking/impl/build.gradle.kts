@@ -61,6 +61,7 @@ dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
     implementation(projects.domain.txhistory)
 
     /** Common */
