@@ -7,12 +7,25 @@ import kotlinx.coroutines.flow.update
 
 internal typealias ChangedCurrencies = Map<ManagedCryptoCurrency.ID, Set<Network.ID>>
 
-internal interface ChangedCurrenciesManager {
+internal class ChangedCurrenciesManager {
 
-    val currenciesToAdd: MutableStateFlow<ChangedCurrencies>
-    val currenciesToRemove: MutableStateFlow<ChangedCurrencies>
+    val currenciesToAdd: MutableStateFlow<ChangedCurrencies> = MutableStateFlow(emptyMap())
+    val currenciesToRemove: MutableStateFlow<ChangedCurrencies> = MutableStateFlow(emptyMap())
 
-    fun updateChangedItems(
+    fun addCurrency(currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID) {
+        updateChangedItems(currencyId, networkId, currenciesToRemove, currenciesToAdd)
+    }
+
+    fun removeCurrency(currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID) {
+        updateChangedItems(currencyId, networkId, currenciesToAdd, currenciesToRemove)
+    }
+
+    fun containsCurrency(currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID): Boolean {
+        return networkId in currenciesToAdd.value[currencyId].orEmpty() ||
+            networkId in currenciesToRemove.value[currencyId].orEmpty()
+    }
+
+    private fun updateChangedItems(
         currencyId: ManagedCryptoCurrency.ID,
         networkId: Network.ID,
         removeFromIfPresent: MutableStateFlow<ChangedCurrencies>,
