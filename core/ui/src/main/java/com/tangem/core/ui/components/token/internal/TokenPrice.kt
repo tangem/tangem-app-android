@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.common.component.token
+package com.tangem.core.ui.components.token.internal
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Row
@@ -12,14 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.StringsSigns.DASH_SIGN
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState.CryptoPriceState as TokenPriceChangeState
+import com.tangem.core.ui.components.token.state.TokenItemState.CryptoPriceState as TokenPriceChangeState
 
 @Composable
 internal fun TokenPrice(state: TokenPriceChangeState?, modifier: Modifier = Modifier) {
