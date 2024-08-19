@@ -24,6 +24,9 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
 
     repositories {
+        flatDir {
+            dirs("app/libs")
+        }
         google {
             content {
                 includeGroupAndSubgroups("androidx")
@@ -90,11 +93,6 @@ dependencyResolutionManagement {
             }
             content {
                 includeGroupAndSubgroups("com.tangem.vico")
-            }
-        }
-        jcenter { // unable to replace with mavenCentral() due to rekotlin
-            content {
-                includeModule("org.rekotlin", "rekotlin")
             }
         }
         maven("https://jitpack.io")
