@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.common.component.token
+package com.tangem.core.ui.components.token.internal
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -8,11 +8,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.StringsSigns
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState.CryptoAmountState as TokenCryptoAmountState
+import com.tangem.core.ui.components.token.state.TokenItemState.CryptoAmountState as TokenCryptoAmountState
 
 @Composable
 internal fun TokenCryptoAmount(
