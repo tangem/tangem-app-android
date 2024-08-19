@@ -7,10 +7,12 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.entity.CurrencyItemUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
+import com.tangem.pagination.PaginationStatus
 
 internal typealias ManageTokensBatchAction = BatchAction<Int, ManageTokensListConfig, ManageTokensUpdateAction>
 
 internal data class ManageTokensListState(
+    val status: PaginationStatus<*> = PaginationStatus.None,
     val userWalletId: UserWalletId? = null,
     val uiBatches: List<Batch<Int, List<CurrencyItemUM>>> = mutableListOf(),
     val currencyBatches: List<Batch<Int, List<ManagedCryptoCurrency>>> = mutableListOf(),
