@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.domain.markets)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.wallets.models)
 
     /* Compose */
     implementation(deps.compose.coil)
@@ -46,6 +47,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.featuretoggles)
 
+    /* Common */
     implementation(projects.common.ui)
     implementation(projects.common.uiCharts)
 }
