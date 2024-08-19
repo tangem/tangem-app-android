@@ -4,7 +4,7 @@ import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -59,7 +59,7 @@ private fun UserWallet.getInfo(
 ): TextReference {
     val dividerRef = stringReference(value = " • ")
 
-    val cardCount = getCardCount()
+    val cardCount = getCardsCount() ?: 1
     val cardCountRef = TextReference.PluralRes(
         id = R.plurals.card_label_card_count,
         count = cardCount,
@@ -99,12 +99,4 @@ private fun getBalanceInfo(
     } else {
         combinedReference(cardCountRef, dividerRef, stringReference(BigDecimalFormatter.EMPTY_BALANCE_SIGN))
     }
-}
-
-private fun UserWallet.getCardCount() = when (val status = scanResponse.card.backupStatus) {
-    is CardDTO.BackupStatus.Active -> status.cardCount.inc()
-    is CardDTO.BackupStatus.CardLinked -> status.cardCount.inc()
-    is CardDTO.BackupStatus.NoBackup,
-    null,
-    -> 1
 }
