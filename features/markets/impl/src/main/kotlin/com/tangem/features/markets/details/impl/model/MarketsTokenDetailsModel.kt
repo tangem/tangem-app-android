@@ -296,9 +296,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                         )
                     }
 
-                    networksState.value = when {
-                        result.networks.isNullOrEmpty() -> TokenNetworksState.NoNetworksAvailable
-                        else -> TokenNetworksState.NetworksAvailable(result.networks!!)
+                    val networks = result.networks
+
+                    networksState.value = if (networks.isNullOrEmpty()) {
+                        TokenNetworksState.NoNetworksAvailable
+                    } else {
+                        TokenNetworksState.NetworksAvailable(networks)
                     }
 
                     chartDataProducer.runTransaction {
