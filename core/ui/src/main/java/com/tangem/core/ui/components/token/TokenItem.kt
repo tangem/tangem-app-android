@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.common.component
+package com.tangem.core.ui.components.token
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -16,15 +16,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Constraints
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.token.internal.*
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.rememberHapticFeedback
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.common.component.token.*
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
+import java.util.UUID
 import kotlin.math.max
 
 private const val TITLE_MIN_WIDTH_COEFFICIENT = 0.3
@@ -35,7 +38,7 @@ private enum class LayoutId {
 }
 
 @Composable
-internal fun TokenItem(
+fun TokenItem(
     state: TokenItemState,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
@@ -397,8 +400,8 @@ private fun Preview_TokenItem_InLight(@PreviewParameter(TokenItemStateProvider::
 
 private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenItemState>(
     collection = listOf(
-        WalletPreviewData.tokenItemVisibleState.copy(
-            iconState = WalletPreviewData.coinIconState.copy(showCustomBadge = true),
+        tokenItemVisibleState.copy(
+            iconState = coinIconState.copy(showCustomBadge = true),
             titleState = TokenItemState.TitleState.Content(
                 text = "PolygonPolygonPolygonPolygonPolygonPolygon",
                 hasPending = true,
@@ -414,13 +417,101 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
                 type = PriceChangeType.UP,
             ),
         ),
-        WalletPreviewData.tokenItemUnreachableState,
-        WalletPreviewData.tokenItemNoAddressState,
-        WalletPreviewData.tokenItemDragState,
-        WalletPreviewData.tokenItemHiddenState,
-        WalletPreviewData.loadingTokenItemState,
-        WalletPreviewData.testnetTokenItemVisibleState,
-        WalletPreviewData.customTokenItemVisibleState,
-        WalletPreviewData.customTestnetTokenItemVisibleState,
+        TokenItemState.Unreachable(
+            id = UUID.randomUUID().toString(),
+            iconState = tokenIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            onItemClick = {},
+            onItemLongClick = {},
+        ),
+        TokenItemState.NoAddress(
+            id = UUID.randomUUID().toString(),
+            iconState = tokenIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            onItemLongClick = {},
+        ),
+        TokenItemState.Draggable(
+            id = UUID.randomUUID().toString(),
+            iconState = tokenIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "3 172,14 $"),
+        ),
+        TokenItemState.Content(
+            id = UUID.randomUUID().toString(),
+            iconState = tokenIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = false),
+            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
+            cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+                price = "312 USD",
+                priceChangePercent = "2.0%",
+                type = PriceChangeType.UP,
+            ),
+            onItemClick = {},
+            onItemLongClick = {},
+        ),
+        TokenItemState.Loading(
+            id = "Loading#1",
+            iconState = customTokenIconState.copy(isGrayscale = true),
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+        ),
+        tokenItemVisibleState.copy(
+            titleState = TokenItemState.TitleState.Content(text = "Polygon testnet"),
+            iconState = tokenIconState.copy(isGrayscale = true),
+        ),
+        tokenItemVisibleState.copy(
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            iconState = customTokenIconState.copy(
+                tint = TangemColorPalette.White,
+                background = TangemColorPalette.Black,
+            ),
+        ),
+        tokenItemVisibleState.copy(
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            iconState = customTokenIconState.copy(isGrayscale = true),
+        ),
     ),
-)
+) {
+
+    companion object {
+
+        val coinIconState
+            get() = CurrencyIconState.CoinIcon(
+                url = null,
+                fallbackResId = R.drawable.img_polygon_22,
+                isGrayscale = false,
+                showCustomBadge = false,
+            )
+
+        val tokenIconState
+            get() = CurrencyIconState.TokenIcon(
+                url = null,
+                topBadgeIconResId = R.drawable.img_polygon_22,
+                fallbackTint = TangemColorPalette.Black,
+                fallbackBackground = TangemColorPalette.Meadow,
+                isGrayscale = false,
+                showCustomBadge = false,
+            )
+
+        private val customTokenIconState
+            get() = CurrencyIconState.CustomTokenIcon(
+                tint = TangemColorPalette.Black,
+                background = TangemColorPalette.Meadow,
+                topBadgeIconResId = R.drawable.img_polygon_22,
+                isGrayscale = false,
+            )
+
+        val tokenItemVisibleState by lazy {
+            TokenItemState.Content(
+                id = UUID.randomUUID().toString(),
+                iconState = coinIconState,
+                titleState = TokenItemState.TitleState.Content(text = "Polygon", hasPending = true),
+                fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = true),
+                cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
+                cryptoPriceState = TokenItemState.CryptoPriceState.Unknown,
+                onItemClick = {},
+                onItemLongClick = {},
+            )
+        }
+    }
+}
