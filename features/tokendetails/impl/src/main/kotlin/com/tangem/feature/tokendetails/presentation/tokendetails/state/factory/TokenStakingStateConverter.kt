@@ -9,6 +9,7 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
@@ -26,15 +27,19 @@ internal class TokenStakingStateConverter(
             ifLeft = {
                 StakingBlockUM.Error(iconState = iconState)
             },
-            ifRight = {
+            ifRight = { stakingEntryInfo ->
+                val apr = BigDecimalFormatter.formatPercent(
+                    percent = stakingEntryInfo.apr,
+                    useAbsoluteValue = true,
+                )
                 StakingBlockUM.StakeAvailable(
-                    interestRate = BigDecimalFormatter.formatPercent(
-                        percent = it.interestRate,
-                        useAbsoluteValue = true,
+                    titleText = resourceReference(
+                        id = R.string.token_details_staking_block_title,
+                        formatArgs = wrappedList(apr),
                     ),
                     subtitleText = resourceReference(
-                        id = getEarnRewardsPeriod(it.rewardSchedule),
-                        formatArgs = wrappedList(it.tokenSymbol),
+                        id = getEarnRewardsPeriod(stakingEntryInfo.rewardSchedule),
+                        formatArgs = wrappedList(stakingEntryInfo.tokenSymbol),
                     ),
                     iconState = iconState,
                     onStakeClicked = clickIntents::onStakeBannerClick,

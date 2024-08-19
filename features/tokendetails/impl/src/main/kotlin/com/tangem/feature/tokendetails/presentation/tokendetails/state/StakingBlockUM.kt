@@ -21,7 +21,7 @@ internal sealed interface StakingBlockUM {
 
     data class StakeAvailable(
         val iconState: IconState,
-        val interestRate: String,
+        val titleText: TextReference,
         val subtitleText: TextReference,
         val onStakeClicked: () -> Unit,
     ) : StakingBlockUM

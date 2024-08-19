@@ -140,7 +140,7 @@ internal class DefaultStakingRepository(
             val yield = getYield(cryptoCurrencyId, symbol)
 
             StakingEntryInfo(
-                interestRate = requireNotNull(yield.validators.maxByOrNull { it.apr.orZero() }?.apr),
+                apr = requireNotNull(yield.validators.maxByOrNull { it.apr.orZero() }?.apr),
                 rewardSchedule = yield.metadata.rewardSchedule,
                 tokenSymbol = yield.token.symbol,
             )

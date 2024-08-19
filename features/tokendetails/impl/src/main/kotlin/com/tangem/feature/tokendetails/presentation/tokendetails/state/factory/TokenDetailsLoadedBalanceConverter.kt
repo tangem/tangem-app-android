@@ -192,17 +192,19 @@ internal class TokenDetailsLoadedBalanceConverter(
         stakingEntryInfo: StakingEntryInfo,
         iconState: IconState,
     ): StakingBlockUM.StakeAvailable {
+        val apr = BigDecimalFormatter.formatPercent(
+            percent = stakingEntryInfo.apr,
+            useAbsoluteValue = true,
+        )
         return StakingBlockUM.StakeAvailable(
-            interestRate = BigDecimalFormatter.formatPercent(
-                percent = stakingEntryInfo.interestRate,
-                useAbsoluteValue = true,
+            titleText = resourceReference(
+                id = R.string.token_details_staking_block_title,
+                formatArgs = wrappedList(apr),
             ),
             subtitleText = resourceReference(
                 id = getEarnRewardsPeriod(stakingEntryInfo.rewardSchedule),
                 formatArgs = wrappedList(stakingEntryInfo.tokenSymbol),
             ),
-            // periodInDays = stakingEntryInfo.periodInDays,
-            // tokenSymbol = stakingEntryInfo.tokenSymbol,
             iconState = iconState,
             onStakeClicked = clickIntents::onStakeBannerClick,
         )

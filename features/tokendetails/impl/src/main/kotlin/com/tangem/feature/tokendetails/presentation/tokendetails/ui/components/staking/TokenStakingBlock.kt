@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerW8
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -87,11 +88,7 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
             SpacerW8()
             Column {
                 Text(
-                    text = stringResource(
-                        // TODO staking
-                        R.string.token_details_staking_block_title,
-                        state.interestRate,
-                    ),
+                    text = state.titleText.resolveReference(),
                     color = TangemTheme.colors.text.primary1,
                     style = TangemTheme.typography.subtitle2,
                 )
@@ -159,8 +156,9 @@ private fun StakingLoading(iconState: IconState, modifier: Modifier = Modifier) 
         }
         SecondaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = "Loading", // TODO staking
-            onClick = { /* TODO staking AND-7134 */ },
+            showProgress = true,
+            text = TextReference.EMPTY.resolveReference(),
+            onClick = { /* no-op */ },
         )
     }
 }

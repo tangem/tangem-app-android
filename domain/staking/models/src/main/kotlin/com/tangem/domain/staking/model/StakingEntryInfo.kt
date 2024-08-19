@@ -4,7 +4,7 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import java.math.BigDecimal
 
 data class StakingEntryInfo(
-    val interestRate: BigDecimal,
+    val apr: BigDecimal,
     val rewardSchedule: Yield.Metadata.RewardSchedule,
     val tokenSymbol: String,
 )
