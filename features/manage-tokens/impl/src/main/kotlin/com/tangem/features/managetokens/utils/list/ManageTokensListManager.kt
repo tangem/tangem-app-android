@@ -19,11 +19,11 @@ import com.tangem.features.managetokens.impl.R
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
@@ -38,37 +38,37 @@ internal class ManageTokensListManager @Inject constructor(
     private val checkHasLinkedTokensUseCase: CheckHasLinkedTokensUseCase,
     private val messageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
-) : ChangedCurrenciesManager,
-    ManageTokensUiManager(
-        messageSender = messageSender,
-        dispatchers = dispatchers,
-    ) {
+) : ManageTokensUiActions {
 
-    override lateinit var scope: CoroutineScope
+    private lateinit var scope: CoroutineScope
 
     private val jobHolder = JobHolder()
-    private val actionsFlow = MutableSharedFlow<ManageTokensBatchAction>(
+    private val actionsFlow: MutableSharedFlow<ManageTokensBatchAction> = MutableSharedFlow(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    override val state: MutableStateFlow<ManageTokensListState> = MutableStateFlow(ManageTokensListState())
+    private val state: MutableStateFlow<ManageTokensListState> = MutableStateFlow(ManageTokensListState())
 
-    val paginationStatus: MutableStateFlow<PaginationStatus<*>> = MutableStateFlow(PaginationStatus.None)
+    private val changedCurrenciesManager = ChangedCurrenciesManager()
+    private val uiManager = ManageTokensUiManager(
+        state = state,
+        messageSender = messageSender,
+        dispatchers = dispatchers,
+        actions = this,
+        scopeProvider = Provider { scope },
+    )
 
-    override val currenciesToAdd: MutableStateFlow<ChangedCurrencies> = MutableStateFlow(emptyMap())
-    override val currenciesToRemove: MutableStateFlow<ChangedCurrencies> = MutableStateFlow(emptyMap())
+    val currenciesToAdd: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToAdd
+    val currenciesToRemove: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToRemove
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val uiItems: Flow<ImmutableList<CurrencyItemUM>> = state
-        .mapLatest { state ->
-            state.uiBatches.asSequence()
-                .flatMap { it.data }
-                .toImmutableList()
-        }
+    val paginationStatus: Flow<PaginationStatus<*>> = state
+        .mapLatest { it.status }
         .distinctUntilChanged()
+    val uiItems: Flow<ImmutableList<CurrencyItemUM>> = uiManager.items
 
-    suspend fun launch(userWalletId: UserWalletId?) = coroutineScope {
+    suspend fun launchPagination(userWalletId: UserWalletId?) = coroutineScope {
         scope = this
 
         val batchFlow = getManagedTokensUseCase(
@@ -120,7 +120,11 @@ internal class ManageTokensListManager @Inject constructor(
         batchListState: BatchListState<Int, List<ManagedCryptoCurrency>>,
         userWalletId: UserWalletId?,
     ) {
-        paginationStatus.value = batchListState.status
+        state.update { state ->
+            state.copy(
+                status = batchListState.status,
+            )
+        }
 
         state.update { state ->
             val newBatches = batchListState.data
@@ -138,20 +142,20 @@ internal class ManageTokensListManager @Inject constructor(
             state.copy(
                 userWalletId = userWalletId,
                 currencyBatches = newBatches,
-                uiBatches = getUiBatches(newBatches, canEditItems),
+                uiBatches = uiManager.createOrUpdateUiBatches(newBatches, canEditItems),
                 canEditItems = canEditItems,
             )
         }
     }
 
     override fun addCurrency(batchKey: Int, currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID) {
-        updateChangedItems(currencyId, networkId, currenciesToRemove, currenciesToAdd)
+        changedCurrenciesManager.addCurrency(currencyId, networkId)
 
         sendSelectCurrencyAction(batchKey, currencyId, networkId, isSelected = true)
     }
 
     override fun removeCurrency(batchKey: Int, currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID) {
-        updateChangedItems(currencyId, networkId, currenciesToAdd, currenciesToRemove)
+        changedCurrenciesManager.removeCurrency(currencyId, networkId)
 
         sendSelectCurrencyAction(batchKey, currencyId, networkId, isSelected = false)
     }
@@ -159,8 +163,7 @@ internal class ManageTokensListManager @Inject constructor(
     override fun checkNeedToShowRemoveNetworkWarning(
         currencyId: ManagedCryptoCurrency.ID,
         networkId: Network.ID,
-    ): Boolean = networkId !in currenciesToRemove.value[currencyId].orEmpty() &&
-        networkId !in currenciesToAdd.value[currencyId].orEmpty()
+    ): Boolean = !changedCurrenciesManager.containsCurrency(currencyId, networkId)
 
     private fun sendSelectCurrencyAction(
         batchKey: Int,
