@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import androidx.annotation.DrawableRes
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.impl.R
