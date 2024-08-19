@@ -4,7 +4,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.ContentMessage
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.entity.CurrencyItemUM
 import com.tangem.features.managetokens.ui.dialog.HasLinkedTokensWarning
 import com.tangem.features.managetokens.ui.dialog.HideTokenWarning
@@ -12,21 +11,36 @@ import com.tangem.features.managetokens.utils.mapper.toUiModel
 import com.tangem.features.managetokens.utils.ui.toggleExpanded
 import com.tangem.features.managetokens.utils.ui.update
 import com.tangem.pagination.Batch
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-internal abstract class ManageTokensUiManager(
+internal class ManageTokensUiManager(
+    private val state: MutableStateFlow<ManageTokensListState>,
     private val messageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val scopeProvider: Provider<CoroutineScope>,
+    private val actions: ManageTokensUiActions,
 ) {
 
-    abstract val scope: CoroutineScope
-    abstract val state: MutableStateFlow<ManageTokensListState>
+    private val scope: CoroutineScope
+        get() = scopeProvider()
 
-    protected fun getUiBatches(
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val items: Flow<ImmutableList<CurrencyItemUM>> = state
+        .mapLatest { state ->
+            state.uiBatches.asSequence()
+                .flatMap { it.data }
+                .toImmutableList()
+        }
+        .distinctUntilChanged()
+
+    fun createOrUpdateUiBatches(
         newCurrencyBatches: List<Batch<Int, List<ManagedCryptoCurrency>>>,
         canEditItems: Boolean,
     ): List<Batch<Int, List<CurrencyItemUM>>> {
@@ -128,31 +142,22 @@ internal abstract class ManageTokensUiManager(
         if (currency !is ManagedCryptoCurrency.Token) return@launch
 
         if (isSelected) {
-            addCurrency(batchKey, currency.id, source.id)
+            actions.addCurrency(batchKey, currency.id, source.id)
         } else {
-            if (checkNeedToShowRemoveNetworkWarning(currency.id, source.id)) {
+            if (actions.checkNeedToShowRemoveNetworkWarning(currency.id, source.id)) {
                 showRemoveNetworkWarning(
                     currency = currency,
                     network = source.network,
                     isCoin = source is ManagedCryptoCurrency.SourceNetwork.Main,
                     onConfirm = {
-                        removeCurrency(batchKey, currency.id, source.id)
+                        actions.removeCurrency(batchKey, currency.id, source.id)
                     },
                 )
             } else {
-                removeCurrency(batchKey, currency.id, source.id)
+                actions.removeCurrency(batchKey, currency.id, source.id)
             }
         }
     }
-
-    protected abstract fun addCurrency(batchKey: Int, currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID)
-
-    protected abstract fun removeCurrency(batchKey: Int, currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID)
-
-    protected abstract fun checkNeedToShowRemoveNetworkWarning(
-        currencyId: ManagedCryptoCurrency.ID,
-        networkId: Network.ID,
-    ): Boolean
 
     private suspend fun showRemoveNetworkWarning(
         currency: ManagedCryptoCurrency,
@@ -164,7 +169,7 @@ internal abstract class ManageTokensUiManager(
         val hasLinkedTokens = if (userWalletId == null || !isCoin) {
             false
         } else {
-            checkHasLinkedTokens(userWalletId, network)
+            actions.checkHasLinkedTokens(userWalletId, network)
         }
 
         val message = ContentMessage { onDismiss ->
@@ -188,8 +193,6 @@ internal abstract class ManageTokensUiManager(
 
         messageSender.send(message)
     }
-
-    protected abstract suspend fun checkHasLinkedTokens(userWalletId: UserWalletId, network: Network): Boolean
 
     private fun Batch<Int, List<ManagedCryptoCurrency>>.currencyIndexById(id: ManagedCryptoCurrency.ID): Int {
         return data
