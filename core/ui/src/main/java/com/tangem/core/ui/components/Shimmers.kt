@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -101,7 +102,11 @@ fun TextShimmer(
  * Height and min width will be set automatically
  */
 @Composable
-fun SmallButtonShimmer(modifier: Modifier = Modifier, withIcon: Boolean = false) {
+fun SmallButtonShimmer(
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(size = TangemTheme.dimens.radius16),
+    withIcon: Boolean = false,
+) {
     PrimarySmallButton(
         config = SmallButtonConfig(
             text = stringReference("B"),
@@ -113,7 +118,7 @@ fun SmallButtonShimmer(modifier: Modifier = Modifier, withIcon: Boolean = false)
             },
         ),
         modifier = modifier
-            .clip(RoundedCornerShape(size = TangemTheme.dimens.radius16))
+            .clip(shape)
             .shimmer(LocalTangemShimmer.current),
     )
 }
