@@ -12,7 +12,6 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -23,6 +22,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryTransactionStateConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getStringResourceId
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.impl.R
@@ -202,7 +202,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                 formatArgs = wrappedList(apr),
             ),
             subtitleText = resourceReference(
-                id = getEarnRewardsPeriod(stakingEntryInfo.rewardSchedule),
+                id = stakingEntryInfo.rewardSchedule.getStringResourceId(),
                 formatArgs = wrappedList(stakingEntryInfo.tokenSymbol),
             ),
             iconState = iconState,
@@ -301,27 +301,5 @@ internal class TokenDetailsLoadedBalanceConverter(
         val totalAmount = amount.getBalance(selectedBalanceType, stakingCryptoAmount)
 
         return BigDecimalFormatter.formatCryptoAmount(totalAmount, status.currency.symbol, status.currency.decimals)
-    }
-}
-
-fun getEarnRewardsPeriod(rewardSchedule: Yield.Metadata.RewardSchedule): Int {
-    return when (rewardSchedule) {
-        Yield.Metadata.RewardSchedule.BLOCK,
-        Yield.Metadata.RewardSchedule.DAY,
-        Yield.Metadata.RewardSchedule.ERA,
-        Yield.Metadata.RewardSchedule.EPOCH,
-        -> R.string.staking_notification_earn_rewards_text_period_day
-
-        Yield.Metadata.RewardSchedule.HOUR,
-        -> R.string.staking_notification_earn_rewards_text_period_hour
-
-        Yield.Metadata.RewardSchedule.WEEK,
-        -> R.string.staking_notification_earn_rewards_text_period_week
-
-        Yield.Metadata.RewardSchedule.MONTH,
-        -> R.string.staking_notification_earn_rewards_text_period_month
-
-        else
-        -> R.string.staking_notification_earn_rewards_text_period_day
     }
 }
