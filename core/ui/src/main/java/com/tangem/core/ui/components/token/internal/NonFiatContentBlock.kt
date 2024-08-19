@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.common.component.token
+package com.tangem.core.ui.components.token.internal
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
@@ -12,9 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import com.tangem.core.ui.R
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorder
 
