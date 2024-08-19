@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.organizetokens.model
 
 import androidx.compose.runtime.Immutable
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem.RoundingMode
 
 /**

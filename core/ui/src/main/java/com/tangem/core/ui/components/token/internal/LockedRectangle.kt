@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.common.component.token
+package com.tangem.core.ui.components.token.internal
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
