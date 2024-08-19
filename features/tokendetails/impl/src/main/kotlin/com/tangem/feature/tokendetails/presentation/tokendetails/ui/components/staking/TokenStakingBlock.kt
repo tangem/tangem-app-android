@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerW8
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
@@ -87,6 +88,7 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
             Column {
                 Text(
                     text = stringResource(
+                        // TODO staking
                         R.string.token_details_staking_block_title,
                         state.interestRate,
                     ),
@@ -97,11 +99,7 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
                 Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
 
                 Text(
-                    text = stringResource(
-                        R.string.token_details_staking_block_subtitle,
-                        state.tokenSymbol,
-                        state.periodInDays,
-                    ),
+                    text = state.subtitleText.resolveReference(),
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.body2,
                 )

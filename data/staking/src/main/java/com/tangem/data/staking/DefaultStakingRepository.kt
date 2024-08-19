@@ -141,7 +141,7 @@ internal class DefaultStakingRepository(
 
             StakingEntryInfo(
                 interestRate = requireNotNull(yield.validators.maxByOrNull { it.apr.orZero() }?.apr),
-                periodInDays = yield.metadata.cooldownPeriod.days,
+                rewardSchedule = yield.metadata.rewardSchedule,
                 tokenSymbol = yield.token.symbol,
             )
         }

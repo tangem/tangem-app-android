@@ -144,8 +144,7 @@ internal object TokenDetailsPreviewData {
 
     val stakingAvailableBlock = StakingBlockUM.StakeAvailable(
         interestRate = "7.38",
-        periodInDays = 4,
-        tokenSymbol = "XLM",
+        subtitleText = resourceReference(R.string.staking_notification_earn_rewards_text_period_day),
         iconState = iconState,
         onStakeClicked = {},
     )

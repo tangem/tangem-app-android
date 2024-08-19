@@ -1,6 +1,8 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import arrow.core.Either
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.StakingError
@@ -30,8 +32,10 @@ internal class TokenStakingStateConverter(
                         percent = it.interestRate,
                         useAbsoluteValue = true,
                     ),
-                    periodInDays = it.periodInDays,
-                    tokenSymbol = it.tokenSymbol,
+                    subtitleText = resourceReference(
+                        id = getEarnRewardsPeriod(it.rewardSchedule),
+                        formatArgs = wrappedList(it.tokenSymbol),
+                    ),
                     iconState = iconState,
                     onStakeClicked = clickIntents::onStakeBannerClick,
                 )
