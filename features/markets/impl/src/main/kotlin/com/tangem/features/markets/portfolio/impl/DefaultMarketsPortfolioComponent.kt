@@ -5,6 +5,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.model.MarketsPortfolioModel
 import com.tangem.features.markets.portfolio.impl.ui.MyPortfolio
@@ -20,6 +21,9 @@ internal class DefaultMarketsPortfolioComponent @AssistedInject constructor(
 ) : AppComponentContext by context, MarketsPortfolioComponent {
 
     private val model: MarketsPortfolioModel = getOrCreateModel(params)
+
+    override fun setTokenNetworks(networks: List<TokenMarketInfo.Network>) = model.setTokenNetworks(networks)
+    override fun setNoNetworksAvailable() = model.setNoNetworksAvailable()
 
     @Composable
     override fun Content(modifier: Modifier) {
