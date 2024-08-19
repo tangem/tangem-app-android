@@ -314,7 +314,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onInitialInfoBannerClick() {
-        // innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
+        innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
     }
 
     override fun onInfoClick(infoType: InfoType) {
@@ -677,7 +677,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private companion object {
-        const val WHAT_IS_STAKING_ARTICLE_URL = "TODO staking"
+        const val WHAT_IS_STAKING_ARTICLE_URL = "https://tangem.com/en/blog/post/how-to-stake-cryptocurrency/"
         const val ALLOWANCE_UPDATE_DELAY = 10_000L
         const val BALANCE_UPDATE_DELAY = 11_000L
     }
