@@ -3,6 +3,7 @@ package com.tangem.features.markets.details.impl.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.ui.charts.state.*
+import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
@@ -43,6 +44,7 @@ import javax.inject.Inject
 
 @Suppress("LargeClass", "LongParameterList")
 @Stable
+@ComponentScoped
 internal class MarketsTokenDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
