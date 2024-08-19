@@ -34,12 +34,12 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.ui.preview.PreviewAddToPortfolioBSContentProvider
-import com.tangem.features.markets.portfolio.impl.ui.state.AddToPortfolioBSContent
+import com.tangem.features.markets.portfolio.impl.ui.state.AddToPortfolioBSContentUM
 import com.tangem.features.markets.portfolio.impl.ui.state.SelectNetworkUM
 
 @Composable
 internal fun AddToPortfolioBottomSheet(config: TangemBottomSheetConfig) {
-    TangemBottomSheet<AddToPortfolioBSContent>(
+    TangemBottomSheet<AddToPortfolioBSContentUM>(
         config = config,
         containerColor = TangemTheme.colors.background.tertiary,
         titleText = resourceReference(R.string.markets_add_to_portfolio_button),
@@ -48,13 +48,13 @@ internal fun AddToPortfolioBottomSheet(config: TangemBottomSheetConfig) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = TangemTheme.dimens.spacing16),
-            state = config.content as AddToPortfolioBSContent,
+            state = config.content as AddToPortfolioBSContentUM,
         )
     }
 }
 
 @Composable
-private fun Content(state: AddToPortfolioBSContent, modifier: Modifier = Modifier) {
+private fun Content(state: AddToPortfolioBSContentUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing16),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
@@ -194,7 +194,7 @@ private fun ScanWalletWarning(modifier: Modifier = Modifier) {
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun Preview(
-    @PreviewParameter(PreviewAddToPortfolioBSContentProvider::class) content: AddToPortfolioBSContent,
+    @PreviewParameter(PreviewAddToPortfolioBSContentProvider::class) content: AddToPortfolioBSContentUM,
 ) {
     TangemThemePreview {
         AddToPortfolioBottomSheet(
@@ -211,7 +211,7 @@ private fun Preview(
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun PreviewContent(
-    @PreviewParameter(PreviewAddToPortfolioBSContentProvider::class) content: AddToPortfolioBSContent,
+    @PreviewParameter(PreviewAddToPortfolioBSContentProvider::class) content: AddToPortfolioBSContentUM,
 ) {
     TangemThemePreview {
         Content(
@@ -227,7 +227,7 @@ private fun PreviewContent(
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun PreviewContentRtl(
-    @PreviewParameter(PreviewAddToPortfolioBSContentProvider::class) content: AddToPortfolioBSContent,
+    @PreviewParameter(PreviewAddToPortfolioBSContentProvider::class) content: AddToPortfolioBSContentUM,
 ) {
     TangemThemePreview(rtl = true) {
         Content(

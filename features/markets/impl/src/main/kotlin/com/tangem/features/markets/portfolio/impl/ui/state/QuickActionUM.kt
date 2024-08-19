@@ -7,7 +7,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.markets.impl.R
 
 @Immutable
-enum class QuickActionUM(
+internal enum class QuickActionUM(
     val title: TextReference,
     val description: TextReference,
     @DrawableRes val icon: Int,

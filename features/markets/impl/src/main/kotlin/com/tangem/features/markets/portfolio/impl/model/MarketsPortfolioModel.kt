@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 @Stable
 @ComponentScoped
-class MarketsPortfolioModel @Inject constructor(
+internal class MarketsPortfolioModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {

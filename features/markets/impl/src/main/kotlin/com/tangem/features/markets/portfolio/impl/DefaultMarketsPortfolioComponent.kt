@@ -14,7 +14,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 @Stable
-class DefaultMarketsPortfolioComponent @AssistedInject constructor(
+internal class DefaultMarketsPortfolioComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: MarketsPortfolioComponent.Params,
 ) : AppComponentContext by context, MarketsPortfolioComponent {

@@ -6,15 +6,15 @@ import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.portfolio.impl.ui.state.AddToPortfolioBSContent
+import com.tangem.features.markets.portfolio.impl.ui.state.AddToPortfolioBSContentUM
 import com.tangem.features.markets.portfolio.impl.ui.state.SelectNetworkUM
 import kotlinx.collections.immutable.persistentListOf
 
-internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider<AddToPortfolioBSContent> {
+internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider<AddToPortfolioBSContentUM> {
 
-    override val values: Sequence<AddToPortfolioBSContent>
+    override val values: Sequence<AddToPortfolioBSContentUM>
         get() = sequenceOf(
-            AddToPortfolioBSContent(
+            AddToPortfolioBSContentUM(
                 selectedWallet = UserWalletItemUM(
                     id = UserWalletId("1"),
                     name = stringReference("Wallet 1"),

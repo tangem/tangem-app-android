@@ -3,7 +3,7 @@ package com.tangem.features.markets.portfolio.impl.ui.state
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import kotlinx.collections.immutable.ImmutableList
 
-data class SelectNetworkUM(
+internal data class SelectNetworkUM(
     val tokenId: String,
     val iconUrl: String?,
     val tokenName: String,
