@@ -55,7 +55,7 @@ internal class ManageTokensModel @Inject constructor(
         ).launchIn(modelScope)
 
         modelScope.launch {
-            manageTokensListManager.launch(params.userWalletId)
+            manageTokensListManager.launchPagination(params.userWalletId)
         }
     }
 
@@ -110,7 +110,7 @@ internal class ManageTokensModel @Inject constructor(
                 onActiveChange = ::toggleSearchBar,
             ),
             hasChanges = false,
-            saveChanges = ::onSaveClick,
+            saveChanges = ::saveChanges,
             loadMore = ::loadMoreItems,
         )
     }
@@ -126,7 +126,9 @@ internal class ManageTokensModel @Inject constructor(
     private fun updatePaginationStatus(status: PaginationStatus<*>) {
         state.update { state ->
             when (status) {
-                is PaginationStatus.InitialLoading -> {
+                is PaginationStatus.None,
+                is PaginationStatus.InitialLoading,
+                -> {
                     if (state.search.isActive) {
                         state
                     } else {
@@ -151,7 +153,6 @@ internal class ManageTokensModel @Inject constructor(
                         isNextBatchLoading = false,
                     )
                 }
-                is PaginationStatus.None,
                 is PaginationStatus.Paginating,
                 is PaginationStatus.EndOfPagination,
                 -> state.copySealed(
@@ -172,7 +173,7 @@ internal class ManageTokensModel @Inject constructor(
 
     private fun loadMoreItems(): Boolean {
         val state = state.value
-        if (state.isInitialBatchLoading) return false
+        if (state.isInitialBatchLoading || state.isNextBatchLoading) return false
 
         modelScope.launch {
             manageTokensListManager.loadMore(
@@ -192,7 +193,7 @@ internal class ManageTokensModel @Inject constructor(
         // TODO: [REDACTED_JIRA]
     }
 
-    private fun onSaveClick() {
+    private fun saveChanges() {
         // TODO: [REDACTED_JIRA]
     }
 
