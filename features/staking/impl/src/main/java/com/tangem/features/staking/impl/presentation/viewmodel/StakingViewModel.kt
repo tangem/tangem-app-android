@@ -327,7 +327,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onAmountValueChange(value: String) {
-        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, yield, value))
+        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, value, yield))
     }
 
     override fun onAmountPasteTriggerDismiss() {
@@ -357,7 +357,7 @@ internal class StakingViewModel @Inject constructor(
             StakingActionCommonType.PENDING_OTHER
         }
         stateController.update(ValidatorSelectChangeTransformer(activeStake.validator))
-        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, yield, activeStake.cryptoValue))
+        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, activeStake.cryptoValue, yield))
         onNextClick(actionType, activeStake.pendingActions)
     }
 

@@ -8,7 +8,7 @@ import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import kotlinx.collections.immutable.ImmutableList
 
-object StakingClickIntentsStub : StakingClickIntents {
+internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onBackClick() {}
 
