@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.common.component.token
+package com.tangem.core.ui.components.token.internal
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Row
@@ -14,11 +14,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.StringsSigns
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState.FiatAmountState as TokenFiatAmountState
+import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState as TokenFiatAmountState
 
 @Composable
 internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
