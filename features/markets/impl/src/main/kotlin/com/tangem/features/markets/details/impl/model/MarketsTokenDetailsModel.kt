@@ -26,6 +26,7 @@ import com.tangem.features.markets.details.impl.model.formatter.*
 import com.tangem.features.markets.details.impl.model.formatter.formatAsPrice
 import com.tangem.features.markets.details.impl.model.formatter.getChangePercentBetween
 import com.tangem.features.markets.details.impl.model.formatter.getPercentByInterval
+import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
@@ -119,6 +120,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     val containerBottomSheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
     val isVisibleOnScreen = MutableStateFlow(false)
+    val networksState = MutableStateFlow<TokenNetworksState>(TokenNetworksState.Loading)
 
     val state = MutableStateFlow(
         MarketsTokenDetailsUM(
@@ -292,6 +294,14 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                                 infoBlocks = infoConverter.convert(result),
                             ),
                         )
+                    }
+
+                    val networks = result.networks
+
+                    networksState.value = if (networks.isNullOrEmpty()) {
+                        TokenNetworksState.NoNetworksAvailable
+                    } else {
+                        TokenNetworksState.NetworksAvailable(networks)
                     }
 
                     chartDataProducer.runTransaction {
