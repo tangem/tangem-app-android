@@ -45,7 +45,6 @@ import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
@@ -261,25 +260,27 @@ internal class DefaultStakingRepository(
 
     override suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
-        address: CryptoCurrencyAddress,
+        cryptoCurrency: CryptoCurrency,
         refresh: Boolean,
     ) = withContext(dispatchers.io) {
         if (!stakingFeatureToggle.isStakingEnabled) return@withContext
 
-        val cryptoCurrency = address.cryptoCurrency
         val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()] ?: return@withContext
+
+        val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network).orEmpty()
 
         cacheRegistry.invokeOnExpire(
             key = getYieldBalancesKey(userWalletId),
             skipCache = refresh,
             block = {
-                val requestBody = getBalanceRequestData(address.address, integrationId)
+                val requestBody = getBalanceRequestData(address, integrationId)
                 val result = stakeKitApi.getSingleYieldBalance(
                     integrationId = requestBody.integrationId,
                     body = requestBody,
                 ).getOrThrow()
 
                 stakingBalanceStore.store(
+                    userWalletId,
                     requestBody.integrationId,
                     YieldBalanceWrapperDTO(
                         balances = result,
@@ -292,15 +293,15 @@ internal class DefaultStakingRepository(
 
     override fun getSingleYieldBalanceFlow(
         userWalletId: UserWalletId,
-        address: CryptoCurrencyAddress,
+        cryptoCurrency: CryptoCurrency,
     ): Flow<YieldBalance> = channelFlow {
         if (!stakingFeatureToggle.isStakingEnabled) {
             send(YieldBalance.Empty)
         } else {
             launch(dispatchers.io) {
-                val integrationId = integrationIdMap[address.cryptoCurrency.id.getIntegrationKey()]
+                val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()]
                     ?: error("Could not get integrationId")
-                stakingBalanceStore.get(integrationId)
+                stakingBalanceStore.get(userWalletId, integrationId)
                     .collectLatest {
                         send(
                             yieldBalanceConverter.convert(
@@ -316,7 +317,7 @@ internal class DefaultStakingRepository(
             withContext(dispatchers.io) {
                 fetchSingleYieldBalance(
                     userWalletId,
-                    address,
+                    cryptoCurrency,
                 )
             }
         }
@@ -324,16 +325,18 @@ internal class DefaultStakingRepository(
 
     override suspend fun getSingleYieldBalanceSync(
         userWalletId: UserWalletId,
-        address: CryptoCurrencyAddress,
+        cryptoCurrency: CryptoCurrency,
     ): YieldBalance = withContext(dispatchers.io) {
         if (!stakingFeatureToggle.isStakingEnabled) {
             YieldBalance.Empty
         } else {
-            fetchSingleYieldBalance(userWalletId, address)
+            fetchSingleYieldBalance(userWalletId, cryptoCurrency)
 
-            val integrationId = integrationIdMap[address.cryptoCurrency.id.getIntegrationKey()]
+            val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()]
                 ?: error("Could not get integrationId")
-            val result = stakingBalanceStore.getSyncOrNull(integrationId) ?: return@withContext YieldBalance.Error
+            val result = stakingBalanceStore.getSyncOrNull(userWalletId, integrationId)
+                ?: return@withContext YieldBalance.Error
+
             yieldBalanceConverter.convert(
                 YieldBalanceConverter.Data(
                     balance = result,
@@ -345,7 +348,7 @@ internal class DefaultStakingRepository(
 
     override suspend fun fetchMultiYieldBalance(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
         refresh: Boolean,
     ) = withContext(dispatchers.io) {
         if (!stakingFeatureToggle.isStakingEnabled) return@withContext
@@ -357,23 +360,23 @@ internal class DefaultStakingRepository(
                 key = getYieldBalancesKey(userWalletId),
                 skipCache = refresh,
                 block = {
-                    val result = stakeKitApi.getMultipleYieldBalances(
-                        addresses
-                            .mapNotNull { networkAddress ->
-                                val cryptoCurrency = networkAddress.cryptoCurrency
-                                val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()]
+                    val availableCurrencies = cryptoCurrencies
+                        .mapNotNull { currency ->
+                            val address = walletManagersFacade.getDefaultAddress(userWalletId, currency.network)
+                            val integrationId = integrationIdMap[currency.id.getIntegrationKey()]
 
-                                if (integrationId != null) {
-                                    networkAddress.address to integrationId
-                                } else {
-                                    null
-                                }
+                            if (integrationId != null && address != null) {
+                                address to integrationId
+                            } else {
+                                null
                             }
-                            .distinct()
-                            .map { getBalanceRequestData(it.first, it.second) },
-                    ).getOrThrow()
+                        }
+                        .distinct()
+                        .map { getBalanceRequestData(it.first, it.second) }
+                        .ifEmpty { return@invokeOnExpire }
+                    val result = stakeKitApi.getMultipleYieldBalances(availableCurrencies).getOrThrow()
 
-                    stakingBalanceStore.store(result)
+                    stakingBalanceStore.store(userWalletId, result)
                 },
             )
         } finally {
@@ -385,20 +388,20 @@ internal class DefaultStakingRepository(
 
     override fun getMultiYieldBalanceFlow(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> = channelFlow {
         if (!stakingFeatureToggle.isStakingEnabled) {
             send(YieldBalanceList.Empty)
         } else {
             launch(dispatchers.io) {
-                stakingBalanceStore.get()
+                stakingBalanceStore.get(userWalletId)
                     .collectLatest { send(yieldBalanceListConverter.convert(it)) }
             }
 
             withContext(dispatchers.io) {
                 fetchMultiYieldBalance(
                     userWalletId,
-                    addresses,
+                    cryptoCurrencies,
                 )
             }
         }
@@ -406,14 +409,14 @@ internal class DefaultStakingRepository(
 
     override fun getMultiYieldBalanceLce(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): LceFlow<Throwable, YieldBalanceList> = lceFlow {
         if (!stakingFeatureToggle.isStakingEnabled) {
             send(YieldBalanceList.Empty)
         } else {
             launch(dispatchers.io) {
                 combine(
-                    stakingBalanceStore.get(),
+                    stakingBalanceStore.get(userWalletId),
                     isYieldBalanceFetching.map { it.getOrElse(userWalletId) { false } },
                 ) { result, isFetching ->
                     val balances = yieldBalanceListConverter.convert(result)
@@ -422,7 +425,7 @@ internal class DefaultStakingRepository(
             }
             withContext(dispatchers.io) {
                 catch(
-                    block = { fetchMultiYieldBalance(userWalletId, addresses, refresh = false) },
+                    block = { fetchMultiYieldBalance(userWalletId, cryptoCurrencies, refresh = false) },
                     catch = { raise(it) },
                 )
             }
@@ -431,13 +434,13 @@ internal class DefaultStakingRepository(
 
     override suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): YieldBalanceList = withContext(dispatchers.io) {
         if (!stakingFeatureToggle.isStakingEnabled) {
             YieldBalanceList.Empty
         } else {
-            fetchMultiYieldBalance(userWalletId, addresses)
-            val result = stakingBalanceStore.getSyncOrNull() ?: return@withContext YieldBalanceList.Error
+            fetchMultiYieldBalance(userWalletId, cryptoCurrencies)
+            val result = stakingBalanceStore.getSyncOrNull(userWalletId) ?: return@withContext YieldBalanceList.Error
             yieldBalanceListConverter.convert(result)
         }
     }
