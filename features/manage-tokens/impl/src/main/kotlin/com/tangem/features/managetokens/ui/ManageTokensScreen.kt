@@ -286,6 +286,7 @@ private fun NetworksList(networks: NetworksUM, currencyId: String, modifier: Mod
                     isLastItem = index == currentItems.lastIndex,
                     content = {
                         BlockchainRow(
+                            modifier = Modifier.padding(end = TangemTheme.dimens.spacing8),
                             model = with(network) {
                                 BlockchainRowUM(
                                     name = name,
