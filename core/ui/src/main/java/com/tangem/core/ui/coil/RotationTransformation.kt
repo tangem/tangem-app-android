@@ -1,11 +1,11 @@
-package com.tangem.common.ui.userwallet
+package com.tangem.core.ui.coil
 
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import coil.size.Size
 import coil.transform.Transformation
 
-internal class RotationTransformation(private val angle: Float) : Transformation {
+class RotationTransformation(private val angle: Float) : Transformation {
 
     override val cacheKey: String = "rotate:$angle"
 
