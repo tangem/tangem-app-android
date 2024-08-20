@@ -242,6 +242,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         appRouterConfig.routerScope = lifecycleScope
         appRouterConfig.componentRouter = routingComponent.router
+        appRouterConfig.snackbarHandler = this
 
         routingComponent.stack.observe(lifecycle.asEssentyLifecycle()) { childStack ->
             appRouterConfig.stack = childStack.backStack
