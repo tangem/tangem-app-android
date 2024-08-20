@@ -1,5 +1,6 @@
 package com.tangem.features.managetokens.component.impl
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -23,6 +24,8 @@ internal class DefaultManageTokensComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
+
+        BackHandler(onBack = state.popBack)
 
         ManageTokensScreen(
             modifier = modifier,
