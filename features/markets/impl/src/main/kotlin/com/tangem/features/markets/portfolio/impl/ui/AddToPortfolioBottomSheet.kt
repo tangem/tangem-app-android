@@ -2,29 +2,36 @@ package com.tangem.features.markets.portfolio.impl.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.userwallet.UserWalletItem
-import com.tangem.core.ui.components.PrimaryButtonIconEnd
-import com.tangem.core.ui.components.SpacerW12
-import com.tangem.core.ui.components.SpacerW6
-import com.tangem.core.ui.components.TangemSwitch
+import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.buttons.common.TangemButton
+import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.buttons.common.TangemButtonSize
+import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.components.rows.BlockchainRow
@@ -36,18 +43,18 @@ import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.ui.preview.PreviewAddToPortfolioBSContentProvider
 import com.tangem.features.markets.portfolio.impl.ui.state.AddToPortfolioBSContentUM
 import com.tangem.features.markets.portfolio.impl.ui.state.SelectNetworkUM
+import kotlinx.coroutines.delay
 
 @Composable
 internal fun AddToPortfolioBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet<AddToPortfolioBSContentUM>(
         config = config,
         containerColor = TangemTheme.colors.background.tertiary,
+        addBottomInsets = false,
         titleText = resourceReference(R.string.markets_add_to_portfolio_button),
     ) {
         Content(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = TangemTheme.dimens.spacing16),
+            modifier = Modifier.fillMaxWidth(),
             state = config.content as AddToPortfolioBSContentUM,
         )
     }
@@ -55,31 +62,99 @@ internal fun AddToPortfolioBottomSheet(config: TangemBottomSheetConfig) {
 
 @Composable
 private fun Content(state: AddToPortfolioBSContentUM, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing16),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-    ) {
-        UserWalletItem(state.selectedWallet)
+    var continueButtonAreaHeight by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    val scrollState = rememberScrollState()
 
-        NetworkSelection(
-            modifier = Modifier.fillMaxWidth(),
-            state = state.selectNetworkUM,
-        )
-
-        AnimatedVisibility(
-            visible = state.isScanCardNotificationVisible,
-            modifier = Modifier.fillMaxWidth(),
+    Box(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(state = scrollState)
+                .padding(horizontal = TangemTheme.dimens.spacing16),
         ) {
-            ScanWalletWarning(modifier = Modifier.fillMaxWidth())
+            UserWalletItem(
+                state = state.selectedWallet,
+                blockColors = TangemBlockCardColors.copy(
+                    containerColor = TangemTheme.colors.background.action,
+                    disabledContainerColor = TangemTheme.colors.background.action,
+                ),
+            )
+
+            SpacerH12()
+
+            NetworkSelection(
+                modifier = Modifier.fillMaxWidth(),
+                state = state.selectNetworkUM,
+            )
+
+            SpacerH12()
+
+            AnimatedVisibility(
+                visible = state.isScanCardNotificationVisible,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column {
+                    ScanWalletWarning(modifier = Modifier.fillMaxWidth())
+                    SpacerH12()
+                }
+
+                // Scroll to the bottom when the notification appears and the scroll is at the bottom
+                LaunchedEffect(Unit) {
+                    if (scrollState.canScrollForward.not()) {
+                        delay(timeMillis = 500)
+                        scrollState.animateScrollTo(scrollState.maxValue)
+                    }
+                }
+            }
+
+            SpacerH(with(density) { continueButtonAreaHeight.toDp() })
         }
 
-        PrimaryButtonIconEnd(
-            modifier = Modifier.fillMaxWidth(),
-            text = stringResource(R.string.common_continue),
-            iconResId = R.drawable.ic_tangem_24,
-            onClick = {},
+        AnimatedVisibility(
+            visible = scrollState.canScrollForward,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter),
+        ) {
+            BottomFade(Modifier.align(Alignment.BottomCenter))
+        }
+
+        ContinueButton(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .onGloballyPositioned {
+                    continueButtonAreaHeight = it.size.height
+                },
+            enabled = state.continueButtonEnabled,
+            onClick = state.onContinueButtonClick,
         )
     }
+}
+
+@Composable
+private fun ContinueButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemButton(
+        enabled = enabled,
+        modifier = modifier
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
+            )
+            .navigationBarsPadding()
+            .fillMaxWidth(),
+        text = stringResource(R.string.common_continue),
+        icon = if (enabled) {
+            TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
+        } else {
+            TangemButtonIconPosition.None
+        },
+        showProgress = false,
+        size = TangemButtonSize.Default,
+        colors = TangemButtonsDefaults.primaryButtonColors,
+        onClick = onClick,
+        animateContentChange = true,
+    )
 }
 
 @Suppress("LongMethod")
@@ -95,10 +170,7 @@ private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifi
             )
         },
     ) {
-        Column(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState()),
-        ) {
+        Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -180,6 +252,7 @@ private fun ScanWalletWarning(modifier: Modifier = Modifier) {
         Icon(
             modifier = Modifier.requiredSize(TangemTheme.dimens.size20),
             imageVector = ImageVector.vectorResource(R.drawable.ic_tangem_24),
+            tint = TangemTheme.colors.icon.primary1,
             contentDescription = null,
         )
         Text(
@@ -236,5 +309,54 @@ private fun PreviewContentRtl(
                 .fillMaxWidth(),
             state = content,
         )
+    }
+}
+
+// For on device testing
+@Composable
+@Preview
+private fun PreviewContentTestOnDevice(
+    @PreviewParameter(PreviewAddToPortfolioBSContentProvider::class) content: AddToPortfolioBSContentUM,
+) {
+    TangemThemePreview(
+        alwaysShowBottomSheets = false,
+    ) {
+        var isShow by remember { mutableStateOf(false) }
+
+        var contentState by remember {
+            mutableStateOf(content)
+        }
+
+        LaunchedEffect(Unit) {
+            contentState = content.copy(
+                onContinueButtonClick = {
+                    contentState = contentState.copy(
+                        isScanCardNotificationVisible = !contentState.isScanCardNotificationVisible,
+                    )
+                },
+                continueButtonEnabled = true,
+                selectedWallet = content.selectedWallet.copy(
+                    onClick = {
+                        contentState = contentState.copy(
+                            continueButtonEnabled = !contentState.continueButtonEnabled,
+                        )
+                    },
+                ),
+            )
+        }
+
+        AddToPortfolioBottomSheet(
+            config = TangemBottomSheetConfig(
+                isShow = isShow,
+                content = contentState,
+                onDismissRequest = { isShow = false },
+            ),
+        )
+
+        Button(
+            onClick = { isShow = !isShow },
+        ) {
+            Text(text = "Toggle")
+        }
     }
 }
