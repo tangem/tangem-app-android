@@ -1,7 +1,5 @@
 package com.tangem.domain.transaction.error
 
-import com.tangem.core.ui.extensions.TextReference
-
 sealed class SendTransactionError {
 
     data object DemoCardError : SendTransactionError()
@@ -16,7 +14,7 @@ sealed class SendTransactionError {
 
     data class CreateAccountUnderfunded(val amount: String) : SendTransactionError()
 
-    data class TangemSdkError(val code: Int, val messageReference: TextReference) : SendTransactionError()
+    data class TangemSdkError(val code: Int, val messageRes: Int, val args: List<Any>) : SendTransactionError()
 
     data class UnknownError(val ex: Exception? = null) : SendTransactionError()
 
