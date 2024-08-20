@@ -13,7 +13,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButton
+import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.ContentMessage
 import com.tangem.core.ui.message.SnackbarMessage
@@ -93,7 +93,7 @@ internal class WalletSettingsModel @Inject constructor(
                     BasicDialog(
                         message = stringResource(R.string.user_wallet_list_delete_prompt),
                         onDismissDialog = onDismiss,
-                        confirmButton = DialogButton(
+                        confirmButton = DialogButtonUM(
                             title = stringResource(R.string.common_delete),
                             warning = true,
                             onClick = {
@@ -101,7 +101,7 @@ internal class WalletSettingsModel @Inject constructor(
                                 onDismiss()
                             },
                         ),
-                        dismissButton = DialogButton(
+                        dismissButton = DialogButtonUM(
                             title = stringResource(R.string.common_cancel),
                             onClick = onDismiss,
                         ),
