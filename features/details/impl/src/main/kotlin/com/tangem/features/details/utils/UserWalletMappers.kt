@@ -1,13 +1,13 @@
 package com.tangem.features.details.utils
 
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.details.entity.UserWalletListUM.UserWalletUM
 import com.tangem.features.details.impl.R
 import com.tangem.utils.StringsSigns.STARS
 import kotlinx.collections.immutable.ImmutableList
@@ -19,7 +19,7 @@ internal fun List<UserWallet>.toUiModels(
     balances: Map<UserWalletId, TotalFiatBalance> = emptyMap(),
     isLoading: Boolean = true,
     isBalancesHidden: Boolean = false,
-): ImmutableList<UserWalletUM> = this.map { model ->
+): ImmutableList<UserWalletItemUM> = this.map { model ->
     val balance = balances[model.walletId]
 
     model.toUiModel(
@@ -37,7 +37,7 @@ private fun UserWallet.toUiModel(
     isLoading: Boolean,
     isBalanceHidden: Boolean,
     onClick: () -> Unit,
-): UserWalletUM = UserWalletUM(
+): UserWalletItemUM = UserWalletItemUM(
     id = walletId,
     name = stringReference(name),
     information = getInfo(
@@ -59,7 +59,7 @@ private fun UserWallet.getInfo(
 ): TextReference {
     val dividerRef = stringReference(value = " • ")
 
-    val cardCount = getCardCount()
+    val cardCount = getCardsCount() ?: 1
     val cardCountRef = TextReference.PluralRes(
         id = R.plurals.card_label_card_count,
         count = cardCount,
@@ -99,12 +99,4 @@ private fun getBalanceInfo(
     } else {
         combinedReference(cardCountRef, dividerRef, stringReference(BigDecimalFormatter.EMPTY_BALANCE_SIGN))
     }
-}
-
-private fun UserWallet.getCardCount() = when (val status = scanResponse.card.backupStatus) {
-    is CardDTO.BackupStatus.Active -> status.cardCount.inc()
-    is CardDTO.BackupStatus.CardLinked -> status.cardCount.inc()
-    is CardDTO.BackupStatus.NoBackup,
-    null,
-    -> 1
 }
