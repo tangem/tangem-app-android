@@ -1,6 +1,7 @@
 package com.tangem.common.ui.amountScreen.converters.field
 
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -81,6 +82,10 @@ class AmountFieldChangeTransformer(
                 cryptoAmount = amountTextField.cryptoAmount.copy(value = BigDecimal.ZERO),
                 fiatAmount = amountTextField.fiatAmount.copy(value = BigDecimal.ZERO),
                 isError = false,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.None,
+                    keyboardType = KeyboardType.Number,
+                ),
             ),
         )
     }
