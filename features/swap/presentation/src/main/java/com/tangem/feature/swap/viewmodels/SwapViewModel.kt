@@ -208,7 +208,7 @@ internal class SwapViewModel @Inject constructor(
                     )
                 }
             }.onFailure {
-                Timber.tag(loggingTag).e(it)
+                Timber.e(it)
 
                 applyInitialTokenChoice(
                     state = TokensDataStateExpress.EMPTY,
@@ -1212,7 +1212,6 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private companion object {
-        const val loggingTag = "SwapViewModel"
         const val INITIAL_AMOUNT = ""
         const val UPDATE_DELAY = 10000L
         const val DEBOUNCE_AMOUNT_DELAY = 1000L
