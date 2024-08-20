@@ -8,8 +8,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.features.markets.component.BottomSheetState
-import com.tangem.features.markets.details.api.MarketsTokenDetailsComponent
+import com.tangem.features.markets.entry.BottomSheetState
+import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.impl.model.MarketsTokenDetailsModel
 import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
 import com.tangem.features.markets.details.impl.ui.MarketsTokenDetailsContent

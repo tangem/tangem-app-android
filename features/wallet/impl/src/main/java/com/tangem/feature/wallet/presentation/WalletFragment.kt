@@ -11,7 +11,7 @@ import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.features.markets.MarketsFeatureToggles
-import com.tangem.features.markets.component.MarketsEntryComponent
+import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.AndroidEntryPoint

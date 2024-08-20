@@ -1,4 +1,4 @@
-package com.tangem.features.markets.component
+package com.tangem.features.markets.entry
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable

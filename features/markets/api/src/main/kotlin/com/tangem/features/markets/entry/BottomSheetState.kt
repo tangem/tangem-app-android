@@ -1,4 +1,4 @@
-package com.tangem.features.markets.component
+package com.tangem.features.markets.entry
 
 enum class BottomSheetState {
     EXPANDED,
