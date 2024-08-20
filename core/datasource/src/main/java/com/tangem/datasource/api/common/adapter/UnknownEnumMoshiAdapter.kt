@@ -3,9 +3,11 @@ package com.tangem.datasource.api.common.adapter
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.EnumJsonAdapter
-import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
+import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO.BalanceTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
+import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardClaimingDTO
+import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
+import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.RewardTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionStatusDTO
@@ -24,13 +26,15 @@ object UnknownEnumMoshiAdapter {
 
 fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
     val map = mapOf(
+        BalanceTypeDTO::class.java to BalanceTypeDTO.UNKNOWN,
         NetworkTypeDTO::class.java to NetworkTypeDTO.UNKNOWN,
-        StakingActionTypeDTO::class.java to StakingActionTypeDTO.UNKNOWN,
-        YieldDTO.RewardTypeDTO::class.java to YieldDTO.RewardTypeDTO.UNKNOWN,
-        BalanceDTO.BalanceType::class.java to BalanceDTO.BalanceType.UNKNOWN,
-        StakingTransactionTypeDTO::class.java to StakingTransactionTypeDTO.UNKNOWN,
-        StakingTransactionStatusDTO::class.java to StakingTransactionStatusDTO.UNKNOWN,
+        RewardClaimingDTO::class.java to RewardClaimingDTO.UNKNOWN,
+        RewardScheduleDTO::class.java to RewardScheduleDTO.UNKNOWN,
+        RewardTypeDTO::class.java to RewardTypeDTO.UNKNOWN,
         StakingActionStatusDTO::class.java to StakingActionStatusDTO.UNKNOWN,
+        StakingActionTypeDTO::class.java to StakingActionTypeDTO.UNKNOWN,
+        StakingTransactionStatusDTO::class.java to StakingTransactionStatusDTO.UNKNOWN,
+        StakingTransactionTypeDTO::class.java to StakingTransactionTypeDTO.UNKNOWN,
     )
 
     return apply {
