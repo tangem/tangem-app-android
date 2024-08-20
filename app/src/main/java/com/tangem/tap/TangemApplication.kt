@@ -6,8 +6,6 @@ import android.content.pm.PackageManager
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.chuckerteam.chucker.api.ChuckerInterceptor
-import com.orhanobut.logger.AndroidLogAdapter
-import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.TangemSdkLogger
@@ -47,7 +45,6 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
-import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
@@ -55,12 +52,11 @@ import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandle
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
+import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.common.log.TangemLogCollector
-import com.tangem.tap.common.log.TimberFormatStrategy
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
@@ -71,7 +67,6 @@ import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
 import kotlinx.coroutines.runBlocking
 import org.rekotlin.Store
-import timber.log.Timber
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
 
 lateinit var store: Store<AppState>
@@ -140,9 +135,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val walletsRepository: WalletsRepository
         get() = entryPoint.getWalletsRepository()
 
-    private val sendFeatureToggles: SendFeatureToggles
-        get() = entryPoint.getSendFeatureToggles()
-
     private val oneTimeEventFilter: OneTimeEventFilter
         get() = entryPoint.getOneTimeEventFilter()
 
@@ -196,6 +188,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles
         get() = entryPoint.getPushNotificationsFeatureToggles()
+
+    private val tangemAppLoggerInitializer: TangemAppLoggerInitializer
+        get() = entryPoint.getTangemAppLogger()
     // endregion
 
     override fun onCreate() {
@@ -207,16 +202,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     fun init() {
         store = createReduxStore()
 
-        if (BuildConfig.LOG_ENABLED) {
-            Logger.addLogAdapter(AndroidLogAdapter(TimberFormatStrategy()))
-            Timber.plant(
-                object : Timber.DebugTree() {
-                    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-                        Logger.log(priority, tag, message, t)
-                    }
-                },
-            )
-        }
+        tangemAppLoggerInitializer.initialize()
 
         foregroundActivityObserver = ForegroundActivityObserver()
         activityResultCaller = foregroundActivityObserver
@@ -231,8 +217,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                 onComplete = ::initWithConfigDependency,
             )
         }
-
-        initWarningMessagesManager()
 
         loadNativeLibraries()
 
@@ -271,7 +255,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     appThemeModeRepository = appThemeModeRepository,
                     balanceHidingRepository = balanceHidingRepository,
                     walletsRepository = walletsRepository,
-                    sendFeatureToggles = sendFeatureToggles,
                     generalUserWalletsListManager = generalUserWalletsListManager,
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
@@ -381,9 +364,5 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
             getFeedbackEmailUseCase = getFeedbackEmailUseCase,
         )
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
-    }
-
-    private fun initWarningMessagesManager() {
-        store.dispatch(GlobalAction.SetWarningManager(WarningMessagesManager()))
     }
 }
