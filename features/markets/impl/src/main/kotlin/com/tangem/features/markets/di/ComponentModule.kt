@@ -1,7 +1,7 @@
 package com.tangem.features.markets.di
 
-import com.tangem.features.markets.component.MarketsListComponent
-import com.tangem.features.markets.component.impl.DefaultMarketsListComponent
+import com.tangem.features.markets.component.MarketsEntryComponent
+import com.tangem.features.markets.DefaultMarketsEntryComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,5 +14,5 @@ internal interface ComponentModule {
 
     @Binds
     @Singleton
-    fun bindMarketsListComponent(factory: DefaultMarketsListComponent.Factory): MarketsListComponent.Factory
+    fun bindMarketsListComponent(factory: DefaultMarketsEntryComponent.Factory): MarketsEntryComponent.Factory
 }
