@@ -12,6 +12,14 @@ import kotlinx.collections.immutable.persistentListOf
 
 internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider<AddToPortfolioBSContentUM> {
 
+    private val blockchainRow = BlockchainRowUM(
+        name = "Etherium 3",
+        type = "TEST",
+        iconResId = R.drawable.ic_eth_16,
+        isMainNetwork = false,
+        isSelected = false,
+    )
+
     override val values: Sequence<AddToPortfolioBSContentUM>
         get() = sequenceOf(
             AddToPortfolioBSContentUM(
@@ -29,32 +37,50 @@ internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider
                     tokenName = "Etherium",
                     tokenCurrencySymbol = "ETH",
                     networks = persistentListOf(
-                        BlockchainRowUM(
-                            name = "Etherium",
+                        blockchainRow.copy(
                             type = "MAIN",
-                            iconResId = R.drawable.ic_eth_16,
                             isMainNetwork = true,
                             isSelected = true,
                         ),
-                        BlockchainRowUM(
-                            name = "Etherium 2",
-                            type = "TEST",
-                            iconResId = R.drawable.ic_eth_16,
-                            isMainNetwork = false,
-                            isSelected = false,
-                        ),
-                        BlockchainRowUM(
-                            name = "Etherium 3",
-                            type = "TEST",
-                            iconResId = R.drawable.ic_eth_16,
-                            isMainNetwork = false,
-                            isSelected = false,
-                        ),
+                        blockchainRow,
+                        blockchainRow,
                     ),
                     onNetworkSwitchClick = { _, _ -> },
                     iconUrl = null,
                 ),
                 isScanCardNotificationVisible = true,
+                continueButtonEnabled = true,
+                onContinueButtonClick = {},
+            ),
+            AddToPortfolioBSContentUM(
+                selectedWallet = UserWalletItemUM(
+                    id = UserWalletId("1"),
+                    name = stringReference("Wallet 1"),
+                    information = stringReference("3 cards, 10,123$"),
+                    imageUrl = "",
+                    isEnabled = true,
+                    endIcon = UserWalletItemUM.EndIcon.Arrow,
+                    onClick = {},
+                ),
+                selectNetworkUM = SelectNetworkUM(
+                    tokenId = "etherium",
+                    tokenName = "Etherium",
+                    tokenCurrencySymbol = "ETH",
+                    networks = persistentListOf(
+                        blockchainRow.copy(
+                            type = "MAIN",
+                            isMainNetwork = true,
+                            isSelected = true,
+                        ),
+                        *Array(25) { blockchainRow },
+                    ),
+
+                    onNetworkSwitchClick = { _, _ -> },
+                    iconUrl = null,
+                ),
+                isScanCardNotificationVisible = true,
+                continueButtonEnabled = false,
+                onContinueButtonClick = {},
             ),
         )
 }
