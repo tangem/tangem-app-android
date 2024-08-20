@@ -122,6 +122,10 @@ internal class NetworkStatusFactory {
             Address.Type.Secondary -> NetworkAddress.Address.Type.Secondary
         }
 
+        if (address.value.isBlank()) {
+            Timber.w("Address value is blank")
+        }
+
         return NetworkAddress.Address(address.value, type)
     }
 }
