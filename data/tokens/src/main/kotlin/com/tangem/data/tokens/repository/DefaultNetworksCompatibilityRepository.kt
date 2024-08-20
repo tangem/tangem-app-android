@@ -3,7 +3,7 @@ package com.tangem.data.tokens.repository
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.card.EllipticCurve
-import com.tangem.data.tokens.utils.getNetwork
+import com.tangem.data.common.currency.getNetwork
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.extensions.*
