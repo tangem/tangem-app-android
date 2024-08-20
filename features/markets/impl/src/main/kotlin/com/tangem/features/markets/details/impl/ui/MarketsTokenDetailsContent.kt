@@ -51,6 +51,7 @@ internal fun MarketsTokenDetailsContent(
     state: MarketsTokenDetailsUM,
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
+    portfolioBlock: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Content(
@@ -58,6 +59,7 @@ internal fun MarketsTokenDetailsContent(
         state = state,
         onBackClick = onBackClick,
         onHeaderSizeChange = onHeaderSizeChange,
+        portfolioBlock = portfolioBlock,
     )
 
     InfoBottomSheet(config = state.infoBottomSheet)
@@ -69,6 +71,7 @@ private fun Content(
     state: MarketsTokenDetailsUM,
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
+    portfolioBlock: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor = LocalMainBottomSheetColor.current.value
@@ -129,6 +132,7 @@ private fun Content(
 
             tokenMarketDetailsBody(
                 state = state.body,
+                portfolioBlock = portfolioBlock,
             )
         }
     }
@@ -288,6 +292,7 @@ private fun Preview() {
             ),
             onHeaderSizeChange = {},
             onBackClick = {},
+            portfolioBlock = {},
         )
     }
 }
