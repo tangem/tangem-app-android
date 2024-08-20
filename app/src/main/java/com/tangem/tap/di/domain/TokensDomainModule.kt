@@ -413,4 +413,10 @@ internal object TokensDomainModule {
             quotesRepository = quotesRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideCheckHasLinkedTokensUseCase(currenciesRepository: CurrenciesRepository): CheckHasLinkedTokensUseCase {
+        return CheckHasLinkedTokensUseCase(currenciesRepository)
+    }
 }

@@ -16,7 +16,7 @@ class StakeKitErrorResponse(
     @Json(name = "code")
     val code: String? = null,
     @Json(name = "countryCode")
-    val countryCode: String,
+    val countryCode: String?,
     @Json(name = "regionCode")
     val regionCode: String? = null,
     @Json(name = "tags")

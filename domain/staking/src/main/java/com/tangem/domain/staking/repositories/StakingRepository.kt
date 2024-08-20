@@ -1,7 +1,12 @@
 package com.tangem.domain.staking.repositories
 
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.core.lce.LceFlow
-import com.tangem.domain.staking.model.*
+import com.tangem.domain.staking.model.StakingApproval
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
@@ -15,9 +20,10 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
+@Suppress("TooManyFunctions")
 interface StakingRepository {
 
-    fun isStakingSupported(currencyId: String): Boolean
+    fun isStakingSupported(integrationKey: String): Boolean
 
     suspend fun fetchEnabledYields(refresh: Boolean)
 
@@ -61,11 +67,15 @@ interface StakingRepository {
         addresses: List<CryptoCurrencyAddress>,
     ): YieldBalanceList
 
-    suspend fun createAction(params: ActionParams): StakingAction
+    suspend fun createAction(userWalletId: UserWalletId, network: Network, params: ActionParams): StakingAction
 
-    suspend fun estimateGas(params: ActionParams): StakingGasEstimate
+    suspend fun estimateGas(userWalletId: UserWalletId, network: Network, params: ActionParams): StakingGasEstimate
 
-    suspend fun constructTransaction(transactionId: String): StakingTransaction
+    suspend fun constructTransaction(
+        networkId: String,
+        fee: Fee,
+        transactionId: String,
+    ): Pair<StakingTransaction, TransactionData.Compiled>
 
     suspend fun submitHash(transactionId: String, transactionHash: String)
 
@@ -75,4 +85,7 @@ interface StakingRepository {
 
     /** Returns whether additional staking is possible if there is already active staking */
     fun isStakeMoreAvailable(networkId: Network.ID): Boolean
+
+    /** Returns staking approval */
+    fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval
 }
