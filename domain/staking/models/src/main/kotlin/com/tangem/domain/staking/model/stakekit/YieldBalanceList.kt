@@ -5,13 +5,10 @@ sealed class YieldBalanceList {
     data class Data(
         val balances: List<YieldBalance>,
     ) : YieldBalanceList() {
-        fun getBalance(rawCurrencyId: String?, networkName: String): YieldBalance {
+        fun getBalance(rawCurrencyId: String?): YieldBalance {
             return balances.firstOrNull { yield ->
                 (yield as? YieldBalance.Data)?.balance?.items
-                    ?.any {
-                        rawCurrencyId == it.rawCurrencyId &&
-                            networkName.equals(it.rawNetworkId, ignoreCase = true)
-                    } == true
+                    ?.any { rawCurrencyId == it.rawCurrencyId } == true
             } ?: YieldBalance.Error
         }
     }
