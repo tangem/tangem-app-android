@@ -35,7 +35,7 @@ class WalletConnectInteractor(
     val blockchainHelper: WcBlockchainHelper,
 ) {
 
-    var isWalletConnectReadyForDeepLinks = false
+    private var isWalletConnectReadyForDeepLinks = false
 
     private val getSelectedWalletUseCase by lazy(LazyThreadSafetyMode.NONE) {
         GetSelectedWalletUseCase(userWalletsListManager)
@@ -82,7 +82,7 @@ class WalletConnectInteractor(
 
     private suspend fun initWithWallet(userWallet: UserWallet) {
         if (userWallet.isMultiCurrency) {
-            Timber.d("WalletConnect: initialize and setup networks for ${userWallet.walletId}")
+            Timber.i("WalletConnect: initialize and setup networks for ${userWallet.walletId}")
             startListeningWc(userWallet.walletId.stringValue, getCardId(userWallet))
             subscribeOnCurrenciesUpdates(userWallet)
         }
@@ -143,9 +143,9 @@ class WalletConnectInteractor(
     private suspend fun subscribeToEvents() {
         events
             .onEach { wcEvent ->
+                Timber.i("WalletConnect: event: $wcEvent")
                 when (wcEvent) {
                     is WalletConnectEvents.SessionProposal -> {
-                        Timber.d("WC session proposal event received")
                         val unsupportedNetworks = wcEvent.requiredChainIds
                             .filter { blockchainHelper.chainIdToNetworkIdOrNull(it) == null }
                         if (unsupportedNetworks.isNotEmpty()) {
@@ -230,6 +230,7 @@ class WalletConnectInteractor(
     }
 
     fun approveSessionProposal(accounts: List<Account>) {
+        Timber.i("Approve session proposal: $accounts")
         val userNamespaces: Map<NetworkNamespace, List<Account>> = accounts
             .groupBy { account ->
                 blockchainHelper.getNamespaceFromFullChainIdOrNull(account.chainId)
@@ -241,14 +242,17 @@ class WalletConnectInteractor(
     }
 
     fun rejectSessionProposal() {
+        Timber.i("Reject session proposal")
         walletConnectRepository.reject()
     }
 
     fun disconnectSession(topic: String) {
+        Timber.i("Disconnect session: $topic")
         walletConnectRepository.disconnect(topic)
     }
 
     fun cancelRequest(topic: String, id: Long) {
+        Timber.i("Cancel request: $topic, $id")
         walletConnectRepository.cancelRequest(topic, id)
     }
 

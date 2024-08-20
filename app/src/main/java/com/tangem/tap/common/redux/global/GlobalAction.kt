@@ -4,7 +4,6 @@ import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.feedback.FeedbackData
@@ -13,8 +12,6 @@ import com.tangem.tap.common.redux.DebugErrorAction
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import org.rekotlin.Action
 
 sealed class GlobalAction : Action {
@@ -72,10 +69,7 @@ sealed class GlobalAction : Action {
         val walletPublicKey: ByteArray,
     ) : GlobalAction()
 
-    data class HideWarningMessage(val warning: WarningMessage) : GlobalAction()
-
     data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
-    data class SetWarningManager(val warningManager: WarningMessagesManager) : GlobalAction()
     data class SetFeedbackManager(val feedbackManager: LegacyFeedbackManager) : GlobalAction()
 
     data class SendEmail(val feedbackData: FeedbackData, val scanResponse: ScanResponse?) : GlobalAction()
@@ -93,6 +87,4 @@ sealed class GlobalAction : Action {
     object FetchUserCountry : GlobalAction() {
         data class Success(val countryCode: String) : GlobalAction()
     }
-
-    data class ChangeAppThemeMode(val appThemeMode: AppThemeMode) : GlobalAction()
 }
