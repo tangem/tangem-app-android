@@ -54,7 +54,7 @@ internal interface InnerWalletRouter : WalletRouter {
     fun isWalletLastScreen(): Boolean
 
     /** Open manage tokens screen */
-    fun openManageTokensScreen()
+    fun openManageTokensScreen(userWalletId: UserWalletId)
 
     /** Open scan failed dialog */
     fun openScanFailedDialog(onTryAgain: () -> Unit)
