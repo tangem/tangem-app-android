@@ -3,7 +3,7 @@ package com.tangem.tap.common.redux.legacy
 import com.tangem.blockchain.common.AmountType
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.redux.LegacyAction
-import com.tangem.domain.tokens.utils.convertToAmount
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.feedback.FeedbackEmail
@@ -42,7 +42,7 @@ internal object LegacyMiddleware {
                     is LegacyAction.SendEmailTransactionFailed -> {
                         if (store.inject(DaggerGraphState::feedbackManagerFeatureToggles).isLocalLogsEnabled) {
 
-                            val amount = action.amount?.convertToAmount(action.cryptoCurrency)
+                            val amount = action.amount?.convertToSdkAmount(action.cryptoCurrency)
                             store.inject(DaggerGraphState::saveBlockchainErrorUseCase).invoke(
                                 error = BlockchainErrorInfo(
                                     errorMessage = action.errorMessage,
@@ -55,7 +55,7 @@ internal object LegacyMiddleware {
                                         ""
                                     },
                                     amount = amount?.value?.stripZeroPlainString() ?: "unknown",
-                                    fee = action.fee?.convertToAmount(action.cryptoCurrency)
+                                    fee = action.fee?.convertToSdkAmount(action.cryptoCurrency)
                                         ?.value?.stripZeroPlainString() ?: "unknown",
                                 ),
                             )
@@ -73,8 +73,8 @@ internal object LegacyMiddleware {
                                     )?.let { walletManager ->
                                         store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
                                             walletManager = walletManager,
-                                            amountToSend = action.amount?.convertToAmount(action.cryptoCurrency),
-                                            feeAmount = action.fee?.convertToAmount(action.cryptoCurrency),
+                                            amountToSend = action.amount?.convertToSdkAmount(action.cryptoCurrency),
+                                            feeAmount = action.fee?.convertToSdkAmount(action.cryptoCurrency),
                                             destinationAddress = action.destinationAddress,
                                         )
                                     }
