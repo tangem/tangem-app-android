@@ -7,9 +7,8 @@ import arrow.core.raise.either
 import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.*
-import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -362,10 +361,10 @@ internal class DefaultSwapRepository @Inject constructor(
             ),
         ) ?: error("Cannot cast to Approver")
 
-        return when (result) {
-            is Result.Success -> result.data
-            is Result.Failure -> error(result.error)
-        }
+        return result.fold(
+            onSuccess = { it },
+            onFailure = { error(it) },
+        )
     }
 
     override suspend fun getApproveData(
