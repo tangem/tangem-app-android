@@ -9,9 +9,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButton
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.saveWallet.ui.models.EnrollBiometricsDialog
 
 @Composable
@@ -19,11 +19,11 @@ fun EnrollBiometricsDialogContent(dialog: EnrollBiometricsDialog) {
     BasicDialog(
         title = stringResource(R.string.save_user_wallet_agreement_enroll_biometrics_title),
         message = stringResource(R.string.save_user_wallet_agreement_enroll_biometrics_description),
-        confirmButton = DialogButton(
+        confirmButton = DialogButtonUM(
             title = stringResource(R.string.common_enable),
             onClick = dialog.onEnroll,
         ),
-        dismissButton = DialogButton(
+        dismissButton = DialogButtonUM(
             onClick = dialog.onCancel,
         ),
         onDismissDialog = dialog.onCancel,
