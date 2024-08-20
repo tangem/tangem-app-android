@@ -20,7 +20,7 @@ class RefreshMultiCurrencyWalletQuotesUseCase(
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<QuotesError, Unit> {
         return either {
-            val currencies = fetchCurrencies(userWalletId = userWalletId)
+            val currencies = getCurrencies(userWalletId = userWalletId)
                 .getOrElse { raise(QuotesError.DataError(it)) }
 
             coroutineScope {
@@ -35,10 +35,10 @@ class RefreshMultiCurrencyWalletQuotesUseCase(
         }
     }
 
-    private suspend fun fetchCurrencies(userWalletId: UserWalletId): Either<Throwable, List<CryptoCurrency>> {
+    private suspend fun getCurrencies(userWalletId: UserWalletId): Either<Throwable, List<CryptoCurrency>> {
         return either {
             catch(
-                block = { currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId, false) },
+                block = { currenciesRepository.getMultiCurrencyWalletCachedCurrenciesSync(userWalletId) },
                 catch = { raise(it) },
             )
         }
@@ -46,7 +46,9 @@ class RefreshMultiCurrencyWalletQuotesUseCase(
 
     private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>) {
         catch(
-            block = { quotesRepository.fetchQuotes(currenciesIds) },
+            block = {
+                quotesRepository.fetchQuotes(currenciesIds)
+            },
             catch = { /* Ignore error */ },
         )
     }
