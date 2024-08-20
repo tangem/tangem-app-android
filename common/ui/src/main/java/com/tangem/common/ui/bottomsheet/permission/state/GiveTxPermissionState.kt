@@ -1,6 +1,8 @@
 package com.tangem.common.ui.bottomsheet.permission.state
 
+import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -22,12 +24,13 @@ sealed class GiveTxPermissionState {
         val approveItems: ImmutableList<ApproveType> = ApproveType.entries.toImmutableList(),
         val approveButton: ApprovePermissionButton,
         val cancelButton: CancelPermissionButton,
-        val onChangeApproveType: (ApproveType) -> Unit,
+        val onChangeApproveType: ((ApproveType) -> Unit)? = null,
     ) : GiveTxPermissionState()
 }
 
-enum class ApproveType {
-    LIMITED, UNLIMITED
+enum class ApproveType(val text: TextReference) {
+    LIMITED(resourceReference(R.string.give_permission_current_transaction)),
+    UNLIMITED(resourceReference(R.string.give_permission_unlimited)),
 }
 
 data class ApprovePermissionButton(
