@@ -4,58 +4,78 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 
-/** Token item state */
+/** TokenItem component state */
 @Immutable
 sealed class TokenItemState {
 
+    /** Unique id */
     abstract val id: String
 
+    /** Token icon state */
     abstract val iconState: CurrencyIconState
 
+    /** Token title state (in one row with [fiatAmountState]) */
     abstract val titleState: TitleState
 
+    /** Token subtitle state (under [titleState] and in one row with [cryptoAmountState]) */
+    abstract val subtitleState: SubtitleState?
+
+    /** Token fiat amount state (in one row with [titleState]) */
     abstract val fiatAmountState: FiatAmountState?
 
+    /** Token crypto amount state (under [fiatAmountState] and in one row with [subtitleState])  */
     abstract val cryptoAmountState: CryptoAmountState?
 
-    abstract val cryptoPriceState: CryptoPriceState?
-
-    /** Loading token state */
+    /**
+     * Loading token state
+     *
+     * @property id            unique id
+     * @property iconState     token icon state
+     * @property titleState    token title
+     * @property subtitleState token subtitle
+     */
     data class Loading(
         override val id: String,
         override val iconState: CurrencyIconState,
         override val titleState: TitleState.Content,
+        override val subtitleState: SubtitleState = SubtitleState.Loading,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState = FiatAmountState.Loading
         override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Loading
-        override val cryptoPriceState: CryptoPriceState = CryptoPriceState.Loading
     }
 
-    /** Locked token state */
+    /**
+     * Locked token state
+     *
+     * @property id unique id
+     */
     data class Locked(override val id: String) : TokenItemState() {
         override val iconState: CurrencyIconState = CurrencyIconState.Locked
         override val titleState: TitleState = TitleState.Locked
+        override val subtitleState: SubtitleState = SubtitleState.Locked
         override val fiatAmountState: FiatAmountState = FiatAmountState.Locked
         override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Locked
-        override val cryptoPriceState: CryptoPriceState = CryptoPriceState.Locked
     }
 
     /**
      * Content token state
      *
-     * @property id                    unique id
-     * @property iconState             token icon state
-     * @property titleState            token name
-     * @property onItemClick           callback which will be called when an item is clicked
-     * @property onItemLongClick       callback which will be called when an item is long clicked
+     * @property id                unique id
+     * @property iconState         token icon state
+     * @property titleState        token title
+     * @property subtitleState     token subtitle
+     * @property fiatAmountState   token fiat amount
+     * @property cryptoAmountState token crypto amount
+     * @property onItemClick       callback which will be called when an item is clicked
+     * @property onItemLongClick   callback which will be called when an item is long clicked
      */
     data class Content(
         override val id: String,
         override val iconState: CurrencyIconState,
         override val titleState: TitleState,
+        override val subtitleState: SubtitleState,
         override val fiatAmountState: FiatAmountState,
         override val cryptoAmountState: CryptoAmountState.Content,
-        override val cryptoPriceState: CryptoPriceState,
         val onItemClick: () -> Unit,
         val onItemLongClick: () -> Unit,
     ) : TokenItemState()
@@ -63,9 +83,10 @@ sealed class TokenItemState {
     /**
      * Draggable token state
      *
-     * @property id                    unique id
-     * @property iconState             token icon state
-     * @property titleState            token name
+     * @property id                unique id
+     * @property iconState         token icon state
+     * @property titleState        token title
+     * @property cryptoAmountState token crypto amount
      */
     data class Draggable(
         override val id: String,
@@ -73,48 +94,50 @@ sealed class TokenItemState {
         override val titleState: TitleState,
         override val cryptoAmountState: CryptoAmountState,
     ) : TokenItemState() {
+        override val subtitleState: SubtitleState? = null
         override val fiatAmountState: FiatAmountState? = null
-        override val cryptoPriceState: CryptoPriceState? = null
     }
 
     /**
      * Unreachable token state
      *
-     * @property id                    token id
-     * @property iconState             token icon state
-     * @property titleState            token name
-     * @property onItemClick           callback which will be called when an item is clicked
-     * @property onItemLongClick       callback which will be called when an item is long clicked
+     * @property id                unique id
+     * @property iconState         token icon state
+     * @property titleState        token title
+     * @property subtitleState     token subtitle
+     * @property onItemClick       callback which will be called when an item is clicked
+     * @property onItemLongClick   callback which will be called when an item is long clicked
      */
     data class Unreachable(
         override val id: String,
         override val iconState: CurrencyIconState,
         override val titleState: TitleState,
+        override val subtitleState: SubtitleState? = null,
         val onItemClick: () -> Unit,
         val onItemLongClick: () -> Unit,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
         override val cryptoAmountState: CryptoAmountState? = null
-        override val cryptoPriceState: CryptoPriceState? = null
     }
 
     /**
      * No derivation address state
      *
-     * @property id                     token id
-     * @property iconState              token icon state
-     * @property titleState             token name
-     * @property onItemLongClick        callback which will be called when an item is long clicked
+     * @property id              unique id
+     * @property iconState       token icon state
+     * @property titleState      token title
+     * @property subtitleState   token subtitle
+     * @property onItemLongClick callback which will be called when an item is long clicked
      */
     data class NoAddress(
         override val id: String,
         override val iconState: CurrencyIconState,
         override val titleState: TitleState,
+        override val subtitleState: SubtitleState? = null,
         val onItemLongClick: () -> Unit,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
         override val cryptoAmountState: CryptoAmountState? = null
-        override val cryptoPriceState: CryptoPriceState? = null
     }
 
     @Immutable
@@ -122,9 +145,27 @@ sealed class TokenItemState {
 
         data class Content(val text: String, val hasPending: Boolean = false) : TitleState()
 
-        object Loading : TitleState()
+        data object Loading : TitleState()
 
-        object Locked : TitleState()
+        data object Locked : TitleState()
+    }
+
+    @Immutable
+    sealed class SubtitleState {
+
+        data class CryptoPriceContent(
+            val price: String,
+            val priceChangePercent: String,
+            val type: PriceChangeType,
+        ) : SubtitleState()
+
+        data class TextContent(val value: String) : SubtitleState()
+
+        data object Unknown : SubtitleState()
+
+        data object Loading : SubtitleState()
+
+        data object Locked : SubtitleState()
     }
 
     @Immutable
@@ -134,34 +175,19 @@ sealed class TokenItemState {
             val hasStaked: Boolean = false,
         ) : FiatAmountState()
 
-        object Loading : FiatAmountState()
+        data object Loading : FiatAmountState()
 
-        object Locked : FiatAmountState()
+        data object Locked : FiatAmountState()
     }
 
     @Immutable
     sealed class CryptoAmountState {
         data class Content(val text: String) : CryptoAmountState()
 
-        object Unreachable : CryptoAmountState()
+        data object Unreachable : CryptoAmountState()
 
-        object Loading : CryptoAmountState()
+        data object Loading : CryptoAmountState()
 
-        object Locked : CryptoAmountState()
-    }
-
-    sealed class CryptoPriceState {
-
-        data class Content(
-            val price: String,
-            val priceChangePercent: String?,
-            val type: PriceChangeType?,
-        ) : CryptoPriceState()
-
-        object Unknown : CryptoPriceState()
-
-        object Loading : CryptoPriceState()
-
-        object Locked : CryptoPriceState()
+        data object Locked : CryptoAmountState()
     }
 }
