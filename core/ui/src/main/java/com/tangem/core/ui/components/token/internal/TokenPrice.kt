@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.token.internal
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -12,19 +13,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.utils.StringsSigns.DASH_SIGN
-import com.tangem.core.ui.components.token.state.TokenItemState.CryptoPriceState as TokenPriceChangeState
+import com.tangem.core.ui.components.token.state.TokenItemState.SubtitleState as TokenPriceState
 
 @Composable
-internal fun TokenPrice(state: TokenPriceChangeState?, modifier: Modifier = Modifier) {
+internal fun TokenPrice(state: TokenPriceState?, modifier: Modifier = Modifier) {
     when (state) {
-        is TokenPriceChangeState.Content -> {
+        is TokenPriceState.CryptoPriceContent -> {
             PriceBlock(
                 modifier = modifier,
                 price = state.price,
@@ -32,13 +37,12 @@ internal fun TokenPrice(state: TokenPriceChangeState?, modifier: Modifier = Modi
                 priceChangePercent = state.priceChangePercent,
             )
         }
-        is TokenPriceChangeState.Unknown -> {
-            PriceText(text = DASH_SIGN, modifier = modifier)
-        }
-        is TokenPriceChangeState.Loading -> {
+        is TokenPriceState.TextContent -> PriceText(text = state.value, modifier = modifier)
+        is TokenPriceState.Unknown -> PriceText(text = DASH_SIGN, modifier = modifier)
+        is TokenPriceState.Loading -> {
             RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
         }
-        is TokenPriceChangeState.Locked -> {
+        is TokenPriceState.Locked -> {
             LockedRectangle(modifier = modifier.placeholderSize())
         }
         null -> Unit
@@ -123,3 +127,36 @@ private fun Modifier.placeholderSize(): Modifier = composed {
         .padding(vertical = TangemTheme.dimens.spacing2)
         .size(width = TangemTheme.dimens.size52, height = TangemTheme.dimens.size12)
 }
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview(@PreviewParameter(TokenPriceChangeStateProvider::class) state: TokenPriceState) {
+    TangemThemePreview {
+        TokenPrice(state = state)
+    }
+}
+
+private class TokenPriceChangeStateProvider : CollectionPreviewParameterProvider<TokenPriceState>(
+    collection = listOf(
+        TokenPriceState.CryptoPriceContent(
+            price = "1.234",
+            priceChangePercent = "2.5%",
+            type = PriceChangeType.UP,
+        ),
+        TokenPriceState.CryptoPriceContent(
+            price = "1.234",
+            priceChangePercent = "2.5%",
+            type = PriceChangeType.DOWN,
+        ),
+        TokenPriceState.CryptoPriceContent(
+            price = "1.234",
+            priceChangePercent = "2.5%",
+            type = PriceChangeType.NEUTRAL,
+        ),
+        TokenPriceState.TextContent(value = "Subtitle"),
+        TokenPriceState.Unknown,
+        TokenPriceState.Loading,
+        TokenPriceState.Locked,
+    ),
+)
