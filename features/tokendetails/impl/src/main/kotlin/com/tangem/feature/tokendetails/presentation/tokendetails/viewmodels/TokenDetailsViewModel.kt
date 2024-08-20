@@ -72,7 +72,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.e
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -123,7 +122,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
+    getUserWalletUseCase: GetUserWalletUseCase,
     tokenDetailsFeatureToggles: TokenDetailsFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
@@ -412,10 +411,13 @@ internal class TokenDetailsViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             val hasDerivations =
                 networkHasDerivationUseCase(userWallet.scanResponse, cryptoCurrency.network).getOrElse { false }
+
+            val isSupported = getExtendedPublicKeyForCurrencyUseCase.isSupported(userWalletId, cryptoCurrency.network)
+
             internalUiState.value = stateFactory.getStateWithUpdatedMenu(
                 cardTypesResolver = userWallet.scanResponse.cardTypesResolver,
                 hasDerivations = hasDerivations,
-                isBitcoin = isBitcoin(cryptoCurrency.network.id.value),
+                isSupported = isSupported,
             )
         }
     }
