@@ -8,7 +8,6 @@ import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.quote.QuotesStore
 import com.tangem.datasource.local.token.ExpressAssetsStore
-import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -28,7 +27,7 @@ internal object TokensDataModule {
     fun provideCurrenciesRepository(
         tangemTechApi: TangemTechApi,
         tangemExpressApi: TangemExpressApi,
-        userTokensStore: UserTokensStore,
+        appPreferencesStore: AppPreferencesStore,
         userWalletsStore: UserWalletsStore,
         walletManagersFacade: WalletManagersFacade,
         expressAssetsStore: ExpressAssetsStore,
@@ -38,7 +37,7 @@ internal object TokensDataModule {
         return DefaultCurrenciesRepository(
             tangemTechApi = tangemTechApi,
             tangemExpressApi = tangemExpressApi,
-            userTokensStore = userTokensStore,
+            appPreferencesStore = appPreferencesStore,
             walletManagersFacade = walletManagersFacade,
             userWalletsStore = userWalletsStore,
             expressAssetsStore = expressAssetsStore,
@@ -71,7 +70,7 @@ internal object TokensDataModule {
         networksStatusesStore: NetworksStatusesStore,
         walletManagersFacade: WalletManagersFacade,
         userWalletsStore: UserWalletsStore,
-        userTokensStore: UserTokensStore,
+        appPreferencesStore: AppPreferencesStore,
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
     ): NetworksRepository {
@@ -79,7 +78,7 @@ internal object TokensDataModule {
             networksStatusesStore = networksStatusesStore,
             walletManagersFacade = walletManagersFacade,
             userWalletsStore = userWalletsStore,
-            userTokensStore = userTokensStore,
+            appPreferencesStore = appPreferencesStore,
             cacheRegistry = cacheRegistry,
             dispatchers = dispatchers,
         )

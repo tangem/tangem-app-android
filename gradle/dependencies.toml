@@ -88,9 +88,9 @@ markdown = "0.7.2"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.14-742"
+tangemBlockchainSdk = "develop-736"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.14-379"
+tangemCardSdk = "develop-378"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 tangemVico = "2.0.0-alpha.25-tangem16"
 #tangemVico = "0.0.1" # Keep it! - used for local builds ^

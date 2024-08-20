@@ -823,6 +823,8 @@
   <string name="wallet_settings_title">ウォレット設定</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">%sを使用するか、カードをスキャンしてウォレットにアクセスしてください</string>
+  <string name="warning_approval_in_progress_message">スワップの承認は現在進行中で、まもなく完了する予定です。</string>
+  <string name="warning_approval_in_progress_title">承認が進行中</string>
   <string name="warning_backup_errors_message">カードのアクティベーションが正しく完了しませんでした。デバイスの NFCモジュールに問題があるか、カードをデバイスに正しくタップしていないことが原因かもしれません。サポートチームにお問い合わせください。</string>
   <string name="warning_backup_errors_title">アクティベーションに失敗しました</string>
   <string name="warning_beacon_chain_retirement_content">BNBネットワーク開発者によると、BEP-2規格のサポートは2024年6月に終了します。この規格の資産を失わないために、BEP-20規格に変換してください。BNBスマートチェーンネットワークへ移行するには、Tangemのスワップサービスをご利用ください。</string>
@@ -840,8 +842,6 @@
   <string name="warning_existential_deposit_title">ネットワークには最低残高が必要です</string>
   <string name="warning_express_active_transaction_message">スワップは、%s の取引完了後に利用可能となります。</string>
   <string name="warning_express_active_transaction_title">アクティブな取引があります</string>
-  <string name="warning_express_approval_in_progress_message">スワップの承認は現在進行中で、まもなく完了する予定です。</string>
-  <string name="warning_express_approval_in_progress_title">承認が進行中</string>
   <string name="warning_express_dust_message">最低のスワップ金額は%1$s です。スワップ後の残金が%2$s を下回らないようにしてください。</string>
   <string name="warning_express_no_exchangeable_coins_description">あなたのリストには、交換可能な %s トークンがありません。</string>
   <string name="warning_express_no_exchangeable_coins_title">スワップ可能なトークンがありません</string>
