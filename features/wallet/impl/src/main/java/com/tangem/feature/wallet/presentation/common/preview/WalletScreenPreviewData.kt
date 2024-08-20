@@ -20,7 +20,7 @@ internal object WalletScreenPreviewData {
         titleState = TokenItemState.TitleState.Content(text = "Bitcoin"),
         fiatAmountState = TokenItemState.FiatAmountState.Content(text = "12 368,14 \$"),
         cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "0,35853044 BTC"),
-        cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+        subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
             price = "34 496,75 \$",
             priceChangePercent = "0,43 %",
             type = PriceChangeType.DOWN,
@@ -46,7 +46,7 @@ internal object WalletScreenPreviewData {
                     titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
                     fiatAmountState = TokenItemState.FiatAmountState.Content(text = "3 340,79 \$"),
                     cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "1,856660295 ETH"),
-                    cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+                    subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                         price = "1 799,41 \$",
                         priceChangePercent = "5,16 %",
                         type = PriceChangeType.UP,
@@ -68,7 +68,7 @@ internal object WalletScreenPreviewData {
                     titleState = TokenItemState.TitleState.Content(text = "Shiba Inu"),
                     fiatAmountState = TokenItemState.FiatAmountState.Content(text = "48,64 \$"),
                     cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "6 200 220,00 SHIB"),
-                    cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+                    subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                         price = "0.01 \$",
                         priceChangePercent = "1,34 %",
                         type = PriceChangeType.DOWN,
