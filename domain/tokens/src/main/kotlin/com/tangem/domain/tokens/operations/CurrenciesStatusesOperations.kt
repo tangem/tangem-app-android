@@ -260,10 +260,14 @@ internal class CurrenciesStatusesOperations(
         currencies.map { currency ->
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
-            val yieldBalance = (yieldBalances as? YieldBalanceList.Data)?.getBalance(
-                rawCurrencyId = currency.id.rawCurrencyId,
-                networkName = currency.network.name,
+            val isStakingSupported = stakingRepository.isStakingSupported(
+                stakingRepository.getIntegrationKey(currency.id),
             )
+            val yieldBalance = if (isStakingSupported) {
+                (yieldBalances as? YieldBalanceList.Data)?.getBalance(currency.id.rawCurrencyId)
+            } else {
+                null
+            }
             createCurrencyStatus(
                 currency = currency,
                 quote = quote,
