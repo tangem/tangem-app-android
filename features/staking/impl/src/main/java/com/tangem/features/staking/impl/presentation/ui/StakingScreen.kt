@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +33,8 @@ import kotlinx.coroutines.flow.withIndex
 
 @Composable
 internal fun StakingScreen(uiState: StakingUiState) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
     BackHandler(onBack = uiState.clickIntents::onPrevClick)
     Column(
         modifier = Modifier
@@ -58,6 +61,11 @@ internal fun StakingScreen(uiState: StakingUiState) {
         )
         StakingBottomSheet(bottomSheetConfig = uiState.bottomSheetConfig)
     }
+
+    StakingEventEffect(
+        event = uiState.event,
+        snackbarHostState = snackbarHostState,
+    )
 }
 
 @Composable
