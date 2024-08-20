@@ -11,7 +11,7 @@ sealed interface TangemButtonIconPosition {
 
     data class End(@DrawableRes override val iconResId: Int) : TangemButtonIconPosition
 
-    object None : TangemButtonIconPosition {
+    data object None : TangemButtonIconPosition {
         @DrawableRes
         override val iconResId: Int? = null
     }
