@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.common.state
+package com.tangem.core.ui.components.token.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -6,7 +6,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 
 /** Token item state */
 @Immutable
-internal sealed class TokenItemState {
+sealed class TokenItemState {
 
     abstract val id: String
 
