@@ -1,10 +1,9 @@
 package com.tangem.data.markets
 
-import com.tangem.data.markets.converters.TokenListChartConverter
+import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.converters.TokenMarketChartsConverter
-import com.tangem.data.markets.converters.TokenQuotesConverter
+import com.tangem.data.markets.converters.TokenQuotesShortConverter
 import com.tangem.data.markets.converters.toRequestParam
-import com.tangem.data.markets.utils.retryOnError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketChartListResponse
@@ -14,15 +13,14 @@ import com.tangem.domain.markets.TokenMarketUpdateRequest
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchUpdateFetcher
 import com.tangem.pagination.BatchUpdateResult
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 internal class MarketsBatchUpdateFetcher(
     private val marketsApi: TangemTechMarketsApi,
     private val tangemTechApi: TangemTechApi,
 ) : BatchUpdateFetcher<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
-
-    private val tokenListChartsConverter = TokenMarketChartsConverter(TokenListChartConverter())
-    private val tokenQuotesConverter = TokenQuotesConverter()
 
     override suspend fun BatchUpdateFetcher.UpdateContext<Int, List<TokenMarket>>.fetchUpdateAsync(
         toUpdate: List<Batch<Int, List<TokenMarket>>>,
@@ -75,7 +73,7 @@ internal class MarketsBatchUpdateFetcher(
                     val res = toUpdate.map { batch ->
                         batch.copy(
                             data = batch.data.map {
-                                it.copy(tokenQuotes = tokenQuotesConverter.convert(it.id, quotesRes))
+                                it.copy(tokenQuotesShort = TokenQuotesShortConverter.convert(it.id, quotesRes))
                             },
                         )
                     }
@@ -97,7 +95,7 @@ internal class MarketsBatchUpdateFetcher(
             key = batchToUpdate.key,
             data = batchToUpdate.data.map {
                 it.copy(
-                    tokenCharts = tokenListChartsConverter.convert(
+                    tokenCharts = TokenMarketChartsConverter.convert(
                         chartsToCopy = it.tokenCharts,
                         tokenId = it.id,
                         interval = updateRequest.interval,
