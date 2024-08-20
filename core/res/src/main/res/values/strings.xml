@@ -88,6 +88,7 @@
   <string name="common_copy">Copy</string>
   <string name="common_copy_address">Copy address</string>
   <string name="common_create">Create</string>
+  <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Custom</string>
   <plurals name="common_days">
     <item quantity="one">%d day</item>
@@ -99,6 +100,7 @@
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
   <string name="common_error">Error</string>
+  <string name="common_exchange">Exchange</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore transaction history</string>
   <string name="common_explorer">Explorer</string>
@@ -126,6 +128,7 @@
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Paste</string>
   <string name="common_range">%1$s-%2$s</string>
+  <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
   <string name="common_reject">Reject</string>
@@ -337,7 +340,7 @@
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is not available</string>
   <string name="markets_add_to_portfolio_button">Add to portfolio</string>
-  <string name="markets_add_token">Add token</string>
+  <string name="markets_add_token">Add</string>
   <string name="markets_available_networks">Available networks</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
@@ -634,7 +637,6 @@
   <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
   <string name="send_tron_account_activation_error">%1$s is an asset in the Tron network. To calculate the fee and make a transaction you need to deposit some Tron (TRX) in your account.</string>
   <string name="send_validation_invalid_address">Invalid address</string>
-  <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
   <string name="settings_card_settings_footer">Prepare to scan card you want to setup.</string>
   <string name="settings_forget_wallet">Forget wallet</string>
@@ -667,7 +669,10 @@
   <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
-  <string name="staking_notification_earn_rewards_text">Staking allow you to earn %1$s. Your staking rewards arrive every ~%2$s days.</string>
+  <string name="staking_notification_earn_rewards_text_period_day">Staking allow you to earn %1$s. Your staking rewards arrive every day.</string>
+  <string name="staking_notification_earn_rewards_text_period_hour">Staking allow you to earn %1$s. Your staking rewards arrive every hour.</string>
+  <string name="staking_notification_earn_rewards_text_period_month">Staking allow you to earn %1$s. Your staking rewards arrive every month.</string>
+  <string name="staking_notification_earn_rewards_text_period_week">Staking allow you to earn %1$s. Your staking rewards arrive every week.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_notification_unstake_text">Rewards stop accruing immediately after you unstake. The unstaking process takes %s.</string>
   <string name="staking_rebond">Rebond</string>
@@ -679,6 +684,7 @@
   <string name="staking_reward_claiming_manual">Manual</string>
   <string name="staking_reward_schedule_block">Block</string>
   <string name="staking_reward_schedule_day">Day</string>
+  <string name="staking_reward_schedule_each_day">Each day</string>
   <string name="staking_reward_schedule_epoch">Epoch</string>
   <string name="staking_reward_schedule_era">Era</string>
   <string name="staking_reward_schedule_hour">Hour</string>
@@ -827,6 +833,8 @@
   <string name="wallet_settings_title">Wallet settings</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Use %s or scan a card to unlock access to your wallet</string>
+  <string name="warning_approval_in_progress_message">The permission-granting process is currently underway and will be completed shortly</string>
+  <string name="warning_approval_in_progress_title">Approval in Progress</string>
   <string name="warning_backup_errors_message">It seems that the card activation was not completed correctly. This could be due to an issue with your device\'s NFC module or incorrect tapping of the card to your device. Please contact our Support team for assistance.</string>
   <string name="warning_backup_errors_title">Activation error</string>
   <string name="warning_beacon_chain_retirement_content">According to BNB network developers, support for the BEP-2 standard will end in June 2024. To avoid losing assets with this standard, please convert them to the BEP-20 standard. Use our swap service or third-party services to transfer funds to the BNB Smart Chain network.</string>
@@ -852,6 +860,8 @@
   <string name="warning_express_not_enough_fee_for_token_tx_description">To make a transaction you need to deposit some %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Unable to cover %s fee</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">The amount to receive must be at least %s</string>
+  <string name="warning_express_pair_unavailable_message">This may occur because the provider is currently unable to exchange your selected pair. Please wait a moment and try again. (Code %@)</string>
+  <string name="warning_express_pair_unavailable_title">Selected pair temporarily unavailable</string>
   <string name="warning_express_refresh_required_title">Service temporarily unavailable</string>
   <string name="warning_express_too_maximum_amount_title">The amount of tokens to be swapped must not exceed %s</string>
   <string name="warning_express_too_minimal_amount_title">The amount to swap must be at least %s</string>
