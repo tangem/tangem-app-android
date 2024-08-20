@@ -14,8 +14,6 @@ interface SwapRepository {
     /** Express getPairs request variant without providers request */
     suspend fun getPairsOnly(initialCurrency: LeastTokenInfo, currencyList: List<CryptoCurrency>): PairsWithProviders
 
-    suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double>
-
     suspend fun getExchangeStatus(txId: String): Either<UnknownError, ExchangeStatusModel>
 
     @Suppress("LongParameterList")
