@@ -2,15 +2,19 @@ package com.tangem.core.ui.decorations
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.res.TangemTheme
 
+@Composable
 fun Modifier.roundedShapeItemDecoration(
     currentIndex: Int,
     lastIndex: Int,
     addDefaultPadding: Boolean = true,
+    radius: Dp = TangemTheme.dimens.radius16,
 ): Modifier = composed {
     val modifier = if (addDefaultPadding) this.padding(horizontal = TangemTheme.dimens.spacing16) else this
     val isSingleItem = currentIndex == 0 && lastIndex == 0
@@ -24,7 +28,7 @@ fun Modifier.roundedShapeItemDecoration(
                         Modifier
                     },
                 )
-                .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
+                .clip(shape = RoundedCornerShape(radius))
         }
         currentIndex == 0 -> {
             modifier
@@ -37,8 +41,8 @@ fun Modifier.roundedShapeItemDecoration(
                 )
                 .clip(
                     shape = RoundedCornerShape(
-                        topStart = TangemTheme.dimens.radius16,
-                        topEnd = TangemTheme.dimens.radius16,
+                        topStart = radius,
+                        topEnd = radius,
                     ),
                 )
         }
@@ -46,8 +50,8 @@ fun Modifier.roundedShapeItemDecoration(
             modifier
                 .clip(
                     shape = RoundedCornerShape(
-                        bottomStart = TangemTheme.dimens.radius16,
-                        bottomEnd = TangemTheme.dimens.radius16,
+                        bottomStart = radius,
+                        bottomEnd = radius,
                     ),
                 )
         }
