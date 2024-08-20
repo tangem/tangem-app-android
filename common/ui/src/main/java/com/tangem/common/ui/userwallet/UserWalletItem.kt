@@ -1,8 +1,11 @@
 package com.tangem.common.ui.userwallet
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +29,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.common.ui.R
 import com.tangem.core.ui.coil.RotationTransformation
+import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemThemePreview
@@ -33,9 +37,14 @@ import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun UserWalletItem(state: UserWalletItemUM, modifier: Modifier = Modifier) {
+fun UserWalletItem(
+    state: UserWalletItemUM,
+    modifier: Modifier = Modifier,
+    blockColors: CardColors = TangemBlockCardColors,
+) {
     BlockCard(
         modifier = modifier,
+        colors = blockColors,
         onClick = state.onClick,
         enabled = state.isEnabled,
     ) {
@@ -142,6 +151,7 @@ private fun CardImage(imageUrl: String, modifier: Modifier = Modifier) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview() {
     TangemThemePreview {
@@ -174,7 +184,12 @@ private fun Preview() {
             ),
         )
 
-        Column {
+        Column(
+            Modifier
+                .background(TangemTheme.colors.background.tertiary)
+                .padding(TangemTheme.dimens.spacing12),
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        ) {
             list.fastForEach { userWalletItemUM ->
                 UserWalletItem(
                     modifier = Modifier.fillMaxWidth(),
