@@ -43,4 +43,6 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun onExploreClick()
 
     fun onShareClick()
+
+    fun onFailedTxEmailClick(errorMessage: String)
 }
