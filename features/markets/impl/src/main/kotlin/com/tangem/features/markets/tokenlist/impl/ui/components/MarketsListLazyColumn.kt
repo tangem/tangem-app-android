@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
+import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -194,28 +195,6 @@ private fun VisibleItemsTracker(listState: LazyListState, state: ListUM) {
     LaunchedEffect(listState.isScrollInProgress, visibleItems) {
         if (state is ListUM.Content && listState.isScrollInProgress.not()) {
             state.visibleIdsChanged(visibleItems)
-        }
-    }
-}
-
-@Composable
-fun InfiniteListHandler(listState: LazyListState, onLoadMore: () -> Boolean, buffer: Int = 2) {
-    val loadMore by remember {
-        derivedStateOf {
-            val layoutInfo = listState.layoutInfo
-            val totalItemsNumber = layoutInfo.totalItemsCount
-            val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
-
-            lastVisibleItemIndex > totalItemsNumber - buffer
-        }
-    }
-
-    val totalItemsCount by remember { derivedStateOf { listState.layoutInfo.totalItemsCount } }
-    var emitted by remember(totalItemsCount) { mutableStateOf(false) }
-
-    LaunchedEffect(loadMore) {
-        if (loadMore && !emitted) {
-            emitted = onLoadMore()
         }
     }
 }

@@ -139,8 +139,8 @@ internal class DefaultWalletRouter(
         return router.stack.lastOrNull() is AppRoute.Wallet
     }
 
-    override fun openManageTokensScreen() {
-        router.push(AppRoute.ManageTokens(readOnlyContent = false))
+    override fun openManageTokensScreen(userWalletId: UserWalletId) {
+        router.push(AppRoute.ManageTokens(userWalletId = userWalletId))
     }
 
     override fun openScanFailedDialog(onTryAgain: () -> Unit) {

@@ -2,10 +2,13 @@ package com.tangem.data.staking
 
 import android.util.Base64
 import arrow.core.raise.catch
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toCompressedPublicKey
@@ -22,6 +25,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.*
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.datasource.api.stakekit.models.response.model.transaction.tron.TronStakeKitTransaction
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
@@ -66,6 +70,7 @@ internal class DefaultStakingRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val stakingFeatureToggle: StakingFeatureToggles,
     private val walletManagersFacade: WalletManagersFacade,
+    private val moshi: Moshi,
 ) : StakingRepository {
 
     private val stakingNetworkTypeConverter = StakingNetworkTypeConverter()
@@ -102,6 +107,9 @@ internal class DefaultStakingRepository(
     private val isYieldBalanceFetching = MutableStateFlow(
         value = emptyMap<UserWalletId, Boolean>(),
     )
+
+    private val tronStakeKitTransactionAdapter: JsonAdapter<TronStakeKitTransaction> =
+        moshi.adapter(TronStakeKitTransaction::class.java)
 
     override fun isStakingSupported(integrationKey: String): Boolean {
         return integrationIdMap.containsKey(integrationKey)
@@ -509,6 +517,8 @@ internal class DefaultStakingRepository(
                 amount = params.amount.toPlainString(),
                 inputToken = tokenConverter.convertBack(params.token),
                 validatorAddress = params.validatorAddress,
+                validatorAddresses = listOf(params.validatorAddress), // check on other networks
+                tronResource = getTronResource(network),
             ),
         )
     }
@@ -567,6 +577,11 @@ internal class DefaultStakingRepository(
             -> TransactionData.Compiled.Data.Bytes(unsignedTransaction.hexToBytes())
             Blockchain.Ethereum,
             -> TransactionData.Compiled.Data.RawString(unsignedTransaction)
+            Blockchain.Tron -> {
+                val tronStakeKitTransaction = tronStakeKitTransactionAdapter.fromJson(unsignedTransaction)
+                    ?: error("Failed to parse Tron StakeKit transaction")
+                TransactionData.Compiled.Data.RawString(tronStakeKitTransaction.rawDataHex)
+            }
             else -> error("Unsupported blockchain")
         }
     }
@@ -598,6 +613,16 @@ internal class DefaultStakingRepository(
 
     private fun CryptoCurrency.ID.getIntegrationKey(): String = rawNetworkId.plus(rawCurrencyId)
 
+    private fun getTronResource(network: Network): TronResource? {
+        val blockchain = Blockchain.fromNetworkId(network.backendId)
+
+        return if (blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet) {
+            TronResource.ENERGY
+        } else {
+            null
+        }
+    }
+
     private companion object {
         const val YIELDS_STORE_KEY = "yields"
 
@@ -622,7 +647,7 @@ internal class DefaultStakingRepository(
             Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
             // Blockchain.Polkadot.run { id + toCoinId() } to POLKADOT_INTEGRATION_ID,
             // Blockchain.Avalanche.run { id + toCoinId() } to AVALANCHE_INTEGRATION_ID,
-            // Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
+            Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
             // Blockchain.Cronos.run { id + toCoinId() } to CRONOS_INTEGRATION_ID,
             // Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
             // Blockchain.Kava.run { id + toCoinId() } to KAVA_INTEGRATION_ID,
