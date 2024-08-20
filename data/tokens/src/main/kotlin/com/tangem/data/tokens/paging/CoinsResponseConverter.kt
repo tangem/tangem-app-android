@@ -2,7 +2,7 @@ package com.tangem.data.tokens.paging
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.data.tokens.utils.getNetworkStandardType
+import com.tangem.data.common.currency.getNetworkStandardType
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Token

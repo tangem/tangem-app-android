@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.analytics.models)
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /* Project - Domain */
     implementation(projects.domain.models)
@@ -66,5 +67,6 @@ dependencies {
 
     /* Other */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.reKotlin)
     implementation(deps.timber)
 }

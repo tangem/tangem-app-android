@@ -104,6 +104,7 @@ dependencies {
     implementation(projects.data.staking)
     implementation(projects.data.walletConnect)
     implementation(projects.data.markets)
+    implementation(projects.data.manageTokens)
 
     /** Features */
     implementation(projects.features.onboarding)

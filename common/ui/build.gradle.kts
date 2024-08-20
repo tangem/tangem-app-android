@@ -18,6 +18,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.coil)
 
     /** Deps */
     implementation(deps.kotlin.immutable.collections)
