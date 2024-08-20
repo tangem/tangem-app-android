@@ -844,6 +844,8 @@
   <string name="wallet_settings_title">Налаштування гаманця</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Використовуйте %s або відскануйте картку, щоб розблокувати доступ до гаманця</string>
+  <string name="warning_approval_in_progress_message">Затвердження обміну триває і незабаром буде завершено</string>
+  <string name="warning_approval_in_progress_title">Затвердження в процесі</string>
   <string name="warning_backup_errors_message">Схоже, що активація картки була виконана неправильно. Це може бути пов\'язано з проблемою з модулем NFC вашого пристрою або неправильним прикладанням картки до пристрою. Зверніться за допомогою до нашої служби підтримки.</string>
   <string name="warning_backup_errors_title">Помилка активації</string>
   <string name="warning_beacon_chain_retirement_content">За рішенням розробників мережі BNB стандарт BEP-2 перестане підтримуватись у червні 2024 року. Щоб не втратити свої активи, їх необхідно конвертувати у стандарт BEP-20. Використовуйте функцію обміну, щоб перевести їх у мережу BNB Smart Chain.</string>
@@ -861,8 +863,6 @@
   <string name="warning_existential_deposit_title">Для роботи з мережею вимагається депозит</string>
   <string name="warning_express_active_transaction_message">Обмін буде доступний після завершення %s транзакції</string>
   <string name="warning_express_active_transaction_title">У вас є активна транзакція</string>
-  <string name="warning_express_approval_in_progress_message">Затвердження обміну триває і незабаром буде завершено</string>
-  <string name="warning_express_approval_in_progress_title">Затвердження в процесі</string>
   <string name="warning_express_dust_message">Мінімальна сума обміну становить - %1$s. Будь ласка, переконайтеся, що залишок на рахунку після обміну буде не менше за %2$s.</string>
   <string name="warning_express_no_exchangeable_coins_description">У вашому списку немає доступних монет для обміну %s</string>
   <string name="warning_express_no_exchangeable_coins_title">Немає доступних токенів для обміну</string>
