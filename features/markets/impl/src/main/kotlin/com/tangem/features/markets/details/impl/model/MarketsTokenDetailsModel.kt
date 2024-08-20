@@ -3,6 +3,7 @@ package com.tangem.features.markets.details.impl.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.ui.charts.state.*
+import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
@@ -25,6 +26,7 @@ import com.tangem.features.markets.details.impl.model.formatter.*
 import com.tangem.features.markets.details.impl.model.formatter.formatAsPrice
 import com.tangem.features.markets.details.impl.model.formatter.getChangePercentBetween
 import com.tangem.features.markets.details.impl.model.formatter.getPercentByInterval
+import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
@@ -43,6 +45,7 @@ import javax.inject.Inject
 
 @Suppress("LargeClass", "LongParameterList")
 @Stable
+@ComponentScoped
 internal class MarketsTokenDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -117,6 +120,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     val containerBottomSheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
     val isVisibleOnScreen = MutableStateFlow(false)
+    val networksState = MutableStateFlow<TokenNetworksState>(TokenNetworksState.Loading)
 
     val state = MutableStateFlow(
         MarketsTokenDetailsUM(
@@ -290,6 +294,14 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                                 infoBlocks = infoConverter.convert(result),
                             ),
                         )
+                    }
+
+                    val networks = result.networks
+
+                    networksState.value = if (networks.isNullOrEmpty()) {
+                        TokenNetworksState.NoNetworksAvailable
+                    } else {
+                        TokenNetworksState.NetworksAvailable(networks)
                     }
 
                     chartDataProducer.runTransaction {
