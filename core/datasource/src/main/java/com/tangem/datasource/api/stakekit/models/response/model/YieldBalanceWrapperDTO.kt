@@ -19,7 +19,7 @@ data class BalanceDTO(
     @Json(name = "groupId")
     val groupId: String,
     @Json(name = "type")
-    val type: BalanceType,
+    val type: BalanceTypeDTO,
     @Json(name = "amount")
     val amount: BigDecimal,
     @Json(name = "date")
@@ -38,7 +38,7 @@ data class BalanceDTO(
     val providerId: String?,
 ) {
 
-    enum class BalanceType {
+    enum class BalanceTypeDTO {
         @Json(name = "available")
         AVAILABLE,
 

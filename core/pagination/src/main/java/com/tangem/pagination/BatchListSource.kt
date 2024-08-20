@@ -114,6 +114,12 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                 loadMoreActionJob?.cancel()
                 reloadActionJob?.cancel()
                 stopAllUpdates()
+
+                state.value = BatchListState(
+                    data = emptyList(),
+                    status = PaginationStatus.InitialLoading,
+                )
+
                 reloadActionJob = scope.launchFetch {
                     reloadTask(action)
                 }
@@ -221,11 +227,6 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
     }
 
     private suspend fun reloadTask(action: BatchAction.Reload<TRequestParams>) {
-        state.value = BatchListState(
-            data = emptyList(),
-            status = PaginationStatus.InitialLoading,
-        )
-
         val res = runCatching {
             batchFetcher.fetchFirst(action.requestParams)
         }.getOrElse {
