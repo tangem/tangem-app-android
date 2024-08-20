@@ -11,7 +11,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 // [REDACTED_TODO_COMMENT]
 @Suppress("LargeClass")
@@ -34,7 +33,7 @@ internal class CurrenciesStatusesOperations(
                     val quotes = quotesRepository.getQuotesSync(currenciesIds, false).right()
                     val networkStatuses =
                         networksRepository.getNetworkStatusesSync(userWalletId, networks, false).right()
-                    val yieldBalances = getYieldBalancesSync()
+                    val yieldBalances = getYieldBalancesSync(nonEmptyCurrencies)
 
                     return createCurrenciesStatuses(nonEmptyCurrencies, quotes, networkStatuses, yieldBalances)
                 },
@@ -146,7 +145,7 @@ internal class CurrenciesStatusesOperations(
             val currenciesFlow = combine(
                 getQuotes(currenciesIds),
                 getNetworksStatuses(networks),
-                getYieldBalances(),
+                getYieldBalances(nonEmptyCurrencies),
             ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances ->
                 createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes, maybeNetworksStatuses, maybeYieldBalances)
             }
@@ -384,25 +383,23 @@ internal class CurrenciesStatusesOperations(
             .onEmpty { emit(Error.EmptyNetworksStatuses.left()) }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun getYieldBalances(): EitherFlow<Error, YieldBalanceList> {
-        return networksRepository.getNetworkAddressesFlow(userWalletId).flatMapLatest { addresses ->
-            stakingRepository.getMultiYieldBalanceFlow(
-                userWalletId = userWalletId,
-                addresses = addresses,
-            ).map<YieldBalanceList, Either<Error, YieldBalanceList>> { it.right() }
-                .catch { emit(Error.DataError(it).left()) }
-                .onEmpty { emit(Error.EmptyYieldBalances.left()) }
-        }
+    private fun getYieldBalances(cryptoCurrencies: List<CryptoCurrency>): Flow<Either<Error, YieldBalanceList>> {
+        return stakingRepository.getMultiYieldBalanceFlow(
+            userWalletId = userWalletId,
+            cryptoCurrencies = cryptoCurrencies,
+        ).map<YieldBalanceList, Either<Error, YieldBalanceList>> { it.right() }
+            .catch { emit(Error.DataError(it).left()) }
+            .onEmpty { emit(Error.EmptyYieldBalances.left()) }
     }
 
-    private suspend fun getYieldBalancesSync(): Either<Error.EmptyYieldBalances, YieldBalanceList> {
+    private suspend fun getYieldBalancesSync(
+        cryptoCurrencies: List<CryptoCurrency>,
+    ): Either<Error.EmptyYieldBalances, YieldBalanceList> {
         return catch(
             block = {
-                val networkAddresses = networksRepository.getNetworkAddresses(userWalletId)
                 stakingRepository.getMultiYieldBalanceSync(
                     userWalletId,
-                    networkAddresses,
+                    cryptoCurrencies,
                 ).right()
             },
             catch = {
@@ -416,10 +413,9 @@ internal class CurrenciesStatusesOperations(
     ): Either<Error.EmptyYieldBalances, YieldBalance> {
         return catch(
             block = {
-                val address = networksRepository.getNetworkAddress(userWalletId, cryptoCurrency)
                 stakingRepository.getSingleYieldBalanceSync(
                     userWalletId,
-                    address,
+                    cryptoCurrency,
                 ).right()
             },
             catch = {
@@ -428,19 +424,13 @@ internal class CurrenciesStatusesOperations(
         )
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getYieldBalance(cryptoCurrency: CryptoCurrency): EitherFlow<Error, YieldBalance> {
-        return networksRepository.getNetworkAddressFlow(
-            userWalletId,
-            cryptoCurrency,
-        ).flatMapLatest { address ->
-            stakingRepository.getSingleYieldBalanceFlow(
-                userWalletId = userWalletId,
-                address = address,
-            ).map<YieldBalance, Either<Error, YieldBalance>> { it.right() }
-                .catch { emit(Error.DataError(it).left()) }
-                .onEmpty { emit(Error.EmptyYieldBalances.left()) }
-        }
+        return stakingRepository.getSingleYieldBalanceFlow(
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrency,
+        ).map<YieldBalance, Either<Error, YieldBalance>> { it.right() }
+            .catch { emit(Error.DataError(it).left()) }
+            .onEmpty { emit(Error.EmptyYieldBalances.left()) }
     }
 
     private fun getIds(
