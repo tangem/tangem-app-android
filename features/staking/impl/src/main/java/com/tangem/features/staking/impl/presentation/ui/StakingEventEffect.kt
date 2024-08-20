@@ -7,7 +7,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import com.tangem.common.ui.alerts.models.AlertUM
 import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButton
+import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
@@ -45,24 +45,24 @@ internal fun StakingEventEffect(event: StateEvent<StakingEvent>, snackbarHostSta
 
 @Composable
 internal fun StakingAlert(state: AlertUM, onDismiss: () -> Unit) {
-    val confirmButton: DialogButton
-    val dismissButton: DialogButton?
+    val confirmButton: DialogButtonUM
+    val dismissButton: DialogButtonUM?
 
     val onActionClick = state.onConfirmClick
     if (onActionClick != null) {
-        confirmButton = DialogButton(
+        confirmButton = DialogButtonUM(
             title = state.confirmButtonText.resolveReference(),
             onClick = {
                 onActionClick()
                 onDismiss()
             },
         )
-        dismissButton = DialogButton(
+        dismissButton = DialogButtonUM(
             title = stringResource(id = R.string.common_cancel),
             onClick = onDismiss,
         )
     } else {
-        confirmButton = DialogButton(
+        confirmButton = DialogButtonUM(
             title = state.confirmButtonText.resolveReference(),
             onClick = onDismiss,
         )
