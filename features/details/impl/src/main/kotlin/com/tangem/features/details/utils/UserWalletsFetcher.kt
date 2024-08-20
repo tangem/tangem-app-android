@@ -2,6 +2,7 @@ package com.tangem.features.details.utils
 
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -22,7 +23,6 @@ import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.details.entity.UserWalletListUM.UserWalletUM
 import com.tangem.features.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,7 +40,7 @@ internal class UserWalletsFetcher @Inject constructor(
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val userWallets: Flow<ImmutableList<UserWalletUM>> = getWalletsUseCase().transformLatest { wallets ->
+    val userWallets: Flow<ImmutableList<UserWalletItemUM>> = getWalletsUseCase().transformLatest { wallets ->
         emit(wallets.toUiModels(onClick = ::navigateToWalletSettings))
 
         combine(
@@ -72,7 +72,7 @@ internal class UserWalletsFetcher @Inject constructor(
         maybeAppCurrency: Either<SelectedAppCurrencyError, AppCurrency>,
         maybeBalances: Lce<TokenListError, Map<UserWalletId, TotalFiatBalance>>,
         balanceHidingSettings: BalanceHidingSettings,
-    ): Lce<Error, ImmutableList<UserWalletUM>> = lce {
+    ): Lce<Error, ImmutableList<UserWalletItemUM>> = lce {
         val balances = withError(
             transform = { Error.UnableToGetBalances },
             block = { maybeBalances.bindOrNull().orEmpty() },
