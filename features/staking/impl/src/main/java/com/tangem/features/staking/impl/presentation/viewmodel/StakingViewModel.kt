@@ -25,16 +25,19 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionType
+import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -54,8 +57,8 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -80,12 +83,17 @@ internal class StakingViewModel @Inject constructor(
     private val submitHashUseCase: SubmitHashUseCase,
     private val isStakeMoreAvailableUseCase: IsStakeMoreAvailableUseCase,
     private val stakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
+    private val updateDelayedNetworkStatusUseCase: UpdateDelayedNetworkStatusUseCase,
+    private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
+    private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
+    private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val isApproveNeededUseCase: IsApproveNeededUseCase,
     private val clipboardManager: ClipboardManager,
     private val vibratorHapticManager: VibratorHapticManager,
+    @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
 
@@ -575,7 +583,7 @@ internal class StakingViewModel @Inject constructor(
             },
             ifRight = { txHash ->
                 submitHash(transactionId, txHash)
-                updateStakeBalance()
+                scheduleUpdates()
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = txHash,
                     networkId = cryptoCurrencyStatus.currency.network.id,
@@ -608,14 +616,55 @@ internal class StakingViewModel @Inject constructor(
             }
     }
 
-    private fun updateStakeBalance() {
-        viewModelScope.launch {
-            stakingYieldBalanceUseCase(
+    private fun scheduleUpdates() {
+        coroutineScope.launch {
+            listOf(
+                // we should update network to find pending tx after 1 sec
+                async {
+                    fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrencyStatus.currency.network))
+                },
+                // we should update tx history and network for new balances
+                async {
+                    updateStakeBalance()
+                },
+                async {
+                    updateTxHistory()
+                },
+                async {
+                    updateNetworkStatuses()
+                },
+            ).awaitAll()
+        }
+    }
+
+    private suspend fun updateNetworkStatuses() {
+        updateDelayedNetworkStatusUseCase(
+            userWalletId = userWalletId,
+            network = cryptoCurrencyStatus.currency.network,
+            delayMillis = BALANCE_UPDATE_DELAY,
+            refresh = true,
+        )
+    }
+
+    private suspend fun updateStakeBalance() {
+        stakingYieldBalanceUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+            refresh = true,
+        )
+    }
+
+    private suspend fun updateTxHistory() {
+        delay(BALANCE_UPDATE_DELAY)
+        val txHistoryItemsCountEither = getTxHistoryItemsCountUseCase(
+            userWalletId = userWalletId,
+            currency = cryptoCurrencyStatus.currency,
+        )
+
+        txHistoryItemsCountEither.onRight {
+            getTxHistoryItemsUseCase(
                 userWalletId = userWalletId,
-                address = CryptoCurrencyAddress(
-                    cryptoCurrencyStatus.currency,
-                    cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value.orEmpty(),
-                ),
+                currency = cryptoCurrencyStatus.currency,
                 refresh = true,
             )
         }
@@ -630,5 +679,6 @@ internal class StakingViewModel @Inject constructor(
     private companion object {
         const val WHAT_IS_STAKING_ARTICLE_URL = "TODO staking"
         const val ALLOWANCE_UPDATE_DELAY = 10_000L
+        const val BALANCE_UPDATE_DELAY = 11_000L
     }
 }
