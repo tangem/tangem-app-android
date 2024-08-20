@@ -69,6 +69,20 @@ class GetExtendedPublicKeyForCurrencyUseCase(
         }
     }
 
+    /**
+     * @return true if xpub generation is supported, false otherwise
+     */
+    suspend fun isSupported(userWalletId: UserWalletId, network: Network): Boolean {
+        val userWallet = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
+            ?: error("Wallet not found")
+
+        val blockchain = Blockchain.fromId(network.id.value)
+        val isSecp256k1Blockchain = Blockchain.secp256k1Blockchains(network.isTestnet).contains(blockchain)
+        val isHdKey = userWallet.wallet.publicKey.derivationType?.hdKey
+
+        return isSecp256k1Blockchain && isHdKey != null
+    }
+
     private suspend fun deriveKeys(
         userWalletId: UserWalletId,
         seedKey: ByteArray,
