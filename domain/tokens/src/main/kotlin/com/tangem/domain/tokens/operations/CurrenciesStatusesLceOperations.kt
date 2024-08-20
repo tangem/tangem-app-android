@@ -69,11 +69,10 @@ internal class CurrenciesStatusesLceOperations(
 
             val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
 
-            val addresses = networksRepository.getNetworkAddresses(userWalletId)
             combine(
                 getQuotes(currenciesIds),
                 getNetworksStatuses(userWalletId, networks),
-                getYieldBalances(userWalletId, addresses),
+                getYieldBalances(userWalletId, nonEmptyCurrencies),
             ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances ->
                 val statuses = createCurrenciesStatuses(
                     currencies = nonEmptyCurrencies,
@@ -196,11 +195,11 @@ internal class CurrenciesStatusesLceOperations(
 
     private fun getYieldBalances(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): LceFlow<TokenListError, YieldBalanceList> {
         return stakingRepository.getMultiYieldBalanceLce(
             userWalletId = userWalletId,
-            addresses = addresses,
+            cryptoCurrencies = cryptoCurrencies,
         ).map { maybeBalances ->
             maybeBalances.mapError { TokenListError.DataError(it) }
         }
