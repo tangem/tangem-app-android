@@ -14,6 +14,7 @@ android {
 dependencies {
     /* Project - API */
     api(projects.features.markets.api)
+    implementation(projects.core.navigation)
 
     /* Domain */
     implementation(projects.domain.markets)
@@ -23,6 +24,7 @@ dependencies {
     /* Compose */
     implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
@@ -37,6 +39,7 @@ dependencies {
     /* Other */
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
+    implementation(deps.decompose.ext.compose)
 
     /* Core */
     implementation(projects.core.decompose)

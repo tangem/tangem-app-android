@@ -9,9 +9,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
@@ -31,7 +28,7 @@ internal fun StakingClaimRewardsValidatorContent(
     if (state !is StakingStates.RewardsValidatorsState.Data) return
     Column(
         modifier = Modifier // Do not put fillMaxSize() in here
-            .background(TangemTheme.colors.background.tertiary)
+            .background(TangemTheme.colors.background.secondary)
             .padding(horizontal = TangemTheme.dimens.spacing12)
             .verticalScroll(rememberScrollState()),
     ) {
@@ -41,19 +38,16 @@ internal fun StakingClaimRewardsValidatorContent(
                     subtitle = stringReference(item.validator.name),
                     caption = combinedReference(
                         resourceReference(R.string.staking_details_apr),
-                        annotatedReference(
-                            buildAnnotatedString {
-                                appendSpace()
-                                withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
-                                    append(
-                                        BigDecimalFormatter.formatPercent(
-                                            percent = item.validator.apr.orZero(),
-                                            useAbsoluteValue = true,
-                                        ),
-                                    )
-                                }
-                            },
-                        ),
+                        annotatedReference {
+                            appendSpace()
+                            appendColored(
+                                text = BigDecimalFormatter.formatPercent(
+                                    percent = item.validator.apr.orZero(),
+                                    useAbsoluteValue = true,
+                                ),
+                                color = TangemTheme.colors.text.accent,
+                            )
+                        },
                     ),
                     infoTitle = item.fiatAmount,
                     infoSubtitle = item.cryptoAmount,
@@ -63,7 +57,7 @@ internal fun StakingClaimRewardsValidatorContent(
                         .background(TangemTheme.colors.background.action)
                         .clickable(
                             onClick = {
-                                clickIntents.selectRewardValidator(item.cryptoValue)
+                                clickIntents.onActiveStake(item)
                             },
                         ),
                 )
