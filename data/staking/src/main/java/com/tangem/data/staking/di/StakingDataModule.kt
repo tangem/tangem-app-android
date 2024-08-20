@@ -37,6 +37,7 @@ internal object StakingDataModule {
         stakingFeatureToggle: StakingFeatureToggles,
         cacheRegistry: CacheRegistry,
         walletManagersFacade: WalletManagersFacade,
+        @NetworkMoshi moshi: Moshi,
     ): StakingRepository {
         return DefaultStakingRepository(
             stakeKitApi = stakeKitApi,
@@ -47,6 +48,7 @@ internal object StakingDataModule {
             cacheRegistry = cacheRegistry,
             stakingFeatureToggle = stakingFeatureToggle,
             walletManagersFacade = walletManagersFacade,
+            moshi = moshi,
         )
     }
 
