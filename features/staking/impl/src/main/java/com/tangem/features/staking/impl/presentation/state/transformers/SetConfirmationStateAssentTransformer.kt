@@ -16,7 +16,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal class SetConfirmationStateAssentTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
     private val stakingGasEstimate: StakingGasEstimate,
     private val pendingActionList: ImmutableList<PendingAction>,
 ) : Transformer<StakingUiState> {
@@ -31,6 +31,7 @@ internal class SetConfirmationStateAssentTransformer(
         gasEstimate: StakingGasEstimate,
     ): StakingStates.ConfirmationState {
         if (this is StakingStates.ConfirmationState.Data) {
+            val isFeeConvertibleToFiat = feeCryptoCurrencyStatus?.currency?.network?.hasFiatFeeRate == true
             return copy(
                 innerState = InnerConfirmationStakingState.ASSENT,
                 feeState = FeeState.Content(
@@ -41,14 +42,15 @@ internal class SetConfirmationStateAssentTransformer(
                             decimals = gasEstimate.token.decimals,
                         ),
                     ),
-                    rate = cryptoCurrencyStatusProvider().value.fiatRate,
-                    isFeeConvertibleToFiat = cryptoCurrencyStatusProvider().currency.network.hasFiatFeeRate,
+                    rate = feeCryptoCurrencyStatus?.value?.fiatRate,
+                    isFeeConvertibleToFiat = isFeeConvertibleToFiat,
                     appCurrency = appCurrencyProvider(),
                     isFeeApproximate = false,
                 ),
                 validatorState = validatorState.copySealed(isClickable = true),
                 pendingActions = pendingActionList,
                 isPrimaryButtonEnabled = true,
+                isApprovalNeeded = false,
             )
         } else {
             return this
