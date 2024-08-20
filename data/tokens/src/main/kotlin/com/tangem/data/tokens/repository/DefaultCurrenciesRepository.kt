@@ -290,6 +290,21 @@ internal class DefaultCurrenciesRepository(
         responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
     }
 
+    override suspend fun getMultiCurrencyWalletCachedCurrenciesSync(userWalletId: UserWalletId) =
+        withContext(dispatchers.io) {
+            val userWallet = getUserWallet(userWalletId)
+            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
+
+            val storedTokens = requireNotNull(
+                value = getSavedUserTokensResponseSync(key = userWallet.walletId),
+                lazyMessage = {
+                    "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+                },
+            )
+
+            responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
+        }
+
     override suspend fun getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
