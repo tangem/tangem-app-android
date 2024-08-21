@@ -43,6 +43,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.events.StakingEventFactory
 import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.AmountChangeStateTransformer
@@ -327,7 +328,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onInitialInfoBannerClick() {
-        // innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
+        innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
     }
 
     override fun onInfoClick(infoType: InfoType) {
@@ -339,7 +340,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onAmountValueChange(value: String) {
-        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, yield, value))
+        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, value, yield))
     }
 
     override fun onAmountPasteTriggerDismiss() {
@@ -369,7 +370,7 @@ internal class StakingViewModel @Inject constructor(
             StakingActionCommonType.PENDING_OTHER
         }
         stateController.update(ValidatorSelectChangeTransformer(activeStake.validator))
-        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, yield, activeStake.cryptoValue))
+        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, activeStake.cryptoValue, yield))
         onNextClick(actionType, activeStake.pendingActions)
     }
 
@@ -696,7 +697,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private companion object {
-        const val WHAT_IS_STAKING_ARTICLE_URL = "TODO staking"
+        const val WHAT_IS_STAKING_ARTICLE_URL = "https://tangem.com/en/blog/post/how-to-stake-cryptocurrency/"
         const val ALLOWANCE_UPDATE_DELAY = 10_000L
         const val BALANCE_UPDATE_DELAY = 11_000L
     }
