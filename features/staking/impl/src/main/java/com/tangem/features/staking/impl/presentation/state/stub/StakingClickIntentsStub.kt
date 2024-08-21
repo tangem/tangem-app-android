@@ -4,12 +4,12 @@ import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.BalanceState
-import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import kotlinx.collections.immutable.ImmutableList
 
 @Suppress("TooManyFunctions")
-object StakingClickIntentsStub : StakingClickIntents {
+internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onBackClick() {}
 
