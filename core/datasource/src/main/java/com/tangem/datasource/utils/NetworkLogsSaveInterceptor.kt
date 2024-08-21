@@ -54,8 +54,8 @@ internal class NetworkLogsSaveInterceptor(
         val connectionProtocol = if (connection != null) " ${connection.protocol()}" else ""
 
         appLogsStore.saveLogMessage(
-            "--> ${request.method} ${request.url}$connectionProtocol\n" +
-                createRequestEndMessage(request),
+            "--> ${request.method} ${request.url}$connectionProtocol\n",
+            createRequestEndMessage(request),
         )
     }
 
@@ -88,12 +88,6 @@ internal class NetworkLogsSaveInterceptor(
     }
 
     private fun logResponseMessage(response: Response, startNs: Long) {
-        val tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
-
-        val responseMessage = if (response.message.isEmpty()) "" else ' ' + response.message
-        val startMessage = "<-- ${response.code}$responseMessage ${response.request.url} " +
-            "(${tookMs}ms)"
-
         val responseHeaders = response.headers
         val responseBody = response.body!!
         val contentLength = responseBody.contentLength()
@@ -138,7 +132,17 @@ internal class NetworkLogsSaveInterceptor(
             }
         }
 
-        appLogsStore.saveLogMessage(startMessage + "\n" + message)
+        val tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
+
+        val spaceBeforeResponseMessage = if (response.message.isEmpty()) "" else ' ' + response.message
+
+        appLogsStore.saveLogMessage(
+            "<-- ${response.code}",
+            spaceBeforeResponseMessage,
+            response.message,
+            " ${response.request.url} (${tookMs}ms)\n",
+            message,
+        )
     }
 
     private fun bodyHasUnknownEncoding(headers: Headers): Boolean {
