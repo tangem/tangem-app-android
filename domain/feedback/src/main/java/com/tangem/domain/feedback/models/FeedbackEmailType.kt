@@ -22,4 +22,12 @@ sealed interface FeedbackEmailType {
 
     /** User has problem with sending transaction */
     data class TransactionSendingProblem(override val cardInfo: CardInfo) : FeedbackEmailType
+
+    /** User has problem with staking */
+    data class StakingProblem(
+        override val cardInfo: CardInfo,
+        val validatorName: String?,
+        val transactionType: String?,
+        val unsignedTransaction: String?,
+    ) : FeedbackEmailType
 }
