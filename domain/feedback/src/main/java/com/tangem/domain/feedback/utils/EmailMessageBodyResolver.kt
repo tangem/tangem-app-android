@@ -23,6 +23,12 @@ internal class EmailMessageBodyResolver(
             is FeedbackEmailType.RateCanBeBetter -> addCardAndPhoneInfo(type.cardInfo)
             is FeedbackEmailType.ScanningProblem -> addScanningProblemBody()
             is FeedbackEmailType.TransactionSendingProblem -> addTransactionSendingProblemBody(type.cardInfo)
+            is FeedbackEmailType.StakingProblem -> addStakingProblemBody(
+                type.cardInfo,
+                type.validatorName,
+                type.transactionType,
+                type.unsignedTransaction,
+            )
         }
 
         return build()
@@ -68,6 +74,36 @@ internal class EmailMessageBodyResolver(
             addBlockchainError(blockchainInfo, blockchainError)
             addDelimiter()
         }
+
+        addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
+    }
+
+    private suspend fun FeedbackDataBuilder.addStakingProblemBody(
+        cardInfo: CardInfo,
+        validatorName: String?,
+        transactionType: String?,
+        unsignedTransaction: String?,
+    ) {
+        addCardInfo(cardInfo)
+        addDelimiter()
+
+        val userWalletId = requireNotNull(cardInfo.userWalletId) { "UserWalletId must be not null" }
+        val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
+        val blockchainInfo = blockchainError?.let {
+            feedbackRepository.getBlockchainInfo(
+                userWalletId = userWalletId,
+                blockchainId = blockchainError.blockchainId,
+                derivationPath = blockchainError.derivationPath,
+            )
+        }
+
+        if (blockchainInfo != null) {
+            addBlockchainError(blockchainInfo, blockchainError)
+            addDelimiter()
+        }
+
+        addStakingInfo(validatorName, transactionType, unsignedTransaction)
+        addDelimiter()
 
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
     }
