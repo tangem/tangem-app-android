@@ -8,8 +8,8 @@ import com.tangem.utils.transformer.Transformer
 
 internal class AmountChangeStateTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
-    private val yield: Yield,
     private val value: String,
+    yield: Yield,
 ) : Transformer<StakingUiState> {
 
     private val amountRequirementStateTransformer = AmountRequirementStateTransformer(
