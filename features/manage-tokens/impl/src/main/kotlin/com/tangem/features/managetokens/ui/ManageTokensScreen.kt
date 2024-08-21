@@ -383,9 +383,15 @@ private fun Preview_ManageTokens(
 
 private class ManageTokensComponentParamsProvider : CollectionPreviewParameterProvider<ManageTokensComponent.Params>(
     collection = listOf(
-        ManageTokensComponent.Params(userWalletId = null,mode = ManageTokensComponent.Mode.Manage(showToolbar = true)),
-        ManageTokensComponent.Params(userWalletId = null,mode = ManageTokensComponent.Mode.Manage(showToolbar = false)),
-        ManageTokensComponent.Params(userWalletId = null,mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true)),
+        ManageTokensComponent.Params(userWalletId = null, mode = ManageTokensComponent.Mode.Manage(showToolbar = true)),
+        ManageTokensComponent.Params(
+            userWalletId = null,
+            mode = ManageTokensComponent.Mode.Manage(showToolbar = false),
+        ),
+        ManageTokensComponent.Params(
+            userWalletId = null,
+            mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true),
+        ),
     ),
 )
 // endregion Preview

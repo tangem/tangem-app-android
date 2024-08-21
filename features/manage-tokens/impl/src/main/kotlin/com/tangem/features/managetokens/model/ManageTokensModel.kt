@@ -10,7 +10,6 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.entity.CurrencyItemUM
 import com.tangem.features.managetokens.entity.ManageTokensTopBarUM

@@ -98,7 +98,11 @@ internal class HomeFragment : ComposeFragment(), StoreSubscriber<HomeState> {
                     viewModel.onSearchClick()
                 } else {
                     Analytics.send(IntroductionProcess.ButtonTokensList())
-                    store.dispatchNavigationAction { push(AppRoute.ManageTokens(userWalletId = null, showToolbar = true)) }
+                    store.dispatchNavigationAction {
+                        push(
+                            AppRoute.ManageTokens(userWalletId = null, showToolbar = true),
+                        )
+                    }
                     store.dispatch(TokensAction.SetArgs.ReadAccess)
                 }
             },

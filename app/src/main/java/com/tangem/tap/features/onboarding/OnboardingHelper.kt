@@ -1,6 +1,5 @@
 package com.tangem.tap.features.onboarding
 
-import android.util.Log
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
@@ -98,8 +97,8 @@ object OnboardingHelper {
                     store.dispatchWithMain(
                         SaveWalletAction.SaveWalletAfterBackup(
                             hasBackupError = hasBackupError,
-                            shouldNavigateToWallet = false
-                        )
+                            shouldNavigateToWallet = false,
+                        ),
                     )
                 }
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
@@ -150,7 +149,7 @@ object OnboardingHelper {
                         SaveWalletAction.SaveWalletAfterBackup(
                             hasBackupError = hasBackupError,
                             shouldNavigateToWallet = true,
-                        )
+                        ),
                     )
                 }
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,

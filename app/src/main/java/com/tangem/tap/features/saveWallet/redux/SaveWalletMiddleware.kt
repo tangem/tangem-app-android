@@ -47,7 +47,7 @@ internal class SaveWalletMiddleware {
             is SaveWalletAction.SaveWalletAfterBackup -> saveWalletAfterBackup(
                 state = state,
                 hasBackupError = action.hasBackupError,
-                shouldNavigateToWallet = action.shouldNavigateToWallet
+                shouldNavigateToWallet = action.shouldNavigateToWallet,
             )
             is SaveWalletAction.AllowToUseBiometrics.Success,
             is SaveWalletAction.AllowToUseBiometrics.Error,
