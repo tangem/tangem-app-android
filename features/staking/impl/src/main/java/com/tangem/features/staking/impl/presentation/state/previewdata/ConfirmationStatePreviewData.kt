@@ -3,6 +3,8 @@ package com.tangem.features.staking.impl.presentation.state.previewdata
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType.Coin
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.R
@@ -81,8 +83,10 @@ internal object ConfirmationStatePreviewData {
         footerText = "You stake \$715.11 and will be receiving ~\$35 monthly",
         notifications = persistentListOf(
             StakingNotification.Warning.EarnRewards(
-                currencyName = "Solana",
-                subtitleResourceId = R.string.staking_notification_earn_rewards_text_period_day,
+                subtitleText = resourceReference(
+                    id = R.string.staking_notification_earn_rewards_text_period_day,
+                    formatArgs = wrappedList("Solana"),
+                ),
             ),
         ),
         transactionDoneState = TransactionDoneState.Empty,
