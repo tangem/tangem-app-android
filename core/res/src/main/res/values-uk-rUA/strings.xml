@@ -704,7 +704,7 @@
   <string name="staking_reward_schedule_month">Місяць</string>
   <string name="staking_reward_schedule_week">Тиждень</string>
   <string name="staking_rewards">Винагороди</string>
-  <string name="staking_stake_locked">Застейкати</string>
+  <string name="staking_stake_locked">Стейкінг закрито</string>
   <string name="staking_stake_more">Застейкати більше</string>
   <string name="staking_title_stake">Застейкати %s</string>
   <string name="staking_title_unstake">Зняти зі стейкінгу %s</string>
@@ -869,6 +869,7 @@
   <string name="warning_express_not_enough_fee_for_token_tx_description">Щоб здійснити транзакцію, вам потрібно внести трохи %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Неможливо покрити комісію %s</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">Сума отримання не може бути меншою за %s</string>
+  <string name="warning_express_pair_unavailable_message">Це може статися тому, що провайдер наразі не може обміняти обрану пару. Будь ласка, зачекайте трохи та спробуйте ще раз. (Код %@)</string>
   <string name="warning_express_refresh_required_title">Сервіс тимчасово недоступний</string>
   <string name="warning_express_too_maximum_amount_title">Сума до обміну не повинна перевищувати %s</string>
   <string name="warning_express_too_minimal_amount_title">Сума для обміну має бути не менше %s</string>
