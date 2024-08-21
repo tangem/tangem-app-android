@@ -86,6 +86,12 @@ internal class FeedbackDataBuilder {
         builder.appendKeyValue("Fee", error.fee ?: "Unable to receive")
     }
 
+    fun addStakingInfo(validatorName: String?, transactionType: String?, unsignedTransaction: String?) {
+        builder.appendKeyValue("Validator", validatorName ?: "unknown")
+        builder.appendKeyValue("Action", transactionType ?: "unknown")
+        builder.appendKeyValue("Unsigned transaction", unsignedTransaction ?: "unknown")
+    }
+
     fun addDelimiter(): StringBuilder = builder.appendDelimiter()
 
     fun build(): String = builder.trimEnd().toString()
