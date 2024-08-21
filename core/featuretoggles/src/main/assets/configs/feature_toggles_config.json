@@ -25,7 +25,7 @@
     },
     {
         "name": "DETAILS_REDESIGN_ENABLED",
-        "version": "5.13.0"
+        "version": "0.0.0"
     },
     {
         "name": "PUSH_NOTIFICATIONS_ENABLED",
@@ -41,6 +41,6 @@
     },
     {
         "name": "NEW_MANAGE_TOKENS",
-        "version": "undefined"
+        "version": "0.0.0"
     }
 ]

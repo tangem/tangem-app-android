@@ -36,6 +36,7 @@ import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
@@ -80,6 +81,9 @@ class OnboardingWalletFragment :
     @RootAppComponentContext
     internal lateinit var rootComponentContext: AppComponentContext
 
+    @Inject
+    internal lateinit var getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase
+
     private val manageTokensComponent by lazy(mode = LazyThreadSafetyMode.NONE) {
         val componentContext = rootComponentContext.childByContext(
             componentContext = defaultComponentContext(onBackPressedDispatcher = null),
@@ -88,6 +92,7 @@ class OnboardingWalletFragment :
         manageTokensComponentFactory.create(
             context = componentContext,
             params = ManageTokensComponent.Params(
+                userWalletId = getSelectedWalletSyncUseCase.invoke().getOrNull()?.walletId,
                 mode = ManageTokensComponent.Mode.Manage(
                     showToolbar = false,
                     onSaved = ::manageTokensCurrenciesSaved,

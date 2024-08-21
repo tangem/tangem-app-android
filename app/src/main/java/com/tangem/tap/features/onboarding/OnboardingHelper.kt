@@ -84,7 +84,6 @@ object OnboardingHelper {
         Analytics.setContext(scanResponse)
         scope.launch {
             val settingsRepository = store.inject(DaggerGraphState::settingsRepository)
-            store.inject(DaggerGraphState::appRouter).stack.also { Log.d("ddk9499", "saveWallet: $it") }
             when {
                 // When should save user wallets, then save card without navigate to save wallet screen
                 store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {

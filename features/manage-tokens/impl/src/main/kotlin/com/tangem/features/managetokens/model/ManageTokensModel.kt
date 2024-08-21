@@ -36,10 +36,8 @@ internal class ManageTokensModel @Inject constructor(
 ) : Model() {
 
     private val params: ManageTokensComponent.Params = paramsContainer.require()
-    
-    val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState(params.userWalletId))
 
-    val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState(params.userWalletId))
+    val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState(params.mode))
 
     init {
         manageTokensListManager.uiItems
@@ -119,9 +117,8 @@ internal class ManageTokensModel @Inject constructor(
                 onActiveChange = ::toggleSearchBar,
             ),
             applyContentInnerPadding = params.applyInnerContentPadding,
-            onSaveClick = { onSaveClick(mode.onSaved) },
             hasChanges = false,
-            saveChanges = ::saveChanges,
+            saveChanges = { saveChanges(mode.onSaved) },
             loadMore = ::loadMoreItems,
         )
     }
@@ -204,7 +201,7 @@ internal class ManageTokensModel @Inject constructor(
         // TODO: https://tangem.atlassian.net/browse/AND-7256
     }
 
-    private fun onSaveClick(onSaved: () -> Unit) {
+    private fun saveChanges(onSaved: () -> Unit) {
         // TODO: https://tangem.atlassian.net/browse/AND-7551
         onSaved()
     }

@@ -51,6 +51,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
+import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.preview.PreviewManageTokensComponent
 import com.tangem.features.managetokens.entity.CurrencyItemUM
 import com.tangem.features.managetokens.entity.CurrencyItemUM.Basic.NetworksUM
@@ -112,19 +113,21 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
 }
 
 @Composable
-private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM, search: SearchBarUM, modifier: Modifier = Modifier) {
+private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM?, search: SearchBarUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.background(TangemTheme.colors.background.primary),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
-        TangemTopAppBar(
-            title = topBar.title.resolveReference(),
-            startButton = TopAppBarButtonUM.Back(topBar.onBackButtonClick),
-            endButton = when (topBar) {
-                is ManageTokensTopBarUM.ManageContent -> topBar.endButton
-                is ManageTokensTopBarUM.ReadContent -> null
-            },
-        )
+        if (topBar != null) {
+            TangemTopAppBar(
+                title = topBar.title.resolveReference(),
+                startButton = TopAppBarButtonUM.Back(topBar.onBackButtonClick),
+                endButton = when (topBar) {
+                    is ManageTokensTopBarUM.ManageContent -> topBar.endButton
+                    is ManageTokensTopBarUM.ReadContent -> null
+                },
+            )
+        }
         SearchBar(
             modifier = Modifier
                 .padding(bottom = TangemTheme.dimens.spacing12)
@@ -380,9 +383,9 @@ private fun Preview_ManageTokens(
 
 private class ManageTokensComponentParamsProvider : CollectionPreviewParameterProvider<ManageTokensComponent.Params>(
     collection = listOf(
-        ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.Manage(showToolbar = true)),
-        ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.Manage(showToolbar = false)),
-        ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true)),
+        ManageTokensComponent.Params(userWalletId = null,mode = ManageTokensComponent.Mode.Manage(showToolbar = true)),
+        ManageTokensComponent.Params(userWalletId = null,mode = ManageTokensComponent.Mode.Manage(showToolbar = false)),
+        ManageTokensComponent.Params(userWalletId = null,mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true)),
     ),
 )
 // endregion Preview
