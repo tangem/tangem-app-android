@@ -60,6 +60,7 @@ internal class QuotesUnsupportedCurrenciesIdAdapter {
             Blockchain.Aurora.toCoinId() to ethCoinId,
             Blockchain.Base.toCoinId() to ethCoinId,
             Blockchain.Blast.toCoinId() to ethCoinId,
+            Blockchain.Cyber.toCoinId() to ethCoinId,
         )
     }
 }
