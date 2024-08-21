@@ -1,6 +1,8 @@
 package com.tangem.features.markets.portfolio.impl.ui.preview
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.PortfolioTokenUM
 import kotlinx.collections.immutable.persistentListOf
@@ -32,19 +34,18 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
         )
 
     val sampleToken = PortfolioTokenUM(
-        id = "",
-        networkId = "",
-        iconUrl = "",
-        balanceContent = PortfolioTokenUM.BalanceContent.TokenBalance(
-            balance = "486,65 \$",
-            tokenAmount = "733,71097 MATIC",
-            hidden = false,
+        tokenItemState = TokenItemState.Content(
+            id = "",
+            iconState = CurrencyIconState.Locked,
+            titleState = TokenItemState.TitleState.Content(text = "My wallet"),
+            fiatAmountState = TokenItemState.FiatAmountState.Content(text = "486,65 \$"),
+            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "733,71097 MATIC"),
+            subtitleState = TokenItemState.SubtitleState.TextContent(value = "XRP Ledger token"),
+            onItemClick = {},
+            onItemLongClick = {},
         ),
-        title = "My wallet",
-        subtitle = "XRP Ledger token",
-        onClick = {},
-        onLongTap = {},
         isQuickActionsShown = false,
         onQuickActionClick = {},
+        isBalanceHidden = false,
     )
 }
