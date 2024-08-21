@@ -22,6 +22,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryTransactionStateConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getStringResourceId
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.impl.R
@@ -191,13 +192,19 @@ internal class TokenDetailsLoadedBalanceConverter(
         stakingEntryInfo: StakingEntryInfo,
         iconState: IconState,
     ): StakingBlockUM.StakeAvailable {
+        val apr = BigDecimalFormatter.formatPercent(
+            percent = stakingEntryInfo.apr,
+            useAbsoluteValue = true,
+        )
         return StakingBlockUM.StakeAvailable(
-            interestRate = BigDecimalFormatter.formatPercent(
-                percent = stakingEntryInfo.interestRate,
-                useAbsoluteValue = true,
+            titleText = resourceReference(
+                id = R.string.token_details_staking_block_title,
+                formatArgs = wrappedList(apr),
             ),
-            periodInDays = stakingEntryInfo.periodInDays,
-            tokenSymbol = stakingEntryInfo.tokenSymbol,
+            subtitleText = resourceReference(
+                id = stakingEntryInfo.rewardSchedule.getStringResourceId(),
+                formatArgs = wrappedList(stakingEntryInfo.tokenSymbol),
+            ),
             iconState = iconState,
             onStakeClicked = clickIntents::onStakeBannerClick,
         )
