@@ -18,7 +18,7 @@ object TransactionDialog {
             data.dAppName,
             data.dAppUrl,
             data.amount,
-            data.gasAmount,
+            data.feeAmount,
             data.totalAmount,
             data.balance,
         )
@@ -51,7 +51,7 @@ data class TransactionRequestDialogData(
     val dAppName: String,
     val dAppUrl: String,
     val amount: String,
-    val gasAmount: String,
+    val feeAmount: String,
     val totalAmount: String,
     val balance: String,
     val isEnoughFundsToSend: Boolean,
