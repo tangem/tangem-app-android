@@ -6,7 +6,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import java.math.BigDecimal
 
 @Immutable
-sealed class FeeState {
+internal sealed class FeeState {
 
     data class Content(
         val fee: Fee?,
