@@ -26,6 +26,7 @@ internal class YieldBalanceConverter : Converter<YieldBalanceConverter.Data, Yie
                             rawCurrencyId = item.tokenDTO.coinGeckoId,
                             rawNetworkId = item.tokenDTO.network.name,
                             validatorAddress = item.validatorAddress,
+                            date = item.date?.toDateTime(),
                             pendingActions = pendingActionConverter.convertList(item.pendingActions),
                         )
                     },
