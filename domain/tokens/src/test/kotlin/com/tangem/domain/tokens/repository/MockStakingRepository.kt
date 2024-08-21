@@ -32,9 +32,9 @@ class MockStakingRepository : StakingRepository {
 
     override suspend fun getEntryInfo(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingEntryInfo =
         StakingEntryInfo(
-            interestRate = 1.toBigDecimal(),
-            periodInDays = 2,
+            apr = 1.toBigDecimal(),
             tokenSymbol = "SOL",
+            rewardSchedule = Yield.Metadata.RewardSchedule.DAY,
         )
 
     override suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield = Yield(
