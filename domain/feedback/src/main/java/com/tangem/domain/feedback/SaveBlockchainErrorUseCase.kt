@@ -14,7 +14,7 @@ class SaveBlockchainErrorUseCase(
     private val feedbackRepository: FeedbackRepository,
 ) {
 
-    fun invoke(error: BlockchainErrorInfo) {
+    operator fun invoke(error: BlockchainErrorInfo) {
         feedbackRepository.saveBlockchainErrorInfo(error = error)
     }
 }
