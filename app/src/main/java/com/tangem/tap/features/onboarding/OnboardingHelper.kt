@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding
 
+import android.util.Log
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
@@ -83,7 +84,7 @@ object OnboardingHelper {
         Analytics.setContext(scanResponse)
         scope.launch {
             val settingsRepository = store.inject(DaggerGraphState::settingsRepository)
-
+            store.inject(DaggerGraphState::appRouter).stack.also { Log.d("ddk9499", "saveWallet: $it") }
             when {
                 // When should save user wallets, then save card without navigate to save wallet screen
                 store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
@@ -95,7 +96,12 @@ object OnboardingHelper {
                         ),
                     )
 
-                    store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup(hasBackupError))
+                    store.dispatchWithMain(
+                        SaveWalletAction.SaveWalletAfterBackup(
+                            hasBackupError = hasBackupError,
+                            shouldNavigateToWallet = false
+                        )
+                    )
                 }
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
                 // then open save wallet screen
@@ -141,7 +147,12 @@ object OnboardingHelper {
                         ),
                     )
 
-                    store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup(hasBackupError))
+                    store.dispatchWithMain(
+                        SaveWalletAction.SaveWalletAfterBackup(
+                            hasBackupError = hasBackupError,
+                            shouldNavigateToWallet = true,
+                        )
+                    )
                 }
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
                 // then open save wallet screen

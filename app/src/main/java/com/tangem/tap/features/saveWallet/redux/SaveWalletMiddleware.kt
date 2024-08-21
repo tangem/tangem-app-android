@@ -44,7 +44,11 @@ internal class SaveWalletMiddleware {
             is SaveWalletAction.AllowToUseBiometrics -> allowToUseBiometrics(state)
             is SaveWalletAction.EnrollBiometrics.Enroll -> enrollBiometrics()
             is SaveWalletAction.Dismiss -> dismiss(state)
-            is SaveWalletAction.SaveWalletAfterBackup -> saveWalletAfterBackup(state, action.hasBackupError)
+            is SaveWalletAction.SaveWalletAfterBackup -> saveWalletAfterBackup(
+                state = state,
+                hasBackupError = action.hasBackupError,
+                shouldNavigateToWallet = action.shouldNavigateToWallet
+            )
             is SaveWalletAction.AllowToUseBiometrics.Success,
             is SaveWalletAction.AllowToUseBiometrics.Error,
             is SaveWalletAction.ProvideBackupInfo,
@@ -55,7 +59,11 @@ internal class SaveWalletMiddleware {
         }
     }
 
-    private fun saveWalletAfterBackup(state: SaveWalletState, hasBackupError: Boolean) {
+    private fun saveWalletAfterBackup(
+        state: SaveWalletState,
+        hasBackupError: Boolean,
+        shouldNavigateToWallet: Boolean,
+    ) {
         scope.launch {
             val backupInfo = state.backupInfo ?: error("Backup info is null")
 
@@ -78,7 +86,7 @@ internal class SaveWalletMiddleware {
                     Timber.e(error, "Unable to save user wallet")
                 }
                 .doOnSuccess { mainScope.launch { store.onUserWalletSelected(userWallet) } }
-                .doOnResult { navigateToWallet() }
+                .doOnResult { if (shouldNavigateToWallet) navigateToWallet() }
         }
     }
 

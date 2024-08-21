@@ -200,7 +200,7 @@ private fun handleFinishBackup(scanResponse: ScanResponse) {
 private fun navigateToWalletScreen() {
     mainScope.launch {
         val settingsRepository = store.inject(DaggerGraphState::settingsRepository)
-        store.dispatchNavigationAction { push(AppRoute.Wallet) }
+        store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
         if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
             delay(timeMillis = 1_800)
             store.dispatchNavigationAction { push(AppRoute.SaveWallet) }
