@@ -17,6 +17,11 @@ import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.feedback.FeedbackManager
+import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.stakekit.PendingAction
@@ -24,6 +29,7 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
+import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionType
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
@@ -94,6 +100,9 @@ internal class StakingViewModel @Inject constructor(
     private val isApproveNeededUseCase: IsApproveNeededUseCase,
     private val clipboardManager: ClipboardManager,
     private val vibratorHapticManager: VibratorHapticManager,
+    private val feedbackManager: FeedbackManager,
+    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
@@ -132,6 +141,8 @@ internal class StakingViewModel @Inject constructor(
 
     private var stakingApproval: StakingApproval = StakingApproval.Empty
     private val allowanceTaskScheduler = SingleTaskScheduler<BigDecimal>()
+
+    private var transactionInProgress: StakingTransaction? = null
 
     private var approvalJobHolder: JobHolder = JobHolder()
 
@@ -206,9 +217,13 @@ internal class StakingViewModel @Inject constructor(
                             stakingEventFactory.createStakingErrorAlert(it)
                             return@launch
                         }
+                        val gasEstimate = constructedTransaction.gasEstimate
+                            ?: return@launch stakingEventFactory.createGenericErrorAlert("Gas estimate is null")
+
+                        transactionInProgress = constructedTransaction
                         sendStakingTransaction(
                             transactionId = constructedTransaction.id,
-                            gasEstimate = constructedTransaction.gasEstimate ?: error("No gas estimate available"),
+                            gasEstimate = gasEstimate,
                             txData = transactionData,
                             pendingActionList = confirmationState.pendingActions,
                         )
@@ -503,7 +518,39 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onFailedTxEmailClick(errorMessage: String) {
-        // TODO staking sending feedback email [REDACTED_TASK_KEY]
+        viewModelScope.launch {
+            val network = cryptoCurrencyStatus.currency.network
+
+            val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrElse { error("CardInfo must be not null") }
+            val amountState = uiState.value.amountState as? AmountState.Data
+            val confirmationState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
+            val validatorState = confirmationState?.validatorState as? ValidatorState.Content
+            val feeState = confirmationState?.feeState as? FeeState.Content
+
+            val validator = validatorState?.chosenValidator
+            val feeAmount = feeState?.fee?.amount
+            val amount = amountState?.amountTextField?.cryptoAmount
+            saveBlockchainErrorUseCase(
+                error = BlockchainErrorInfo(
+                    errorMessage = errorMessage,
+                    blockchainId = network.id.value,
+                    derivationPath = network.derivationPath.value,
+                    destinationAddress = validator?.address.orEmpty(),
+                    tokenSymbol = (cryptoCurrencyStatus.currency as? CryptoCurrency.Token)?.symbol,
+                    amount = amount?.run { value?.toPlainString() + currencySymbol }.orEmpty(),
+                    fee = feeAmount?.run { value?.toPlainString() + currencySymbol }.orEmpty(),
+                ),
+            )
+
+            val email = FeedbackEmailType.StakingProblem(
+                cardInfo = cardInfo,
+                validatorName = validator?.name,
+                transactionType = transactionInProgress?.type?.name,
+                unsignedTransaction = transactionInProgress?.unsignedTransaction,
+            )
+
+            feedbackManager.sendEmail(email)
+        }
     }
 
     fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
@@ -601,6 +648,7 @@ internal class StakingViewModel @Inject constructor(
                 stakingEventFactory.createSendTransactionErrorAlert(error)
             },
             ifRight = { txHash ->
+                transactionInProgress = null
                 submitHash(transactionId, txHash)
                 scheduleUpdates()
                 val txUrl = getExplorerTransactionUrlUseCase(
