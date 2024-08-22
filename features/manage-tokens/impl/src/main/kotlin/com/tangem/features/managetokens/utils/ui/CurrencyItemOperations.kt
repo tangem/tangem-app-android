@@ -2,8 +2,8 @@ package com.tangem.features.managetokens.utils.ui
 
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
-import com.tangem.features.managetokens.entity.CurrencyItemUM
-import com.tangem.features.managetokens.entity.CurrencyItemUM.Basic.NetworksUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
 import com.tangem.features.managetokens.utils.mapper.toUiNetworksModel
 import kotlinx.collections.immutable.toImmutableList
 
@@ -55,10 +55,10 @@ private fun CurrencyItemUM.Basic.updateNetworks(currency: ManagedCryptoCurrency.
     is NetworksUM.Collapsed -> networks
     is NetworksUM.Expanded -> networks.copy(
         networks = networks.networks.map { network ->
-            val isSelected = network.id in currency.addedIn
+            val isSelected = network.networkId in currency.addedIn
 
             network.copy(
-                iconResId = network.id.getIconRes(isSelected),
+                iconResId = network.networkId.getIconRes(isSelected),
                 isSelected = isSelected,
             )
         }.toImmutableList(),
