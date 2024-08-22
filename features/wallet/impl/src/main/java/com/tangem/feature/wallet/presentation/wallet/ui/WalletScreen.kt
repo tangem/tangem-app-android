@@ -71,9 +71,9 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.VisaTxDe
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
-import com.tangem.features.markets.component.BottomSheetState
-import com.tangem.features.markets.component.BottomSheetState.*
-import com.tangem.features.markets.component.MarketsEntryComponent
+import com.tangem.features.markets.entry.BottomSheetState
+import com.tangem.features.markets.entry.BottomSheetState.*
+import com.tangem.features.markets.entry.MarketsEntryComponent
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 

@@ -1,7 +1,6 @@
-package com.tangem.features.markets
+package com.tangem.features.markets.entry.impl
 
 import androidx.compose.animation.Animatable
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -18,10 +17,10 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
-import com.tangem.features.markets.component.BottomSheetState
-import com.tangem.features.markets.component.MarketsEntryComponent
-import com.tangem.features.markets.details.api.MarketsTokenDetailsComponent
-import com.tangem.features.markets.details.api.toSerializable
+import com.tangem.features.markets.entry.BottomSheetState
+import com.tangem.features.markets.entry.MarketsEntryComponent
+import com.tangem.features.markets.details.MarketsTokenDetailsComponent
+import com.tangem.features.markets.details.toSerializable
 import com.tangem.features.markets.tokenlist.api.MarketsTokenListComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
