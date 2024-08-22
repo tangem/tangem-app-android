@@ -37,10 +37,6 @@ internal class DefaultSettingsRepository(
         )
     }
 
-    override fun saveLogMessage(message: String) {
-        appLogsStore.saveLogMessage(message)
-    }
-
     override fun deleteDeprecatedLogs(maxSize: Int) {
         appLogsStore.deleteDeprecatedLogs(maxSize)
     }
