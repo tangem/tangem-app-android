@@ -217,7 +217,6 @@
   <string name="express_choose_providers_subtitle">Tangem propose des échanges de jetons via des fournisseurs tiers selon les conditions de chaque fournisseur</string>
   <string name="express_choose_providers_title">Choisissez un fournisseur</string>
   <string name="express_error_code">Une erreur s\'est produite. Code : %s</string>
-  <string name="express_error_provider_unavailable">Oups! L\'échange de la paire sélectionnée via le fournisseur choisi est temporairement indisponible. Veuillez réessayer plus tard. (Code : %s)</string>
   <string name="express_error_swap_pair_unavailable">Le fournisseur sélectionné n\'est pas disponible pour le moment. Veuillez réessayer plus tard. (Code : %s)</string>
   <string name="express_error_swap_unavailable">Les échanges ne sont pas disponibles pour le moment. Veuillez réessayer plus tard. (Code : %s)</string>
   <string name="express_estimated_amount">Montant estimé</string>
