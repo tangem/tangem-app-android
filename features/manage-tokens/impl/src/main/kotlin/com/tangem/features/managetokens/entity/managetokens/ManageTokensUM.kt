@@ -1,7 +1,8 @@
-package com.tangem.features.managetokens.entity
+package com.tangem.features.managetokens.entity.managetokens
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
