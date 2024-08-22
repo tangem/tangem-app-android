@@ -6,7 +6,7 @@ import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.markets.TokenMarketParam
+import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -267,7 +267,7 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class MarketsTokenDetails(
-        val token: TokenMarketParam,
+        val token: TokenMarketParams,
         val appCurrency: AppCurrency,
     ) : AppRoute(path = "/markets_token_details/${token.id}")
 }
