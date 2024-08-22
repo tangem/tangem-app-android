@@ -556,14 +556,6 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override fun isStakeMoreAvailable(networkId: Network.ID): Boolean {
-        val blockchain = Blockchain.fromId(networkId.value)
-        return when (blockchain) {
-            Blockchain.Solana -> false
-            else -> true
-        }
-    }
-
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval {
         return when (getIntegrationKey(cryptoCurrency.id)) {
             Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() -> {
