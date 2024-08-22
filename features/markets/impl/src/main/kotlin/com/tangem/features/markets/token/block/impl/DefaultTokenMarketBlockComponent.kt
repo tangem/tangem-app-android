@@ -2,7 +2,9 @@ package com.tangem.features.markets.token.block.impl
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
@@ -23,7 +25,12 @@ internal class DefaultTokenMarketBlockComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        TokenMarketBlock(modifier)
+        val state by model.state.collectAsStateWithLifecycle()
+
+        TokenMarketBlock(
+            modifier = modifier,
+            state = state,
+        )
     }
 
     @AssistedFactory
