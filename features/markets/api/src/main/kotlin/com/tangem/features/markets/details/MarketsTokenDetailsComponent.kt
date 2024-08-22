@@ -5,17 +5,19 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.factory.ComponentFactory
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.TokenMarketParam
 import com.tangem.features.markets.entry.BottomSheetState
 import kotlinx.serialization.Serializable
 
 @Stable
-interface MarketsTokenDetailsComponent {
+interface MarketsTokenDetailsComponent : ComposableContentComponent {
 
     @Serializable
     data class Params(
-        val token: TokenMarketSerializable,
+        val token: TokenMarketParam,
         val appCurrency: AppCurrency,
     )
 
@@ -26,7 +28,5 @@ interface MarketsTokenDetailsComponent {
         modifier: Modifier,
     )
 
-    interface Factory {
-        fun create(context: AppComponentContext, params: Params, onBack: () -> Unit): MarketsTokenDetailsComponent
-    }
+    interface Factory : ComponentFactory<Params, MarketsTokenDetailsComponent>
 }
