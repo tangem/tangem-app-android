@@ -3,6 +3,8 @@ package com.tangem.tap.features.onboarding.products.wallet.ui
 import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
@@ -219,41 +221,43 @@ class OnboardingWalletFragment :
 
     override fun newState(state: OnboardingWalletState) {
         if (activity == null || view == null) return
-        Log.d("ddk9499", "newState: ${state.step}")
+        Handler(Looper.getMainLooper()).post {
+            Log.d("ddk9499", "newState: ${state.step}")
 
-        animator.updateBackupState(state.backupState)
-        requireActivity().invalidateOptionsMenu()
+            animator.updateBackupState(state.backupState)
+            requireActivity().invalidateOptionsMenu()
 
-        Log.d("ddk9499", "newState: ${state.getProgressStep()}/${state.getMaxProgress()}")
-        // pbBinding.pbState.max = state.getMaxProgress()
-        // pbBinding.pbState.progress = state.getProgressStep()
-        Log.d("ddk9499", "newState: after progress")
+            Log.d("ddk9499", "newState: ${state.getProgressStep()}/${state.getMaxProgress()}")
+            pbBinding.pbState.max = state.getMaxProgress()
+            pbBinding.pbState.progress = state.getProgressStep()
+            Log.d("ddk9499", "newState: after progress")
 
-        when {
-            state.wallet2State != null -> {
-                Log.d("ddk9499", "newState: wallet2state != null")
-                seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
-                state.cardArtworkUri?.let {
-                    seedPhraseViewModel.setCardArtworkUri(it.toString())
+            when {
+                state.wallet2State != null -> {
+                    Log.d("ddk9499", "newState: wallet2state != null")
+                    seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
+                    state.cardArtworkUri?.let {
+                        seedPhraseViewModel.setCardArtworkUri(it.toString())
+                        if (state.isRingOnboarding) {
+                            binding.imvFrontCard.load(R.drawable.img_ring_placeholder)
+                        } else {
+                            loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
+                        }
+                        loadImageIntoImageView(it, binding.imvFirstBackupCard)
+                        loadImageIntoImageView(it, binding.imvSecondBackupCard)
+                    }
+                }
+                else -> {
+                    Log.d("ddk9499", "newState: else branch")
                     if (state.isRingOnboarding) {
                         binding.imvFrontCard.load(R.drawable.img_ring_placeholder)
                     } else {
                         loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
                     }
-                    loadImageIntoImageView(it, binding.imvFirstBackupCard)
-                    loadImageIntoImageView(it, binding.imvSecondBackupCard)
+                    loadImageIntoImageView(state.cardArtworkUri, binding.imvFirstBackupCard)
+                    loadImageIntoImageView(state.cardArtworkUri, binding.imvSecondBackupCard)
+                    handleOnboardingStep(state)
                 }
-            }
-            else -> {
-                Log.d("ddk9499", "newState: else branch")
-                // if (state.isRingOnboarding) {
-                //     binding.imvFrontCard.load(R.drawable.img_ring_placeholder)
-                // } else {
-                //     loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
-                // }
-                // loadImageIntoImageView(state.cardArtworkUri, binding.imvFirstBackupCard)
-                // loadImageIntoImageView(state.cardArtworkUri, binding.imvSecondBackupCard)
-                handleOnboardingStep(state)
             }
         }
     }
@@ -286,7 +290,7 @@ class OnboardingWalletFragment :
         bindingManageTokens.onboardingManageTokensContainer.hide()
         binding.layoutButtonsCommon.btnWalletAlternativeAction.hide()
         Log.d("ddk9499", "setManageTokensState: ")
-        // pbBinding.pbState.show()
+        pbBinding.pbState.show()
         Log.d("ddk9499", "setManageTokensState: after pbBinding.pbState.show")
         binding.onboardingWalletContainer.hide()
         Log.d("ddk9499", "setManageTokensState: after binding.onboardingWalletContainer.hide()")
@@ -329,6 +333,7 @@ class OnboardingWalletFragment :
     }
 
     private fun setBackupState(state: BackupState) {
+        Log.d("ddk9499", "setBackupState: $state")
         when (state.backupStep) {
             BackupStep.InitBackup -> showBackupIntro(state)
             BackupStep.ScanOriginCard -> showScanOriginCard()
@@ -338,7 +343,11 @@ class OnboardingWalletFragment :
             BackupStep.ReenterAccessCode -> showReenterAccessCode(state)
             is BackupStep.WritePrimaryCard -> showWritePrimaryCard(state)
             is BackupStep.WriteBackupCard -> showWriteBackupCard(state)
-            BackupStep.Finished -> showSuccess()
+            BackupStep.Finished -> {
+                // don't need to navigate here
+                Log.d("ddk9499", "setBackupState: showSuccess")
+                // showSuccess()
+            }
         }
     }
 
