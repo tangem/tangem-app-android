@@ -118,12 +118,12 @@ internal class TokenMarketBlockModel @Inject constructor(
     private fun navigateToMarketDetails() {
         val quotes = quotesState ?: return
 
-        val tokenParam = TokenMarketParam(
+        val tokenParam = TokenMarketParams(
             id = params.tokenId,
             name = params.tokenSymbol,
             imageUrl = params.tokenImageUrl,
             symbol = params.tokenSymbol,
-            tokenQuotes = TokenMarketParam.Quotes(
+            tokenQuotes = TokenMarketParams.Quotes(
                 currentPrice = quotes.currentPrice,
                 h24Percent = quotes.h24Percent,
                 weekPercent = null,
