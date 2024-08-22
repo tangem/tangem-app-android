@@ -18,8 +18,8 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
-import com.tangem.features.markets.component.BottomSheetState
-import com.tangem.features.markets.details.api.MarketsTokenDetailsComponent
+import com.tangem.features.markets.entry.BottomSheetState
+import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.impl.model.converters.DescriptionConverter
 import com.tangem.features.markets.details.impl.model.converters.TokenMarketInfoConverter
 import com.tangem.features.markets.details.impl.model.formatter.*
