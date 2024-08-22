@@ -8,7 +8,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.defaultComponentContext
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.bundle.unbundle
+import com.tangem.common.routing.utils.asRouter
 import com.tangem.core.decompose.context.DefaultAppComponentContext
 import com.tangem.core.decompose.di.DecomposeComponent
 import com.tangem.core.ui.UiDependencies
@@ -46,6 +48,9 @@ internal class TokenDetailsFragment : ComposeFragment() {
     @Inject
     internal lateinit var tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory
 
+    @Inject
+    internal lateinit var appRouter: AppRouter
+
     private var tokenMarketBlockComponent: TokenMarketBlockComponent? = null
 
     private val internalTokenDetailsRouter: InnerTokenDetailsRouter
@@ -57,23 +62,37 @@ internal class TokenDetailsFragment : ComposeFragment() {
         super.onCreate(savedInstanceState)
 
         if (marketsFeatureToggles.isFeatureEnabled) {
+            val cryptoCurrency: CryptoCurrency = arguments
+                ?.getBundle(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
+                ?.unbundle(CryptoCurrency.serializer())
+                ?: error("Token Details screen can't open without `CryptoCurrency`")
+
+            val param = cryptoCurrency.toParam() ?: return
+
             val appContext = DefaultAppComponentContext(
                 componentContext = defaultComponentContext(requireActivity().onBackPressedDispatcher),
                 messageHandler = uiDependencies.eventMessageHandler,
                 dispatchers = coroutineDispatcherProvider,
                 hiltComponentBuilder = componentBuilder,
+                replaceRouter = appRouter.asRouter(),
             )
-
-            val cryptoCurrency: CryptoCurrency = arguments
-                ?.getBundle(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
-                ?.unbundle(CryptoCurrency.serializer())
-                ?: error("This screen can't open without `CryptoCurrency`")
 
             tokenMarketBlockComponent = tokenMarketBlockComponentFactory.create(
                 appComponentContext = appContext,
-                params = TokenMarketBlockComponent.Params(cryptoCurrency = cryptoCurrency),
+                params = param,
             )
         }
+    }
+
+    private fun CryptoCurrency.toParam(): TokenMarketBlockComponent.Params? {
+        val tokenId = id.rawCurrencyId ?: return null // token price is not available
+
+        return TokenMarketBlockComponent.Params(
+            tokenId = tokenId,
+            tokenName = name,
+            tokenSymbol = symbol,
+            tokenImageUrl = iconUrl,
+        )
     }
 
     @Composable
