@@ -4,11 +4,11 @@ import androidx.annotation.DrawableRes
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.getGreyedOutIconRes
 import com.tangem.domain.tokens.model.Network
-import com.tangem.features.managetokens.entity.CurrencyNetworkUM
+import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
 
 internal fun CurrencyNetworkUM.select(isSelected: Boolean): CurrencyNetworkUM {
     return copy(
-        iconResId = id.getIconRes(isSelected),
+        iconResId = networkId.getIconRes(isSelected),
         isSelected = isSelected,
     )
 }
