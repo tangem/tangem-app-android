@@ -23,8 +23,8 @@ private class RouterProxy(
     private val appRouter: AppRouter,
 ) : Router {
     override fun push(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
-        (route as? AppRoute)?.let {
-            appRouter.push(it, onComplete)
+        if (route is AppRoute) {
+            appRouter.push(route, onComplete)
         }
     }
 
@@ -39,7 +39,7 @@ private class RouterProxy(
     }
 
     override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
-        (route as? AppRoute)?.let {
+        if (route is AppRoute) {
             appRouter.popTo(route, onComplete)
         }
     }
