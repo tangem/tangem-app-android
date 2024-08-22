@@ -63,6 +63,7 @@ import com.tangem.features.staking.impl.presentation.state.transformers.approval
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import com.tangem.utils.extensions.isSingleItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.*
@@ -376,7 +377,16 @@ internal class StakingViewModel @Inject constructor(
         stateController.update(ValidatorSelectChangeTransformer(validator))
     }
 
-    override fun openRewardsValidators() = onNextClick(actionType = StakingActionCommonType.PENDING_REWARDS)
+    override fun openRewardsValidators() {
+        val rewardsValidators =
+            stateController.value.rewardsValidatorsState as? StakingStates.RewardsValidatorsState.Data
+        val rewards = rewardsValidators?.rewards
+        if (rewards != null && rewards.isSingleItem()) {
+            onActiveStake(rewards.first())
+        } else {
+            onNextClick(actionType = StakingActionCommonType.PENDING_REWARDS)
+        }
+    }
 
     override fun onActiveStake(activeStake: BalanceState) {
         val actionType = if (activeStake.pendingActions.isEmpty()) {
