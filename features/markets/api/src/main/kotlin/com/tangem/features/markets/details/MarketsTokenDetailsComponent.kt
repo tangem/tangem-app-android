@@ -1,4 +1,4 @@
-package com.tangem.features.markets.details.api
+package com.tangem.features.markets.details
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.features.markets.component.BottomSheetState
+import com.tangem.features.markets.entry.BottomSheetState
 import kotlinx.serialization.Serializable
 
 @Stable
