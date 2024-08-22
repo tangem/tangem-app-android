@@ -1,4 +1,4 @@
-package com.tangem.features.managetokens.entity
+package com.tangem.features.managetokens.entity.item
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
