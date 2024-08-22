@@ -4,7 +4,7 @@ import com.tangem.domain.core.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TokenMarketParam(
+data class TokenMarketParams(
     val id: String,
     val name: String,
     val symbol: String,
@@ -21,12 +21,12 @@ data class TokenMarketParam(
     )
 }
 
-fun TokenMarket.toSerializableParam(): TokenMarketParam {
-    return TokenMarketParam(
+fun TokenMarket.toSerializableParam(): TokenMarketParams {
+    return TokenMarketParams(
         id = id,
         name = name,
         symbol = symbol,
-        tokenQuotes = TokenMarketParam.Quotes(
+        tokenQuotes = TokenMarketParams.Quotes(
             currentPrice = tokenQuotesShort.currentPrice,
             h24Percent = tokenQuotesShort.h24ChangePercent,
             weekPercent = tokenQuotesShort.weekChangePercent,
