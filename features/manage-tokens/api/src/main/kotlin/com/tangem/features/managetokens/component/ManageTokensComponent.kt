@@ -6,7 +6,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 interface ManageTokensComponent : ComposableContentComponent {
 
-    data class Params(val userWalletId: UserWalletId?, val mode: Mode, val applyInnerContentPadding: Boolean = true)
+    data class Params(val userWalletId: UserWalletId?, val mode: Mode)
 
     sealed class Mode {
         abstract val showToolbar: Boolean

@@ -86,7 +86,6 @@ internal class ManageTokensModel @Inject constructor(
                 onActiveChange = ::toggleSearchBar,
             ),
             loadMore = ::loadMoreItems,
-            applyContentInnerPadding = params.applyInnerContentPadding,
         )
     }
 
@@ -115,7 +114,6 @@ internal class ManageTokensModel @Inject constructor(
                 isActive = false,
                 onActiveChange = ::toggleSearchBar,
             ),
-            applyContentInnerPadding = params.applyInnerContentPadding,
             hasChanges = false,
             saveChanges = { saveChanges(mode.onSaved) },
             loadMore = ::loadMoreItems,

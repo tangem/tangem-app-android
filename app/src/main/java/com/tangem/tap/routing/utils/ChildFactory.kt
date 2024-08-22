@@ -133,7 +133,6 @@ internal class ChildFactory @Inject constructor(
                             } else {
                                 ManageTokensComponent.Mode.Manage(showToolbar = route.showToolbar)
                             },
-                            applyInnerContentPadding = true,
                         ),
                         componentFactory = manageTokensComponentFactory,
                     )

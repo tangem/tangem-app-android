@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
+import android.util.Log
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.backupService
 import com.tangem.tap.common.redux.AppState
@@ -13,12 +14,13 @@ object OnboardingWalletReducer {
 private fun internalReduce(action: Action, appState: AppState): OnboardingWalletState {
     val state = appState.onboardingWalletState
 
+    if (action is OnboardingWalletAction) {
+        Log.d("ddk9499", "internalReduce: $action")
+    }
+
     return when (action) {
         is GlobalAction.Onboarding -> ReducerForGlobalAction.reduce(action, state)
-        is BackupAction -> state.copy(
-            step = OnboardingStepReducer.reduce(action = action, state = state),
-            backupState = BackupReducer.reduce(action = action, state = state.backupState),
-        )
+        is BackupAction -> state.copy(backupState = BackupReducer.reduce(action = action, state = state.backupState))
         is OnboardingWallet2Action -> OnboardingWallet2Reducer.reduce(action, state)
         is OnboardingWalletAction.GetToCreateWalletStep -> state.copy(
             step = OnboardingWalletStep.CreateWallet,
@@ -27,7 +29,8 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
         is OnboardingWalletAction.SetArtworkUrl -> {
             state.copy(cardArtworkUri = action.artworkUri)
         }
-        is OnboardingManageTokensAction -> state.copy(step = OnboardingStepReducer.reduce(action, state))
+        is OnboardingManageTokensAction.CurrenciesSaved -> state.copy(step = OnboardingWalletStep.Done)
+        is OnboardingWalletAction.WalletSaved -> state.copy(step = OnboardingWalletStep.ManageTokens)
         is OnboardingWalletAction.Done -> state.copy(step = OnboardingWalletStep.Done)
         else -> state
     }
@@ -122,16 +125,6 @@ private object BackupReducer {
             BackupAction.OnAccessCodeDialogClosed -> state.copy(backupStep = BackupStep.AddBackupCards)
             BackupAction.DiscardBackup -> BackupState()
             else -> state
-        }
-    }
-}
-
-private object OnboardingStepReducer {
-    fun reduce(action: Action, state: OnboardingWalletState): OnboardingWalletStep {
-        return when (action) {
-            is BackupAction.SkipBackup, is BackupAction.FinishBackup -> OnboardingWalletStep.ManageTokens
-            is OnboardingManageTokensAction.CurrenciesSaved -> OnboardingWalletStep.Done
-            else -> state.step
         }
     }
 }

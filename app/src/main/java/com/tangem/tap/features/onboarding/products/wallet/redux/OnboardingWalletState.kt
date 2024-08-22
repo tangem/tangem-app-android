@@ -2,6 +2,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import com.tangem.domain.redux.StateDialog
 import org.rekotlin.StateType
 
@@ -20,6 +21,7 @@ data class OnboardingWalletState(
     @Suppress("MagicNumber")
     fun getMaxProgress(): Int {
         val baseProgress = 7
+        Log.d("ddk9499", "getMaxProgress: ${getWallet2Progress() + baseProgress}")
         return getWallet2Progress() + baseProgress
     }
 
@@ -36,13 +38,14 @@ data class OnboardingWalletState(
                     BackupStep.ReenterAccessCode -> 4
                     BackupStep.SetAccessCode -> 4
                     BackupStep.WritePrimaryCard, is BackupStep.WriteBackupCard -> 5
-                    BackupStep.Finished -> getMaxProgress()
+                    BackupStep.Finished -> 6
                 }
             }
             OnboardingWalletStep.ManageTokens -> 6
             OnboardingWalletStep.Done -> getMaxProgress()
         }
 
+        Log.d("ddk9499", "getProgressStep: ${getWallet2Progress() + progressByStep}")
         return getWallet2Progress() + progressByStep
     }
 

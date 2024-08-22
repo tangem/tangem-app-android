@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding
 
+import android.util.Log
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
@@ -16,6 +17,7 @@ import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
 import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -211,9 +213,12 @@ object OnboardingHelper {
         userWalletsListManager.save(userWallet, canOverride = true)
             .doOnFailure { error ->
                 Timber.e(error, "Unable to save user wallet")
+                Log.e("ddk9499", "proceedWithScanResponse: wallet save error: ${error.message}", error)
             }
             .doOnSuccess {
                 mainScope.launch { store.onUserWalletSelected(userWallet) }
+                Log.d("ddk9499", "proceedWithScanResponse: wallet saved successfully")
+                store.dispatch(OnboardingWalletAction.WalletSaved)
             }
     }
 }

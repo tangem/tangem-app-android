@@ -59,7 +59,6 @@ internal class PreviewManageTokensComponent(params: ManageTokensComponent.Params
                 isActive = false,
                 onActiveChange = ::toggleSearchBar,
             ),
-            applyContentInnerPadding = params.applyInnerContentPadding,
             hasChanges = false,
             isInitialBatchLoading = false,
             isNextBatchLoading = true,

@@ -14,7 +14,6 @@ internal sealed class ManageTokensUM {
     abstract val topBar: ManageTokensTopBarUM?
     abstract val search: SearchBarUM
     abstract val loadMore: () -> Boolean
-    abstract val applyContentInnerPadding: Boolean
 
     data class ReadContent(
         override val popBack: () -> Unit,
@@ -24,7 +23,6 @@ internal sealed class ManageTokensUM {
         override val topBar: ManageTokensTopBarUM?,
         override val search: SearchBarUM,
         override val loadMore: () -> Boolean,
-        override val applyContentInnerPadding: Boolean,
     ) : ManageTokensUM()
 
     data class ManageContent(
@@ -35,7 +33,6 @@ internal sealed class ManageTokensUM {
         override val topBar: ManageTokensTopBarUM?,
         override val search: SearchBarUM,
         override val loadMore: () -> Boolean,
-        override val applyContentInnerPadding: Boolean,
         val saveChanges: () -> Unit,
         val hasChanges: Boolean,
     ) : ManageTokensUM()

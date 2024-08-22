@@ -26,6 +26,8 @@ sealed class OnboardingWalletAction : Action {
     class SetArtworkUrl(val artworkUri: Uri?) : OnboardingWalletAction()
 
     data object OnBackPressed : OnboardingWalletAction()
+
+    data object WalletSaved : OnboardingWalletAction()
 }
 
 sealed class OnboardingWallet2Action : OnboardingWalletAction() {
