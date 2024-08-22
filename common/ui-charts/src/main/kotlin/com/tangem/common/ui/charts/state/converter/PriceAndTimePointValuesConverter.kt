@@ -22,6 +22,11 @@ class PriceAndTimePointValuesConverter(
     private val formatYValuesCache = mutableMapOf<Double, BigDecimal>()
     private val formatXValuesCache = mutableMapOf<Double, BigDecimal>()
 
+    private data class Point(
+        val x: BigDecimal,
+        val y: BigDecimal,
+    )
+
     override fun convert(data: MarketChartData.Data): MarketChartRawData {
         formatYValuesCache.clear()
         formatXValuesCache.clear()
@@ -33,8 +38,10 @@ class PriceAndTimePointValuesConverter(
         )
         minMaxCache = cache
 
-        val normY = data.y.normalizeToDouble(min = cache.minY, max = cache.maxY)
-        val normX = data.x.normalizeTime(min = cache.minX, max = cache.maxX)
+        val points = data.x.zip(data.y) { x, y -> Point(x, y) }.sortedBy { it.x }
+
+        val normY = points.map { it.y }.normalizeToDouble(min = cache.minY, max = cache.maxY)
+        val normX = points.map { it.x }.normalizeTime(min = cache.minX, max = cache.maxX)
 
         return if (normX.size > MAX_POINTS) {
             LTThreeBuckets
