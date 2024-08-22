@@ -93,7 +93,7 @@ internal class DefaultFeedbackRepository(
         }
     }
 
-    override fun createLogFile(): File? = appLogsStore.getFile()
+    override fun getLogFile(): File? = appLogsStore.getFile()
 
     private fun getAppVersion(): String {
         return runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }

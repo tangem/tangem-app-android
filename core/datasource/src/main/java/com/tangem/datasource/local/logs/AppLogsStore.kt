@@ -13,7 +13,6 @@ import timber.log.Timber
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
-import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -49,7 +48,6 @@ class AppLogsStore @Inject constructor(
         .appendLiteral('.')
         .appendMillisOfSecond(3)
         .toFormatter()
-        .withLocale(Locale.getDefault())
 
     /** Get log file */
     fun getFile(): File? = if (file.exists()) file else null

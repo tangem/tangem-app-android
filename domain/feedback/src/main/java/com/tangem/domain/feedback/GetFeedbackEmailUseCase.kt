@@ -29,7 +29,7 @@ class GetFeedbackEmailUseCase(
             address = getAddress(type.cardInfo),
             subject = emailSubjectResolver.resolve(type),
             message = createMessage(type),
-            file = feedbackRepository.createLogFile(),
+            file = feedbackRepository.getLogFile(),
         )
     }
 
