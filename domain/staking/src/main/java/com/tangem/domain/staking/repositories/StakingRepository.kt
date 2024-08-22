@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.Flow
 @Suppress("TooManyFunctions")
 interface StakingRepository {
 
+    fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String
+
     fun isStakingSupported(integrationKey: String): Boolean
 
     suspend fun fetchEnabledYields(refresh: Boolean)
