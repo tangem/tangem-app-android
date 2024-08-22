@@ -13,7 +13,6 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
-import com.tangem.features.managetokens.entity.managetokens.BottomSheetConfig
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R

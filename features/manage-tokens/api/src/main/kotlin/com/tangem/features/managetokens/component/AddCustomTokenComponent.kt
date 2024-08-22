@@ -1,18 +1,15 @@
 package com.tangem.features.managetokens.component
 
-import androidx.compose.runtime.Composable
+import com.tangem.core.decompose.factory.ComponentFactory
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.wallets.models.UserWalletId
 
-interface AddCustomTokenComponent {
-
-    @Composable
-    fun BottomSheet(isVisible: Boolean, onDismiss: () -> Unit)
+interface AddCustomTokenComponent : ComposableBottomSheetComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
+        val onDismiss: () -> Unit,
     )
 
-    interface Factory {
-        fun create(params: Params): AddCustomTokenComponent
-    }
+    interface Factory : ComponentFactory<Params, AddCustomTokenComponent>
 }
