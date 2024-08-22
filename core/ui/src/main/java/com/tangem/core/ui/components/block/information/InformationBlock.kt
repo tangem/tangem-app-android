@@ -26,6 +26,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Immutable
 class InformationBlockContentScope(val scope: BoxScope) : BoxScope by scope
 
+// TODO: [REDACTED_JIRA]
 @Composable
 fun InformationBlock(
     title: @Composable BoxScope.() -> Unit,
@@ -40,15 +41,28 @@ fun InformationBlock(
             .background(color = TangemTheme.colors.background.action),
         horizontalAlignment = Alignment.Start,
     ) {
+        val minHeight = if (action == null) TangemTheme.dimens.size36 else TangemTheme.dimens.size40
+        val padding = if (action == null) {
+            PaddingValues(
+                start = TangemTheme.dimens.spacing12,
+                top = TangemTheme.dimens.spacing12,
+                end = TangemTheme.dimens.spacing12,
+                bottom = TangemTheme.dimens.spacing4,
+            )
+        } else {
+            PaddingValues(
+                start = TangemTheme.dimens.spacing12,
+                top = TangemTheme.dimens.spacing11,
+                end = TangemTheme.dimens.spacing12,
+                bottom = TangemTheme.dimens.spacing5,
+            )
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = TangemTheme.dimens.size40)
-                .padding(
-                    top = TangemTheme.dimens.spacing12,
-                    bottom = TangemTheme.dimens.spacing6,
-                )
-                .padding(horizontal = TangemTheme.dimens.spacing12),
+                .heightIn(min = minHeight)
+                .padding(paddingValues = padding),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
