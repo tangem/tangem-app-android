@@ -51,4 +51,5 @@ dependencies {
     /* Common */
     implementation(projects.common.ui)
     implementation(projects.common.uiCharts)
+    implementation(projects.common.routing)
 }
