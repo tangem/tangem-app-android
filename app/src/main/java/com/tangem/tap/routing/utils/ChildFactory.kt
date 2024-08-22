@@ -11,6 +11,7 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.managetokens.ManageTokensToggles
 import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
@@ -50,6 +51,7 @@ internal class ChildFactory @Inject constructor(
     private val walletSettingsComponentFactory: WalletSettingsComponent.Factory,
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
+    private val marketsTokenDetailsComponentFactory: MarketsTokenDetailsComponent.Factory,
     private val sendRouter: SendRouter,
     private val tokenDetailsRouter: TokenDetailsRouter,
     private val walletRouter: WalletRouter,
@@ -183,6 +185,16 @@ internal class ChildFactory @Inject constructor(
                     contextProvider = contextProvider(route, contextFactory),
                     params = WalletSettingsComponent.Params(route.userWalletId),
                     componentFactory = walletSettingsComponentFactory,
+                )
+            }
+            is AppRoute.MarketsTokenDetails -> {
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = MarketsTokenDetailsComponent.Params(
+                        token = route.token,
+                        appCurrency = route.appCurrency,
+                    ),
+                    componentFactory = marketsTokenDetailsComponentFactory,
                 )
             }
         }
