@@ -13,10 +13,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.features.managetokens.component.ManageTokensComponent
-import com.tangem.features.managetokens.entity.CurrencyItemUM
-import com.tangem.features.managetokens.entity.CurrencyNetworkUM
-import com.tangem.features.managetokens.entity.ManageTokensTopBarUM
-import com.tangem.features.managetokens.entity.ManageTokensUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
+import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
+import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.ui.ManageTokensScreen
 import kotlinx.collections.immutable.mutate
@@ -134,7 +134,7 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
 
     private fun getCurrencyNetworks(currencyIndex: Int) = List(size = 3) { networkIndex ->
         CurrencyNetworkUM(
-            id = Network.ID(networkIndex.toString()),
+            networkId = Network.ID(networkIndex.toString()),
             name = "NETWORK$networkIndex",
             type = "N$networkIndex",
             iconResId = R.drawable.ic_eth_16,
