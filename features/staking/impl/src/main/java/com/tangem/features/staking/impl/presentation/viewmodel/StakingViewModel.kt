@@ -89,7 +89,6 @@ internal class StakingViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
     private val submitHashUseCase: SubmitHashUseCase,
-    private val isStakeMoreAvailableUseCase: IsStakeMoreAvailableUseCase,
     private val stakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
     private val updateDelayedNetworkStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
@@ -581,13 +580,10 @@ internal class StakingViewModel @Inject constructor(
 
                     setupApprovalNeeded()
 
-                    val networkId = cryptoCurrencyStatus.currency.network.id
-                    val isStakeMoreAvailable = isStakeMoreAvailableUseCase(networkId)
                     stateController.update(
                         transformer = SetInitialDataStateTransformer(
                             clickIntents = this@StakingViewModel,
                             yield = yield,
-                            isStakeMoreAvailable = isStakeMoreAvailable.getOrElse { false },
                             isApprovalNeeded = stakingApproval is StakingApproval.Needed,
                             cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                             userWalletProvider = Provider { userWallet },

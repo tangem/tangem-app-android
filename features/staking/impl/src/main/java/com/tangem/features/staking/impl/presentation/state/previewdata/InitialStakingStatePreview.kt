@@ -52,7 +52,6 @@ internal object InitialStakingStatePreview {
         ),
         onInfoClick = {},
         yieldBalance = InnerYieldBalanceState.Empty,
-        isStakeMoreAvailable = true,
     )
 
     val stateWithYield = defaultState.copy(

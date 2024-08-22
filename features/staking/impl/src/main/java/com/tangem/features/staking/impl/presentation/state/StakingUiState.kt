@@ -57,7 +57,6 @@ internal sealed class StakingStates {
             val aprRange: TextReference,
             val onInfoClick: (InfoType) -> Unit,
             val yieldBalance: InnerYieldBalanceState,
-            val isStakeMoreAvailable: Boolean,
         ) : InitialInfoState()
 
         data class Empty(
