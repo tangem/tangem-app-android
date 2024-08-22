@@ -50,10 +50,10 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.managetokens.component.preview.PreviewManageTokensComponent
-import com.tangem.features.managetokens.entity.CurrencyItemUM
-import com.tangem.features.managetokens.entity.CurrencyItemUM.Basic.NetworksUM
-import com.tangem.features.managetokens.entity.ManageTokensTopBarUM
-import com.tangem.features.managetokens.entity.ManageTokensUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
+import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
+import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
 import kotlinx.collections.immutable.ImmutableList
 

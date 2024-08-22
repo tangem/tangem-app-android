@@ -2,8 +2,8 @@ package com.tangem.features.managetokens.utils.mapper
 
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
-import com.tangem.features.managetokens.entity.CurrencyItemUM.Basic.NetworksUM
-import com.tangem.features.managetokens.entity.CurrencyNetworkUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
+import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
 import com.tangem.features.managetokens.utils.ui.getIconRes
 import kotlinx.collections.immutable.toImmutableList
 
@@ -33,7 +33,7 @@ private fun SourceNetwork.toUiModel(
     onSelectedStateChange: (SourceNetwork, Boolean) -> Unit,
 ): CurrencyNetworkUM {
     return CurrencyNetworkUM(
-        id = id,
+        networkId = id,
         name = network.name.uppercase(),
         iconResId = id.getIconRes(isColored = isSelected || !isEditable),
         isSelected = isSelected || !isEditable,
