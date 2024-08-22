@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.tokens.models)
 
     /* Compose */
     implementation(deps.compose.coil)
