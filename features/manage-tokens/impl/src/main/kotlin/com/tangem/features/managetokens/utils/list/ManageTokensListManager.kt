@@ -14,7 +14,7 @@ import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.tokens.CheckHasLinkedTokensUseCase
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.managetokens.entity.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
