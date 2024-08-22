@@ -1,4 +1,4 @@
-package com.tangem.features.markets.details.api
+package com.tangem.features.markets.details
 
 import com.tangem.domain.core.serialization.SerializedBigDecimal
 import com.tangem.domain.markets.TokenMarket

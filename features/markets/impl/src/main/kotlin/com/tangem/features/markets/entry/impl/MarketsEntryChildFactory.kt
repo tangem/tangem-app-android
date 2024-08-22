@@ -1,10 +1,10 @@
-package com.tangem.features.markets
+package com.tangem.features.markets.entry.impl
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
-import com.tangem.features.markets.details.api.MarketsTokenDetailsComponent
+import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.tokenlist.api.MarketsTokenListComponent
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
