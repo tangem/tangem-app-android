@@ -13,6 +13,7 @@ internal data class AddCustomTokenConfig(
     val userWalletId: UserWalletId,
     val selectedNetwork: SelectedNetwork? = null,
     val selectedDerivationPath: SelectedDerivationPath? = null,
+    val formValues: CustomTokenFormValues = CustomTokenFormValues(),
 ) : TangemBottomSheetConfigContent {
 
     enum class Step {
