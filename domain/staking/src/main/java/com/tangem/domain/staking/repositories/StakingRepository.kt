@@ -84,9 +84,6 @@ interface StakingRepository {
 
     suspend fun sendUnsubmittedHashes()
 
-    /** Returns whether additional staking is possible if there is already active staking */
-    fun isStakeMoreAvailable(networkId: Network.ID): Boolean
-
     /** Returns staking approval */
     fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval
 }
