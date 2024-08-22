@@ -104,15 +104,17 @@ sealed class SwapEvents(
     )
 
     data class NoticeProviderError(
-        val token: String,
+        val sendToken: String,
+        val receiveToken: String,
         val provider: SwapProvider,
         val errorCode: Int,
     ) : SwapEvents(
         event = "Notice - Express Error",
         params = mapOf(
-            "Token" to token,
+            "Send Token" to sendToken,
+            "Receive Token" to receiveToken,
             "Provider" to provider.name,
-            "Error code" to errorCode.toString(),
+            "Error Code" to errorCode.toString(),
         ),
     )
 
