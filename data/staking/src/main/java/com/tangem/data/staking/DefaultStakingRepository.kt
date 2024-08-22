@@ -70,7 +70,7 @@ internal class DefaultStakingRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val stakingFeatureToggle: StakingFeatureToggles,
     private val walletManagersFacade: WalletManagersFacade,
-    private val moshi: Moshi,
+    moshi: Moshi,
 ) : StakingRepository {
 
     private val stakingNetworkTypeConverter = StakingNetworkTypeConverter()
@@ -110,6 +110,10 @@ internal class DefaultStakingRepository(
 
     private val tronStakeKitTransactionAdapter: JsonAdapter<TronStakeKitTransaction> =
         moshi.adapter(TronStakeKitTransaction::class.java)
+
+    override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = with(cryptoCurrencyId) {
+        rawNetworkId.plus(rawCurrencyId)
+    }
 
     override fun isStakingSupported(integrationKey: String): Boolean {
         return integrationIdMap.containsKey(integrationKey)
@@ -165,7 +169,7 @@ internal class DefaultStakingRepository(
             val yields = getEnabledYields() ?: return@withContext StakingAvailability.Unavailable
 
             val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, symbol)
-            val isSupported = isStakingSupported(cryptoCurrencyId.getIntegrationKey())
+            val isSupported = isStakingSupported(getIntegrationKey(cryptoCurrencyId))
 
             when {
                 prefetchedYield != null && isSupported -> {
@@ -273,7 +277,7 @@ internal class DefaultStakingRepository(
     ) = withContext(dispatchers.io) {
         if (!stakingFeatureToggle.isStakingEnabled) return@withContext
 
-        val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()] ?: return@withContext
+        val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)] ?: return@withContext
 
         val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network).orEmpty()
 
@@ -307,7 +311,7 @@ internal class DefaultStakingRepository(
             send(YieldBalance.Empty)
         } else {
             launch(dispatchers.io) {
-                val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()]
+                val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)]
                     ?: error("Could not get integrationId")
                 stakingBalanceStore.get(userWalletId, integrationId)
                     .collectLatest {
@@ -340,7 +344,7 @@ internal class DefaultStakingRepository(
         } else {
             fetchSingleYieldBalance(userWalletId, cryptoCurrency)
 
-            val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()]
+            val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)]
                 ?: error("Could not get integrationId")
             val result = stakingBalanceStore.getSyncOrNull(userWalletId, integrationId)
                 ?: return@withContext YieldBalance.Error
@@ -371,7 +375,7 @@ internal class DefaultStakingRepository(
                     val availableCurrencies = cryptoCurrencies
                         .mapNotNull { currency ->
                             val address = walletManagersFacade.getDefaultAddress(userWalletId, currency.network)
-                            val integrationId = integrationIdMap[currency.id.getIntegrationKey()]
+                            val integrationId = integrationIdMap[getIntegrationKey(currency.id)]
 
                             if (integrationId != null && address != null) {
                                 address to integrationId
@@ -561,7 +565,7 @@ internal class DefaultStakingRepository(
     }
 
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval {
-        return when (cryptoCurrency.id.getIntegrationKey()) {
+        return when (getIntegrationKey(cryptoCurrency.id)) {
             Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() -> {
                 StakingApproval.Needed(ETHEREUM_POLYGON_APPROVE_SPENDER)
             }
@@ -575,6 +579,7 @@ internal class DefaultStakingRepository(
             Blockchain.Solana,
             Blockchain.Cosmos,
             -> TransactionData.Compiled.Data.Bytes(unsignedTransaction.hexToBytes())
+            Blockchain.BSC,
             Blockchain.Ethereum,
             -> TransactionData.Compiled.Data.RawString(unsignedTransaction)
             Blockchain.Tron -> {
@@ -611,8 +616,6 @@ internal class DefaultStakingRepository(
 
     private fun getYieldBalancesKey(userWalletId: UserWalletId) = "yield_balance_${userWalletId.stringValue}"
 
-    private fun CryptoCurrency.ID.getIntegrationKey(): String = rawNetworkId.plus(rawCurrencyId)
-
     private fun getTronResource(network: Network): TronResource? {
         val blockchain = Blockchain.fromNetworkId(network.backendId)
 
@@ -629,11 +632,11 @@ internal class DefaultStakingRepository(
         const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
         const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
         const val ETHEREUM_POLYGON_INTEGRATION_ID = "ethereum-matic-native-staking"
+        const val BINANCE_INTEGRATION_ID = "bsc-bnb-native-staking"
         const val POLKADOT_INTEGRATION_ID = "polkadot-dot-validator-staking"
         const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
         const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
         const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
-        const val BINANCE_INTEGRATION_ID = "bsc-bnb-native-staking"
         const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
         const val NEAR_INTEGRATION_ID = "near-near-native-staking"
         const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
@@ -645,11 +648,11 @@ internal class DefaultStakingRepository(
             Blockchain.Solana.run { id + toCoinId() } to SOLANA_INTEGRATION_ID,
             Blockchain.Cosmos.run { id + toCoinId() } to COSMOS_INTEGRATION_ID,
             Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
+            Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
             // Blockchain.Polkadot.run { id + toCoinId() } to POLKADOT_INTEGRATION_ID,
             // Blockchain.Avalanche.run { id + toCoinId() } to AVALANCHE_INTEGRATION_ID,
             Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
             // Blockchain.Cronos.run { id + toCoinId() } to CRONOS_INTEGRATION_ID,
-            // Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
             // Blockchain.Kava.run { id + toCoinId() } to KAVA_INTEGRATION_ID,
             // Blockchain.Near.run { id + toCoinId() } to NEAR_INTEGRATION_ID,
             // Blockchain.Tezos.run { id + toCoinId() } to TEZOS_INTEGRATION_ID,
