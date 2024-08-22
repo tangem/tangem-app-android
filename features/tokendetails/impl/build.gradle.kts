@@ -78,6 +78,7 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.staking)
+    implementation(projects.domain.markets.models)
 
     /** Temp dependency to swap domain */
     implementation(projects.features.swap.domain)
