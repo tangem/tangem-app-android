@@ -112,7 +112,11 @@ private fun LeftSide(
 }
 
 @Composable
-fun RightSide(priceChangeType: PriceChangeType?, chartRawData: MarketChartRawData?, modifier: Modifier = Modifier) {
+private fun RightSide(
+    priceChangeType: PriceChangeType?,
+    chartRawData: MarketChartRawData?,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier.padding(vertical = TangemTheme.dimens.spacing10),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
