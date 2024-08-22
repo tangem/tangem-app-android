@@ -15,7 +15,11 @@ internal class MarketTokenDetailsRouter(
         stackNavigation.popWhile({ it != MarketsEntryChildFactory.Child.TokenList }, onComplete)
     }
 
-    override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) = error("Not allowed")
+    override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
+        /** Not allowed */
+    }
 
-    override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) = error("Not allowed")
+    override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
+        /** Not allowed */
+    }
 }
