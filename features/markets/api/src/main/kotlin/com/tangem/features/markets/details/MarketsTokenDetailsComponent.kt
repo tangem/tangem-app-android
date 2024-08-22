@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.Dp
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.markets.TokenMarketParam
+import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.markets.entry.BottomSheetState
 import kotlinx.serialization.Serializable
 
@@ -17,7 +17,7 @@ interface MarketsTokenDetailsComponent : ComposableContentComponent {
 
     @Serializable
     data class Params(
-        val token: TokenMarketParam,
+        val token: TokenMarketParams,
         val appCurrency: AppCurrency,
     )
 
