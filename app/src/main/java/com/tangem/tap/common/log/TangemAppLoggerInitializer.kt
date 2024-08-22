@@ -3,19 +3,19 @@ package com.tangem.tap.common.log
 import android.util.Log
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
-import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.wallet.BuildConfig
 import timber.log.Timber
 
 /**
  * Tangem app logger
  *
- * @property settingsRepository repository for saving logs
+ * @property appLogsStore app logs store
  *
 [REDACTED_AUTHOR]
  */
 class TangemAppLoggerInitializer(
-    private val settingsRepository: SettingsRepository,
+    private val appLogsStore: AppLogsStore,
 ) {
 
     /** Initialize */
@@ -35,7 +35,7 @@ class TangemAppLoggerInitializer(
                 }
 
                 if (PERMITTED_PRIORITY.contains(priority)) {
-                    settingsRepository.saveLogMessage(message)
+                    appLogsStore.saveLogMessage(message)
                 }
             }
         }
