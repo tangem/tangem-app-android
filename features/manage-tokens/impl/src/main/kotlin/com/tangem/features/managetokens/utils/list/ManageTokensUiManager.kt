@@ -4,7 +4,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.ContentMessage
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.tokens.model.Network
-import com.tangem.features.managetokens.entity.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.ui.dialog.HasLinkedTokensWarning
 import com.tangem.features.managetokens.ui.dialog.HideTokenWarning
 import com.tangem.features.managetokens.utils.mapper.toUiModel
