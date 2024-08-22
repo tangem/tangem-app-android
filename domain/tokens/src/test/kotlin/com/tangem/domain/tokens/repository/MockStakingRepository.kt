@@ -251,7 +251,5 @@ class MockStakingRepository : StakingRepository {
         /* no-op */
     }
 
-    override fun isStakeMoreAvailable(networkId: Network.ID): Boolean = true
-
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval = StakingApproval.Empty
 }
