@@ -1,4 +1,4 @@
-package com.tangem.features.managetokens.entity
+package com.tangem.features.managetokens.entity.managetokens
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
