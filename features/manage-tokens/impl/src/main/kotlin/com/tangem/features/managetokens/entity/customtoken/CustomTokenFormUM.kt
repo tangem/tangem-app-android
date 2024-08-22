@@ -1,42 +1,40 @@
-package com.tangem.features.managetokens.entity
+package com.tangem.features.managetokens.entity.customtoken
 
-import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
-@Immutable
 internal data class CustomTokenFormUM(
     val networkName: ClickableFieldUM,
-    val contractAddress: TextInputFieldUM,
-    val tokenName: TextInputFieldUM,
-    val tokenSymbol: TextInputFieldUM,
-    val tokenDecimals: TextInputFieldUM,
     val derivationPath: ClickableFieldUM,
-    val notifications: ImmutableList<NotificationUM>,
-    val canAddToken: Boolean,
-    val onNetworkClick: () -> Unit,
-    val onDerivationPathClick: () -> Unit,
-    val onAddClick: () -> Unit,
+    val tokenForm: TokenFormUM?,
+    val notifications: ImmutableList<NotificationUM> = persistentListOf(),
+    val canAddToken: Boolean = false,
+    val saveToken: () -> Unit,
 ) {
 
-    @Immutable
+    data class TokenFormUM(
+        val contractAddress: TextInputFieldUM,
+        val name: TextInputFieldUM,
+        val symbol: TextInputFieldUM,
+        val decimals: TextInputFieldUM,
+    )
+
     data class NotificationUM(
         val id: String,
         val config: NotificationConfig,
     )
 }
 
-@Immutable
 internal data class TextInputFieldUM(
     val label: TextReference,
     val placeholder: TextReference,
-    val value: String,
-    val onValueChange: (String) -> Unit,
+    val value: String = "",
     val error: TextReference? = null,
+    val onValueChange: (String) -> Unit,
 )
 
-@Immutable
 internal data class ClickableFieldUM(
     val label: TextReference,
     val value: TextReference,
