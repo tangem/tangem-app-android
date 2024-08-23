@@ -736,6 +736,7 @@ internal class StateBuilder(
 
     private fun getWarningForError(dataError: DataError, fromToken: CryptoCurrency): SwapWarning {
         val providerErrorMessage = getProviderErrorMessage(dataError)
+        val providerErrorTitle = getProviderErrorTitle(dataError)
         return when (dataError) {
             is DataError.ExchangeTooSmallAmountError -> SwapWarning.GeneralError(
                 notificationConfig = NotificationConfig(
@@ -759,22 +760,8 @@ internal class StateBuilder(
             )
             else -> SwapWarning.GeneralWarning(
                 notificationConfig = NotificationConfig(
-                    title = if (dataError is DataError.UnknownError) {
-                        resourceReference(R.string.common_error)
-                    } else {
-                        resourceReference(R.string.warning_express_refresh_required_title)
-                    },
-                    subtitle = when {
-                        dataError is DataError.UnknownError -> {
-                            resourceReference(R.string.common_unknown_error)
-                        }
-                        providerErrorMessage != null -> {
-                            providerErrorMessage
-                        }
-                        else -> {
-                            resourceReference(R.string.express_error_code, wrappedList(dataError.code.toString()))
-                        }
-                    },
+                    title = providerErrorTitle,
+                    subtitle = providerErrorMessage,
                     iconResId = R.drawable.img_attention_20,
                     buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                         text = resourceReference(R.string.warning_button_refresh),
@@ -1096,16 +1083,17 @@ internal class StateBuilder(
         )
     }
 
-    private fun getProviderErrorMessage(dataError: DataError): TextReference? {
+    private fun getProviderErrorMessage(dataError: DataError): TextReference {
         return when (dataError) {
             is DataError.SwapsAreUnavailableNowError -> resourceReference(
                 id = R.string.express_error_swap_unavailable,
                 formatArgs = wrappedList(dataError.code),
             )
             is DataError.ExchangeNotPossibleError -> resourceReference(
-                id = R.string.express_error_provider_unavailable,
+                id = R.string.warning_express_pair_unavailable_message,
                 formatArgs = wrappedList(dataError.code),
             )
+            is DataError.UnknownError -> resourceReference(R.string.common_unknown_error)
             is DataError.ExchangeProviderNotActiveError,
             is DataError.ExchangeProviderNotFoundError,
             is DataError.ExchangeProviderNotAvailableError,
@@ -1114,7 +1102,18 @@ internal class StateBuilder(
                 id = R.string.express_error_swap_pair_unavailable,
                 formatArgs = wrappedList(dataError.code),
             )
-            else -> null
+            else -> resourceReference(R.string.express_error_code, wrappedList(dataError.code.toString()))
+        }
+    }
+
+    private fun getProviderErrorTitle(dataError: DataError): TextReference {
+        return when (dataError) {
+            is DataError.ExchangeNotPossibleError -> resourceReference(
+                id = R.string.warning_express_pair_unavailable_title,
+                formatArgs = wrappedList(dataError.code),
+            )
+            is DataError.UnknownError -> resourceReference(R.string.common_error)
+            else -> resourceReference(R.string.warning_express_refresh_required_title)
         }
     }
 
