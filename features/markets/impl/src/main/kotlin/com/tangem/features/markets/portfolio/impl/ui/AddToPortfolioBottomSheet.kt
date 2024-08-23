@@ -53,10 +53,14 @@ internal fun AddToPortfolioBottomSheet(config: TangemBottomSheetConfig) {
         addBottomInsets = false,
         titleText = resourceReference(R.string.markets_add_to_portfolio_button),
     ) {
+        val content = config.content as? AddToPortfolioBSContentUM ?: return@TangemBottomSheet
+
         Content(
             modifier = Modifier.fillMaxWidth(),
-            state = config.content as AddToPortfolioBSContentUM,
+            state = content,
         )
+
+        WalletSelectorBottomSheet(content.walletSelectorConfig)
     }
 }
 

@@ -69,6 +69,8 @@ internal fun MyPortfolio(state: MyPortfolioUM, modifier: Modifier = Modifier) {
             MyPortfolioUM.Unavailable -> UnavailableContent()
         }
     }
+
+    AddToPortfolioBottomSheet(state.addToPortfolioBS)
 }
 
 @Composable
@@ -112,7 +114,7 @@ private fun AddFirstTokenContent(state: MyPortfolioUM.AddFirstToken, modifier: M
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         Text(
-            text = "To start buying, exchanging or receiving this asset, add this token to at least 1 network",
+            text = "To start buying, exchanging or receiving this asset, add this token to at least 1 network", // FIXME
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.tertiary,
         )
