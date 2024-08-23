@@ -1261,7 +1261,6 @@ internal class StateBuilder(
         selectedProviderId: String,
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
-        unavailableProviders: List<SwapProvider>,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
         val availableProvidersStates = providersStates.entries
@@ -1269,15 +1268,10 @@ internal class StateBuilder(
                 it.convertToProviderBottomSheetState(pricesLowerBest, actions.onProviderSelect)
             }
             .sortedWith(ProviderPercentDiffComparator)
-        val unavailableProviderStates = unavailableProviders.map {
-            it.convertToUnavailableProviderState(
-                alertText = resourceReference(R.string.express_provider_not_available),
-                selectionType = ProviderState.SelectionType.NONE,
-            )
-        }
+            .toImmutableList()
         val config = ChooseProviderBottomSheetConfig(
             selectedProviderId = selectedProviderId,
-            providers = (availableProvidersStates + unavailableProviderStates).toImmutableList(),
+            providers = availableProvidersStates,
         )
         return uiState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
@@ -1627,22 +1621,6 @@ internal class StateBuilder(
                 PercentDifference.Value(percent)
             } ?: PercentDifference.Value(0f),
             namePrefix = ProviderState.PrefixType.NONE,
-            onProviderClick = onProviderClick,
-        )
-    }
-
-    private fun SwapProvider.convertToUnavailableProviderState(
-        alertText: TextReference,
-        selectionType: ProviderState.SelectionType,
-        onProviderClick: ((String) -> Unit)? = null,
-    ): ProviderState {
-        return ProviderState.Unavailable(
-            id = this.providerId,
-            name = this.name,
-            iconUrl = this.imageLarge,
-            type = this.type.providerName,
-            selectionType = selectionType,
-            alertText = alertText,
             onProviderClick = onProviderClick,
         )
     }
