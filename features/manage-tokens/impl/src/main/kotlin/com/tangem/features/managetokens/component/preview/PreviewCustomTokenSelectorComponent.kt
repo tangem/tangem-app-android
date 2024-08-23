@@ -29,13 +29,15 @@ internal class PreviewCustomTokenSelectorComponent(
         when (params) {
             is Params.DerivationPathSelector -> {
                 val d = SelectedDerivationPath(
-                    value = "m/44'/0'/0'/0/$index",
-                    name = stringReference(value = "Network $index"),
+                    id = Network.ID(index.toString()),
+                    value = Network.DerivationPath.Card("m/44'/0'/0'/0/$index"),
+                    networkName = stringReference(value = "Network $index"),
                 )
 
                 DerivationPathUM(
-                    value = "m/44'/0'/0'/0/$index",
-                    blockchainName = d.name,
+                    id = d.id.value,
+                    value = d.value.value.orEmpty(),
+                    networkName = d.networkName,
                     isSelected = d.value == params.selectedDerivationPath?.value,
                     onSelectedStateChange = { params.onDerivationPathSelected(d) },
                 )
@@ -44,7 +46,8 @@ internal class PreviewCustomTokenSelectorComponent(
                 val n = SelectedNetwork(
                     id = Network.ID(index.toString()),
                     name = stringReference(value = "Network $index"),
-                    derivationPath = "m/44'/0'/0'/0/$index",
+                    derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/$index"),
+                    canHandleTokens = false,
                 )
 
                 CurrencyNetworkUM(
