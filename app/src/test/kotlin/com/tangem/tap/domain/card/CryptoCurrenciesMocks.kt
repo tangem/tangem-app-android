@@ -68,6 +68,7 @@ internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
                 isTestnet = false,
                 standardType = Network.StandardType.ERC20,
                 hasFiatFeeRate = true,
+                canHandleTokens = true,
             ),
             name = "NEVER-MIND",
             symbol = "NEVER-MIND",
