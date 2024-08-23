@@ -405,9 +405,13 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun sendErrorAnalyticsEvent(error: DataError, provider: SwapProvider) {
+        val receiveToken = dataState.toCryptoCurrency?.currency?.let {
+            "${it.network.backendId}:${it.symbol}"
+        }
         analyticsEventHandler.send(
             SwapEvents.NoticeProviderError(
-                token = initialCryptoCurrency.symbol,
+                sendToken = "${initialCryptoCurrency.network.backendId}:${initialCryptoCurrency.symbol}",
+                receiveToken = receiveToken ?: "",
                 provider = provider,
                 errorCode = error.code,
             ),
