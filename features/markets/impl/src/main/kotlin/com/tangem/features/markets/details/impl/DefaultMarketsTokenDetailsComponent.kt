@@ -70,9 +70,7 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
             model.isVisibleOnScreen.value = bsState == BottomSheetState.EXPANDED
         }
 
-        BackHandler(
-            enabled = bsState == BottomSheetState.EXPANDED,
-        ) {
+        BackHandler(enabled = bsState == BottomSheetState.EXPANDED) {
             navigateBack()
         }
 
