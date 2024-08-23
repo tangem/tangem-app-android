@@ -1,5 +1,7 @@
 package com.tangem.features.managetokens.model
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -13,6 +15,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
+import com.tangem.features.managetokens.entity.managetokens.BottomSheetConfig
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
@@ -38,6 +41,7 @@ internal class ManageTokensModel @Inject constructor(
     private val params: ManageTokensComponent.Params = paramsContainer.require()
 
     val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState(params.userWalletId))
+    val bottomSheetNavigation: SlotNavigation<BottomSheetConfig> = SlotNavigation()
 
     init {
         manageTokensListManager.uiItems
@@ -99,7 +103,7 @@ internal class ManageTokensModel @Inject constructor(
                 onBackButtonClick = router::pop,
                 endButton = TopAppBarButtonUM(
                     iconRes = R.drawable.ic_plus_24,
-                    onIconClicked = ::onAddCustomToken,
+                    onIconClicked = ::navigateToAddCustomToken,
                 ),
             ),
             search = SearchBarUM(
@@ -189,8 +193,10 @@ internal class ManageTokensModel @Inject constructor(
         return persistentListOf()
     }
 
-    private fun onAddCustomToken() {
-        // TODO: [REDACTED_JIRA]
+    private fun navigateToAddCustomToken() {
+        params.userWalletId?.let {
+            bottomSheetNavigation.activate(BottomSheetConfig.AddCustomToken(it))
+        }
     }
 
     private fun saveChanges() {
