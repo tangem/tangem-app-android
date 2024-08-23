@@ -6,6 +6,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -225,4 +226,6 @@ interface CurrenciesRepository {
     ): CryptoCurrency.Token
 
     suspend fun hasTokens(userWalletId: UserWalletId, network: Network): Boolean
+
+    fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>>
 }

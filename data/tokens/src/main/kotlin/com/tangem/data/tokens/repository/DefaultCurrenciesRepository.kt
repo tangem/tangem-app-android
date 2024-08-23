@@ -490,13 +490,40 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
-        return getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
-            responseCurrenciesFactory.createCurrencies(
-                response = storedTokens,
-                scanResponse = userWallet.scanResponse,
-            )
+    override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
+        return channelFlow {
+            userWalletsStore.userWallets.map { userWallets ->
+                userWallets
+                    .filter(UserWallet::isMultiCurrency) // TODO
+                    .map { userWallet ->
+                        // TODO cache
+
+                        getMultiCurrencyWalletCurrencies(userWallet = userWallet).map { currencies ->
+                            userWallet to currencies.filter { it.id.rawCurrencyId == currencyRawId } // TODO
+                        }
+                    }
+                    .let { flows: List<Flow<Pair<UserWallet, List<CryptoCurrency>>>> ->
+                        combine(*flows.toTypedArray()) { userWalletsWithCurrencies ->
+                            userWalletsWithCurrencies.toMap()
+                        }
+                            .collectLatest(::send)
+                    }
+            }
         }
+    }
+
+    private fun getMultiCurrencyWalletCurrencies(
+        userWallet: UserWallet,
+        // predicate: (UserTokensResponse) -> Boolean = { true },
+    ): Flow<List<CryptoCurrency>> {
+        return getSavedUserTokensResponse(userWallet.walletId)
+            // .filter(predicate)
+            .map { storedTokens ->
+                responseCurrenciesFactory.createCurrencies(
+                    response = storedTokens,
+                    scanResponse = userWallet.scanResponse,
+                )
+            }
     }
 
     private suspend fun fetchTokensIfCacheExpired(userWallet: UserWallet, refresh: Boolean) {
