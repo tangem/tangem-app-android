@@ -54,6 +54,7 @@ jobs:
           apk_path_internal: app/build/outputs/apk/internal/app-internal.apk
           versionCode: ${{ env.VERSION_CODE }}
           versionName: ${{ steps.version.outputs.versionName }}
+          releaseNotes: ${{ github.ref_name }} - ${{ github.sha }}
           groups: testers
         run: |
           bundle exec fastlane publishToFirebase
