@@ -1,11 +1,13 @@
 package com.tangem.data.managetokens.di
 
+import com.tangem.data.managetokens.DefaultCustomTokensRepository
 import com.tangem.data.managetokens.DefaultManageTokensRepository
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.data.managetokens.utils.ManagedCryptoCurrencyFactory
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -36,5 +38,11 @@ internal object ManageTokensDataModule {
             appPreferencesStore,
             dispatchers,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCustomTokensRepository(): CustomTokensRepository {
+        return DefaultCustomTokensRepository()
     }
 }
