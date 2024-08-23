@@ -103,7 +103,8 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "1"),
                         name = stringReference("Ethereum"),
-                        derivationPath = "m/44'/0'/0'/0/0",
+                        derivationPath = Network.DerivationPath.None,
+                        canHandleTokens = false,
                     ),
                 ),
             ),
@@ -115,7 +116,8 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "0"),
                         name = stringReference("Ethereum"),
-                        derivationPath = "m/44'/0'/0'/0/0",
+                        derivationPath = Network.DerivationPath.None,
+                        canHandleTokens = false,
                     ),
                 ),
             ),
@@ -125,8 +127,9 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     step = AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR,
                     popBack = {},
                     selectedDerivationPath = SelectedDerivationPath(
-                        value = "m/44'/0'/0'/0/0",
-                        name = stringReference("Ethereum"),
+                        id = Network.ID(value = "0"),
+                        value = Network.DerivationPath.None,
+                        networkName = stringReference("Ethereum"),
                     ),
                 ),
             ),
