@@ -23,6 +23,7 @@ fun getNetwork(networkId: Network.ID, derivationPath: Network.DerivationPath): N
         currencySymbol = blockchain.currency,
         standardType = getNetworkStandardType(blockchain),
         hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
+        canHandleTokens = blockchain.canHandleTokens(),
     )
 }
 
@@ -45,6 +46,7 @@ fun getNetwork(
         currencySymbol = blockchain.currency,
         standardType = getNetworkStandardType(blockchain),
         hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
+        canHandleTokens = blockchain.canHandleTokens(),
     )
 }
 
