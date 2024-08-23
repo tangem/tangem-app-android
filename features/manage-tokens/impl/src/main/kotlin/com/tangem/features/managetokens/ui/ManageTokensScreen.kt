@@ -44,8 +44,10 @@ import com.tangem.core.ui.components.rows.BlockchainRow
 import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.components.rows.model.ChainRowUM
+import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
@@ -91,6 +93,12 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
                     .padding(innerPadding)
                     .fillMaxSize(),
                 state = state,
+            )
+        },
+        snackbarHost = {
+            TangemSnackbarHost(
+                modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
+                hostState = LocalSnackbarHostState.current,
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
