@@ -439,13 +439,14 @@ internal class SwapViewModel @Inject constructor(
         val consideredProviders = state.consideredProvidersStates()
 
         return if (consideredProviders.isNotEmpty()) {
+            val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
+            val bestQuotesProvider = findBestQuoteProvider(successLoadedData)
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
-                currentSelected
+                // logic for always choose best if already selected provider
+                bestQuotesProvider ?: currentSelected
             } else {
-                val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
                 val recommendedProvider = successLoadedData.keys.firstOrNull { it.isRecommended }
-                val bestQuotesProvider = findBestQuoteProvider(successLoadedData)
                 triggerPromoProviderEvent(recommendedProvider, bestQuotesProvider)
                 recommendedProvider ?: bestQuotesProvider ?: consideredProviders.keys.first()
             }
@@ -962,12 +963,10 @@ internal class SwapViewModel @Inject constructor(
                 analyticsEventHandler.send(SwapEvents.ProviderClicked)
                 val states = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
                 val pricesLowerBest = getPricesLowerBest(providerId, states)
-                val unavailableProviders = getUnavailableProvidersFor(dataState.lastLoadedSwapStates)
                 uiState = stateBuilder.showSelectProviderBottomSheet(
                     uiState = uiState,
                     selectedProviderId = providerId,
                     pricesLowerBest = pricesLowerBest,
-                    unavailableProviders = unavailableProviders,
                     providersStates = dataState.lastLoadedSwapStates,
                 ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
             },
@@ -1117,15 +1116,6 @@ internal class SwapViewModel @Inject constructor(
         }
 
         return groupToFind.available.find { idToFind == it.currencyStatus.currency.id.value }?.providers ?: emptyList()
-    }
-
-    private fun getAllProviders(): List<SwapProvider> {
-        return dataState.tokensDataState?.allProviders ?: emptyList()
-    }
-
-    private fun getUnavailableProvidersFor(state: Map<SwapProvider, SwapState>): List<SwapProvider> {
-        val availableProviders = state.keys.map { it.providerId }
-        return getAllProviders().filterNot { availableProviders.contains(it.providerId) }
     }
 
     private fun Map<SwapProvider, SwapState>.getLastLoadedSuccessStates(): SuccessLoadedSwapData {
