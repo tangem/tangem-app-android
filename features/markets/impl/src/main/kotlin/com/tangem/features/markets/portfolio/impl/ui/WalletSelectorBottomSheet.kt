@@ -17,6 +17,7 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.TangemTopAppBarHeight
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockCard
+import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
@@ -64,18 +65,25 @@ private fun Content(state: WalletSelectorBSContentUM, modifier: Modifier = Modif
     ) {
         BlockCard(
             modifier = Modifier.fillMaxSize(),
+            colors = TangemBlockCardColors.copy(
+                containerColor = TangemTheme.colors.background.action,
+                disabledContainerColor = TangemTheme.colors.background.action,
+            ),
         ) {
             state.userWallets.forEach { state ->
                 key(state.id) {
                     UserWalletItem(
                         modifier = Modifier.fillMaxWidth(),
+                        blockColors = TangemBlockCardColors.copy(
+                            containerColor = TangemTheme.colors.background.action,
+                            disabledContainerColor = TangemTheme.colors.background.action,
+                        ),
                         state = state,
                     )
                 }
             }
-
-            SpacerH(bottomBarHeight)
         }
+        SpacerH(bottomBarHeight)
     }
 }
 
