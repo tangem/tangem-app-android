@@ -124,8 +124,9 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                     userWalletId = config.userWalletId,
                     network = config.selectedNetwork ?: error("Network is not selected"),
                     derivationPath = config.selectedDerivationPath ?: SelectedDerivationPath(
+                        id = config.selectedNetwork.id,
                         value = config.selectedNetwork.derivationPath,
-                        name = resourceReference(R.string.custom_token_derivation_path_default),
+                        networkName = resourceReference(R.string.custom_token_derivation_path_default),
                     ),
                     formValues = config.formValues,
                     onSelectNetworkClick = ::showNetworkSelector,
