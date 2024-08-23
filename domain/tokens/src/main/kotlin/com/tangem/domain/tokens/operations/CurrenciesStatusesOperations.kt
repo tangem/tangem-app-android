@@ -207,7 +207,7 @@ internal class CurrenciesStatusesOperations(
         return getCurrencyStatusFlow(currency)
     }
 
-    private fun getCurrencyStatusFlow(currency: CryptoCurrency): Flow<Either<Error, CryptoCurrencyStatus>> {
+    fun getCurrencyStatusFlow(currency: CryptoCurrency): Flow<Either<Error, CryptoCurrencyStatus>> {
         val (networks, currenciesIds) = getIds(nonEmptyListOf(currency))
 
         val quoteFlow = getQuotes(currenciesIds)

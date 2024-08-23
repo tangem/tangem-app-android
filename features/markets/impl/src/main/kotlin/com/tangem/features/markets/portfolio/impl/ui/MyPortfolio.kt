@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -74,10 +75,12 @@ internal fun MyPortfolio(state: MyPortfolioUM, modifier: Modifier = Modifier) {
 private fun TokenList(state: MyPortfolioUM.Tokens, modifier: Modifier = Modifier) {
     Column(modifier) {
         state.tokens.fastForEachIndexed { index, token ->
-            PortfolioItem(
-                state = token,
-                lastInList = index == state.tokens.size - 1,
-            )
+            key(token.tokenItemState.id) {
+                PortfolioItem(
+                    state = token,
+                    lastInList = index == state.tokens.size - 1,
+                )
+            }
         }
     }
 }

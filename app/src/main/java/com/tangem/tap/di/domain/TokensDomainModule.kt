@@ -106,6 +106,22 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
+    fun provide(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
+    ): GetAllWalletsCryptoCurrencyStatusesUseCase {
+        return GetAllWalletsCryptoCurrencyStatusesUseCase(
+            currenciesRepository,
+            quotesRepository,
+            networksRepository,
+            stakingRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideGetCurrencyWarningsUseCase(
         walletManagersFacade: WalletManagersFacade,
         currenciesRepository: CurrenciesRepository,

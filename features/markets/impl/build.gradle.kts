@@ -20,6 +20,8 @@ dependencies {
     implementation(projects.domain.markets)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
 
     /* Compose */
