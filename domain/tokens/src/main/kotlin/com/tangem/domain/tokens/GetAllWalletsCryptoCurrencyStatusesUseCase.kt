@@ -11,9 +11,8 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWallet
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 
 /**
 [REDACTED_AUTHOR]
@@ -24,40 +23,32 @@ class GetAllWalletsCryptoCurrencyStatusesUseCase(
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
 ) {
-
+    @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(
         currencyRawId: String,
-    ): Flow<Map<UserWallet, Flow<List<Either<CurrencyStatusError, CryptoCurrencyStatus>>>>> {
+    ): Flow<Map<UserWallet, List<Either<CurrencyStatusError, CryptoCurrencyStatus>>>> {
         return currenciesRepository.getAllWalletsCryptoCurrencies(currencyRawId)
-            .map { userWalletsWithCurrencies: Map<UserWallet, List<CryptoCurrency>> ->
-                userWalletsWithCurrencies
-                    .mapValues {
-                        val operations = CurrenciesStatusesOperations(
-                            userWalletId = it.key.walletId,
-                            currenciesRepository = currenciesRepository,
-                            quotesRepository = quotesRepository,
-                            networksRepository = networksRepository,
-                            stakingRepository = stakingRepository,
-                        )
+            .flatMapConcat { userWalletsWithCurrencies: Map<UserWallet, List<CryptoCurrency>> ->
+                val walletStatusFlows = userWalletsWithCurrencies.map { (userWallet, cryptoCurrencies) ->
+                    val operations = CurrenciesStatusesOperations(
+                        userWalletId = userWallet.walletId,
+                        currenciesRepository = currenciesRepository,
+                        quotesRepository = quotesRepository,
+                        networksRepository = networksRepository,
+                        stakingRepository = stakingRepository,
+                    )
 
-                        val currencyStatuses = it.value
-                            .map(operations::getCurrencyStatusFlow)
-                            .let {
-                                combine(*it.toTypedArray()) { a ->
-                                    a.map { maybeCurrency ->
-                                        maybeCurrency.mapLeft(CurrenciesStatusesOperations.Error::mapToCurrencyError)
-                                    }
-                                }
-                            }
-
-                        currencyStatuses
+                    val currencyStatusFlows = cryptoCurrencies.map { cryptoCurrency ->
+                        operations.getCurrencyStatusFlow(cryptoCurrency)
+                            .map { it.mapLeft(CurrenciesStatusesOperations.Error::mapToCurrencyError) }
                     }
+
+                    combine(currencyStatusFlows) { statuses ->
+                        userWallet to statuses.toList()
+                    }
+                }
+
+                combine(walletStatusFlows) { it.toMap() }
             }
-        // .map {
-        //     it.values.
-        // }
-        // .flatMapLatest { a: Map<UserWallet, Flow<List<Either<CurrencyStatusError, CryptoCurrencyStatus>>>> ->
-        //
-        // }
     }
 }
