@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.ChainRowUM
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -154,7 +155,7 @@ private fun NetworkItem(model: CurrencyNetworkUM, modifier: Modifier = Modifier)
                 icon = CurrencyIconState.CoinIcon(
                     url = null,
                     fallbackResId = model.iconResId,
-                    isGrayscale = !model.isSelected,
+                    isGrayscale = false,
                     showCustomBadge = false,
                 ),
                 showCustom = false,
@@ -205,7 +206,7 @@ private fun DerivationPathItem(model: DerivationPathUM, modifier: Modifier = Mod
         contentAlignment = Alignment.CenterStart,
     ) {
         Text(
-            text = "${model.value} ${if (model.isSelected) "- selected" else ""}",
+            text = "${model.networkName.resolveReference()}: ${model.value} ${if (model.isSelected) "<" else ""}",
             color = TangemTheme.colors.text.primary1,
         )
     }
@@ -235,7 +236,8 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "0"),
                         name = stringReference(""),
-                        derivationPath = "m/44'/0'/0'/0/0",
+                        derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
+                        canHandleTokens = false,
                     ),
                     onNetworkSelected = {},
                 ),
@@ -244,8 +246,9 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
                 params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
                     userWalletId = UserWalletId(stringValue = "321"),
                     selectedDerivationPath = SelectedDerivationPath(
-                        value = "m/44'/0'/0'/0/0",
-                        name = stringReference(""),
+                        id = Network.ID(value = "0"),
+                        value = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
+                        networkName = stringReference(""),
                     ),
                     onDerivationPathSelected = {},
                 ),
