@@ -11,6 +11,7 @@ internal data class CustomTokenFormUM(
     val tokenForm: TokenFormUM?,
     val notifications: ImmutableList<NotificationUM> = persistentListOf(),
     val canAddToken: Boolean = false,
+    val isValidating: Boolean = false,
     val saveToken: () -> Unit,
 ) {
 
@@ -32,6 +33,7 @@ internal data class TextInputFieldUM(
     val placeholder: TextReference,
     val value: String = "",
     val error: TextReference? = null,
+    val isEnabled: Boolean = true,
     val onValueChange: (String) -> Unit,
 )
 
