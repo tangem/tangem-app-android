@@ -25,13 +25,11 @@ class GetFeedbackEmailUseCase(
     private val emailMessageBodyResolver = EmailMessageBodyResolver(feedbackRepository)
 
     suspend operator fun invoke(type: FeedbackEmailType): FeedbackEmail {
-        val formattedLogs = AppLogsFormatter().format(appLogs = feedbackRepository.getAppLogs())
-
         return FeedbackEmail(
             address = getAddress(type.cardInfo),
             subject = emailSubjectResolver.resolve(type),
             message = createMessage(type),
-            file = feedbackRepository.createLogFile(logs = formattedLogs),
+            file = feedbackRepository.getLogFile(),
         )
     }
 
