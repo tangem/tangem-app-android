@@ -50,9 +50,7 @@ class WalletConnectSdkHelper {
     @Suppress("MagicNumber")
     suspend fun prepareTransactionData(data: EthTransactionData): WcTransactionData {
         val transaction = data.transaction
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(data.networkId)) {
-            "Blockchain not found"
-        }
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(data.networkId)) { "Blockchain not found" }
         val walletManager = requireNotNull(getWalletManager(blockchain, data.rawDerivationPath)) {
             "WalletManager not found"
         }
@@ -73,27 +71,31 @@ class WalletConnectSdkHelper {
             "Transaction amount is null"
         }
 
+        // TODO move fee calculation to SDK getFee() [REDACTED_JIRA]
         val gasLimit = getGasLimitFromTx(value, walletManager, transaction)
+        val gasPrice = getGasPrice(walletManager, transaction)
 
-        val gasPrice = transaction.gasPrice?.hexToBigDecimal()
-            ?: when (val result = (walletManager as? EthereumGasLoader)?.getGasPrice()) {
-                is Result.Success -> result.data.toBigDecimal()
-                is Result.Failure -> {
-                    (result.error as? Throwable)?.let { Timber.e(it, "getGasPrice failed") }
-
-                    error("Unable to get gas price: ${result.error}")
-                }
-                null -> error("Gas price is null")
-            }
-
-        val fee = (gasLimit * gasPrice).movePointLeft(decimals)
-        val total = value + fee
+        val feeDecimal = (gasLimit * gasPrice).movePointLeft(decimals)
+        val total = value + feeDecimal
+        val feeAmount = Amount(feeDecimal, wallet.blockchain)
 
         val destinationAddress = requireNotNull(transaction.to) { "Destination address is null" }
 
+        val fee = if (blockchain.isEvm()) {
+            // TODO [REDACTED_JIRA]
+            // workaround for Mantle, remove after [REDACTED_JIRA]
+            val patchedAmount = if (blockchain == Blockchain.Mantle) {
+                feeAmount.copy(value = feeAmount.value?.multiply(MANTLE_FEE_ESTIMATE_MULTIPLIER))
+            } else {
+                feeAmount
+            }
+            Fee.Ethereum(patchedAmount, gasLimit.toBigInteger(), gasPrice.toBigInteger())
+        } else {
+            Fee.Common(feeAmount)
+        }
         val transactionData = TransactionData.Uncompiled(
             amount = Amount(value, wallet.blockchain),
-            fee = Fee.Common(Amount(fee, wallet.blockchain)),
+            fee = fee,
             sourceAddress = transaction.from,
             destinationAddress = destinationAddress,
             extras = EthereumTransactionExtras(
@@ -107,7 +109,7 @@ class WalletConnectSdkHelper {
             dAppName = data.metaName,
             dAppUrl = data.metaUrl,
             amount = value.toFormattedString(decimals),
-            gasAmount = fee.toFormattedString(decimals),
+            feeAmount = feeDecimal.toFormattedString(decimals),
             totalAmount = total.toFormattedString(decimals),
             balance = balance.toFormattedString(decimals),
             isEnoughFundsToSend = balance - total >= BigDecimal.ZERO,
@@ -148,6 +150,22 @@ class WalletConnectSdkHelper {
         }
     }
 
+    private suspend fun getGasPrice(walletManager: WalletManager, transaction: WcEthereumTransaction): BigDecimal {
+        val txGasPrice = transaction.gasPrice?.hexToBigDecimal()
+        if (txGasPrice != null) {
+            return txGasPrice
+        }
+        return when (val result = (walletManager as? EthereumGasLoader)?.getGasPrice()) {
+            is Result.Success -> result.data.toBigDecimal()
+            is Result.Failure -> {
+                (result.error as? Throwable)?.let { Timber.e(it, "getGasPrice failed") }
+
+                error("Unable to get gas price: ${result.error}")
+            }
+            null -> error("Gas price is null")
+        }
+    }
+
     private suspend fun getGasLimitFromTx(
         value: BigDecimal,
         walletManager: WalletManager,
@@ -155,14 +173,14 @@ class WalletConnectSdkHelper {
     ): BigDecimal {
         return transaction.gas?.hexToBigDecimal()
             ?: transaction.gasLimit?.hexToBigDecimal()
-            ?: getGaLimitFromBlockchain(
+            ?: getGasLimitFromBlockchain(
                 value = value,
                 walletManager = walletManager,
                 transaction = transaction,
             )
     }
 
-    private suspend fun getGaLimitFromBlockchain(
+    private suspend fun getGasLimitFromBlockchain(
         value: BigDecimal,
         walletManager: WalletManager,
         transaction: WcEthereumTransaction,
@@ -418,5 +436,7 @@ class WalletConnectSdkHelper {
         const val ETH_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n"
         const val HEX_PREFIX = "0x"
         const val DEFAULT_MAX_GASLIMIT = 350000
+        // TODO remove after [REDACTED_JIRA]
+        private val MANTLE_FEE_ESTIMATE_MULTIPLIER = BigDecimal("1.6")
     }
 }
