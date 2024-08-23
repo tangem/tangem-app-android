@@ -34,14 +34,14 @@ internal class DefaultRouter(
 
     override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         popTo(
-            predicate = { it == route },
+            predicate = { it != route },
             onComplete = onComplete,
         )
     }
 
     override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
         popTo(
-            predicate = { routeClass.isInstance(it) },
+            predicate = { it::class != routeClass },
             onComplete = onComplete,
         )
     }
