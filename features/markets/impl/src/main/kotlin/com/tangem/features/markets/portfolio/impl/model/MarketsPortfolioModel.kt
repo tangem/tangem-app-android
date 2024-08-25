@@ -4,60 +4,71 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.tokens.GetAllWalletsCryptoCurrencyStatusesUseCase
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.PortfolioTokenUM
 import com.tangem.features.markets.portfolio.impl.ui.state.QuickActionUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @Stable
 @ComponentScoped
 internal class MarketsPortfolioModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    getAllWalletsCryptoCurrencyStatusesUseCase: GetAllWalletsCryptoCurrencyStatusesUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
-    // private val getWalletsUseCase: GetWalletsUseCase,
-    // private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
-    // private val getTokenListUseCase: GetTokenListUseCase,
-    // private val getAllWalletsCryptoCurrencyStatusesUseCase: GetAllWalletsCryptoCurrencyStatusesUseCase,
 ) : Model() {
 
     val state: StateFlow<MyPortfolioUM> get() = _state
     private val _state: MutableStateFlow<MyPortfolioUM> = MutableStateFlow(value = MyPortfolioUM.Loading)
 
-    @Suppress("UnusedPrivateMember")
     private val params = paramsContainer.require<MarketsPortfolioComponent.Params>()
 
-    // private val tokens = MutableStateFlow<>init {
-    //     getAllWalletsCryptoCurrencyStatusesUseCase(params.tokenId)
-    //         .collectLatest {
-    //         }
-    // }
+    private val networks = MutableStateFlow<List<TokenMarketInfo.Network>>(value = emptyList())
 
-    fun setTokenNetworks(networks: List<TokenMarketInfo.Network>) {
-        _state.update {
-            if (networks.isEmpty()) {
+    init {
+        combine(
+            flow = getAllWalletsCryptoCurrencyStatusesUseCase(params.tokenId),
+            flow2 = networks,
+        ) { map, networks ->
+            val supportedTokens = map.flatMap { entry ->
+                entry.value
+                    .filter { either ->
+                        either.isRight { status -> // TODO
+                            networks.any { network ->
+                                network.networkId == status.currency.network.id.value
+                            }
+                        }
+                    }
+                    .mapNotNull {
+                        it.getOrNull()?.let { entry.key to it } // TODO
+                    }
+            }
+
+            if (supportedTokens.isEmpty()) {
                 MyPortfolioUM.AddFirstToken(onAddClick = ::onAddClick)
             } else {
+                val tokens = supportedTokens.map { (userWallet, status) ->
+                    TokenItemState.Loading(
+                        id = params.tokenId,
+                        iconState = CryptoCurrencyToIconStateConverter().convert(status.currency),
+                        titleState = TokenItemState.TitleState.Content(text = userWallet.name),
+                        subtitleState = TokenItemState.SubtitleState.TextContent(
+                            value = status.currency.name,
+                        ),
+                    )
+                }
+
                 MyPortfolioUM.Tokens(
-                    tokens = networks.map {
+                    tokens = tokens.map {
                         PortfolioTokenUM(
-                            tokenItemState = TokenItemState.Loading(
-                                id = params.tokenId,
-                                iconState = TODO(),
-                                titleState = TokenItemState.TitleState.Content(
-                                    text = "decore",
-                                ),
-                                // subtitleState = TokenItemState.SubtitleState.TextContent(
-                                //     value = ,
-                                // ),
-                            ),
+                            tokenItemState = it,
                             isBalanceHidden = false,
                             isQuickActionsShown = false,
                             onQuickActionClick = {
@@ -75,6 +86,12 @@ internal class MarketsPortfolioModel @Inject constructor(
                 )
             }
         }
+            .onEach { _state.value = it }
+            .launchIn(modelScope)
+    }
+
+    fun setTokenNetworks(networks: List<TokenMarketInfo.Network>) {
+        this.networks.value = networks
     }
 
     fun setNoNetworksAvailable() {

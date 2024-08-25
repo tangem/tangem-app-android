@@ -28,7 +28,7 @@ class GetAllWalletsCryptoCurrencyStatusesUseCase(
         currencyRawId: String,
     ): Flow<Map<UserWallet, List<Either<CurrencyStatusError, CryptoCurrencyStatus>>>> {
         return currenciesRepository.getAllWalletsCryptoCurrencies(currencyRawId)
-            .flatMapConcat { userWalletsWithCurrencies: Map<UserWallet, List<CryptoCurrency>> ->
+            .flatMapLatest { userWalletsWithCurrencies: Map<UserWallet, List<CryptoCurrency>> ->
                 val walletStatusFlows = userWalletsWithCurrencies.map { (userWallet, cryptoCurrencies) ->
                     val operations = CurrenciesStatusesOperations(
                         userWalletId = userWallet.walletId,
@@ -46,9 +46,12 @@ class GetAllWalletsCryptoCurrencyStatusesUseCase(
                     combine(currencyStatusFlows) { statuses ->
                         userWallet to statuses.toList()
                     }
+                        .onEmpty { emit(userWallet to emptyList()) }
                 }
 
-                combine(walletStatusFlows) { it.toMap() }
+                combine(walletStatusFlows) {
+                    it.toMap()
+                }
             }
     }
 }
