@@ -181,7 +181,7 @@ private fun LazyItemScope.DraggableItem(
                 reorderableTokenListState = reorderableState,
             )
             is DraggableItem.Token -> TokenItem(
-                modifier = itemModifier,
+                modifier = itemModifier.background(color = TangemTheme.colors.background.primary),
                 state = item.tokenItemState,
                 reorderableTokenListState = reorderableState,
                 isBalanceHidden = isBalanceHidden,

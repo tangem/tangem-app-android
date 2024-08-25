@@ -1,7 +1,6 @@
 package com.tangem.core.ui.components.token
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -79,9 +78,7 @@ fun TokenItem(
 
     CustomContainer(
         state = state,
-        modifier = modifier
-            .tokenClickable(state = state)
-            .background(color = TangemTheme.colors.background.primary),
+        modifier = modifier.tokenClickable(state = state),
     ) {
         CurrencyIcon(
             state = state.iconState,

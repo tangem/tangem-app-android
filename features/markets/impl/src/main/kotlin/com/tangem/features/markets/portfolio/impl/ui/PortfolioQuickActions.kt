@@ -39,11 +39,10 @@ internal fun PortfolioQuickActions(
 ) {
     AnimatedVisibility(
         visible = isVisible,
-        modifier = modifier,
         enter = expandVertically(expandFrom = Alignment.Top),
         exit = shrinkVertically(shrinkTowards = Alignment.Top),
     ) {
-        Column {
+        Column(modifier) {
             LineSeparator()
             QuickActionItem(
                 state = QuickActionUM.Buy,

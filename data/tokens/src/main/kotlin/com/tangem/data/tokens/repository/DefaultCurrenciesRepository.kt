@@ -498,7 +498,7 @@ internal class DefaultCurrenciesRepository(
                 .filter(UserWallet::isMultiCurrency) // TODO
                 .map { userWallet ->
                     getMultiCurrencyWalletCurrencies(userWallet = userWallet).map { currencies ->
-                        userWallet to currencies.filter { it.id.rawCurrencyId == currencyRawId } // TODO
+                        userWallet to currencies.filter { it.id.rawCurrencyId == currencyRawId } // TODO blast?
                     }
                 }
 
