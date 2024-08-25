@@ -17,9 +17,12 @@ dependencies {
     implementation(projects.core.navigation)
 
     /* Domain */
-    implementation(projects.domain.markets)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.markets)
+    implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
