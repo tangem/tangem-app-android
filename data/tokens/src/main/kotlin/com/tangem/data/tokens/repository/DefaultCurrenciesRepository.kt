@@ -40,6 +40,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -490,25 +491,19 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
-        return channelFlow {
-            userWalletsStore.userWallets.map { userWallets ->
-                userWallets
-                    .filter(UserWallet::isMultiCurrency) // TODO
-                    .map { userWallet ->
-                        // TODO cache
+        return userWalletsStore.userWallets.flatMapLatest { userWallets ->
+            val userWalletsWithCurrencies = userWallets
+                .filter(UserWallet::isMultiCurrency) // TODO
+                .map { userWallet ->
+                    getMultiCurrencyWalletCurrencies(userWallet = userWallet).map { currencies ->
+                        userWallet to currencies.filter { it.id.rawCurrencyId == currencyRawId } // TODO
+                    }
+                }
 
-                        getMultiCurrencyWalletCurrencies(userWallet = userWallet).map { currencies ->
-                            userWallet to currencies.filter { it.id.rawCurrencyId == currencyRawId } // TODO
-                        }
-                    }
-                    .let { flows: List<Flow<Pair<UserWallet, List<CryptoCurrency>>>> ->
-                        combine(*flows.toTypedArray()) { userWalletsWithCurrencies ->
-                            userWalletsWithCurrencies.toMap()
-                        }
-                            .collectLatest(::send)
-                    }
-            }
+            combine(userWalletsWithCurrencies) { it.toMap() }
+                .onEmpty { emit(value = emptyMap()) }
         }
     }
 
