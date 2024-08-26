@@ -1,6 +1,7 @@
 package com.tangem.features.markets.portfolio.impl.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
@@ -20,16 +21,22 @@ import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState 
 @Composable
 internal fun PortfolioItem(state: PortfolioTokenUM, lastInList: Boolean, modifier: Modifier = Modifier) {
     Column(modifier) {
-        TokenItem(state = state.tokenItemState, isBalanceHidden = state.isBalanceHidden)
+        TokenItem(
+            state = state.tokenItemState,
+            isBalanceHidden = state.isBalanceHidden,
+            modifier = Modifier.background(color = TangemTheme.colors.background.action),
+        )
 
         PortfolioQuickActions(
-            modifier = Modifier.padding(
-                bottom = if (lastInList) {
-                    TangemTheme.dimens.spacing12
-                } else {
-                    TangemTheme.dimens.spacing24
-                },
-            ),
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.spacing12)
+                .padding(
+                    bottom = if (lastInList) {
+                        TangemTheme.dimens.spacing12
+                    } else {
+                        TangemTheme.dimens.spacing24
+                    },
+                ),
             isVisible = state.isQuickActionsShown,
             onActionClick = state.onQuickActionClick,
         )
