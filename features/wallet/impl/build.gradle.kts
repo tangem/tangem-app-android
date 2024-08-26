@@ -93,6 +93,9 @@ dependencies {
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.markets.api)
 
+    /** Common modules */
+    implementation(projects.common.ui)
+
     /** Test libraries */
     implementation(deps.test.junit)
     implementation(deps.test.truth)
