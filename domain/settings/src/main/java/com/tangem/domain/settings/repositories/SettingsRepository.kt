@@ -10,8 +10,6 @@ interface SettingsRepository {
 
     suspend fun setWalletScrollPreviewAvailability(isEnabled: Boolean)
 
-    fun saveLogMessage(message: String)
-
     fun deleteDeprecatedLogs(maxSize: Int)
 
     suspend fun isSendTapHelpPreviewEnabled(): Boolean

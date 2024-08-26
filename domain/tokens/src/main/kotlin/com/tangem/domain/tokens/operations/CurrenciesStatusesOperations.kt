@@ -55,7 +55,7 @@ internal class CurrenciesStatusesOperations(
                     } else {
                         currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, cryptoCurrencyId)
                     }
-                    val quotes = quotesRepository.getQuoteSync(cryptoCurrencyId).right()
+                    val quotes = quotesRepository.getQuoteSync(cryptoCurrencyId)?.right() ?: Error.EmptyQuotes.left()
                     val networkStatuses =
                         networksRepository.getNetworkStatusesSync(
                             userWalletId,
@@ -99,7 +99,7 @@ internal class CurrenciesStatusesOperations(
             catch = { raise(Error.DataError(it)) },
         )
         val quotes = catch(
-            block = { quotesRepository.getQuoteSync(currency.id).right() },
+            block = { quotesRepository.getQuoteSync(currency.id)?.right() ?: Error.EmptyQuotes.left() },
             catch = { Error.DataError(it).left() },
         )
         val networkStatus = catch(
