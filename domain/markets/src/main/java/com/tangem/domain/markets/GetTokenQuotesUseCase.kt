@@ -1,19 +1,26 @@
 package com.tangem.domain.markets
 
 import arrow.core.Either
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.repository.QuotesRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
+@Suppress("UnusedPrivateMember")
 class GetTokenQuotesUseCase(
-    private val marketsTokenRepository: MarketsTokenRepository,
+    private val quotesRepository: QuotesRepository,
 ) {
-
-    suspend operator fun invoke(appCurrency: AppCurrency, tokenId: String): Either<Unit, TokenQuotes> {
-        return Either.catch {
-            marketsTokenRepository.getTokenQuotes(
-                fiatCurrencyCode = appCurrency.code,
-                tokenId = tokenId,
-            )
-        }.mapLeft {}
+    operator fun invoke(tokenId: String, interval: PriceChangeInterval): Flow<Either<Unit, Quote>> {
+        return flowOf(
+            Either.catch {
+                Quote(
+                    rawCurrencyId = "USD",
+                    fiatRate = 100.toBigDecimal(), // mock
+                    priceChange = 10.toBigDecimal(), // mock
+                )
+            }.mapLeft {},
+        )
+        // TODO implement quotes fetching from repository [REDACTED_TASK_KEY]
+        // quotesRepository.getQuotesUpdates()
     }
 }
