@@ -9,7 +9,7 @@ import timber.log.Timber
 val logMiddleware: Middleware<AppState> = { _, _ ->
     { nextDispatch ->
         { action ->
-            Timber.i("Dispatch action: $action")
+            Timber.i("Dispatch action: ${action::class.java.simpleName}")
             nextDispatch(action)
         }
     }
