@@ -7,9 +7,9 @@ import java.io.File
 
 interface FeedbackRepository {
 
-    suspend fun getCardInfo(scanResponse: ScanResponse): CardInfo
+    fun getCardInfo(scanResponse: ScanResponse): CardInfo
 
-    suspend fun getUserWalletsInfo(userWalletId: UserWalletId?): UserWalletsInfo
+    fun getUserWalletsInfo(userWalletId: UserWalletId?): UserWalletsInfo
 
     suspend fun getBlockchainInfoList(userWalletId: UserWalletId): List<BlockchainInfo>
 
@@ -23,9 +23,7 @@ interface FeedbackRepository {
 
     fun saveBlockchainErrorInfo(error: BlockchainErrorInfo)
 
-    suspend fun getBlockchainErrorInfo(userWalletId: UserWalletId): BlockchainErrorInfo?
+    fun getBlockchainErrorInfo(userWalletId: UserWalletId): BlockchainErrorInfo?
 
-    suspend fun getAppLogs(): List<AppLogModel>
-
-    suspend fun createLogFile(logs: String): File?
+    fun getLogFile(): File?
 }
