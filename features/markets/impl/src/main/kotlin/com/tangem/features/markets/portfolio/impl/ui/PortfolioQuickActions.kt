@@ -4,7 +4,9 @@ import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
@@ -67,7 +69,7 @@ private fun AnimatedVisibilityScope.LineSeparator(modifier: Modifier = Modifier)
     val strokeWidth = TangemTheme.dimens.size1
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val verticalPadding = TangemTheme.dimens.spacing2
-    val startPadding = TangemTheme.dimens.spacing28
+    val startPadding = TangemTheme.dimens.spacing18
 
     val height = TangemTheme.dimens.size16 + verticalPadding * 2
 
@@ -118,10 +120,7 @@ private fun AnimatedVisibilityScope.QuickActionItem(
                 hapticManager.perform(TangemHapticEffect.View.SegmentTick)
                 onClick()
             }
-            .padding(
-                vertical = TangemTheme.dimens.spacing2,
-                horizontal = TangemTheme.dimens.spacing12,
-            ),
+            .padding(horizontal = TangemTheme.dimens.spacing2, vertical = TangemTheme.dimens.spacing3),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing18),
     ) {
