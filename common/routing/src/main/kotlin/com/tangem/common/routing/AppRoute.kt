@@ -5,6 +5,8 @@ import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -177,8 +179,8 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class ManageTokens(
-        val readOnlyContent: Boolean,
-    ) : AppRoute(path = "/manage_tokens/$readOnlyContent"), RouteBundleParams {
+        val userWalletId: UserWalletId? = null,
+    ) : AppRoute(path = "/manage_tokens/$userWalletId"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
 
@@ -262,4 +264,10 @@ sealed class AppRoute(val path: String) : Route {
     data class WalletSettings(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/wallet_settings/${userWalletId.stringValue}")
+
+    @Serializable
+    data class MarketsTokenDetails(
+        val token: TokenMarketParams,
+        val appCurrency: AppCurrency,
+    ) : AppRoute(path = "/markets_token_details/${token.id}")
 }
