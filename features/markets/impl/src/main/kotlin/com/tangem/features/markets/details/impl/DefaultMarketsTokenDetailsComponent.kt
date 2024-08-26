@@ -1,5 +1,6 @@
 package com.tangem.features.markets.details.impl
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -69,6 +70,10 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
             model.isVisibleOnScreen.value = bsState == BottomSheetState.EXPANDED
         }
 
+        BackHandler(enabled = bsState == BottomSheetState.EXPANDED) {
+            navigateBack()
+        }
+
         MarketsTokenDetailsContent(
             modifier = modifier,
             backgroundColor = LocalMainBottomSheetColor.current.value,
@@ -84,6 +89,10 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
+        BackHandler {
+            navigateBack()
+        }
+
         LifecycleStartEffect(Unit) {
             model.isVisibleOnScreen.value = true
             onStopOrDispose {
