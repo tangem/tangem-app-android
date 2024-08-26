@@ -245,9 +245,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         appRouterConfig.snackbarHandler = this
 
         routingComponent.stack.observe(lifecycle.asEssentyLifecycle()) { childStack ->
-            appRouterConfig.stack = childStack.backStack
+            val stack = childStack.backStack
                 .plus(childStack.active)
                 .map { it.configuration }
+
+            if (stack == appRouterConfig.stack) return@observe
+
+            appRouterConfig.stack = stack
 
             when (val child = childStack.active.instance) {
                 is RoutingComponent.Child.Initial -> Unit
