@@ -48,11 +48,13 @@ internal fun TokenQuotes.getPercentByInterval(interval: PriceChangeInterval): Bi
     }
 }
 
+@Suppress("MagicNumber")
 internal fun BigDecimal?.percentChangeType(): PriceChangeType {
+    val scaled = this?.setScale(4, RoundingMode.HALF_UP)
     return when {
-        this == null -> PriceChangeType.NEUTRAL
-        this > BigDecimal.ZERO -> PriceChangeType.UP
-        this < BigDecimal.ZERO -> PriceChangeType.DOWN
+        scaled == null -> PriceChangeType.NEUTRAL
+        scaled > BigDecimal.ZERO -> PriceChangeType.UP
+        scaled < BigDecimal.ZERO -> PriceChangeType.DOWN
         else -> PriceChangeType.NEUTRAL
     }
 }

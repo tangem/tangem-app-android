@@ -1,10 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.features.staking.impl.R
 
 internal sealed class StakingNotification(val config: NotificationConfig) {
@@ -50,14 +47,10 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
         ),
     ) {
         data class EarnRewards(
-            val subtitleResourceId: Int,
-            val currencyName: String,
+            val subtitleText: TextReference,
         ) : Warning(
             title = resourceReference(R.string.staking_notification_earn_rewards_title),
-            subtitle = resourceReference(
-                subtitleResourceId,
-                wrappedList(currencyName),
-            ),
+            subtitle = subtitleText,
         )
 
         data class Unstake(
@@ -66,7 +59,13 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
             title = resourceReference(R.string.common_unstake),
             subtitle = resourceReference(
                 R.string.staking_notification_unstake_text,
-                wrappedList(cooldownPeriodDays, cooldownPeriodDays),
+                wrappedList(
+                    pluralReference(
+                        id = R.plurals.common_days,
+                        count = cooldownPeriodDays,
+                        formatArgs = wrappedList(cooldownPeriodDays),
+                    ),
+                ),
             ),
         )
 
