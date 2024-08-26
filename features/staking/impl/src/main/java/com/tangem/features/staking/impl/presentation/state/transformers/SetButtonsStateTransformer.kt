@@ -119,7 +119,6 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
     private fun List<PendingAction>.getSecondaryAction(): PendingAction? = getOrNull(1)
 
     private fun StakingUiState.isButtonsVisible(): Boolean = when (currentStep) {
-        StakingStep.InitialInfo -> isStakeMoreAvailable()
         StakingStep.RewardsValidators -> false
         else -> true
     }
@@ -170,7 +169,7 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
     private fun StakingUiState.onPrimaryClick() {
         when (currentStep) {
             StakingStep.InitialInfo -> {
-                val actionType = StakingActionCommonType.ENTER.takeIf { isStakeMoreAvailable() }
+                val actionType = StakingActionCommonType.ENTER
                 clickIntents.onAmountValueChange("") // reset amount state
                 clickIntents.onNextClick(actionType)
             }
@@ -240,10 +239,5 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
         StakingActionType.UNSTAKE -> resourceReference(R.string.common_unstake)
         StakingActionType.UNKNOWN -> TextReference.EMPTY
         null -> TextReference.EMPTY
-    }
-
-    private fun StakingUiState.isStakeMoreAvailable(): Boolean {
-        val initialState = initialInfoState as? StakingStates.InitialInfoState.Data
-        return initialState?.isStakeMoreAvailable == true || initialState?.yieldBalance is InnerYieldBalanceState.Empty
     }
 }
