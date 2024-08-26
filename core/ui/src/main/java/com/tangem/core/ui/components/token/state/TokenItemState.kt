@@ -26,6 +26,12 @@ sealed class TokenItemState {
     /** Token crypto amount state (under [fiatAmountState] and in one row with [subtitleState])  */
     abstract val cryptoAmountState: CryptoAmountState?
 
+    /** Callback which will be called when an item is clicked */
+    abstract val onItemClick: (() -> Unit)?
+
+    /** Callback which will be called when an item is long clicked */
+    abstract val onItemLongClick: (() -> Unit)?
+
     /**
      * Loading token state
      *
@@ -42,6 +48,8 @@ sealed class TokenItemState {
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState = FiatAmountState.Loading
         override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Loading
+        override val onItemClick: (() -> Unit)? = null
+        override val onItemLongClick: (() -> Unit)? = null
     }
 
     /**
@@ -55,6 +63,8 @@ sealed class TokenItemState {
         override val subtitleState: SubtitleState = SubtitleState.Locked
         override val fiatAmountState: FiatAmountState = FiatAmountState.Locked
         override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Locked
+        override val onItemClick: (() -> Unit)? = null
+        override val onItemLongClick: (() -> Unit)? = null
     }
 
     /**
@@ -76,8 +86,8 @@ sealed class TokenItemState {
         override val subtitleState: SubtitleState,
         override val fiatAmountState: FiatAmountState,
         override val cryptoAmountState: CryptoAmountState.Content,
-        val onItemClick: () -> Unit,
-        val onItemLongClick: () -> Unit,
+        override val onItemClick: (() -> Unit)?,
+        override val onItemLongClick: (() -> Unit)?,
     ) : TokenItemState()
 
     /**
@@ -96,6 +106,8 @@ sealed class TokenItemState {
     ) : TokenItemState() {
         override val subtitleState: SubtitleState? = null
         override val fiatAmountState: FiatAmountState? = null
+        override val onItemClick: (() -> Unit)? = null
+        override val onItemLongClick: (() -> Unit)? = null
     }
 
     /**
@@ -113,8 +125,8 @@ sealed class TokenItemState {
         override val iconState: CurrencyIconState,
         override val titleState: TitleState,
         override val subtitleState: SubtitleState? = null,
-        val onItemClick: () -> Unit,
-        val onItemLongClick: () -> Unit,
+        override val onItemClick: (() -> Unit)?,
+        override val onItemLongClick: (() -> Unit)?,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
         override val cryptoAmountState: CryptoAmountState? = null
@@ -134,10 +146,11 @@ sealed class TokenItemState {
         override val iconState: CurrencyIconState,
         override val titleState: TitleState,
         override val subtitleState: SubtitleState? = null,
-        val onItemLongClick: () -> Unit,
+        override val onItemLongClick: (() -> Unit)?,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
         override val cryptoAmountState: CryptoAmountState? = null
+        override val onItemClick: (() -> Unit)? = null
     }
 
     @Immutable
