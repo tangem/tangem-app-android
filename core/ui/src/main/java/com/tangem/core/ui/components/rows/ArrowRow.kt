@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.*
@@ -68,6 +69,7 @@ private class ChildArrowScope(
 
 @Composable
 fun ChildArrow(childHeight: Dp, isLastChild: Boolean) {
+    val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val figureWidth = TangemTheme.dimens.size40
 
     val strokeColor = TangemTheme.colors.stroke.secondary
@@ -86,18 +88,31 @@ fun ChildArrow(childHeight: Dp, isLastChild: Boolean) {
     )
     val arrowHeadRectDp = DpRect(
         origin = DpOffset(
-            x = figureWidth - arrowHeadSize.width,
+            x = if (isLtr) {
+                figureWidth - arrowHeadSize.width
+            } else {
+                0.dp
+            },
             y = figureRectDp.size.center.y - arrowHeadSize.center.y,
         ),
         size = arrowHeadSize,
     )
 
-    val curvedArrowRectDp = DpRect(
-        top = figureRectDp.top,
-        left = TangemTheme.dimens.size18,
-        right = figureRectDp.right - arrowHeadRectDp.width,
-        bottom = figureRectDp.size.center.y,
-    )
+    val curvedArrowRectDp = if (isLtr) {
+        DpRect(
+            top = figureRectDp.top,
+            left = TangemTheme.dimens.size18,
+            right = figureRectDp.right - arrowHeadRectDp.width,
+            bottom = figureRectDp.size.center.y,
+        )
+    } else {
+        DpRect(
+            top = figureRectDp.top,
+            left = arrowHeadRectDp.width,
+            right = TangemTheme.dimens.size18 + arrowHeadRectDp.width,
+            bottom = figureRectDp.size.center.y,
+        )
+    }
 
     Canvas(
         modifier = Modifier
@@ -114,20 +129,26 @@ fun ChildArrow(childHeight: Dp, isLastChild: Boolean) {
             drawScope = this,
         )
 
-        scope.drawCurveArrow()
-        scope.drawArrowHead()
+        scope.drawCurveArrow(isLtr)
+        scope.drawArrowHead(isLtr)
 
         if (!isLastChild) {
-            scope.drawArrowLine()
+            scope.drawArrowLine(isLtr)
         }
     }
 }
 
-private fun ChildArrowScope.drawArrowHead() {
+private fun ChildArrowScope.drawArrowHead(isLtr: Boolean) {
     val arrowHeadPath = Path().apply {
-        moveTo(arrowHeadRect.centerRight)
-        lineTo(arrowHeadRect.topLeft)
-        lineTo(arrowHeadRect.bottomLeft)
+        if (isLtr) {
+            moveTo(arrowHeadRect.centerRight)
+            lineTo(arrowHeadRect.topLeft)
+            lineTo(arrowHeadRect.bottomLeft)
+        } else {
+            moveTo(arrowHeadRect.centerLeft)
+            lineTo(arrowHeadRect.topRight)
+            lineTo(arrowHeadRect.bottomRight)
+        }
         close()
     }
     val paint = Paint().apply {
@@ -143,13 +164,21 @@ private fun ChildArrowScope.drawArrowHead() {
     }
 }
 
-private fun ChildArrowScope.drawCurveArrow() {
+private fun ChildArrowScope.drawCurveArrow(isLtr: Boolean) {
     val curveArrowPath = Path().apply {
-        moveTo(curvedArrowRect.topLeft)
-        quadraticBezierTo(
-            control = curvedArrowRect.bottomLeft,
-            end = curvedArrowRect.bottomRight,
-        )
+        if (isLtr) {
+            moveTo(curvedArrowRect.topLeft)
+            quadraticBezierTo(
+                control = curvedArrowRect.bottomLeft,
+                end = curvedArrowRect.bottomRight,
+            )
+        } else {
+            moveTo(curvedArrowRect.topRight)
+            quadraticBezierTo(
+                control = curvedArrowRect.bottomRight,
+                end = curvedArrowRect.bottomLeft,
+            )
+        }
     }
     drawPath(
         path = curveArrowPath,
@@ -158,11 +187,20 @@ private fun ChildArrowScope.drawCurveArrow() {
     )
 }
 
-private fun ChildArrowScope.drawArrowLine() {
-    drawLine(
-        color = strokeColor,
-        start = curvedArrowRect.topLeft,
-        end = Offset(curvedArrowRect.left, figureRect.bottom),
-        strokeWidth = arrowStrokeWidth,
-    )
+private fun ChildArrowScope.drawArrowLine(isLtr: Boolean) {
+    if (isLtr) {
+        drawLine(
+            color = strokeColor,
+            start = curvedArrowRect.topLeft,
+            end = Offset(curvedArrowRect.left, figureRect.bottom),
+            strokeWidth = arrowStrokeWidth,
+        )
+    } else {
+        drawLine(
+            color = strokeColor,
+            start = curvedArrowRect.topRight,
+            end = Offset(curvedArrowRect.right, figureRect.bottom),
+            strokeWidth = arrowStrokeWidth,
+        )
+    }
 }
