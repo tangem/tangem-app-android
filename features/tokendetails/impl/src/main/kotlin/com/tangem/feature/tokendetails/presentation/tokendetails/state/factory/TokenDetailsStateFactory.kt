@@ -29,9 +29,9 @@ import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
@@ -366,13 +366,13 @@ internal class TokenDetailsStateFactory(
     fun getStateWithUpdatedMenu(
         cardTypesResolver: CardTypesResolver,
         hasDerivations: Boolean,
-        isBitcoin: Boolean,
+        isSupported: Boolean,
     ): TokenDetailsState {
         return with(currentStateProvider()) {
             copy(
                 topAppBarConfig = topAppBarConfig.copy(
                     tokenDetailsAppBarMenuConfig = topAppBarConfig.tokenDetailsAppBarMenuConfig
-                        ?.updateMenu(cardTypesResolver, hasDerivations, isBitcoin),
+                        ?.updateMenu(cardTypesResolver, hasDerivations, isSupported),
                 ),
             )
         }
@@ -387,10 +387,10 @@ internal class TokenDetailsStateFactory(
     private fun TokenDetailsAppBarMenuConfig.updateMenu(
         cardTypesResolver: CardTypesResolver,
         hasDerivations: Boolean,
-        isBitcoin: Boolean,
+        isSupported: Boolean,
     ): TokenDetailsAppBarMenuConfig? {
         if (cardTypesResolver.isSingleWalletWithToken()) return null
-        val showGenerateExtendedKey = featureToggles.isGenerateXPubEnabled() && isBitcoin
+        val showGenerateExtendedKey = featureToggles.isGenerateXPubEnabled() && isSupported
         return copy(
             items = buildList {
                 if (showGenerateExtendedKey && hasDerivations) {
