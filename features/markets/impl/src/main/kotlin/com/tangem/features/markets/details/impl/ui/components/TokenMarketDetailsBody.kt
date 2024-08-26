@@ -11,14 +11,29 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.tokenlist.impl.ui.components.UnableToLoadData
 
-internal fun LazyListScope.tokenMarketDetailsBody(state: MarketsTokenDetailsUM.Body) {
+internal fun LazyListScope.tokenMarketDetailsBody(
+    state: MarketsTokenDetailsUM.Body,
+    portfolioBlock: @Composable (Modifier) -> Unit,
+) {
     when (state) {
         MarketsTokenDetailsUM.Body.Loading -> {
-            loading()
+            item("description-loading") {
+                DescriptionPlaceholder(modifier = Modifier.blockPaddings())
+            }
+
+            item(key = "portfolio") {
+                portfolioBlock(Modifier.blockPaddings())
+            }
+
+            loadingInfoBlocks()
         }
         is MarketsTokenDetailsUM.Body.Content -> {
             if (state.description != null) {
                 description(state.description)
+            }
+
+            item(key = "portfolio") {
+                portfolioBlock(Modifier.blockPaddings())
             }
 
             infoBlocksList(state.infoBlocks)
@@ -106,11 +121,7 @@ internal fun LazyListScope.infoBlocksList(state: MarketsTokenDetailsUM.Informati
     }
 }
 
-private fun LazyListScope.loading() {
-    item("description-loading") {
-        DescriptionPlaceholder(modifier = Modifier.blockPaddings())
-    }
-
+private fun LazyListScope.loadingInfoBlocks() {
     item("insights-loading") {
         InsightsBlockPlaceholder(modifier = Modifier.blockPaddings())
     }
