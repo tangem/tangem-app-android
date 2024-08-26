@@ -683,7 +683,7 @@
   <string name="staking_notification_earn_rewards_text_period_week">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждую неделю.</string>
   <string name="staking_notification_earn_rewards_title">Получите награду за стейкинг</string>
   <string name="staking_notification_unstake_text">Награда перестанет начисляться сразу после завершения стейкинга. Процесс завершения длится %s.</string>
-  <string name="staking_restake">Повторный стейкинг</string>
+  <string name="staking_restake">Сменить валидатора</string>
   <string name="staking_restake_rewards">Застейкать вознаграждения</string>
   <string name="staking_revoke">Отозвать</string>
   <string name="staking_revote">Переголосовать</string>
@@ -701,6 +701,7 @@
   <string name="staking_stake_locked">Стейкинг закрыт</string>
   <string name="staking_stake_more">Застейкать еще</string>
   <string name="staking_title_stake">Застейкать %s</string>
+  <string name="staking_title_unstake">Вывести %s</string>
   <string name="staking_unlocked_locked">Разблокировать</string>
   <string name="staking_unstaked">Выведено из стейкинга</string>
   <string name="staking_unstaked_footer">Проверьте процесс завершения стейкинга, чтобы вывести свои средства.</string>
@@ -858,8 +859,6 @@
   <string name="warning_existential_deposit_title">Для работы с сетью необходим депозит</string>
   <string name="warning_express_active_transaction_message">Обмен будет доступен после завершения %s транзакции</string>
   <string name="warning_express_active_transaction_title">У вас есть активная транзакция</string>
-  <string name="warning_express_approval_in_progress_message">Разрешение обмена в процессе и будет скоро завершено</string>
-  <string name="warning_express_approval_in_progress_title">Разрешение в процессе</string>
   <string name="warning_express_dust_message">Минимальная сумма обмена - %1$s. Пожалуйста, убедитесь, что остаток после обмена также не будет меньше %2$s.</string>
   <string name="warning_express_no_exchangeable_coins_description">У вас в списке нет монет доступных для обмена с %s</string>
   <string name="warning_express_no_exchangeable_coins_title">Нет доступных для обмена токенов</string>

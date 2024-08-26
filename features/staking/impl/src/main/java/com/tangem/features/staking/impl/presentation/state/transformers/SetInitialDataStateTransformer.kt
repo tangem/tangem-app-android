@@ -18,6 +18,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.features.staking.impl.presentation.state.ValidatorState
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
@@ -32,7 +33,6 @@ import java.math.BigDecimal
 internal class SetInitialDataStateTransformer(
     private val clickIntents: StakingClickIntents,
     private val yield: Yield,
-    private val isStakeMoreAvailable: Boolean,
     private val isApprovalNeeded: Boolean,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
@@ -83,7 +83,6 @@ internal class SetInitialDataStateTransformer(
             infoItems = getInfoItems(),
             onInfoClick = clickIntents::onInfoClick,
             yieldBalance = yieldBalancesConverter.convert(Unit),
-            isStakeMoreAvailable = isStakeMoreAvailable,
         )
     }
 
