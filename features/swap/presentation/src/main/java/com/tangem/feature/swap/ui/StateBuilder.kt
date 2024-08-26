@@ -475,10 +475,7 @@ internal class StateBuilder(
                 ),
                 iconResId = R.drawable.ic_alert_circle_24,
                 buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
-                    text = resourceReference(
-                        R.string.send_notification_leave_button,
-                        wrappedList(deposit),
-                    ),
+                    text = resourceReference(R.string.common_ok),
                     onClick = {
                         actions.onLeaveExistentialDeposit(
                             SwapAmount(
