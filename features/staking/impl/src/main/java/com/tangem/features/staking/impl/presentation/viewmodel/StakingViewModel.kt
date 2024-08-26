@@ -37,10 +37,7 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
-import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
-import com.tangem.domain.transaction.usecase.GetFeeUseCase
-import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
@@ -70,6 +67,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import java.math.BigDecimal
+import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -87,6 +85,7 @@ internal class StakingViewModel @Inject constructor(
     private val getConstructedStakingTransactionUseCase: GetConstructedStakingTransactionUseCase,
     private val estimateGasUseCase: EstimateGasUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
+    private val sendMultipleTransactionUseCase: SendMultipleTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
     private val submitHashUseCase: SubmitHashUseCase,
@@ -143,7 +142,7 @@ internal class StakingViewModel @Inject constructor(
     private var stakingApproval: StakingApproval = StakingApproval.Empty
     private val allowanceTaskScheduler = SingleTaskScheduler<BigDecimal>()
 
-    private var transactionInProgress: StakingTransaction? = null
+    private val transactionsInProgress: CopyOnWriteArrayList<StakingTransaction> = CopyOnWriteArrayList()
 
     private var approvalJobHolder: JobHolder = JobHolder()
 
@@ -187,7 +186,7 @@ internal class StakingViewModel @Inject constructor(
                 val defaultAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
                     ?: error("No available address")
 
-                val stakingTransaction = getStakingTransactionUseCase(
+                val stakingTransactions = getStakingTransactionUseCase(
                     userWalletId = userWalletId,
                     network = cryptoCurrencyStatus.currency.network,
                     params = ActionParams(
@@ -206,9 +205,9 @@ internal class StakingViewModel @Inject constructor(
                     return@launch
                 }
 
-                stakingTransaction
+                val transactions = stakingTransactions
                     .filterNot { it.type == StakingTransactionType.APPROVAL }
-                    .forEach { transaction ->
+                    .map { transaction ->
                         val (constructedTransaction, transactionData) = getConstructedStakingTransactionUseCase(
                             networkId = cryptoCurrencyStatus.currency.network.id.value,
                             fee = fee,
@@ -218,17 +217,18 @@ internal class StakingViewModel @Inject constructor(
                             stakingEventFactory.createStakingErrorAlert(it)
                             return@launch
                         }
-                        val gasEstimate = constructedTransaction.gasEstimate
-                            ?: return@launch stakingEventFactory.createGenericErrorAlert("Gas estimate is null")
 
-                        transactionInProgress = constructedTransaction
-                        sendStakingTransaction(
-                            transactionId = constructedTransaction.id,
-                            gasEstimate = gasEstimate,
-                            txData = transactionData,
-                            pendingActionList = confirmationState.pendingActions,
-                        )
+                        constructedTransaction to transactionData
                     }
+                transactionsInProgress.addAll(transactions.map { it.first })
+
+                sendStakingTransaction(
+                    transactionStakeKitIds = transactions.map { it.first.id },
+                    transactions = transactions.map { it.second },
+                    gasEstimate = transactions[0].first.gasEstimate
+                        ?: return@launch stakingEventFactory.createGenericErrorAlert("Gas estimate is null"),
+                    pendingActionList = confirmationState.pendingActions,
+                )
             }
         }
     }
@@ -555,8 +555,8 @@ internal class StakingViewModel @Inject constructor(
             val email = FeedbackEmailType.StakingProblem(
                 cardInfo = cardInfo,
                 validatorName = validator?.name,
-                transactionType = transactionInProgress?.type?.name,
-                unsignedTransaction = transactionInProgress?.unsignedTransaction,
+                transactionTypes = transactionsInProgress.map { it.type.name },
+                unsignedTransactions = transactionsInProgress.map { it.unsignedTransaction },
             )
 
             feedbackManager.sendEmail(email)
@@ -632,13 +632,13 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private suspend fun sendStakingTransaction(
-        transactionId: String,
+        transactionStakeKitIds: List<String>,
+        transactions: List<TransactionData.Compiled>,
         gasEstimate: StakingGasEstimate,
-        txData: TransactionData,
         pendingActionList: ImmutableList<PendingAction>,
     ) {
-        sendTransactionUseCase(
-            txData = txData,
+        sendMultipleTransactionUseCase(
+            txsData = transactions,
             userWallet = userWallet,
             network = cryptoCurrencyStatus.currency.network,
         ).fold(
@@ -654,12 +654,15 @@ internal class StakingViewModel @Inject constructor(
                 )
                 stakingEventFactory.createSendTransactionErrorAlert(error)
             },
-            ifRight = { txHash ->
-                transactionInProgress = null
-                submitHash(transactionId, txHash)
+            ifRight = { transactionHashes ->
+                transactionsInProgress.clear()
+                submitHash(
+                    transactionIds = transactionStakeKitIds,
+                    transactionHashes = transactionHashes,
+                )
                 scheduleUpdates()
                 val txUrl = getExplorerTransactionUrlUseCase(
-                    txHash = txHash,
+                    txHash = transactionHashes.last(),
                     networkId = cryptoCurrencyStatus.currency.network.id,
                 ).getOrElse { "" }
 
@@ -675,18 +678,22 @@ internal class StakingViewModel @Inject constructor(
         )
     }
 
-    private suspend fun submitHash(transactionId: String, transactionHash: String) {
-        submitHashUseCase.submitHash(
-            transactionId = transactionId,
-            transactionHash = transactionHash,
-        )
-            .onLeft {
-                saveUnsubmittedHashUseCase.invoke(
+    private suspend fun submitHash(transactionIds: List<String>, transactionHashes: List<String>) {
+        transactionIds
+            .zip(transactionHashes)
+            .forEach { (transactionId, transactionHash) ->
+                submitHashUseCase.submitHash(
                     transactionId = transactionId,
                     transactionHash = transactionHash,
                 )
-            }.onRight {
-                Timber.d("Successful hash submission")
+                    .onLeft {
+                        saveUnsubmittedHashUseCase.invoke(
+                            transactionId = transactionId,
+                            transactionHash = transactionHash,
+                        )
+                    }.onRight {
+                        Timber.d("Successful hash submission")
+                    }
             }
     }
 
