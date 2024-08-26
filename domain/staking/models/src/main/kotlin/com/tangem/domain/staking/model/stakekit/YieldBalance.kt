@@ -1,6 +1,7 @@
 package com.tangem.domain.staking.model.stakekit
 
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import org.joda.time.DateTime
 import java.math.BigDecimal
 
 sealed class YieldBalance {
@@ -38,6 +39,7 @@ data class BalanceItem(
     val rawCurrencyId: String?,
     val rawNetworkId: String,
     val validatorAddress: String?,
+    val date: DateTime?,
     val pendingActions: List<PendingAction>,
 )
 
