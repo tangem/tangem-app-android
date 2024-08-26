@@ -225,7 +225,6 @@
   <string name="express_choose_providers_subtitle">Tangem пропонує обмін токенів через сторонніх провайдерів відповідно до умов кожного провайдера</string>
   <string name="express_choose_providers_title">Оберіть провайдера</string>
   <string name="express_error_code">Виникла помилка. Код: %s</string>
-  <string name="express_error_provider_unavailable">На жаль, обмін вказаної пари через обраного провайдера тимчасово неможливий. Спробуйте здійснити обмін пізніше. (Код: %s)</string>
   <string name="express_error_swap_pair_unavailable">Наразі обраний провайдер недоступний для обміну. Спробуй пізніше. (Код: %s)</string>
   <string name="express_error_swap_unavailable">Наразі обмін неможливий. Спробуй пізніше. (Код: %s)</string>
   <string name="express_estimated_amount">Курс обміну</string>
