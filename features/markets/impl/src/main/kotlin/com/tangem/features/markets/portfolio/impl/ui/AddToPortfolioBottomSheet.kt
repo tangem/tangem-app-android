@@ -55,8 +55,10 @@ internal fun AddToPortfolioBottomSheet(config: TangemBottomSheetConfig) {
     ) {
         Content(
             modifier = Modifier.fillMaxWidth(),
-            state = config.content as AddToPortfolioBSContentUM,
+            state = it,
         )
+
+        WalletSelectorBottomSheet(it.walletSelectorConfig)
     }
 }
 
