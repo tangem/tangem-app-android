@@ -48,7 +48,7 @@ data class ActionRequestBodyArgs(
     @Json(name = "ledgerWalletAPICompatible")
     val ledgerWalletAPICompatible: Boolean? = null,
     @Json(name = "tronResource")
-    val tronResource: String? = null,
+    val tronResource: TronResource? = null,
     @Json(name = "signatureVerification")
     val signatureVerification: SignatureVerification? = null,
     @Json(name = "inputToken")
@@ -61,3 +61,11 @@ data class SignatureVerification(
     @Json(name = "signed")
     val signed: String,
 )
+
+enum class TronResource {
+    @Json(name = "ENERGY")
+    ENERGY,
+
+    @Json(name = "BANDWIDTH")
+    BANDWIDTH,
+}
