@@ -1,7 +1,6 @@
 package com.tangem.core.ui.components.token
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -79,9 +78,7 @@ fun TokenItem(
 
     CustomContainer(
         state = state,
-        modifier = modifier
-            .tokenClickable(state = state)
-            .background(color = TangemTheme.colors.background.primary),
+        modifier = modifier.tokenClickable(state = state),
     ) {
         CurrencyIcon(
             state = state.iconState,
@@ -130,17 +127,22 @@ fun TokenItem(
 @OptIn(ExperimentalFoundationApi::class)
 private fun Modifier.tokenClickable(state: TokenItemState): Modifier = composed {
     when (state) {
-        is TokenItemState.Content -> {
-            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
-            combinedClickable(onClick = state.onItemClick, onLongClick = onLongClick)
-        }
-        is TokenItemState.Unreachable -> {
-            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
-            combinedClickable(onClick = state.onItemClick, onLongClick = onLongClick)
-        }
-        is TokenItemState.NoAddress -> {
-            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
-            combinedClickable(onClick = {}, onLongClick = onLongClick)
+        is TokenItemState.Content,
+        is TokenItemState.NoAddress,
+        is TokenItemState.Unreachable,
+        -> {
+            val onClick = state.onItemClick
+            val onLongClick = state.onItemLongClick?.let { rememberHapticFeedback(state = state, onAction = it) }
+
+            when {
+                onClick == null && onLongClick == null -> this
+                onClick == null && onLongClick != null -> combinedClickable(onClick = {}, onLongClick = onLongClick)
+                onClick != null && onLongClick == null -> combinedClickable(onClick = onClick)
+                onClick != null && onLongClick != null -> {
+                    combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                }
+                else -> this
+            }
         }
         is TokenItemState.Draggable,
         is TokenItemState.Loading,
