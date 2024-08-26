@@ -1,5 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
@@ -45,8 +47,10 @@ internal class SetConfirmationStateLoadingTransformer(
                 )
             } else {
                 StakingNotification.Warning.EarnRewards(
-                    currencyName = yield.token.name,
-                    subtitleResourceId = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
+                    subtitleText = resourceReference(
+                        id = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
+                        formatArgs = wrappedList(yield.token.name),
+                    ),
                 )
             },
         )
