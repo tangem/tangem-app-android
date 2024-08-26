@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.common.preview
 
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -9,7 +10,6 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarConfig
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import kotlinx.collections.immutable.persistentListOf
 
@@ -20,7 +20,7 @@ internal object WalletScreenPreviewData {
         titleState = TokenItemState.TitleState.Content(text = "Bitcoin"),
         fiatAmountState = TokenItemState.FiatAmountState.Content(text = "12 368,14 \$"),
         cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "0,35853044 BTC"),
-        cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+        subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
             price = "34 496,75 \$",
             priceChangePercent = "0,43 %",
             type = PriceChangeType.DOWN,
@@ -46,7 +46,7 @@ internal object WalletScreenPreviewData {
                     titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
                     fiatAmountState = TokenItemState.FiatAmountState.Content(text = "3 340,79 \$"),
                     cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "1,856660295 ETH"),
-                    cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+                    subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                         price = "1 799,41 \$",
                         priceChangePercent = "5,16 %",
                         type = PriceChangeType.UP,
@@ -68,7 +68,7 @@ internal object WalletScreenPreviewData {
                     titleState = TokenItemState.TitleState.Content(text = "Shiba Inu"),
                     fiatAmountState = TokenItemState.FiatAmountState.Content(text = "48,64 \$"),
                     cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "6 200 220,00 SHIB"),
-                    cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+                    subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                         price = "0.01 \$",
                         priceChangePercent = "1,34 %",
                         type = PriceChangeType.DOWN,
