@@ -6,7 +6,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
@@ -28,7 +30,6 @@ import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
-import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionType
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
@@ -225,8 +226,7 @@ internal class StakingViewModel @Inject constructor(
                 sendStakingTransaction(
                     transactionStakeKitIds = transactions.map { it.first.id },
                     transactions = transactions.map { it.second },
-                    gasEstimate = transactions[0].first.gasEstimate
-                        ?: return@launch stakingEventFactory.createGenericErrorAlert("Gas estimate is null"),
+                    fee = fee,
                     pendingActionList = confirmationState.pendingActions,
                 )
             }
@@ -291,7 +291,7 @@ internal class StakingViewModel @Inject constructor(
         validatorAddress: String,
     ) {
         val pendingAction = pendingActions.firstOrNull()
-        val stakingGasEstimate = estimateGasUseCase(
+        val gasEstimate = estimateGasUseCase(
             userWalletId = userWalletId,
             network = cryptoCurrencyStatus.currency.network,
             params = ActionParams(
@@ -313,7 +313,13 @@ internal class StakingViewModel @Inject constructor(
             SetConfirmationStateAssentTransformer(
                 appCurrencyProvider = Provider { appCurrency },
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                stakingGasEstimate = stakingGasEstimate,
+                fee = Fee.Common(
+                    Amount(
+                        currencySymbol = gasEstimate.token.symbol,
+                        value = gasEstimate.amount,
+                        decimals = gasEstimate.token.decimals,
+                    ),
+                ),
                 pendingActionList = pendingActions,
             ),
         )
@@ -634,7 +640,7 @@ internal class StakingViewModel @Inject constructor(
     private suspend fun sendStakingTransaction(
         transactionStakeKitIds: List<String>,
         transactions: List<TransactionData.Compiled>,
-        gasEstimate: StakingGasEstimate,
+        fee: Fee,
         pendingActionList: ImmutableList<PendingAction>,
     ) {
         sendMultipleTransactionUseCase(
@@ -648,7 +654,7 @@ internal class StakingViewModel @Inject constructor(
                     SetConfirmationStateAssentTransformer(
                         appCurrencyProvider = Provider { appCurrency },
                         feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                        stakingGasEstimate = gasEstimate,
+                        fee = fee,
                         pendingActionList = pendingActionList,
                     ),
                 )
@@ -670,7 +676,7 @@ internal class StakingViewModel @Inject constructor(
                     SetConfirmationStateCompletedTransformer(
                         appCurrencyProvider = Provider { appCurrency },
                         feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                        stakingGasEstimate = gasEstimate,
+                        fee = fee,
                         txUrl = txUrl,
                     ),
                 )
