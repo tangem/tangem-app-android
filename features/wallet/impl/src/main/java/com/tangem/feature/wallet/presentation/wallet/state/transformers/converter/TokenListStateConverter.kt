@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
+import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.cardTypesResolver
@@ -11,7 +12,6 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.TokensListItemState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
-import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
@@ -19,15 +19,16 @@ import kotlinx.collections.immutable.persistentListOf
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.OrganizeTokensButtonConfig as WalletOrganizeTokensButtonConfig
 
 internal class TokenListStateConverter(
+    appCurrency: AppCurrency,
     private val tokenList: TokenList,
     private val selectedWallet: UserWallet,
-    private val appCurrency: AppCurrency,
     private val clickIntents: WalletClickIntents,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
     private val tokenStatusConverter = TokenItemStateConverter(
-        appCurrencyProvider = Provider { appCurrency },
-        clickIntents = clickIntents,
+        appCurrency = appCurrency,
+        onItemClick = clickIntents::onTokenItemClick,
+        onItemLongClick = clickIntents::onTokenItemLongClick,
     )
 
     override fun convert(value: WalletTokensListState): WalletTokensListState {
