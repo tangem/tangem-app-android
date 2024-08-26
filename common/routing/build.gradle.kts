@@ -19,6 +19,8 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.staking.models)
+    implementation(projects.domain.markets.models)
+    implementation(projects.domain.appCurrency.models)
 
     /* Libs - Other */
     api(deps.kotlin.serialization)
