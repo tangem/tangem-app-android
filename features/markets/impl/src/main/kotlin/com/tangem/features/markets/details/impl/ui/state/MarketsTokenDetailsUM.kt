@@ -13,7 +13,7 @@ import java.math.BigDecimal
 internal data class MarketsTokenDetailsUM(
     val tokenName: String,
     val priceText: String,
-    val iconUrl: String,
+    val iconUrl: String?,
     val dateTimeText: TextReference,
     val priceChangePercentText: String,
     val priceChangeType: PriceChangeType,
