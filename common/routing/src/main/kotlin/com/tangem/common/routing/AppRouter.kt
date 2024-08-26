@@ -23,7 +23,12 @@ interface AppRouter {
      * @param route The route to push.
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun push(route: AppRoute, onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun push(
+        route: AppRoute,
+        onComplete: (isSuccess: Boolean) -> Unit = { isSuccess ->
+            defaultCompletionHandler(isSuccess, errorMessage = "Unable to push $route")
+        },
+    )
 
     /**
      * Replaces ***all*** routes in the navigation stack with the specified [routes].
@@ -31,14 +36,23 @@ interface AppRouter {
      * @param routes The routes to replace the current stack with.
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun replaceAll(vararg routes: AppRoute, onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun replaceAll(
+        vararg routes: AppRoute,
+        onComplete: (isSuccess: Boolean) -> Unit = { isSuccess ->
+            defaultCompletionHandler(isSuccess, errorMessage = "Unable to replace routes with $routes")
+        },
+    )
 
     /**
      * Pops the top route from the navigation stack.
      *
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun pop(onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun pop(
+        onComplete: (isSuccess: Boolean) -> Unit = { isSuccess ->
+            defaultCompletionHandler(isSuccess, errorMessage = "Unable to pop route")
+        },
+    )
 
     /**
      * Pops routes from the navigation stack until the specified [route] is found.
@@ -46,7 +60,12 @@ interface AppRouter {
      * @param route The route to pop to.
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun popTo(route: AppRoute, onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun popTo(
+        route: AppRoute,
+        onComplete: (isSuccess: Boolean) -> Unit = { isSuccess ->
+            defaultCompletionHandler(isSuccess, errorMessage = "Unable to pop to $route")
+        },
+    )
 
     /**
      * Pops routes from the navigation stack until the ***first*** specified [routeClass] is found.
@@ -54,5 +73,12 @@ interface AppRouter {
      * @param routeClass The route class to pop to.
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun popTo(routeClass: KClass<out AppRoute>, onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun popTo(
+        routeClass: KClass<out AppRoute>,
+        onComplete: (isSuccess: Boolean) -> Unit = { isSuccess ->
+            defaultCompletionHandler(isSuccess, errorMessage = "Unable to pop to $routeClass")
+        },
+    )
+
+    fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String)
 }
