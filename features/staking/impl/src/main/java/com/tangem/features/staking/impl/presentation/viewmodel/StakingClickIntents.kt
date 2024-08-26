@@ -5,7 +5,7 @@ import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.BalanceState
-import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -43,4 +43,6 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun onExploreClick()
 
     fun onShareClick()
+
+    fun onFailedTxEmailClick(errorMessage: String)
 }
