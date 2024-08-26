@@ -3,6 +3,7 @@ package com.tangem.features.markets.details.impl.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.ui.charts.state.*
+import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
@@ -17,14 +18,14 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
-import com.tangem.features.markets.component.BottomSheetState
-import com.tangem.features.markets.details.api.MarketsTokenDetailsComponent
+import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.impl.model.converters.DescriptionConverter
 import com.tangem.features.markets.details.impl.model.converters.TokenMarketInfoConverter
 import com.tangem.features.markets.details.impl.model.formatter.*
 import com.tangem.features.markets.details.impl.model.formatter.formatAsPrice
 import com.tangem.features.markets.details.impl.model.formatter.getChangePercentBetween
 import com.tangem.features.markets.details.impl.model.formatter.getPercentByInterval
+import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
@@ -43,13 +44,14 @@ import javax.inject.Inject
 
 @Suppress("LargeClass", "LongParameterList")
 @Stable
+@ComponentScoped
 internal class MarketsTokenDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
-    private val getTokenQuotesUseCase: GetTokenQuotesUseCase,
+    private val getTokenFullQuotesUseCase: GetTokenFullQuotesUseCase,
     private val urlOpener: UrlOpener,
 ) : Model() {
 
@@ -115,8 +117,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private var lastUpdatedTimestamp: Long = DateTime.now().millis
 
-    val containerBottomSheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
     val isVisibleOnScreen = MutableStateFlow(false)
+    val networksState = MutableStateFlow<TokenNetworksState>(TokenNetworksState.Loading)
 
     val state = MutableStateFlow(
         MarketsTokenDetailsUM(
@@ -131,11 +133,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 percent = params.token.tokenQuotes.h24Percent,
                 useAbsoluteValue = true,
             ),
-            priceChangeType = if (params.token.tokenQuotes.h24Percent < BigDecimal.ZERO) {
-                PriceChangeType.DOWN
-            } else {
-                PriceChangeType.UP
-            },
+            priceChangeType = params.token.tokenQuotes.h24Percent.percentChangeType(),
             iconUrl = params.token.imageUrl,
             chartState = MarketsTokenDetailsUM.ChartState(
                 dataProducer = chartDataProducer,
@@ -180,7 +178,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private fun loadQuotes() {
         modelScope.launch {
-            val result = getTokenQuotesUseCase(
+            val result = getTokenFullQuotesUseCase(
                 tokenId = params.token.id,
                 appCurrency = currentAppCurrency.value,
             )
@@ -209,6 +207,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 appCurrency = currentAppCurrency.value,
                 interval = interval,
                 tokenId = params.token.id,
+                preview = false,
             )
 
             state.update {
@@ -242,6 +241,11 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                         chartState = it.chartState.copy(
                             status = MarketsTokenDetailsUM.ChartState.Status.DATA,
                         ),
+                        body = if (it.body is MarketsTokenDetailsUM.Body.Nothing) {
+                            MarketsTokenDetailsUM.Body.Error(onLoadRetryClick = ::onLoadRetryClicked)
+                        } else {
+                            it.body
+                        },
                     )
                 }
             }.onLeft {
@@ -290,6 +294,14 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                                 infoBlocks = infoConverter.convert(result),
                             ),
                         )
+                    }
+
+                    val networks = result.networks
+
+                    networksState.value = if (networks.isNullOrEmpty()) {
+                        TokenNetworksState.NoNetworksAvailable
+                    } else {
+                        TokenNetworksState.NetworksAvailable(networks)
                     }
 
                     chartDataProducer.runTransaction {
@@ -476,7 +488,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             while (true) {
                 delay(timeMillis)
                 // Update quotes only when the container bottom sheet is in the expanded state
-                containerBottomSheetState.first { it == BottomSheetState.EXPANDED }
+
                 // and is visible on the screen
                 isVisibleOnScreen.first { it }
 

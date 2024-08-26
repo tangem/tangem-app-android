@@ -4,11 +4,11 @@ import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -59,7 +59,7 @@ internal class TokenItemStateConverter(
                 hasStaked = !getStakedBalance().isZero(),
             ),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = getFormattedAmount()),
-            cryptoPriceState = getCryptoPriceState(),
+            subtitleState = getCryptoPriceState(),
             onItemClick = { clickIntents.onTokenItemClick(this) },
             onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
         )
@@ -97,12 +97,12 @@ internal class TokenItemStateConverter(
         onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
     )
 
-    private fun CryptoCurrencyStatus.getCryptoPriceState(): TokenItemState.CryptoPriceState {
+    private fun CryptoCurrencyStatus.getCryptoPriceState(): TokenItemState.SubtitleState {
         val fiatRate = value.fiatRate
         val priceChange = value.priceChange
 
         return if (fiatRate != null && priceChange != null) {
-            TokenItemState.CryptoPriceState.Content(
+            TokenItemState.SubtitleState.CryptoPriceContent(
                 price = fiatRate.getFormattedCryptoPrice(),
                 priceChangePercent = BigDecimalFormatter.formatPercent(
                     percent = priceChange,
@@ -111,7 +111,7 @@ internal class TokenItemStateConverter(
                 type = priceChange.getPriceChangeType(),
             )
         } else {
-            TokenItemState.CryptoPriceState.Unknown
+            TokenItemState.SubtitleState.Unknown
         }
     }
 

@@ -149,6 +149,17 @@ interface CurrenciesRepository {
     ): List<CryptoCurrency>
 
     /**
+     * Retrieves the list of cryptocurrencies within a multi-currency wallet.
+     * Returns previously loaded currencies or empty list
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @return A list of [CryptoCurrency].
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun getMultiCurrencyWalletCachedCurrenciesSync(userWalletId: UserWalletId): List<CryptoCurrency>
+
+    /**
      * Retrieves the cryptocurrency for a specific multi-currency user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
