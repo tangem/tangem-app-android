@@ -1,20 +1,20 @@
 package com.tangem.tap.data
 
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
-import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.datasource.local.logs.AppLogsStore
 
 /**
  * BlockchainSDK logger implementation
  *
- * @property settingsRepository settings repository
+ * @property appLogsStore app logs store
  *
 [REDACTED_AUTHOR]
  */
 internal class TangemBlockchainSDKLogger(
-    private val settingsRepository: SettingsRepository,
+    private val appLogsStore: AppLogsStore,
 ) : BlockchainSDKLogger {
 
     override fun log(level: BlockchainSDKLogger.Level, message: String) {
-        settingsRepository.saveLogMessage(message)
+        appLogsStore.saveLogMessage(message)
     }
 }
