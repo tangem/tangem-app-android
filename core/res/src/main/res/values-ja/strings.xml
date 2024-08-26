@@ -98,6 +98,7 @@
   <string name="common_enable">有効にする</string>
   <string name="common_enabled">有効</string>
   <string name="common_error">エラー</string>
+  <string name="common_exchange">交換</string>
   <string name="common_explore">移動する</string>
   <string name="common_explore_transaction_history">取引履歴を調べる</string>
   <string name="common_explorer">エクスプローラー</string>
@@ -822,6 +823,8 @@
   <string name="wallet_settings_title">ウォレット設定</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">%sを使用するか、カードをスキャンしてウォレットにアクセスしてください</string>
+  <string name="warning_approval_in_progress_message">許可付与のプロセスは現在進行中であり、まもなく完了する予定です。</string>
+  <string name="warning_approval_in_progress_title">承認中</string>
   <string name="warning_backup_errors_message">カードのアクティベーションが正しく完了しませんでした。デバイスの NFCモジュールに問題があるか、カードをデバイスに正しくタップしていないことが原因かもしれません。サポートチームにお問い合わせください。</string>
   <string name="warning_backup_errors_title">アクティベーションに失敗しました</string>
   <string name="warning_beacon_chain_retirement_content">BNBネットワーク開発者によると、BEP-2規格のサポートは2024年6月に終了します。この規格の資産を失わないために、BEP-20規格に変換してください。BNBスマートチェーンネットワークへ移行するには、Tangemのスワップサービスをご利用ください。</string>

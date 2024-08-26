@@ -108,6 +108,22 @@ internal class DefaultMarketsTokenRepository(
         return TokenChartConverter.convert(interval, response.getOrThrow())
     }
 
+    override suspend fun getChartPreview(
+        fiatCurrencyCode: String,
+        interval: PriceChangeInterval,
+        tokenId: String,
+    ): TokenChart {
+        val response = marketsApi.getCoinsListCharts(
+            coinIds = tokenId,
+            currency = fiatCurrencyCode,
+            interval = interval.toRequestParam(),
+        )
+
+        val chart = response.getOrThrow()[tokenId] ?: error("No chart preview data for token $tokenId")
+
+        return TokenChartConverter.convert(interval, chart)
+    }
+
     override suspend fun getTokenInfo(
         fiatCurrencyCode: String,
         tokenId: String,

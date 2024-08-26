@@ -223,19 +223,16 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         )
 
         viewModelScope.launch(dispatchers.main) {
-            walletManagersFacade.getAddress(
+            walletManagersFacade.getDefaultAddress(
                 userWalletId = stateHolder.getSelectedWalletId(),
                 network = cryptoCurrencyStatus.currency.network,
-            )
-                .find { it.type == AddressType.Default }
-                ?.value
-                ?.let {
-                    stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
+            )?.let {
+                stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
 
-                    walletEventSender.send(
-                        event = WalletEvent.CopyAddress(address = it),
-                    )
-                }
+                walletEventSender.send(
+                    event = WalletEvent.CopyAddress(address = it),
+                )
+            }
         }
     }
 
