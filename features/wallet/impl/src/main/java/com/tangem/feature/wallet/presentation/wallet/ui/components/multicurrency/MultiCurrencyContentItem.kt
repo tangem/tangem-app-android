@@ -2,9 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrenc
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.feature.wallet.presentation.common.component.NetworkGroupItem
-import com.tangem.feature.wallet.presentation.common.component.TokenItem
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.TokensListItemState
 
 /**
