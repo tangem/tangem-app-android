@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.AppBarDefaults
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -181,7 +180,7 @@ private fun LazyItemScope.DraggableItem(
                 reorderableTokenListState = reorderableState,
             )
             is DraggableItem.Token -> TokenItem(
-                modifier = itemModifier,
+                modifier = itemModifier.background(color = TangemTheme.colors.background.primary),
                 state = item.tokenItemState,
                 reorderableTokenListState = reorderableState,
                 isBalanceHidden = isBalanceHidden,
@@ -212,7 +211,7 @@ private fun TopBar(
         }
     }
     val elevation by animateDpAsState(
-        targetValue = if (isElevationEnabled) AppBarDefaults.TopAppBarElevation else TangemTheme.dimens.elevation0,
+        targetValue = if (isElevationEnabled) TangemTheme.dimens.elevation4 else TangemTheme.dimens.elevation0,
         label = "top_bar_shadow_elevation",
     )
 
