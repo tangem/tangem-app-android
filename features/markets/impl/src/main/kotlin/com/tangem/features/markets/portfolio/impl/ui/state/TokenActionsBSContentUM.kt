@@ -7,7 +7,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.ImmutableList
 
-internal data class TokenActionsBSContent(
+internal data class TokenActionsBSContentUM(
     val title: String,
     val actions: ImmutableList<Action>,
     val onActionClick: (Action) -> Unit,
