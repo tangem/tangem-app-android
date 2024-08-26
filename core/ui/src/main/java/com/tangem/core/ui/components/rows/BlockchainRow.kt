@@ -29,8 +29,9 @@ fun BlockchainRow(model: BlockchainRowUM, action: @Composable BoxScope.() -> Uni
         modifier = modifier
             .heightIn(min = TangemTheme.dimens.size52)
             .padding(
-                vertical = TangemTheme.dimens.spacing8,
-                horizontal = TangemTheme.dimens.spacing8,
+                top = TangemTheme.dimens.spacing8,
+                bottom = TangemTheme.dimens.spacing8,
+                start = TangemTheme.dimens.spacing8,
             ),
         icon = {
             RowIcon(
@@ -125,7 +126,7 @@ private fun Preview_BlockchainRow(@PreviewParameter(BlockchainRowParameterProvid
                 BlockchainRow(
                     model = state,
                     action = {
-                        TangemSwitch(onCheckedChange = { /* [REDACTED_TODO_COMMENT]*/ }, checked = true)
+                        TangemSwitch(onCheckedChange = { }, checked = true)
                     },
                 )
             },
