@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.featuretoggles)
     implementation(projects.core.navigation)
+    implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
