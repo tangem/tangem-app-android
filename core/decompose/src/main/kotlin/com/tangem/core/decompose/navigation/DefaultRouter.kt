@@ -3,7 +3,6 @@ package com.tangem.core.decompose.navigation
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.popWhile
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import kotlin.reflect.KClass
@@ -34,16 +33,27 @@ internal class DefaultRouter(
     }
 
     override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
-        navigation.popWhile(
+        popTo(
             predicate = { it != route },
             onComplete = onComplete,
         )
     }
 
     override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
-        navigation.popWhile(
+        popTo(
             predicate = { it::class != routeClass },
             onComplete = onComplete,
+        )
+    }
+
+    private fun popTo(predicate: (Route) -> Boolean, onComplete: (isSuccess: Boolean) -> Unit) {
+        navigation.navigate(
+            transformer = { stack ->
+                stack
+                    .dropLastWhile(predicate)
+                    .ifEmpty { stack }
+            },
+            onComplete = { newStack, oldStack -> onComplete(newStack.size < oldStack.size) },
         )
     }
 }
