@@ -18,12 +18,12 @@ import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.components.rows.CornersToRound
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContent
+import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun TokenActionsBottomSheet(config: TangemBottomSheetConfig) {
-    TangemBottomSheet<TokenActionsBSContent>(
+    TangemBottomSheet<TokenActionsBSContentUM>(
         config = config,
         title = { content ->
             TangemBottomSheetTitle(content.title)
@@ -34,7 +34,7 @@ fun TokenActionsBottomSheet(config: TangemBottomSheetConfig) {
 }
 
 @Composable
-private fun Content(content: TokenActionsBSContent) {
+private fun Content(content: TokenActionsBSContentUM) {
     Column(
         modifier = Modifier
             .padding(
@@ -78,9 +78,9 @@ private fun Preview() {
                 TangemBottomSheetConfig(
                     isShow = true,
                     onDismissRequest = {},
-                    content = TokenActionsBSContent(
+                    content = TokenActionsBSContentUM(
                         title = "Wallet 1",
-                        actions = TokenActionsBSContent.Action.entries.toImmutableList(),
+                        actions = TokenActionsBSContentUM.Action.entries.toImmutableList(),
                         onActionClick = {},
                     ),
                 ),
