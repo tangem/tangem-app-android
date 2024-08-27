@@ -42,7 +42,17 @@ internal object ManageTokensDataModule {
 
     @Provides
     @Singleton
-    fun provideCustomTokensRepository(): CustomTokensRepository {
-        return DefaultCustomTokensRepository()
+    fun provideCustomTokensRepository(
+        tangemTechApi: TangemTechApi,
+        userWalletsStore: UserWalletsStore,
+        appPreferencesStore: AppPreferencesStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): CustomTokensRepository {
+        return DefaultCustomTokensRepository(
+            tangemTechApi,
+            userWalletsStore,
+            appPreferencesStore,
+            dispatchers,
+        )
     }
 }
