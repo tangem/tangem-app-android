@@ -5,7 +5,7 @@
     },
     {
         "name": "LOCAL_USER_LOGS_ENABLED",
-        "version": "undefined"
+        "version": "5.14.0"
     },
     {
         "name": "GENERATE_XPUB_ENABLED",

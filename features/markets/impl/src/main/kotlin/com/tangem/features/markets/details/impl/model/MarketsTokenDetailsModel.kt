@@ -2,7 +2,9 @@ package com.tangem.features.markets.details.impl.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
-import com.tangem.common.ui.charts.state.*
+import com.tangem.common.ui.charts.state.MarketChartData
+import com.tangem.common.ui.charts.state.MarketChartDataProducer
+import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -22,13 +24,11 @@ import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.impl.model.converters.DescriptionConverter
 import com.tangem.features.markets.details.impl.model.converters.TokenMarketInfoConverter
 import com.tangem.features.markets.details.impl.model.formatter.*
-import com.tangem.features.markets.details.impl.model.formatter.formatAsPrice
-import com.tangem.features.markets.details.impl.model.formatter.getChangePercentBetween
-import com.tangem.features.markets.details.impl.model.formatter.getPercentByInterval
 import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -296,7 +296,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                         )
                     }
 
-                    val networks = result.networks
+                    val networks = result.networks?.filter {
+                        BlockchainUtils.isSupportedNetworkId(it.networkId)
+                    }
 
                     networksState.value = if (networks.isNullOrEmpty()) {
                         TokenNetworksState.NoNetworksAvailable

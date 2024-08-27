@@ -20,4 +20,7 @@ dependencies {
 
     /** Core */
     implementation(projects.core.utils)
+
+    /** Libs */
+    implementation(projects.libs.blockchainSdk)
 }
