@@ -124,7 +124,7 @@ private fun Content(state: PricePerformanceUM.Value, modifier: Modifier = Modifi
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
             Text(
                 modifier = Modifier.weight(1f),
@@ -132,7 +132,6 @@ private fun Content(state: PricePerformanceUM.Value, modifier: Modifier = Modifi
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
             )
-            SpacerW8()
             Text(
                 modifier = Modifier.weight(1f),
                 text = state.high,

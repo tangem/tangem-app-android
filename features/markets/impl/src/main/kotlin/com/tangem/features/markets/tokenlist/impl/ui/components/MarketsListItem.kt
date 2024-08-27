@@ -33,7 +33,7 @@ import com.tangem.utils.StringsSigns.MINUS
 import kotlin.random.Random
 
 @Composable
-fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+internal fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     MarketsListItemContent(
         modifier = modifier
             .fillMaxWidth()
