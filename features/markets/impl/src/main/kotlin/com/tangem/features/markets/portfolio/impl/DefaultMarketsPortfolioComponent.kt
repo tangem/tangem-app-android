@@ -2,14 +2,15 @@ package com.tangem.features.markets.portfolio.impl
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.model.MarketsPortfolioModel
 import com.tangem.features.markets.portfolio.impl.ui.MyPortfolio
-import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -27,10 +28,9 @@ internal class DefaultMarketsPortfolioComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        MyPortfolio(
-            modifier = modifier,
-            state = MyPortfolioUM.Loading,
-        )
+        val state by model.state.collectAsStateWithLifecycle()
+
+        MyPortfolio(modifier = modifier, state = state)
     }
 
     @AssistedFactory
