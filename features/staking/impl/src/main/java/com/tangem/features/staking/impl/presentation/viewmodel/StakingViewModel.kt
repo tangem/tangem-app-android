@@ -206,7 +206,7 @@ internal class StakingViewModel @Inject constructor(
                     return@launch
                 }
 
-                val transactions = stakingTransactions
+                val fullTransactionsData = stakingTransactions
                     .filterNot { it.type == StakingTransactionType.APPROVAL }
                     .map { transaction ->
                         val (constructedTransaction, transactionData) = getConstructedStakingTransactionUseCase(
@@ -219,13 +219,16 @@ internal class StakingViewModel @Inject constructor(
                             return@launch
                         }
 
-                        constructedTransaction to transactionData
+                        FullTransactionData(
+                            stakeKitTransaction = constructedTransaction,
+                            tangemTransaction = transactionData,
+                        )
                     }
-                transactionsInProgress.addAll(transactions.map { it.first })
+
+                transactionsInProgress.addAll(fullTransactionsData.map { it.stakeKitTransaction })
 
                 sendStakingTransaction(
-                    transactionStakeKitIds = transactions.map { it.first.id },
-                    transactions = transactions.map { it.second },
+                    fullTransactionsData = fullTransactionsData,
                     fee = fee,
                     pendingActionList = confirmationState.pendingActions,
                 )
@@ -638,13 +641,12 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private suspend fun sendStakingTransaction(
-        transactionStakeKitIds: List<String>,
-        transactions: List<TransactionData.Compiled>,
+        fullTransactionsData: List<FullTransactionData>,
         fee: Fee,
         pendingActionList: ImmutableList<PendingAction>,
     ) {
         sendMultipleTransactionUseCase(
-            txsData = transactions,
+            txsData = fullTransactionsData.map { it.tangemTransaction },
             userWallet = userWallet,
             network = cryptoCurrencyStatus.currency.network,
         ).fold(
@@ -663,7 +665,7 @@ internal class StakingViewModel @Inject constructor(
             ifRight = { transactionHashes ->
                 transactionsInProgress.clear()
                 submitHash(
-                    transactionIds = transactionStakeKitIds,
+                    transactionIds = fullTransactionsData.map { it.stakeKitTransaction.id },
                     transactionHashes = transactionHashes,
                 )
                 scheduleUpdates()
@@ -762,6 +764,11 @@ internal class StakingViewModel @Inject constructor(
             (value.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState ==
             InnerConfirmationStakingState.ASSENT
     }
+
+    private data class FullTransactionData(
+        val stakeKitTransaction: StakingTransaction,
+        val tangemTransaction: TransactionData.Compiled,
+    )
 
     private companion object {
         const val WHAT_IS_STAKING_ARTICLE_URL = "https://tangem.com/en/blog/post/how-to-stake-cryptocurrency/"
