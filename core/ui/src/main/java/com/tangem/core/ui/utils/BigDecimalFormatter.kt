@@ -336,6 +336,15 @@ object BigDecimalFormatter {
     ): String {
         if (amount == null) return EMPTY_BALANCE_SIGN
 
+        if (amount < BigDecimal.ONE) {
+            return formatFiatPriceUncapped(
+                fiatAmount = amount,
+                fiatCurrencyCode = fiatCurrencyCode,
+                fiatCurrencySymbol = fiatCurrencySymbol,
+                locale = locale,
+            )
+        }
+
         val rawAmount = formatCompactAmount(
             amount = amount,
             locale = locale,

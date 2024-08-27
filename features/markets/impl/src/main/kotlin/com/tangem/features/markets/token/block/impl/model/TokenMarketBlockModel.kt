@@ -17,6 +17,8 @@ import com.tangem.domain.markets.*
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.markets.token.block.impl.ui.state.TokenMarketBlockUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -29,7 +31,7 @@ internal class TokenMarketBlockModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
-    private val getTokenQuotesUseCase: GetTokenQuotesUseCase,
+    private val getTokenQuotesUseCase: GetCurrencyQuotesUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) : Model() {
 
@@ -46,6 +48,7 @@ internal class TokenMarketBlockModel @Inject constructor(
         )
 
     private var quotesState: QuotesState? = null
+    private val quotesUpdateJobHolder = JobHolder()
 
     val state = MutableStateFlow(
         TokenMarketBlockUM(
@@ -65,10 +68,11 @@ internal class TokenMarketBlockModel @Inject constructor(
     private fun startFetching() {
         modelScope.launch {
             getTokenQuotesUseCase(
-                tokenId = params.tokenId,
+                currencyID = params.cryptoCurrencyID,
                 interval = PriceChangeInterval.H24,
+                refresh = true,
             ).collect {
-                it.onRight { res ->
+                it.onSome { res ->
                     quotesState = QuotesState(
                         currentPrice = res.fiatRate,
                         h24Percent = res.priceChange,
@@ -90,7 +94,7 @@ internal class TokenMarketBlockModel @Inject constructor(
                     )
                 }
             }
-        }
+        }.saveIn(quotesUpdateJobHolder)
 
         modelScope.launch(dispatchers.main) {
             val result = getTokenPriceChartUseCase(
@@ -131,7 +135,6 @@ internal class TokenMarketBlockModel @Inject constructor(
             ),
         )
 
-        // FIXME navigation crash AND-8046
         router.push(
             AppRoute.MarketsTokenDetails(
                 token = tokenParam,
