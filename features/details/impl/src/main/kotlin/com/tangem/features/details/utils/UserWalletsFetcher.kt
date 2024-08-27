@@ -2,6 +2,7 @@ package com.tangem.features.details.utils
 
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.userwallet.converter.UserWalletItemUMConverter
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
@@ -25,6 +26,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -41,7 +43,10 @@ internal class UserWalletsFetcher @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val userWallets: Flow<ImmutableList<UserWalletItemUM>> = getWalletsUseCase().transformLatest { wallets ->
-        emit(wallets.toUiModels(onClick = ::navigateToWalletSettings))
+        val uiModels = UserWalletItemUMConverter(onClick = ::navigateToWalletSettings).convertList(wallets)
+            .toImmutableList()
+
+        emit(uiModels)
 
         combine(
             getSelectedAppCurrencyUseCase().distinctUntilChanged(),
@@ -75,20 +80,30 @@ internal class UserWalletsFetcher @Inject constructor(
     ): Lce<Error, ImmutableList<UserWalletItemUM>> = lce {
         val balances = withError(
             transform = { Error.UnableToGetBalances },
-            block = { maybeBalances.bindOrNull().orEmpty() },
+            block = {
+                maybeBalances.bindOrNull().orEmpty()
+                    .filterKeys { userWalletId -> wallets.any { it.walletId == userWalletId } }
+                    .mapKeys { entry -> wallets.first { it.walletId == entry.key } }
+            },
         )
+
         val appCurrency = withError(
             transform = { Error.UnableToGetAppCurrency },
             block = { maybeAppCurrency.toLce().bind() },
         )
 
-        wallets.toUiModels(
-            appCurrency = appCurrency,
-            balances = balances,
-            onClick = ::navigateToWalletSettings,
-            isBalancesHidden = balanceHidingSettings.isBalanceHidden,
-            isLoading = maybeBalances.isLoading(),
-        )
+        balances
+            .map { (userWallet, balance) ->
+                UserWalletItemUMConverter(
+                    onClick = ::navigateToWalletSettings,
+                    appCurrency = appCurrency,
+                    balance = balance,
+                    isBalanceHidden = balanceHidingSettings.isBalanceHidden,
+                    isLoading = maybeBalances.isLoading(),
+                )
+                    .convert(userWallet)
+            }
+            .toImmutableList()
     }
 
     private fun navigateToWalletSettings(userWalletId: UserWalletId) {
