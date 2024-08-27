@@ -11,6 +11,21 @@ fun getBlockchain(networkId: Network.ID): Blockchain {
     return Blockchain.fromId(networkId.value)
 }
 
+fun getNetwork(networkId: Network.ID, derivationPath: Network.DerivationPath): Network {
+    val blockchain = getBlockchain(networkId)
+
+    return Network(
+        id = networkId,
+        backendId = blockchain.toNetworkId(),
+        name = blockchain.getNetworkName(),
+        isTestnet = blockchain.isTestnet(),
+        derivationPath = derivationPath,
+        currencySymbol = blockchain.currency,
+        standardType = getNetworkStandardType(blockchain),
+        hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
+    )
+}
+
 fun getNetwork(
     blockchain: Blockchain,
     extraDerivationPath: String?,
