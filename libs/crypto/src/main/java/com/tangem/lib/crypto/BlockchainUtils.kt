@@ -2,6 +2,8 @@ package com.tangem.lib.crypto
 
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.lib.crypto.converter.XrpTaggedAddressConverter
 import com.tangem.lib.crypto.models.XrpTaggedAddress
 
@@ -54,5 +56,9 @@ object BlockchainUtils {
     fun isBeaconChain(networkId: String): Boolean {
         val blockchain = Blockchain.fromId(networkId)
         return blockchain == Blockchain.Binance || blockchain == Blockchain.BinanceTestnet
+    }
+
+    fun isSupportedNetworkId(networkId: String): Boolean {
+        return Blockchain.fromNetworkId(networkId)?.isSupportedInApp() ?: false
     }
 }
