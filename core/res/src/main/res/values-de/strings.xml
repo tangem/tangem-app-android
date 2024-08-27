@@ -859,6 +859,7 @@
   <string name="warning_express_not_enough_fee_for_token_tx_description">Um eine Transaktion durchzuführen, du etwas etwas einzahlen %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Die Gebühr %s kann nicht gedeckt werden</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">Der zu erhaltende Betrag muss mindestens %s betragen</string>
+  <string name="warning_express_pair_unavailable_title">Ausgewähltes Paar vorübergehend nicht verfügbar</string>
   <string name="warning_express_refresh_required_title">Service vorübergehend nicht verfügbar</string>
   <string name="warning_express_too_maximum_amount_title">Die Menge der zu tauschenden Token darf folgende Werte nicht überschreiten %s</string>
   <string name="warning_express_too_minimal_amount_title">Der zu tauschende Betrag muss mindestens %s betragen</string>
