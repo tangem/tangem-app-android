@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.MarketChartLook
+import com.tangem.common.ui.charts.state.sorted
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -237,9 +238,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             chart.onRight {
                 chartDataProducer.runTransactionSuspend {
                     chartData = MarketChartData.Data(
-                        x = it.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
                         y = it.priceY.toImmutableList(),
-                    )
+                        x = it.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
+                    ).sorted()
 
                     updateLook {
                         it.copy(
