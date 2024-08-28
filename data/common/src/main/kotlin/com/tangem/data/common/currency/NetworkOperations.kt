@@ -50,7 +50,7 @@ fun getNetwork(
     )
 }
 
-private fun getNetworkDerivationPath(
+fun getNetworkDerivationPath(
     blockchain: Blockchain,
     extraDerivationPath: String?,
     cardDerivationStyleProvider: DerivationStyleProvider?,
