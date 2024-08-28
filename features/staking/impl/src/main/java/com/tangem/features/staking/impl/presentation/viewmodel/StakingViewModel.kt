@@ -59,8 +59,6 @@ import com.tangem.features.staking.impl.presentation.state.transformers.approval
 import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetConfirmationStateAssentApprovalTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.approval.ShowApprovalBottomSheetTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
-import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
-import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
@@ -159,9 +157,12 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onBackClick()
     }
 
-    override fun onNextClick(actionType: StakingActionCommonType?, pendingActions: ImmutableList<PendingAction>) {
-        if (actionType != null) {
-            stateController.update { it.copy(actionType = actionType) }
+    override fun onNextClick(
+        actionTypeToOverwrite: StakingActionCommonType?,
+        pendingActions: ImmutableList<PendingAction>
+    ) {
+        if (actionTypeToOverwrite != null) {
+            stateController.update { it.copy(actionType = actionTypeToOverwrite) }
         }
         stakingStateRouter.onNextClick()
         if (isAssentState()) {
@@ -394,20 +395,15 @@ internal class StakingViewModel @Inject constructor(
         if (rewards != null && rewards.isSingleItem()) {
             onActiveStake(rewards.first())
         } else {
-            onNextClick(actionType = StakingActionCommonType.PENDING_REWARDS)
+            onNextClick(actionTypeToOverwrite = StakingActionCommonType.PENDING_REWARDS)
         }
     }
 
     override fun onActiveStake(activeStake: BalanceState) {
-        val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value) // TODO smth
-        val actionType = if (activeStake.pendingActions.isEmpty() || isTron) {
-            StakingActionCommonType.EXIT
-        } else {
-            StakingActionCommonType.PENDING_OTHER
-        }
+        stateController.update(ActionTypeActiveStakeTransformer(cryptoCurrencyStatus, activeStake))
         stateController.update(ValidatorSelectChangeTransformer(activeStake.validator))
         stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, activeStake.cryptoValue, yield))
-        onNextClick(actionType, activeStake.pendingActions)
+        onNextClick(null, activeStake.pendingActions)
     }
 
     override fun showApprovalBottomSheet() {
