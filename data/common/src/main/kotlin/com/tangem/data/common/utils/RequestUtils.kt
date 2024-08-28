@@ -8,8 +8,12 @@ import timber.log.Timber
 import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("UnconditionalJumpStatementInLoop", "MagicNumber")
-suspend fun <T> retryOnError(priority: Boolean = false, call: suspend () -> T): T {
-    var currentDelay = 500
+suspend fun <T> retryOnError(
+    priority: Boolean = false,
+    startRetryDelay : Int = 500,
+    call: suspend () -> T
+): T {
+    var currentDelay = startRetryDelay
     var priorityCounter = 5
     while (true) {
         return try {
