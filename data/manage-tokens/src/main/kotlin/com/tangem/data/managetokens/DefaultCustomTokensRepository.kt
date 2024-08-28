@@ -1,8 +1,11 @@
 package com.tangem.data.managetokens
 
+import com.tangem.blockchain.blockchains.cardano.CardanoTokenAddressConverter
+import com.tangem.blockchain.blockchains.hedera.HederaTokenAddressConverter
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
+import com.tangem.data.common.currency.getBlockchain
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -70,6 +73,11 @@ internal class DefaultCustomTokensRepository(
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId)
             ?: error("User wallet not found")
         val network = getNetwork(networkId, derivationPath)
+        val tokenAddress = convertTokenAddress(
+            networkId,
+            contractAddress,
+            symbol = null,
+        )
 
         val supportedTokenNetworkIds = userWallet.scanResponse.card
             .supportedBlockchains(userWallet.scanResponse.cardTypesResolver)
@@ -85,7 +93,7 @@ internal class DefaultCustomTokensRepository(
         response.coins.firstNotNullOfOrNull { coin ->
             val coinNetwork = coin.networks.firstOrNull { network ->
                 (network.contractAddress != null || network.decimalCount != null) &&
-                    network.contractAddress.equals(contractAddress, ignoreCase = true) &&
+                    network.contractAddress.equals(tokenAddress, ignoreCase = true) &&
                     network.networkId in supportedTokenNetworkIds
             }
 
@@ -96,7 +104,7 @@ internal class DefaultCustomTokensRepository(
                     name = coin.name,
                     symbol = coin.symbol,
                     decimals = coinNetwork.decimalCount!!.toInt(),
-                    contractAddress = contractAddress,
+                    contractAddress = tokenAddress,
                 )
             } else {
                 null
@@ -119,6 +127,11 @@ internal class DefaultCustomTokensRepository(
         formValues: AddCustomTokenForm.Validated.All,
     ): CryptoCurrency.Token {
         val network = getNetwork(networkId, derivationPath)
+        val tokenAddress = convertTokenAddress(
+            networkId,
+            formValues.contractAddress,
+            formValues.symbol,
+        )
 
         return cryptoCurrencyFactory.createToken(
             network = network,
@@ -126,7 +139,24 @@ internal class DefaultCustomTokensRepository(
             name = formValues.name,
             symbol = formValues.symbol,
             decimals = formValues.decimals,
-            contractAddress = formValues.contractAddress,
+            contractAddress = tokenAddress,
         )
+    }
+
+    private fun convertTokenAddress(networkId: Network.ID, contractAddress: String, symbol: String?): String {
+        val convertedAddress = when (getBlockchain(networkId)) {
+            Blockchain.Hedera,
+            Blockchain.HederaTestnet,
+            -> HederaTokenAddressConverter().convertToTokenId(contractAddress)
+            Blockchain.Cardano -> {
+                // TODO: [REDACTED_JIRA]
+                CardanoTokenAddressConverter().convertToFingerprint(contractAddress, symbol)
+            }
+            else -> contractAddress
+        }
+
+        return requireNotNull(convertedAddress) {
+            "Token contract address is invalid"
+        }
     }
 }
