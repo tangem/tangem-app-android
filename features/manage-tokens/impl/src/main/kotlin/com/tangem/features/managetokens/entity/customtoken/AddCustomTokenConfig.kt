@@ -28,11 +28,13 @@ internal data class AddCustomTokenConfig(
 internal data class SelectedNetwork(
     val id: Network.ID,
     val name: TextReference,
-    val derivationPath: String,
+    val derivationPath: Network.DerivationPath,
+    val canHandleTokens: Boolean,
 )
 
 @Serializable
 internal data class SelectedDerivationPath(
-    val value: String,
-    val name: TextReference,
+    val id: Network.ID,
+    val value: Network.DerivationPath,
+    val networkName: TextReference,
 )
