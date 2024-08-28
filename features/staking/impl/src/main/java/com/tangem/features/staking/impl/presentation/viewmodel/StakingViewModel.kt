@@ -159,7 +159,7 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onNextClick(
         actionTypeToOverwrite: StakingActionCommonType?,
-        pendingActions: ImmutableList<PendingAction>
+        pendingActions: ImmutableList<PendingAction>,
     ) {
         if (actionTypeToOverwrite != null) {
             stateController.update { it.copy(actionType = actionTypeToOverwrite) }

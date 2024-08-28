@@ -20,7 +20,5 @@ internal class ActionTypeActiveStakeTransformer(
         }
 
         return prevState.copy(actionType = actionType)
-
     }
-
 }

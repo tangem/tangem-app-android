@@ -127,7 +127,7 @@ internal class YieldBalancesConverter(
         BalanceType.UNSTAKED -> resourceReference(R.string.staking_unstaked) to
             resourceReference(R.string.staking_unstaked_footer)
         BalanceType.UNSTAKING -> resourceReference(R.string.staking_unstaking) to null
-        BalanceType.LOCKED -> stringReference("Locked") to null
+        BalanceType.LOCKED -> resourceReference(R.string.staking_locked) to null
         BalanceType.AVAILABLE -> null to null
         BalanceType.PREPARING -> null to null
         BalanceType.REWARDS -> null to null
