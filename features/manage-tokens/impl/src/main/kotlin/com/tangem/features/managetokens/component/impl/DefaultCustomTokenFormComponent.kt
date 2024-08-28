@@ -49,7 +49,7 @@ internal class DefaultCustomTokenFormComponent @AssistedInject constructor(
             tokenForm = getInitialTokenForm(),
             derivationPath = ClickableFieldUM(
                 label = resourceReference(R.string.custom_token_derivation_path),
-                value = params.derivationPath.name,
+                value = params.derivationPath.networkName,
                 onClick = ::selectDerivationPath,
             ),
             saveToken = {
