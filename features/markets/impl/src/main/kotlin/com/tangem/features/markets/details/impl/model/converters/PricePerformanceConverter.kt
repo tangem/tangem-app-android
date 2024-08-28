@@ -7,24 +7,23 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.details.impl.ui.state.PricePerformanceUM
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns
-import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 @Stable
 internal class PricePerformanceConverter(
     private val appCurrency: Provider<AppCurrency>,
-) : Converter<TokenMarketInfo.PricePerformance, PricePerformanceUM> {
+) {
 
-    override fun convert(value: TokenMarketInfo.PricePerformance): PricePerformanceUM {
+    fun convert(value: TokenMarketInfo.PricePerformance, currentPrice: BigDecimal): PricePerformanceUM {
         return PricePerformanceUM(
-            h24 = value.day.convert(),
-            month = value.month.convert(),
-            all = value.allTime.convert(),
+            h24 = value.day.convert(currentPrice),
+            month = value.month.convert(currentPrice),
+            all = value.allTime.convert(currentPrice),
         )
     }
 
-    private fun TokenMarketInfo.Range?.convert(): PricePerformanceUM.Value {
+    private fun TokenMarketInfo.Range?.convert(currentPrice: BigDecimal): PricePerformanceUM.Value {
         if (this == null) {
             return PricePerformanceUM.Value(
                 low = StringsSigns.DASH_SIGN,
@@ -36,7 +35,7 @@ internal class PricePerformanceConverter(
         return PricePerformanceUM.Value(
             low = low.convert(),
             high = high.convert(),
-            indicatorFraction = calculateFraction(),
+            indicatorFraction = calculateFraction(currentPrice),
         )
     }
 
@@ -50,10 +49,15 @@ internal class PricePerformanceConverter(
         )
     }
 
-    private fun TokenMarketInfo.Range.calculateFraction(): Float {
-        if (low == null || high == null || low == BigDecimal.ZERO) return 0f
-        return (high!! - low!!).divide(low!!, RoundingMode.HALF_UP)
-            .setScale(2, RoundingMode.HALF_UP)
-            .toFloat().coerceAtMost(1f)
+    private fun TokenMarketInfo.Range.calculateFraction(currentPrice: BigDecimal): Float {
+        return when {
+            low == null || high == null || high == BigDecimal.ZERO || currentPrice < low -> 0f
+            currentPrice > high || low == high -> 1f
+            else -> {
+                (currentPrice - low!!).divide(high!! - low!!, RoundingMode.HALF_UP)
+                    .setScale(2, RoundingMode.HALF_UP)
+                    .toFloat().coerceAtMost(1f)
+            }
+        }
     }
 }
