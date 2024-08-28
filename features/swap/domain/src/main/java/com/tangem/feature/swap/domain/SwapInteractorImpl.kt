@@ -1138,6 +1138,7 @@ internal class SwapInteractorImpl @Inject constructor(
                             isAllowedToSpend = isAllowedToSpend,
                             spenderAddress = quoteModel.allowanceContract,
                         )
+                        if (state !is SwapState.QuotesLoadedState) return state
                         state.copy(
                             preparedSwapConfigState = state.preparedSwapConfigState.copy(
                                 isAllowedToSpend = isAllowedToSpend,
@@ -1171,16 +1172,30 @@ internal class SwapInteractorImpl @Inject constructor(
                 }
             },
             ifLeft = { error ->
-                val rates = getQuotes(fromToken.currency.id)
-                val fromTokenSwapInfo = TokenSwapInfo(
-                    tokenAmount = amount,
-                    amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
-                        ?: BigDecimal.ZERO,
-                    cryptoCurrencyStatus = fromToken,
+                createSwapErrorWith(
+                    fromToken = fromToken,
+                    amount = amount,
+                    includeFeeInAmount = includeFeeInAmount,
+                    dataError = error,
                 )
-                return SwapState.SwapError(fromTokenSwapInfo, error, includeFeeInAmount)
             },
         )
+    }
+
+    private suspend fun createSwapErrorWith(
+        fromToken: CryptoCurrencyStatus,
+        amount: SwapAmount,
+        includeFeeInAmount: IncludeFeeInAmount,
+        dataError: DataError,
+    ): SwapState.SwapError {
+        val rates = getQuotes(fromToken.currency.id)
+        val fromTokenSwapInfo = TokenSwapInfo(
+            tokenAmount = amount,
+            amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
+                ?: BigDecimal.ZERO,
+            cryptoCurrencyStatus = fromToken,
+        )
+        return SwapState.SwapError(fromTokenSwapInfo, dataError, includeFeeInAmount)
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -1481,7 +1496,7 @@ internal class SwapInteractorImpl @Inject constructor(
         quotesLoadedState: SwapState.QuotesLoadedState,
         spenderAddress: String?,
         isAllowedToSpend: Boolean,
-    ): SwapState.QuotesLoadedState {
+    ): SwapState {
         val fromToken = fromTokenStatus.currency
         if (isAllowedToSpend) {
             return quotesLoadedState.copy(
@@ -1526,15 +1541,19 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
             } catch (e: Exception) {
                 Timber.e(e, "Failed to get fee")
-                null
+                // it's impossible next steps without fee
+                return createSwapErrorWith(
+                    fromToken = fromTokenStatus,
+                    amount = swapAmount,
+                    includeFeeInAmount = IncludeFeeInAmount.Excluded,
+                    dataError = DataError.UnknownError,
+                )
             }
         }
-        val feeState = feeData?.let {
-            when (feeData) {
-                is ProxyFees.MultipleFees -> feeData.proxyFeesToFeeState(fromToken)
-                is ProxyFees.SingleFee -> feeData.proxyFeesToFeeState(fromToken)
-            }
-        } ?: TxFeeState.Empty
+        val feeState = when (feeData) {
+            is ProxyFees.MultipleFees -> feeData.proxyFeesToFeeState(fromToken)
+            is ProxyFees.SingleFee -> feeData.proxyFeesToFeeState(fromToken)
+        }
         val fee = when (feeState) {
             TxFeeState.Empty -> BigDecimal.ZERO
             is TxFeeState.MultipleFeeState -> feeState.normalFee.feeValue
