@@ -142,19 +142,19 @@ internal class ManageTokensUiManager(
         if (currency !is ManagedCryptoCurrency.Token) return@launch
 
         if (isSelected) {
-            actions.addCurrency(batchKey, currency.id, source.id)
+            actions.addCurrency(batchKey, currency, source.network)
         } else {
-            if (actions.checkNeedToShowRemoveNetworkWarning(currency.id, source.id)) {
+            if (actions.checkNeedToShowRemoveNetworkWarning(currency, source.network)) {
                 showRemoveNetworkWarning(
                     currency = currency,
                     network = source.network,
                     isCoin = source is ManagedCryptoCurrency.SourceNetwork.Main,
                     onConfirm = {
-                        actions.removeCurrency(batchKey, currency.id, source.id)
+                        actions.removeCurrency(batchKey, currency, source.network)
                     },
                 )
             } else {
-                actions.removeCurrency(batchKey, currency.id, source.id)
+                actions.removeCurrency(batchKey, currency, source.network)
             }
         }
     }

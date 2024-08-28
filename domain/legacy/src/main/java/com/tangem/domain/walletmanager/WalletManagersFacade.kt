@@ -17,6 +17,7 @@ import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
+import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -53,6 +54,8 @@ interface WalletManagersFacade {
     suspend fun remove(userWalletId: UserWalletId, networks: Set<Network>)
 
     suspend fun removeTokens(userWalletId: UserWalletId, tokens: Set<CryptoCurrency.Token>)
+
+    suspend fun removeTokensByTokenInfo(userWalletId: UserWalletId, tokenInfos: Set<TokenInfo>)
 
     /**
      * Returns [UpdateWalletManagerResult] with last pending transactions

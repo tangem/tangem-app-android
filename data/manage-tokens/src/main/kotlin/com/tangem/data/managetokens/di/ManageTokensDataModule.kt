@@ -3,12 +3,14 @@ package com.tangem.data.managetokens.di
 import com.tangem.data.managetokens.DefaultCustomTokensRepository
 import com.tangem.data.managetokens.DefaultManageTokensRepository
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
-import com.tangem.data.managetokens.utils.ManagedCryptoCurrencyFactory
+import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -25,18 +27,22 @@ internal object ManageTokensDataModule {
     fun provideManageTokensRepository(
         tangemTechApi: TangemTechApi,
         userWalletsStore: UserWalletsStore,
-        managedCryptoCurrencyFactory: ManagedCryptoCurrencyFactory,
         manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
         appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
+        walletManagersFacade: WalletManagersFacade,
+        tangemExpressApi: TangemExpressApi,
+        expressAssetsStore: ExpressAssetsStore,
     ): ManageTokensRepository {
         return DefaultManageTokensRepository(
             tangemTechApi,
             userWalletsStore,
-            managedCryptoCurrencyFactory,
             manageTokensUpdateFetcher,
             appPreferencesStore,
             dispatchers,
+            walletManagersFacade,
+            tangemExpressApi,
+            expressAssetsStore,
         )
     }
 
