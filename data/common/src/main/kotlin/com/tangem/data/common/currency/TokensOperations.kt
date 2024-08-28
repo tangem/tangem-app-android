@@ -85,7 +85,7 @@ private fun getCurrencyIdBody(network: Network): CurrencyIdBody {
     }
 }
 
-private fun getTokenIconUrlFromDefaultHost(tokenId: String): String {
+fun getTokenIconUrlFromDefaultHost(tokenId: String): String {
     return buildString {
         append(DEFAULT_TOKENS_ICONS_HOST)
         append('/')
