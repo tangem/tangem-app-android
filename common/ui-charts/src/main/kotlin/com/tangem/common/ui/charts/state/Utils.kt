@@ -4,9 +4,10 @@ import kotlinx.collections.immutable.toImmutableList
 
 fun MarketChartData.Data.sorted(): MarketChartData.Data {
     val points = this.x.zip(this.y).sortedBy { it.first }
+    val (x, y) = points.unzip()
 
     return MarketChartData.Data(
-        x = points.map { it.first }.toImmutableList(),
-        y = points.map { it.second }.toImmutableList(),
+        x = x.toImmutableList(),
+        y = y.toImmutableList(),
     )
 }
