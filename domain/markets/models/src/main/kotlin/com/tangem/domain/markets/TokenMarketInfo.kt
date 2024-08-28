@@ -27,7 +27,13 @@ data class TokenMarketInfo(
         val liquidityChange: Change?,
         val buyPressureChange: Change?,
         val experiencedBuyerChange: Change?,
-    )
+        val sourceNetworks: List<SourceNetwork>,
+    ) {
+        data class SourceNetwork(
+            val id: String,
+            val name: String,
+        )
+    }
 
     data class Change(
         val day: BigDecimal?,
