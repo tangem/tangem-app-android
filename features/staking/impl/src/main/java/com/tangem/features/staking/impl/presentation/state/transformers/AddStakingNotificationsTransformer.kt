@@ -1,8 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.common.ui.feeScreen.checkAndCalculateSubtractedAmount
-import com.tangem.common.ui.feeScreen.checkFeeCoverage
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedBalanceNotification
@@ -14,13 +12,17 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountE
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.staking.impl.presentation.state.FeeState
+import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
+import com.tangem.features.staking.impl.presentation.state.utils.checkFeeCoverage
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
@@ -41,17 +43,17 @@ internal class AddStakingNotificationsTransformer(
 ) : Transformer<StakingUiState> {
     override fun transform(prevState: StakingUiState): StakingUiState {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val appCurrency = appCurrencyProvider()
         val balance = cryptoCurrencyStatus.value.amount.orZero()
 
         val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data ?: return prevState
         val amountState = prevState.amountState as? AmountState.Data ?: return prevState
-        val feeState = confirmationState.feeState as? FeeState.Content ?: return prevState
+        val feeState = confirmationState.feeState as? FeeState.Content
 
         val amountValue = amountState.amountTextField.cryptoAmount.value.orZero()
-        val feeValue = feeState.fee?.amount?.value.orZero()
+        val feeValue = feeState?.fee?.amount?.value.orZero()
         val reduceAmountBy = confirmationState.reduceAmountBy.orZero()
 
+        val isEnterAction = prevState.actionType == StakingActionCommonType.ENTER
         val isFeeCoverage = checkFeeCoverage(
             amountValue = amountValue,
             feeValue = feeValue,
@@ -61,7 +63,7 @@ internal class AddStakingNotificationsTransformer(
         )
         val sendingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isSubtractAvailable,
-            cryptoCurrencyStatus = cryptoCurrencyStatusProvider(),
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
             amountValue = amountValue,
             feeValue = feeValue,
             reduceAmountBy = reduceAmountBy,
@@ -73,7 +75,7 @@ internal class AddStakingNotificationsTransformer(
                 prevState = prevState,
                 feeError = feeError,
                 sendingAmount = sendingAmount,
-                onReload = { prevState.clickIntents.loadFee(confirmationState.pendingActions) },
+                onReload = { prevState.clickIntents.getFee(confirmationState.pendingAction) },
                 feeValue = feeValue,
             )
             // warnings
@@ -82,7 +84,7 @@ internal class AddStakingNotificationsTransformer(
                 amountState = amountState,
                 feeState = feeState,
                 sendingAmount = sendingAmount,
-                isFeeCoverage = isFeeCoverage,
+                isFeeCoverage = isFeeCoverage && isEnterAction,
             )
 
             addAll(confirmationState.notifications)
@@ -91,6 +93,7 @@ internal class AddStakingNotificationsTransformer(
         return prevState.copy(
             confirmationState = confirmationState.copy(
                 notifications = notifications.toImmutableList(),
+                isPrimaryButtonEnabled = !notifications.any { it is StakingNotification.Error },
             ),
         )
     }
@@ -151,7 +154,7 @@ internal class AddStakingNotificationsTransformer(
     private fun MutableList<NotificationUM>.addWarningNotifications(
         prevState: StakingUiState,
         amountState: AmountState.Data,
-        feeState: FeeState.Content,
+        feeState: FeeState.Content?,
         sendingAmount: BigDecimal,
         isFeeCoverage: Boolean,
     ) {
@@ -161,7 +164,7 @@ internal class AddStakingNotificationsTransformer(
 
         addExistentialWarningNotification(
             existentialDeposit = currencyCheck.existentialDeposit,
-            feeAmount = feeState.fee?.amount?.value.orZero(),
+            feeAmount = feeState?.fee?.amount?.value.orZero(),
             receivedAmount = sendingAmount,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             onReduceClick = prevState.clickIntents::onAmountReduceByClick,
@@ -177,7 +180,7 @@ internal class AddStakingNotificationsTransformer(
         // blockchain specific
         addValidateTransactionNotifications(
             dustValue = currencyCheck.dustValue.orZero(),
-            fee = feeState.fee,
+            fee = feeState?.fee,
             validationError = validatorError,
             cryptoCurrency = cryptoCurrency,
             onReduceClick = prevState.clickIntents::onAmountReduceToClick,
