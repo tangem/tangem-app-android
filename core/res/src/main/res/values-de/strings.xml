@@ -875,6 +875,8 @@
   <string name="warning_low_signatures_message">Auf dieser Karte sind nur noch %s Unterschriften übrig. Du musst dein gesamtes Guthaben abheben.</string>
   <string name="warning_low_signatures_title">Geringe Anzahl von Unterschriften</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Token in verschiedenen Netzwerken können unterschiedliche Adressen haben. Überprüfe bei der Überweisung noch einmal, ob deine Adresse mit der des Netzwerks übereinstimmt.</string>
+  <string name="warning_matic_migration_title">Migration von MATIC zu POL</string>
+  <string name="warning_matic_migration_message">MATIC wird auf POL migriert. Es gibt jedoch keine Frist, und MATIC wird noch nicht abgeschafft. Du kannst MATIC-Token weiterhin verwenden oder sie über eien Exchange gegen POL tauschen.</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="one">Verwende deine Karte, um eine Adresse für das %d-Netz zu erhalten</item>
     <item quantity="other">Verwende deine Karte, um mehrere Adressen für die %d-Netzwerke zu erhalten</item>
