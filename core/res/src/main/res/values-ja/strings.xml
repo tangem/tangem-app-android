@@ -847,7 +847,7 @@
   <string name="warning_express_not_enough_fee_for_token_tx_description">取引を行うには、 %1$s %2$sを入金する必要があります。</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">%s 手数料を支払えません</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">受け取る金額は、 %s 以上である必要があります。</string>
-  <string name="warning_express_pair_unavailable_message">これは、選択したペアがプロバイダーでは現在交換できないために発生する可能性があります。しばらく待ってからもう一度お試しください。(コード%@ )</string>
+  <string name="warning_express_pair_unavailable_message">これは、選択したペアがプロバイダーでは現在交換できないために発生する可能性があります。しばらく待ってからもう一度お試しください。(コード%s )</string>
   <string name="warning_express_pair_unavailable_title">選択されたペアは一時的に利用できません</string>
   <string name="warning_express_refresh_required_title">サービスは一時的に利用できません</string>
   <string name="warning_express_too_maximum_amount_title">スワップするトークンの量は %s を超えないでください</string>
