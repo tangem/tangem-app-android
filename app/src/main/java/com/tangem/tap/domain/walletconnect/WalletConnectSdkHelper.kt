@@ -72,7 +72,7 @@ class WalletConnectSdkHelper {
         }
 
         // TODO move fee calculation to SDK getFee() [REDACTED_JIRA]
-        val gasLimit = getGasLimitFromTx(value, walletManager, transaction)
+        val gasLimit = getGasLimitFromTx(value, walletManager, transaction, blockchain)
         val gasPrice = getGasPrice(walletManager, transaction)
 
         val feeDecimal = (gasLimit * gasPrice).movePointLeft(decimals)
@@ -170,6 +170,7 @@ class WalletConnectSdkHelper {
         value: BigDecimal,
         walletManager: WalletManager,
         transaction: WcEthereumTransaction,
+        blockchain: Blockchain,
     ): BigDecimal {
         return transaction.gas?.hexToBigDecimal()
             ?: transaction.gasLimit?.hexToBigDecimal()
@@ -177,7 +178,7 @@ class WalletConnectSdkHelper {
                 value = value,
                 walletManager = walletManager,
                 transaction = transaction,
-            )
+            ).increaseForMantleIfNeeded(blockchain)
     }
 
     private suspend fun getGasLimitFromBlockchain(
@@ -197,6 +198,15 @@ class WalletConnectSdkHelper {
                 DEFAULT_MAX_GASLIMIT.toBigDecimal() // Set high gasLimit if not provided
             }
             else -> DEFAULT_MAX_GASLIMIT.toBigDecimal() // Set high gasLimit if not provided
+        }
+    }
+
+    // TODO Workaround for Mantle. Remove after [REDACTED_JIRA]
+    private fun BigDecimal.increaseForMantleIfNeeded(blockchain: Blockchain): BigDecimal {
+        return if (blockchain == Blockchain.Mantle) {
+            this.multiply(MANTLE_FEE_ESTIMATE_MULTIPLIER)
+        } else {
+            this
         }
     }
 
