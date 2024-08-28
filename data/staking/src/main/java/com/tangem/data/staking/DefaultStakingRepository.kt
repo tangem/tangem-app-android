@@ -2,7 +2,6 @@ package com.tangem.data.staking
 
 import android.util.Base64
 import arrow.core.raise.catch
-import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
@@ -108,8 +107,7 @@ internal class DefaultStakingRepository(
         value = emptyMap<UserWalletId, Boolean>(),
     )
 
-    private val tronStakeKitTransactionAdapter: JsonAdapter<TronStakeKitTransaction> =
-        moshi.adapter(TronStakeKitTransaction::class.java)
+    private val tronStakeKitTransactionAdapter by lazy { moshi.adapter(TronStakeKitTransaction::class.java) }
 
     override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = with(cryptoCurrencyId) {
         rawNetworkId.plus(rawCurrencyId)
@@ -537,6 +535,7 @@ internal class DefaultStakingRepository(
             args = ActionRequestBodyArgs(
                 amount = params.amount.toPlainString(),
                 validatorAddress = params.validatorAddress,
+                validatorAddresses = listOf(params.validatorAddress),
             ),
         )
     }

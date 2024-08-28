@@ -59,6 +59,8 @@ import com.tangem.features.staking.impl.presentation.state.transformers.approval
 import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetConfirmationStateAssentApprovalTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.approval.ShowApprovalBottomSheetTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
@@ -397,7 +399,8 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onActiveStake(activeStake: BalanceState) {
-        val actionType = if (activeStake.pendingActions.isEmpty()) {
+        val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value) // TODO smth
+        val actionType = if (activeStake.pendingActions.isEmpty() || isTron) {
             StakingActionCommonType.EXIT
         } else {
             StakingActionCommonType.PENDING_OTHER
