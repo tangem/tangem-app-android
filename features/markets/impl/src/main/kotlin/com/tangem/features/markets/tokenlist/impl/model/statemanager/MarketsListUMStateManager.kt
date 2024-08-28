@@ -192,7 +192,7 @@ internal class MarketsListUMStateManager(
     private fun state(): MarketsListUM = MarketsListUM(
         list = ListUM.Loading,
         searchBar = SearchBarUM(
-            placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
+            placeholderText = resourceReference(R.string.common_search),
             query = "",
             onQueryChange = { searchQuery = it },
             isActive = false,
