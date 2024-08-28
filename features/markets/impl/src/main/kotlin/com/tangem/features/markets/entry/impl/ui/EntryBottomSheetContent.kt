@@ -30,7 +30,6 @@ internal fun EntryBottomSheetContent(
     modifier: Modifier = Modifier,
 ) {
     val primary = TangemTheme.colors.background.primary
-    val secondary = TangemTheme.colors.background.secondary
     val backgroundColor = remember { Animatable(primary) }
 
     LocalMainBottomSheetColor.current.value = backgroundColor.value
@@ -73,7 +72,7 @@ private fun BackgroundColorEffects(
     bottomSheetState: State<BottomSheetState>,
 ) {
     val primary = TangemTheme.colors.background.primary
-    val secondary = TangemTheme.colors.background.secondary
+    val tertiary = TangemTheme.colors.background.tertiary
 
     // Order of LaunchedEffects is important here
 
@@ -81,7 +80,7 @@ private fun BackgroundColorEffects(
         when (activeChild) {
             is MarketsEntryChildFactory.Child.TokenDetails -> {
                 backgroundColor.animateTo(
-                    secondary,
+                    tertiary,
                     animationSpec = tween(durationMillis = 500),
                 )
             }
@@ -99,7 +98,7 @@ private fun BackgroundColorEffects(
             when (bottomSheetState.value) {
                 BottomSheetState.EXPANDED -> {
                     backgroundColor.animateTo(
-                        secondary,
+                        tertiary,
                         animationSpec = tween(durationMillis = 100),
                     )
                 }
@@ -113,12 +112,12 @@ private fun BackgroundColorEffects(
         }
     }
 
-    LaunchedEffect(primary, secondary) {
+    LaunchedEffect(primary, tertiary) {
         if (backgroundColor.isRunning) return@LaunchedEffect
 
         when (activeChild) {
             is MarketsEntryChildFactory.Child.TokenDetails -> {
-                backgroundColor.snapTo(secondary)
+                backgroundColor.snapTo(tertiary)
             }
             MarketsEntryChildFactory.Child.TokenList -> {
                 backgroundColor.snapTo(primary)
