@@ -863,6 +863,8 @@
   <string name="warning_low_signatures_message">このカードには%sの署名のみが残っています。資金をすべて引き出す必要があります。</string>
   <string name="warning_low_signatures_title">署名数が少ないです</string>
   <string name="warning_manage_tokens_legacy_derivation_message">異なるネットワーク上のトークンは、異なるアドレスを持つ場合があります。資金を送金する際には、アドレスがネットワークと一致していることを再確認してください。</string>
+  <string name="warning_matic_migration_title">MATICからPOLへの移行</string>
+  <string name="warning_matic_migration_message">MATICはPOLに移行中です。ただし、期限は設定されておらず、MATICはまだ廃止されていません。MATICトークンを引き続き安全に使用することも、取引所でPOLに交換することもできます。</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="other">%d ネットワークのアドレスを取得するために、カードを利用してください</item>
   </plurals>
