@@ -76,6 +76,7 @@ class GetCurrencyWarningsUseCase(
                 getNetworkNoAccountWarning(currencyStatus),
                 getBeaconChainShutdownWarning(currency.network.id),
                 getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency),
+                getMigrationFromMaticToPolWarning(currency),
             )
         }.flowOn(dispatchers.io)
     }
@@ -304,7 +305,19 @@ class GetCurrencyWarningsUseCase(
         }
     }
 
+    private fun getMigrationFromMaticToPolWarning(currency: CryptoCurrency): CryptoCurrencyWarning? {
+        return if (currency.symbol == MATIC_SYMBOL && !BlockchainUtils.isPolygonChain(currency.network.id.value)) {
+            CryptoCurrencyWarning.MigrationMaticToPol
+        } else {
+            null
+        }
+    }
+
     private fun BigDecimal?.isZero(): Boolean {
         return this?.signum() == 0
+    }
+
+    companion object {
+        private const val MATIC_SYMBOL = "MATIC"
     }
 }
