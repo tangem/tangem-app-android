@@ -125,10 +125,10 @@ private fun LazyListScope.loadingInfoBlocks() {
     item("insights-loading") {
         InsightsBlockPlaceholder(modifier = Modifier.blockPaddings())
     }
-
-    item("securityScore-loading") {
-        SecurityScorePlaceHolder(modifier = Modifier.blockPaddings())
-    }
+// [REDACTED_TODO_COMMENT]
+    // item("securityScore-loading") {
+    //     SecurityScorePlaceHolder(modifier = Modifier.blockPaddings())
+    // }
 
     item("metrics-loading") {
         MetricsBlockPlaceholder(modifier = Modifier.blockPaddings())

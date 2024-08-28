@@ -256,7 +256,7 @@ private fun Preview() {
                         onItemClick = {},
                     ),
                     searchBar = SearchBarUM(
-                        placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
+                        placeholderText = resourceReference(R.string.common_search),
                         query = "",
                         onQueryChange = {},
                         isActive = false,
