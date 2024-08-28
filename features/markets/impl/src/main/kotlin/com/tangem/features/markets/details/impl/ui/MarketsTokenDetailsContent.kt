@@ -1,5 +1,6 @@
 package com.tangem.features.markets.details.impl.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
@@ -193,7 +194,7 @@ private fun TokenPriceText(
     val fallColor = TangemTheme.colors.text.warning
     val generalColor = TangemTheme.colors.text.primary1
 
-    val color = remember { Animatable(generalColor) }
+    val color = remember(generalColor) { Animatable(generalColor) }
 
     EventEffect(triggerPriceChange) {
         val nextColor = when (it) {
@@ -268,12 +269,11 @@ fun PriceChangeInterval.getText(): TextReference {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview() {
     TangemThemePreview {
-        Content(
-            modifier = Modifier.background(TangemTheme.colors.background.tertiary),
-            addTopBarStatusBarInsets = false,
+        MarketsTokenDetailsContent(
             state = MarketsTokenDetailsUM(
                 tokenName = "Token Name",
                 priceText = "$0.00000000324",
@@ -303,6 +303,7 @@ private fun Preview() {
             onBackClick = {},
             backgroundColor = TangemTheme.colors.background.tertiary,
             portfolioBlock = {},
+            addTopBarStatusBarPadding = false,
         )
     }
 }

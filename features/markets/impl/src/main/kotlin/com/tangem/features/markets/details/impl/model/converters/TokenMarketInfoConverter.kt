@@ -17,6 +17,9 @@ internal class TokenMarketInfoConverter(
 ) : Converter<TokenMarketInfo, MarketsTokenDetailsUM.InformationBlocks> {
 
     private val insightsConverter = InsightsConverter(appCurrency = appCurrency, onInfoClick = onInfoClick)
+
+    @Suppress("UnusedPrivateMember")
+    // TODO second markets iteration
     private val securityScoreConverter = SecurityScoreConverter(onInfoClick = onInfoClick)
     private val metricsConverter = MetricsConverter(appCurrency = appCurrency, onInfoClick = onInfoClick)
     private val pricePerformanceConverter = PricePerformanceConverter(appCurrency = appCurrency)
@@ -25,9 +28,14 @@ internal class TokenMarketInfoConverter(
     override fun convert(value: TokenMarketInfo): MarketsTokenDetailsUM.InformationBlocks {
         return MarketsTokenDetailsUM.InformationBlocks(
             insights = value.insights?.let { insightsConverter.convert(it) },
-            securityScore = securityScoreConverter.convert(Unit),
+            securityScore = null,
             metrics = value.metrics?.let { metricsConverter.convert(it) },
-            pricePerformance = value.pricePerformance?.let { pricePerformanceConverter.convert(it) },
+            pricePerformance = value.pricePerformance?.let {
+                pricePerformanceConverter.convert(
+                    value = it,
+                    currentPrice = value.quotes.currentPrice,
+                )
+            },
             links = value.links?.let { linksConverter.convert(it) },
         )
     }
