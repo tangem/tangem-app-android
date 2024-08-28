@@ -10,19 +10,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.res.TangemTheme
 
+/**
+ * Text view for token price.
+ *
+ * @param price Price of the token.
+ * @param priceChangeType Type of the price change.
+ */
 @Composable
-fun TokenPriceText(
-    price: String,
-    modifier: Modifier = Modifier,
-    priceChangeType: PriceChangeType? = null,
-    skipFirstAnimation: Boolean = false,
-) {
+fun TokenPriceText(price: String, modifier: Modifier = Modifier, priceChangeType: PriceChangeType? = null) {
     val growColor = TangemTheme.colors.text.accent
     val fallColor = TangemTheme.colors.text.warning
     val generalColor = TangemTheme.colors.text.primary1
 
-    val color = remember { Animatable(generalColor) }
-    var animationSkipped by remember { mutableStateOf(skipFirstAnimation.not()) }
+    val color = remember(generalColor) { Animatable(generalColor) }
+    var animationSkipped by remember { mutableStateOf(false) }
 
     LaunchedEffect(price) {
         if (animationSkipped.not()) {

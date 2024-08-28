@@ -88,7 +88,6 @@ private fun LeftSide(
                     modifier = Modifier.alignByBaseline(),
                     price = priceText,
                     priceChangeType = type,
-                    skipFirstAnimation = true,
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
