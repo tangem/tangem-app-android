@@ -272,22 +272,24 @@ class TransactionManagerImpl(
      * @param blockchain
      */
     private fun createMultipleProxyFees(gasPrice: BigInteger, gasLimit: BigInteger, blockchain: Blockchain): ProxyFees {
-        val gasPriceNormal = gasPrice.increaseBigIntegerByPercents(MULTIPLIER_GAS_PRICE_FOR_NORMAL_FEE)
+        val patchedGasLimit = gasLimit.toBigDecimal().increaseForMantleIfNeeded(blockchain).toBigInteger()
+        val gasPriceNormal = gasPrice
+            .increaseBigIntegerByPercents(MULTIPLIER_GAS_PRICE_FOR_NORMAL_FEE)
         val gasPricePriority = gasPrice.increaseBigIntegerByPercents(MULTIPLIER_GAS_PRICE_FOR_PRIORITY_FEE)
-        val feeMin = gasLimit.multiply(gasPrice).toBigDecimal(
+        val feeMin = patchedGasLimit.multiply(gasPrice).toBigDecimal(
             scale = blockchain.decimals(),
             mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
         ).increaseForMantleIfNeeded(blockchain)
-        val feeNormal = gasLimit.multiply(gasPriceNormal).toBigDecimal(
+        val feeNormal = patchedGasLimit.multiply(gasPriceNormal).toBigDecimal(
             scale = blockchain.decimals(),
             mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
         ).increaseForMantleIfNeeded(blockchain)
-        val feePriority = gasLimit.multiply(gasPricePriority).toBigDecimal(
+        val feePriority = patchedGasLimit.multiply(gasPricePriority).toBigDecimal(
             scale = blockchain.decimals(),
             mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
         ).increaseForMantleIfNeeded(blockchain)
         val minFee = ProxyFee.Common(
-            gasLimit = gasLimit,
+            gasLimit = patchedGasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
                 value = feeMin,
@@ -295,7 +297,7 @@ class TransactionManagerImpl(
             ),
         )
         val normalFee = ProxyFee.Common(
-            gasLimit = gasLimit,
+            gasLimit = patchedGasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
                 value = feeNormal,
@@ -303,7 +305,7 @@ class TransactionManagerImpl(
             ),
         )
         val priorityFee = ProxyFee.Common(
-            gasLimit = gasLimit,
+            gasLimit = patchedGasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
                 value = feePriority,
