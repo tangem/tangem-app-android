@@ -60,6 +60,7 @@ internal fun LinksBlock(state: LinksUM, modifier: Modifier = Modifier) {
                     title = stringResource(id = R.string.markets_token_details_blockchain_site),
                     links = state.blockchainSite,
                     onLinkClick = state.onLinkClick,
+                    lastBlock = true,
                 )
             }
         },

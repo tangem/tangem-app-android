@@ -1,185 +1,46 @@
 package com.tangem.features.markets.tokenlist.impl.ui.components
 
 import android.content.res.Configuration
-import androidx.compose.animation.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.AnchoredDraggableState
-import androidx.compose.foundation.gestures.DraggableAnchors
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.anchoredDraggable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.IntOffset
 import com.tangem.common.ui.charts.MarketChartMini
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
+import com.tangem.common.ui.tokens.TokenPriceText
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.core.ui.haptic.TangemHapticEffect
-import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.windowsize.WindowSizeType
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
 import com.tangem.features.markets.tokenlist.impl.ui.preview.MarketChartListItemPreviewDataProvider
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
 import com.tangem.utils.StringsSigns.MINUS
-import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 import kotlin.random.Random
 
-internal enum class DragValue { Start, End }
-
-const val SWIPE_THRESHOLD_PERCENT = 0.8f
-const val SWIPE_VELOCITY_THRESHOLD = 20f
-
-@Suppress("LongMethod")
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MarketsListItem(
-    model: MarketsListItemUM,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
-    onSwipeToAction: () -> Unit = {},
-) {
-    val actionWidth = TangemTheme.dimens.size68
-    val actionWidthPx = with(LocalDensity.current) { actionWidth.toPx() }
-
-    val hapticManager = LocalHapticManager.current
-
-    val anchors = DraggableAnchors {
-        DragValue.Start at 0f
-        DragValue.End at -actionWidthPx
-    }
-    val state = remember {
-        AnchoredDraggableState(
-            initialValue = DragValue.Start,
-            anchors = anchors,
-            positionalThreshold = { it * (1 - SWIPE_THRESHOLD_PERCENT) },
-            velocityThreshold = { SWIPE_VELOCITY_THRESHOLD },
-            animationSpec = tween(easing = FastOutSlowInEasing),
-            confirmValueChange = { it == DragValue.Start },
-        )
-    }
-    val dragInteractionSource = remember { MutableInteractionSource() }
-    val clickInteractionSource = remember { MutableInteractionSource() }
-    val isInDraggedState by dragInteractionSource.collectIsDraggedAsState()
-
-    LaunchedEffect(Unit) {
-        var actionPerformed = false
-        var releasePerformed = true
-        launch {
-            snapshotFlow { state.offset }
-                .collect {
-                    val border = -actionWidthPx * SWIPE_THRESHOLD_PERCENT
-                    if (it < border && actionPerformed.not()) {
-                        hapticManager.perform(TangemHapticEffect.View.GestureThresholdActivate)
-                        actionPerformed = true
-                        releasePerformed = false
-                    }
-
-                    if (it > border) {
-                        if (releasePerformed.not()) {
-                            hapticManager.perform(TangemHapticEffect.View.GestureThresholdDeactivate)
-                            releasePerformed = true
-                        }
-                        actionPerformed = false
-                    }
-                }
-        }
-        launch {
-            snapshotFlow { isInDraggedState }
-                .collect {
-                    if (it.not() && actionPerformed) {
-                        releasePerformed = true
-                        onSwipeToAction()
-                    }
-                }
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .height(intrinsicSize = IntrinsicSize.Min)
-            .fillMaxWidth(),
-    ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .fillMaxHeight()
-                .offset {
-                    IntOffset(
-                        x = actionWidthPx.roundToInt() +
-                            state
-                                .requireOffset()
-                                .toInt(),
-                        y = 0,
-                    )
-                }
-                .width(actionWidth)
-                .background(TangemTheme.colors.control.checked),
-            contentAlignment = Alignment.Center,
-        ) {
-            Image(
-                modifier = Modifier.size(TangemTheme.dimens.size28),
-                imageVector = ImageVector.vectorResource(id = R.drawable.ic_plus_mini_28),
-                colorFilter = ColorFilter.tint(TangemTheme.colors.icon.primary2),
-                contentDescription = null,
-            )
-        }
-
-        Box(
-            modifier = modifier
-                .align(Alignment.CenterStart)
-                .clip(RectangleShape)
-                .offset {
-                    IntOffset(
-                        x = state
-                            .requireOffset()
-                            .toInt(),
-                        y = 0,
-                    )
-                }
-                .anchoredDraggable(
-                    state = state,
-                    orientation = Orientation.Horizontal,
-                    interactionSource = dragInteractionSource,
-                )
-                .clickable(
-                    enabled = true,
-                    interactionSource = clickInteractionSource,
-                    indication = rememberRipple(),
-                    onClick = onClick,
-                ),
-        ) {
-            MarketsListItemContent(model = model)
-        }
-    }
+internal fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+    MarketsListItemContent(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RectangleShape)
+            .clickable(onClick = onClick),
+        model = model,
+    )
 }
 
 @Composable
@@ -322,38 +183,6 @@ private fun RowScope.TokenMarketCapText(text: String) {
         style = TangemTheme.typography.caption2,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-    )
-}
-
-@Composable
-private fun TokenPriceText(price: String, modifier: Modifier = Modifier, priceChangeType: PriceChangeType? = null) {
-    val growColor = TangemTheme.colors.text.accent
-    val fallColor = TangemTheme.colors.text.warning
-    val generalColor = TangemTheme.colors.text.primary1
-
-    val color = remember { Animatable(generalColor) }
-
-    LaunchedEffect(price) {
-        if (priceChangeType != null) {
-            val nextColor = when (priceChangeType) {
-                PriceChangeType.UP,
-                -> growColor
-                PriceChangeType.DOWN -> fallColor
-                PriceChangeType.NEUTRAL -> return@LaunchedEffect
-            }
-
-            color.animateTo(nextColor, snap())
-            color.animateTo(generalColor, tween(durationMillis = 500))
-        }
-    }
-
-    Text(
-        modifier = modifier,
-        text = price,
-        color = color.value,
-        maxLines = 1,
-        style = TangemTheme.typography.body2,
-        overflow = TextOverflow.Visible,
     )
 }
 
