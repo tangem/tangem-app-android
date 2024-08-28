@@ -3,6 +3,7 @@ package com.tangem.features.markets.tokenlist.impl.model.converters
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartRawData
+import com.tangem.common.ui.charts.state.sorted
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -115,7 +116,7 @@ internal class MarketsTokenItemConverter(
                 MarketChartData.Data(
                     y = ct.priceY.toImmutableList(),
                     x = ct.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
-                ),
+                ).sorted(),
             )
         }
     }
