@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
+import com.tangem.common.ui.charts.state.sorted
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -105,13 +106,16 @@ internal class TokenMarketBlockModel @Inject constructor(
             )
 
             result.onRight { res ->
+                // wait until quotes are loaded
+                state.first { it.currentPrice != null }
+
                 state.update { stateToUpdate ->
                     stateToUpdate.copy(
                         chartData = priceAndTimePointValuesConverter.convert(
                             MarketChartData.Data(
                                 y = res.priceY.toImmutableList(),
-                                x = res.timeStamps.sorted().map { it.toBigDecimal() }.toImmutableList(),
-                            ),
+                                x = res.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
+                            ).sorted(),
                         ),
                     )
                 }
