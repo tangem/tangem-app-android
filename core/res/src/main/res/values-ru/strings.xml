@@ -882,6 +882,8 @@
   <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
   <string name="warning_low_signatures_title">Малое количество подписей</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токены на разных сетях могут иметь разные адреса. Пожалуйста, убедитесь при переводе средств, что ваш адрес соответствует сети.</string>
+  <string name="warning_matic_migration_title">Миграция MATIC в POL</string>
+  <string name="warning_matic_migration_message">Токен MATIC мигрирует на POL. Однако крайний срок не установлен, и MATIC пока не устарел. Вы можете спокойно продолжать использовать токен MATIC или воспользоваться биржами, чтобы обменять его на POL.</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="one">Используйте вашу карту, чтобы получить адрес для %d сети</item>
     <item quantity="few">Используйте вашу карту, чтобы получить адреса для %d сетей</item>
