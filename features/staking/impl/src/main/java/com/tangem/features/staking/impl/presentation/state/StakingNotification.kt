@@ -1,61 +1,56 @@
 package com.tangem.features.staking.impl.presentation.state
 
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.*
 import com.tangem.features.staking.impl.R
 
-internal sealed class StakingNotification(val config: NotificationConfig) {
+internal object StakingNotification {
 
     sealed class Error(
         title: TextReference,
         subtitle: TextReference,
-        iconResId: Int = R.drawable.ic_alert_24,
         buttonState: NotificationConfig.ButtonsState? = null,
         onCloseClick: (() -> Unit)? = null,
-    ) : StakingNotification(
-        config = NotificationConfig(
-            title = title,
-            subtitle = subtitle,
-            iconResId = iconResId,
-            buttonsState = buttonState,
-            onCloseClick = onCloseClick,
-        ),
+    ) : NotificationUM.Error(
+        title = title,
+        subtitle = subtitle,
+        iconResId = R.drawable.ic_alert_24,
+        buttonState = buttonState,
+        onCloseClick = onCloseClick,
     ) {
-        data class StakedPositionNotFoundError(val message: String) : Error(
+        data class StakedPositionNotFoundError(val message: String) : StakingNotification.Error(
             title = stringReference(message),
             subtitle = stringReference(message),
         )
 
-        data class Common(val subtitle: TextReference) : Error(
+        data class Common(val subtitle: TextReference) : StakingNotification.Error(
             title = resourceReference(R.string.common_error),
             subtitle = subtitle,
         )
     }
-
     sealed class Warning(
         title: TextReference,
         subtitle: TextReference,
         buttonsState: NotificationConfig.ButtonsState? = null,
         onCloseClick: (() -> Unit)? = null,
-    ) : StakingNotification(
-        config = NotificationConfig(
-            title = title,
-            subtitle = subtitle,
-            iconResId = R.drawable.ic_alert_circle_24,
-            buttonsState = buttonsState,
-            onCloseClick = onCloseClick,
-        ),
+    ) : NotificationUM.Warning(
+        title = title,
+        subtitle = subtitle,
+        iconResId = R.drawable.ic_alert_circle_24,
+        buttonsState = buttonsState,
+        onCloseClick = onCloseClick,
     ) {
         data class EarnRewards(
             val subtitleText: TextReference,
-        ) : Warning(
+        ) : StakingNotification.Warning(
             title = resourceReference(R.string.staking_notification_earn_rewards_title),
             subtitle = subtitleText,
         )
 
         data class Unstake(
             val cooldownPeriodDays: Int,
-        ) : Warning(
+        ) : StakingNotification.Warning(
             title = resourceReference(R.string.common_unstake),
             subtitle = resourceReference(
                 R.string.staking_notification_unstake_text,
@@ -72,6 +67,6 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
         data class TransactionInProgress(
             val title: TextReference,
             val description: TextReference,
-        ) : Warning(title = title, subtitle = description)
+        ) : StakingNotification.Warning(title = title, subtitle = description)
     }
 }
