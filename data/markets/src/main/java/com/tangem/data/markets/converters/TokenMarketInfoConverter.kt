@@ -57,6 +57,7 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
             liquidityChange = liquidityChange?.convert(),
             buyPressureChange = buyPressureChange?.convert(),
             experiencedBuyerChange = experiencedBuyerChange?.convert(),
+            sourceNetworks = sourceNetworks.orEmpty().map { TokenMarketInfo.Insights.SourceNetwork(it.id, it.name) },
         )
     }
 
