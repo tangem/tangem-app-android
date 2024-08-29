@@ -2,23 +2,29 @@ package com.tangem.features.markets.portfolio.impl.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
-internal sealed class MyPortfolioUM {
+internal sealed interface MyPortfolioUM {
 
-    val addToPortfolioBS: TangemBottomSheetConfig = TangemBottomSheetConfig(
-        isShow = false,
-        onDismissRequest = {},
-        content = TangemBottomSheetConfigContent.Empty,
-    )
+    sealed interface AddTokensAvailabilityUM : MyPortfolioUM {
+        val bsConfig: TangemBottomSheetConfig
+        val onAddClick: () -> Unit
+
+        fun copySealed(bsConfig: TangemBottomSheetConfig): AddTokensAvailabilityUM {
+            return when (this) {
+                is AddFirstToken -> copy(bsConfig = bsConfig)
+                is Tokens -> copy(bsConfig = bsConfig)
+            }
+        }
+    }
 
     data class Tokens(
         val tokens: ImmutableList<PortfolioTokenUM>,
         val buttonState: AddButtonState,
-        val onAddClick: () -> Unit,
-    ) : MyPortfolioUM() {
+        override val bsConfig: TangemBottomSheetConfig,
+        override val onAddClick: () -> Unit,
+    ) : AddTokensAvailabilityUM {
 
         enum class AddButtonState {
             Loading,
@@ -28,10 +34,11 @@ internal sealed class MyPortfolioUM {
     }
 
     data class AddFirstToken(
-        val onAddClick: () -> Unit,
-    ) : MyPortfolioUM()
+        override val bsConfig: TangemBottomSheetConfig,
+        override val onAddClick: () -> Unit,
+    ) : AddTokensAvailabilityUM
 
-    data object Loading : MyPortfolioUM()
+    data object Loading : MyPortfolioUM
 
-    data object Unavailable : MyPortfolioUM()
+    data object Unavailable : MyPortfolioUM
 }

@@ -35,7 +35,7 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
 
     private val portfolioComponent = portfolioComponentFactory.create(
         context = child("my_portfolio"),
-        params = MarketsPortfolioComponent.Params(params.token.id),
+        params = MarketsPortfolioComponent.Params(params.token),
     )
 
     init {

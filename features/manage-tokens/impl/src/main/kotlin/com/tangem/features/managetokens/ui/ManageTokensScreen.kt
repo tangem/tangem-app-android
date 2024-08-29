@@ -341,6 +341,7 @@ private fun NetworksList(
                             modifier = Modifier.padding(end = TangemTheme.dimens.spacing8),
                             model = with(network) {
                                 BlockchainRowUM(
+                                    id = id,
                                     name = name,
                                     type = type,
                                     iconResId = iconResId,

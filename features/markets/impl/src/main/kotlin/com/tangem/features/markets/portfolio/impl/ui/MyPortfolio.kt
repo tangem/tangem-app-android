@@ -53,7 +53,9 @@ internal fun MyPortfolio(state: MyPortfolioUM, modifier: Modifier = Modifier) {
         }
     }
 
-    AddToPortfolioBottomSheet(config = state.addToPortfolioBS)
+    if (state is MyPortfolioUM.AddTokensAvailabilityUM) {
+        AddToPortfolioBottomSheet(config = state.bsConfig)
+    }
 }
 
 @Composable
