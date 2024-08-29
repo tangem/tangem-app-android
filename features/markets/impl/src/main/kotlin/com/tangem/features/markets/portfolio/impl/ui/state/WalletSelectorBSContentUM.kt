@@ -6,6 +6,5 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal data class WalletSelectorBSContentUM(
     val userWallets: ImmutableList<UserWalletItemUM>,
-    val onWalletSelected: (UserWalletItemUM) -> Unit,
     val onBack: () -> Unit,
 ) : TangemBottomSheetConfigContent
