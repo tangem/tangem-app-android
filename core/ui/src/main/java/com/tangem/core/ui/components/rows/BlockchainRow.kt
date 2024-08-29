@@ -137,6 +137,7 @@ private fun Preview_BlockchainRow(@PreviewParameter(BlockchainRowParameterProvid
 private class BlockchainRowParameterProvider : CollectionPreviewParameterProvider<BlockchainRowUM>(
     collection = listOf(
         BlockchainRowUM(
+            id = "0",
             name = "BNB BEACON CHAIN",
             type = "BEP20",
             iconResId = R.drawable.img_bsc_22,
@@ -144,6 +145,7 @@ private class BlockchainRowParameterProvider : CollectionPreviewParameterProvide
             isSelected = true,
         ),
         BlockchainRowUM(
+            id = "1",
             name = "1234567890111213141516171819",
             type = "BEP20",
             iconResId = R.drawable.ic_bsc_16,
@@ -151,6 +153,7 @@ private class BlockchainRowParameterProvider : CollectionPreviewParameterProvide
             isSelected = false,
         ),
         BlockchainRowUM(
+            id = "2",
             name = "BNB BEACON CHAIN",
             type = "1234567890111213141516171819",
             iconResId = R.drawable.ic_bsc_16,
