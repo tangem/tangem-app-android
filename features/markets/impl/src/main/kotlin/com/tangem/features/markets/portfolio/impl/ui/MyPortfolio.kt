@@ -53,7 +53,11 @@ internal fun MyPortfolio(state: MyPortfolioUM, modifier: Modifier = Modifier) {
         }
     }
 
-    AddToPortfolioBottomSheet(config = state.addToPortfolioBS)
+    when (state) {
+        is MyPortfolioUM.AddFirstToken -> AddToPortfolioBottomSheet(config = state.bsConfig)
+        is MyPortfolioUM.Tokens -> AddToPortfolioBottomSheet(config = state.bsConfig)
+        else -> Unit
+    }
 }
 
 @Composable
