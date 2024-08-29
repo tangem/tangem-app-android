@@ -10,13 +10,12 @@ import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
-import kotlinx.collections.immutable.ImmutableList
 
 internal class SetConfirmationStateAssentTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
     private val fee: Fee,
-    private val pendingActionList: ImmutableList<PendingAction>,
+    private val action: PendingAction?,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
@@ -38,7 +37,7 @@ internal class SetConfirmationStateAssentTransformer(
                     isFeeApproximate = false,
                 ),
                 validatorState = validatorState.copySealed(isClickable = true),
-                pendingActions = pendingActionList,
+                pendingAction = action,
                 isPrimaryButtonEnabled = true,
                 isApprovalNeeded = false,
             )
