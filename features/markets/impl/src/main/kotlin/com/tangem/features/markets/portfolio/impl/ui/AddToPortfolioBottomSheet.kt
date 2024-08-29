@@ -35,7 +35,6 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.components.rows.BlockchainRow
-import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -214,15 +213,7 @@ private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifi
                             modifier = Modifier.padding(
                                 end = TangemTheme.dimens.spacing4,
                             ),
-                            model = with(network) {
-                                BlockchainRowUM(
-                                    name = name,
-                                    type = type,
-                                    iconResId = iconResId,
-                                    isMainNetwork = isMainNetwork,
-                                    isSelected = isSelected,
-                                )
-                            },
+                            model = network,
                             action = {
                                 TangemSwitch(
                                     checked = network.isSelected,
