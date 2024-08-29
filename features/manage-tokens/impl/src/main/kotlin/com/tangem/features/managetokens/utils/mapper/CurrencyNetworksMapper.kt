@@ -16,7 +16,7 @@ internal fun ManagedCryptoCurrency.Token.toUiNetworksModel(
         NetworksUM.Expanded(
             networks = availableNetworks.map {
                 it.toUiModel(
-                    isSelected = it.id in addedIn,
+                    isSelected = it.network in addedIn,
                     isEditable = isItemsEditable,
                     onSelectedStateChange = onSelectedStateChange,
                 )
@@ -33,7 +33,7 @@ private fun SourceNetwork.toUiModel(
     onSelectedStateChange: (SourceNetwork, Boolean) -> Unit,
 ): CurrencyNetworkUM {
     return CurrencyNetworkUM(
-        networkId = id,
+        network = network,
         name = network.name.uppercase(),
         iconResId = id.getIconRes(isColored = isSelected || !isEditable),
         isSelected = isSelected || !isEditable,
