@@ -132,7 +132,7 @@ internal class DefaultCurrenciesRepository(
         savedCurrencies: List<UserTokensResponse.Token>,
     ): List<CryptoCurrency.Coin> {
         return newTokens
-            .filterNot { savedCurrencies.hasCoinForToken(it) } // tokens without coins
+            .filterNot { savedCurrencies.hasCoinForToken(it.network) } // tokens without coins
             .mapNotNull {
                 cryptoCurrencyFactory.createCoin(
                     blockchain = getBlockchain(networkId = it.network.id),
