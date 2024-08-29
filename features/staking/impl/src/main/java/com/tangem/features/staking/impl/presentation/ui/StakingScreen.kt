@@ -24,7 +24,9 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingActionSelectionBottomSheetConfig
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingInfoBottomSheetConfig
+import com.tangem.features.staking.impl.presentation.ui.bottomsheet.StakingActionSelectorBottomSheet
 import com.tangem.features.staking.impl.presentation.ui.bottomsheet.StakingInfoBottomSheet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -74,6 +76,7 @@ fun StakingBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
     when (bottomSheetConfig.content) {
         is StakingInfoBottomSheetConfig -> StakingInfoBottomSheet(bottomSheetConfig)
         is GiveTxPermissionBottomSheetConfig -> GiveTxPermissionBottomSheet(bottomSheetConfig)
+        is StakingActionSelectionBottomSheetConfig -> StakingActionSelectorBottomSheet(bottomSheetConfig)
     }
 }
 
