@@ -77,6 +77,7 @@ internal class ManagedCryptoCurrencyFactory {
                 iconUrl = token.id?.let { getIconUrl(it, imageHost) },
                 contractAddress = contractAddress,
                 network = network,
+                decimals = token.decimals,
             )
         }
     }
