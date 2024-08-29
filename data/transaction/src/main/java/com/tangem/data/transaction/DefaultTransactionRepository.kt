@@ -158,6 +158,21 @@ internal class DefaultTransactionRepository(
         (walletManager as TransactionSender).send(txData, signer)
     }
 
+    override suspend fun sendMultipleTransactions(
+        txsData: List<TransactionData>,
+        signer: CommonSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ) = withContext(coroutineDispatcherProvider.io) {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+        (walletManager as TransactionSender).sendMultiple(txsData, signer)
+    }
+
     override fun createTransactionDataExtras(
         data: String,
         network: Network,
