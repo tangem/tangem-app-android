@@ -1,11 +1,12 @@
 package com.tangem.features.markets.portfolio.impl.model
 
-import arrow.core.Either
-import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.tokens.error.CurrencyStatusError
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.markets.portfolio.impl.domain.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 
 /**
@@ -18,63 +19,142 @@ import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
  */
 internal class MyPortfolioUMMFactory(
     private val onAddClick: () -> Unit,
-    private val onTokenItemClick: (CryptoCurrencyStatus) -> Unit,
+    private val onTokenItemClick: (Int, CryptoCurrency.ID) -> Unit,
+    private val addToPortfolioBSContentUMFactory: AddToPortfolioBSContentUMFactory,
 ) {
 
-    /**
-     * Create [MyPortfolioUM] from data set
-     *
-     * @param walletsWithCurrencyStatuses wallets with currency statuses
-     * @param availableNetworks           available networks
-     * @param appCurrency                 app currency
-     * @param isBalanceHidden             flag that indicates if balance should be hidden
-     */
     fun create(
-        walletsWithCurrencyStatuses: Map<UserWallet, List<Either<CurrencyStatusError, CryptoCurrencyStatus>>>,
+        portfolioModel: PortfolioData,
+        portfolioBSVisibilityModel: PortfolioBSVisibilityModel,
         availableNetworks: List<TokenMarketInfo.Network>?,
-        appCurrency: AppCurrency,
-        isBalanceHidden: Boolean,
+        selectedWalletId: UserWalletId?,
+        walletsWithChangedNetworks: Map<UserWalletId, List<String>>,
     ): MyPortfolioUM {
         if (availableNetworks == null) return MyPortfolioUM.Loading
 
         if (availableNetworks.isEmpty()) return MyPortfolioUM.Unavailable
 
-        val availableWalletsWithStatuses = walletsWithCurrencyStatuses
-            .filterAvailable(networks = availableNetworks)
-            .flatMapStatuses()
+        val walletsWithStatuses = portfolioModel.walletsWithCurrencyStatuses
+            .filterAvailableNetworks(networks = availableNetworks)
 
-        if (availableWalletsWithStatuses.isEmpty()) {
-            return MyPortfolioUM.AddFirstToken(onAddClick = onAddClick)
+        val isPortfolioEmpty = walletsWithStatuses.flatMap { it.value }.isEmpty()
+        if (isPortfolioEmpty) {
+            val hasMultiWallets = walletsWithStatuses.filterKeys(UserWallet::isMultiCurrency).isNotEmpty()
+
+            return if (hasMultiWallets) {
+                MyPortfolioUM.AddFirstToken(
+                    bsConfig = createAddToPortfolioBSConfig(
+                        portfolioModel = portfolioModel,
+                        selectedWalletId = selectedWalletId,
+                        availableNetworks = availableNetworks,
+                        walletsWithChangedNetworks = walletsWithChangedNetworks,
+                        portfolioBSVisibilityModel = portfolioBSVisibilityModel,
+                    ),
+                    onAddClick = onAddClick,
+                )
+            } else {
+                MyPortfolioUM.Unavailable
+            }
         }
 
         return TokensPortfolioUMConverter(
-            appCurrency = appCurrency,
-            isBalanceHidden = isBalanceHidden,
-            availableNetworks = availableNetworks,
+            appCurrency = portfolioModel.appCurrency,
+            isBalanceHidden = portfolioModel.isBalanceHidden,
+            isAllAvailableNetworksAdded = walletsWithStatuses.isAllAvailableNetworksAdded(availableNetworks),
+            bsConfig = createAddToPortfolioBSConfig(
+                portfolioModel = portfolioModel,
+                selectedWalletId = selectedWalletId,
+                availableNetworks = availableNetworks,
+                portfolioBSVisibilityModel = portfolioBSVisibilityModel,
+                walletsWithChangedNetworks = walletsWithChangedNetworks,
+            ),
             onAddClick = onAddClick,
             onTokenItemClick = onTokenItemClick,
         )
-            .convert(availableWalletsWithStatuses)
+            .convert(walletsWithStatuses)
     }
 
-    private fun Map<UserWallet, List<Either<CurrencyStatusError, CryptoCurrencyStatus>>>.filterAvailable(
-        networks: List<TokenMarketInfo.Network>,
-    ): Map<UserWallet, List<CryptoCurrencyStatus>> {
-        val networkIds = networks.map { it.networkId }
+    private fun createAddToPortfolioBSConfig(
+        portfolioModel: PortfolioData,
+        selectedWalletId: UserWalletId?,
+        availableNetworks: List<TokenMarketInfo.Network>,
+        portfolioBSVisibilityModel: PortfolioBSVisibilityModel,
+        walletsWithChangedNetworks: Map<UserWalletId, List<String>>,
+    ): TangemBottomSheetConfig {
+        val walletId = requireNotNull(selectedWalletId) {
+            "Selected wallet must be not null in state with AddToPortfolio bottom sheet"
+        }
 
-        return mapValues { entry ->
-            entry.value.mapNotNull { maybeStatus ->
-                maybeStatus.getOrNull()
-                    ?.takeIf { networkIds.contains(it.currency.network.backendId) }
-            }
+        val selectedWallet = portfolioModel.walletsWithCurrencyStatuses.keys
+            .firstOrNull { it.walletId == walletId }
+            ?: error("portfolioModel.walletsWithCurrencyStatuses doesn't contain selected wallet: $walletId")
+
+        val changedNetworks = walletsWithChangedNetworks[selectedWalletId]
+        val alreadyAddedNetworks = requireNotNull(
+            value = portfolioModel.walletsWithCurrencyStatuses[selectedWallet],
+            lazyMessage = {
+                "portfolioModel.walletsWithCurrencyStatuses doesn't contain selected wallet: $walletId"
+            },
+        )
+            .filterAvailableNetworks(availableNetworks)
+            .map { it.currency.network.backendId }
+
+        return addToPortfolioBSContentUMFactory.create(
+            portfolioModel = portfolioModel,
+            portfolioBSVisibilityModel = portfolioBSVisibilityModel,
+            selectedWallet = selectedWallet,
+            networksWithToggle = availableNetworks.associateWithToggle(
+                changedNetworks = changedNetworks,
+                alreadyAddedNetworks = alreadyAddedNetworks,
+            ),
+            isUserChangedNetworks = changedNetworks != null && alreadyAddedNetworks != changedNetworks,
+        )
+    }
+
+    private fun List<TokenMarketInfo.Network>.associateWithToggle(
+        changedNetworks: List<String>?,
+        alreadyAddedNetworks: List<String>,
+    ): Map<TokenMarketInfo.Network, Boolean> {
+        // Use user choice or check already added networks
+        return associateWith { network ->
+            val isSelectedByUser = changedNetworks?.contains(network.networkId)
+
+            if (isSelectedByUser != null) return@associateWith isSelectedByUser
+
+            val isAlreadyAdded = alreadyAddedNetworks.any { it == network.networkId }
+
+            isAlreadyAdded
         }
     }
 
-    private fun Map<UserWallet, List<CryptoCurrencyStatus>>.flatMapStatuses(): Map<UserWallet, CryptoCurrencyStatus> {
+    private fun Map<UserWallet, List<CryptoCurrencyStatus>>.isAllAvailableNetworksAdded(
+        availableNetworks: List<TokenMarketInfo.Network>,
+    ): Boolean {
+        val networkIds = availableNetworks.map { it.networkId }
+
         return this
-            .flatMap { entry ->
-                entry.value.map { entry.key to it }
-            }
-            .toMap()
+            // User can add currencies only in multi-currency wallets
+            .filterKeys(UserWallet::isMultiCurrency)
+            .mapValues { it.value.map { it.currency.network.backendId } }
+            // Each wallets contains all available networks?
+            .all { it.value.containsAll(networkIds) }
+    }
+
+    /** Filter map values by available networks [networks] */
+    private fun Map<UserWallet, List<CryptoCurrencyStatus>>.filterAvailableNetworks(
+        networks: List<TokenMarketInfo.Network>,
+    ): Map<UserWallet, List<CryptoCurrencyStatus>> {
+        return mapValues { entry -> entry.value.filterAvailableNetworks(networks) }
+    }
+
+    /** Filter list of [CryptoCurrencyStatus] by available networks [networks] */
+    private fun List<CryptoCurrencyStatus>.filterAvailableNetworks(
+        networks: List<TokenMarketInfo.Network>,
+    ): List<CryptoCurrencyStatus> {
+        val networkIds = networks.map(TokenMarketInfo.Network::networkId)
+
+        return mapNotNull {
+            it.takeIf { networkIds.contains(it.currency.network.backendId) }
+        }
     }
 }

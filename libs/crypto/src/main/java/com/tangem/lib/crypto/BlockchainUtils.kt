@@ -61,4 +61,35 @@ object BlockchainUtils {
     fun isSupportedNetworkId(networkId: String): Boolean {
         return Blockchain.fromNetworkId(networkId)?.isSupportedInApp() ?: false
     }
+
+    fun getNetworkStandardName(blockchain: Blockchain): String {
+        return when (blockchain) {
+            Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ERC20"
+            Blockchain.BSC, Blockchain.BSCTestnet -> "BEP20"
+            Blockchain.Binance, Blockchain.BinanceTestnet -> "BEP2"
+            Blockchain.Tron, Blockchain.TronTestnet -> "TRC20"
+            Blockchain.TON -> "TON"
+            else -> ""
+        }
+    }
+
+    fun getNetworkNameWithoutTestnet(blockchain: Blockchain): String {
+        return blockchain.getNetworkName().replace(oldValue = " Testnet", newValue = "")
+    }
+
+    data class Network(
+        val blockchainId: String,
+        val name: String,
+        val protocolName: String,
+    )
+
+    fun getNetworkInfo(networkId: String): Network {
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: error("")
+
+        return Network(
+            blockchainId = blockchain.id,
+            name = getNetworkNameWithoutTestnet(blockchain),
+            protocolName = getNetworkStandardName(blockchain),
+        )
+    }
 }

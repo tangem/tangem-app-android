@@ -14,7 +14,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.res.TangemTheme
@@ -136,27 +135,27 @@ private fun Preview_BlockchainRow(@PreviewParameter(BlockchainRowParameterProvid
 
 private class BlockchainRowParameterProvider : CollectionPreviewParameterProvider<BlockchainRowUM>(
     collection = listOf(
-        BlockchainRowUM(
-            name = "BNB BEACON CHAIN",
-            type = "BEP20",
-            iconResId = R.drawable.img_bsc_22,
-            isMainNetwork = true,
-            isSelected = true,
-        ),
-        BlockchainRowUM(
-            name = "1234567890111213141516171819",
-            type = "BEP20",
-            iconResId = R.drawable.ic_bsc_16,
-            isMainNetwork = true,
-            isSelected = false,
-        ),
-        BlockchainRowUM(
-            name = "BNB BEACON CHAIN",
-            type = "1234567890111213141516171819",
-            iconResId = R.drawable.ic_bsc_16,
-            isMainNetwork = false,
-            isSelected = false,
-        ),
+        // BlockchainRowUM(
+        //     name = "BNB BEACON CHAIN",
+        //     type = "BEP20",
+        //     iconResId = R.drawable.img_bsc_22,
+        //     isMainNetwork = true,
+        //     isSelected = true,
+        // ),
+        // BlockchainRowUM(
+        //     name = "1234567890111213141516171819",
+        //     type = "BEP20",
+        //     iconResId = R.drawable.ic_bsc_16,
+        //     isMainNetwork = true,
+        //     isSelected = false,
+        // ),
+        // BlockchainRowUM(
+        //     name = "BNB BEACON CHAIN",
+        //     type = "1234567890111213141516171819",
+        //     iconResId = R.drawable.ic_bsc_16,
+        //     isMainNetwork = false,
+        //     isSelected = false,
+        // ),
     ),
 )
 // endregion Preview

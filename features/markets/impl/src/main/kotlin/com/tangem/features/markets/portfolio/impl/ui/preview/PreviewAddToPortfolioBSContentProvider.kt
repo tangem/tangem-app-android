@@ -15,6 +15,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider<AddToPortfolioBSContentUM> {
 
     private val blockchainRow = BlockchainRowUM(
+        id = "1",
         name = "Etherium 3",
         type = "TEST",
         iconResId = R.drawable.ic_eth_16,
@@ -60,7 +61,7 @@ internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider
                     onDismissRequest = {},
                     content = TangemBottomSheetConfigContent.Empty,
                 ),
-                onWalletClick = {},
+                // onWalletClick = {},
             ),
             AddToPortfolioBSContentUM(
                 selectedWallet = userWallet,
@@ -88,7 +89,6 @@ internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider
                     onDismissRequest = {},
                     content = TangemBottomSheetConfigContent.Empty,
                 ),
-                onWalletClick = {},
             ),
         )
 }
