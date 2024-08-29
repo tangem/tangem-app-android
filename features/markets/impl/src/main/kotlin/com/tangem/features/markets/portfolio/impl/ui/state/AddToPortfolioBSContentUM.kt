@@ -10,6 +10,5 @@ internal data class AddToPortfolioBSContentUM(
     val isScanCardNotificationVisible: Boolean,
     val continueButtonEnabled: Boolean,
     val onContinueButtonClick: () -> Unit,
-    val onWalletClick: () -> Unit,
     val walletSelectorConfig: TangemBottomSheetConfig,
 ) : TangemBottomSheetConfigContent
