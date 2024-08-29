@@ -51,7 +51,17 @@ internal class PreviewCustomTokenSelectorComponent(
                 )
 
                 CurrencyNetworkUM(
-                    networkId = n.id,
+                    network = Network(
+                        id = n.id,
+                        backendId = n.id.value,
+                        name = "",
+                        currencySymbol = "",
+                        derivationPath = Network.DerivationPath.Card(""),
+                        isTestnet = false,
+                        standardType = Network.StandardType.ERC20,
+                        hasFiatFeeRate = false,
+                        canHandleTokens = false,
+                    ),
                     name = "Network $index",
                     type = "N$index",
                     iconResId = R.drawable.ic_eth_16,
