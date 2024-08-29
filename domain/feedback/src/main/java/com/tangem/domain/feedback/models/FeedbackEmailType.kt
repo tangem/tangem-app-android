@@ -27,7 +27,7 @@ sealed interface FeedbackEmailType {
     data class StakingProblem(
         override val cardInfo: CardInfo,
         val validatorName: String?,
-        val transactionType: String?,
-        val unsignedTransaction: String?,
+        val transactionTypes: List<String>,
+        val unsignedTransactions: List<String?>,
     ) : FeedbackEmailType
 }
