@@ -6,7 +6,7 @@ sealed class ManageTokensUpdateAction {
 
     data class AddCurrency(
         val currencyId: ManagedCryptoCurrency.ID,
-        val networkId: Network.ID,
+        val network: Network,
         val isSelected: Boolean,
     ) : ManageTokensUpdateAction()
 }
