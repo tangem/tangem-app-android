@@ -363,8 +363,8 @@ internal class StateBuilder(
         if (quoteModel.permissionState is PermissionDataState.PermissionLoading) {
             warnings.add(
                 SwapWarning.TransactionInProgressWarning(
-                    title = stringReference("//TODO"),
-                    description = stringReference("//TODO"),
+                    title = resourceReference(R.string.warning_express_approval_in_progress_title),
+                    description = resourceReference(R.string.warning_express_approval_in_progress_message),
                 ),
             )
         } else if (quoteModel.preparedSwapConfigState.hasOutgoingTransaction) {
@@ -993,8 +993,8 @@ internal class StateBuilder(
         warnings.add(
             0,
             SwapWarning.TransactionInProgressWarning(
-                title = stringReference("//TODO"),
-                description = stringReference("//TODO"),
+                title = resourceReference(R.string.warning_express_approval_in_progress_title),
+                description = resourceReference(R.string.warning_express_approval_in_progress_message),
             ),
         )
         return uiState.copy(

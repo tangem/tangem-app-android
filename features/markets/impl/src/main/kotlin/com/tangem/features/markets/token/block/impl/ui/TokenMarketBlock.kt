@@ -14,6 +14,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.charts.MarketChartMini
 import com.tangem.common.ui.charts.state.MarketChartRawData
+import com.tangem.common.ui.tokens.TokenPriceText
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.TextShimmer
@@ -83,19 +84,21 @@ private fun LeftSide(
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
             ) {
-                Text(
-                    text = priceText,
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                TokenPriceText(
+                    modifier = Modifier.alignByBaseline(),
+                    price = priceText,
+                    priceChangeType = type,
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
                 ) {
                     PriceChangeInPercent(
+                        modifier = Modifier.alignByBaseline(),
                         valueInPercent = percentText,
                         type = type,
                     )
                     Text(
+                        modifier = Modifier.alignByBaseline(),
                         text = stringResource(id = R.string.wallet_marketprice_block_update_time),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
