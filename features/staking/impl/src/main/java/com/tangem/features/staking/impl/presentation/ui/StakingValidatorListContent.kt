@@ -58,7 +58,7 @@ internal fun StakingValidatorListContent(
                 InputRowImageSelector(
                     subtitle = stringReference(item.name),
                     caption = combinedReference(
-                        resourceReference(R.string.staking_details_apr),
+                        resourceReference(R.string.staking_details_annual_percentage_rate),
                         annotatedReference {
                             appendSpace()
                             appendColored(
