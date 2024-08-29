@@ -4,13 +4,14 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.markets.TokenMarketParams
 import kotlinx.serialization.Serializable
 
 @Stable
 interface MarketsPortfolioComponent : ComposableContentComponent {
 
     @Serializable
-    data class Params(val tokenId: String)
+    data class Params(val token: TokenMarketParams)
 
     fun setTokenNetworks(networks: List<TokenMarketInfo.Network>)
 
