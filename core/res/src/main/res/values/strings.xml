@@ -70,6 +70,7 @@
   <string name="common_access_denied">Access denied</string>
   <string name="common_all">All</string>
   <string name="common_allow">Allow</string>
+  <string name="common_analytics">Analytics</string>
   <string name="common_apply">Apply</string>
   <string name="common_approval">Approval</string>
   <string name="common_approve">Approve</string>
@@ -82,6 +83,7 @@
   <string name="common_buy_currency">Go to %1$s</string>
   <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
   <string name="common_cancel">Cancel</string>
+  <string name="common_choose_action">Choose action</string>
   <string name="common_claim_rewards">Claim rewards</string>
   <string name="common_close">Close</string>
   <string name="common_continue">Continue</string>
@@ -174,7 +176,7 @@
   <string name="custom_token_creation_error_network_not_selected">Please select the network</string>
   <string name="custom_token_creation_error_token_already_exist_message">This token has already been added to the list</string>
   <string name="custom_token_creation_error_token_already_exist_title">Token already exists</string>
-  <string name="custom_token_creation_error_wrong_decimals">Decimal must be a valid integer, up to %li</string>
+  <string name="custom_token_creation_error_wrong_decimals">Decimal must be a valid integer, up to %d</string>
   <string name="custom_token_custom_derivation">Custom derivation</string>
   <string name="custom_token_custom_derivation_placeholder">E. g. m/00\'/0000\'/0\'/0/0</string>
   <string name="custom_token_custom_derivation_title">Enter custom derivation</string>
@@ -351,6 +353,7 @@
   <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you must scan your Tangem Wallet card</string>
   <string name="markets_insights_info_description_message">This section’s data is sourced from the following networks: %s</string>
   <string name="markets_loading_error_title">Unable to load the data…</string>
+  <string name="markets_loading_no_data_title">No data</string>
   <string name="markets_quick_actions">Quick actions</string>
   <string name="markets_search_result_title">Result</string>
   <string name="markets_search_see_tokens_under_100k">See tokens under 100k market cap</string>
@@ -659,6 +662,7 @@
   <string name="staking_details_unbonding_period_info">The period you must wait after requesting to withdraw funds from staking before the tokens become available.</string>
   <string name="staking_details_warmup_period">Warmup period</string>
   <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
+  <string name="staking_locked">Locked</string>
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_notification_earn_rewards_text_period_day">Staking allows you to earn %1$s. Your staking rewards arrive every day.</string>
@@ -854,7 +858,7 @@
   <string name="warning_express_not_enough_fee_for_token_tx_description">To make a transaction you need to deposit some %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Unable to cover %s fee</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">The amount to receive must be at least %s</string>
-  <string name="warning_express_pair_unavailable_message">This may occur because the provider is currently unable to exchange your selected pair. Please wait a moment and try again. (Code %@)</string>
+  <string name="warning_express_pair_unavailable_message">This may occur because the provider is currently unable to exchange your selected pair. Please wait a moment and try again. (Code %s)</string>
   <string name="warning_express_pair_unavailable_title">Selected pair temporarily unavailable</string>
   <string name="warning_express_refresh_required_title">Service temporarily unavailable</string>
   <string name="warning_express_too_maximum_amount_title">The amount of tokens to be swapped must not exceed %s</string>
