@@ -36,6 +36,7 @@ internal sealed class ManageTokensUM {
         override val loadMore: () -> Boolean,
         val saveChanges: () -> Unit,
         val hasChanges: Boolean,
+        val isSavingInProgress: Boolean,
     ) : ManageTokensUM()
 
     fun copySealed(
@@ -44,6 +45,7 @@ internal sealed class ManageTokensUM {
         hasChanges: Boolean = this is ManageContent && this.hasChanges,
         isInitialBatchLoading: Boolean = this.isInitialBatchLoading,
         isNextBatchLoading: Boolean = this.isNextBatchLoading,
+        isSavingInProgress: Boolean = this is ManageContent && this.isSavingInProgress,
     ): ManageTokensUM {
         return when (this) {
             is ManageContent -> copy(
@@ -52,6 +54,7 @@ internal sealed class ManageTokensUM {
                 hasChanges = hasChanges,
                 isInitialBatchLoading = isInitialBatchLoading,
                 isNextBatchLoading = isNextBatchLoading,
+                isSavingInProgress = isSavingInProgress,
             )
             is ReadContent -> copy(
                 search = search,
