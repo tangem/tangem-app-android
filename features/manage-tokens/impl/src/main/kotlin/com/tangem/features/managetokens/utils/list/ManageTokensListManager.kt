@@ -59,8 +59,8 @@ internal class ManageTokensListManager @Inject constructor(
         scopeProvider = Provider { scope },
     )
 
-    val currenciesToAdd: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToAdd
-    val currenciesToRemove: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToRemove
+    val currenciesToAdd: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToAdd.asStateFlow()
+    val currenciesToRemove: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToRemove.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val paginationStatus: Flow<PaginationStatus<*>> = state
@@ -148,32 +148,32 @@ internal class ManageTokensListManager @Inject constructor(
         }
     }
 
-    override fun addCurrency(batchKey: Int, currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID) {
-        changedCurrenciesManager.addCurrency(currencyId, networkId)
+    override fun addCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network) {
+        changedCurrenciesManager.addCurrency(currency, network)
 
-        sendSelectCurrencyAction(batchKey, currencyId, networkId, isSelected = true)
+        sendSelectCurrencyAction(batchKey, currency.id, network, isSelected = true)
     }
 
-    override fun removeCurrency(batchKey: Int, currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID) {
-        changedCurrenciesManager.removeCurrency(currencyId, networkId)
+    override fun removeCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network) {
+        changedCurrenciesManager.removeCurrency(currency, network)
 
-        sendSelectCurrencyAction(batchKey, currencyId, networkId, isSelected = false)
+        sendSelectCurrencyAction(batchKey, currency.id, network, isSelected = false)
     }
 
     override fun checkNeedToShowRemoveNetworkWarning(
-        currencyId: ManagedCryptoCurrency.ID,
-        networkId: Network.ID,
-    ): Boolean = !changedCurrenciesManager.containsCurrency(currencyId, networkId)
+        currency: ManagedCryptoCurrency.Token,
+        network: Network,
+    ): Boolean = !changedCurrenciesManager.containsCurrency(currency, network)
 
     private fun sendSelectCurrencyAction(
         batchKey: Int,
         currencyId: ManagedCryptoCurrency.ID,
-        networkId: Network.ID,
+        network: Network,
         isSelected: Boolean,
     ) {
         val request = ManageTokensUpdateAction.AddCurrency(
             currencyId = currencyId,
-            networkId = networkId,
+            network = network,
             isSelected = isSelected,
         )
         val action = BatchAction.UpdateBatches(
