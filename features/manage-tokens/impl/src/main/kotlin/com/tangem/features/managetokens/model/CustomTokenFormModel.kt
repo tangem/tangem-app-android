@@ -1,6 +1,7 @@
 package com.tangem.features.managetokens.model
 
 import androidx.compose.ui.res.stringResource
+import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,7 +10,9 @@ import com.tangem.core.ui.components.SimpleOkDialog
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.ContentMessage
+import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.managetokens.component.CustomTokenFormComponent
 import com.tangem.features.managetokens.entity.customtoken.ClickableFieldUM
@@ -31,11 +34,14 @@ import javax.inject.Inject
 internal class CustomTokenFormModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val customCurrencyValidator: CustomCurrencyValidator,
+    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
+    private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val messageSender: UiMessageSender,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params: CustomTokenFormComponent.Params = paramsContainer.require()
+    private var createdCurrency: CryptoCurrency? = null
 
     val state: MutableStateFlow<CustomTokenFormUM> = MutableStateFlow(
         value = getInitialState(),
@@ -78,17 +84,7 @@ internal class CustomTokenFormModel @Inject constructor(
                 },
                 onClick = ::selectDerivationPath,
             ),
-            saveToken = {
-                // TODO: Save token: [REDACTED_JIRA]
-                val dialog = ContentMessage { onDismiss ->
-                    SimpleOkDialog(
-                        message = "Not yet implemented",
-                        onDismissDialog = onDismiss,
-                    )
-                }
-
-                messageSender.send(dialog)
-            },
+            saveToken = ::addCurrency,
         )
     }
 
@@ -117,6 +113,8 @@ internal class CustomTokenFormModel @Inject constructor(
 
     private fun observeValidatorUpdates() = modelScope.launch {
         customCurrencyValidator.consumeUpdates { validatorState ->
+            createdCurrency = null
+
             when (validatorState) {
                 is CustomCurrencyValidator.State.NotStarted -> Unit
                 is CustomCurrencyValidator.State.SearchingToken -> updateStateWithSearching()
@@ -125,12 +123,16 @@ internal class CustomTokenFormModel @Inject constructor(
                     exceptions = validatorState.exceptions,
                 )
                 is CustomCurrencyValidator.State.TokenNotFound -> updateStateWithNotFoundNotification()
-                is CustomCurrencyValidator.State.Validated -> updateStateWithCurrency(
-                    currency = validatorState.currency,
-                    fillForm = validatorState.fillForm,
-                    isAlreadyAdded = validatorState.isAlreadyAdded,
-                    isCustom = validatorState.isCustom,
-                )
+                is CustomCurrencyValidator.State.Validated -> {
+                    createdCurrency = validatorState.currency
+
+                    updateStateWithCurrency(
+                        currency = validatorState.currency,
+                        fillForm = validatorState.fillForm,
+                        isAlreadyAdded = validatorState.isAlreadyAdded,
+                        isCustom = validatorState.isCustom,
+                    )
+                }
             }
         }
     }
@@ -294,6 +296,40 @@ internal class CustomTokenFormModel @Inject constructor(
                 copy(decimals = decimals.updateValue(value))
             }
         }
+    }
+
+    private fun addCurrency() = resource(
+        acquire = {
+            state.update { state ->
+                state.updateWithProgress(showProgress = true)
+            }
+        },
+        release = {
+            state.update { state ->
+                state.updateWithProgress(showProgress = false)
+            }
+        },
+    ) {
+        val currency = createdCurrency
+        if (currency == null) {
+            Timber.e("Trying to add currency without validation")
+            showErrorDialog()
+            return@resource
+        }
+
+        derivePublicKeysUseCase(params.userWalletId, listOf(currency)).getOrElse {
+            Timber.e(it, "Failed to derive public keys")
+            showErrorDialog()
+            return@resource
+        }
+
+        addCryptoCurrenciesUseCase(params.userWalletId, currency).getOrElse {
+            Timber.e(it, "Failed to add currency")
+            showErrorDialog()
+            return@resource
+        }
+
+        params.onCurrencyAdded()
     }
 
     private fun selectNetwork() {
