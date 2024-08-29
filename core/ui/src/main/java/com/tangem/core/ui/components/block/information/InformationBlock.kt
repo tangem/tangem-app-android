@@ -9,6 +9,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
@@ -32,12 +33,13 @@ fun InformationBlock(
     title: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
     contentHorizontalPadding: Dp = TangemTheme.dimens.spacing12,
+    shape: Shape = TangemTheme.shapes.roundedCornersXMedium,
     action: (@Composable BoxScope.() -> Unit)? = null,
     content: (@Composable InformationBlockContentScope.() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .clip(shape)
             .background(color = TangemTheme.colors.background.action),
         horizontalAlignment = Alignment.Start,
     ) {
