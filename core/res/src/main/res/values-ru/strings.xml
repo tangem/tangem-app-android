@@ -71,6 +71,7 @@
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_all">Все</string>
   <string name="common_allow">Разрешить</string>
+  <string name="common_analytics">Аналитика</string>
   <string name="common_apply">Применить</string>
   <string name="common_approval">Одобрение</string>
   <string name="common_approve">Подтвердить</string>
@@ -177,7 +178,7 @@
   <string name="custom_token_contract_address_input_title">Адрес контракта</string>
   <string name="custom_token_creation_error_invalid_contract_address">Адрес контракта некорректен</string>
   <string name="custom_token_creation_error_network_not_selected">Пожалуйста, выберите сеть</string>
-  <string name="custom_token_creation_error_wrong_decimals">Десятичное число должно быть действительным целым числом, до %li</string>
+  <string name="custom_token_creation_error_wrong_decimals">Десятичное число должно быть действительным целым числом, до %d</string>
   <string name="custom_token_custom_derivation">Своя деривация</string>
   <string name="custom_token_custom_derivation_placeholder">Например m/00\'/0000\'/0\'/0/0</string>
   <string name="custom_token_custom_derivation_title">Введите свою деривацию</string>
@@ -353,6 +354,7 @@
   <string name="markets_common_title">Рынок</string>
   <string name="markets_generate_addresses_notification">Чтобы создать адреса для выбранных сетей, отсканируйте вашу карту Tangem кошелька</string>
   <string name="markets_insights_info_description_message">Данные раздела получены из следующих сетей: %s</string>
+  <string name="markets_loading_no_data_title">Нет данных</string>
   <string name="markets_quick_actions">Быстрые действия</string>
   <string name="markets_search_result_title">Результат</string>
   <string name="markets_search_see_tokens_under_100k">Токены с капитализацией меньше 100к</string>
@@ -647,7 +649,7 @@
   <string name="staking_active_footer">Для завершения стейкинга нажмите на блок выше</string>
   <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_claim_unstaked">Забрать средства</string>
-  <string name="staking_details_annual_percentage_rate">Годовая процентная ставка</string>
+  <string name="staking_details_annual_percentage_rate">Процентная ставка</string>
   <string name="staking_details_annual_percentage_rate_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_available">Доступно</string>
@@ -668,6 +670,7 @@
   <string name="staking_details_unbonding_period_info">Период, который необходимо подождать после запроса на вывод средств из стейкинга, прежде чем токены станут доступны.</string>
   <string name="staking_details_warmup_period">Период прогрева</string>
   <string name="staking_details_warmup_period_info">Время, необходимое для начала процесса стейкинга и активации процесса начисления наград</string>
+  <string name="staking_locked">Заблокировано</string>
   <string name="staking_migrate">Переместить</string>
   <string name="staking_native">Нативный стейкинг</string>
   <string name="staking_notification_earn_rewards_text_period_day">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый день.</string>
@@ -696,7 +699,7 @@
   <string name="staking_title_stake">Застейкать %s</string>
   <string name="staking_title_unstake">Вывести %s</string>
   <string name="staking_unlocked_locked">Разблокировать</string>
-  <string name="staking_unstaked">Выведено из стейкинга</string>
+  <string name="staking_unstaked">Вывод из стейкинга</string>
   <string name="staking_unstaked_footer">Проверьте процесс завершения стейкинга, чтобы вывести свои средства.</string>
   <string name="staking_unstaking">Завершение стейкинга</string>
   <string name="staking_validator">Валидатор</string>
@@ -860,7 +863,7 @@
   <string name="warning_express_not_enough_fee_for_token_tx_description">Чтобы совершить транзакцию, вам необходимо внести немного %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Невозможно покрыть комиссию %s</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">Сумма получения не может быть менее %s</string>
-  <string name="warning_express_pair_unavailable_message">Это может произойти из-за того, что провайдер временно не предоставляет обмен выбранной вами пары. Пожалуйста, подождите некоторое время и попробуйте снова. (Код %@)</string>
+  <string name="warning_express_pair_unavailable_message">Это может произойти из-за того, что провайдер временно не предоставляет обмен выбранной вами пары. Пожалуйста, подождите некоторое время и попробуйте снова. (Код %s)</string>
   <string name="warning_express_pair_unavailable_title">Выбранная пара временно недоступна</string>
   <string name="warning_express_refresh_required_title">Cервис временно недоступен</string>
   <string name="warning_express_too_maximum_amount_title">Сумма для обмена должна быть не более %s</string>
