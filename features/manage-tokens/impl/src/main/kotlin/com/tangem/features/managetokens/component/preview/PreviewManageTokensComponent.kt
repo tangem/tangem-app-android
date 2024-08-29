@@ -144,6 +144,7 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
                 isTestnet = false,
                 standardType = Network.StandardType.ERC20,
                 hasFiatFeeRate = false,
+                canHandleTokens = false,
             ),
             name = "NETWORK$networkIndex",
             type = "N$networkIndex",
