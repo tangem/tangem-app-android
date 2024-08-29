@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.GetManagedTokensUseCase
+import com.tangem.domain.managetokens.RemoveCustomManagedCryptoCurrencyUseCase
 import com.tangem.domain.managetokens.model.ManageTokensListBatchingContext
 import com.tangem.domain.managetokens.model.ManageTokensListConfig
 import com.tangem.domain.managetokens.model.ManageTokensUpdateAction
@@ -29,6 +30,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -36,6 +38,7 @@ import javax.inject.Inject
 internal class ManageTokensListManager @Inject constructor(
     private val getManagedTokensUseCase: GetManagedTokensUseCase,
     private val checkHasLinkedTokensUseCase: CheckHasLinkedTokensUseCase,
+    private val removeCustomCurrencyUseCase: RemoveCustomManagedCryptoCurrencyUseCase,
     private val messageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ManageTokensUiActions {
@@ -158,6 +161,12 @@ internal class ManageTokensListManager @Inject constructor(
         changedCurrenciesManager.removeCurrency(currency, network)
 
         sendSelectCurrencyAction(batchKey, currency.id, network, isSelected = false)
+    }
+
+    override fun removeCustomCurrency(userWalletId: UserWalletId, currency: ManagedCryptoCurrency.Custom) {
+        scope.launch {
+            removeCustomCurrencyUseCase.invoke(userWalletId, currency)
+        }
     }
 
     override fun checkNeedToShowRemoveNetworkWarning(

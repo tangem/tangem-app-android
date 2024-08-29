@@ -25,6 +25,7 @@ sealed class ManagedCryptoCurrency {
             override val iconUrl: String?,
             override val network: Network,
             val contractAddress: String,
+            val decimals: Int,
         ) : Custom()
 
         data class Coin(
