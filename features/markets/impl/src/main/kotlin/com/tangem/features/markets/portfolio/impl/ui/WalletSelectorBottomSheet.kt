@@ -109,7 +109,6 @@ private fun Preview() {
                         ),
                     ),
                     onBack = {},
-                    onWalletSelected = {},
                 ),
             ),
         )
@@ -135,7 +134,6 @@ private fun PreviewContent() {
                     ),
                 ),
                 onBack = {},
-                onWalletSelected = {},
             ),
         )
     }
