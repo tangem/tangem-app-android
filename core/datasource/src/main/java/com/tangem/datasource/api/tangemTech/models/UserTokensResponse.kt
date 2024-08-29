@@ -20,7 +20,7 @@ data class UserTokensResponse(
         @Json(name = "contractAddress") val contractAddress: String?,
     ) {
         override fun equals(other: Any?): Boolean {
-            val otherToken = (other as? Token) ?: return false
+            val otherToken = other as? Token ?: return false
 
             return otherToken.contractAddress == this.contractAddress &&
                 otherToken.networkId == this.networkId &&
