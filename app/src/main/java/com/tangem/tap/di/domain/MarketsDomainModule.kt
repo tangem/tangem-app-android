@@ -41,7 +41,7 @@ object MarketsDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetTokenQuotesUseCase(quotesRepository: QuotesRepository): GetTokenQuotesUseCase {
-        return GetTokenQuotesUseCase(quotesRepository = quotesRepository)
+    fun provideGetTokenQuotesUseCase(quotesRepository: QuotesRepository): GetCurrencyQuotesUseCase {
+        return GetCurrencyQuotesUseCase(quotesRepository = quotesRepository)
     }
 }

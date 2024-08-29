@@ -67,7 +67,16 @@ data class TokenMarketInfoResponse(
         val buyPressureChange: Change?,
         @Json(name = "experienced_buyer_change")
         val experiencedBuyerChange: Change?,
-    )
+        @Json(name = "networks")
+        val sourceNetworks: List<SourceNetwork>?,
+    ) {
+        data class SourceNetwork(
+            @Json(name = "network_id")
+            val id: String,
+            @Json(name = "network_name")
+            val name: String,
+        )
+    }
 
     data class Change(
         @Json(name = "24h")
