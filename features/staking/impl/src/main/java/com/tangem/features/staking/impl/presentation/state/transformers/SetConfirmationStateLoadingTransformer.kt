@@ -32,8 +32,7 @@ internal class SetConfirmationStateLoadingTransformer(
                 notifications = getNotifications(prevState),
                 footerText = "",
                 transactionDoneState = TransactionDoneState.Empty,
-                pendingActions = persistentListOf(),
-                pendingActionInProgress = null,
+                pendingAction = null,
                 isApprovalNeeded = false,
             ),
         )
