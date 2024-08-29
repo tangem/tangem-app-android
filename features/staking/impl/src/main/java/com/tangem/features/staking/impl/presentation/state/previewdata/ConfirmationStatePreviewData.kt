@@ -9,9 +9,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
-import com.tangem.features.staking.impl.presentation.state.StakingNotification
-import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.ValidatorState
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
@@ -90,7 +87,7 @@ internal object ConfirmationStatePreviewData {
             ),
         ),
         transactionDoneState = TransactionDoneState.Empty,
-        pendingActions = persistentListOf(),
+        pendingAction = null,
         isApprovalNeeded = false,
     )
 }
