@@ -13,11 +13,8 @@ import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.tokens.model.Network
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-internal class ManagedCryptoCurrencyFactory @Inject constructor() {
+internal class ManagedCryptoCurrencyFactory {
 
     fun create(
         coinsResponse: CoinsResponse,
@@ -100,7 +97,7 @@ internal class ManagedCryptoCurrencyFactory @Inject constructor() {
             availableNetworks = coinResponse.networks.mapNotNull { network ->
                 createSource(network, derivationStyleProvider)
             },
-            addedIn = findAddedInNetworksIds(coinResponse.id, tokensResponse),
+            addedIn = findAddedInNetworks(coinResponse.id, tokensResponse, derivationStyleProvider),
         )
     }
 
@@ -119,26 +116,35 @@ internal class ManagedCryptoCurrencyFactory @Inject constructor() {
         return if (contractAddress.isNullOrBlank()) {
             SourceNetwork.Main(
                 network = network,
+                decimals = blockchain.decimals(),
             )
         } else {
             SourceNetwork.Default(
                 network = network,
+                decimals = requireNotNull(networkResponse.decimalCount?.toInt()),
                 contractAddress = contractAddress,
             )
         }
     }
 
-    private fun findAddedInNetworksIds(currencyId: String, tokensResponse: UserTokensResponse?): Set<Network.ID> {
+    private fun findAddedInNetworks(
+        currencyId: String,
+        tokensResponse: UserTokensResponse?,
+        derivationStyleProvider: DerivationStyleProvider?,
+    ): Set<Network> {
         if (tokensResponse == null) return emptySet()
 
         return tokensResponse.tokens
             .filter { it.id == currencyId }
-            .map { it.networkId }
-            .mapNotNullTo(mutableSetOf()) { networkId ->
-                val blockchain = Blockchain.fromNetworkId(networkId)
+            .mapNotNullTo(mutableSetOf()) { token ->
+                val blockchain = Blockchain.fromNetworkId(token.networkId)
 
                 if (blockchain != null && blockchain.isSupportedInApp()) {
-                    Network.ID(blockchain.id)
+                    getNetwork(
+                        blockchain = blockchain,
+                        extraDerivationPath = token.derivationPath,
+                        derivationStyleProvider = derivationStyleProvider,
+                    )
                 } else {
                     null
                 }
