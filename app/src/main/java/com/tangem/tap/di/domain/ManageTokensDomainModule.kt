@@ -50,6 +50,14 @@ internal object ManageTokensDomainModule {
 
     @Provides
     @Singleton
+    fun provideRemoveCustomManagedCryptoCurrencyUseCase(
+        customTokensRepository: CustomTokensRepository,
+    ): RemoveCustomManagedCryptoCurrencyUseCase {
+        return RemoveCustomManagedCryptoCurrencyUseCase(customTokensRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideSaveManagedTokensUseCase(
         manageTokensRepository: ManageTokensRepository,
         derivationsRepository: DerivationsRepository,

@@ -52,12 +52,14 @@ internal object ManageTokensDataModule {
         tangemTechApi: TangemTechApi,
         userWalletsStore: UserWalletsStore,
         appPreferencesStore: AppPreferencesStore,
+        walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
     ): CustomTokensRepository {
         return DefaultCustomTokensRepository(
             tangemTechApi,
             userWalletsStore,
             appPreferencesStore,
+            walletManagersFacade,
             dispatchers,
         )
     }
