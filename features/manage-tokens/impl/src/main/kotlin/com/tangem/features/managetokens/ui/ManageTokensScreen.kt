@@ -102,6 +102,7 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
                         .padding(horizontal = TangemTheme.dimens.spacing16)
                         .fillMaxWidth(),
                     isVisible = state.hasChanges,
+                    showProgress = state.isSavingInProgress,
                     onClick = state.saveChanges,
                 )
             }
@@ -133,7 +134,12 @@ private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM, search: SearchBarUM
 }
 
 @Composable
-private fun SaveChangesButton(isVisible: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun SaveChangesButton(
+    isVisible: Boolean,
+    showProgress: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     AnimatedVisibility(
         modifier = modifier,
         visible = isVisible,
@@ -144,6 +150,7 @@ private fun SaveChangesButton(isVisible: Boolean, onClick: () -> Unit, modifier:
         PrimaryButtonIconEnd(
             text = stringResource(id = R.string.common_save),
             iconResId = R.drawable.ic_tangem_24,
+            showProgress = showProgress,
             onClick = onClick,
         )
     }
