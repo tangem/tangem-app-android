@@ -54,6 +54,7 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
             isNextBatchLoading = true,
             loadMore = { false },
             saveChanges = {},
+            isSavingInProgress = false,
         ),
     )
 
@@ -134,7 +135,17 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
 
     private fun getCurrencyNetworks(currencyIndex: Int) = List(size = 3) { networkIndex ->
         CurrencyNetworkUM(
-            networkId = Network.ID(networkIndex.toString()),
+            network = Network(
+                id = Network.ID(networkIndex.toString()),
+                backendId = networkIndex.toString(),
+                name = "",
+                currencySymbol = "",
+                derivationPath = Network.DerivationPath.Card(""),
+                isTestnet = false,
+                standardType = Network.StandardType.ERC20,
+                hasFiatFeeRate = false,
+                canHandleTokens = false,
+            ),
             name = "NETWORK$networkIndex",
             type = "N$networkIndex",
             iconResId = R.drawable.ic_eth_16,
