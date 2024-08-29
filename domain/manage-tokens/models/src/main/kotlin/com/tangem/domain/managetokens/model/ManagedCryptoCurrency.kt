@@ -42,7 +42,7 @@ sealed class ManagedCryptoCurrency {
         override val symbol: String,
         override val iconUrl: String,
         val availableNetworks: List<SourceNetwork>,
-        val addedIn: Set<Network.ID>,
+        val addedIn: Set<Network>,
     ) : ManagedCryptoCurrency() {
 
         val isAdded: Boolean = addedIn.isNotEmpty()
@@ -54,6 +54,7 @@ sealed class ManagedCryptoCurrency {
     sealed class SourceNetwork {
 
         abstract val network: Network
+        abstract val decimals: Int
 
         val id: Network.ID
             get() = network.id
@@ -73,10 +74,12 @@ sealed class ManagedCryptoCurrency {
 
         data class Main(
             override val network: Network,
+            override val decimals: Int,
         ) : SourceNetwork()
 
         data class Default(
             override val network: Network,
+            override val decimals: Int,
             val contractAddress: String,
         ) : SourceNetwork()
 
