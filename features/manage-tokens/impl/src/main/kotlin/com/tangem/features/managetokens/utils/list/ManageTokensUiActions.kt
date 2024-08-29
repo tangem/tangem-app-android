@@ -10,6 +10,8 @@ internal interface ManageTokensUiActions {
 
     fun removeCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network)
 
+    fun removeCustomCurrency(userWalletId: UserWalletId, currency: ManagedCryptoCurrency.Custom)
+
     fun checkNeedToShowRemoveNetworkWarning(currency: ManagedCryptoCurrency.Token, network: Network): Boolean
 
     suspend fun checkHasLinkedTokens(userWalletId: UserWalletId, network: Network): Boolean
