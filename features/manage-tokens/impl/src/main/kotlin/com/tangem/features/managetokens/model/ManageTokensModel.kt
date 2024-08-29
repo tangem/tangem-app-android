@@ -12,6 +12,7 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.managetokens.SaveManagedTokensUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
@@ -21,12 +22,14 @@ import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.utils.list.ChangedCurrencies
 import com.tangem.features.managetokens.utils.list.ManageTokensListManager
+import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @ComponentScoped
@@ -35,6 +38,7 @@ internal class ManageTokensModel @Inject constructor(
     private val router: Router,
     private val manageTokensListManager: ManageTokensListManager,
     private val messageSender: UiMessageSender,
+    private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -76,7 +80,7 @@ internal class ManageTokensModel @Inject constructor(
             popBack = router::pop,
             isInitialBatchLoading = true,
             isNextBatchLoading = false,
-            items = getInitialItems(),
+            items = persistentListOf(),
             topBar = ManageTokensTopBarUM.ReadContent(
                 title = resourceReference(R.string.common_search_tokens),
                 onBackButtonClick = router::pop,
@@ -97,7 +101,7 @@ internal class ManageTokensModel @Inject constructor(
             popBack = router::pop,
             isInitialBatchLoading = true,
             isNextBatchLoading = false,
-            items = getInitialItems(),
+            items = persistentListOf(),
             topBar = ManageTokensTopBarUM.ManageContent(
                 title = resourceReference(id = R.string.main_manage_tokens),
                 onBackButtonClick = router::pop,
@@ -116,6 +120,7 @@ internal class ManageTokensModel @Inject constructor(
             hasChanges = false,
             saveChanges = ::saveChanges,
             loadMore = ::loadMoreItems,
+            isSavingInProgress = false,
         )
     }
 
@@ -157,9 +162,16 @@ internal class ManageTokensModel @Inject constructor(
                         isNextBatchLoading = false,
                     )
                 }
-                is PaginationStatus.Paginating,
-                is PaginationStatus.EndOfPagination,
-                -> state.copySealed(
+                is PaginationStatus.Paginating -> {
+                    (status.lastResult as? BatchFetchResult.Error)?.let { fetchError ->
+                        Timber.e(fetchError.throwable)
+                    }
+                    state.copySealed(
+                        isInitialBatchLoading = false,
+                        isNextBatchLoading = false,
+                    )
+                }
+                is PaginationStatus.EndOfPagination -> state.copySealed(
                     isInitialBatchLoading = false,
                     isNextBatchLoading = false,
                 )
@@ -189,10 +201,6 @@ internal class ManageTokensModel @Inject constructor(
         return true
     }
 
-    private fun getInitialItems(): ImmutableList<CurrencyItemUM> {
-        return persistentListOf()
-    }
-
     private fun navigateToAddCustomToken() {
         params.userWalletId?.let {
             bottomSheetNavigation.activate(BottomSheetConfig.AddCustomToken(it))
@@ -200,7 +208,18 @@ internal class ManageTokensModel @Inject constructor(
     }
 
     private fun saveChanges() {
-        // TODO: [REDACTED_JIRA]
+        modelScope.launch {
+            state.update { state -> state.copySealed(isSavingInProgress = true) }
+            saveManagedTokensUseCase.invoke(
+                userWalletId = requireNotNull(params.userWalletId),
+                currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
+                currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
+            ).fold(
+                ifLeft = { Timber.e(it, "Failed to save changes") },
+                ifRight = { router.pop() },
+            )
+            state.update { state -> state.copySealed(isSavingInProgress = false) }
+        }
     }
 
     private fun searchCurrencies(query: String) {
