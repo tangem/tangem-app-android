@@ -104,7 +104,8 @@ internal class ManageTokensUiManager(
             network = currency.network,
             isCoin = currency is ManagedCryptoCurrency.Custom.Coin,
             onConfirm = {
-                // TODO: [REDACTED_JIRA]
+                val userWalletId = requireNotNull(state.value.userWalletId) { "UserWalletId is null. Can not remove" }
+                actions.removeCustomCurrency(userWalletId = userWalletId, currency = currency)
             },
         )
     }
