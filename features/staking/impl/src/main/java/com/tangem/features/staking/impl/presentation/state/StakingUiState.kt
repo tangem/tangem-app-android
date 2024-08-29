@@ -83,11 +83,10 @@ internal sealed class StakingStates {
             val innerState: InnerConfirmationStakingState,
             val feeState: FeeState,
             val validatorState: ValidatorState,
-            val pendingActions: ImmutableList<PendingAction>,
+            val pendingAction: PendingAction?,
             val notifications: ImmutableList<StakingNotification>,
             val footerText: String,
             val transactionDoneState: TransactionDoneState,
-            val pendingActionInProgress: PendingAction? = null,
             val isApprovalNeeded: Boolean,
         ) : ConfirmationState()
 

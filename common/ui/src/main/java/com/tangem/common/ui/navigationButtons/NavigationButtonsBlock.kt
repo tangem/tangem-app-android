@@ -43,8 +43,6 @@ fun NavigationButtonsBlock(buttonState: NavigationButtonsState, modifier: Modifi
             PreviousButton(state?.prevButton)
             PrimaryButton(state?.primaryButton, modifier = Modifier.weight(1f))
         }
-
-        SecondaryButton(state?.secondaryButton)
     }
 }
 
@@ -72,35 +70,6 @@ private fun PrimaryButton(primaryButton: NavigationButton?, modifier: Modifier =
                 colors = TangemButtonsDefaults.primaryButtonColors,
                 icon = icon,
                 modifier = Modifier.fillMaxWidth(),
-            )
-        } else {
-            Spacer(modifier = Modifier.fillMaxWidth())
-        }
-    }
-}
-
-@Composable
-private fun SecondaryButton(secondaryButton: NavigationButton?) {
-    val wrappedButton by rememberNavigationButton(secondaryButton)
-    AnimatedContent(
-        targetState = wrappedButton,
-        transitionSpec = { navigationButtonsTransition() },
-        contentAlignment = Alignment.Center,
-        label = "Animate show secondary button",
-        modifier = Modifier.fillMaxWidth(),
-    ) { button ->
-        if (button != null && button.textReference != TextReference.EMPTY) {
-            val icon = button.iconRes?.let { TangemButtonIconPosition.End(iconResId = it) }
-                ?: TangemButtonIconPosition.None
-
-            TangemButton(
-                text = button.textReference.resolveReference(),
-                enabled = button.isEnabled,
-                onClick = button.onClick,
-                icon = icon,
-                showProgress = button.showProgress,
-                colors = TangemButtonsDefaults.secondaryButtonColors,
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
             )
         } else {
             Spacer(modifier = Modifier.fillMaxWidth())
