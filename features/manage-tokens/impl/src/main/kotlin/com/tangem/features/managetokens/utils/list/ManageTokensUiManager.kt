@@ -104,7 +104,8 @@ internal class ManageTokensUiManager(
             network = currency.network,
             isCoin = currency is ManagedCryptoCurrency.Custom.Coin,
             onConfirm = {
-                // TODO: https://tangem.atlassian.net/browse/AND-7969
+                val userWalletId = requireNotNull(state.value.userWalletId) { "UserWalletId is null. Can not remove" }
+                actions.removeCustomCurrency(userWalletId = userWalletId, currency = currency)
             },
         )
     }
