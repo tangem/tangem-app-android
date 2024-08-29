@@ -170,15 +170,7 @@ internal class DefaultCustomTokensRepository(
             val token = userTokensResponseFactory.createResponseToken(cryptoCurrency)
             storeAndPushTokens(
                 userWalletId = userWalletId,
-                response = savedCurrencies.copy(
-                    tokens = savedCurrencies.tokens.filterNot {
-                        // it's better to compare by fields, to support renaming and etc
-                        it.contractAddress == token.contractAddress &&
-                            it.networkId == token.networkId &&
-                            it.derivationPath == token.derivationPath &&
-                            it.decimals == token.decimals
-                    },
-                ),
+                response = savedCurrencies.copy(tokens = savedCurrencies.tokens.filterNot { it == token }),
             )
             when (cryptoCurrency) {
                 is CryptoCurrency.Coin -> walletManagersFacade.remove(userWalletId, setOf(cryptoCurrency.network))
