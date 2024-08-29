@@ -17,9 +17,9 @@ internal class PortfolioTokenUMConverter(
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
     private val onTokenItemClick: (CryptoCurrencyStatus) -> Unit,
-) : Converter<Map.Entry<UserWallet, CryptoCurrencyStatus>, PortfolioTokenUM> {
+) : Converter<Pair<UserWallet, CryptoCurrencyStatus>, PortfolioTokenUM> {
 
-    override fun convert(value: Map.Entry<UserWallet, CryptoCurrencyStatus>): PortfolioTokenUM {
+    override fun convert(value: Pair<UserWallet, CryptoCurrencyStatus>): PortfolioTokenUM {
         val (userWallet, cryptoCurrencyStatus) = value
 
         val tokenItemStateConverter = TokenItemStateConverter(
