@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.ChainRowUM
@@ -34,7 +35,6 @@ import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
 import com.tangem.features.managetokens.component.preview.PreviewCustomTokenSelectorComponent
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenSelectorUM
 import com.tangem.features.managetokens.entity.customtoken.SelectedDerivationPath
-import com.tangem.features.managetokens.entity.customtoken.SelectedNetwork
 import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
 import com.tangem.features.managetokens.entity.item.DerivationPathUM
 import com.tangem.features.managetokens.impl.R
@@ -46,7 +46,9 @@ internal fun CustomTokenSelectorContent(model: CustomTokenSelectorUM, modifier: 
     val lastIndex = model.items.lastIndex
 
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.background(
+            color = TangemTheme.colors.background.secondary,
+        ),
         contentPadding = PaddingValues(
             bottom = TangemTheme.dimens.spacing16 + bottomBarHeight,
         ),
@@ -178,38 +180,47 @@ private fun NetworkItem(model: CurrencyNetworkUM, modifier: Modifier = Modifier)
 
 @Composable
 private fun CustomDerivationButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    // TODO: Implement in [REDACTED_JIRA]
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size56)
-            .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
-            .background(color = TangemTheme.colors.background.primary)
-            .clickable(onClick = onClick)
-            .padding(all = TangemTheme.dimens.spacing12),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Text(
-            text = "Custom",
-            color = TangemTheme.colors.text.primary1,
-        )
-    }
+    InformationBlock(
+        modifier = modifier.clickable(onClick = onClick),
+        title = {
+            Text(
+                text = stringResource(id = R.string.custom_token_custom_derivation),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.secondary,
+            )
+        },
+        content = {
+            Text(
+                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                text = stringResource(id = R.string.custom_token_custom_derivation_title),
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.primary1,
+            )
+        },
+    )
 }
 
 @Composable
 private fun DerivationPathItem(model: DerivationPathUM, modifier: Modifier = Modifier) {
-    // TODO: Implement in [REDACTED_JIRA]
-    Box(
-        modifier = modifier
-            .heightIn(TangemTheme.dimens.size56)
-            .padding(all = TangemTheme.dimens.spacing12),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Text(
-            text = "${model.networkName.resolveReference()}: ${model.value} ${if (model.isSelected) "<" else ""}",
-            color = TangemTheme.colors.text.primary1,
-        )
-    }
+    InformationBlock(
+        modifier = modifier,
+        shape = RectangleShape,
+        title = {
+            Text(
+                text = model.networkName.resolveReference(),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.secondary,
+            )
+        },
+        content = {
+            Text(
+                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                text = model.value,
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.primary1,
+            )
+        },
+    )
 }
 
 // region Preview
@@ -229,19 +240,6 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
     PreviewParameterProvider<CustomTokenSelectorComponent> {
     override val values: Sequence<CustomTokenSelectorComponent>
         get() = sequenceOf(
-            PreviewCustomTokenSelectorComponent(),
-            PreviewCustomTokenSelectorComponent(
-                params = CustomTokenSelectorComponent.Params.NetworkSelector(
-                    userWalletId = UserWalletId(stringValue = "321"),
-                    selectedNetwork = SelectedNetwork(
-                        id = Network.ID(value = "0"),
-                        name = stringReference(""),
-                        derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
-                        canHandleTokens = false,
-                    ),
-                    onNetworkSelected = {},
-                ),
-            ),
             PreviewCustomTokenSelectorComponent(
                 params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
                     userWalletId = UserWalletId(stringValue = "321"),
