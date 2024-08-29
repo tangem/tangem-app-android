@@ -6,19 +6,14 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onBackClick()
 
-    fun onNextClick(
-        actionType: StakingActionCommonType? = null,
-        pendingActions: ImmutableList<PendingAction> = persistentListOf(),
-    )
+    fun onNextClick(actionType: StakingActionCommonType? = null, pendingAction: PendingAction? = null)
 
-    fun onActionClick(pendingAction: PendingAction?)
+    fun onActionClick()
 
     fun onPrevClick()
 
