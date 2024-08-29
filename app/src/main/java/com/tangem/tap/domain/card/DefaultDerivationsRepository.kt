@@ -12,6 +12,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -30,6 +31,10 @@ internal class DefaultDerivationsRepository(
 ) : DerivationsRepository {
 
     override suspend fun derivePublicKeys(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        derivePublicKeysByNetworks(userWalletId = userWalletId, networks = currencies.map(CryptoCurrency::network))
+    }
+
+    override suspend fun derivePublicKeysByNetworks(userWalletId: UserWalletId, networks: List<Network>) {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
 
         if (!userWallet.scanResponse.card.settings.isHDWalletAllowed) {
@@ -38,7 +43,7 @@ internal class DefaultDerivationsRepository(
         }
 
         val derivations = MissedDerivationsFinder(scanResponse = userWallet.scanResponse)
-            .find(currencies)
+            .findByNetworks(networks)
             .ifEmpty {
                 Timber.d("Nothing to derive")
                 return

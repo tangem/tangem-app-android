@@ -31,6 +31,7 @@ import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.SmartContractMethod
+import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.walletmanager.utils.WalletManagerFactory
@@ -103,24 +104,45 @@ class DefaultWalletManagersFacade(
         tokens
             .groupBy(CryptoCurrency.Token::network)
             .forEach { (network, networkTokens) ->
-                removeTokens(userWalletId, network, networkTokens)
+                removeTokens(
+                    userWalletId = userWalletId,
+                    network = network,
+                    networkTokens = sdkTokenConverter.convertList(networkTokens),
+                )
             }
     }
 
-    private suspend fun removeTokens(
-        userWalletId: UserWalletId,
-        network: Network,
-        networkTokens: List<CryptoCurrency.Token>,
-    ) {
+    override suspend fun removeTokensByTokenInfo(userWalletId: UserWalletId, tokenInfos: Set<TokenInfo>) {
+        if (tokenInfos.isEmpty()) return
+
+        tokenInfos
+            .groupBy { it.network }
+            .forEach { (network, tokenInfoList) ->
+                removeTokens(
+                    userWalletId = userWalletId,
+                    network = network,
+                    networkTokens = tokenInfoList.map {
+                        Token(
+                            name = it.name,
+                            symbol = it.symbol,
+                            contractAddress = it.contractAddress,
+                            decimals = it.decimals,
+                            id = it.id,
+                        )
+                    },
+                )
+            }
+    }
+
+    private suspend fun removeTokens(userWalletId: UserWalletId, network: Network, networkTokens: List<Token>) {
         withContext(dispatchers.io) {
             val walletManager = walletManagersStore.getSyncOrNull(
                 userWalletId = userWalletId,
                 blockchain = Blockchain.fromId(network.id.value),
                 derivationPath = network.derivationPath.value,
             ) ?: return@withContext
-            val tokensToRemove = sdkTokenConverter.convertList(networkTokens)
 
-            tokensToRemove.forEach { token ->
+            networkTokens.forEach { token ->
                 walletManager.removeToken(token)
             }
 
