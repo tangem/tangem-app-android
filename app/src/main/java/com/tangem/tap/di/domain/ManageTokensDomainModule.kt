@@ -1,5 +1,8 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.managetokens.SaveManagedTokensUseCase
+import com.tangem.domain.managetokens.GetManagedTokensUseCase
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -43,5 +46,17 @@ internal object ManageTokensDomainModule {
         customTokensRepository: CustomTokensRepository,
     ): CheckIsCurrencyNotAddedUseCase {
         return CheckIsCurrencyNotAddedUseCase(customTokensRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSaveManagedTokensUseCase(
+        manageTokensRepository: ManageTokensRepository,
+        derivationsRepository: DerivationsRepository,
+    ): SaveManagedTokensUseCase {
+        return SaveManagedTokensUseCase(
+            manageTokensRepository = manageTokensRepository,
+            derivationsRepository = derivationsRepository,
+        )
     }
 }
