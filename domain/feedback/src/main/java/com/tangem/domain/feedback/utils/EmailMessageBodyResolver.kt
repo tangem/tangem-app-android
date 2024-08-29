@@ -26,8 +26,8 @@ internal class EmailMessageBodyResolver(
             is FeedbackEmailType.StakingProblem -> addStakingProblemBody(
                 type.cardInfo,
                 type.validatorName,
-                type.transactionType,
-                type.unsignedTransaction,
+                type.transactionTypes,
+                type.unsignedTransactions,
             )
         }
 
@@ -81,8 +81,8 @@ internal class EmailMessageBodyResolver(
     private suspend fun FeedbackDataBuilder.addStakingProblemBody(
         cardInfo: CardInfo,
         validatorName: String?,
-        transactionType: String?,
-        unsignedTransaction: String?,
+        transactionTypes: List<String>,
+        unsignedTransactions: List<String?>,
     ) {
         addCardInfo(cardInfo)
         addDelimiter()
@@ -102,7 +102,7 @@ internal class EmailMessageBodyResolver(
             addDelimiter()
         }
 
-        addStakingInfo(validatorName, transactionType, unsignedTransaction)
+        addStakingInfo(validatorName, transactionTypes, unsignedTransactions)
         addDelimiter()
 
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
