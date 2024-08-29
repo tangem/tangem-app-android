@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,6 +46,7 @@ import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.components.rows.model.ChainRowUM
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
+import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalSnackbarHostState
@@ -166,9 +168,12 @@ private fun SaveChangesButton(
 
 @Composable
 private fun Content(state: ManageTokensUM, modifier: Modifier = Modifier) {
+    val listState = rememberLazyListState()
+
     Box(modifier = modifier) {
         Currencies(
             modifier = Modifier.fillMaxSize(),
+            listState = listState,
             items = state.items,
             showLoadingItem = state.isNextBatchLoading,
             onLoadMore = state.loadMore,
@@ -185,10 +190,15 @@ private fun Content(state: ManageTokensUM, modifier: Modifier = Modifier) {
             )
         }
     }
+
+    EventEffect(event = state.scrollToTop) {
+        listState.animateScrollToItem(index = 0)
+    }
 }
 
 @Composable
 private fun Currencies(
+    listState: LazyListState,
     items: ImmutableList<CurrencyItemUM>,
     showLoadingItem: Boolean,
     isEditable: Boolean,
@@ -198,7 +208,6 @@ private fun Currencies(
     val bottomBarHeight = with(LocalDensity.current) {
         WindowInsets.systemBars.getBottom(density = this).toDp()
     }
-    val listState = rememberLazyListState()
 
     LazyColumn(
         modifier = modifier,
