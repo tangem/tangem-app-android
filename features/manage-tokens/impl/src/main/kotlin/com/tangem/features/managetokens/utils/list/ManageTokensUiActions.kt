@@ -6,11 +6,11 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 internal interface ManageTokensUiActions {
 
-    fun addCurrency(batchKey: Int, currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID)
+    fun addCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network)
 
-    fun removeCurrency(batchKey: Int, currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID)
+    fun removeCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network)
 
-    fun checkNeedToShowRemoveNetworkWarning(currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID): Boolean
+    fun checkNeedToShowRemoveNetworkWarning(currency: ManagedCryptoCurrency.Token, network: Network): Boolean
 
     suspend fun checkHasLinkedTokens(userWalletId: UserWalletId, network: Network): Boolean
 }
