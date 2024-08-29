@@ -63,7 +63,6 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -157,25 +156,25 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onBackClick()
     }
 
-    override fun onNextClick(actionType: StakingActionCommonType?, pendingActions: ImmutableList<PendingAction>) {
+    override fun onNextClick(actionType: StakingActionCommonType?, pendingAction: PendingAction?) {
         if (actionType != null) {
             stateController.update { it.copy(actionType = actionType) }
         }
         stakingStateRouter.onNextClick()
         if (isAssentState()) {
-            getFee(pendingActions)
+            getFee(pendingAction)
         }
     }
 
-    override fun onActionClick(pendingAction: PendingAction?) {
-        handleOnNextConfirmationClick(pendingAction)
+    override fun onActionClick() {
+        handleOnNextConfirmationClick()
         stakingStateRouter.onNextClick()
     }
 
-    private fun handleOnNextConfirmationClick(pendingAction: PendingAction?) {
+    private fun handleOnNextConfirmationClick() {
         if (isAssentState()) {
             viewModelScope.launch {
-                stateController.update(SetConfirmationStateInProgressTransformer(pendingAction))
+                stateController.update(SetConfirmationStateInProgressTransformer())
 
                 val confirmationState =
                     value.confirmationState as? StakingStates.ConfirmationState.Data ?: error("No confirmation state")
@@ -186,6 +185,7 @@ internal class StakingViewModel @Inject constructor(
                 val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: error("No fee provided")
                 val defaultAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
                     ?: error("No available address")
+                val pendingAction = confirmationState.pendingAction
 
                 val stakingTransactions = getStakingTransactionUseCase(
                     userWalletId = userWalletId,
@@ -230,13 +230,13 @@ internal class StakingViewModel @Inject constructor(
                 sendStakingTransaction(
                     fullTransactionsData = fullTransactionsData,
                     fee = fee,
-                    pendingActionList = confirmationState.pendingActions,
+                    pendingAction = confirmationState.pendingAction,
                 )
             }
         }
     }
 
-    private fun getFee(pendingActions: ImmutableList<PendingAction>) {
+    private fun getFee(pendingAction: PendingAction?) {
         viewModelScope.launch {
             stateController.update(
                 SetConfirmationStateLoadingTransformer(
@@ -270,7 +270,7 @@ internal class StakingViewModel @Inject constructor(
                     )
                 } else {
                     estimateGas(
-                        pendingActions = pendingActions,
+                        pendingAction = pendingAction,
                         amount = amount,
                         sourceAddress = sourceAddress,
                         validatorAddress = validatorAddress,
@@ -278,7 +278,7 @@ internal class StakingViewModel @Inject constructor(
                 }
             } else {
                 estimateGas(
-                    pendingActions = pendingActions,
+                    pendingAction = pendingAction,
                     amount = amount,
                     sourceAddress = sourceAddress,
                     validatorAddress = validatorAddress,
@@ -288,12 +288,11 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private suspend fun estimateGas(
-        pendingActions: ImmutableList<PendingAction>,
+        pendingAction: PendingAction?,
         amount: BigDecimal,
         sourceAddress: String,
         validatorAddress: String,
     ) {
-        val pendingAction = pendingActions.firstOrNull()
         val gasEstimate = estimateGasUseCase(
             userWalletId = userWalletId,
             network = cryptoCurrencyStatus.currency.network,
@@ -323,7 +322,7 @@ internal class StakingViewModel @Inject constructor(
                         decimals = gasEstimate.token.decimals,
                     ),
                 ),
-                pendingActionList = pendingActions,
+                action = pendingAction,
             ),
         )
     }
@@ -397,14 +396,29 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onActiveStake(activeStake: BalanceState) {
-        val actionType = if (activeStake.pendingActions.isEmpty()) {
-            StakingActionCommonType.EXIT
+        if (activeStake.pendingActions.size > 1) {
+            stateController.update(
+                ShowActionSelectorBottomSheetTransformer(
+                    pendingActions = activeStake.pendingActions,
+                    onActionSelect = {
+                        onNextClick(actionType = StakingActionCommonType.PENDING_OTHER, pendingAction = it)
+                        stateController.update(DismissBottomSheetStateTransformer())
+                    },
+                    onDismiss = {
+                        stateController.update(DismissBottomSheetStateTransformer())
+                    },
+                ),
+            )
         } else {
-            StakingActionCommonType.PENDING_OTHER
+            val actionType = if (activeStake.pendingActions.isEmpty()) {
+                StakingActionCommonType.EXIT
+            } else {
+                StakingActionCommonType.PENDING_OTHER
+            }
+            stateController.update(ValidatorSelectChangeTransformer(activeStake.validator))
+            stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, activeStake.cryptoValue, yield))
+            onNextClick(actionType, activeStake.pendingActions.firstOrNull())
         }
-        stateController.update(ValidatorSelectChangeTransformer(activeStake.validator))
-        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, activeStake.cryptoValue, yield))
-        onNextClick(actionType, activeStake.pendingActions)
     }
 
     override fun showApprovalBottomSheet() {
@@ -479,13 +493,13 @@ internal class StakingViewModel @Inject constructor(
                 ifRight = {
                     stateController.update(SetApprovalInProgressTransformer)
                     stateController.update(DismissBottomSheetStateTransformer())
-                    awaitForAllowance(confirmationState.pendingActions)
+                    awaitForAllowance(confirmationState.pendingAction)
                 },
             )
         }.saveIn(approvalJobHolder)
     }
 
-    private fun awaitForAllowance(pendingActions: ImmutableList<PendingAction>) {
+    private fun awaitForAllowance(pendingAction: PendingAction?) {
         val approval = stakingApproval as? StakingApproval.Needed ?: return
         allowanceTaskScheduler.scheduleTask(
             scope = viewModelScope,
@@ -504,7 +518,7 @@ internal class StakingViewModel @Inject constructor(
                     val amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
                         ?: error("No amount provided")
                     if (allowance >= amount) {
-                        getFee(pendingActions)
+                        getFee(pendingAction)
                         allowanceTaskScheduler.cancelTask()
                     }
                 },
@@ -643,7 +657,7 @@ internal class StakingViewModel @Inject constructor(
     private suspend fun sendStakingTransaction(
         fullTransactionsData: List<FullTransactionData>,
         fee: Fee,
-        pendingActionList: ImmutableList<PendingAction>,
+        pendingAction: PendingAction?,
     ) {
         sendMultipleTransactionUseCase(
             txsData = fullTransactionsData.map { it.tangemTransaction },
@@ -657,7 +671,7 @@ internal class StakingViewModel @Inject constructor(
                         appCurrencyProvider = Provider { appCurrency },
                         feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                         fee = fee,
-                        pendingActionList = pendingActionList,
+                        action = pendingAction,
                     ),
                 )
                 stakingEventFactory.createSendTransactionErrorAlert(error)
