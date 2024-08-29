@@ -8,7 +8,7 @@ import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
 
 internal fun CurrencyNetworkUM.select(isSelected: Boolean): CurrencyNetworkUM {
     return copy(
-        iconResId = networkId.getIconRes(isSelected),
+        iconResId = network.id.getIconRes(isSelected),
         isSelected = isSelected,
     )
 }
