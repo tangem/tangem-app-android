@@ -212,8 +212,7 @@ internal class SetInitialDataStateTransformer(
             notifications = persistentListOf(),
             footerText = "",
             transactionDoneState = TransactionDoneState.Empty,
-            pendingActions = persistentListOf(),
-            pendingActionInProgress = null,
+            pendingAction = null,
             isApprovalNeeded = isApprovalNeeded,
         )
     }
