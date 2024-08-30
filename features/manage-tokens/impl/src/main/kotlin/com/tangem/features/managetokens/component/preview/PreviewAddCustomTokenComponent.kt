@@ -60,7 +60,8 @@ internal class PreviewAddCustomTokenComponent(
                         PreviewCustomTokenSelectorComponent(
                             params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
                                 userWalletId = state.userWalletId,
-                                selectedDerivationPath = state.selectedDerivationPath,
+                                selectedNetwork = state.selectedNetwork!!,
+                                selectedDerivationPath = state.selectedDerivationPath!!,
                                 onDerivationPathSelected = {},
                             ),
                         ).Content(modifier)
