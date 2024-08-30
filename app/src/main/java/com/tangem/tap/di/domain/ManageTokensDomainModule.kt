@@ -1,8 +1,6 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.card.repository.DerivationsRepository
-import com.tangem.domain.managetokens.SaveManagedTokensUseCase
-import com.tangem.domain.managetokens.GetManagedTokensUseCase
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -66,5 +64,21 @@ internal object ManageTokensDomainModule {
             manageTokensRepository = manageTokensRepository,
             derivationsRepository = derivationsRepository,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetSupportedNetworksUseCase(
+        customTokensRepository: CustomTokensRepository,
+    ): GetSupportedNetworksUseCase {
+        return GetSupportedNetworksUseCase(customTokensRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideValidateDerivationPathUseCase(
+        customTokensRepository: CustomTokensRepository,
+    ): ValidateDerivationPathUseCase {
+        return ValidateDerivationPathUseCase(customTokensRepository)
     }
 }
