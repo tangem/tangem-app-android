@@ -1,6 +1,9 @@
 package com.tangem.features.staking.impl.presentation.state.converters
 
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -46,16 +49,11 @@ internal class RewardsValidatorStateConverter(
             }
             val cryptoValue = balance.amount
             val fiatValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoValue)
-            val unbondingPeriod = yield.metadata.cooldownPeriod.days
+
             validator?.toBalanceState(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 cryptoValue = cryptoValue,
                 fiatValue = fiatValue,
-                unbondingPeriod = pluralReference(
-                    id = R.plurals.common_days,
-                    count = unbondingPeriod,
-                    formatArgs = wrappedList(unbondingPeriod),
-                ),
                 pendingActions = balance.pendingActions.toPersistentList(),
             )
         }
@@ -64,12 +62,12 @@ internal class RewardsValidatorStateConverter(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         cryptoValue: BigDecimal,
         fiatValue: BigDecimal?,
-        unbondingPeriod: TextReference,
         pendingActions: ImmutableList<PendingAction>,
     ): BalanceState {
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
-
+        val unbondingPeriod = yield.metadata.cooldownPeriod.days
+        val warmupPeriod = yield.metadata.warmupPeriod.days
         val cryptoAmount = stringReference(
             BigDecimalFormatter.formatCryptoAmount(
                 cryptoAmount = cryptoValue,
@@ -94,7 +92,16 @@ internal class RewardsValidatorStateConverter(
             cryptoAmount = cryptoAmount,
             fiatAmount = fiatAmount,
             rawCurrencyId = cryptoCurrency.id.rawCurrencyId,
-            unbondingPeriod = unbondingPeriod,
+            unbondingPeriod = pluralReference(
+                id = R.plurals.common_days,
+                count = unbondingPeriod,
+                formatArgs = wrappedList(unbondingPeriod),
+            ),
+            warmupPeriod = pluralReference(
+                id = R.plurals.common_days,
+                count = unbondingPeriod,
+                formatArgs = wrappedList(warmupPeriod),
+            ),
             pendingActions = pendingActions,
         )
     }
