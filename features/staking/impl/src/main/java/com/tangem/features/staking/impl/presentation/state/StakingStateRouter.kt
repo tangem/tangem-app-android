@@ -26,9 +26,7 @@ internal class StakingStateRouter(
             StakingStep.Validators,
             StakingStep.Amount,
             -> showConfirmation()
-            StakingStep.Confirmation -> {
-// [REDACTED_TODO_COMMENT]
-            }
+            StakingStep.Confirmation -> showInitial()
         }
     }
 
