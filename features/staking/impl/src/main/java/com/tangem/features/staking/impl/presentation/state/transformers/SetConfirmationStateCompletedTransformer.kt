@@ -4,11 +4,9 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.*
-import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.StakingUiState
-import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
+import kotlinx.collections.immutable.persistentListOf
 
 internal class SetConfirmationStateCompletedTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -39,6 +37,7 @@ internal class SetConfirmationStateCompletedTransformer(
                 validatorState = validatorState.copySealed(
                     isClickable = false,
                 ),
+                notifications = persistentListOf(),
                 transactionDoneState = TransactionDoneState.Content(
                     timestamp = System.currentTimeMillis(),
                     txUrl = txUrl,
