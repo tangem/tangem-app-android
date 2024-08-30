@@ -35,6 +35,7 @@ import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
 import com.tangem.features.managetokens.component.preview.PreviewCustomTokenSelectorComponent
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenSelectorUM
 import com.tangem.features.managetokens.entity.customtoken.SelectedDerivationPath
+import com.tangem.features.managetokens.entity.customtoken.SelectedNetwork
 import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
 import com.tangem.features.managetokens.entity.item.DerivationPathUM
 import com.tangem.features.managetokens.impl.R
@@ -110,6 +111,8 @@ private fun Header(header: CustomTokenSelectorUM.HeaderUM, modifier: Modifier = 
         is CustomTokenSelectorUM.HeaderUM.CustomDerivationButton -> {
             CustomDerivationButton(
                 modifier = modifier.padding(vertical = TangemTheme.dimens.spacing16),
+                enteredDerivationPath = header.value,
+                isSelected = header.value != null,
                 onClick = header.onClick,
             )
         }
@@ -164,38 +167,41 @@ private fun NetworkItem(model: CurrencyNetworkUM, modifier: Modifier = Modifier)
             )
         },
         action = {
-            AnimatedVisibility(
-                modifier = Modifier.size(TangemTheme.dimens.size24),
-                visible = model.isSelected,
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_check_24),
-                    tint = TangemTheme.colors.icon.accent,
-                    contentDescription = null,
-                )
-            }
+            SelectedIcon(isVisible = model.isSelected)
         },
     )
 }
 
 @Composable
-private fun CustomDerivationButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun CustomDerivationButton(
+    enteredDerivationPath: String?,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     InformationBlock(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .clickable(onClick = onClick),
         title = {
-            Text(
-                text = stringResource(id = R.string.custom_token_custom_derivation),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.secondary,
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+            ) {
+                Text(
+                    text = stringResource(id = R.string.custom_token_custom_derivation),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.secondary,
+                )
+                Text(
+                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                    text = enteredDerivationPath ?: stringResource(id = R.string.custom_token_custom_derivation_title),
+                    style = TangemTheme.typography.body2,
+                    color = TangemTheme.colors.text.primary1,
+                )
+            }
         },
-        content = {
-            Text(
-                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
-                text = stringResource(id = R.string.custom_token_custom_derivation_title),
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
-            )
+        action = {
+            SelectedIcon(isVisible = isSelected)
         },
     )
 }
@@ -206,21 +212,41 @@ private fun DerivationPathItem(model: DerivationPathUM, modifier: Modifier = Mod
         modifier = modifier,
         shape = RectangleShape,
         title = {
-            Text(
-                text = model.networkName.resolveReference(),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.secondary,
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+            ) {
+                Text(
+                    text = model.networkName.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.secondary,
+                )
+
+                Text(
+                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                    text = model.value,
+                    style = TangemTheme.typography.body2,
+                    color = TangemTheme.colors.text.primary1,
+                )
+            }
         },
-        content = {
-            Text(
-                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
-                text = model.value,
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
-            )
+        action = {
+            SelectedIcon(isVisible = model.isSelected)
         },
     )
+}
+
+@Composable
+private fun SelectedIcon(isVisible: Boolean, modifier: Modifier = Modifier) {
+    AnimatedVisibility(
+        modifier = modifier.size(TangemTheme.dimens.size24),
+        visible = isVisible,
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_check_24),
+            tint = TangemTheme.colors.icon.accent,
+            contentDescription = null,
+        )
+    }
 }
 
 // region Preview
@@ -243,6 +269,12 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
             PreviewCustomTokenSelectorComponent(
                 params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
                     userWalletId = UserWalletId(stringValue = "321"),
+                    selectedNetwork = SelectedNetwork(
+                        id = Network.ID(value = "0"),
+                        name = stringReference("Ethereum"),
+                        derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
+                        canHandleTokens = true,
+                    ),
                     selectedDerivationPath = SelectedDerivationPath(
                         id = Network.ID(value = "0"),
                         value = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
