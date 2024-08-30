@@ -81,6 +81,12 @@ sealed class AnalyticsParam {
             override val feeType: FeeType,
         ) : TxSentFrom("Swap"), TxData
 
+        data class Staking(
+            override val blockchain: String,
+            override val token: String,
+            override val feeType: FeeType,
+        ) : TxSentFrom("Staking"), TxData
+
         data class Approve(
             override val blockchain: String,
             override val token: String,
