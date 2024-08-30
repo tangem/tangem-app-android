@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -57,7 +59,11 @@ interface WalletCurrencyActionsClickIntents {
 
     fun onBuyClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
 
-    fun onSwapClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
+    fun onSwapClick(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        userWalletId: UserWalletId,
+        unavailabilityReason: ScenarioUnavailabilityReason,
+    )
 
     fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
@@ -95,6 +101,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
     private val getYieldUseCase: GetYieldUseCase,
+    private val appRouter: AppRouter,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -352,6 +359,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onSwapClick(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        userWalletId: UserWalletId,
         unavailabilityReason: ScenarioUnavailabilityReason,
     ) {
         analyticsEventHandler.send(
@@ -360,7 +368,12 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        reduxStateHolder.dispatch(TradeCryptoAction.Swap(cryptoCurrencyStatus.currency))
+        appRouter.push(
+            AppRoute.Swap(
+                currency = cryptoCurrencyStatus.currency,
+                userWalletId = userWalletId,
+            ),
+        )
     }
 
     override fun onExploreClick() {
