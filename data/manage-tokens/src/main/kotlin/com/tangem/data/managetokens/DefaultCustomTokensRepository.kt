@@ -2,6 +2,7 @@ package com.tangem.data.managetokens
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
@@ -16,8 +17,10 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.extensions.canHandleBlockchain
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
@@ -177,6 +180,33 @@ internal class DefaultCustomTokensRepository(
                 is CryptoCurrency.Token -> walletManagersFacade.removeTokens(userWalletId, setOf(cryptoCurrency))
             }
         }
+
+    override suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network> = withContext(dispatchers.io) {
+        val userWallet = userWalletsStore.getSyncOrNull(userWalletId)
+            ?: error("User wallet not found")
+        val scanResponse = userWallet.scanResponse
+
+        Blockchain.entries
+            .mapNotNull { blockchain ->
+                if (scanResponse.card.canHandleBlockchain(blockchain, scanResponse.cardTypesResolver)) {
+                    getNetwork(
+                        blockchain = blockchain,
+                        extraDerivationPath = null,
+                        derivationStyleProvider = scanResponse.derivationStyleProvider,
+                    )
+                } else {
+                    null
+                }
+            }
+    }
+
+    override fun createDerivationPath(rawPath: String): Network.DerivationPath {
+        val sdkPath = DerivationPath(rawPath)
+
+        return Network.DerivationPath.Custom(
+            value = sdkPath.rawPath,
+        )
+    }
 
     private suspend fun storeAndPushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
         val compatibleUserTokensResponse = userTokensBackwardCompatibility.applyCompatibilityAndGetUpdated(response)
