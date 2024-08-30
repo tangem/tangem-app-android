@@ -152,7 +152,7 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
     private fun StakingUiState.onConfirmationClick() {
         if (confirmationState is StakingStates.ConfirmationState.Data) {
             if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
-                clickIntents.onBackClick()
+                clickIntents.onNextClick()
             } else {
                 val isEnterAction = actionType == StakingActionCommonType.ENTER
                 val isApproveNeeded = confirmationState.isApprovalNeeded
