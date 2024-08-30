@@ -26,7 +26,6 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
@@ -74,20 +73,18 @@ internal class SwapViewModel @Inject constructor(
     private val getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
-    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
 
     private val initialCryptoCurrency: CryptoCurrency = savedStateHandle.get<Bundle>(AppRoute.Swap.CURRENCY_BUNDLE_KEY)
         ?.unbundle(CryptoCurrency.serializer())
-        ?: error("no expected parameter CryptoCurrency found`")
+        ?: error("no expected parameter CryptoCurrency found")
 
-    private val selectedWalletId: UserWalletId? = savedStateHandle.get<Bundle>(AppRoute.Swap.USER_WALLET_ID_KEY)
+    private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.Swap.USER_WALLET_ID_KEY)
         ?.unbundle(UserWalletId.serializer())
+        ?: error("no expected parameter UserWalletId found")
 
-    private val swapInteractor = getWalletId()?.let {
-        swapInteractorFactory.create(it)
-    } ?: SwapInteractorStub(errorMessage = "Unable to get UserWalletId")
+    private val swapInteractor = swapInteractorFactory.create(userWalletId)
 
     private lateinit var initialCryptoCurrencyStatus: CryptoCurrencyStatus
 
@@ -134,10 +131,8 @@ internal class SwapViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(dispatchers.io) {
-            val walletId = getWalletId() ?: return@launch
-
             val cryptoCurrencyStatus =
-                getCryptoCurrencyStatusUseCase(walletId, initialCryptoCurrency.id).getOrNull()
+                getCryptoCurrencyStatusUseCase(userWalletId, initialCryptoCurrency.id).getOrNull()
             if (cryptoCurrencyStatus == null) {
                 uiState = stateBuilder.addAlert(uiState = uiState, onClick = swapRouter::back)
             } else {
@@ -178,8 +173,6 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
-    private fun getWalletId(): UserWalletId? = selectedWalletId ?: getSelectedWalletSyncUseCase().getOrNull()?.walletId
-
     private fun sendSelectTokenScreenOpenedEvent() {
         val isAnyAvailableTokensTo = dataState.tokensDataState?.toGroup?.available?.isNotEmpty() ?: false
         val isAnyAvailableTokensFrom = dataState.tokensDataState?.fromGroup?.available?.isNotEmpty() ?: false
@@ -200,8 +193,6 @@ internal class SwapViewModel @Inject constructor(
                         state,
                     ),
                 )
-
-                val userWalletId = getWalletId() ?: return@launch
 
                 (dataState.fromCryptoCurrency?.currency as? CryptoCurrency.Coin)?.let {
                     subscribeToCoinBalanceUpdates(
@@ -718,8 +709,6 @@ internal class SwapViewModel @Inject constructor(
             analyticsEventHandler.send(SwapEvents.ChooseTokenScreenResult(tokenChosen = true, token = it))
         }
 
-        val userWalletId = selectedWalletId ?: getSelectedWalletSyncUseCase().getOrNull()?.walletId
-
         if (foundToken != null) {
             val fromToken: CryptoCurrencyStatus
             val toToken: CryptoCurrencyStatus
@@ -728,7 +717,7 @@ internal class SwapViewModel @Inject constructor(
                 toToken = initialCryptoCurrencyStatus
 
                 val newToken = fromToken.currency as? CryptoCurrency.Coin
-                if (userWalletId != null && newToken != null) {
+                if (newToken != null) {
                     subscribeToCoinBalanceUpdates(
                         userWalletId = userWalletId,
                         coin = newToken,
@@ -740,7 +729,7 @@ internal class SwapViewModel @Inject constructor(
                 toToken = foundToken.currencyStatus
 
                 val newToken = toToken.currency as? CryptoCurrency.Coin
-                if (userWalletId != null && newToken != null) {
+                if (newToken != null) {
                     subscribeToCoinBalanceUpdates(
                         userWalletId = userWalletId,
                         coin = newToken,
@@ -996,9 +985,8 @@ internal class SwapViewModel @Inject constructor(
                 }
             },
             onBuyClick = { currency ->
-                val walletId = getWalletId() ?: return@UiActions
                 swapRouter.openTokenDetails(
-                    userWalletId = walletId,
+                    userWalletId = userWalletId,
                     currency = currency,
                 )
             },
@@ -1172,12 +1160,10 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun updateWalletBalance() {
-        val walletId = getWalletId() ?: return
-
         dataState.fromCryptoCurrency?.currency?.network?.let { network ->
             viewModelScope.launch {
                 withContext(NonCancellable) {
-                    updateForBalance(walletId, network)
+                    updateForBalance(userWalletId, network)
                 }
             }
         }

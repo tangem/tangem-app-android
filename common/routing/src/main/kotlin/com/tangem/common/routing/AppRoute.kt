@@ -219,8 +219,8 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Swap(
         val currency: CryptoCurrency,
-        val userWalletId: UserWalletId? = null,
-    ) : AppRoute(path = "/swap/${currency.id.value}/${userWalletId?.stringValue ?: ""}"), RouteBundleParams {
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/swap/${currency.id.value}/${userWalletId.stringValue}"), RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
 
