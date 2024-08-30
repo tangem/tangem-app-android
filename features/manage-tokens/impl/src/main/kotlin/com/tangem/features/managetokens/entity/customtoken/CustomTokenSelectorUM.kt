@@ -17,6 +17,7 @@ internal data class CustomTokenSelectorUM(
         data object Description : HeaderUM()
 
         data class CustomDerivationButton(
+            val value: String?,
             val onClick: () -> Unit,
         ) : HeaderUM()
     }
