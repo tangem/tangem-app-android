@@ -20,4 +20,10 @@ interface DerivationsRepository {
         userWalletId: UserWalletId,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): Map<ByteArrayKey, ExtendedPublicKeysMap>
+
+    /** Check if user [userWalletId] has missed derivations using map of [Network.ID] with extraDerivationPath */
+    suspend fun hasMissedDerivations(
+        userWalletId: UserWalletId,
+        networksWithDerivationPath: Map<Network.ID, String?>,
+    ): Boolean
 }
