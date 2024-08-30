@@ -5,7 +5,6 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 
@@ -24,17 +23,15 @@ internal class MyPortfolioUMMFactory(
 ) {
 
     fun create(
-        portfolioModel: PortfolioData,
-        portfolioBSVisibilityModel: PortfolioBSVisibilityModel,
+        portfolioData: PortfolioData,
+        portfolioUIData: PortfolioUIData,
         availableNetworks: List<TokenMarketInfo.Network>?,
-        selectedWalletId: UserWalletId?,
-        walletsWithChangedNetworks: Map<UserWalletId, List<String>>,
     ): MyPortfolioUM {
         if (availableNetworks == null) return MyPortfolioUM.Loading
 
         if (availableNetworks.isEmpty()) return MyPortfolioUM.Unavailable
 
-        val walletsWithStatuses = portfolioModel.walletsWithCurrencyStatuses
+        val walletsWithStatuses = portfolioData.walletsWithCurrencyStatuses
             .filterAvailableNetworks(networks = availableNetworks)
 
         val isPortfolioEmpty = walletsWithStatuses.flatMap { it.value }.isEmpty()
@@ -44,11 +41,9 @@ internal class MyPortfolioUMMFactory(
             return if (hasMultiWallets) {
                 MyPortfolioUM.AddFirstToken(
                     bsConfig = createAddToPortfolioBSConfig(
-                        portfolioModel = portfolioModel,
-                        selectedWalletId = selectedWalletId,
+                        portfolioData = portfolioData,
+                        portfolioUIData = portfolioUIData,
                         availableNetworks = availableNetworks,
-                        walletsWithChangedNetworks = walletsWithChangedNetworks,
-                        portfolioBSVisibilityModel = portfolioBSVisibilityModel,
                     ),
                     onAddClick = onAddClick,
                 )
@@ -58,15 +53,13 @@ internal class MyPortfolioUMMFactory(
         }
 
         return TokensPortfolioUMConverter(
-            appCurrency = portfolioModel.appCurrency,
-            isBalanceHidden = portfolioModel.isBalanceHidden,
+            appCurrency = portfolioData.appCurrency,
+            isBalanceHidden = portfolioData.isBalanceHidden,
             isAllAvailableNetworksAdded = walletsWithStatuses.isAllAvailableNetworksAdded(availableNetworks),
             bsConfig = createAddToPortfolioBSConfig(
-                portfolioModel = portfolioModel,
-                selectedWalletId = selectedWalletId,
+                portfolioData = portfolioData,
+                portfolioUIData = portfolioUIData,
                 availableNetworks = availableNetworks,
-                portfolioBSVisibilityModel = portfolioBSVisibilityModel,
-                walletsWithChangedNetworks = walletsWithChangedNetworks,
             ),
             onAddClick = onAddClick,
             onTokenItemClick = onTokenItemClick,
@@ -75,23 +68,20 @@ internal class MyPortfolioUMMFactory(
     }
 
     private fun createAddToPortfolioBSConfig(
-        portfolioModel: PortfolioData,
-        selectedWalletId: UserWalletId?,
+        portfolioData: PortfolioData,
+        portfolioUIData: PortfolioUIData,
         availableNetworks: List<TokenMarketInfo.Network>,
-        portfolioBSVisibilityModel: PortfolioBSVisibilityModel,
-        walletsWithChangedNetworks: Map<UserWalletId, List<String>>,
     ): TangemBottomSheetConfig {
-        val walletId = requireNotNull(selectedWalletId) {
-            "Selected wallet must be not null in state with AddToPortfolio bottom sheet"
-        }
+        val walletId = portfolioUIData.selectedWalletId
+            ?: portfolioData.walletsWithCurrencyStatuses.keys.firstOrNull { it.isMultiCurrency }?.walletId
 
-        val selectedWallet = portfolioModel.walletsWithCurrencyStatuses.keys
+        val selectedWallet = portfolioData.walletsWithCurrencyStatuses.keys
             .firstOrNull { it.walletId == walletId }
             ?: error("portfolioModel.walletsWithCurrencyStatuses doesn't contain selected wallet: $walletId")
 
-        val changedNetworks = walletsWithChangedNetworks[selectedWalletId]
+        val changedNetworks = portfolioUIData.walletsWithChangedNetworks[portfolioUIData.selectedWalletId]
         val alreadyAddedNetworks = requireNotNull(
-            value = portfolioModel.walletsWithCurrencyStatuses[selectedWallet],
+            value = portfolioData.walletsWithCurrencyStatuses[selectedWallet],
             lazyMessage = {
                 "portfolioModel.walletsWithCurrencyStatuses doesn't contain selected wallet: $walletId"
             },
@@ -100,8 +90,8 @@ internal class MyPortfolioUMMFactory(
             .map { it.currency.network.backendId }
 
         return addToPortfolioBSContentUMFactory.create(
-            portfolioData = portfolioModel,
-            portfolioBSVisibilityModel = portfolioBSVisibilityModel,
+            portfolioData = portfolioData,
+            portfolioUIData = portfolioUIData,
             selectedWallet = selectedWallet,
             networksWithToggle = availableNetworks.associateWithToggle(
                 changedNetworks = changedNetworks,
