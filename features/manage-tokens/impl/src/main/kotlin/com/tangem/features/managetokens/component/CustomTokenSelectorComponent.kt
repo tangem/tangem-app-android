@@ -18,6 +18,7 @@ internal interface CustomTokenSelectorComponent : ComposableContentComponent {
 
         data class DerivationPathSelector(
             val userWalletId: UserWalletId,
+            val selectedNetwork: SelectedNetwork,
             val selectedDerivationPath: SelectedDerivationPath?,
             val onDerivationPathSelected: (SelectedDerivationPath) -> Unit,
         ) : Params()
