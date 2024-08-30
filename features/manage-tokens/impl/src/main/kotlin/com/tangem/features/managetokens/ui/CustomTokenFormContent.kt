@@ -11,11 +11,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -82,6 +82,7 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
                 .fillMaxWidth(),
             text = stringResource(id = R.string.custom_token_add_token),
             enabled = model.canAddToken,
+            showProgress = model.isValidating,
             onClick = model.saveToken,
         )
     }
@@ -159,14 +160,25 @@ private fun TextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
+    var isFocused by remember { mutableStateOf(value = false) }
+
     InformationBlock(
         modifier = modifier,
         title = {
             val color by animateColorAsState(
-                targetValue = if (model.error != null) {
-                    TangemTheme.colors.text.warning
-                } else {
-                    TangemTheme.colors.text.tertiary
+                targetValue = when {
+                    !model.isEnabled -> {
+                        TangemTheme.colors.text.disabled
+                    }
+                    model.error != null -> {
+                        TangemTheme.colors.text.warning
+                    }
+                    model.value.isNotBlank() || isFocused -> {
+                        TangemTheme.colors.text.tertiary
+                    }
+                    else -> {
+                        TangemTheme.colors.text.disabled
+                    }
                 },
                 label = "Field label color",
             )
@@ -178,14 +190,27 @@ private fun TextField(
             )
         },
         content = {
+            val color by animateColorAsState(
+                targetValue = if (model.isEnabled) {
+                    TangemTheme.colors.text.primary1
+                } else {
+                    TangemTheme.colors.text.disabled
+                },
+                label = "Field value color",
+            )
+
             SimpleTextField(
                 modifier = Modifier
                     .padding(bottom = TangemTheme.dimens.spacing12)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .onFocusChanged {
+                        isFocused = it.isFocused
+                    },
                 value = model.value,
+                color = color,
                 onValueChange = model.onValueChange,
-                readOnly = false,
                 placeholder = model.placeholder,
+                readOnly = !model.isEnabled && !isFocused,
                 singleLine = true,
                 keyboardOptions = keyboardOptions,
                 keyboardActions = keyboardActions,
@@ -236,7 +261,16 @@ private class PreviewCustomTokenFormComponentProvider :
 
     override val values: Sequence<PreviewCustomTokenFormComponent>
         get() = sequenceOf(
-            PreviewCustomTokenFormComponent(),
+            PreviewCustomTokenFormComponent(
+                tokenForm = PreviewCustomTokenFormComponent.tokenForm.copy(
+                    contractAddress = TextInputFieldUM(
+                        label = stringReference("Contract address"),
+                        value = "0x1234567890",
+                        placeholder = stringReference("0x1234567890"),
+                        onValueChange = {},
+                    ),
+                ),
+            ),
             PreviewCustomTokenFormComponent(
                 tokenForm = PreviewCustomTokenFormComponent.tokenForm.copy(
                     contractAddress = TextInputFieldUM(
