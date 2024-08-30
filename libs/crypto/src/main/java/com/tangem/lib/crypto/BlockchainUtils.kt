@@ -56,6 +56,11 @@ object BlockchainUtils {
         return Blockchain.fromNetworkId(networkId)?.isSupportedInApp() ?: false
     }
 
+    fun isArbitrum(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Arbitrum
+    }
+
     data class BlockchainInfo(
         val blockchainId: String,
         val name: String,
