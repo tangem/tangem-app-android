@@ -2,15 +2,16 @@ package com.tangem.features.managetokens.entity.customtoken
 
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
-import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 
 internal data class CustomTokenFormUM(
     val networkName: ClickableFieldUM,
     val derivationPath: ClickableFieldUM,
     val tokenForm: TokenFormUM?,
-    val notifications: ImmutableList<NotificationUM> = persistentListOf(),
+    val notifications: PersistentList<NotificationUM> = persistentListOf(),
     val canAddToken: Boolean = false,
+    val isValidating: Boolean = false,
     val saveToken: () -> Unit,
 ) {
 
@@ -32,6 +33,7 @@ internal data class TextInputFieldUM(
     val placeholder: TextReference,
     val value: String = "",
     val error: TextReference? = null,
+    val isEnabled: Boolean = true,
     val onValueChange: (String) -> Unit,
 )
 
