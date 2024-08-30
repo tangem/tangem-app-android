@@ -33,4 +33,8 @@ interface CustomTokensRepository {
     ): CryptoCurrency.Token
 
     suspend fun removeCurrency(userWalletId: UserWalletId, currency: ManagedCryptoCurrency.Custom)
+
+    suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network>
+
+    fun createDerivationPath(rawPath: String): Network.DerivationPath
 }
