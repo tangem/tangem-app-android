@@ -164,23 +164,19 @@ internal class StakingViewModel @Inject constructor(
             stateController.update { it.copy(actionType = actionType) }
         }
         stakingStateRouter.onNextClick()
-        if (isAssentState()) {
-            getFee(pendingAction)
+        when {
+            isInitState() -> stateController.update(SetConfirmationStateLoadingTransformer(yield))
+            isAssentState() -> getFee(pendingAction)
         }
     }
 
     override fun onActionClick() {
         handleOnNextConfirmationClick()
-        stakingStateRouter.onNextClick()
     }
 
     override fun getFee(pendingAction: PendingAction?) {
         viewModelScope.launch {
-            stateController.update(
-                SetConfirmationStateLoadingTransformer(
-                    yield = yield,
-                ),
-            )
+            stateController.update(SetConfirmationStateLoadingTransformer(yield))
             val cryptoCurrencyValue = cryptoCurrencyStatus.value
             val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
                 ?: error("No confirmation state")
@@ -869,6 +865,10 @@ internal class StakingViewModel @Inject constructor(
         return value.currentStep == StakingStep.Confirmation &&
             (value.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState ==
             InnerConfirmationStakingState.ASSENT
+    }
+
+    private fun isInitState(): Boolean {
+        return value.currentStep == StakingStep.InitialInfo
     }
 
     private suspend fun checkIfSubtractAvailable() {
