@@ -5,8 +5,10 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
@@ -24,6 +26,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val portfolioDataLoader: PortfolioDataLoader,
+    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -85,14 +88,43 @@ internal class MarketsPortfolioModel @Inject constructor(
     private fun subscribeOnStateUpdates() {
         combine(
             flow = portfolioDataLoader.load(params.token.id),
-            flow2 = portfolioBSVisibilityModelFlow,
+            flow2 = getPortfolioUIDataFlow(),
             flow3 = availableNetworksFlow,
-            flow4 = selectedMultiWalletIdFlow,
-            flow5 = walletsWithChangedNetworksFlow,
             transform = factory::create,
         )
             .onEach { _state.value = it }
             .launchIn(modelScope)
+    }
+
+    private fun getPortfolioUIDataFlow(): Flow<PortfolioUIData> {
+        return combine(
+            flow = portfolioBSVisibilityModelFlow,
+            flow2 = selectedMultiWalletIdFlow,
+            flow3 = walletsWithChangedNetworksFlow,
+            transform = { portfolioBSVisibilityModel, selectedWalletId, walletsWithChangedNetworks ->
+                PortfolioUIData(
+                    portfolioBSVisibilityModel = portfolioBSVisibilityModel,
+                    selectedWalletId = selectedWalletId,
+                    walletsWithChangedNetworks = walletsWithChangedNetworks,
+                    hasMissedDerivations = hasMissedDerivations(selectedWalletId, walletsWithChangedNetworks),
+                )
+            },
+        )
+    }
+
+    private suspend fun hasMissedDerivations(
+        selectedWalletId: UserWalletId?,
+        walletsWithChangedNetworks: Map<UserWalletId, List<String>>,
+    ): Boolean {
+        return if (selectedWalletId != null) {
+            hasMissedDerivationsUseCase.invoke(
+                userWalletId = selectedWalletId,
+                networksWithDerivationPath = walletsWithChangedNetworks[selectedWalletId].orEmpty()
+                    .associate { Network.ID(it) to null },
+            )
+        } else {
+            false
+        }
     }
 
     private fun onTokenItemClick(index: Int, id: CryptoCurrency.ID) {

@@ -36,21 +36,21 @@ internal class AddToPortfolioBSContentUMFactory(
     /**
      * Create [TangemBottomSheetConfig]
      *
-     * @param portfolioData              portfolio data
-     * @param portfolioBSVisibilityModel portfolio bottom sheet visibility model
-     * @param selectedWallet             selected wallet
-     * @param networksWithToggle         networks with toggle
-     * @param isUserChangedNetworks      flag indicates if user changed networks
+     * @param portfolioData         portfolio data
+     * @param portfolioUIData       portfolio bottom sheet visibility model
+     * @param selectedWallet        selected wallet
+     * @param networksWithToggle    networks with toggle
+     * @param isUserChangedNetworks flag indicates if user changed networks
      */
     fun create(
         portfolioData: PortfolioData,
-        portfolioBSVisibilityModel: PortfolioBSVisibilityModel,
+        portfolioUIData: PortfolioUIData,
         selectedWallet: UserWallet,
         networksWithToggle: Map<TokenMarketInfo.Network, Boolean>,
         isUserChangedNetworks: Boolean,
     ): TangemBottomSheetConfig {
         return TangemBottomSheetConfig(
-            isShow = portfolioBSVisibilityModel.addToPortfolioBSVisibility,
+            isShow = portfolioUIData.portfolioBSVisibilityModel.addToPortfolioBSVisibility,
             onDismissRequest = { onAddToPortfolioVisibilityChange(false) },
             content = AddToPortfolioBSContentUM(
                 selectedWallet = selectedWallet.toSelectedUserWalletItemUM(),
@@ -58,11 +58,11 @@ internal class AddToPortfolioBSContentUMFactory(
                     networksWithToggle = networksWithToggle,
                     onNetworkSwitchClick = onNetworkSwitchClick,
                 ).convert(value = token),
-                isScanCardNotificationVisible = false, // TODO https://tangem.atlassian.net/browse/AND-8158
+                isScanCardNotificationVisible = portfolioUIData.hasMissedDerivations,
                 continueButtonEnabled = isUserChangedNetworks,
                 onContinueButtonClick = onContinueClick,
                 walletSelectorConfig = crateWalletSelectorBSConfig(
-                    isShow = portfolioBSVisibilityModel.walletSelectorBSVisibility,
+                    isShow = portfolioUIData.portfolioBSVisibilityModel.walletSelectorBSVisibility,
                     portfolioData = portfolioData,
                     selectedWalletId = selectedWallet.walletId,
                 ),
