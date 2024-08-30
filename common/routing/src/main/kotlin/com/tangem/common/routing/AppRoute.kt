@@ -219,12 +219,14 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Swap(
         val currency: CryptoCurrency,
-    ) : AppRoute(path = "/swap/${currency.id.value}"), RouteBundleParams {
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/swap/${currency.id.value}/${userWalletId.stringValue}"), RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
 
         companion object {
             const val CURRENCY_BUNDLE_KEY = "currency"
+            const val USER_WALLET_ID_KEY = "userWalletId"
         }
     }
 
