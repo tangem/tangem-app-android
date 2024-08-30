@@ -14,6 +14,7 @@ import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.features.managetokens.component.CustomTokenFormComponent
 import com.tangem.features.managetokens.entity.customtoken.ClickableFieldUM
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormUM
@@ -57,7 +58,7 @@ internal class CustomTokenFormModel @Inject constructor(
                 customCurrencyValidator.createCoin(
                     userWalletId = params.userWalletId,
                     networkId = params.network.id,
-                    derivationPath = params.derivationPath.value,
+                    derivationPath = getDerivationPath(),
                 )
             }
         }
@@ -77,7 +78,7 @@ internal class CustomTokenFormModel @Inject constructor(
             },
             derivationPath = ClickableFieldUM(
                 label = resourceReference(R.string.custom_token_derivation_path),
-                value = if (params.derivationPath.id == params.network.id) {
+                value = if (params.derivationPath == null || params.derivationPath.id == params.network.id) {
                     resourceReference(R.string.custom_token_derivation_path_default)
                 } else {
                     params.derivationPath.networkName
@@ -104,7 +105,7 @@ internal class CustomTokenFormModel @Inject constructor(
                 customCurrencyValidator.validateForm(
                     userWalletId = params.userWalletId,
                     networkId = params.network.id,
-                    derivationPath = params.derivationPath.value,
+                    derivationPath = getDerivationPath(),
                     formValues = formValues,
                 )
             }
@@ -264,6 +265,10 @@ internal class CustomTokenFormModel @Inject constructor(
         )
 
         return formValues.fillValues(form)
+    }
+
+    private fun getDerivationPath(): Network.DerivationPath {
+        return params.derivationPath?.value ?: params.network.derivationPath
     }
 
     private fun updateContractAddress(value: String) {
