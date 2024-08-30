@@ -15,7 +15,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
-import com.tangem.features.managetokens.entity.managetokens.BottomSheetConfig
+import com.tangem.features.managetokens.entity.managetokens.ManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.model.ManageTokensModel
 import com.tangem.features.managetokens.ui.ManageTokensScreen
 import dagger.assisted.Assisted
@@ -32,7 +32,7 @@ internal class DefaultManageTokensComponent @AssistedInject constructor(
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
-        serializer = BottomSheetConfig.serializer(),
+        serializer = ManageTokensBottomSheetConfig.serializer(),
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
     )
@@ -53,10 +53,10 @@ internal class DefaultManageTokensComponent @AssistedInject constructor(
     }
 
     private fun bottomSheetChild(
-        config: BottomSheetConfig,
+        config: ManageTokensBottomSheetConfig,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
-        is BottomSheetConfig.AddCustomToken -> {
+        is ManageTokensBottomSheetConfig.AddCustomToken -> {
             addCustomTokenComponentFactory.create(
                 context = childByContext(componentContext),
                 params = AddCustomTokenComponent.Params(
