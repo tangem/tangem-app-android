@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -34,11 +35,12 @@ internal class SetConfirmationStateLoadingTransformer(
                 transactionDoneState = TransactionDoneState.Empty,
                 pendingAction = null,
                 isApprovalNeeded = false,
+                reduceAmountBy = null,
             ),
         )
     }
 
-    private fun getNotifications(prevState: StakingUiState): ImmutableList<StakingNotification> {
+    private fun getNotifications(prevState: StakingUiState): ImmutableList<NotificationUM> {
         return persistentListOf(
             if (prevState.actionType == StakingActionCommonType.EXIT) {
                 StakingNotification.Warning.Unstake(
