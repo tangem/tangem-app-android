@@ -214,6 +214,7 @@ internal class SetInitialDataStateTransformer(
             transactionDoneState = TransactionDoneState.Empty,
             pendingAction = null,
             isApprovalNeeded = isApprovalNeeded,
+            reduceAmountBy = null,
         )
     }
 
