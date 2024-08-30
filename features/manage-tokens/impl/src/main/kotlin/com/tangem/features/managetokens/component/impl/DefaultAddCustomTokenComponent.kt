@@ -12,7 +12,6 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.CustomTokenFormComponent
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
@@ -20,7 +19,6 @@ import com.tangem.features.managetokens.entity.customtoken.AddCustomTokenConfig
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormValues
 import com.tangem.features.managetokens.entity.customtoken.SelectedDerivationPath
 import com.tangem.features.managetokens.entity.customtoken.SelectedNetwork
-import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.ui.AddCustomTokenBottomSheet
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -110,6 +108,9 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                 context = childByContext(componentContext),
                 params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
                     userWalletId = config.userWalletId,
+                    selectedNetwork = requireNotNull(config.selectedNetwork) {
+                        "Network is not selected"
+                    },
                     selectedDerivationPath = config.selectedDerivationPath,
                     onDerivationPathSelected = { derivationPath ->
                         showForm(derivationPath = derivationPath)
@@ -122,12 +123,10 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                 context = childByContext(componentContext),
                 params = CustomTokenFormComponent.Params(
                     userWalletId = config.userWalletId,
-                    network = config.selectedNetwork ?: error("Network is not selected"),
-                    derivationPath = config.selectedDerivationPath ?: SelectedDerivationPath(
-                        id = config.selectedNetwork.id,
-                        value = config.selectedNetwork.derivationPath,
-                        networkName = resourceReference(R.string.custom_token_derivation_path_default),
-                    ),
+                    network = requireNotNull(config.selectedNetwork) {
+                        "Network is not selected"
+                    },
+                    derivationPath = config.selectedDerivationPath,
                     formValues = config.formValues,
                     onSelectNetworkClick = ::showNetworkSelector,
                     onSelectDerivationPathClick = ::showDerivationPathSelector,
