@@ -209,7 +209,7 @@ private fun ActiveStakingBlock(groups: ImmutableList<BalanceGroupedState>, onCli
                                 InputRowImageInfo(
                                     subtitle = stringReference(balance.validator.name),
                                     caption = getCaption(group.type, balance),
-                                    isGrayscaleImage = group.type == BalanceType.UNSTAKING,
+                                    isGrayscaleImage = !group.isClickable,
                                     infoTitle = balance.fiatAmount,
                                     infoSubtitle = balance.cryptoAmount,
                                     imageUrl = balance.validator.image.orEmpty(),
@@ -247,6 +247,18 @@ private fun getCaption(balanceType: BalanceType, balance: BalanceState): TextRef
         }
         BalanceType.UNSTAKED -> {
             resourceReference(R.string.staking_ready_to_withdraw)
+        }
+        BalanceType.PREPARING -> {
+            combinedReference(
+                resourceReference(R.string.staking_details_warmup_period),
+                annotatedReference {
+                    appendSpace()
+                    appendColored(
+                        text = balance.warmupPeriod.resolveReference(),
+                        color = TangemTheme.colors.text.accent,
+                    )
+                },
+            )
         }
         else -> {
             combinedReference(
