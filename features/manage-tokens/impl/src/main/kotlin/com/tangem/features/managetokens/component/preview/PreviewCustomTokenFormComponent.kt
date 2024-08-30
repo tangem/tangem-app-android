@@ -11,7 +11,7 @@ import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormUM
 import com.tangem.features.managetokens.entity.customtoken.TextInputFieldUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.ui.CustomTokenFormContent
-import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 
 internal class PreviewCustomTokenFormComponent(
@@ -19,7 +19,7 @@ internal class PreviewCustomTokenFormComponent(
     derivationPath: ClickableFieldUM = PreviewCustomTokenFormComponent.derivationPath,
     canAddToken: Boolean = false,
     tokenForm: CustomTokenFormUM.TokenFormUM? = PreviewCustomTokenFormComponent.tokenForm,
-    notifications: ImmutableList<CustomTokenFormUM.NotificationUM> = PreviewCustomTokenFormComponent.notifications,
+    notifications: PersistentList<CustomTokenFormUM.NotificationUM> = PreviewCustomTokenFormComponent.notifications,
 ) : CustomTokenFormComponent {
 
     private val previewState = CustomTokenFormUM(
@@ -73,7 +73,7 @@ internal class PreviewCustomTokenFormComponent(
                 onValueChange = {},
             ),
         )
-        val notifications: ImmutableList<CustomTokenFormUM.NotificationUM> = persistentListOf(
+        val notifications: PersistentList<CustomTokenFormUM.NotificationUM> = persistentListOf(
             CustomTokenFormUM.NotificationUM(
                 id = "1",
                 config = NotificationConfig(
