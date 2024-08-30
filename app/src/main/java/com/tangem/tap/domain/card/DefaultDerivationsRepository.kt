@@ -1,5 +1,7 @@
 package com.tangem.tap.domain.card
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.TangemSdkError
@@ -8,8 +10,10 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.data.common.currency.getNetwork
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -50,6 +54,26 @@ internal class DefaultDerivationsRepository(
             }
 
         derivePublicKeys(userWalletId = userWalletId, derivations = derivations)
+    }
+
+    override suspend fun hasMissedDerivations(
+        userWalletId: UserWalletId,
+        networksWithDerivationPath: Map<Network.ID, String?>,
+    ): Boolean {
+        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
+
+        val derivations = MissedDerivationsFinder(scanResponse = userWallet.scanResponse)
+            .findByNetworks(
+                networksWithDerivationPath.mapNotNull { (networkId, extraDerivationPath) ->
+                    getNetwork(
+                        blockchain = Blockchain.fromNetworkId(networkId.value) ?: return@mapNotNull null,
+                        extraDerivationPath = extraDerivationPath,
+                        derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                    )
+                },
+            )
+
+        return derivations.isNotEmpty()
     }
 
     override suspend fun derivePublicKeys(userWalletId: UserWalletId, derivations: Derivations): DerivedKeys {
