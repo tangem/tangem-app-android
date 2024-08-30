@@ -1,13 +1,7 @@
 package com.tangem.features.managetokens.di
 
-import com.tangem.features.managetokens.component.AddCustomTokenComponent
-import com.tangem.features.managetokens.component.CustomTokenFormComponent
-import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
-import com.tangem.features.managetokens.component.ManageTokensComponent
-import com.tangem.features.managetokens.component.impl.DefaultAddCustomTokenComponent
-import com.tangem.features.managetokens.component.impl.DefaultCustomTokenFormComponent
-import com.tangem.features.managetokens.component.impl.DefaultCustomTokenSelectorComponent
-import com.tangem.features.managetokens.component.impl.DefaultManageTokensComponent
+import com.tangem.features.managetokens.component.*
+import com.tangem.features.managetokens.component.impl.*
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -39,4 +33,10 @@ internal interface ComponentModule {
     fun bindCustomTokenFormComponentFactory(
         factory: DefaultCustomTokenFormComponent.Factory,
     ): CustomTokenFormComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindCustomTokenDerivationInputComponentFactory(
+        factory: DefaultCustomTokenDerivationInputComponent.Factory,
+    ): CustomTokenDerivationInputComponent.Factory
 }
