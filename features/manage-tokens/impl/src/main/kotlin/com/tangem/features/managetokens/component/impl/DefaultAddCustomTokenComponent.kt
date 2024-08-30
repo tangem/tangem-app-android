@@ -131,6 +131,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                     formValues = config.formValues,
                     onSelectNetworkClick = ::showNetworkSelector,
                     onSelectDerivationPathClick = ::showDerivationPathSelector,
+                    onCurrencyAdded = ::dismissAndNotify,
                 ),
             )
         }
@@ -168,6 +169,11 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
             popBack = ::dismiss,
         )
         navigation.replaceAll(config)
+    }
+
+    private fun dismissAndNotify() {
+        dismiss()
+        params.onCurrencyAdded()
     }
 
     @AssistedFactory

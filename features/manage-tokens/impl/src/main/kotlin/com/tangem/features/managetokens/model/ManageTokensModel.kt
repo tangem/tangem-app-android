@@ -9,6 +9,8 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
@@ -64,6 +66,12 @@ internal class ManageTokensModel @Inject constructor(
 
         modelScope.launch {
             manageTokensListManager.launchPagination(params.userWalletId)
+        }
+    }
+
+    fun reloadList() {
+        modelScope.launch {
+            manageTokensListManager.reload(params.userWalletId)
         }
     }
 
@@ -166,9 +174,18 @@ internal class ManageTokensModel @Inject constructor(
                     (status.lastResult as? BatchFetchResult.Error)?.let { fetchError ->
                         Timber.e(fetchError.throwable)
                     }
+
                     state.copySealed(
                         isInitialBatchLoading = false,
                         isNextBatchLoading = false,
+                        scrollToTop = if (state.isInitialBatchLoading && state.items.isNotEmpty()) {
+                            triggeredEvent(
+                                data = Unit,
+                                onConsume = ::consumeScrollToTopEvent,
+                            )
+                        } else {
+                            state.scrollToTop
+                        },
                     )
                 }
                 is PaginationStatus.EndOfPagination -> state.copySealed(
@@ -176,6 +193,14 @@ internal class ManageTokensModel @Inject constructor(
                     isNextBatchLoading = false,
                 )
             }
+        }
+    }
+
+    private fun consumeScrollToTopEvent() {
+        this.state.update { state ->
+            state.copySealed(
+                scrollToTop = consumedEvent(),
+            )
         }
     }
 
