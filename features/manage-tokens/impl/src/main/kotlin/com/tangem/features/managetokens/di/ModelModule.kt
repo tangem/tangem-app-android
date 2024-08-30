@@ -2,6 +2,8 @@ package com.tangem.features.managetokens.di
 
 import com.tangem.core.decompose.di.DecomposeComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.managetokens.model.CustomTokenFormModel
+import com.tangem.features.managetokens.model.CustomTokenSelectorModel
 import com.tangem.features.managetokens.model.ManageTokensModel
 import dagger.Binds
 import dagger.Module
@@ -17,4 +19,14 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(ManageTokensModel::class)
     fun provideManageTokensModel(model: ManageTokensModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(CustomTokenFormModel::class)
+    fun provideCustomTokenFormModel(model: CustomTokenFormModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(CustomTokenSelectorModel::class)
+    fun provideCustomTokenSelectorModel(model: CustomTokenSelectorModel): Model
 }
