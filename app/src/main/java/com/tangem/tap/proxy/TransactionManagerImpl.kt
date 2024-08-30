@@ -353,6 +353,6 @@ class TransactionManagerImpl(
     companion object {
         private const val MULTIPLIER_GAS_PRICE_FOR_NORMAL_FEE = 150 // 50%
         private const val MULTIPLIER_GAS_PRICE_FOR_PRIORITY_FEE = 200 // 50%
-        private val MANTLE_FEE_ESTIMATE_MULTIPLIER = BigDecimal("1.6")
+        private val MANTLE_FEE_ESTIMATE_MULTIPLIER = BigDecimal("1.8")
     }
 }
