@@ -12,7 +12,7 @@ internal interface CustomTokenFormComponent : ComposableContentComponent {
     data class Params(
         val userWalletId: UserWalletId,
         val network: SelectedNetwork,
-        val derivationPath: SelectedDerivationPath,
+        val derivationPath: SelectedDerivationPath?,
         val formValues: CustomTokenFormValues,
         val onSelectNetworkClick: (CustomTokenFormValues) -> Unit,
         val onSelectDerivationPathClick: (CustomTokenFormValues) -> Unit,
