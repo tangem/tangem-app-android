@@ -18,7 +18,7 @@ import com.tangem.domain.managetokens.SaveManagedTokensUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
-import com.tangem.features.managetokens.entity.managetokens.BottomSheetConfig
+import com.tangem.features.managetokens.entity.managetokens.ManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
@@ -47,7 +47,7 @@ internal class ManageTokensModel @Inject constructor(
     private val params: ManageTokensComponent.Params = paramsContainer.require()
 
     val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState(params.userWalletId))
-    val bottomSheetNavigation: SlotNavigation<BottomSheetConfig> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<ManageTokensBottomSheetConfig> = SlotNavigation()
 
     init {
         manageTokensListManager.uiItems
@@ -228,7 +228,7 @@ internal class ManageTokensModel @Inject constructor(
 
     private fun navigateToAddCustomToken() {
         params.userWalletId?.let {
-            bottomSheetNavigation.activate(BottomSheetConfig.AddCustomToken(it))
+            bottomSheetNavigation.activate(ManageTokensBottomSheetConfig.AddCustomToken(it))
         }
     }
 
