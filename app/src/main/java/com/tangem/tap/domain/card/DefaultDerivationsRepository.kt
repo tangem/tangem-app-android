@@ -56,15 +56,18 @@ internal class DefaultDerivationsRepository(
         derivePublicKeys(userWalletId = userWalletId, derivations = derivations)
     }
 
-    override suspend fun hasMissedDerivations(userWalletId: UserWalletId, networkIds: List<Network.ID>): Boolean {
+    override suspend fun hasMissedDerivations(
+        userWalletId: UserWalletId,
+        networksWithDerivationPath: Map<Network.ID, String?>,
+    ): Boolean {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
 
         val derivations = MissedDerivationsFinder(scanResponse = userWallet.scanResponse)
             .findByNetworks(
-                networkIds.mapNotNull {
+                networksWithDerivationPath.mapNotNull { (networkId, extraDerivationPath) ->
                     getNetwork(
-                        blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null,
-                        extraDerivationPath = null,
+                        blockchain = Blockchain.fromNetworkId(networkId.value) ?: return@mapNotNull null,
+                        extraDerivationPath = extraDerivationPath,
                         derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
                     )
                 },

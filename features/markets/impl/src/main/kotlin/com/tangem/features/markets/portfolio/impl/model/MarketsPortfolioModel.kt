@@ -119,7 +119,8 @@ internal class MarketsPortfolioModel @Inject constructor(
         return if (selectedWalletId != null) {
             hasMissedDerivationsUseCase.invoke(
                 userWalletId = selectedWalletId,
-                networkIds = walletsWithChangedNetworks[selectedWalletId].orEmpty().map(Network::ID),
+                networksWithDerivationPath = walletsWithChangedNetworks[selectedWalletId].orEmpty()
+                    .associate { Network.ID(it) to null },
             )
         } else {
             false

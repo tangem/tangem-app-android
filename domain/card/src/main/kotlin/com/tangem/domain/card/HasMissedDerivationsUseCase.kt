@@ -13,7 +13,11 @@ class HasMissedDerivationsUseCase(
     private val derivationsRepository: DerivationsRepository,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId, networkIds: List<Network.ID>): Boolean {
-        return derivationsRepository.hasMissedDerivations(userWalletId, networkIds)
+    /** Check if user [userWalletId] has missed derivations using map of [Network.ID] with extraDerivationPath */
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        networksWithDerivationPath: Map<Network.ID, String?>,
+    ): Boolean {
+        return derivationsRepository.hasMissedDerivations(userWalletId, networksWithDerivationPath)
     }
 }
