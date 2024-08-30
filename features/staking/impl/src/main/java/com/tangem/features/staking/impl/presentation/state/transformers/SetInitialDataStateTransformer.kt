@@ -56,16 +56,19 @@ internal class SetInitialDataStateTransformer(
     }
 
     private val yieldBalancesConverter by lazy(LazyThreadSafetyMode.NONE) {
-        YieldBalancesConverter(cryptoCurrencyStatusProvider, appCurrencyProvider, yield)
+        YieldBalancesConverter(
+            cryptoCurrencyStatusProvider,
+            appCurrencyProvider,
+            yield,
+        )
     }
 
     override fun transform(prevState: StakingUiState): StakingUiState {
-        val cryptoCurrencyName = cryptoCurrencyStatusProvider().currency.name
-
+        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
         return prevState.copy(
             title = TextReference.EMPTY,
-            walletName = userWalletProvider.invoke().name,
-            cryptoCurrencyName = cryptoCurrencyName,
+            cryptoCurrencyName = cryptoCurrency.name,
+            cryptoCurrencySymbol = cryptoCurrency.symbol,
             clickIntents = clickIntents,
             currentStep = StakingStep.InitialInfo,
             initialInfoState = createInitialInfoState(),
