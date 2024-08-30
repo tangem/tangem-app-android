@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.presentation.state
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.event.StateEvent
@@ -13,6 +14,7 @@ import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import kotlinx.collections.immutable.ImmutableList
+import java.math.BigDecimal
 
 /**
  * Ui states of the staking screen
@@ -84,10 +86,11 @@ internal sealed class StakingStates {
             val feeState: FeeState,
             val validatorState: ValidatorState,
             val pendingAction: PendingAction?,
-            val notifications: ImmutableList<StakingNotification>,
+            val notifications: ImmutableList<NotificationUM>,
             val footerText: String,
             val transactionDoneState: TransactionDoneState,
             val isApprovalNeeded: Boolean,
+            val reduceAmountBy: BigDecimal?,
         ) : ConfirmationState()
 
         data class Empty(
