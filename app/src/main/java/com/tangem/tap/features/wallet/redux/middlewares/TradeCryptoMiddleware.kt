@@ -48,7 +48,6 @@ object TradeCryptoMiddleware {
             is TradeCryptoAction.FinishSelling -> openReceiptUrl(action.transactionId)
             is TradeCryptoAction.Buy -> proceedBuyAction(state, action)
             is TradeCryptoAction.Sell -> proceedSellAction(action)
-            is TradeCryptoAction.Swap -> openSwap(currency = action.cryptoCurrency)
             is TradeCryptoAction.Stake -> openStaking(
                 userWalletId = action.userWalletId,
                 cryptoCurrencyId = action.cryptoCurrencyId,
@@ -139,10 +138,6 @@ object TradeCryptoMiddleware {
             action = CurrencyExchangeManager.Action.Sell,
             transactionId = transactionId,
         )?.let { store.dispatchOpenUrl(it) }
-    }
-
-    private fun openSwap(currency: CryptoCurrency) {
-        store.dispatchNavigationAction { push(AppRoute.Swap(currency = currency)) }
     }
 
     private fun openStaking(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID, yield: Yield) {
