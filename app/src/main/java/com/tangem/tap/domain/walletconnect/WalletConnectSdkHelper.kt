@@ -445,6 +445,6 @@ class WalletConnectSdkHelper {
         const val HEX_PREFIX = "0x"
         const val DEFAULT_MAX_GASLIMIT = 350000
 // [REDACTED_TODO_COMMENT]
-        private val MANTLE_FEE_ESTIMATE_MULTIPLIER = BigDecimal("1.6")
+        private val MANTLE_FEE_ESTIMATE_MULTIPLIER = BigDecimal("1.8")
     }
 }
