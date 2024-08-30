@@ -89,5 +89,6 @@ internal object ConfirmationStatePreviewData {
         transactionDoneState = TransactionDoneState.Empty,
         pendingAction = null,
         isApprovalNeeded = false,
+        reduceAmountBy = null,
     )
 }
