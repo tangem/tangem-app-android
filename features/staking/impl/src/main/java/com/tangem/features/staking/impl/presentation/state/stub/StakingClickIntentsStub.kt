@@ -69,4 +69,6 @@ internal object StakingClickIntentsStub : StakingClickIntents {
     override fun onNotificationCancel(notification: Class<out NotificationUM>) {}
 
     override fun openTokenDetails(cryptoCurrency: CryptoCurrency) {}
+
+    override fun onActiveStakeAnalytic() {}
 }
