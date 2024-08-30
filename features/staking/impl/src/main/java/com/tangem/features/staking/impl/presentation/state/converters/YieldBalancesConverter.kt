@@ -6,6 +6,7 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.staking.model.stakekit.BalanceType.Companion.isClickable
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceGroupedState
@@ -61,7 +62,7 @@ internal class YieldBalancesConverter(
         .groupBy { it.type.toGroup() }
         .mapNotNull { item ->
             val (title, footer) = getGroupTitle(item.key)
-            val isClickable = getClickableType(item.key)
+            val isClickable = item.key.isClickable()
             title?.let {
                 BalanceGroupedState(
                     items = item.value.mapBalances().toPersistentList(),
@@ -88,6 +89,7 @@ internal class YieldBalancesConverter(
                 val cryptoAmount = balance.amount
                 val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
                 val unbonding = getUnbondingDate(balance.date)
+                val warmupPeriod = yield.metadata.warmupPeriod.days
                 validator?.let {
                     BalanceState(
                         validator = validator,
@@ -108,6 +110,7 @@ internal class YieldBalancesConverter(
                         ),
                         rawCurrencyId = balance.rawCurrencyId,
                         unbondingPeriod = unbonding,
+                        warmupPeriod = pluralReference(R.plurals.common_days, warmupPeriod, wrappedList(warmupPeriod)),
                         pendingActions = balance.pendingActions.toPersistentList(),
                     )
                 }
@@ -128,25 +131,11 @@ internal class YieldBalancesConverter(
             resourceReference(R.string.staking_unstaked_footer)
         BalanceType.UNSTAKING -> resourceReference(R.string.staking_unstaking) to null
         BalanceType.AVAILABLE -> null to null
-        BalanceType.PREPARING -> null to null
+        BalanceType.PREPARING -> resourceReference(R.string.staking_preparing) to null
         BalanceType.REWARDS -> null to null
         BalanceType.LOCKED -> null to null
         BalanceType.UNLOCKING -> null to null
         BalanceType.UNKNOWN -> null to null
-    }
-
-    private fun getClickableType(type: BalanceType) = when (type) {
-        BalanceType.STAKED,
-        BalanceType.UNSTAKED,
-        -> true
-        BalanceType.AVAILABLE,
-        BalanceType.UNSTAKING,
-        BalanceType.PREPARING,
-        BalanceType.REWARDS,
-        BalanceType.LOCKED,
-        BalanceType.UNLOCKING,
-        BalanceType.UNKNOWN,
-        -> false
     }
 
     private fun getUnbondingDate(date: DateTime?): TextReference {
