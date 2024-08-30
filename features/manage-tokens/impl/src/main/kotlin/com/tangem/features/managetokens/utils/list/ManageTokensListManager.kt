@@ -92,6 +92,7 @@ internal class ManageTokensListManager @Inject constructor(
     }
 
     suspend fun reload(userWalletId: UserWalletId?) {
+        state.value = ManageTokensListState()
         actionsFlow.emit(
             BatchAction.Reload(
                 requestParams = ManageTokensListConfig(userWalletId, searchText = null),
@@ -166,6 +167,8 @@ internal class ManageTokensListManager @Inject constructor(
     override fun removeCustomCurrency(userWalletId: UserWalletId, currency: ManagedCryptoCurrency.Custom) {
         scope.launch {
             removeCustomCurrencyUseCase.invoke(userWalletId, currency)
+                .onRight { reload(userWalletId) }
+                .onLeft { Timber.e(it) }
         }
     }
 
