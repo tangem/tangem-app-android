@@ -15,7 +15,7 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onBackClick()
 
-    fun onNextClick(actionType: StakingActionCommonType? = null, pendingAction: PendingAction? = null)
+    fun onNextClick(actionTypeToOverwrite: StakingActionCommonType? = null, pendingAction: PendingAction? = null)
 
     fun onActionClick()
 
@@ -27,7 +27,7 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun getFee(pendingAction: PendingAction?)
 
-    override fun onAmountNext() = onNextClick(actionType = null)
+    override fun onAmountNext() = onNextClick(actionTypeToOverwrite = null)
 
     fun openValidators()
 
