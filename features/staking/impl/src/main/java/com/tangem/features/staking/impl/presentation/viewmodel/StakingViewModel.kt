@@ -159,9 +159,9 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onBackClick()
     }
 
-    override fun onNextClick(actionType: StakingActionCommonType?, pendingAction: PendingAction?) {
-        if (actionType != null) {
-            stateController.update { it.copy(actionType = actionType) }
+    override fun onNextClick(actionTypeToOverwrite: StakingActionCommonType?, pendingAction: PendingAction?) {
+        if (actionTypeToOverwrite != null) {
+            stateController.update { it.copy(actionType = actionTypeToOverwrite) }
         }
         stakingStateRouter.onNextClick()
         when {
@@ -395,7 +395,7 @@ internal class StakingViewModel @Inject constructor(
         if (rewards != null && rewards.isSingleItem()) {
             onActiveStake(rewards.first())
         } else {
-            onNextClick(actionType = StakingActionCommonType.PENDING_REWARDS)
+            onNextClick(actionTypeToOverwrite = StakingActionCommonType.PENDING_REWARDS)
         }
     }
 
@@ -405,7 +405,7 @@ internal class StakingViewModel @Inject constructor(
                 ShowActionSelectorBottomSheetTransformer(
                     pendingActions = activeStake.pendingActions,
                     onActionSelect = {
-                        onNextClick(actionType = StakingActionCommonType.PENDING_OTHER, pendingAction = it)
+                        onNextClick(actionTypeToOverwrite = StakingActionCommonType.PENDING_OTHER, pendingAction = it)
                         stateController.update(DismissBottomSheetStateTransformer())
                     },
                     onDismiss = {
@@ -414,14 +414,10 @@ internal class StakingViewModel @Inject constructor(
                 ),
             )
         } else {
-            val actionType = if (activeStake.pendingActions.isEmpty()) {
-                StakingActionCommonType.EXIT
-            } else {
-                StakingActionCommonType.PENDING_OTHER
-            }
+            stateController.update(ActionTypeActiveStakeTransformer(cryptoCurrencyStatus, activeStake))
             stateController.update(ValidatorSelectChangeTransformer(activeStake.validator))
             stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, activeStake.cryptoValue, yield))
-            onNextClick(actionType, activeStake.pendingActions.firstOrNull())
+            onNextClick(null, activeStake.pendingActions.firstOrNull())
         }
     }
 
