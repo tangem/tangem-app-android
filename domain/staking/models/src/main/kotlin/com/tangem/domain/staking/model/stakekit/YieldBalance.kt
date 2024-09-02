@@ -8,6 +8,7 @@ sealed class YieldBalance {
 
     data class Data(
         val balance: YieldBalanceItem,
+        val address: String,
     ) : YieldBalance() {
         fun getTotalStakingBalance(): BigDecimal {
             return balance.items
