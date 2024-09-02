@@ -33,9 +33,9 @@ internal fun StakingClaimRewardsValidatorContent(
             .verticalScroll(rememberScrollState()),
     ) {
         state.rewards.forEachIndexed { index, item ->
-            key(item.title + index) {
+            key(item.title.resolveReference() + index) {
                 InputRowImageInfo(
-                    subtitle = stringReference(item.title),
+                    subtitle = item.title,
                     caption = combinedReference(
                         resourceReference(R.string.staking_details_apr),
                         annotatedReference {

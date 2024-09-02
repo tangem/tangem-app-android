@@ -205,9 +205,9 @@ private fun ActiveStakingBlock(groups: ImmutableList<BalanceGroupedState>, onCli
                             ),
                         )
                         group.items.forEachIndexed { index, balance ->
-                            key(balance.title + index) {
+                            key(balance.title.resolveReference() + index) {
                                 InputRowImageInfo(
-                                    subtitle = stringReference(balance.title),
+                                    subtitle = balance.title,
                                     caption = getCaption(group.type, balance),
                                     isGrayscaleImage = !group.isClickable,
                                     infoTitle = balance.fiatAmount,

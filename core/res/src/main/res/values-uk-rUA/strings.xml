@@ -351,7 +351,7 @@
   <string name="markets_loading_error_title">Не вдалося завантажити дані...</string>
   <string name="markets_quick_actions">Швидкі дії</string>
   <string name="markets_search_result_title">Результат</string>
-  <string name="markets_search_see_tokens_under_100k">Переглянути токени до 100к ринкової капіталізації</string>
+  <string name="markets_search_see_tokens_under_100k">Переглянути токени до 100к USD ринкової капіталізації</string>
   <string name="markets_search_show_tokens">Показати токени</string>
   <string name="markets_search_token_no_result_title">Жодного результату</string>
   <string name="markets_select_network">Виберіть мережу</string>
@@ -674,7 +674,7 @@
   <string name="staking_notification_earn_rewards_text_period_month">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються щомісяця.</string>
   <string name="staking_notification_earn_rewards_text_period_week">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються щотиждня.</string>
   <string name="staking_notification_earn_rewards_title">Отримуйте винагороду за стейкінг</string>
-  <string name="staking_notification_unstake_text">Винагороди припиняють нараховуватися одразу після того, як ви знімаєте ставку. Процес зняття займає %s.</string>
+  <string name="staking_notification_unstake_text">Винагорода припиняє нараховуватися одразу після того, як ви почнете процес завершення стейкінгу. Процес завершення триває %s.</string>
   <string name="staking_rebond">Зʼєднати ще раз</string>
   <string name="staking_restake">Повторно застейкати</string>
   <string name="staking_restake_rewards">Застейкати винагороди</string>
@@ -695,7 +695,7 @@
   <string name="staking_title_stake">Застейкати %s</string>
   <string name="staking_title_unstake">Зняти зі стейкінгу %s</string>
   <string name="staking_unlocked_locked">Розблокувати</string>
-  <string name="staking_unstaked">Скасовано зі стейкінгу</string>
+  <string name="staking_unstaked">Вивід зі стейкінгу</string>
   <string name="staking_unstaked_footer">Перевірити незастейкані, щоб отримати свої активи</string>
   <string name="staking_unstaking">Зняти зі стейкінгу</string>
   <string name="staking_validator">Валідатор</string>
@@ -871,6 +871,7 @@
   <string name="warning_low_signatures_message">На цій картці залишається лише %s підписів. Ви повинні вивести всі свої кошти.</string>
   <string name="warning_low_signatures_title">Низька кількість підписів</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токени в різних мережах можуть мати різні адреси. Переконайтеся, що ваша адреса відповідає мережі, коли переказуєте кошти.</string>
+  <string name="warning_matic_migration_message">Токен MATIC мігрує до POL. Однак кінцевого терміну не встановлено і MATIC ще не застарілий. Ви можете безпечно продовжувати використовувати токен MATIC або скористатися біржами, щоб обміняти його на POL.</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="one">Використовуйте вашу картку, щоб отримати адресу для %d мережі</item>
     <item quantity="few">Використовуйте вашу картку, щоб отримати адреси для %d мереж</item>

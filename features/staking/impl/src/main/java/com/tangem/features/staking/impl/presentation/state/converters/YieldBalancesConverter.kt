@@ -65,7 +65,7 @@ internal class YieldBalancesConverter(
             val isClickable = item.key.isClickable()
             title?.let {
                 BalanceGroupedState(
-                    items = item.value.mapBalances().toPersistentList(),
+                    items = item.value.mapBalances(item.key).toPersistentList(),
                     footer = footer,
                     title = it,
                     type = item.key,
@@ -76,44 +76,54 @@ internal class YieldBalancesConverter(
         .filterNot { it.items.isEmpty() }
         .toPersistentList()
 
-    private fun List<BalanceItem>.mapBalances(): List<BalanceState> {
+    private fun List<BalanceItem>.mapBalances(balanceType: BalanceType): List<BalanceState> {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
-        var index = 1
+        var incrementingIndex = 1
         return this
             .filterNot { it.amount.isZero() }
-            .map { balance ->
+            .mapNotNull { balance ->
                 val validator = yield.validators.firstOrNull {
                     balance.validatorAddress?.contains(it.address, ignoreCase = true) == true
                 }
+
                 val cryptoAmount = balance.amount
                 val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
                 val unbonding = getUnbondingDate(balance.date)
                 val warmupPeriod = yield.metadata.warmupPeriod.days
-                BalanceState(
-                    validator = validator,
-                    title = validator?.name ?: index++.toString(),
-                    cryptoValue = cryptoAmount.parseBigDecimal(cryptoCurrency.decimals),
-                    cryptoDecimal = cryptoAmount,
-                    cryptoAmount = stringReference(
-                        BigDecimalFormatter.formatCryptoAmount(
-                            cryptoAmount = cryptoAmount,
-                            cryptoCurrency = cryptoCurrency,
+                val title = when {
+                    validator != null -> stringReference(validator.name)
+                    balanceType == BalanceType.UNSTAKING -> {
+                        resourceReference(R.string.staking_unstaking_item_name, wrappedList(incrementingIndex++))
+                    }
+                    else -> null
+                }
+                title?.let {
+                    BalanceState(
+                        validator = validator,
+                        title = title,
+                        cryptoValue = cryptoAmount.parseBigDecimal(cryptoCurrency.decimals),
+                        cryptoDecimal = cryptoAmount,
+                        cryptoAmount = stringReference(
+                            BigDecimalFormatter.formatCryptoAmount(
+                                cryptoAmount = cryptoAmount,
+                                cryptoCurrency = cryptoCurrency,
+                            ),
                         ),
-                    ),
-                    fiatAmount = stringReference(
-                        BigDecimalFormatter.formatFiatAmount(
-                            fiatAmount = fiatAmount,
-                            fiatCurrencyCode = appCurrency.code,
-                            fiatCurrencySymbol = appCurrency.symbol,
+                        fiatAmount = stringReference(
+                            BigDecimalFormatter.formatFiatAmount(
+                                fiatAmount = fiatAmount,
+                                fiatCurrencyCode = appCurrency.code,
+                                fiatCurrencySymbol = appCurrency.symbol,
+                            ),
                         ),
-                    ),
-                    rawCurrencyId = balance.rawCurrencyId,
-                    unbondingPeriod = unbonding,
-                    warmupPeriod = pluralReference(R.plurals.common_days, warmupPeriod, wrappedList(warmupPeriod)),
-                    pendingActions = balance.pendingActions.toPersistentList(),
-                )
+                        rawCurrencyId = balance.rawCurrencyId,
+                        unbondingPeriod = unbonding,
+                        warmupPeriod = pluralReference(R.plurals.common_days, warmupPeriod, wrappedList(warmupPeriod)),
+                        pendingActions = balance.pendingActions.toPersistentList(),
+                    )
+                }
             }
     }
 
