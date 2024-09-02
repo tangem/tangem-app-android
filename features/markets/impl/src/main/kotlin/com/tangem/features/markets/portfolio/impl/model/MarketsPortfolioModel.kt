@@ -6,6 +6,8 @@ import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.HasMissedDerivationsUseCase
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -13,21 +15,26 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
+import com.tangem.features.markets.portfolio.impl.model.intents.TokenActionsIntents
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ComponentScoped
 internal class MarketsPortfolioModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    override val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val portfolioDataLoader: PortfolioDataLoader,
     private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
-    override val dispatchers: CoroutineDispatcherProvider,
+    private val tokenActionsIntentsFactory: TokenActionsIntents.Factory,
 ) : Model() {
 
     val state: StateFlow<MyPortfolioUM> get() = _state
@@ -45,7 +52,17 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private val portfolioBSVisibilityModelFlow = MutableStateFlow(value = PortfolioBSVisibilityModel())
 
-    private val factory = MyPortfolioUMMFactory(
+    private val currentAppCurrency = getSelectedAppCurrencyUseCase()
+        .map { maybeAppCurrency ->
+            maybeAppCurrency.getOrElse { AppCurrency.Default }
+        }
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = AppCurrency.Default,
+        )
+
+    private val factory = MyPortfolioUMFactory(
         onAddClick = { onAddToPortfolioBSVisibilityChange(isShow = true) },
         onTokenItemClick = ::onTokenItemClick,
         addToPortfolioBSContentUMFactory = AddToPortfolioBSContentUMFactory(
@@ -55,6 +72,15 @@ internal class MarketsPortfolioModel @Inject constructor(
             onNetworkSwitchClick = ::onNetworkSwitchClick,
             onWalletSelect = ::onWalletSelect,
             onContinueClick = ::onContinueClick,
+        ),
+        tokenActionsIntents = tokenActionsIntentsFactory.create(
+            currentAppCurrency = Provider { currentAppCurrency.value },
+            updateTokenActionsBSConfig = { updateBlock ->
+                updateTokensState { it.copy(tokenActionsBSConfig = updateBlock(it.tokenActionsBSConfig)) }
+            },
+            updateTokenReceiveBSConfig = { updateBlock ->
+                updateTokensState { it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig)) }
+            },
         ),
     )
 
@@ -128,9 +154,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     }
 
     private fun onTokenItemClick(index: Int, id: CryptoCurrency.ID) {
-        _state.update {
-            val state = _state.value as? MyPortfolioUM.Tokens ?: return@update it
-
+        updateTokensState { state ->
             state.copy(
                 tokens = state.tokens
                     .mapIndexed { i, tokenUM ->
@@ -138,7 +162,7 @@ internal class MarketsPortfolioModel @Inject constructor(
                         if (index == i && id.value == tokenUM.tokenItemState.id) {
                             tokenUM.copy(isQuickActionsShown = !tokenUM.isQuickActionsShown)
                         } else {
-                            tokenUM
+                            tokenUM.copy(isQuickActionsShown = false)
                         }
                     }
                     .toImmutableList(),
@@ -192,6 +216,13 @@ internal class MarketsPortfolioModel @Inject constructor(
     private fun onWalletSelectorVisibilityChange(isShow: Boolean) {
         portfolioBSVisibilityModelFlow.update {
             it.copy(addToPortfolioBSVisibility = true, walletSelectorBSVisibility = isShow)
+        }
+    }
+
+    private fun updateTokensState(block: (MyPortfolioUM.Tokens) -> MyPortfolioUM) {
+        _state.update { stateToUpdate ->
+            val tokensState = stateToUpdate as? MyPortfolioUM.Tokens ?: return@update stateToUpdate
+            block(tokensState)
         }
     }
 }

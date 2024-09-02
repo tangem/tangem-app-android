@@ -88,14 +88,3 @@ internal fun PriceChangeType.toChartType(): MarketChartLook.Type {
         PriceChangeType.NEUTRAL -> MarketChartLook.Type.Neutral
     }
 }
-
-@Suppress("MagicNumber")
-internal fun getChartTypeByPercent(percent: BigDecimal?): MarketChartLook.Type {
-    val scaled = percent?.setScale(4, RoundingMode.HALF_UP)
-    return when {
-        scaled == null -> return MarketChartLook.Type.Neutral
-        scaled > BigDecimal.ZERO -> MarketChartLook.Type.Growing
-        scaled < BigDecimal.ZERO -> MarketChartLook.Type.Falling
-        else -> MarketChartLook.Type.Neutral
-    }
-}

@@ -66,6 +66,8 @@ internal class AddToPortfolioBSContentUMFactory(
                     portfolioData = portfolioData,
                     selectedWalletId = selectedWallet.walletId,
                 ),
+                // TODO maybe do not show wallets with already added token
+                isWalletBlockVisible = portfolioData.walletsWithBalance.size > 1,
             ),
         )
     }
@@ -86,7 +88,7 @@ internal class AddToPortfolioBSContentUMFactory(
             isShow = isShow,
             onDismissRequest = { onWalletSelectorVisibilityChange(false) },
             content = WalletSelectorBSContentUM(
-                userWallets = portfolioData.walletsWithCurrencyStatuses
+                userWallets = portfolioData.walletsWithCurrencies
                     .filterKeys(UserWallet::isMultiCurrency)
                     .map { it.key }
                     .map { userWallet ->

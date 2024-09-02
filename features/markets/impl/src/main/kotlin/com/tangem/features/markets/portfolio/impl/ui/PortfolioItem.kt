@@ -3,6 +3,7 @@ package com.tangem.features.markets.portfolio.impl.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -25,11 +26,15 @@ internal fun PortfolioItem(state: PortfolioTokenUM, lastInList: Boolean, modifie
             state = state.tokenItemState,
             isBalanceHidden = state.isBalanceHidden,
             modifier = Modifier.background(color = TangemTheme.colors.background.action),
+            itemPaddingValues = PaddingValues(
+                start = TangemTheme.dimens.spacing10,
+                end = TangemTheme.dimens.spacing12,
+            ),
         )
 
         PortfolioQuickActions(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing12)
+                .background(color = TangemTheme.colors.background.action)
                 .padding(
                     bottom = if (lastInList) {
                         TangemTheme.dimens.spacing12
@@ -37,8 +42,10 @@ internal fun PortfolioItem(state: PortfolioTokenUM, lastInList: Boolean, modifie
                         TangemTheme.dimens.spacing24
                     },
                 ),
+            actions = state.quickActions.actions,
             isVisible = state.isQuickActionsShown,
-            onActionClick = state.onQuickActionClick,
+            onActionClick = state.quickActions.onQuickActionClick,
+            onActionLongClick = state.quickActions.onQuickActionLongClick,
         )
     }
 }

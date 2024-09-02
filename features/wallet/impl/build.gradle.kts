@@ -78,7 +78,7 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
-    implementation(projects.domain.staking)
+    implementation(projects.domain.staking.models)
 
     //TODO: Create api/impl modules for onboarding https://tangem.atlassian.net/browse/AND-4841
     implementation(projects.features.onboarding)

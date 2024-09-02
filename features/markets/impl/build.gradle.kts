@@ -29,6 +29,10 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
 
+    /* Redux -_- */
+    implementation(projects.domain.legacy)
+    implementation(deps.reKotlin)
+
     /* Compose */
     implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
