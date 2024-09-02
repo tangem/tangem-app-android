@@ -15,7 +15,7 @@ internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onBackClick() {}
 
-    override fun onNextClick(actionType: StakingActionCommonType?, pendingAction: PendingAction?) {}
+    override fun onNextClick(actionTypeToOverwrite: StakingActionCommonType?, pendingAction: PendingAction?) {}
 
     override fun onActionClick() {}
 
