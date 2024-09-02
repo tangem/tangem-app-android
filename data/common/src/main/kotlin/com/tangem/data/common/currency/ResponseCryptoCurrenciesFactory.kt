@@ -118,6 +118,7 @@ class ResponseCryptoCurrenciesFactory {
             // get name and symbol from enum Blockchain until backend renamed
             // [REDACTED_JIRA]
             Blockchain.Dischain,
+            Blockchain.Polygon,
             -> this.currency
             else -> responseToken.symbol
         }
