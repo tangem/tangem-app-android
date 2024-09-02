@@ -29,6 +29,9 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
 
+    // FIXME AND-8203
+    // Remove the "Buy" and "Sell" actions from the redux middleware.
+    // Instead, create some kind of interface for such cases.
     /* Redux -_- */
     implementation(projects.domain.legacy)
     implementation(deps.reKotlin)
