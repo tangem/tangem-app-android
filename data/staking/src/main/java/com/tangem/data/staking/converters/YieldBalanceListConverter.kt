@@ -15,14 +15,7 @@ internal class YieldBalanceListConverter : Converter<Set<YieldBalanceWrapperDTO>
             YieldBalanceList.Empty
         } else {
             YieldBalanceList.Data(
-                balances = value.map {
-                    converter.convert(
-                        YieldBalanceConverter.Data(
-                            balance = it.balances,
-                            integrationId = it.integrationId,
-                        ),
-                    )
-                },
+                balances = value.map(converter::convert),
             )
         }
     }
