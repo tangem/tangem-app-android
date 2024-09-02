@@ -20,7 +20,9 @@ import kotlinx.collections.immutable.ImmutableList
 @Immutable
 internal data class StakingUiState(
     val title: TextReference,
+    val subtitle: TextReference?,
     val clickIntents: StakingClickIntents,
+    val walletName: String,
     val cryptoCurrencyName: String,
     val currentStep: StakingStep,
     val initialInfoState: StakingStates.InitialInfoState,
