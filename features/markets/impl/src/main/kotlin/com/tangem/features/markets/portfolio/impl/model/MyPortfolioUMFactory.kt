@@ -6,7 +6,6 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
-import com.tangem.features.markets.portfolio.impl.model.intents.TokenActionsIntents
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 
 /**
@@ -21,7 +20,7 @@ internal class MyPortfolioUMFactory(
     private val onAddClick: () -> Unit,
     private val onTokenItemClick: (Int, CryptoCurrency.ID) -> Unit,
     private val addToPortfolioBSContentUMFactory: AddToPortfolioBSContentUMFactory,
-    private val tokenActionsIntents: TokenActionsIntents,
+    private val tokenActionsHandler: TokenActionsHandler,
 ) {
 
     fun create(
@@ -65,7 +64,7 @@ internal class MyPortfolioUMFactory(
             ),
             onAddClick = onAddClick,
             onTokenItemClick = onTokenItemClick,
-            quickActionsIntents = tokenActionsIntents,
+            quickActionsIntents = tokenActionsHandler,
         )
             .convert(walletsWithCurrencies)
     }

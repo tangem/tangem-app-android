@@ -15,7 +15,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
-import com.tangem.features.markets.portfolio.impl.model.intents.TokenActionsIntents
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -34,7 +33,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val portfolioDataLoader: PortfolioDataLoader,
     private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
-    private val tokenActionsIntentsFactory: TokenActionsIntents.Factory,
+    private val tokenActionsIntentsFactory: TokenActionsHandler.Factory,
 ) : Model() {
 
     val state: StateFlow<MyPortfolioUM> get() = _state
@@ -73,7 +72,7 @@ internal class MarketsPortfolioModel @Inject constructor(
             onWalletSelect = ::onWalletSelect,
             onContinueClick = ::onContinueClick,
         ),
-        tokenActionsIntents = tokenActionsIntentsFactory.create(
+        tokenActionsHandler = tokenActionsIntentsFactory.create(
             currentAppCurrency = Provider { currentAppCurrency.value },
             updateTokenActionsBSConfig = { updateBlock ->
                 updateTokensState { it.copy(tokenActionsBSConfig = updateBlock(it.tokenActionsBSConfig)) }

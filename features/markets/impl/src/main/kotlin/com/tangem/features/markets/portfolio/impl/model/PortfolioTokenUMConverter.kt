@@ -8,7 +8,6 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
-import com.tangem.features.markets.portfolio.impl.model.intents.TokenActionsIntents
 import com.tangem.features.markets.portfolio.impl.ui.state.PortfolioTokenUM
 import com.tangem.features.markets.portfolio.impl.ui.state.QuickActionUM
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
@@ -24,7 +23,7 @@ internal class PortfolioTokenUMConverter(
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
     private val onTokenItemClick: (CryptoCurrencyStatus) -> Unit,
-    private val tokenActionsIntents: TokenActionsIntents,
+    private val tokenActionsHandler: TokenActionsHandler,
 ) : Converter<PortfolioData.CryptoCurrencyData, PortfolioTokenUM> {
 
     override fun convert(value: PortfolioData.CryptoCurrencyData): PortfolioTokenUM {
@@ -36,7 +35,7 @@ internal class PortfolioTokenUMConverter(
             },
             onItemClick = onTokenItemClick,
             onItemLongClick = {
-                tokenActionsIntents.onTokenLongClick(cryptoCurrencyData = value)
+                tokenActionsHandler.onTokenLongClick(cryptoCurrencyData = value)
             },
         )
 
@@ -72,15 +71,15 @@ internal class PortfolioTokenUMConverter(
             ).toImmutableList(),
             onQuickActionClick = {
                 when (it) {
-                    QuickActionUM.Buy -> tokenActionsIntents.handle(
+                    QuickActionUM.Buy -> tokenActionsHandler.handle(
                         action = TokenActionsBSContentUM.Action.Buy,
                         cryptoCurrencyData = cryptoData,
                     )
-                    QuickActionUM.Exchange -> tokenActionsIntents.handle(
+                    QuickActionUM.Exchange -> tokenActionsHandler.handle(
                         action = TokenActionsBSContentUM.Action.Exchange,
                         cryptoCurrencyData = cryptoData,
                     )
-                    QuickActionUM.Receive -> tokenActionsIntents.handle(
+                    QuickActionUM.Receive -> tokenActionsHandler.handle(
                         action = TokenActionsBSContentUM.Action.Receive,
                         cryptoCurrencyData = cryptoData,
                     )
@@ -88,7 +87,7 @@ internal class PortfolioTokenUMConverter(
             },
             onQuickActionLongClick = {
                 if (it == QuickActionUM.Receive) {
-                    tokenActionsIntents.handle(
+                    tokenActionsHandler.handle(
                         action = TokenActionsBSContentUM.Action.CopyAddress,
                         cryptoCurrencyData = cryptoData,
                     )

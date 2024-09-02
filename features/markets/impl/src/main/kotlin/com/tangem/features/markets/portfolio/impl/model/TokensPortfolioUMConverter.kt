@@ -6,7 +6,6 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
-import com.tangem.features.markets.portfolio.impl.model.intents.TokenActionsIntents
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM.Tokens.AddButtonState
 import com.tangem.utils.converter.Converter
@@ -25,7 +24,7 @@ internal class TokensPortfolioUMConverter(
     private val bsConfig: TangemBottomSheetConfig,
     private val onAddClick: () -> Unit,
     private val onTokenItemClick: (index: Int, id: CryptoCurrency.ID) -> Unit,
-    private val quickActionsIntents: TokenActionsIntents,
+    private val quickActionsIntents: TokenActionsHandler,
 ) : Converter<Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>, MyPortfolioUM.Tokens> {
 
     override fun convert(value: Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>): MyPortfolioUM.Tokens {
@@ -37,7 +36,7 @@ internal class TokensPortfolioUMConverter(
                         appCurrency = appCurrency,
                         isBalanceHidden = isBalanceHidden,
                         onTokenItemClick = { onTokenItemClick(index, it.currency.id) },
-                        tokenActionsIntents = quickActionsIntents,
+                        tokenActionsHandler = quickActionsIntents,
                     ).convert(cryptoData)
                 }
                 .toImmutableList(),

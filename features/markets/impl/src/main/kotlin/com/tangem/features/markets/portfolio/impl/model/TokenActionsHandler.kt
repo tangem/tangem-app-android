@@ -1,4 +1,4 @@
-package com.tangem.features.markets.portfolio.impl.model.intents
+package com.tangem.features.markets.portfolio.impl.model
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ComponentScoped
@@ -27,7 +27,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Suppress("LongParameterList")
 @ComponentScoped
-internal class TokenActionsIntents @AssistedInject constructor(
+internal class TokenActionsHandler @AssistedInject constructor(
     private val router: Router,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
@@ -194,6 +194,6 @@ internal class TokenActionsIntents @AssistedInject constructor(
             updateTokenReceiveBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
             @Assisted("updateTokenActionsBSConfig")
             updateTokenActionsBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
-        ): TokenActionsIntents
+        ): TokenActionsHandler
     }
 }
