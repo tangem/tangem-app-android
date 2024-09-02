@@ -299,6 +299,7 @@ internal class DefaultStakingRepository(
                     YieldBalanceWrapperDTO(
                         balances = result,
                         integrationId = requestBody.integrationId,
+                        addresses = requestBody.addresses,
                     ),
                 )
             },
@@ -317,14 +318,7 @@ internal class DefaultStakingRepository(
                     ?: error("Could not get integrationId")
                 stakingBalanceStore.get(userWalletId, integrationId)
                     .collectLatest {
-                        send(
-                            yieldBalanceConverter.convert(
-                                YieldBalanceConverter.Data(
-                                    balance = it,
-                                    integrationId = integrationId,
-                                ),
-                            ),
-                        )
+                        send(yieldBalanceConverter.convert(it))
                     }
             }
 
@@ -351,12 +345,7 @@ internal class DefaultStakingRepository(
             val result = stakingBalanceStore.getSyncOrNull(userWalletId, integrationId)
                 ?: return@withContext YieldBalance.Error
 
-            yieldBalanceConverter.convert(
-                YieldBalanceConverter.Data(
-                    balance = result,
-                    integrationId = integrationId,
-                ),
-            )
+            yieldBalanceConverter.convert(result)
         }
     }
 
@@ -385,7 +374,7 @@ internal class DefaultStakingRepository(
                                 null
                             }
                         }
-                        .distinct()
+                        .distinctBy { it.second }
                         .map { getBalanceRequestData(it.first, it.second) }
                         .ifEmpty { return@invokeOnExpire }
                     val result = stakeKitApi.getMultipleYieldBalances(availableCurrencies).getOrThrow()
