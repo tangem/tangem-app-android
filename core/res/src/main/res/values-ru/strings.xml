@@ -71,6 +71,7 @@
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_all">Все</string>
   <string name="common_allow">Разрешить</string>
+  <string name="common_analytics">Аналитика</string>
   <string name="common_apply">Применить</string>
   <string name="common_approval">Одобрение</string>
   <string name="common_approve">Подтвердить</string>
@@ -669,6 +670,7 @@
   <string name="staking_details_unbonding_period_info">Период, который необходимо подождать после запроса на вывод средств из стейкинга, прежде чем токены станут доступны.</string>
   <string name="staking_details_warmup_period">Период прогрева</string>
   <string name="staking_details_warmup_period_info">Время, необходимое для начала процесса стейкинга и активации процесса начисления наград</string>
+  <string name="staking_locked">Заблокировано</string>
   <string name="staking_migrate">Переместить</string>
   <string name="staking_native">Нативный стейкинг</string>
   <string name="staking_notification_earn_rewards_text_period_day">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый день.</string>

@@ -4,10 +4,10 @@ import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal sealed class BottomSheetConfig {
+internal sealed class ManageTokensBottomSheetConfig {
 
     @Serializable
     data class AddCustomToken(
         val userWalletId: UserWalletId,
-    ) : BottomSheetConfig()
+    ) : ManageTokensBottomSheetConfig()
 }

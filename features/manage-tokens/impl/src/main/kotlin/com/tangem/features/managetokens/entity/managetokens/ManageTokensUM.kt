@@ -2,6 +2,8 @@ package com.tangem.features.managetokens.entity.managetokens
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -15,6 +17,7 @@ internal sealed class ManageTokensUM {
     abstract val topBar: ManageTokensTopBarUM
     abstract val search: SearchBarUM
     abstract val loadMore: () -> Boolean
+    abstract val scrollToTop: StateEvent<Unit>
 
     data class ReadContent(
         override val popBack: () -> Unit,
@@ -24,6 +27,7 @@ internal sealed class ManageTokensUM {
         override val topBar: ManageTokensTopBarUM,
         override val search: SearchBarUM,
         override val loadMore: () -> Boolean,
+        override val scrollToTop: StateEvent<Unit> = consumedEvent(),
     ) : ManageTokensUM()
 
     data class ManageContent(
@@ -34,8 +38,10 @@ internal sealed class ManageTokensUM {
         override val topBar: ManageTokensTopBarUM,
         override val search: SearchBarUM,
         override val loadMore: () -> Boolean,
+        override val scrollToTop: StateEvent<Unit> = consumedEvent(),
         val saveChanges: () -> Unit,
         val hasChanges: Boolean,
+        val isSavingInProgress: Boolean,
     ) : ManageTokensUM()
 
     fun copySealed(
@@ -44,6 +50,8 @@ internal sealed class ManageTokensUM {
         hasChanges: Boolean = this is ManageContent && this.hasChanges,
         isInitialBatchLoading: Boolean = this.isInitialBatchLoading,
         isNextBatchLoading: Boolean = this.isNextBatchLoading,
+        isSavingInProgress: Boolean = this is ManageContent && this.isSavingInProgress,
+        scrollToTop: StateEvent<Unit> = this.scrollToTop,
     ): ManageTokensUM {
         return when (this) {
             is ManageContent -> copy(
@@ -52,12 +60,15 @@ internal sealed class ManageTokensUM {
                 hasChanges = hasChanges,
                 isInitialBatchLoading = isInitialBatchLoading,
                 isNextBatchLoading = isNextBatchLoading,
+                isSavingInProgress = isSavingInProgress,
+                scrollToTop = scrollToTop,
             )
             is ReadContent -> copy(
                 search = search,
                 items = items,
                 isInitialBatchLoading = isInitialBatchLoading,
                 isNextBatchLoading = isNextBatchLoading,
+                scrollToTop = scrollToTop,
             )
         }
     }

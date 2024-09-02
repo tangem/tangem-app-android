@@ -55,10 +55,10 @@ private fun CurrencyItemUM.Basic.updateNetworks(currency: ManagedCryptoCurrency.
     is NetworksUM.Collapsed -> networks
     is NetworksUM.Expanded -> networks.copy(
         networks = networks.networks.map { network ->
-            val isSelected = network.networkId in currency.addedIn
+            val isSelected = network.network in currency.addedIn
 
             network.copy(
-                iconResId = network.networkId.getIconRes(isSelected),
+                iconResId = network.network.id.getIconRes(isSelected),
                 isSelected = isSelected,
             )
         }.toImmutableList(),

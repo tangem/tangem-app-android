@@ -13,6 +13,7 @@ import com.tangem.features.managetokens.utils.ui.update
 import com.tangem.pagination.Batch
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.addOrReplace
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -49,8 +50,9 @@ internal class ManageTokensUiManager(
 
         newCurrencyBatches.forEach { (key, data) ->
             val indexToUpdate = currentUiBatches.indexOfFirst { it.key == key }
+            val currencyBatch = state.value.currencyBatches.getOrNull(indexToUpdate)
 
-            if (indexToUpdate == -1) {
+            if (indexToUpdate == -1 || currencyBatch == null) {
                 val newBatch = Batch(
                     key = key,
                     data = data.map { item ->
@@ -62,7 +64,7 @@ internal class ManageTokensUiManager(
                     },
                 )
 
-                batches.add(newBatch)
+                batches.addOrReplace(newBatch) { it.key == key }
             } else {
                 val uiBatchToUpdate = currentUiBatches[indexToUpdate]
 
@@ -70,8 +72,6 @@ internal class ManageTokensUiManager(
                     return@forEach
                 }
 
-                val currentCurrencyBatches = state.value.currencyBatches
-                val currencyBatch = currentCurrencyBatches[indexToUpdate]
                 val updatedBatch = uiBatchToUpdate.copy(
                     data = data.mapIndexed { index, item ->
                         if (item == currencyBatch.data[index]) {
@@ -104,7 +104,8 @@ internal class ManageTokensUiManager(
             network = currency.network,
             isCoin = currency is ManagedCryptoCurrency.Custom.Coin,
             onConfirm = {
-                // TODO: https://tangem.atlassian.net/browse/AND-7969
+                val userWalletId = requireNotNull(state.value.userWalletId) { "UserWalletId is null. Can not remove" }
+                actions.removeCustomCurrency(userWalletId = userWalletId, currency = currency)
             },
         )
     }
@@ -142,19 +143,19 @@ internal class ManageTokensUiManager(
         if (currency !is ManagedCryptoCurrency.Token) return@launch
 
         if (isSelected) {
-            actions.addCurrency(batchKey, currency.id, source.id)
+            actions.addCurrency(batchKey, currency, source.network)
         } else {
-            if (actions.checkNeedToShowRemoveNetworkWarning(currency.id, source.id)) {
+            if (actions.checkNeedToShowRemoveNetworkWarning(currency, source.network)) {
                 showRemoveNetworkWarning(
                     currency = currency,
                     network = source.network,
                     isCoin = source is ManagedCryptoCurrency.SourceNetwork.Main,
                     onConfirm = {
-                        actions.removeCurrency(batchKey, currency.id, source.id)
+                        actions.removeCurrency(batchKey, currency, source.network)
                     },
                 )
             } else {
-                actions.removeCurrency(batchKey, currency.id, source.id)
+                actions.removeCurrency(batchKey, currency, source.network)
             }
         }
     }

@@ -78,11 +78,28 @@ data class PendingAction(
 enum class BalanceType {
     AVAILABLE,
     STAKED,
-    UNSTAKING,
-    UNSTAKED,
     PREPARING,
-    REWARDS,
-    LOCKED,
+    UNSTAKING,
     UNLOCKING,
+    UNSTAKED,
+    LOCKED,
+    REWARDS,
     UNKNOWN,
+    ;
+
+    companion object {
+        fun BalanceType.isClickable() = when (this) {
+            STAKED,
+            UNSTAKED,
+            LOCKED,
+            -> true
+            AVAILABLE,
+            UNSTAKING,
+            PREPARING,
+            REWARDS,
+            UNLOCKING,
+            UNKNOWN,
+            -> false
+        }
+    }
 }

@@ -35,7 +35,7 @@ internal class PreviewCustomTokenSelectorComponent(
                 )
 
                 DerivationPathUM(
-                    id = d.id.value,
+                    id = d.id?.value ?: "",
                     value = d.value.value.orEmpty(),
                     networkName = d.networkName,
                     isSelected = d.value == params.selectedDerivationPath?.value,
@@ -51,7 +51,17 @@ internal class PreviewCustomTokenSelectorComponent(
                 )
 
                 CurrencyNetworkUM(
-                    networkId = n.id,
+                    network = Network(
+                        id = n.id,
+                        backendId = n.id.value,
+                        name = "",
+                        currencySymbol = "",
+                        derivationPath = Network.DerivationPath.Card(""),
+                        isTestnet = false,
+                        standardType = Network.StandardType.ERC20,
+                        hasFiatFeeRate = false,
+                        canHandleTokens = false,
+                    ),
                     name = "Network $index",
                     type = "N$index",
                     iconResId = R.drawable.ic_eth_16,
@@ -65,7 +75,10 @@ internal class PreviewCustomTokenSelectorComponent(
 
     val previewState = CustomTokenSelectorUM(
         header = when (params) {
-            is Params.DerivationPathSelector -> CustomTokenSelectorUM.HeaderUM.CustomDerivationButton({})
+            is Params.DerivationPathSelector -> CustomTokenSelectorUM.HeaderUM.CustomDerivationButton(
+                value = null,
+                onClick = {},
+            )
             is Params.NetworkSelector -> if (params.selectedNetwork == null) {
                 CustomTokenSelectorUM.HeaderUM.Description
             } else {

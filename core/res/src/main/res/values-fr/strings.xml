@@ -569,6 +569,7 @@
   <string name="settings_wallet_name_title">Nom</string>
   <string name="staking_active">Actif</string>
   <string name="staking_active_footer">Afin d\'unstaker vos actifs, appuyez sur le bloc ci-dessus</string>
+  <string name="staking_details_annual_percentage_rate">Pourcentage de rendement annuel</string>
   <string name="staking_details_annual_percentage_rate_info">Le pourcentage de rendement annuel que vous pouvez gagner en participant au staking.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_available">Disponible</string>

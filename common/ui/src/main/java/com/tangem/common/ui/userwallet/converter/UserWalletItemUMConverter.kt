@@ -30,6 +30,7 @@ class UserWalletItemUMConverter(
     private val balance: TotalFiatBalance? = null,
     private val isLoading: Boolean = true,
     private val isBalanceHidden: Boolean = false,
+    private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
 ) : Converter<UserWallet, UserWalletItemUM> {
 
     override fun convert(value: UserWallet): UserWalletItemUM {
@@ -45,6 +46,7 @@ class UserWalletItemUMConverter(
                 ),
                 imageUrl = artworkUrl,
                 isEnabled = !isLocked,
+                endIcon = endIcon,
                 onClick = { onClick(value.walletId) },
             )
         }

@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.ChainRowUM
@@ -46,7 +47,9 @@ internal fun CustomTokenSelectorContent(model: CustomTokenSelectorUM, modifier: 
     val lastIndex = model.items.lastIndex
 
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.background(
+            color = TangemTheme.colors.background.secondary,
+        ),
         contentPadding = PaddingValues(
             bottom = TangemTheme.dimens.spacing16 + bottomBarHeight,
         ),
@@ -108,6 +111,8 @@ private fun Header(header: CustomTokenSelectorUM.HeaderUM, modifier: Modifier = 
         is CustomTokenSelectorUM.HeaderUM.CustomDerivationButton -> {
             CustomDerivationButton(
                 modifier = modifier.padding(vertical = TangemTheme.dimens.spacing16),
+                enteredDerivationPath = header.value,
+                isSelected = header.value != null,
                 onClick = header.onClick,
             )
         }
@@ -162,52 +167,84 @@ private fun NetworkItem(model: CurrencyNetworkUM, modifier: Modifier = Modifier)
             )
         },
         action = {
-            AnimatedVisibility(
-                modifier = Modifier.size(TangemTheme.dimens.size24),
-                visible = model.isSelected,
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_check_24),
-                    tint = TangemTheme.colors.icon.accent,
-                    contentDescription = null,
-                )
-            }
+            SelectedIcon(isVisible = model.isSelected)
         },
     )
 }
 
 @Composable
-private fun CustomDerivationButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    // TODO: Implement in https://tangem.atlassian.net/browse/AND-8033
-    Box(
+private fun CustomDerivationButton(
+    enteredDerivationPath: String?,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    InformationBlock(
         modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size56)
-            .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
-            .background(color = TangemTheme.colors.background.primary)
-            .clickable(onClick = onClick)
-            .padding(all = TangemTheme.dimens.spacing12),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Text(
-            text = "Custom",
-            color = TangemTheme.colors.text.primary1,
-        )
-    }
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .clickable(onClick = onClick),
+        title = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+            ) {
+                Text(
+                    text = stringResource(id = R.string.custom_token_custom_derivation),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.secondary,
+                )
+                Text(
+                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                    text = enteredDerivationPath ?: stringResource(id = R.string.custom_token_custom_derivation_title),
+                    style = TangemTheme.typography.body2,
+                    color = TangemTheme.colors.text.primary1,
+                )
+            }
+        },
+        action = {
+            SelectedIcon(isVisible = isSelected)
+        },
+    )
 }
 
 @Composable
 private fun DerivationPathItem(model: DerivationPathUM, modifier: Modifier = Modifier) {
-    // TODO: Implement in https://tangem.atlassian.net/browse/AND-8033
-    Box(
-        modifier = modifier
-            .heightIn(TangemTheme.dimens.size56)
-            .padding(all = TangemTheme.dimens.spacing12),
-        contentAlignment = Alignment.CenterStart,
+    InformationBlock(
+        modifier = modifier,
+        shape = RectangleShape,
+        title = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+            ) {
+                Text(
+                    text = model.networkName.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.secondary,
+                )
+
+                Text(
+                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                    text = model.value,
+                    style = TangemTheme.typography.body2,
+                    color = TangemTheme.colors.text.primary1,
+                )
+            }
+        },
+        action = {
+            SelectedIcon(isVisible = model.isSelected)
+        },
+    )
+}
+
+@Composable
+private fun SelectedIcon(isVisible: Boolean, modifier: Modifier = Modifier) {
+    AnimatedVisibility(
+        modifier = modifier.size(TangemTheme.dimens.size24),
+        visible = isVisible,
     ) {
-        Text(
-            text = "${model.networkName.resolveReference()}: ${model.value} ${if (model.isSelected) "<" else ""}",
-            color = TangemTheme.colors.text.primary1,
+        Icon(
+            painter = painterResource(id = R.drawable.ic_check_24),
+            tint = TangemTheme.colors.icon.accent,
+            contentDescription = null,
         )
     }
 }
@@ -229,22 +266,15 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
     PreviewParameterProvider<CustomTokenSelectorComponent> {
     override val values: Sequence<CustomTokenSelectorComponent>
         get() = sequenceOf(
-            PreviewCustomTokenSelectorComponent(),
-            PreviewCustomTokenSelectorComponent(
-                params = CustomTokenSelectorComponent.Params.NetworkSelector(
-                    userWalletId = UserWalletId(stringValue = "321"),
-                    selectedNetwork = SelectedNetwork(
-                        id = Network.ID(value = "0"),
-                        name = stringReference(""),
-                        derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
-                        canHandleTokens = false,
-                    ),
-                    onNetworkSelected = {},
-                ),
-            ),
             PreviewCustomTokenSelectorComponent(
                 params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
                     userWalletId = UserWalletId(stringValue = "321"),
+                    selectedNetwork = SelectedNetwork(
+                        id = Network.ID(value = "0"),
+                        name = stringReference("Ethereum"),
+                        derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
+                        canHandleTokens = true,
+                    ),
                     selectedDerivationPath = SelectedDerivationPath(
                         id = Network.ID(value = "0"),
                         value = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
