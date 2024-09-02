@@ -137,9 +137,8 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
     private fun StakingUiState.onPrimaryClick() {
         when (currentStep) {
             StakingStep.InitialInfo -> {
-                val actionType = StakingActionCommonType.ENTER
                 clickIntents.onAmountValueChange("") // reset amount state
-                clickIntents.onNextClick(actionType)
+                clickIntents.onNextClick(StakingActionCommonType.ENTER)
             }
             StakingStep.Validators,
             StakingStep.Amount,
