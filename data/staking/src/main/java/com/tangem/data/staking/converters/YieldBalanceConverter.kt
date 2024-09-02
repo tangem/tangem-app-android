@@ -25,7 +25,8 @@ internal class YieldBalanceConverter : Converter<YieldBalanceConverter.Data, Yie
                             pricePerShare = item.pricePerShare,
                             rawCurrencyId = item.tokenDTO.coinGeckoId,
                             rawNetworkId = item.tokenDTO.network.name,
-                            validatorAddress = item.validatorAddress,
+                            // tron-specific. operates validatorAddresses instead of validatorAddress
+                            validatorAddress = item.validatorAddress ?: item.validatorAddresses?.get(0),
                             date = item.date?.toDateTime(),
                             pendingActions = pendingActionConverter.convertList(item.pendingActions),
                         )
