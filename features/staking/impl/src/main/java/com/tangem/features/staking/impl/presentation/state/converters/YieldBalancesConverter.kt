@@ -85,7 +85,7 @@ internal class YieldBalancesConverter(
             .mapNotNull { balance ->
                 val validator = yield.validators.firstOrNull {
                     balance.validatorAddress?.contains(it.address, ignoreCase = true) == true
-                }
+                } ?: mockedValidator
                 val cryptoAmount = balance.amount
                 val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
                 val unbonding = getUnbondingDate(balance.date)
@@ -130,10 +130,10 @@ internal class YieldBalancesConverter(
         BalanceType.UNSTAKED -> resourceReference(R.string.staking_unstaked) to
             resourceReference(R.string.staking_unstaked_footer)
         BalanceType.UNSTAKING -> resourceReference(R.string.staking_unstaking) to null
+        BalanceType.LOCKED -> resourceReference(R.string.staking_locked) to null
         BalanceType.AVAILABLE -> null to null
         BalanceType.PREPARING -> resourceReference(R.string.staking_preparing) to null
         BalanceType.REWARDS -> null to null
-        BalanceType.LOCKED -> null to null
         BalanceType.UNLOCKING -> null to null
         BalanceType.UNKNOWN -> null to null
     }
@@ -164,5 +164,12 @@ internal class YieldBalancesConverter(
 
     private companion object {
         const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000
+
+        private val mockedValidator = Yield.Validator(
+            address = "",
+            status = "",
+            name = "Mocked validator",
+            preferred = true,
+        )
     }
 }
