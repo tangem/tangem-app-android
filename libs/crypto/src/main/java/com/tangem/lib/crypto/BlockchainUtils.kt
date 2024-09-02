@@ -52,6 +52,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.Binance || blockchain == Blockchain.BinanceTestnet
     }
 
+    fun isTron(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet
+    }
+
     fun isSupportedNetworkId(networkId: String): Boolean {
         return Blockchain.fromNetworkId(networkId)?.isSupportedInApp() ?: false
     }
