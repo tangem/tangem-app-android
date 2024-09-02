@@ -132,7 +132,7 @@ internal class DefaultCurrenciesRepository(
         savedCurrencies: List<UserTokensResponse.Token>,
     ): List<CryptoCurrency.Coin> {
         return newTokens
-            .filterNot { savedCurrencies.hasCoinForToken(it) } // tokens without coins
+            .filterNot { savedCurrencies.hasCoinForToken(it.network) } // tokens without coins
             .mapNotNull {
                 cryptoCurrencyFactory.createCoin(
                     blockchain = getBlockchain(networkId = it.network.id),
@@ -153,15 +153,7 @@ internal class DefaultCurrenciesRepository(
             val token = userTokensResponseFactory.createResponseToken(currency)
             storeAndPushTokens(
                 userWalletId = userWalletId,
-                response = savedCurrencies.copy(
-                    tokens = savedCurrencies.tokens.filterNot {
-                        // it's better to compare by fields, to support renaming and etc
-                        it.contractAddress == token.contractAddress &&
-                            it.networkId == token.networkId &&
-                            it.derivationPath == token.derivationPath &&
-                            it.decimals == token.decimals
-                    },
-                ),
+                response = savedCurrencies.copy(tokens = savedCurrencies.tokens.filterNot { it == token }),
             )
         }
 

@@ -70,6 +70,7 @@
   <string name="common_access_denied">Access denied</string>
   <string name="common_all">All</string>
   <string name="common_allow">Allow</string>
+  <string name="common_analytics">Analytics</string>
   <string name="common_apply">Apply</string>
   <string name="common_approval">Approval</string>
   <string name="common_approve">Approve</string>
@@ -82,6 +83,7 @@
   <string name="common_buy_currency">Go to %1$s</string>
   <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
   <string name="common_cancel">Cancel</string>
+  <string name="common_choose_action">Choose action</string>
   <string name="common_claim_rewards">Claim rewards</string>
   <string name="common_close">Close</string>
   <string name="common_continue">Continue</string>
@@ -669,6 +671,7 @@
   <string name="staking_notification_earn_rewards_text_period_week">Staking allows you to earn %1$s. Your staking rewards arrive every week.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_notification_unstake_text">Rewards stop accruing immediately after you start unstaking. The unstaking process takes %s.</string>
+  <string name="staking_preparing">Preparing</string>
   <string name="staking_ready_to_withdraw">Ready to withdraw</string>
   <string name="staking_rebond">Rebond</string>
   <string name="staking_restake">Restake</string>

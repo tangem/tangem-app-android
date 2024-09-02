@@ -1,14 +1,11 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
-import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.utils.transformer.Transformer
 
-internal class SetConfirmationStateInProgressTransformer(
-    private val pendingAction: PendingAction?,
-) : Transformer<StakingUiState> {
+internal class SetConfirmationStateInProgressTransformer : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         return prevState.copy(
@@ -22,7 +19,6 @@ internal class SetConfirmationStateInProgressTransformer(
                 isPrimaryButtonEnabled = false,
                 innerState = InnerConfirmationStakingState.IN_PROGRESS,
                 validatorState = validatorState.copySealed(isClickable = false),
-                pendingActionInProgress = pendingAction,
             )
         } else {
             this

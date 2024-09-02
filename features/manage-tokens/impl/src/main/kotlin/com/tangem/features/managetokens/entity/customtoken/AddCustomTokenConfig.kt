@@ -34,7 +34,7 @@ internal data class SelectedNetwork(
 
 @Serializable
 internal data class SelectedDerivationPath(
-    val id: Network.ID,
+    val id: Network.ID?,
     val value: Network.DerivationPath,
     val networkName: TextReference,
 )
