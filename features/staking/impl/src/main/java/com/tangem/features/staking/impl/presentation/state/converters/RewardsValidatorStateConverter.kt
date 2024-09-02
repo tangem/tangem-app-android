@@ -87,6 +87,7 @@ internal class RewardsValidatorStateConverter(
 
         return BalanceState(
             validator = this,
+            title = this.name,
             cryptoValue = cryptoValue.parseBigDecimal(cryptoCurrency.decimals),
             cryptoDecimal = cryptoValue,
             cryptoAmount = cryptoAmount,

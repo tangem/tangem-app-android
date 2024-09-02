@@ -80,40 +80,40 @@ internal class YieldBalancesConverter(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
+        var index = 1
         return this
             .filterNot { it.amount.isZero() }
-            .mapNotNull { balance ->
+            .map { balance ->
                 val validator = yield.validators.firstOrNull {
                     balance.validatorAddress?.contains(it.address, ignoreCase = true) == true
-                } ?: mockedValidator
+                }
                 val cryptoAmount = balance.amount
                 val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
                 val unbonding = getUnbondingDate(balance.date)
                 val warmupPeriod = yield.metadata.warmupPeriod.days
-                validator?.let {
-                    BalanceState(
-                        validator = validator,
-                        cryptoValue = cryptoAmount.parseBigDecimal(cryptoCurrency.decimals),
-                        cryptoDecimal = cryptoAmount,
-                        cryptoAmount = stringReference(
-                            BigDecimalFormatter.formatCryptoAmount(
-                                cryptoAmount = cryptoAmount,
-                                cryptoCurrency = cryptoCurrency,
-                            ),
+                BalanceState(
+                    validator = validator,
+                    title = validator?.name ?: index++.toString(),
+                    cryptoValue = cryptoAmount.parseBigDecimal(cryptoCurrency.decimals),
+                    cryptoDecimal = cryptoAmount,
+                    cryptoAmount = stringReference(
+                        BigDecimalFormatter.formatCryptoAmount(
+                            cryptoAmount = cryptoAmount,
+                            cryptoCurrency = cryptoCurrency,
                         ),
-                        fiatAmount = stringReference(
-                            BigDecimalFormatter.formatFiatAmount(
-                                fiatAmount = fiatAmount,
-                                fiatCurrencyCode = appCurrency.code,
-                                fiatCurrencySymbol = appCurrency.symbol,
-                            ),
+                    ),
+                    fiatAmount = stringReference(
+                        BigDecimalFormatter.formatFiatAmount(
+                            fiatAmount = fiatAmount,
+                            fiatCurrencyCode = appCurrency.code,
+                            fiatCurrencySymbol = appCurrency.symbol,
                         ),
-                        rawCurrencyId = balance.rawCurrencyId,
-                        unbondingPeriod = unbonding,
-                        warmupPeriod = pluralReference(R.plurals.common_days, warmupPeriod, wrappedList(warmupPeriod)),
-                        pendingActions = balance.pendingActions.toPersistentList(),
-                    )
-                }
+                    ),
+                    rawCurrencyId = balance.rawCurrencyId,
+                    unbondingPeriod = unbonding,
+                    warmupPeriod = pluralReference(R.plurals.common_days, warmupPeriod, wrappedList(warmupPeriod)),
+                    pendingActions = balance.pendingActions.toPersistentList(),
+                )
             }
     }
 
@@ -164,12 +164,5 @@ internal class YieldBalancesConverter(
 
     private companion object {
         const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000
-
-        private val mockedValidator = Yield.Validator(
-            address = "",
-            status = "",
-            name = "Mocked validator",
-            preferred = true,
-        )
     }
 }
