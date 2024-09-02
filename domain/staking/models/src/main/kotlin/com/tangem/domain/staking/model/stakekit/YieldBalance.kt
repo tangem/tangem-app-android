@@ -91,12 +91,12 @@ enum class BalanceType {
         fun BalanceType.isClickable() = when (this) {
             STAKED,
             UNSTAKED,
+            LOCKED,
             -> true
             AVAILABLE,
             UNSTAKING,
             PREPARING,
             REWARDS,
-            LOCKED,
             UNLOCKING,
             UNKNOWN,
             -> false
