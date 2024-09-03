@@ -357,7 +357,7 @@
   <string name="markets_loading_no_data_title">Нет данных</string>
   <string name="markets_quick_actions">Быстрые действия</string>
   <string name="markets_search_result_title">Результат</string>
-  <string name="markets_search_see_tokens_under_100k">Токены с капитализацией меньше 100к</string>
+  <string name="markets_search_see_tokens_under_100k">Токены с капитализацией меньше 100к USD</string>
   <string name="markets_search_show_tokens">Показать токены</string>
   <string name="markets_search_token_no_result_title">Нет результата</string>
   <string name="markets_select_network">Выберите сеть</string>
@@ -666,7 +666,7 @@
   <string name="staking_details_reward_schedule_info">Это период, определяющий, когда участники стейкинга получат свои вознаграждения.</string>
   <string name="staking_details_rewards_to_claim">Вознаграждение для получения: %s</string>
   <string name="staking_details_title">Стейкинг %s</string>
-  <string name="staking_details_unbonding_period">Период вывода</string>
+  <string name="staking_details_unbonding_period">Период отзыва</string>
   <string name="staking_details_unbonding_period_info">Период, который необходимо подождать после запроса на вывод средств из стейкинга, прежде чем токены станут доступны.</string>
   <string name="staking_details_warmup_period">Период прогрева</string>
   <string name="staking_details_warmup_period_info">Время, необходимое для начала процесса стейкинга и активации процесса начисления наград</string>
@@ -698,10 +698,12 @@
   <string name="staking_stake_more">Застейкать еще</string>
   <string name="staking_title_stake">Застейкать %s</string>
   <string name="staking_title_unstake">Вывести %s</string>
+  <string name="staking_unbonding">Отзыв</string>
   <string name="staking_unlocked_locked">Разблокировать</string>
   <string name="staking_unstaked">Вывод из стейкинга</string>
   <string name="staking_unstaked_footer">Проверьте процесс завершения стейкинга, чтобы вывести свои средства.</string>
   <string name="staking_unstaking">Завершение стейкинга</string>
+  <string name="staking_unstaking_item_name">Завершение стейкинга %s</string>
   <string name="staking_validator">Валидатор</string>
   <string name="staking_validators">Валидаторы</string>
   <string name="staking_vote">Проголосовать</string>
