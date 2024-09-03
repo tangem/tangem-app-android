@@ -183,6 +183,22 @@ sealed class NotificationUM(val config: NotificationConfig) {
         )
     }
 
+    open class Info(
+        title: TextReference,
+        subtitle: TextReference,
+        iconResId: Int = R.drawable.ic_alert_circle_24,
+        buttonsState: NotificationConfig.ButtonsState? = null,
+        onCloseClick: (() -> Unit)? = null,
+    ) : NotificationUM(
+        config = NotificationConfig(
+            title = title,
+            subtitle = subtitle,
+            iconResId = iconResId,
+            buttonsState = buttonsState,
+            onCloseClick = onCloseClick,
+        ),
+    )
+
     sealed interface Cardano {
 
         data class MinAdaValueCharged(val tokenName: String, val minAdaValue: String) : Warning(
