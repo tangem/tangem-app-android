@@ -65,6 +65,7 @@ internal class SetInitialDataStateTransformer(
                 R.string.staking_title_stake,
                 wrappedList(cryptoCurrencyStatusProvider().currency.name),
             ),
+            walletName = userWalletProvider.invoke().name,
             cryptoCurrencyName = cryptoCurrencyStatusProvider.invoke().currency.name,
             clickIntents = clickIntents,
             currentStep = StakingStep.InitialInfo,
