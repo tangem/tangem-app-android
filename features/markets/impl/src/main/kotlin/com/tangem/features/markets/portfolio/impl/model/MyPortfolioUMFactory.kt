@@ -23,17 +23,15 @@ internal class MyPortfolioUMFactory(
     private val tokenActionsHandler: TokenActionsHandler,
 ) {
 
-    fun create(
-        portfolioData: PortfolioData,
-        portfolioUIData: PortfolioUIData,
-        availableNetworks: List<TokenMarketInfo.Network>?,
-    ): MyPortfolioUM {
-        if (availableNetworks == null) return MyPortfolioUM.Loading
+    fun create(portfolioData: PortfolioData, portfolioUIData: PortfolioUIData): MyPortfolioUM {
+        val addToPortfolioData = portfolioUIData.addToPortfolioData
 
-        if (availableNetworks.isEmpty()) return MyPortfolioUM.Unavailable
+        if (addToPortfolioData.availableNetworks == null) return MyPortfolioUM.Loading
+
+        if (addToPortfolioData.availableNetworks.isEmpty()) return MyPortfolioUM.Unavailable
 
         val walletsWithCurrencies = portfolioData.walletsWithCurrencies
-            .filterAvailableNetworks(networks = availableNetworks)
+            .filterAvailableNetworks(networks = addToPortfolioData.availableNetworks)
 
         val isPortfolioEmpty = walletsWithCurrencies.flatMap { it.value }.isEmpty()
         if (isPortfolioEmpty) {
@@ -44,7 +42,6 @@ internal class MyPortfolioUMFactory(
                     addToPortfolioBSConfig = createAddToPortfolioBSConfig(
                         portfolioData = portfolioData,
                         portfolioUIData = portfolioUIData,
-                        availableNetworks = availableNetworks,
                     ),
                     onAddClick = onAddClick,
                 )
@@ -56,12 +53,10 @@ internal class MyPortfolioUMFactory(
         return TokensPortfolioUMConverter(
             appCurrency = portfolioData.appCurrency,
             isBalanceHidden = portfolioData.isBalanceHidden,
-            isAllAvailableNetworksAdded = walletsWithCurrencies.isAllAvailableNetworksAdded(availableNetworks),
-            bsConfig = createAddToPortfolioBSConfig(
-                portfolioData = portfolioData,
-                portfolioUIData = portfolioUIData,
-                availableNetworks = availableNetworks,
+            isAllAvailableNetworksAdded = walletsWithCurrencies.isAllAvailableNetworksAdded(
+                availableNetworks = addToPortfolioData.availableNetworks,
             ),
+            bsConfig = createAddToPortfolioBSConfig(portfolioData = portfolioData, portfolioUIData = portfolioUIData),
             onAddClick = onAddClick,
             onTokenItemClick = onTokenItemClick,
             quickActionsIntents = tokenActionsHandler,
@@ -72,7 +67,6 @@ internal class MyPortfolioUMFactory(
     private fun createAddToPortfolioBSConfig(
         portfolioData: PortfolioData,
         portfolioUIData: PortfolioUIData,
-        availableNetworks: List<TokenMarketInfo.Network>,
     ): TangemBottomSheetConfig {
         val walletId = portfolioUIData.selectedWalletId
             ?: portfolioData.walletsWithCurrencies.keys.firstOrNull { it.isMultiCurrency }?.walletId
@@ -81,46 +75,32 @@ internal class MyPortfolioUMFactory(
             .firstOrNull { it.walletId == walletId }
             ?: error("portfolioModel.walletsWithCurrencyStatuses doesn't contain selected wallet: $walletId")
 
-        val changedNetworks = portfolioUIData.walletsWithChangedNetworks[portfolioUIData.selectedWalletId]
+        val availableNetworks = portfolioUIData.addToPortfolioData.availableNetworks.orEmpty()
+
         val alreadyAddedNetworks = requireNotNull(
-            value = portfolioData.walletsWithCurrencies[selectedWallet],
+            value = portfolioData.walletsWithCurrencies
+                .filterAvailableNetworks(availableNetworks)[selectedWallet],
             lazyMessage = {
                 "portfolioModel.walletsWithCurrencyStatuses doesn't contain selected wallet: $walletId"
             },
         )
-            .filterAvailableNetworks(availableNetworks)
             .map { it.status.currency.network.backendId }
+            .toSet()
 
         return addToPortfolioBSContentUMFactory.create(
             portfolioData = portfolioData,
             portfolioUIData = portfolioUIData,
             selectedWallet = selectedWallet,
-            networksWithToggle = availableNetworks.associateWithToggle(
-                changedNetworks = changedNetworks,
-                alreadyAddedNetworks = alreadyAddedNetworks,
+            networksWithToggle = portfolioUIData.addToPortfolioData.associateWithToggle(
+                userWalletId = selectedWallet.walletId,
+                alreadyAddedNetworkIds = alreadyAddedNetworks,
             ),
-            isUserChangedNetworks = changedNetworks != null && alreadyAddedNetworks != changedNetworks,
+            isUserChangedNetworks = portfolioUIData.addToPortfolioData.isUserChangedNetworks(selectedWallet.walletId),
         )
     }
 
-    private fun List<TokenMarketInfo.Network>.associateWithToggle(
-        changedNetworks: List<String>?,
-        alreadyAddedNetworks: List<String>,
-    ): Map<TokenMarketInfo.Network, Boolean> {
-        // Use user choice or check already added networks
-        return associateWith { network ->
-            val isSelectedByUser = changedNetworks?.contains(network.networkId)
-
-            if (isSelectedByUser != null) return@associateWith isSelectedByUser
-
-            val isAlreadyAdded = alreadyAddedNetworks.any { it == network.networkId }
-
-            isAlreadyAdded
-        }
-    }
-
     private fun Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>.isAllAvailableNetworksAdded(
-        availableNetworks: List<TokenMarketInfo.Network>,
+        availableNetworks: Set<TokenMarketInfo.Network>,
     ): Boolean {
         val networkIds = availableNetworks.map { it.networkId }
 
@@ -134,14 +114,14 @@ internal class MyPortfolioUMFactory(
 
     /** Filter map values by available networks [networks] */
     private fun Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>.filterAvailableNetworks(
-        networks: List<TokenMarketInfo.Network>,
+        networks: Set<TokenMarketInfo.Network>,
     ): Map<UserWallet, List<PortfolioData.CryptoCurrencyData>> {
         return mapValues { entry -> entry.value.filterAvailableNetworks(networks) }
     }
 
     /** Filter list of [CryptoCurrencyStatus] by available networks [networks] */
     private fun List<PortfolioData.CryptoCurrencyData>.filterAvailableNetworks(
-        networks: List<TokenMarketInfo.Network>,
+        networks: Set<TokenMarketInfo.Network>,
     ): List<PortfolioData.CryptoCurrencyData> {
         val networkIds = networks.map(TokenMarketInfo.Network::networkId)
 
