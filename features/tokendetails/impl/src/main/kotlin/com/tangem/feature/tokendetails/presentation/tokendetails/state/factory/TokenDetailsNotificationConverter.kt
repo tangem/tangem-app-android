@@ -122,6 +122,7 @@ internal class TokenDetailsNotificationConverter(
                     ""
                 },
             )
+            is CryptoCurrencyWarning.MigrationMaticToPol -> MigrationMaticToPol
         }
     }
 

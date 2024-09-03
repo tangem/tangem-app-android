@@ -52,6 +52,12 @@ object BlockchainUtils {
         return blockchain == Blockchain.Binance || blockchain == Blockchain.BinanceTestnet
     }
 
+    /** If current [networkId] is Polygon */
+    fun isPolygonChain(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Polygon || blockchain == Blockchain.PolygonTestnet
+    }
+
     fun isTron(networkId: String): Boolean {
         val blockchain = Blockchain.fromId(networkId)
         return blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet

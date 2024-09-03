@@ -272,22 +272,24 @@ class TransactionManagerImpl(
      * @param blockchain
      */
     private fun createMultipleProxyFees(gasPrice: BigInteger, gasLimit: BigInteger, blockchain: Blockchain): ProxyFees {
-        val gasPriceNormal = gasPrice.increaseBigIntegerByPercents(MULTIPLIER_GAS_PRICE_FOR_NORMAL_FEE)
+        val patchedGasLimit = gasLimit.toBigDecimal().increaseForMantleIfNeeded(blockchain).toBigInteger()
+        val gasPriceNormal = gasPrice
+            .increaseBigIntegerByPercents(MULTIPLIER_GAS_PRICE_FOR_NORMAL_FEE)
         val gasPricePriority = gasPrice.increaseBigIntegerByPercents(MULTIPLIER_GAS_PRICE_FOR_PRIORITY_FEE)
-        val feeMin = gasLimit.multiply(gasPrice).toBigDecimal(
+        val feeMin = patchedGasLimit.multiply(gasPrice).toBigDecimal(
             scale = blockchain.decimals(),
             mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
-        )
-        val feeNormal = gasLimit.multiply(gasPriceNormal).toBigDecimal(
+        ).increaseForMantleIfNeeded(blockchain)
+        val feeNormal = patchedGasLimit.multiply(gasPriceNormal).toBigDecimal(
             scale = blockchain.decimals(),
             mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
-        )
-        val feePriority = gasLimit.multiply(gasPricePriority).toBigDecimal(
+        ).increaseForMantleIfNeeded(blockchain)
+        val feePriority = patchedGasLimit.multiply(gasPricePriority).toBigDecimal(
             scale = blockchain.decimals(),
             mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
-        )
+        ).increaseForMantleIfNeeded(blockchain)
         val minFee = ProxyFee.Common(
-            gasLimit = gasLimit,
+            gasLimit = patchedGasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
                 value = feeMin,
@@ -295,7 +297,7 @@ class TransactionManagerImpl(
             ),
         )
         val normalFee = ProxyFee.Common(
-            gasLimit = gasLimit,
+            gasLimit = patchedGasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
                 value = feeNormal,
@@ -303,7 +305,7 @@ class TransactionManagerImpl(
             ),
         )
         val priorityFee = ProxyFee.Common(
-            gasLimit = gasLimit,
+            gasLimit = patchedGasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
                 value = feePriority,
@@ -339,8 +341,18 @@ class TransactionManagerImpl(
         }
     }
 
+    // TODO Workaround for Mantle. Remove after [REDACTED_JIRA]
+    private fun BigDecimal.increaseForMantleIfNeeded(blockchain: Blockchain): BigDecimal {
+        return if (blockchain == Blockchain.Mantle) {
+            this.multiply(MANTLE_FEE_ESTIMATE_MULTIPLIER)
+        } else {
+            this
+        }
+    }
+
     companion object {
         private const val MULTIPLIER_GAS_PRICE_FOR_NORMAL_FEE = 150 // 50%
         private const val MULTIPLIER_GAS_PRICE_FOR_PRIORITY_FEE = 200 // 50%
+        private val MANTLE_FEE_ESTIMATE_MULTIPLIER = BigDecimal("1.8")
     }
 }
