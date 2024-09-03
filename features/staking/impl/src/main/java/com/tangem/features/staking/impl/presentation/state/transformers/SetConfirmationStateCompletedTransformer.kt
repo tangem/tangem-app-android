@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.*
@@ -37,6 +38,7 @@ internal class SetConfirmationStateCompletedTransformer(
                 validatorState = validatorState.copySealed(
                     isClickable = false,
                 ),
+                footerText = TextReference.EMPTY,
                 notifications = persistentListOf(),
                 transactionDoneState = TransactionDoneState.Content(
                     timestamp = System.currentTimeMillis(),
