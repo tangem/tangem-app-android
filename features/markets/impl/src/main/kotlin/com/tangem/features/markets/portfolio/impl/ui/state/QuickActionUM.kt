@@ -11,6 +11,7 @@ internal enum class QuickActionUM(
     val title: TextReference,
     val description: TextReference,
     @DrawableRes val icon: Int,
+    val longClickAvailable: Boolean = false,
 ) {
     Buy(
         title = resourceReference(R.string.common_buy),
@@ -26,5 +27,6 @@ internal enum class QuickActionUM(
         title = resourceReference(R.string.common_receive),
         description = resourceReference(R.string.receive_token_description),
         icon = R.drawable.ic_arrow_down_24,
+        longClickAvailable = true,
     ),
 }

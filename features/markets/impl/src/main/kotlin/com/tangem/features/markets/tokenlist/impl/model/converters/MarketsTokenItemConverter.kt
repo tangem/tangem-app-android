@@ -121,16 +121,18 @@ internal class MarketsTokenItemConverter(
         }
     }
 
+    @Suppress("MagicNumber")
     private fun TokenMarket.getTrendType(): PriceChangeType {
         val percent = when (currentTrendInterval) {
             TrendInterval.H24 -> tokenQuotesShort.h24ChangePercent
             TrendInterval.D7 -> tokenQuotesShort.weekChangePercent
             TrendInterval.M1 -> tokenQuotesShort.monthChangePercent
-        }.setScale(2, RoundingMode.UP)
-
-        return when (percent.compareTo(BigDecimal.ZERO)) {
-            1 -> PriceChangeType.UP
-            -1 -> PriceChangeType.DOWN
+        }
+        val scaled = percent.setScale(4, RoundingMode.HALF_UP)
+        return when {
+            scaled == null -> PriceChangeType.NEUTRAL
+            scaled > BigDecimal.ZERO -> PriceChangeType.UP
+            scaled < BigDecimal.ZERO -> PriceChangeType.DOWN
             else -> PriceChangeType.NEUTRAL
         }
     }
