@@ -104,3 +104,9 @@ enum class BalanceType {
         }
     }
 }
+
+enum class RewardBlockType {
+    NoRewards,
+    Rewards,
+    RewardUnavailable,
+}
