@@ -29,6 +29,13 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
 
+    // FIXME [REDACTED_TASK_KEY]
+    // Remove the "Buy" and "Sell" actions from the redux middleware.
+    // Instead, create some kind of interface for such cases.
+    /* Redux -_- */
+    implementation(projects.domain.legacy)
+    implementation(deps.reKotlin)
+
     /* Compose */
     implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
