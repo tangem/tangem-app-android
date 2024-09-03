@@ -7,7 +7,10 @@ import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.settings.*
+import com.tangem.domain.settings.CanUseBiometryUseCase
+import com.tangem.domain.settings.IsWalletsScrollPreviewEnabled
+import com.tangem.domain.settings.ShouldAskPermissionUseCase
+import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
@@ -190,6 +193,8 @@ internal class WalletViewModel @Inject constructor(
 
     /** Change selected wallet state if selected wallet [selectedWalletId] was changed in the background */
     private suspend fun changeSelectedWalletState(selectedWalletId: UserWalletId) {
+        if (!stateHolder.isInitialized) return
+
         if (screenLifecycleProvider.isBackgroundState.value && selectedWalletId != stateHolder.getSelectedWalletId()) {
             stateHolder.value.wallets
                 .indexOfFirstOrNull { prevState -> prevState.walletCardState.id == selectedWalletId }
