@@ -38,6 +38,21 @@ internal class DefaultDerivationsRepository(
         derivePublicKeysByNetworks(userWalletId = userWalletId, networks = currencies.map(CryptoCurrency::network))
     }
 
+    override suspend fun derivePublicKeysByNetworkIds(userWalletId: UserWalletId, networkIds: List<Network.ID>) {
+        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
+
+        derivePublicKeysByNetworks(
+            userWalletId = userWalletId,
+            networks = networkIds.mapNotNull {
+                getNetwork(
+                    blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null,
+                    extraDerivationPath = null,
+                    derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                )
+            },
+        )
+    }
+
     override suspend fun derivePublicKeysByNetworks(userWalletId: UserWalletId, networks: List<Network>) {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
 
