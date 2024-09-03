@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,7 +24,9 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingActionSelectionBottomSheetConfig
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingInfoBottomSheetConfig
+import com.tangem.features.staking.impl.presentation.ui.bottomsheet.StakingActionSelectorBottomSheet
 import com.tangem.features.staking.impl.presentation.ui.bottomsheet.StakingInfoBottomSheet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -32,6 +35,8 @@ import kotlinx.coroutines.flow.withIndex
 
 @Composable
 internal fun StakingScreen(uiState: StakingUiState) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
     BackHandler(onBack = uiState.clickIntents::onPrevClick)
     Column(
         modifier = Modifier
@@ -58,6 +63,11 @@ internal fun StakingScreen(uiState: StakingUiState) {
         )
         StakingBottomSheet(bottomSheetConfig = uiState.bottomSheetConfig)
     }
+
+    StakingEventEffect(
+        event = uiState.event,
+        snackbarHostState = snackbarHostState,
+    )
 }
 
 @Composable
@@ -66,6 +76,7 @@ fun StakingBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
     when (bottomSheetConfig.content) {
         is StakingInfoBottomSheetConfig -> StakingInfoBottomSheet(bottomSheetConfig)
         is GiveTxPermissionBottomSheetConfig -> GiveTxPermissionBottomSheet(bottomSheetConfig)
+        is StakingActionSelectionBottomSheetConfig -> StakingActionSelectorBottomSheet(bottomSheetConfig)
     }
 }
 
@@ -86,6 +97,7 @@ private fun SendAppBar(uiState: StakingUiState) {
     }
     AppBarWithBackButtonAndIcon(
         text = uiState.title.resolveReference(),
+        subtitle = uiState.subtitle?.resolveReference(),
         backIconRes = backIcon,
         onBackClick = uiState.clickIntents::onBackClick,
         backgroundColor = TangemTheme.colors.background.secondary,
