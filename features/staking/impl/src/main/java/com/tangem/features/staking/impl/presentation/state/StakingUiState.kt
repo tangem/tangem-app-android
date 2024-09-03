@@ -89,7 +89,7 @@ internal sealed class StakingStates {
             val validatorState: ValidatorState,
             val pendingAction: PendingAction?,
             val notifications: ImmutableList<NotificationUM>,
-            val footerText: String,
+            val footerText: TextReference,
             val transactionDoneState: TransactionDoneState,
             val isApprovalNeeded: Boolean,
             val reduceAmountBy: BigDecimal?,
