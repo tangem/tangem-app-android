@@ -3,9 +3,9 @@ package com.tangem.feature.wallet.presentation.wallet.ui
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
-import com.tangem.core.ui.components.AdditionalTextInputDialogParams
+import com.tangem.core.ui.components.AdditionalTextInputDialogUM
 import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButton
+import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.TextInputDialog
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.feature.wallet.impl.R
@@ -21,12 +21,12 @@ internal fun WalletAlert(state: WalletAlertState, onDismiss: () -> Unit) {
 
 @Composable
 private fun BasicAlert(state: WalletAlertState.Basic, onDismiss: () -> Unit) {
-    val confirmButton: DialogButton
-    val dismissButton: DialogButton?
+    val confirmButton: DialogButtonUM
+    val dismissButton: DialogButtonUM?
 
     val onActionClick = state.onConfirmClick
     if (onActionClick != null) {
-        confirmButton = DialogButton(
+        confirmButton = DialogButtonUM(
             title = state.confirmButtonText.resolveReference(),
             warning = state.isWarningConfirmButton,
             onClick = {
@@ -34,12 +34,12 @@ private fun BasicAlert(state: WalletAlertState.Basic, onDismiss: () -> Unit) {
                 onDismiss()
             },
         )
-        dismissButton = DialogButton(
+        dismissButton = DialogButtonUM(
             title = stringResource(id = R.string.common_cancel),
             onClick = onDismiss,
         )
     } else {
-        confirmButton = DialogButton(
+        confirmButton = DialogButtonUM(
             title = state.confirmButtonText.resolveReference(),
             warning = state.isWarningConfirmButton,
             onClick = onDismiss,
@@ -62,7 +62,7 @@ private fun TextInputAlert(state: WalletAlertState.TextInput, onDismiss: () -> U
 
     TextInputDialog(
         fieldValue = value,
-        confirmButton = DialogButton(
+        confirmButton = DialogButtonUM(
             title = state.confirmButtonText.resolveReference(),
             enabled = value.text.isNotEmpty() &&
                 value.text != state.text &&
@@ -75,8 +75,8 @@ private fun TextInputAlert(state: WalletAlertState.TextInput, onDismiss: () -> U
         onDismissDialog = onDismiss,
         onValueChange = { value = it },
         title = state.title.resolveReference(),
-        dismissButton = DialogButton(title = stringResource(id = R.string.common_cancel), onClick = onDismiss),
-        textFieldParams = AdditionalTextInputDialogParams(
+        dismissButton = DialogButtonUM(title = stringResource(id = R.string.common_cancel), onClick = onDismiss),
+        textFieldParams = AdditionalTextInputDialogUM(
             label = state.label.resolveReference(),
             isError = state.errorTextProvider(value.text) != null,
             caption = state.errorTextProvider(value.text)?.resolveReference(),
