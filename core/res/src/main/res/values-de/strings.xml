@@ -70,6 +70,7 @@
   <string name="common_access_denied">Zugang verweigert</string>
   <string name="common_all">Alle</string>
   <string name="common_allow">Erlauben</string>
+  <string name="common_analytics">Analysen</string>
   <string name="common_apply">Anwenden</string>
   <string name="common_approval">Genehmigung</string>
   <string name="common_approve">Genehmigen</string>
@@ -82,6 +83,7 @@
   <string name="common_buy_currency">Gehe zu %1$s</string>
   <string name="common_camera_denied_alert_message">D hast keinen Zugang zur Kamera erteilt, bitte passe deine Datenschutzeinstellungen an</string>
   <string name="common_cancel">Abbrechen</string>
+  <string name="common_choose_action">Aktion wählen</string>
   <string name="common_claim_rewards">Stakingbelohnungen beanstpruchen</string>
   <string name="common_close">Schließen</string>
   <string name="common_continue">Weiter</string>
@@ -354,7 +356,7 @@
   <string name="markets_loading_no_data_title">Keine Daten</string>
   <string name="markets_quick_actions">Schnelle Aktionen</string>
   <string name="markets_search_result_title">Ergebnis</string>
-  <string name="markets_search_see_tokens_under_100k">Token unter 100k Marktkapitalisierung anzeigen</string>
+  <string name="markets_search_see_tokens_under_100k">Token unter 100k USD Marktkapitalisierung anzeigen</string>
   <string name="markets_search_show_tokens">Token anzeigen</string>
   <string name="markets_search_token_no_result_title">Kein Ergebnis</string>
   <string name="markets_select_network">Netzwerk auswählen</string>
@@ -646,6 +648,7 @@
   <string name="staking_details_annual_percentage_rate">Jährliche prozentuale Rendite</string>
   <string name="staking_details_annual_percentage_rate_info">Die jährliche prozentuale Rendite, die du durch die Teilnahme am Staking erzielen kannst.</string>
   <string name="staking_details_apr">Effektiver Jahreszins</string>
+  <string name="staking_details_auto_claiming_rewards_daily_text">Belohnungen sammeln sich täglich automatisch in deinem Staking-Konto an.</string>
   <string name="staking_details_available">Verfügbar</string>
   <string name="staking_details_average_reward_rate">Durchschnittliche Belohnungsquote</string>
   <string name="staking_details_banner_text">Was sit Staking?</string>
@@ -664,6 +667,7 @@
   <string name="staking_details_unbonding_period_info">Der Zeitraum, den du nach der Beantragung der Abhebung von Geldern aus dem Staking warten musst, bevor die Token verfügbar werden.</string>
   <string name="staking_details_warmup_period">Aufwärmphase</string>
   <string name="staking_details_warmup_period_info">Die zugewiesene Zeit für die Aktivierung der Teilnahme am Staking.</string>
+  <string name="staking_locked">Gesperrt</string>
   <string name="staking_migrate">Migrieren</string>
   <string name="staking_native">Natives Staking</string>
   <string name="staking_notification_earn_rewards_text_period_day">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jeden tag.</string>
@@ -672,6 +676,8 @@
   <string name="staking_notification_earn_rewards_text_period_week">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jede Woche.</string>
   <string name="staking_notification_earn_rewards_title">Verdiene Staking-Belohnungen</string>
   <string name="staking_notification_unstake_text">Die Belohnungen werden sofort nach dem unstaken gestoppt. Der unstakingprozess dauert %s.</string>
+  <string name="staking_notification_withdraw_text">Dein Guthaben wurde freigegeben. Du kannst es jetzt zusammen mit deinen verdienten Prämien auszahlen.</string>
+  <string name="staking_preparing">Vorbereitung</string>
   <string name="staking_ready_to_withdraw">Bereit zum Abheben</string>
   <string name="staking_rebond">Erneut binden</string>
   <string name="staking_restake">Erneut staken</string>

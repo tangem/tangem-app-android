@@ -40,7 +40,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun InputRowImageInfo(
     subtitle: TextReference,
     infoTitle: TextReference,
-    imageUrl: String,
+    imageUrl: String?,
     modifier: Modifier = Modifier,
     title: TextReference? = null,
     caption: TextReference? = null,
