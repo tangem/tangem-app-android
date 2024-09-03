@@ -1,7 +1,9 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import dagger.Module
 import dagger.Provides
@@ -43,5 +45,15 @@ object MarketsDomainModule {
     @Singleton
     fun provideGetTokenQuotesUseCase(quotesRepository: QuotesRepository): GetCurrencyQuotesUseCase {
         return GetCurrencyQuotesUseCase(quotesRepository = quotesRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSaveMarketTokensUseCase(
+        derivationsRepository: DerivationsRepository,
+        marketsTokenRepository: MarketsTokenRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): SaveMarketTokensUseCase {
+        return SaveMarketTokensUseCase(derivationsRepository, marketsTokenRepository, currenciesRepository)
     }
 }
