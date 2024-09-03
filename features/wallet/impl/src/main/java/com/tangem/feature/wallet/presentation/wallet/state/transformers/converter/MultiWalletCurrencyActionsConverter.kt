@@ -62,7 +62,7 @@ internal class MultiWalletCurrencyActionsConverter(
             is TokenActionsState.ActionState.Stake -> {
                 title = resourceReference(R.string.common_stake)
                 icon = R.drawable.ic_staking_24
-                action = { clickIntents.onStakeClick(cryptoCurrencyStatus) }
+                action = { clickIntents.onStakeClick(cryptoCurrencyStatus, actionsState.yield) }
             }
             is TokenActionsState.ActionState.Sell -> {
                 title = resourceReference(R.string.common_sell)
