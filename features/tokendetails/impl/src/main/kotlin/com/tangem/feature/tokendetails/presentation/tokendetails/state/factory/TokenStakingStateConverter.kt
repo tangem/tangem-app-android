@@ -1,12 +1,16 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import arrow.core.Either
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getStringResourceId
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
@@ -24,14 +28,20 @@ internal class TokenStakingStateConverter(
             ifLeft = {
                 StakingBlockUM.Error(iconState = iconState)
             },
-            ifRight = {
+            ifRight = { stakingEntryInfo ->
+                val apr = BigDecimalFormatter.formatPercent(
+                    percent = stakingEntryInfo.apr,
+                    useAbsoluteValue = true,
+                )
                 StakingBlockUM.StakeAvailable(
-                    interestRate = BigDecimalFormatter.formatPercent(
-                        percent = it.interestRate,
-                        useAbsoluteValue = true,
+                    titleText = resourceReference(
+                        id = R.string.token_details_staking_block_title,
+                        formatArgs = wrappedList(apr),
                     ),
-                    periodInDays = it.periodInDays,
-                    tokenSymbol = it.tokenSymbol,
+                    subtitleText = resourceReference(
+                        id = stakingEntryInfo.rewardSchedule.getStringResourceId(),
+                        formatArgs = wrappedList(stakingEntryInfo.tokenSymbol),
+                    ),
                     iconState = iconState,
                     onStakeClicked = clickIntents::onStakeBannerClick,
                 )

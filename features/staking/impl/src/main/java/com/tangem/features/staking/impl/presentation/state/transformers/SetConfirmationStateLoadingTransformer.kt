@@ -1,5 +1,8 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
@@ -30,14 +33,14 @@ internal class SetConfirmationStateLoadingTransformer(
                 notifications = getNotifications(prevState),
                 footerText = "",
                 transactionDoneState = TransactionDoneState.Empty,
-                pendingActions = persistentListOf(),
-                pendingActionInProgress = null,
+                pendingAction = null,
                 isApprovalNeeded = false,
+                reduceAmountBy = null,
             ),
         )
     }
 
-    private fun getNotifications(prevState: StakingUiState): ImmutableList<StakingNotification> {
+    private fun getNotifications(prevState: StakingUiState): ImmutableList<NotificationUM> {
         return persistentListOf(
             if (prevState.actionType == StakingActionCommonType.EXIT) {
                 StakingNotification.Warning.Unstake(
@@ -45,8 +48,10 @@ internal class SetConfirmationStateLoadingTransformer(
                 )
             } else {
                 StakingNotification.Warning.EarnRewards(
-                    currencyName = yield.token.name,
-                    subtitleResourceId = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
+                    subtitleText = resourceReference(
+                        id = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
+                        formatArgs = wrappedList(yield.token.name),
+                    ),
                 )
             },
         )
