@@ -106,6 +106,22 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetAllWalletsCryptoCurrencyStatusesUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
+    ): GetAllWalletsCryptoCurrencyStatusesUseCase {
+        return GetAllWalletsCryptoCurrencyStatusesUseCase(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideGetCurrencyWarningsUseCase(
         walletManagersFacade: WalletManagersFacade,
         currenciesRepository: CurrenciesRepository,
@@ -158,8 +174,9 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
     ): FetchCurrencyStatusUseCase {
-        return FetchCurrencyStatusUseCase(currenciesRepository, networksRepository, quotesRepository)
+        return FetchCurrencyStatusUseCase(currenciesRepository, networksRepository, quotesRepository, stakingRepository)
     }
 
     @Provides
@@ -418,5 +435,11 @@ internal object TokensDomainModule {
     @Singleton
     fun provideCheckHasLinkedTokensUseCase(currenciesRepository: CurrenciesRepository): CheckHasLinkedTokensUseCase {
         return CheckHasLinkedTokensUseCase(currenciesRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetCurrencyCheckUseCase(currencyChecksRepository: CurrencyChecksRepository): GetCurrencyCheckUseCase {
+        return GetCurrencyCheckUseCase(currencyChecksRepository)
     }
 }
