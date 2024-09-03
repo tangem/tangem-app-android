@@ -7,10 +7,12 @@ import com.tangem.features.staking.impl.presentation.state.ValidatorState
 import com.tangem.utils.transformer.Transformer
 
 internal class ValidatorSelectChangeTransformer(
-    private val selectedValidator: Yield.Validator,
+    private val selectedValidator: Yield.Validator?,
 ) : Transformer<StakingUiState> {
+
     override fun transform(prevState: StakingUiState): StakingUiState {
         val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data ?: return prevState
+        selectedValidator ?: return prevState
         val validatorState = (confirmationState.validatorState as? ValidatorState.Content)?.copy(
             chosenValidator = selectedValidator,
         ) ?: ValidatorState.Content(
