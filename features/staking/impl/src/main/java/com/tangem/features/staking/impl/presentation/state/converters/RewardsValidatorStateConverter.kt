@@ -1,6 +1,5 @@
 package com.tangem.features.staking.impl.presentation.state.converters
 
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -13,7 +12,6 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.utils.Provider
-import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -74,14 +72,11 @@ internal class RewardsValidatorStateConverter(
                 cryptoCurrency = cryptoCurrency,
             ),
         )
-        val fiatAmount = combinedReference(
-            stringReference(PLUS),
-            stringReference(
-                BigDecimalFormatter.formatFiatAmount(
-                    fiatAmount = fiatValue,
-                    fiatCurrencyCode = appCurrency.code,
-                    fiatCurrencySymbol = appCurrency.symbol,
-                ),
+        val fiatAmount = stringReference(
+            BigDecimalFormatter.formatFiatAmount(
+                fiatAmount = fiatValue,
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
             ),
         )
 
