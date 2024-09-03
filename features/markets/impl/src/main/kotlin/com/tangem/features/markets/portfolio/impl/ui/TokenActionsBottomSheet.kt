@@ -57,6 +57,7 @@ private fun Content(content: TokenActionsBSContentUM) {
                 SimpleSettingsRow(
                     title = action.text.resolveReference(),
                     icon = action.iconRes,
+                    redesign = true,
                     onItemsClick = { content.onActionClick(action) },
                 )
             }
