@@ -211,7 +211,7 @@ internal class SetInitialDataStateTransformer(
             feeState = FeeState.Loading,
             validatorState = ValidatorState.Loading,
             notifications = persistentListOf(),
-            footerText = "",
+            footerText = TextReference.EMPTY,
             transactionDoneState = TransactionDoneState.Empty,
             pendingAction = null,
             isApprovalNeeded = isApprovalNeeded,
