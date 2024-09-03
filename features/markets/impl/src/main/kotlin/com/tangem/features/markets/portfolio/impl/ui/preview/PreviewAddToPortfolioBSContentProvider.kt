@@ -3,7 +3,6 @@ package com.tangem.features.markets.portfolio.impl.ui.preview
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.wallets.models.UserWalletId
@@ -54,13 +53,10 @@ internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider
                     iconUrl = null,
                 ),
                 isScanCardNotificationVisible = true,
+                isWalletBlockVisible = true,
                 continueButtonEnabled = true,
                 onContinueButtonClick = {},
-                walletSelectorConfig = TangemBottomSheetConfig(
-                    isShow = false,
-                    onDismissRequest = {},
-                    content = TangemBottomSheetConfigContent.Empty,
-                ),
+                walletSelectorConfig = TangemBottomSheetConfig.Empty,
             ),
             AddToPortfolioBSContentUM(
                 selectedWallet = userWallet,
@@ -81,13 +77,10 @@ internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider
                     iconUrl = null,
                 ),
                 isScanCardNotificationVisible = true,
+                isWalletBlockVisible = false,
                 continueButtonEnabled = false,
                 onContinueButtonClick = {},
-                walletSelectorConfig = TangemBottomSheetConfig(
-                    isShow = false,
-                    onDismissRequest = {},
-                    content = TangemBottomSheetConfigContent.Empty,
-                ),
+                walletSelectorConfig = TangemBottomSheetConfig.Empty,
             ),
         )
 }
