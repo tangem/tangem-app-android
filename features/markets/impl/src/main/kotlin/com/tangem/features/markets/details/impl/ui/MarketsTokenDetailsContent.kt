@@ -122,6 +122,7 @@ private fun Content(
                 IntervalSelector(
                     trendInterval = state.selectedInterval,
                     onIntervalClick = state.onSelectedIntervalChange,
+                    isEnabled = state.body !is MarketsTokenDetailsUM.Body.Nothing,
                     modifier = Modifier
                         .padding(horizontal = TangemTheme.dimens.spacing16)
                         .fillMaxWidth(),
@@ -219,6 +220,7 @@ private fun TokenPriceText(
 @Composable
 private fun IntervalSelector(
     trendInterval: PriceChangeInterval,
+    isEnabled: Boolean,
     onIntervalClick: (PriceChangeInterval) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -235,6 +237,7 @@ private fun IntervalSelector(
         color = TangemTheme.colors.button.secondary,
         initialSelectedItem = trendInterval,
         onClick = onIntervalClick,
+        isEnabled = isEnabled,
         modifier = modifier,
     ) {
         Box(
@@ -249,7 +252,11 @@ private fun IntervalSelector(
                 modifier = Modifier.align(Alignment.Center),
                 text = it.getText().resolveReference(),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.primary1,
+                color = if (isEnabled) {
+                    TangemTheme.colors.text.primary1
+                } else {
+                    TangemTheme.colors.text.disabled
+                },
             )
         }
     }
