@@ -16,10 +16,11 @@ import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
  *
 [REDACTED_AUTHOR]
  */
-internal class MyPortfolioUMMFactory(
+internal class MyPortfolioUMFactory(
     private val onAddClick: () -> Unit,
     private val onTokenItemClick: (Int, CryptoCurrency.ID) -> Unit,
     private val addToPortfolioBSContentUMFactory: AddToPortfolioBSContentUMFactory,
+    private val tokenActionsHandler: TokenActionsHandler,
 ) {
 
     fun create(
@@ -31,16 +32,16 @@ internal class MyPortfolioUMMFactory(
 
         if (availableNetworks.isEmpty()) return MyPortfolioUM.Unavailable
 
-        val walletsWithStatuses = portfolioData.walletsWithCurrencyStatuses
+        val walletsWithCurrencies = portfolioData.walletsWithCurrencies
             .filterAvailableNetworks(networks = availableNetworks)
 
-        val isPortfolioEmpty = walletsWithStatuses.flatMap { it.value }.isEmpty()
+        val isPortfolioEmpty = walletsWithCurrencies.flatMap { it.value }.isEmpty()
         if (isPortfolioEmpty) {
-            val hasMultiWallets = walletsWithStatuses.filterKeys(UserWallet::isMultiCurrency).isNotEmpty()
+            val hasMultiWallets = walletsWithCurrencies.filterKeys(UserWallet::isMultiCurrency).isNotEmpty()
 
             return if (hasMultiWallets) {
                 MyPortfolioUM.AddFirstToken(
-                    bsConfig = createAddToPortfolioBSConfig(
+                    addToPortfolioBSConfig = createAddToPortfolioBSConfig(
                         portfolioData = portfolioData,
                         portfolioUIData = portfolioUIData,
                         availableNetworks = availableNetworks,
@@ -55,7 +56,7 @@ internal class MyPortfolioUMMFactory(
         return TokensPortfolioUMConverter(
             appCurrency = portfolioData.appCurrency,
             isBalanceHidden = portfolioData.isBalanceHidden,
-            isAllAvailableNetworksAdded = walletsWithStatuses.isAllAvailableNetworksAdded(availableNetworks),
+            isAllAvailableNetworksAdded = walletsWithCurrencies.isAllAvailableNetworksAdded(availableNetworks),
             bsConfig = createAddToPortfolioBSConfig(
                 portfolioData = portfolioData,
                 portfolioUIData = portfolioUIData,
@@ -63,8 +64,9 @@ internal class MyPortfolioUMMFactory(
             ),
             onAddClick = onAddClick,
             onTokenItemClick = onTokenItemClick,
+            quickActionsIntents = tokenActionsHandler,
         )
-            .convert(walletsWithStatuses)
+            .convert(walletsWithCurrencies)
     }
 
     private fun createAddToPortfolioBSConfig(
@@ -73,21 +75,21 @@ internal class MyPortfolioUMMFactory(
         availableNetworks: List<TokenMarketInfo.Network>,
     ): TangemBottomSheetConfig {
         val walletId = portfolioUIData.selectedWalletId
-            ?: portfolioData.walletsWithCurrencyStatuses.keys.firstOrNull { it.isMultiCurrency }?.walletId
+            ?: portfolioData.walletsWithCurrencies.keys.firstOrNull { it.isMultiCurrency }?.walletId
 
-        val selectedWallet = portfolioData.walletsWithCurrencyStatuses.keys
+        val selectedWallet = portfolioData.walletsWithCurrencies.keys
             .firstOrNull { it.walletId == walletId }
             ?: error("portfolioModel.walletsWithCurrencyStatuses doesn't contain selected wallet: $walletId")
 
         val changedNetworks = portfolioUIData.walletsWithChangedNetworks[portfolioUIData.selectedWalletId]
         val alreadyAddedNetworks = requireNotNull(
-            value = portfolioData.walletsWithCurrencyStatuses[selectedWallet],
+            value = portfolioData.walletsWithCurrencies[selectedWallet],
             lazyMessage = {
                 "portfolioModel.walletsWithCurrencyStatuses doesn't contain selected wallet: $walletId"
             },
         )
             .filterAvailableNetworks(availableNetworks)
-            .map { it.currency.network.backendId }
+            .map { it.status.currency.network.backendId }
 
         return addToPortfolioBSContentUMFactory.create(
             portfolioData = portfolioData,
@@ -117,7 +119,7 @@ internal class MyPortfolioUMMFactory(
         }
     }
 
-    private fun Map<UserWallet, List<CryptoCurrencyStatus>>.isAllAvailableNetworksAdded(
+    private fun Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>.isAllAvailableNetworksAdded(
         availableNetworks: List<TokenMarketInfo.Network>,
     ): Boolean {
         val networkIds = availableNetworks.map { it.networkId }
@@ -125,26 +127,26 @@ internal class MyPortfolioUMMFactory(
         return this
             // User can add currencies only in multi-currency wallets
             .filterKeys(UserWallet::isMultiCurrency)
-            .mapValues { it.value.map { it.currency.network.backendId } }
+            .mapValues { entry -> entry.value.map { it.status.currency.network.backendId } }
             // Each wallets contains all available networks?
             .all { it.value.containsAll(networkIds) }
     }
 
     /** Filter map values by available networks [networks] */
-    private fun Map<UserWallet, List<CryptoCurrencyStatus>>.filterAvailableNetworks(
+    private fun Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>.filterAvailableNetworks(
         networks: List<TokenMarketInfo.Network>,
-    ): Map<UserWallet, List<CryptoCurrencyStatus>> {
+    ): Map<UserWallet, List<PortfolioData.CryptoCurrencyData>> {
         return mapValues { entry -> entry.value.filterAvailableNetworks(networks) }
     }
 
     /** Filter list of [CryptoCurrencyStatus] by available networks [networks] */
-    private fun List<CryptoCurrencyStatus>.filterAvailableNetworks(
+    private fun List<PortfolioData.CryptoCurrencyData>.filterAvailableNetworks(
         networks: List<TokenMarketInfo.Network>,
-    ): List<CryptoCurrencyStatus> {
+    ): List<PortfolioData.CryptoCurrencyData> {
         val networkIds = networks.map(TokenMarketInfo.Network::networkId)
 
         return mapNotNull {
-            it.takeIf { networkIds.contains(it.currency.network.backendId) }
+            it.takeIf { networkIds.contains(it.status.currency.network.backendId) }
         }
     }
 }
