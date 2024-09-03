@@ -16,7 +16,7 @@ import com.tangem.core.ui.res.TangemTheme
 
 /**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=281-248&mode=design&t=bXqehWPHyATKcZEW-4)
- * */
+ **/
 @Composable
 fun SimpleSettingsRow(
     title: String,
@@ -26,10 +26,11 @@ fun SimpleSettingsRow(
     rowColors: RowColors = getDefaultRowColors(),
     enabled: Boolean = true,
     subtitle: String? = null,
+    redesign: Boolean = false,
 ) {
     Row(
         modifier = modifier
-            .height(TangemTheme.dimens.size56)
+            .height(if (redesign) TangemTheme.dimens.size48 else TangemTheme.dimens.size56)
             .fillMaxWidth()
             .clickable(
                 onClick = {
@@ -44,10 +45,16 @@ fun SimpleSettingsRow(
         Icon(
             painter = painterResource(id = icon),
             contentDescription = null,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing20),
+            modifier = Modifier
+                .padding(horizontal = if (redesign) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing20),
             tint = rowColors.iconColor(enabled = enabled).value,
         )
-        Column(modifier = Modifier.padding(end = TangemTheme.dimens.spacing20)) {
+        Column(
+            modifier = Modifier
+                .padding(
+                    end = if (redesign) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing20,
+                ),
+        ) {
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle1,
