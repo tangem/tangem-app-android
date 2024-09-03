@@ -2,7 +2,6 @@ package com.tangem.features.markets.portfolio.impl.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -10,12 +9,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.SimpleSettingsRow
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetTitle
-import com.tangem.core.ui.components.inputrow.InputRowChecked
-import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.components.rows.CornersToRound
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
@@ -50,16 +49,15 @@ private fun Content(content: TokenActionsBSContentUM) {
                 else -> CornersToRound.ZERO
             }
 
-            DividerContainer(
+            Box(
                 modifier = Modifier
                     .clip(cornersToRound.getShape())
-                    .background(TangemTheme.colors.background.action)
-                    .clickable { content.onActionClick(action) },
-                showDivider = index != content.actions.lastIndex,
+                    .background(TangemTheme.colors.background.action),
             ) {
-                InputRowChecked(
-                    text = action.text,
-                    checked = false,
+                SimpleSettingsRow(
+                    title = action.text.resolveReference(),
+                    icon = action.iconRes,
+                    onItemsClick = { content.onActionClick(action) },
                 )
             }
         }

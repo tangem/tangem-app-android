@@ -346,9 +346,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
         chartDataProducer.runTransaction {
             updateLook {
-                it.copy(
-                    type = getChartTypeByPercent(percent),
-                )
+                it.copy(type = percent.percentChangeType().toChartType())
             }
         }
     }
@@ -356,13 +354,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private suspend fun updateQuotes(newQuotes: TokenQuotes) {
         quotesStateUpdater.updateQuotes(newQuotes)
 
-        val percent = newQuotes.getPercentByInterval(interval = state.value.selectedInterval)
+        val percent = newQuotes
+            .getPercentByInterval(interval = state.value.selectedInterval)
 
         chartDataProducer.runTransaction {
             updateLook {
-                it.copy(
-                    type = getChartTypeByPercent(percent),
-                )
+                it.copy(type = percent.percentChangeType().toChartType())
             }
         }
     }
@@ -430,7 +427,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         chartDataProducer.runTransaction {
             updateLook {
                 it.copy(
-                    type = getChartTypeByPercent(percent),
+                    type = percent.percentChangeType().toChartType(),
                 )
             }
         }
@@ -477,7 +474,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         launch {
             while (true) {
                 delay(timeMillis)
-                // Update quotes only when content visible on the screen
+                // Update quotes only when content is visible on the screen
                 isVisibleOnScreen.first { it }
 
                 loadQuotes()

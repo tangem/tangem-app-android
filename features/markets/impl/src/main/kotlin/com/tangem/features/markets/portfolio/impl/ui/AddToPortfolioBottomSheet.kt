@@ -73,15 +73,16 @@ private fun Content(state: AddToPortfolioBSContentUM, modifier: Modifier = Modif
                 .verticalScroll(state = scrollState)
                 .padding(horizontal = TangemTheme.dimens.spacing16),
         ) {
-            UserWalletItem(
-                state = state.selectedWallet,
-                blockColors = TangemBlockCardColors.copy(
-                    containerColor = TangemTheme.colors.background.action,
-                    disabledContainerColor = TangemTheme.colors.background.action,
-                ),
-            )
-
-            SpacerH12()
+            if (state.isWalletBlockVisible) {
+                UserWalletItem(
+                    state = state.selectedWallet,
+                    blockColors = TangemBlockCardColors.copy(
+                        containerColor = TangemTheme.colors.background.action,
+                        disabledContainerColor = TangemTheme.colors.background.action,
+                    ),
+                )
+                SpacerH12()
+            }
 
             NetworkSelection(
                 modifier = Modifier.fillMaxWidth(),
