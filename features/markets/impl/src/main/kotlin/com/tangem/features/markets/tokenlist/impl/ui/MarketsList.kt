@@ -98,10 +98,7 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
                 },
             state = state.searchBar,
         )
-        Column(
-            Modifier.padding(horizontal = TangemTheme.dimens.size16),
-
-        ) {
+        Column(Modifier.padding(horizontal = TangemTheme.dimens.size16)) {
             AnimatedVisibility(
                 visible = scrolledState.value.not(),
             ) {
@@ -121,10 +118,11 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
                 )
             }
         }
+        val strokeWidth = TangemTheme.dimens.size0_5
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(0.5.dp)
+                .height(strokeWidth)
                 .drawBehind {
                     // draw horizontal line
                     if (scrolledState.value) {
@@ -132,7 +130,7 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
                             color = strokeColor,
                             start = Offset(0f, size.height),
                             end = Offset(size.width, size.height),
-                            strokeWidth = 0.5.dp.toPx(),
+                            strokeWidth = strokeWidth.toPx(),
                         )
                     }
                 },
