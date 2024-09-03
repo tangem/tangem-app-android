@@ -22,6 +22,7 @@ internal object MockNetworks {
         currencySymbol = "ETH",
         derivationPath = Network.DerivationPath.None,
         hasFiatFeeRate = true,
+        canHandleTokens = true,
     )
 
     val network2 = Network(
@@ -33,6 +34,7 @@ internal object MockNetworks {
         currencySymbol = "ETH",
         derivationPath = Network.DerivationPath.None,
         hasFiatFeeRate = true,
+        canHandleTokens = true,
     )
 
     val network3 = Network(
@@ -44,6 +46,7 @@ internal object MockNetworks {
         currencySymbol = "ETH",
         derivationPath = Network.DerivationPath.None,
         hasFiatFeeRate = true,
+        canHandleTokens = true,
     )
 
     val networkStatus1 = NetworkStatus(
