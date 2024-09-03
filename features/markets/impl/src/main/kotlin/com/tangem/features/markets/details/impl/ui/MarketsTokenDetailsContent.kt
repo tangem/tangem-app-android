@@ -1,5 +1,6 @@
 package com.tangem.features.markets.details.impl.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,7 +35,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.disableNestedScroll
@@ -45,49 +46,59 @@ import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
-@Suppress("UnusedPrivateMember")
+@Suppress("LongParameterList")
 @Composable
 internal fun MarketsTokenDetailsContent(
     state: MarketsTokenDetailsUM,
+    backgroundColor: Color,
+    addTopBarStatusBarPadding: Boolean,
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
+    portfolioBlock: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Content(
         modifier = modifier,
+        backgroundColor = backgroundColor,
         state = state,
         onBackClick = onBackClick,
         onHeaderSizeChange = onHeaderSizeChange,
+        portfolioBlock = portfolioBlock,
+        addTopBarStatusBarInsets = addTopBarStatusBarPadding,
     )
 
     InfoBottomSheet(config = state.infoBottomSheet)
 }
 
-@Suppress("UnusedPrivateMember")
+@Suppress("LongParameterList")
 @Composable
 private fun Content(
     state: MarketsTokenDetailsUM,
+    backgroundColor: Color,
+    addTopBarStatusBarInsets: Boolean,
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
+    portfolioBlock: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val backgroundColor = LocalMainBottomSheetColor.current.value
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     Column(
         modifier = modifier
             .drawBehind { drawRect(backgroundColor) }
+            .let { if (addTopBarStatusBarInsets) it.statusBarsPadding() else it }
             .fillMaxSize(),
     ) {
         TangemTopAppBar(
-            modifier = Modifier.onGloballyPositioned {
-                if (it.size.height > 0) {
-                    with(density) {
-                        onHeaderSizeChange(it.size.height.toDp())
+            modifier = Modifier
+                .onGloballyPositioned {
+                    if (it.size.height > 0) {
+                        with(density) {
+                            onHeaderSizeChange(it.size.height.toDp())
+                        }
                     }
-                }
-            },
+                },
             title = state.tokenName,
             startButton = TopAppBarButtonUM.Back(onBackClick),
         )
@@ -122,6 +133,7 @@ private fun Content(
             ) {
                 MarketTokenDetailsChart(
                     modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = backgroundColor,
                     state = state.chartState,
                 )
             }
@@ -129,6 +141,7 @@ private fun Content(
 
             tokenMarketDetailsBody(
                 state = state.body,
+                portfolioBlock = portfolioBlock,
             )
         }
     }
@@ -181,7 +194,7 @@ private fun TokenPriceText(
     val fallColor = TangemTheme.colors.text.warning
     val generalColor = TangemTheme.colors.text.primary1
 
-    val color = remember { Animatable(generalColor) }
+    val color = remember(generalColor) { Animatable(generalColor) }
 
     EventEffect(triggerPriceChange) {
         val nextColor = when (it) {
@@ -256,11 +269,11 @@ fun PriceChangeInterval.getText(): TextReference {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview() {
     TangemThemePreview {
-        Content(
-            modifier = Modifier.background(TangemTheme.colors.background.tertiary),
+        MarketsTokenDetailsContent(
             state = MarketsTokenDetailsUM(
                 tokenName = "Token Name",
                 priceText = "$0.00000000324",
@@ -288,6 +301,9 @@ private fun Preview() {
             ),
             onHeaderSizeChange = {},
             onBackClick = {},
+            backgroundColor = TangemTheme.colors.background.tertiary,
+            portfolioBlock = {},
+            addTopBarStatusBarPadding = false,
         )
     }
 }
