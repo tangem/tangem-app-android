@@ -72,6 +72,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.Arbitrum
     }
 
+    fun isSolana(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Solana
+    }
+
     data class BlockchainInfo(
         val blockchainId: String,
         val name: String,
