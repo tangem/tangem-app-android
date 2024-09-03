@@ -3,15 +3,18 @@ package com.tangem.features.staking.impl.presentation.state
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.features.staking.impl.presentation.state.transformers.InfoType
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
+import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import kotlinx.collections.immutable.ImmutableList
+import java.math.BigDecimal
 
 /**
  * Ui states of the staking screen
@@ -19,7 +22,9 @@ import kotlinx.collections.immutable.ImmutableList
 @Immutable
 internal data class StakingUiState(
     val title: TextReference,
+    val subtitle: TextReference?,
     val clickIntents: StakingClickIntents,
+    val walletName: String,
     val cryptoCurrencyName: String,
     val currentStep: StakingStep,
     val initialInfoState: StakingStates.InitialInfoState,
@@ -56,7 +61,6 @@ internal sealed class StakingStates {
             val aprRange: TextReference,
             val onInfoClick: (InfoType) -> Unit,
             val yieldBalance: InnerYieldBalanceState,
-            val isStakeMoreAvailable: Boolean,
         ) : InitialInfoState()
 
         data class Empty(
@@ -83,12 +87,12 @@ internal sealed class StakingStates {
             val innerState: InnerConfirmationStakingState,
             val feeState: FeeState,
             val validatorState: ValidatorState,
-            val pendingActions: ImmutableList<PendingAction>,
-            val notifications: ImmutableList<StakingNotification>,
+            val pendingAction: PendingAction?,
+            val notifications: ImmutableList<NotificationUM>,
             val footerText: String,
             val transactionDoneState: TransactionDoneState,
-            val pendingActionInProgress: PendingAction? = null,
             val isApprovalNeeded: Boolean,
+            val reduceAmountBy: BigDecimal?,
         ) : ConfirmationState()
 
         data class Empty(

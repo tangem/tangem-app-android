@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers.amount
 
+import androidx.compose.ui.text.input.ImeAction
 import com.tangem.common.extensions.isZero
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.extensions.resourceReference
@@ -31,6 +32,7 @@ internal class AmountRequirementStateTransformer(
         val isRequirementError = isRequirementError(prevState, amountRequirements)
         return if (isRequirementError) {
             prevState.copy(
+                isPrimaryButtonEnabled = false,
                 amountTextField = prevState.amountTextField.copy(
                     isError = true,
                     error = resourceReference(
@@ -42,6 +44,9 @@ internal class AmountRequirementStateTransformer(
                                 cryptoCurrencyStatus.currency.decimals,
                             ),
                         ),
+                    ),
+                    keyboardOptions = prevState.amountTextField.keyboardOptions.copy(
+                        imeAction = ImeAction.None,
                     ),
                 ),
             )
