@@ -71,6 +71,7 @@ internal object InitialStakingStatePreview {
                     isClickable = true,
                     items = persistentListOf(
                         BalanceState(
+                            title = stringReference("Binance"),
                             cryptoValue = "100",
                             cryptoAmount = stringReference("100 SOL"),
                             cryptoDecimal = "100".toBigDecimal(),
