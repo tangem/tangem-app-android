@@ -143,9 +143,14 @@ internal object TokenDetailsPreviewData {
     val stakingErrorBlock = StakingBlockUM.Error(iconState)
 
     val stakingAvailableBlock = StakingBlockUM.StakeAvailable(
-        interestRate = "7.38",
-        periodInDays = 4,
-        tokenSymbol = "XLM",
+        titleText = resourceReference(
+            id = R.string.token_details_staking_block_title,
+            formatArgs = wrappedList("3.27%"),
+        ),
+        subtitleText = resourceReference(
+            id = R.string.staking_notification_earn_rewards_text_period_day,
+            formatArgs = wrappedList("Solana"),
+        ),
         iconState = iconState,
         onStakeClicked = {},
     )
