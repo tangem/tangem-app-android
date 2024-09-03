@@ -29,6 +29,7 @@ import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -63,6 +64,8 @@ internal class ManageTokensModel @Inject constructor(
             manageTokensListManager.currenciesToRemove,
             ::updateChangedItems,
         ).launchIn(modelScope)
+
+        observeSearchQueryChanges()
 
         modelScope.launch {
             manageTokensListManager.launchPagination(params.userWalletId)
@@ -130,6 +133,31 @@ internal class ManageTokensModel @Inject constructor(
             loadMore = ::loadMoreItems,
             isSavingInProgress = false,
         )
+    }
+
+    @OptIn(FlowPreview::class)
+    private fun observeSearchQueryChanges() {
+        state
+            .distinctUntilChanged { old, new ->
+                // It's also used to skip search activation to avoid searching an empty query
+                old.search.query == new.search.query &&
+                    (old.search.isActive == new.search.isActive || new.search.isActive)
+            }
+            .transform { state ->
+                val query = state.search.query
+
+                if (state.search.isActive) {
+                    emit(query)
+                }
+            }
+            .sample(periodMillis = 1_000)
+            .onEach { query ->
+                manageTokensListManager.search(
+                    userWalletId = params.userWalletId,
+                    query = query,
+                )
+            }
+            .launchIn(modelScope)
     }
 
     private fun updateItems(items: ImmutableList<CurrencyItemUM>) {
@@ -256,26 +284,15 @@ internal class ManageTokensModel @Inject constructor(
                 ),
             )
         }
-
-        modelScope.launch {
-            manageTokensListManager.search(params.userWalletId, query)
-        }
     }
 
     private fun toggleSearchBar(isActive: Boolean) {
         state.update { state ->
             state.copySealed(
                 search = state.search.copy(
-                    query = if (isActive) state.search.query else "",
                     isActive = isActive,
                 ),
             )
-        }
-
-        modelScope.launch {
-            if (!isActive) {
-                manageTokensListManager.reload(params.userWalletId)
-            }
         }
     }
 }
