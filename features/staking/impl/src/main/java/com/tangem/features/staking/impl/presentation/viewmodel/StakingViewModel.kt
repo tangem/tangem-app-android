@@ -162,6 +162,13 @@ internal class StakingViewModel @Inject constructor(
     override fun onNextClick(actionTypeToOverwrite: StakingActionCommonType?, pendingAction: PendingAction?) {
         if (actionTypeToOverwrite != null) {
             stateController.update { it.copy(actionType = actionTypeToOverwrite) }
+            stateController.update {
+                val confirmationState = it.confirmationState as? StakingStates.ConfirmationState.Data
+                it.copy(
+                    confirmationState = confirmationState?.copy(pendingAction = pendingAction)
+                        ?: StakingStates.ConfirmationState.Empty(),
+                )
+            }
         }
         stakingStateRouter.onNextClick()
         when {
@@ -407,6 +414,14 @@ internal class StakingViewModel @Inject constructor(
                 ShowActionSelectorBottomSheetTransformer(
                     pendingActions = activeStake.pendingActions,
                     onActionSelect = {
+                        stateController.update(ValidatorSelectChangeTransformer(activeStake.validator))
+                        stateController.update(
+                            AmountChangeStateTransformer(
+                                cryptoCurrencyStatus,
+                                activeStake.cryptoValue,
+                                yield,
+                            ),
+                        )
                         onNextClick(actionTypeToOverwrite = StakingActionCommonType.PENDING_OTHER, pendingAction = it)
                         stateController.update(DismissBottomSheetStateTransformer())
                     },
@@ -548,6 +563,7 @@ internal class StakingViewModel @Inject constructor(
                     currencyCheck = currencyStatus,
                     isSubtractAvailable = isAmountSubtractAvailable,
                     feeError = feeError,
+                    yield = yield,
                 ),
             )
         }
