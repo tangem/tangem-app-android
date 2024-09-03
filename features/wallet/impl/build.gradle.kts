@@ -78,7 +78,7 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
-    implementation(projects.domain.staking)
+    implementation(projects.domain.staking.models)
 
     //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
     implementation(projects.features.onboarding)
