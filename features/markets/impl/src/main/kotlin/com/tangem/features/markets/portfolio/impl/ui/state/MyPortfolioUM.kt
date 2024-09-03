@@ -10,7 +10,9 @@ internal sealed class MyPortfolioUM {
     data class Tokens(
         val tokens: ImmutableList<PortfolioTokenUM>,
         val buttonState: AddButtonState,
-        val bsConfig: TangemBottomSheetConfig,
+        val addToPortfolioBSConfig: TangemBottomSheetConfig,
+        val tokenReceiveBSConfig: TangemBottomSheetConfig,
+        val tokenActionsBSConfig: TangemBottomSheetConfig,
         val onAddClick: () -> Unit,
     ) : MyPortfolioUM() {
 
@@ -22,7 +24,7 @@ internal sealed class MyPortfolioUM {
     }
 
     data class AddFirstToken(
-        val bsConfig: TangemBottomSheetConfig,
+        val addToPortfolioBSConfig: TangemBottomSheetConfig,
         val onAddClick: () -> Unit,
     ) : MyPortfolioUM()
 
