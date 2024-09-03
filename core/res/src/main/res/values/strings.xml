@@ -356,7 +356,7 @@
   <string name="markets_loading_no_data_title">No data</string>
   <string name="markets_quick_actions">Quick actions</string>
   <string name="markets_search_result_title">Result</string>
-  <string name="markets_search_see_tokens_under_100k">See tokens under 100k market cap</string>
+  <string name="markets_search_see_tokens_under_100k">See tokens under 100k USD market cap</string>
   <string name="markets_search_show_tokens">Show tokens</string>
   <string name="markets_search_token_no_result_title">No result</string>
   <string name="markets_select_network">Select network</string>
@@ -644,6 +644,7 @@
   <string name="staking_details_annual_percentage_rate">Annual percentage rate</string>
   <string name="staking_details_annual_percentage_rate_info">The annual percentage return you can earn from participating in staking.</string>
   <string name="staking_details_apr">APR</string>
+  <string name="staking_details_auto_claiming_rewards_daily_text">Rewards automatically accumulate in your staking balance daily.</string>
   <string name="staking_details_available">Available</string>
   <string name="staking_details_average_reward_rate">Average Reward Rate</string>
   <string name="staking_details_banner_text">What is Staking?</string>
@@ -671,6 +672,7 @@
   <string name="staking_notification_earn_rewards_text_period_week">Staking allows you to earn %1$s. Your staking rewards arrive every week.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_notification_unstake_text">Rewards stop accruing immediately after you start unstaking. The unstaking process takes %s.</string>
+  <string name="staking_notification_withdraw_text">Your funds have been unstaked. You can now withdraw them along with your earned rewards.</string>
   <string name="staking_preparing">Preparing</string>
   <string name="staking_ready_to_withdraw">Ready to withdraw</string>
   <string name="staking_rebond">Rebond</string>
@@ -698,6 +700,7 @@
   <string name="staking_unstaked">Unstaked</string>
   <string name="staking_unstaked_footer">Check unstaked to claim your assets</string>
   <string name="staking_unstaking">Unstaking</string>
+  <string name="staking_unstaking_item_name">Unstaking assets %s</string>
   <string name="staking_validator">Validator</string>
   <string name="staking_validators">Validators</string>
   <string name="staking_vote">Vote</string>
