@@ -69,6 +69,7 @@
   <string name="common_access_denied">アクセスが拒否されました</string>
   <string name="common_all">すべて</string>
   <string name="common_allow">許可する</string>
+  <string name="common_analytics">アナリティクス</string>
   <string name="common_apply">適用する</string>
   <string name="common_approval">承認</string>
   <string name="common_approve">承認</string>
@@ -81,6 +82,7 @@
   <string name="common_buy_currency">%1$sへ移動</string>
   <string name="common_camera_denied_alert_message">カメラへのアクセスを許可していません。プライバシー設定を調整してください。</string>
   <string name="common_cancel">キャンセル</string>
+  <string name="common_choose_action">アクションを選択</string>
   <string name="common_claim_rewards">報酬を受け取る</string>
   <string name="common_close">閉じる</string>
   <string name="common_continue">続ける</string>
@@ -633,6 +635,7 @@
   <string name="staking_details_annual_percentage_rate">年率</string>
   <string name="staking_details_annual_percentage_rate_info">ステーキングに参加することで得られる年間収益率。</string>
   <string name="staking_details_apr">APR</string>
+  <string name="staking_details_auto_claiming_rewards_daily_text">報酬は毎日自動的にステーキング残高に蓄積されます。</string>
   <string name="staking_details_available">利用可能</string>
   <string name="staking_details_average_reward_rate">平均報酬率</string>
   <string name="staking_details_banner_text">ステーキングとは？</string>
@@ -660,6 +663,8 @@
   <string name="staking_notification_earn_rewards_text_period_week">ステーキングにより%1$sを獲得できます。ステーキング報酬は毎週受け取れます。</string>
   <string name="staking_notification_earn_rewards_title">ステーキング報酬を獲得</string>
   <string name="staking_notification_unstake_text">ステーキング解除プロセスの開始後、報酬の獲得はすぐに停止します。ステーキング解除には%sかかります。</string>
+  <string name="staking_notification_withdraw_text">あなたの資金はステーキング解除されました。獲得した報酬とともに引き出すことができます。</string>
+  <string name="staking_preparing">準備中</string>
   <string name="staking_ready_to_withdraw">引き出し準備完了</string>
   <string name="staking_rebond">再結束</string>
   <string name="staking_restake">再度ステーキングする</string>
