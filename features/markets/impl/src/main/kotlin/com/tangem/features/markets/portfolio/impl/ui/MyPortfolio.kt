@@ -16,6 +16,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SmallButtonShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
@@ -24,8 +25,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.ui.preview.PreviewMyPortfolioUMProvider
-import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM.Tokens.AddButtonState
+import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 
 @Composable
 internal fun MyPortfolio(state: MyPortfolioUM, modifier: Modifier = Modifier) {
@@ -54,8 +55,8 @@ internal fun MyPortfolio(state: MyPortfolioUM, modifier: Modifier = Modifier) {
     }
 
     when (state) {
-        is MyPortfolioUM.AddFirstToken -> AddToPortfolioBottomSheet(config = state.bsConfig)
-        is MyPortfolioUM.Tokens -> AddToPortfolioBottomSheet(config = state.bsConfig)
+        is MyPortfolioUM.AddFirstToken -> AddToPortfolioBottomSheet(config = state.addToPortfolioBSConfig)
+        is MyPortfolioUM.Tokens -> AddToPortfolioBottomSheet(config = state.addToPortfolioBSConfig)
         else -> Unit
     }
 }
@@ -105,6 +106,9 @@ private fun TokenList(state: MyPortfolioUM.Tokens, modifier: Modifier = Modifier
             }
         }
     }
+
+    TokenReceiveBottomSheet(config = state.tokenReceiveBSConfig)
+    TokenActionsBottomSheet(config = state.tokenActionsBSConfig)
 }
 
 @Composable
