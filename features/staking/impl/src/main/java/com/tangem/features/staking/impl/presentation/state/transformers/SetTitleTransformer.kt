@@ -1,6 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -41,14 +41,11 @@ internal object SetTitleTransformer : Transformer<StakingUiState> {
                         val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
                         val title = confirmationState?.pendingAction?.type?.getPendingActionTitle()
 
-                        if (title == null || title == TextReference.EMPTY) {
-                            resourceReference(
+                        title?.takeIf { it.isNullOrEmpty() }
+                            ?: resourceReference(
                                 R.string.staking_title_stake,
                                 wrappedList(prevState.cryptoCurrencyName),
                             )
-                        } else {
-                            title
-                        }
                     }
                 }
             }
