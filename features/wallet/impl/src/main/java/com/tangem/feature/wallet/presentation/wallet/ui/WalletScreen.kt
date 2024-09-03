@@ -2,8 +2,11 @@ package com.tangem.feature.wallet.presentation.wallet.ui
 
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -220,12 +223,9 @@ private fun WalletContent(
     }
 
     if (marketsEntryComponent != null) {
-        val bottomSheetState = remember {
-            mutableStateOf(BottomSheetState.COLLAPSED)
-        }
-        var headerSize by remember {
-            mutableStateOf(0.dp)
-        }
+        val bottomSheetState = remember { mutableStateOf(COLLAPSED) }
+
+        var headerSize by remember { mutableStateOf(0.dp) }
 
         BaseScaffoldWithMarkets(
             state = state,
@@ -241,17 +241,15 @@ private fun WalletContent(
                     modifier = Modifier,
                 )
             },
-        ) {
-            scaffoldContent()
-        }
+            content = scaffoldContent,
+        )
     } else {
         BaseScaffold(
             state = state,
             selectedWallet = selectedWallet,
             snackbarHostState = snackbarHostState,
-        ) {
-            scaffoldContent()
-        }
+            content = scaffoldContent,
+        )
     }
 }
 
@@ -274,16 +272,21 @@ private fun BaseScaffold(
             )
         },
         floatingActionButton = {
-            val manageTokensButtonConfig by remember(state.selectedWalletIndex) {
-                mutableStateOf(
-                    (state.wallets[state.selectedWalletIndex] as? WalletState.MultiCurrency)?.manageTokensButtonConfig,
-                )
-            }
+            val manageTokensButtonConfig by rememberUpdatedState(
+                newValue = (state.wallets[state.selectedWalletIndex] as? WalletState.MultiCurrency)
+                    ?.manageTokensButtonConfig,
+            )
 
-            manageTokensButtonConfig?.let {
+            AnimatedVisibility(
+                visible = manageTokensButtonConfig != null,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                val config = manageTokensButtonConfig ?: return@AnimatedVisibility
+
                 ManageTokensButton(
                     modifier = Modifier.navigationBarsPadding(),
-                    onClick = it.onClick,
+                    onClick = config.onClick,
                 )
             }
         },
