@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.defaultComponentContext
+import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.utils.asRouter
 import com.tangem.core.decompose.context.DefaultAppComponentContext
 import com.tangem.core.decompose.di.DecomposeComponent
 import com.tangem.core.ui.UiDependencies
@@ -44,6 +46,9 @@ internal class WalletFragment : ComposeFragment() {
     @Inject
     internal lateinit var marketsFeatureToggles: MarketsFeatureToggles
 
+    @Inject
+    internal lateinit var appRouter: AppRouter
+
     private var marketsEntryComponent: MarketsEntryComponent? = null
 
     private val _walletRouter: InnerWalletRouter
@@ -60,6 +65,7 @@ internal class WalletFragment : ComposeFragment() {
                 messageHandler = uiDependencies.eventMessageHandler,
                 dispatchers = coroutineDispatcherProvider,
                 hiltComponentBuilder = componentBuilder,
+                replaceRouter = appRouter.asRouter(),
             )
 
             marketsEntryComponent = marketsEntryComponentFactory.create(appContext)
