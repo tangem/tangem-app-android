@@ -7,7 +7,7 @@ import com.tangem.domain.wallets.models.UserWalletId
  *
  * @property portfolioBSVisibilityModel portfolio bottom sheet visibility model
  * @property selectedWalletId           selected wallet id
- * @property walletsWithChangedNetworks wallets with changed networks
+ * @property addToPortfolioData         add to portfolio data
  * @property hasMissedDerivations       flag that indicates if user has missed derivations
  *
  * @author Andrew Khokhlov on 29/08/2024
@@ -15,6 +15,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 internal data class PortfolioUIData(
     val portfolioBSVisibilityModel: PortfolioBSVisibilityModel,
     val selectedWalletId: UserWalletId?,
-    val walletsWithChangedNetworks: Map<UserWalletId, List<String>>,
+    val addToPortfolioData: AddToPortfolioManager.AddToPortfolioData,
     val hasMissedDerivations: Boolean,
 )

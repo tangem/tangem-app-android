@@ -30,7 +30,11 @@ internal class AddToPortfolioBSContentUMFactory(
     private val onWalletSelectorVisibilityChange: (Boolean) -> Unit,
     private val onNetworkSwitchClick: (String, Boolean) -> Unit,
     private val onWalletSelect: (UserWalletId) -> Unit,
-    private val onContinueClick: () -> Unit,
+    private val onContinueClick: (
+        selectedWalletId: UserWalletId,
+        addedNetworks: Set<TokenMarketInfo.Network>,
+        removedNetworks: Set<TokenMarketInfo.Network>,
+    ) -> Unit,
 ) {
 
     /**
@@ -60,7 +64,23 @@ internal class AddToPortfolioBSContentUMFactory(
                 ).convert(value = token),
                 isScanCardNotificationVisible = portfolioUIData.hasMissedDerivations,
                 continueButtonEnabled = isUserChangedNetworks,
-                onContinueButtonClick = onContinueClick,
+                onContinueButtonClick = {
+                    val alreadyAddedNetworkIds = portfolioData.walletsWithCurrencies[selectedWallet].orEmpty()
+                        .map { it.status.currency.network.backendId }
+                        .toSet()
+
+                    onContinueClick(
+                        selectedWallet.walletId,
+                        portfolioUIData.addToPortfolioData.getAddedNetworks(
+                            userWalletId = selectedWallet.walletId,
+                            alreadyAddedNetworkIds = alreadyAddedNetworkIds,
+                        ),
+                        portfolioUIData.addToPortfolioData.getRemovedNetworks(
+                            userWalletId = selectedWallet.walletId,
+                            alreadyAddedNetworkIds = alreadyAddedNetworkIds,
+                        ),
+                    )
+                },
                 walletSelectorConfig = crateWalletSelectorBSConfig(
                     isShow = portfolioUIData.portfolioBSVisibilityModel.walletSelectorBSVisibility,
                     portfolioData = portfolioData,
