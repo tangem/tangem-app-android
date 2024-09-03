@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
@@ -36,6 +37,14 @@ internal object SetTitleTransformer : Transformer<StakingUiState> {
             }
         }
 
-        return prevState.copy(title = title)
+        val subtitle = when (currentStep) {
+            StakingStep.Confirmation -> stringReference(prevState.walletName)
+            else -> null
+        }
+
+        return prevState.copy(
+            title = title,
+            subtitle = subtitle,
+        )
     }
 }
