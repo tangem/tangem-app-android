@@ -49,10 +49,10 @@ import kotlinx.collections.immutable.toImmutableList
 @Composable
 fun BasicDialog(
     message: String,
-    confirmButton: DialogButton,
+    confirmButton: DialogButtonUM,
     onDismissDialog: () -> Unit,
     title: String? = null,
-    dismissButton: DialogButton? = null,
+    dismissButton: DialogButtonUM? = null,
     isDismissable: Boolean = true,
 ) {
     TangemDialog(
@@ -72,7 +72,7 @@ fun BasicDialog(
 fun SimpleOkDialog(message: String, onDismissDialog: () -> Unit) {
     TangemDialog(
         type = DialogType.Message(message),
-        confirmButton = DialogButton(onClick = onDismissDialog),
+        confirmButton = DialogButtonUM(onClick = onDismissDialog),
         onDismissDialog = onDismissDialog,
         title = null,
         dismissButton = null,
@@ -97,12 +97,12 @@ fun SimpleOkDialog(message: String, onDismissDialog: () -> Unit) {
 @Composable
 fun TextInputDialog(
     fieldValue: TextFieldValue,
-    confirmButton: DialogButton,
+    confirmButton: DialogButtonUM,
     onDismissDialog: () -> Unit,
     onValueChange: (TextFieldValue) -> Unit,
-    textFieldParams: AdditionalTextInputDialogParams = remember { AdditionalTextInputDialogParams() },
+    textFieldParams: AdditionalTextInputDialogUM = remember { AdditionalTextInputDialogUM() },
     title: String? = null,
-    dismissButton: DialogButton? = null,
+    dismissButton: DialogButtonUM? = null,
     isDismissable: Boolean = true,
 ) {
     TangemDialog(
@@ -125,12 +125,12 @@ fun TextInputDialog(
 @Composable
 fun TextInputDialog(
     fieldValue: String,
-    confirmButton: DialogButton,
+    confirmButton: DialogButtonUM,
     onDismissDialog: () -> Unit,
     onValueChange: (String) -> Unit,
-    textFieldParams: AdditionalTextInputDialogParams = remember { AdditionalTextInputDialogParams() },
+    textFieldParams: AdditionalTextInputDialogUM = remember { AdditionalTextInputDialogUM() },
     title: String? = null,
-    dismissButton: DialogButton? = null,
+    dismissButton: DialogButtonUM? = null,
     isDismissable: Boolean = true,
 ) {
     TangemDialog(
@@ -154,7 +154,7 @@ fun TextInputDialog(
 fun SelectorDialog(
     selectedItemIndex: Int,
     items: ImmutableList<String>,
-    confirmButton: DialogButton,
+    confirmButton: DialogButtonUM,
     onSelect: (index: Int) -> Unit,
     onDismissDialog: () -> Unit,
     title: String? = null,
@@ -180,7 +180,7 @@ fun SelectorDialog(
  * @param enabled If false button will be disabled
  * @param onClick Button click callback
  */
-data class DialogButton(
+data class DialogButtonUM(
     val title: String? = null,
     val warning: Boolean = false,
     val enabled: Boolean = true,
@@ -190,7 +190,7 @@ data class DialogButton(
 /**
  * Additional params for dialog text field
  */
-data class AdditionalTextInputDialogParams(
+data class AdditionalTextInputDialogUM(
     val label: String? = null,
     val placeholder: String? = null,
     val caption: String? = null,
@@ -203,10 +203,10 @@ data class AdditionalTextInputDialogParams(
 @Composable
 private fun TangemDialog(
     type: DialogType,
-    confirmButton: DialogButton,
+    confirmButton: DialogButtonUM,
     onDismissDialog: () -> Unit,
     title: String? = null,
-    dismissButton: DialogButton? = null,
+    dismissButton: DialogButtonUM? = null,
     properties: DialogProperties = DialogProperties(),
 ) {
     Dialog(properties = properties, onDismissRequest = onDismissDialog) {
@@ -304,7 +304,11 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun DialogButtons(confirmButton: DialogButton, dismissButton: DialogButton?, modifier: Modifier = Modifier) {
+private fun DialogButtons(
+    confirmButton: DialogButtonUM,
+    dismissButton: DialogButtonUM?,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(
@@ -413,13 +417,13 @@ private sealed class DialogType {
     data class TextInput(
         val value: TextFieldValue,
         val onValueChange: (TextFieldValue) -> Unit,
-        val params: AdditionalTextInputDialogParams = AdditionalTextInputDialogParams(),
+        val params: AdditionalTextInputDialogUM = AdditionalTextInputDialogUM(),
     ) : DialogType()
 
     data class SimpleTextInput(
         val value: String,
         val onValueChange: (String) -> Unit,
-        val params: AdditionalTextInputDialogParams = AdditionalTextInputDialogParams(),
+        val params: AdditionalTextInputDialogUM = AdditionalTextInputDialogUM(),
     ) : DialogType()
 
     data class Selector(
@@ -445,8 +449,8 @@ private fun BasicDialogPreview() {
         message = "All protected passwords will be deleted from the secure storage, you must enter the wallet " +
             "password to work with the app",
         title = "Attention",
-        confirmButton = DialogButton {},
-        dismissButton = DialogButton {},
+        confirmButton = DialogButtonUM {},
+        dismissButton = DialogButtonUM {},
         onDismissDialog = {},
     )
 }
@@ -478,8 +482,8 @@ private fun WarningBasicDialogSample(modifier: Modifier = Modifier) {
             message = "All protected passwords will be deleted from the secure storage, you must enter the wallet " +
                 "password to work with the app",
             title = "Attention",
-            confirmButton = DialogButton(warning = true) {},
-            dismissButton = DialogButton {},
+            confirmButton = DialogButtonUM(warning = true) {},
+            dismissButton = DialogButtonUM {},
             onDismissDialog = {},
         )
     }
@@ -502,10 +506,10 @@ private fun TextInputDialogSample(modifier: Modifier = Modifier) {
         TextInputDialog(
             fieldValue = TextFieldValue(text = ""),
             title = "Rename Wallet",
-            confirmButton = DialogButton {},
+            confirmButton = DialogButtonUM {},
             onDismissDialog = {},
             onValueChange = {},
-            textFieldParams = AdditionalTextInputDialogParams(
+            textFieldParams = AdditionalTextInputDialogUM(
                 label = "Wallet name",
             ),
         )
@@ -530,7 +534,7 @@ private fun SelectorDialogPreview(@PreviewParameter(SelctorDialogParamsProvider:
             title = param.title,
             items = param.items,
             selectedItemIndex = param.selectedItemIndex,
-            confirmButton = DialogButton(title = "Cancel", onClick = {}),
+            confirmButton = DialogButtonUM(title = "Cancel", onClick = {}),
             onSelect = {},
             onDismissDialog = {},
         )

@@ -59,7 +59,7 @@ fun GiveTxPermissionBottomSheet(config: TangemBottomSheetConfig) {
                 BasicDialog(
                     message = content.data.dialogText.resolveReference(),
                     title = stringResource(id = R.string.common_approve),
-                    confirmButton = DialogButton { isPermissionAlertShow = false },
+                    confirmButton = DialogButtonUM { isPermissionAlertShow = false },
                     onDismissDialog = {},
                 )
             }
