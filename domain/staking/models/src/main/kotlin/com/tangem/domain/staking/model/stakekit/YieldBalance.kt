@@ -1,12 +1,14 @@
 package com.tangem.domain.staking.model.stakekit
 
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import org.joda.time.DateTime
 import java.math.BigDecimal
 
 sealed class YieldBalance {
 
     data class Data(
         val balance: YieldBalanceItem,
+        val address: String,
     ) : YieldBalance() {
         fun getTotalStakingBalance(): BigDecimal {
             return balance.items
@@ -38,6 +40,7 @@ data class BalanceItem(
     val rawCurrencyId: String?,
     val rawNetworkId: String,
     val validatorAddress: String?,
+    val date: DateTime?,
     val pendingActions: List<PendingAction>,
 )
 
@@ -76,11 +79,28 @@ data class PendingAction(
 enum class BalanceType {
     AVAILABLE,
     STAKED,
-    UNSTAKING,
-    UNSTAKED,
     PREPARING,
-    REWARDS,
-    LOCKED,
+    UNSTAKING,
     UNLOCKING,
+    UNSTAKED,
+    LOCKED,
+    REWARDS,
     UNKNOWN,
+    ;
+
+    companion object {
+        fun BalanceType.isClickable() = when (this) {
+            STAKED,
+            UNSTAKED,
+            LOCKED,
+            -> true
+            AVAILABLE,
+            UNSTAKING,
+            PREPARING,
+            REWARDS,
+            UNLOCKING,
+            UNKNOWN,
+            -> false
+        }
+    }
 }
