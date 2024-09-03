@@ -18,6 +18,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.features.staking.impl.presentation.state.ValidatorState
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
@@ -32,7 +33,6 @@ import java.math.BigDecimal
 internal class SetInitialDataStateTransformer(
     private val clickIntents: StakingClickIntents,
     private val yield: Yield,
-    private val isStakeMoreAvailable: Boolean,
     private val isApprovalNeeded: Boolean,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
@@ -65,6 +65,7 @@ internal class SetInitialDataStateTransformer(
                 R.string.staking_title_stake,
                 wrappedList(cryptoCurrencyStatusProvider().currency.name),
             ),
+            walletName = userWalletProvider.invoke().name,
             cryptoCurrencyName = cryptoCurrencyStatusProvider.invoke().currency.name,
             clickIntents = clickIntents,
             currentStep = StakingStep.InitialInfo,
@@ -83,7 +84,6 @@ internal class SetInitialDataStateTransformer(
             infoItems = getInfoItems(),
             onInfoClick = clickIntents::onInfoClick,
             yieldBalance = yieldBalancesConverter.convert(Unit),
-            isStakeMoreAvailable = isStakeMoreAvailable,
         )
     }
 
@@ -213,9 +213,9 @@ internal class SetInitialDataStateTransformer(
             notifications = persistentListOf(),
             footerText = "",
             transactionDoneState = TransactionDoneState.Empty,
-            pendingActions = persistentListOf(),
-            pendingActionInProgress = null,
+            pendingAction = null,
             isApprovalNeeded = isApprovalNeeded,
+            reduceAmountBy = null,
         )
     }
 
