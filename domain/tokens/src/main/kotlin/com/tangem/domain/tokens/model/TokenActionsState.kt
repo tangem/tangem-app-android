@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.wallets.models.UserWalletId
 
 data class TokenActionsState(
@@ -20,7 +21,10 @@ data class TokenActionsState(
 
         data class Receive(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
-        data class Stake(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
+        data class Stake(
+            override val unavailabilityReason: ScenarioUnavailabilityReason,
+            val yield: Yield?,
+        ) : ActionState()
 
         data class Swap(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
