@@ -204,15 +204,15 @@ private fun ActiveStakingBlock(groups: ImmutableList<BalanceGroupedState>, onCli
                                 end = TangemTheme.dimens.spacing12,
                             ),
                         )
-                        group.items.forEach { balance ->
-                            key(balance.validator.address) {
+                        group.items.forEachIndexed { index, balance ->
+                            key(balance.title.resolveReference() + index) {
                                 InputRowImageInfo(
-                                    subtitle = stringReference(balance.validator.name),
+                                    subtitle = balance.title,
                                     caption = getCaption(group.type, balance),
                                     isGrayscaleImage = !group.isClickable,
                                     infoTitle = balance.fiatAmount,
                                     infoSubtitle = balance.cryptoAmount,
-                                    imageUrl = balance.validator.image.orEmpty(),
+                                    imageUrl = balance.validator?.image,
                                     iconEndRes = R.drawable.ic_chevron_right_24.takeIf { group.isClickable },
                                     modifier = Modifier.clickable(
                                         interactionSource = remember { MutableInteractionSource() },
@@ -267,7 +267,7 @@ private fun getCaption(balanceType: BalanceType, balance: BalanceState): TextRef
                     appendSpace()
                     appendColored(
                         text = BigDecimalFormatter.formatPercent(
-                            percent = balance.validator.apr.orZero(),
+                            percent = balance.validator?.apr.orZero(),
                             useAbsoluteValue = true,
                         ),
                         color = TangemTheme.colors.text.accent,
