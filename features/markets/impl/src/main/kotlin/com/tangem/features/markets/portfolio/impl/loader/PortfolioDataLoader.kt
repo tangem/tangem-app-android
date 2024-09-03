@@ -94,6 +94,7 @@ internal class PortfolioDataLoader @Inject constructor(
                     }
                 }
             }
+            .distinctUntilChanged()
     }
 
     private fun getSelectedAppCurrencyFlow(): Flow<AppCurrency> {
