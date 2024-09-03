@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
@@ -65,10 +67,13 @@ internal fun MarketsList(
     )
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modifier: Modifier = Modifier) {
     val density = LocalDensity.current
     val background = LocalMainBottomSheetColor.current.value
+    val strokeColor = TangemTheme.colors.stroke.primary
+    val scrolledState = remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -82,7 +87,7 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
                 .padding(
                     start = TangemTheme.dimens.spacing16,
                     end = TangemTheme.dimens.spacing16,
-                    bottom = TangemTheme.dimens.spacing4,
+                    bottom = TangemTheme.dimens.spacing12,
                 )
                 .onGloballyPositioned {
                     if (it.size.height > 0) {
@@ -93,23 +98,45 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
                 },
             state = state.searchBar,
         )
-        Spacer(Modifier.height(TangemTheme.dimens.spacing20))
         Column(Modifier.padding(horizontal = TangemTheme.dimens.size16)) {
-            Title(isInSearchMode = state.isInSearchMode)
-            AnimatedVisibility(state.isInSearchMode.not()) {
+            AnimatedVisibility(
+                visible = scrolledState.value.not(),
+            ) {
                 Column {
+                    SpacerH8()
+                    Title(isInSearchMode = state.isInSearchMode)
                     SpacerH12()
-                    Options(
-                        sortByTypeUM = state.selectedSortBy,
-                        trendInterval = state.selectedInterval,
-                        onIntervalClick = state.onIntervalClick,
-                        onSortByClick = state.onSortByButtonClick,
-                    )
                 }
             }
+            AnimatedVisibility(state.isInSearchMode.not()) {
+                Options(
+                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                    sortByTypeUM = state.selectedSortBy,
+                    trendInterval = state.selectedInterval,
+                    onIntervalClick = state.onIntervalClick,
+                    onSortByClick = state.onSortByButtonClick,
+                )
+            }
         }
-        SpacerH12()
+        val strokeWidth = TangemTheme.dimens.size0_5
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(strokeWidth)
+                .drawBehind {
+                    // draw horizontal line
+                    if (scrolledState.value) {
+                        drawLine(
+                            color = strokeColor,
+                            start = Offset(0f, size.height),
+                            end = Offset(size.width, size.height),
+                            strokeWidth = strokeWidth.toPx(),
+                        )
+                    }
+                },
+        )
         ItemsList(
+            scrolledState = scrolledState,
             isInSearchMode = state.isInSearchMode,
             state = state.list,
         )
@@ -184,9 +211,34 @@ private fun Options(
 }
 
 @Composable
-private fun ItemsList(isInSearchMode: Boolean, state: ListUM, modifier: Modifier = Modifier) {
+private fun ItemsList(
+    scrolledState: MutableState<Boolean>,
+    isInSearchMode: Boolean,
+    state: ListUM,
+    modifier: Modifier = Modifier,
+) {
     val searchLazyListState = rememberLazyListState()
     val mainLazyListState = rememberLazyListState()
+
+    val mainScrolled by remember {
+        derivedStateOf {
+            mainLazyListState.firstVisibleItemScrollOffset > 0
+        }
+    }
+
+    val searchScrolledState by remember {
+        derivedStateOf {
+            searchLazyListState.firstVisibleItemScrollOffset > 0
+        }
+    }
+
+    LaunchedEffect(mainScrolled, isInSearchMode, searchScrolledState) {
+        scrolledState.value = if (isInSearchMode) {
+            searchScrolledState
+        } else {
+            mainScrolled
+        }
+    }
 
     MarketsListLazyColumn(
         modifier = modifier,
