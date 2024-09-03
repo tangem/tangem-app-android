@@ -38,7 +38,7 @@ sealed class CurrencyIconState {
      * Represents a token icon.
      *
      * @property url The URL where the token icon can be fetched from. May be `null` if not found.
-     * @property topBadgeIconResId The drawable resource ID for the network badge.
+     * @property topBadgeIconResId The drawable resource ID for the network badge. May be `null`.
      * @property isGrayscale Specifies whether to show the icon in grayscale.
      * @property showCustomBadge Specifies whether to show the custom token badge.
      * @property fallbackTint The color to be used for tinting the fallback icon.
@@ -46,7 +46,7 @@ sealed class CurrencyIconState {
      */
     data class TokenIcon(
         val url: String?,
-        @DrawableRes override val topBadgeIconResId: Int,
+        @DrawableRes override val topBadgeIconResId: Int?,
         override val isGrayscale: Boolean,
         override val showCustomBadge: Boolean,
         val fallbackTint: Color,
@@ -80,5 +80,29 @@ sealed class CurrencyIconState {
         override val isGrayscale: Boolean = false
         override val showCustomBadge: Boolean = false
         override val topBadgeIconResId: Int? = null
+    }
+
+    fun copySealed(
+        isGrayscale: Boolean = this.isGrayscale,
+        showCustomBadge: Boolean = this.showCustomBadge,
+        topBadgeIconResId: Int? = this.topBadgeIconResId,
+    ): CurrencyIconState = when (this) {
+        is CoinIcon -> copy(
+            isGrayscale = isGrayscale,
+            showCustomBadge = showCustomBadge,
+        )
+        is CustomTokenIcon -> copy(
+            isGrayscale = isGrayscale,
+            showCustomBadge = showCustomBadge,
+            topBadgeIconResId = topBadgeIconResId ?: this.topBadgeIconResId,
+        )
+        is TokenIcon -> copy(
+            isGrayscale = isGrayscale,
+            showCustomBadge = showCustomBadge,
+            topBadgeIconResId = topBadgeIconResId,
+        )
+        is Loading,
+        is Locked,
+        -> this
     }
 }
