@@ -32,7 +32,8 @@ data class BalanceGroupedState(
 
 @Immutable
 data class BalanceState(
-    val validator: Yield.Validator,
+    val validator: Yield.Validator?,
+    val title: TextReference,
     val cryptoValue: String,
     val cryptoDecimal: BigDecimal,
     val cryptoAmount: TextReference,
