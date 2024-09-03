@@ -9,6 +9,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -62,6 +63,10 @@ internal class MockCurrenciesRepository(
         userWalletId: UserWalletId,
         refresh: Boolean,
     ): List<CryptoCurrency> {
+        return tokens.first().getOrElse { e -> throw e }
+    }
+
+    override suspend fun getMultiCurrencyWalletCachedCurrenciesSync(userWalletId: UserWalletId): List<CryptoCurrency> {
         return tokens.first().getOrElse { e -> throw e }
     }
 
@@ -147,5 +152,9 @@ internal class MockCurrenciesRepository(
 
     override suspend fun hasTokens(userWalletId: UserWalletId, network: Network): Boolean {
         return false
+    }
+
+    override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
+        return emptyFlow()
     }
 }
