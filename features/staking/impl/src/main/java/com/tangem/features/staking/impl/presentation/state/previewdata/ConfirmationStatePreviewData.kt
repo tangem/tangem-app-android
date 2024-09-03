@@ -79,7 +79,7 @@ internal object ConfirmationStatePreviewData {
         ),
         footerText = "You stake \$715.11 and will be receiving ~\$35 monthly",
         notifications = persistentListOf(
-            StakingNotification.Warning.EarnRewards(
+            StakingNotification.Info.EarnRewards(
                 subtitleText = resourceReference(
                     id = R.string.staking_notification_earn_rewards_text_period_day,
                     formatArgs = wrappedList("Solana"),
