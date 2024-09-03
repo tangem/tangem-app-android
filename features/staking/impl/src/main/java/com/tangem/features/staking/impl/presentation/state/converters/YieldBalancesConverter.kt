@@ -12,9 +12,9 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceGroupedState
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
+import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.toPersistentList
 import org.joda.time.DateTime
 import java.util.Calendar
@@ -35,9 +35,7 @@ internal class YieldBalancesConverter(
             val cryptoRewardsValue = yieldBalance.getRewardStakingBalance()
             val fiatRewardsValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoRewardsValue)
             val groupedBalances = getGroupedBalance(yieldBalance.balance)
-            val isRewardsClaimable = yieldBalance.balance.items
-                .filter { it.type == BalanceType.REWARDS }
-                .any { it.pendingActions.isNotEmpty() }
+
             InnerYieldBalanceState.Data(
                 rewardsCrypto = BigDecimalFormatter.formatCryptoAmount(
                     cryptoAmount = cryptoRewardsValue,
@@ -48,8 +46,7 @@ internal class YieldBalancesConverter(
                     fiatCurrencyCode = appCurrency.code,
                     fiatCurrencySymbol = appCurrency.symbol,
                 ),
-                isRewardsToClaim = !cryptoRewardsValue.isNullOrZero(),
-                isRewardsClaimable = isRewardsClaimable,
+                rewardBlockType = getRewardBlockType(),
                 balance = groupedBalances,
             )
         } else {
@@ -162,6 +159,23 @@ internal class YieldBalancesConverter(
             pluralReference(R.plurals.common_in_days, days, wrappedList(days))
         } else {
             resourceReference(R.string.common_today)
+        }
+    }
+
+    private fun getRewardBlockType(): RewardBlockType {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
+        val isRewardsClaimable = yieldBalance?.balance?.items
+            ?.filter { it.type == BalanceType.REWARDS }
+            ?.any { it.pendingActions.isNotEmpty() }
+            ?: false
+
+        val isSolana = isSolana(cryptoCurrencyStatus.currency.network.id.value)
+
+        return when {
+            isSolana -> RewardBlockType.RewardUnavailable
+            isRewardsClaimable -> RewardBlockType.Rewards
+            else -> RewardBlockType.NoRewards
         }
     }
 
