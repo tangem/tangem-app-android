@@ -97,6 +97,7 @@ private fun SendAppBar(uiState: StakingUiState) {
     }
     AppBarWithBackButtonAndIcon(
         text = uiState.title.resolveReference(),
+        subtitle = uiState.subtitle?.resolveReference(),
         backIconRes = backIcon,
         onBackClick = uiState.clickIntents::onBackClick,
         backgroundColor = TangemTheme.colors.background.secondary,
