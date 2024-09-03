@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.tangemTech.models
 
 import com.squareup.moshi.Json
+import com.tangem.common.extensions.calculateHashCode
 
 data class UserTokensResponse(
     @Json(name = "version") val version: Int = 0,
@@ -17,7 +18,23 @@ data class UserTokensResponse(
         @Json(name = "symbol") val symbol: String,
         @Json(name = "decimals") val decimals: Int,
         @Json(name = "contractAddress") val contractAddress: String?,
-    )
+    ) {
+        override fun equals(other: Any?): Boolean {
+            val otherToken = other as? Token ?: return false
+
+            return otherToken.contractAddress == this.contractAddress &&
+                otherToken.networkId == this.networkId &&
+                otherToken.derivationPath == this.derivationPath &&
+                otherToken.decimals == this.decimals
+        }
+
+        override fun hashCode(): Int = calculateHashCode(
+            contractAddress.hashCode(),
+            networkId.hashCode(),
+            derivationPath.hashCode(),
+            decimals.hashCode(),
+        )
+    }
 
     enum class GroupType {
         @Json(name = "none")
