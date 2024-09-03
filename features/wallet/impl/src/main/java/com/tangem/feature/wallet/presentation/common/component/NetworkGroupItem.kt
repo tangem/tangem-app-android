@@ -56,30 +56,46 @@ internal fun DraggableNetworkGroupItem(
     )
 }
 
+// TODO: [REDACTED_JIRA]
 @Composable
 private fun InternalNetworkGroupItem(
     networkName: String,
     modifier: Modifier = Modifier,
-    endIcon: @Composable RowScope.() -> Unit = {},
+    endIcon: @Composable (RowScope.() -> Unit)? = null,
 ) {
-    Column(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .background(TangemTheme.colors.background.primary)
-                .padding(horizontal = TangemTheme.dimens.spacing12)
-                .fillMaxWidth()
-                .heightIn(min = TangemTheme.dimens.size40),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = stringResource(id = R.string.wallet_network_group_title, networkName),
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12, bottom = TangemTheme.dimens.spacing8),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-            )
-            endIcon()
-        }
+    val minHeight = if (endIcon == null) TangemTheme.dimens.size36 else TangemTheme.dimens.size40
+    val padding = if (endIcon == null) {
+        PaddingValues(
+            start = TangemTheme.dimens.spacing12,
+            top = TangemTheme.dimens.spacing12,
+            end = TangemTheme.dimens.spacing12,
+            bottom = TangemTheme.dimens.spacing4,
+        )
+    } else {
+        PaddingValues(
+            start = TangemTheme.dimens.spacing12,
+            top = TangemTheme.dimens.spacing11,
+            end = TangemTheme.dimens.spacing12,
+            bottom = TangemTheme.dimens.spacing5,
+        )
+    }
+
+    Row(
+        modifier = modifier
+            .background(TangemTheme.colors.background.primary)
+            .fillMaxWidth()
+            .heightIn(min = minHeight)
+            .padding(paddingValues = padding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = stringResource(id = R.string.wallet_network_group_title, networkName),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.tertiary,
+        )
+
+        if (endIcon != null) endIcon()
     }
 }
 

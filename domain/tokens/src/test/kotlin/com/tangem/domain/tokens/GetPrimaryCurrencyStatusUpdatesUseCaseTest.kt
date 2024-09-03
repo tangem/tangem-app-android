@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.mock.MockNetworks
 import com.tangem.domain.tokens.mock.MockQuotes
@@ -123,7 +122,7 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
                     networkAddress = NetworkAddress.Single(
                         defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                     ),
-                    yieldBalance = YieldBalance.Error,
+                    yieldBalance = null,
                 ),
             )
         }
