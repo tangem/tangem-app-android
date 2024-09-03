@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -68,11 +69,13 @@ internal fun StakingBalanceBlock(state: StakingBlockUM.Staked, modifier: Modifie
                     color = TangemTheme.colors.text.tertiary,
                 )
             }
-            Text(
-                text = state.rewardValue.resolveReference(),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-            )
+            if (state.rewardValue != TextReference.EMPTY) {
+                Text(
+                    text = state.rewardValue.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            }
         }
         Icon(
             painter = painterResource(id = R.drawable.ic_chevron_right_24),
