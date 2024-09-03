@@ -101,7 +101,7 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             title = resourceReference(R.string.send_notification_existential_deposit_title),
             subtitle = resourceReference(R.string.send_notification_existential_deposit_text, wrappedList(deposit)),
             buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
-                text = resourceReference(R.string.send_notification_leave_button, wrappedList(deposit)),
+                text = resourceReference(R.string.common_ok),
                 onClick = onConfirmClick,
             ),
         )

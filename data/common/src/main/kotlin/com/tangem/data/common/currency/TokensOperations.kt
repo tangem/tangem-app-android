@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency.ID
 import com.tangem.domain.tokens.model.Network
 import com.tangem.blockchain.common.Token as SdkToken
@@ -65,10 +64,10 @@ fun getCoinIconUrl(blockchain: Blockchain): String? {
     return coinId?.let(::getTokenIconUrlFromDefaultHost)
 }
 
-fun List<UserTokensResponse.Token>.hasCoinForToken(token: CryptoCurrency.Token): Boolean {
+fun List<UserTokensResponse.Token>.hasCoinForToken(network: Network): Boolean {
     return any {
-        val blockchain = getBlockchain(networkId = token.network.id)
-        val tokenDerivation = token.network.derivationPath.value
+        val blockchain = getBlockchain(networkId = network.id)
+        val tokenDerivation = network.derivationPath.value
         it.id == blockchain.toCoinId() && it.derivationPath == tokenDerivation
     }
 }
@@ -85,7 +84,7 @@ private fun getCurrencyIdBody(network: Network): CurrencyIdBody {
     }
 }
 
-private fun getTokenIconUrlFromDefaultHost(tokenId: String): String {
+fun getTokenIconUrlFromDefaultHost(tokenId: String): String {
     return buildString {
         append(DEFAULT_TOKENS_ICONS_HOST)
         append('/')
