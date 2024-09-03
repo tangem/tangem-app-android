@@ -9,7 +9,7 @@ import com.tangem.utils.transformer.Transformer
 
 internal class AmountMaxValueStateTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
-    private val yield: Yield,
+    yield: Yield,
 ) : Transformer<StakingUiState> {
 
     private val amountRequirementStateTransformer = AmountRequirementStateTransformer(
