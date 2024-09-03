@@ -172,7 +172,7 @@ internal class StakingViewModel @Inject constructor(
         }
         stakingStateRouter.onNextClick()
         when {
-            isInitState() -> stateController.update(SetConfirmationStateLoadingTransformer(yield))
+            isInitState() -> stateController.update(SetConfirmationStateLoadingTransformer(yield, appCurrency))
             isAssentState() -> getFee(pendingAction)
         }
     }
@@ -183,7 +183,7 @@ internal class StakingViewModel @Inject constructor(
 
     override fun getFee(pendingAction: PendingAction?) {
         viewModelScope.launch {
-            stateController.update(SetConfirmationStateLoadingTransformer(yield))
+            stateController.update(SetConfirmationStateLoadingTransformer(yield, appCurrency))
             val cryptoCurrencyValue = cryptoCurrencyStatus.value
             val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
                 ?: error("No confirmation state")
