@@ -3,6 +3,7 @@ package com.tangem.features.markets.tokenlist.impl.model.converters
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartRawData
+import com.tangem.common.ui.charts.state.sorted
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -115,21 +116,23 @@ internal class MarketsTokenItemConverter(
                 MarketChartData.Data(
                     y = ct.priceY.toImmutableList(),
                     x = ct.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
-                ),
+                ).sorted(),
             )
         }
     }
 
+    @Suppress("MagicNumber")
     private fun TokenMarket.getTrendType(): PriceChangeType {
         val percent = when (currentTrendInterval) {
             TrendInterval.H24 -> tokenQuotesShort.h24ChangePercent
             TrendInterval.D7 -> tokenQuotesShort.weekChangePercent
             TrendInterval.M1 -> tokenQuotesShort.monthChangePercent
-        }.setScale(2, RoundingMode.UP)
-
-        return when (percent.compareTo(BigDecimal.ZERO)) {
-            1 -> PriceChangeType.UP
-            -1 -> PriceChangeType.DOWN
+        }
+        val scaled = percent.setScale(4, RoundingMode.HALF_UP)
+        return when {
+            scaled == null -> PriceChangeType.NEUTRAL
+            scaled > BigDecimal.ZERO -> PriceChangeType.UP
+            scaled < BigDecimal.ZERO -> PriceChangeType.DOWN
             else -> PriceChangeType.NEUTRAL
         }
     }
