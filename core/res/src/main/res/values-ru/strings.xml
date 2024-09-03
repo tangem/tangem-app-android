@@ -71,6 +71,7 @@
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_all">Все</string>
   <string name="common_allow">Разрешить</string>
+  <string name="common_analytics">Аналитика</string>
   <string name="common_apply">Применить</string>
   <string name="common_approval">Одобрение</string>
   <string name="common_approve">Подтвердить</string>
@@ -107,7 +108,6 @@
   <string name="common_explore">Обозреватель</string>
   <string name="common_explore_transaction_history">Посмотреть историю транзакций</string>
   <string name="common_explorer">Обозреватель</string>
-  <string name="common_fee_label">Комиссия</string>
   <string name="common_fee_selector_footer">Сетевые комиссии – это плата пользователя за обработку и подтверждение транзакций. Размер комиссии зависит от нагрузки на сеть, объема транзакции и приоритета исполнения. %s</string>
   <string name="common_fee_selector_option_fast">Быстро</string>
   <string name="common_fee_selector_option_market">По рынку</string>
@@ -117,6 +117,12 @@
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
   <string name="common_import">Импортировать</string>
+  <plurals name="common_in_days">
+    <item quantity="one">через %d день</item>
+    <item quantity="few">через %d дня</item>
+    <item quantity="many">через %d дней</item>
+    <item quantity="other">через %d дней</item>
+  </plurals>
   <string name="common_later">Позже</string>
   <string name="common_locked">Заблокирован</string>
   <string name="common_main_network">Основная сеть</string>
@@ -172,7 +178,7 @@
   <string name="custom_token_contract_address_input_title">Адрес контракта</string>
   <string name="custom_token_creation_error_invalid_contract_address">Адрес контракта некорректен</string>
   <string name="custom_token_creation_error_network_not_selected">Пожалуйста, выберите сеть</string>
-  <string name="custom_token_creation_error_wrong_decimals">Десятичное число должно быть действительным целым числом, до %li</string>
+  <string name="custom_token_creation_error_wrong_decimals">Десятичное число должно быть действительным целым числом, до %d</string>
   <string name="custom_token_custom_derivation">Своя деривация</string>
   <string name="custom_token_custom_derivation_placeholder">Например m/00\'/0000\'/0\'/0/0</string>
   <string name="custom_token_custom_derivation_title">Введите свою деривацию</string>
@@ -347,6 +353,8 @@
   <string name="markets_common_my_portfolio">Мой портфель</string>
   <string name="markets_common_title">Рынок</string>
   <string name="markets_generate_addresses_notification">Чтобы создать адреса для выбранных сетей, отсканируйте вашу карту Tangem кошелька</string>
+  <string name="markets_insights_info_description_message">Данные раздела получены из следующих сетей: %s</string>
+  <string name="markets_loading_no_data_title">Нет данных</string>
   <string name="markets_quick_actions">Быстрые действия</string>
   <string name="markets_search_result_title">Результат</string>
   <string name="markets_search_see_tokens_under_100k">Токены с капитализацией меньше 100к</string>
@@ -354,8 +362,8 @@
   <string name="markets_search_token_no_result_title">Нет результата</string>
   <string name="markets_select_network">Выберите сеть</string>
   <string name="markets_select_wallet">Выберите кошелек</string>
-  <string name="markets_selector_interval_1m_title">1мин</string>
-  <string name="markets_selector_interval_1y_title">1год</string>
+  <string name="markets_selector_interval_1m_title">1м</string>
+  <string name="markets_selector_interval_1y_title">1г</string>
   <string name="markets_selector_interval_24h_title">24ч</string>
   <string name="markets_selector_interval_3m_title">3м</string>
   <string name="markets_selector_interval_6m_title">6м</string>
@@ -374,7 +382,7 @@
     <item quantity="many">На основе %d оценок</item>
     <item quantity="other">На основе %d оценок</item>
   </plurals>
-  <string name="markets_token_details_blockchain_site">Сайт блокчейна</string>
+  <string name="markets_token_details_blockchain_site">Веб-сайт</string>
   <string name="markets_token_details_buy_pressure">Покупательское предпочтение</string>
   <string name="markets_token_details_buy_pressure_description">Разница между объемом покупателей и  продавцов</string>
   <string name="markets_token_details_circulating_supply">Циркулирующее предложение</string>
@@ -577,18 +585,11 @@
   <string name="send_custom_kaspa_per_utxo_footer">Комиссия, которую нужно заплатить за использование каждого неиспользованного выхода транзакции (UTXO) в сети Kaspa. Чем больше UTXO вы используете в транзакции, тем выше будет комиссия.</string>
   <string name="send_custom_kaspa_per_utxo_title">KAS за UTXO</string>
   <string name="send_date_format">%1$s, %2$s</string>
-  <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
   <string name="send_enter_address_field">Введите адрес</string>
   <string name="send_error_address_same_as_wallet">Адрес совпадает с адресом кошелька</string>
-  <string name="send_extras_error_invalid_destination_tag">Недопустимый Tag. Он не будет добавлен в транзакцию.</string>
   <string name="send_extras_error_invalid_memo">Недопустимый Memo. Он не будет добавлен в транзакцию.</string>
-  <string name="send_extras_hint_destination_tag">Tag</string>
   <string name="send_extras_hint_memo">Memo</string>
-  <string name="send_fee_include_description">Включая комиссию</string>
-  <string name="send_fee_picker_low">Низкая</string>
-  <string name="send_fee_picker_normal">Нормальная</string>
-  <string name="send_fee_picker_priority">Приоритетная</string>
   <string name="send_fee_unreachable_error_text">Проверьте своё интернет соединение</string>
   <string name="send_fee_unreachable_error_title">Информация о комиссии сети недоступна</string>
   <string name="send_from_wallet_android">Из</string>
@@ -603,7 +604,7 @@
   <string name="send_network_fee_warning_title">Покрытие сетевой комиссии</string>
   <string name="send_notification_exceed_balance_text">Недостаточно средств для перевода, так как сумма комиссии и сумма перевода в совокупности больше имеющегося баланса</string>
   <string name="send_notification_exceed_balance_title">Недостаточно средств</string>
-  <string name="send_notification_existential_deposit_text">Аккаунт будет удален из блокчейна, если баланс упадет ниже экзистенциального депозита. Пожалуйста, оставьте %s на балансе.</string>
+  <string name="send_notification_existential_deposit_text">Для сохранения вашего аккаунта в блокчейне и защиты от возможных рисков необходим баланс не менее %s. Эта сумма останется на вашем счете и не может быть снята.</string>
   <string name="send_notification_existential_deposit_title">Экзистенциальный депозит</string>
   <string name="send_notification_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
   <string name="send_notification_fee_too_high_title">Установлена высокая комиссия</string>
@@ -637,24 +638,18 @@
   <string name="send_summary_title">Отправка %s</string>
   <string name="send_summary_transaction_description">Вы отправляете **%1$s**, включая комиссию сети %2$s</string>
   <string name="send_summary_transaction_description_no_fiat_fee">Вы отправляете **%1$s** и %2$s</string>
-  <string name="send_title_currency_format">Отправка %s</string>
-  <string name="send_total_label">Всего</string>
-  <string name="send_total_subtitle_asset_format">%1$s и %2$s будет отправлено</string>
-  <string name="send_total_subtitle_fiat_format">≈ %1$s (вкл. комиссию: %2$s)</string>
-  <string name="send_total_subtitle_format">%s будет отправлено</string>
   <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
   <string name="send_tron_account_activation_error">%1$s — это монета в сети Tron. Чтобы рассчитать комиссию и совершить транзакцию, вам необходимо внести немного Tron (TRX) на свой адрес.</string>
-  <string name="send_validation_invalid_address">Неверный адрес</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
   <string name="settings_card_settings_footer">Подготовьтесь к сканированию карты, которую вы хотите настроить.</string>
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
   <string name="staking_active">Активно</string>
-  <string name="staking_active_footer">Для завершения стейкинга нажмите сюда</string>
+  <string name="staking_active_footer">Для завершения стейкинга нажмите на блок выше</string>
   <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_claim_unstaked">Забрать средства</string>
-  <string name="staking_details_annual_percentage_rate">Годовая процентная ставка</string>
+  <string name="staking_details_annual_percentage_rate">Процентная ставка</string>
   <string name="staking_details_annual_percentage_rate_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_available">Доступно</string>
@@ -675,6 +670,7 @@
   <string name="staking_details_unbonding_period_info">Период, который необходимо подождать после запроса на вывод средств из стейкинга, прежде чем токены станут доступны.</string>
   <string name="staking_details_warmup_period">Период прогрева</string>
   <string name="staking_details_warmup_period_info">Время, необходимое для начала процесса стейкинга и активации процесса начисления наград</string>
+  <string name="staking_locked">Заблокировано</string>
   <string name="staking_migrate">Переместить</string>
   <string name="staking_native">Нативный стейкинг</string>
   <string name="staking_notification_earn_rewards_text_period_day">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый день.</string>
@@ -682,12 +678,12 @@
   <string name="staking_notification_earn_rewards_text_period_month">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый месяц.</string>
   <string name="staking_notification_earn_rewards_text_period_week">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждую неделю.</string>
   <string name="staking_notification_earn_rewards_title">Получите награду за стейкинг</string>
-  <string name="staking_notification_unstake_text">Награда перестанет начисляться сразу после завершения стейкинга. Процесс завершения длится %s.</string>
-  <string name="staking_restake">Повторный стейкинг</string>
+  <string name="staking_notification_unstake_text">Награда перестанет начисляться сразу после того, как вы начнете процесс завершения стейкинга. Процесс завершения длится %s.</string>
+  <string name="staking_restake">Сменить валидатора</string>
   <string name="staking_restake_rewards">Застейкать вознаграждения</string>
   <string name="staking_revoke">Отозвать</string>
   <string name="staking_revote">Переголосовать</string>
-  <string name="staking_reward_claiming_auto">Автоматически</string>
+  <string name="staking_reward_claiming_auto">Авто</string>
   <string name="staking_reward_claiming_manual">Вручную</string>
   <string name="staking_reward_schedule_block">Блок</string>
   <string name="staking_reward_schedule_day">День</string>
@@ -701,8 +697,9 @@
   <string name="staking_stake_locked">Стейкинг закрыт</string>
   <string name="staking_stake_more">Застейкать еще</string>
   <string name="staking_title_stake">Застейкать %s</string>
+  <string name="staking_title_unstake">Вывести %s</string>
   <string name="staking_unlocked_locked">Разблокировать</string>
-  <string name="staking_unstaked">Выведено из стейкинга</string>
+  <string name="staking_unstaked">Вывод из стейкинга</string>
   <string name="staking_unstaked_footer">Проверьте процесс завершения стейкинга, чтобы вывести свои средства.</string>
   <string name="staking_unstaking">Завершение стейкинга</string>
   <string name="staking_validator">Валидатор</string>
@@ -882,8 +879,8 @@
   <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
   <string name="warning_low_signatures_title">Малое количество подписей</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токены на разных сетях могут иметь разные адреса. Пожалуйста, убедитесь при переводе средств, что ваш адрес соответствует сети.</string>
-  <string name="warning_matic_migration_title">Миграция MATIC в POL</string>
   <string name="warning_matic_migration_message">Токен MATIC мигрирует на POL. Однако крайний срок не установлен, и MATIC пока не устарел. Вы можете спокойно продолжать использовать токен MATIC или воспользоваться биржами, чтобы обменять его на POL.</string>
+  <string name="warning_matic_migration_title">Миграция MATIC в POL</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="one">Используйте вашу карту, чтобы получить адрес для %d сети</item>
     <item quantity="few">Используйте вашу карту, чтобы получить адреса для %d сетей</item>
