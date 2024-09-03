@@ -48,6 +48,8 @@ sealed class CryptoCurrencyWarning {
 
     data object BeaconChainShutdown : CryptoCurrencyWarning()
 
+    data object MigrationMaticToPol : CryptoCurrencyWarning()
+
     /**
      * Shows a warning about an available fee resource for a transaction in several blockchains (ex. Koinos)
      */

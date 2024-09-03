@@ -30,6 +30,9 @@ internal class WalletStateController @Inject constructor() {
 
     val value: WalletScreenState get() = uiState.value
 
+    val isInitialized: Boolean
+        get() = value.selectedWalletIndex != NOT_INITIALIZED_WALLET_INDEX
+
     private val mutableUiState: MutableStateFlow<WalletScreenState> = MutableStateFlow(value = getInitialState())
 
     fun update(function: (WalletScreenState) -> WalletScreenState) {

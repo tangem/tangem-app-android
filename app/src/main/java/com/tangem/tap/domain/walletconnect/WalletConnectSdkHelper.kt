@@ -71,7 +71,7 @@ class WalletConnectSdkHelper {
             "Transaction amount is null"
         }
 // [REDACTED_TODO_COMMENT]
-        val gasLimit = getGasLimitFromTx(value, walletManager, transaction)
+        val gasLimit = getGasLimitFromTx(value, walletManager, transaction, blockchain)
         val gasPrice = getGasPrice(walletManager, transaction)
 
         val feeDecimal = (gasLimit * gasPrice).movePointLeft(decimals)
@@ -169,6 +169,7 @@ class WalletConnectSdkHelper {
         value: BigDecimal,
         walletManager: WalletManager,
         transaction: WcEthereumTransaction,
+        blockchain: Blockchain,
     ): BigDecimal {
         return transaction.gas?.hexToBigDecimal()
             ?: transaction.gasLimit?.hexToBigDecimal()
@@ -176,7 +177,7 @@ class WalletConnectSdkHelper {
                 value = value,
                 walletManager = walletManager,
                 transaction = transaction,
-            )
+            ).increaseForMantleIfNeeded(blockchain)
     }
 
     private suspend fun getGasLimitFromBlockchain(
@@ -196,6 +197,14 @@ class WalletConnectSdkHelper {
                 DEFAULT_MAX_GASLIMIT.toBigDecimal() // Set high gasLimit if not provided
             }
             else -> DEFAULT_MAX_GASLIMIT.toBigDecimal() // Set high gasLimit if not provided
+        }
+    }
+// [REDACTED_TODO_COMMENT]
+    private fun BigDecimal.increaseForMantleIfNeeded(blockchain: Blockchain): BigDecimal {
+        return if (blockchain == Blockchain.Mantle) {
+            this.multiply(MANTLE_FEE_ESTIMATE_MULTIPLIER)
+        } else {
+            this
         }
     }
 
@@ -436,6 +445,6 @@ class WalletConnectSdkHelper {
         const val HEX_PREFIX = "0x"
         const val DEFAULT_MAX_GASLIMIT = 350000
 // [REDACTED_TODO_COMMENT]
-        private val MANTLE_FEE_ESTIMATE_MULTIPLIER = BigDecimal("1.6")
+        private val MANTLE_FEE_ESTIMATE_MULTIPLIER = BigDecimal("1.8")
     }
 }
