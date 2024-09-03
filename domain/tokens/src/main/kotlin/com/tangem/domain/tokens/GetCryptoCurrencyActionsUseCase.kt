@@ -130,11 +130,24 @@ class GetCryptoCurrencyActionsUseCase(
         // staking
         if (stakingFeatureToggles.isStakingEnabled) {
             if (isStakingAvailable(cryptoCurrency)) {
-                activeList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.None))
+                val yield = kotlin.runCatching {
+                    stakingRepository.getYield(
+                        cryptoCurrencyId = cryptoCurrency.id,
+                        symbol = cryptoCurrency.symbol,
+                    )
+                }.getOrNull()
+
+                activeList.add(
+                    TokenActionsState.ActionState.Stake(
+                        unavailabilityReason = ScenarioUnavailabilityReason.None,
+                        yield = yield,
+                    ),
+                )
             } else {
                 disabledList.add(
                     TokenActionsState.ActionState.Stake(
                         unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(cryptoCurrency.name),
+                        yield = null,
                     ),
                 )
             }
@@ -254,7 +267,7 @@ class GetCryptoCurrencyActionsUseCase(
             actionsList.add(TokenActionsState.ActionState.Receive(scenario))
         }
         if (stakingFeatureToggles.isStakingEnabled) {
-            actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable))
+            actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable, null))
         }
         actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
 

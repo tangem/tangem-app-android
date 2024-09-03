@@ -1,12 +1,12 @@
 package com.tangem.features.details.model
 
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.features.details.entity.UserWalletListUM
-import com.tangem.features.details.entity.UserWalletListUM.UserWalletUM
 import com.tangem.features.details.impl.R
 import com.tangem.features.details.utils.UserWalletSaver
 import com.tangem.features.details.utils.UserWalletsFetcher
@@ -48,7 +48,7 @@ internal class UserWalletListModel @Inject constructor(
     }
 
     private fun updateState(
-        userWallets: ImmutableList<UserWalletUM>,
+        userWallets: ImmutableList<UserWalletItemUM>,
         shouldSaveUserWallets: Boolean,
         isWalletSavingInProgress: Boolean,
     ) = state.update { value ->
