@@ -33,8 +33,11 @@ internal fun NotificationsBlock(notifications: ImmutableList<NotificationUM>) {
                 Notification(
                     config = notification.config,
                     iconTint = when (notification) {
-                        is StakingNotification.Warning -> TangemTheme.colors.icon.accent
+                        is StakingNotification.Info,
+                        is NotificationUM.Info,
+                        -> TangemTheme.colors.icon.accent
 
+                        is StakingNotification.Warning,
                         is NotificationUM.Error.ExceedsBalance,
                         is NotificationUM.Warning,
                         -> null
