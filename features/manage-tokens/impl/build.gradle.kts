@@ -22,8 +22,11 @@ dependencies {
     implementation(projects.core.featuretoggles)
 
     /* Project - Domain */
-    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.manageTokens)
+    implementation(projects.domain.card)
+    implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -43,5 +46,6 @@ dependencies {
 
     /* Other */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.decompose.ext.compose)
     implementation(deps.timber)
 }

@@ -34,7 +34,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.markets.component.BottomSheetState
+import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListLazyColumn
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListSortByBottomSheet
@@ -256,7 +256,7 @@ private fun Preview() {
                         onItemClick = {},
                     ),
                     searchBar = SearchBarUM(
-                        placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
+                        placeholderText = resourceReference(R.string.common_search),
                         query = "",
                         onQueryChange = {},
                         isActive = false,

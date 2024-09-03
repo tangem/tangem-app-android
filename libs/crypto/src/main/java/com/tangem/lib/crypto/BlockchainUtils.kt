@@ -2,6 +2,8 @@ package com.tangem.lib.crypto
 
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.lib.crypto.converter.XrpTaggedAddressConverter
 import com.tangem.lib.crypto.models.XrpTaggedAddress
 
@@ -33,12 +35,6 @@ object BlockchainUtils {
         return blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
     }
 
-    /** If current [networkId] is Dogecoin */
-    fun isDogecoin(networkId: String): Boolean {
-        val blockchain = Blockchain.fromId(networkId)
-        return blockchain == Blockchain.Dogecoin
-    }
-
     /** If current [networkId] is Tezos */
     fun isTezos(networkId: String): Boolean {
         val blockchain = Blockchain.fromId(networkId)
@@ -60,5 +56,50 @@ object BlockchainUtils {
     fun isPolygonChain(networkId: String): Boolean {
         val blockchain = Blockchain.fromId(networkId)
         return blockchain == Blockchain.Polygon || blockchain == Blockchain.PolygonTestnet
+    }
+
+    fun isTron(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet
+    }
+
+    fun isSupportedNetworkId(networkId: String): Boolean {
+        return Blockchain.fromNetworkId(networkId)?.isSupportedInApp() ?: false
+    }
+
+    fun isArbitrum(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Arbitrum
+    }
+
+    data class BlockchainInfo(
+        val blockchainId: String,
+        val name: String,
+        val protocolName: String,
+    )
+
+    fun getNetworkInfo(networkId: String): BlockchainInfo? {
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
+
+        return BlockchainInfo(
+            blockchainId = blockchain.id,
+            name = getNetworkNameWithoutTestnet(blockchain),
+            protocolName = getNetworkStandardName(blockchain),
+        )
+    }
+
+    private fun getNetworkStandardName(blockchain: Blockchain): String {
+        return when (blockchain) {
+            Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ERC20"
+            Blockchain.BSC, Blockchain.BSCTestnet -> "BEP20"
+            Blockchain.Binance, Blockchain.BinanceTestnet -> "BEP2"
+            Blockchain.Tron, Blockchain.TronTestnet -> "TRC20"
+            Blockchain.TON -> "TON"
+            else -> ""
+        }
+    }
+
+    private fun getNetworkNameWithoutTestnet(blockchain: Blockchain): String {
+        return blockchain.getNetworkName().replace(oldValue = " Testnet", newValue = "")
     }
 }

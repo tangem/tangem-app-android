@@ -6,7 +6,10 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.BalanceGroupedState
+import com.tangem.features.staking.impl.presentation.state.BalanceState
+import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
+import com.tangem.features.staking.impl.presentation.state.StakingStates
 import kotlinx.collections.immutable.persistentListOf
 
 internal object InitialStakingStatePreview {
@@ -52,7 +55,6 @@ internal object InitialStakingStatePreview {
         ),
         onInfoClick = {},
         yieldBalance = InnerYieldBalanceState.Empty,
-        isStakeMoreAvailable = true,
     )
 
     val stateWithYield = defaultState.copy(
@@ -88,6 +90,7 @@ internal object InitialStakingStatePreview {
                             ),
                             unbondingPeriod = stringReference("3 days"),
                             pendingActions = persistentListOf(),
+                            warmupPeriod = stringReference("3 days"),
                         ),
                     ),
                 ),

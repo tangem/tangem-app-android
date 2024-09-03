@@ -38,5 +38,6 @@ data class BalanceState(
     val fiatAmount: TextReference,
     val rawCurrencyId: String?,
     val unbondingPeriod: TextReference,
+    val warmupPeriod: TextReference,
     val pendingActions: ImmutableList<PendingAction>,
 )

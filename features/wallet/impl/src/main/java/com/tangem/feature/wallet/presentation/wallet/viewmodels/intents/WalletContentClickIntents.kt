@@ -90,7 +90,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onManageTokensClick() {
         analyticsEventHandler.send(PortfolioEvent.ButtonManageTokens)
         reduxStateHolder.dispatch(action = TokensAction.SetArgs.ManageAccess)
-        router.openManageTokensScreen()
+        router.openManageTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
     }
 
     override fun onOrganizeTokensClick() {

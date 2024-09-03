@@ -209,7 +209,7 @@ private fun ActiveStakingBlock(groups: ImmutableList<BalanceGroupedState>, onCli
                                 InputRowImageInfo(
                                     subtitle = stringReference(balance.validator.name),
                                     caption = getCaption(group.type, balance),
-                                    isGrayscaleImage = group.type == BalanceType.UNSTAKING,
+                                    isGrayscaleImage = !group.isClickable,
                                     infoTitle = balance.fiatAmount,
                                     infoSubtitle = balance.cryptoAmount,
                                     imageUrl = balance.validator.image.orEmpty(),
@@ -232,31 +232,49 @@ private fun ActiveStakingBlock(groups: ImmutableList<BalanceGroupedState>, onCli
 
 @Composable
 private fun getCaption(balanceType: BalanceType, balance: BalanceState): TextReference {
-    return if (balanceType == BalanceType.UNSTAKING) {
-        combinedReference(
-            resourceReference(R.string.staking_details_unbonding_period),
-            annotatedReference {
-                appendSpace()
-                appendColored(
-                    text = balance.unbondingPeriod.resolveReference(),
-                    color = TangemTheme.colors.text.accent,
-                )
-            },
-        )
-    } else {
-        combinedReference(
-            resourceReference(R.string.app_name),
-            annotatedReference {
-                appendSpace()
-                appendColored(
-                    text = BigDecimalFormatter.formatPercent(
-                        percent = balance.validator.apr.orZero(),
-                        useAbsoluteValue = true,
-                    ),
-                    color = TangemTheme.colors.text.accent,
-                )
-            },
-        )
+    return when (balanceType) {
+        BalanceType.UNSTAKING -> {
+            combinedReference(
+                resourceReference(R.string.staking_unbonding),
+                annotatedReference {
+                    appendSpace()
+                    appendColored(
+                        text = balance.unbondingPeriod.resolveReference(),
+                        color = TangemTheme.colors.text.accent,
+                    )
+                },
+            )
+        }
+        BalanceType.UNSTAKED -> {
+            resourceReference(R.string.staking_ready_to_withdraw)
+        }
+        BalanceType.PREPARING -> {
+            combinedReference(
+                resourceReference(R.string.staking_details_warmup_period),
+                annotatedReference {
+                    appendSpace()
+                    appendColored(
+                        text = balance.warmupPeriod.resolveReference(),
+                        color = TangemTheme.colors.text.accent,
+                    )
+                },
+            )
+        }
+        else -> {
+            combinedReference(
+                resourceReference(R.string.staking_details_apr),
+                annotatedReference {
+                    appendSpace()
+                    appendColored(
+                        text = BigDecimalFormatter.formatPercent(
+                            percent = balance.validator.apr.orZero(),
+                            useAbsoluteValue = true,
+                        ),
+                        color = TangemTheme.colors.text.accent,
+                    )
+                },
+            )
+        }
     }
 }
 

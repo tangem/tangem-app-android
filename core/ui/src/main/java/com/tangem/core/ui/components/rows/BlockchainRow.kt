@@ -29,8 +29,9 @@ fun BlockchainRow(model: BlockchainRowUM, action: @Composable BoxScope.() -> Uni
         modifier = modifier
             .heightIn(min = TangemTheme.dimens.size52)
             .padding(
-                vertical = TangemTheme.dimens.spacing8,
-                horizontal = TangemTheme.dimens.spacing8,
+                top = TangemTheme.dimens.spacing8,
+                bottom = TangemTheme.dimens.spacing8,
+                start = TangemTheme.dimens.spacing8,
             ),
         icon = {
             RowIcon(
@@ -125,7 +126,7 @@ private fun Preview_BlockchainRow(@PreviewParameter(BlockchainRowParameterProvid
                 BlockchainRow(
                     model = state,
                     action = {
-                        TangemSwitch(onCheckedChange = { /*TODO*/ }, checked = true)
+                        TangemSwitch(onCheckedChange = { }, checked = true)
                     },
                 )
             },
@@ -136,6 +137,7 @@ private fun Preview_BlockchainRow(@PreviewParameter(BlockchainRowParameterProvid
 private class BlockchainRowParameterProvider : CollectionPreviewParameterProvider<BlockchainRowUM>(
     collection = listOf(
         BlockchainRowUM(
+            id = "0",
             name = "BNB BEACON CHAIN",
             type = "BEP20",
             iconResId = R.drawable.img_bsc_22,
@@ -143,6 +145,7 @@ private class BlockchainRowParameterProvider : CollectionPreviewParameterProvide
             isSelected = true,
         ),
         BlockchainRowUM(
+            id = "1",
             name = "1234567890111213141516171819",
             type = "BEP20",
             iconResId = R.drawable.ic_bsc_16,
@@ -150,6 +153,7 @@ private class BlockchainRowParameterProvider : CollectionPreviewParameterProvide
             isSelected = false,
         ),
         BlockchainRowUM(
+            id = "2",
             name = "BNB BEACON CHAIN",
             type = "1234567890111213141516171819",
             iconResId = R.drawable.ic_bsc_16,
