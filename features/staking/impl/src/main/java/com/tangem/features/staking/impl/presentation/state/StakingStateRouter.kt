@@ -26,9 +26,7 @@ internal class StakingStateRouter(
             StakingStep.Validators,
             StakingStep.Amount,
             -> showConfirmation()
-            StakingStep.Confirmation -> {
-                // TODO staking handle
-            }
+            StakingStep.Confirmation -> showInitial()
         }
     }
 
