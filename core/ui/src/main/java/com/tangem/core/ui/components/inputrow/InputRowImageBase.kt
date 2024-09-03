@@ -42,7 +42,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 @Composable
 internal fun InputRowImageBase(
     subtitle: TextReference,
-    imageUrl: String,
+    imageUrl: String?,
     modifier: Modifier = Modifier,
     caption: TextReference? = null,
     subtitleColor: Color = TangemTheme.colors.text.primary1,
@@ -55,14 +55,16 @@ internal fun InputRowImageBase(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier,
     ) {
-        InputRowAsyncImage(
-            imageUrl = imageUrl,
-            isGrayscale = isGrayscaleImage,
-            modifier = Modifier
-                .size(TangemTheme.dimens.spacing36)
-                .clip(TangemTheme.shapes.roundedCornersXLarge),
-        )
-        SpacerW12()
+        if (imageUrl != null) {
+            InputRowAsyncImage(
+                imageUrl = imageUrl,
+                isGrayscale = isGrayscaleImage,
+                modifier = Modifier
+                    .size(TangemTheme.dimens.spacing36)
+                    .clip(TangemTheme.shapes.roundedCornersXLarge),
+            )
+            SpacerW12()
+        }
         Column {
             Text(
                 text = subtitle.resolveReference(),

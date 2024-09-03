@@ -65,7 +65,7 @@ internal class YieldBalancesConverter(
             val isClickable = item.key.isClickable()
             title?.let {
                 BalanceGroupedState(
-                    items = item.value.mapBalances().toPersistentList(),
+                    items = item.value.mapBalances(item.key).toPersistentList(),
                     footer = footer,
                     title = it,
                     type = item.key,
@@ -76,23 +76,33 @@ internal class YieldBalancesConverter(
         .filterNot { it.items.isEmpty() }
         .toPersistentList()
 
-    private fun List<BalanceItem>.mapBalances(): List<BalanceState> {
+    private fun List<BalanceItem>.mapBalances(balanceType: BalanceType): List<BalanceState> {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
+        var incrementingIndex = 1
         return this
             .filterNot { it.amount.isZero() }
             .mapNotNull { balance ->
                 val validator = yield.validators.firstOrNull {
                     balance.validatorAddress?.contains(it.address, ignoreCase = true) == true
-                } ?: mockedValidator
+                }
+
                 val cryptoAmount = balance.amount
                 val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
                 val unbonding = getUnbondingDate(balance.date)
                 val warmupPeriod = yield.metadata.warmupPeriod.days
-                validator?.let {
+                val title = when {
+                    validator != null -> stringReference(validator.name)
+                    balanceType == BalanceType.UNSTAKING -> {
+                        resourceReference(R.string.staking_unstaking_item_name, wrappedList(incrementingIndex++))
+                    }
+                    else -> null
+                }
+                title?.let {
                     BalanceState(
                         validator = validator,
+                        title = title,
                         cryptoValue = cryptoAmount.parseBigDecimal(cryptoCurrency.decimals),
                         cryptoDecimal = cryptoAmount,
                         cryptoAmount = stringReference(
@@ -164,12 +174,5 @@ internal class YieldBalancesConverter(
 
     private companion object {
         const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000
-
-        private val mockedValidator = Yield.Validator(
-            address = "",
-            status = "",
-            name = "Mocked validator",
-            preferred = true,
-        )
     }
 }
