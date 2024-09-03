@@ -61,7 +61,9 @@ internal class StakingStateController @Inject constructor() {
     private fun getInitialState(): StakingUiState {
         return StakingUiState(
             title = TextReference.EMPTY,
+            subtitle = null,
             clickIntents = StakingClickIntentsStub,
+            walletName = "",
             cryptoCurrencyName = "",
             currentStep = StakingStep.InitialInfo,
             initialInfoState = StakingStates.InitialInfoState.Empty(),
