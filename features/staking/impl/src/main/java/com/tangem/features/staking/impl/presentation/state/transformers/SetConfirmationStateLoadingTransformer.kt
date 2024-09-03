@@ -1,14 +1,8 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
-import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.utils.transformer.Transformer
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 internal class SetConfirmationStateLoadingTransformer(
@@ -30,52 +24,13 @@ internal class SetConfirmationStateLoadingTransformer(
                     chosenValidator = chosenValidator,
                     availableValidators = yield.validators,
                 ),
-                notifications = getNotifications(prevState),
+                notifications = persistentListOf(),
                 footerText = "",
                 transactionDoneState = TransactionDoneState.Empty,
-                pendingAction = null,
+                pendingAction = possibleConfirmationState?.pendingAction,
                 isApprovalNeeded = false,
                 reduceAmountBy = null,
             ),
         )
-    }
-
-    private fun getNotifications(prevState: StakingUiState): ImmutableList<NotificationUM> {
-        return persistentListOf(
-            if (prevState.actionType == StakingActionCommonType.EXIT) {
-                StakingNotification.Warning.Unstake(
-                    cooldownPeriodDays = yield.metadata.cooldownPeriod.days,
-                )
-            } else {
-                StakingNotification.Warning.EarnRewards(
-                    subtitleText = resourceReference(
-                        id = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
-                        formatArgs = wrappedList(yield.token.name),
-                    ),
-                )
-            },
-        )
-    }
-
-    private fun getEarnRewardsPeriod(rewardSchedule: Yield.Metadata.RewardSchedule): Int {
-        return when (rewardSchedule) {
-            Yield.Metadata.RewardSchedule.BLOCK,
-            Yield.Metadata.RewardSchedule.DAY,
-            Yield.Metadata.RewardSchedule.ERA,
-            Yield.Metadata.RewardSchedule.EPOCH,
-            -> R.string.staking_notification_earn_rewards_text_period_day
-
-            Yield.Metadata.RewardSchedule.HOUR,
-            -> R.string.staking_notification_earn_rewards_text_period_hour
-
-            Yield.Metadata.RewardSchedule.WEEK,
-            -> R.string.staking_notification_earn_rewards_text_period_week
-
-            Yield.Metadata.RewardSchedule.MONTH,
-            -> R.string.staking_notification_earn_rewards_text_period_month
-
-            else
-            -> R.string.staking_notification_earn_rewards_text_period_day
-        }
     }
 }
