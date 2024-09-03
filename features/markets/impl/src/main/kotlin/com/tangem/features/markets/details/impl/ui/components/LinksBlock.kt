@@ -13,9 +13,7 @@ import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SmallButtonShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
-import com.tangem.core.ui.components.buttons.SecondarySmallButton
-import com.tangem.core.ui.components.buttons.SmallButtonConfig
-import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.buttons.chip.Chip
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -98,12 +96,10 @@ private fun SubBlock(
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
             ) {
                 links.fastForEach {
-                    SecondarySmallButton(
-                        config = SmallButtonConfig(
-                            text = it.title,
-                            onClick = { onLinkClick(it) },
-                            icon = TangemButtonIconPosition.Start(iconResId = it.iconRes),
-                        ),
+                    Chip(
+                        text = it.title,
+                        iconResId = it.iconRes,
+                        onClick = { onLinkClick(it) },
                     )
                 }
             }
