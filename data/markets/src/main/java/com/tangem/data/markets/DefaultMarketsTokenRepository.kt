@@ -1,5 +1,9 @@
 package com.tangem.data.markets
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.data.common.currency.CryptoCurrencyFactory
+import com.tangem.data.common.currency.getNetwork
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.converters.TokenChartConverter
 import com.tangem.data.markets.converters.TokenMarketInfoConverter
@@ -8,8 +12,12 @@ import com.tangem.data.markets.converters.toRequestParam
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -19,6 +27,7 @@ import java.util.concurrent.atomic.AtomicLong
 internal class DefaultMarketsTokenRepository(
     private val marketsApi: TangemTechMarketsApi,
     private val tangemTechApi: TangemTechApi,
+    private val userWalletsStore: UserWalletsStore,
     private val dispatcherProvider: CoroutineDispatcherProvider,
 ) : MarketsTokenRepository {
 
@@ -147,5 +156,37 @@ internal class DefaultMarketsTokenRepository(
         )
 
         return TokenMarketInfoConverter.convert(response.getOrThrow()).quotes
+    }
+
+    override suspend fun createCryptoCurrency(
+        userWalletId: UserWalletId,
+        token: TokenMarketParams,
+        network: TokenMarketInfo.Network,
+    ): CryptoCurrency? {
+        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("UserWalletId [$userWalletId] not found")
+        val blockchain = Blockchain.fromNetworkId(network.networkId) ?: error("Unknown network [${network.networkId}]")
+
+        return if (network.contractAddress == null) {
+            CryptoCurrencyFactory().createCoin(
+                blockchain = blockchain,
+                extraDerivationPath = null,
+                derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+            )
+        } else {
+            val currencyNetwork = getNetwork(
+                blockchain = blockchain,
+                extraDerivationPath = null,
+                derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+            ) ?: return null
+
+            CryptoCurrencyFactory().createToken(
+                network = currencyNetwork,
+                rawId = token.id,
+                name = token.name,
+                symbol = token.symbol,
+                decimals = network.decimalCount ?: error("Unknown decimal"),
+                contractAddress = network.contractAddress!!,
+            )
+        }
     }
 }
