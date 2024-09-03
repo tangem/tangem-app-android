@@ -7,6 +7,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 internal data class AddToPortfolioBSContentUM(
     val selectedWallet: UserWalletItemUM,
     val selectNetworkUM: SelectNetworkUM,
+    val isWalletBlockVisible: Boolean,
     val isScanCardNotificationVisible: Boolean,
     val continueButtonEnabled: Boolean,
     val onContinueButtonClick: () -> Unit,

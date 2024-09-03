@@ -56,6 +56,7 @@ dependencies {
     implementation(projects.core.deepLinks.global)
     implementation(projects.core.featuretoggles)
     implementation(projects.core.decompose)
+    implementation(projects.common.ui)
 
     implementation(projects.libs.crypto)
 
