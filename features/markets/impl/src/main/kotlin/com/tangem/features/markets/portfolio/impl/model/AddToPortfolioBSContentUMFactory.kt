@@ -66,7 +66,6 @@ internal class AddToPortfolioBSContentUMFactory(
                     portfolioData = portfolioData,
                     selectedWalletId = selectedWallet.walletId,
                 ),
-                // TODO maybe do not show wallets with already added token
                 isWalletBlockVisible = portfolioData.walletsWithBalance.size > 1,
             ),
         )
