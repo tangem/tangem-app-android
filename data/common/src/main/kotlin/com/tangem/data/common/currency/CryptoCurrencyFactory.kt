@@ -12,6 +12,29 @@ import com.tangem.blockchain.common.Token as SdkToken
 // FIXME: Make internal
 class CryptoCurrencyFactory {
 
+    @Suppress("LongParameterList") // Yep, it's long
+    fun createToken(
+        network: Network,
+        rawId: String?,
+        name: String,
+        symbol: String,
+        decimals: Int,
+        contractAddress: String,
+    ): CryptoCurrency.Token {
+        val id = getTokenId(network, rawId, contractAddress)
+
+        return CryptoCurrency.Token(
+            id = id,
+            network = network,
+            name = name,
+            symbol = symbol,
+            decimals = decimals,
+            iconUrl = rawId?.let(::getTokenIconUrlFromDefaultHost),
+            isCustom = isCustomToken(id, network),
+            contractAddress = contractAddress,
+        )
+    }
+
     fun createToken(
         sdkToken: SdkToken,
         blockchain: Blockchain,
@@ -49,15 +72,7 @@ class CryptoCurrencyFactory {
         }
         val network = getNetwork(blockchain, extraDerivationPath, derivationStyleProvider) ?: return null
 
-        return CryptoCurrency.Coin(
-            id = getCoinId(network, blockchain.toCoinId()),
-            network = network,
-            name = blockchain.fullName,
-            symbol = blockchain.currency,
-            iconUrl = getCoinIconUrl(blockchain),
-            decimals = blockchain.decimals(),
-            isCustom = isCustomCoin(network),
-        )
+        return createCoin(network)
     }
 
     fun createCoin(
@@ -67,6 +82,20 @@ class CryptoCurrencyFactory {
     ): CryptoCurrency.Coin? {
         val blockchain = Blockchain.fromNetworkId(networkId) ?: Blockchain.Unknown
         return createCoin(blockchain, extraDerivationPath, derivationStyleProvider)
+    }
+
+    fun createCoin(network: Network): CryptoCurrency.Coin {
+        val blockchain = Blockchain.fromId(network.id.value)
+
+        return CryptoCurrency.Coin(
+            id = getCoinId(network, blockchain.toCoinId()),
+            network = network,
+            name = blockchain.fullName,
+            symbol = blockchain.currency,
+            iconUrl = getCoinIconUrl(blockchain),
+            decimals = blockchain.decimals(),
+            isCustom = isCustomCoin(network),
+        )
     }
 
     fun createToken(
