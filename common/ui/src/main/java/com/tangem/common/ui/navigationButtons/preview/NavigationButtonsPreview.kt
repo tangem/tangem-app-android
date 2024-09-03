@@ -30,14 +30,6 @@ internal object NavigationButtonsPreview {
         ),
     )
 
-    private val next = NavigationButton(
-        textReference = resourceReference(R.string.common_next),
-        isSecondary = false,
-        isIconVisible = false,
-        showProgress = false,
-        isEnabled = true,
-        onClick = {},
-    )
     private val prev = NavigationButton(
         textReference = TextReference.EMPTY,
         iconRes = R.drawable.ic_back_24,
@@ -60,7 +52,6 @@ internal object NavigationButtonsPreview {
     val allButtons = NavigationButtonsState.Data(
         primaryButton = finished,
         prevButton = prev,
-        secondaryButton = next,
         extraButtons = extraButtons,
         txUrl = "https://tangem.com",
     )
