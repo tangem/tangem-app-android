@@ -128,13 +128,19 @@ private fun Content(state: AddToPortfolioBSContentUM, modifier: Modifier = Modif
                     continueButtonAreaHeight = it.size.height
                 },
             enabled = state.continueButtonEnabled,
+            isTangemIconVisible = state.isScanCardNotificationVisible,
             onClick = state.onContinueButtonClick,
         )
     }
 }
 
 @Composable
-private fun ContinueButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ContinueButton(
+    enabled: Boolean,
+    isTangemIconVisible: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     TangemButton(
         enabled = enabled,
         modifier = modifier
@@ -146,7 +152,7 @@ private fun ContinueButton(enabled: Boolean, onClick: () -> Unit, modifier: Modi
             .navigationBarsPadding()
             .fillMaxWidth(),
         text = stringResource(R.string.common_continue),
-        icon = if (enabled) {
+        icon = if (enabled && isTangemIconVisible) {
             TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
         } else {
             TangemButtonIconPosition.None
