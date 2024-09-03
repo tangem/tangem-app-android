@@ -1,6 +1,7 @@
 package com.tangem.features.details.utils
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.AppInstanceIdProvider
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
@@ -19,6 +20,7 @@ import javax.inject.Inject
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
     private val urlOpener: UrlOpener,
+    private val appInstanceIdProvider: AppInstanceIdProvider,
 ) {
 
     fun buildAll(isWalletConnectAvailable: Boolean, onSupportClick: () -> Unit): ImmutableList<DetailsItemUM> =
@@ -50,7 +52,7 @@ internal class ItemsBuilder @Inject constructor(
                 block = BlockUM(
                     text = resourceReference(R.string.details_buy_wallet),
                     iconRes = R.drawable.ic_tangem_24,
-                    onClick = { urlOpener.openUrl(BUY_TANGEM_URL) },
+                    onClick = { urlOpener.openUrl(buildBuyLink()) },
                 ),
             ),
         ),
@@ -102,6 +104,12 @@ internal class ItemsBuilder @Inject constructor(
             ),
         ),
     )
+
+    private fun buildBuyLink(): String {
+        return appInstanceIdProvider.getAppInstanceIdSync()?.let {
+            "$BUY_TANGEM_URL&app_instance_id=$it"
+        } ?: BUY_TANGEM_URL
+    }
 
     private companion object {
         const val BUY_TANGEM_URL = "https://buy.tangem.com/?utm_source=tangem&utm_medium=app"

@@ -7,8 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,25 +43,15 @@ fun NavigationButtonsBlock(buttonState: NavigationButtonsState, modifier: Modifi
             PreviousButton(state?.prevButton)
             PrimaryButton(state?.primaryButton, modifier = Modifier.weight(1f))
         }
-
-        SecondaryButton(state?.secondaryButton)
     }
 }
 
 @Composable
 private fun PrimaryButton(primaryButton: NavigationButton?, modifier: Modifier = Modifier) {
+    val wrappedButton by rememberNavigationButton(primaryButton)
     AnimatedContent(
-        targetState = primaryButton,
-        transitionSpec = {
-            val isPrimaryToHide = targetState != null && initialState == null
-            val isPrimaryWasVisible = targetState == null && initialState != null
-            if (isPrimaryToHide || isPrimaryWasVisible) {
-                slideInVertically(initialOffsetY = { it / 2 }).plus(fadeIn())
-                    .togetherWith(slideOutVertically(targetOffsetY = { it / 2 }).plus(fadeOut()))
-            } else {
-                fadeIn().togetherWith(fadeOut())
-            }
-        },
+        targetState = wrappedButton,
+        transitionSpec = { navigationButtonsTransition() },
         contentAlignment = Alignment.Center,
         label = "Animate show primary button",
         modifier = modifier.fillMaxWidth(),
@@ -81,43 +70,6 @@ private fun PrimaryButton(primaryButton: NavigationButton?, modifier: Modifier =
                 colors = TangemButtonsDefaults.primaryButtonColors,
                 icon = icon,
                 modifier = Modifier.fillMaxWidth(),
-            )
-        } else {
-            Spacer(modifier = Modifier.fillMaxWidth())
-        }
-    }
-}
-
-@Composable
-private fun SecondaryButton(secondaryButton: NavigationButton?) {
-    AnimatedContent(
-        targetState = secondaryButton,
-        transitionSpec = {
-            val isPrimaryToHide = targetState != null && initialState == null
-            val isPrimaryWasVisible = targetState == null && initialState != null
-            if (isPrimaryToHide || isPrimaryWasVisible) {
-                slideInVertically(initialOffsetY = { it / 2 }).plus(fadeIn())
-                    .togetherWith(slideOutVertically(targetOffsetY = { it / 2 }).plus(fadeOut()))
-            } else {
-                fadeIn().togetherWith(fadeOut())
-            }
-        },
-        contentAlignment = Alignment.Center,
-        label = "Animate show secondary button",
-        modifier = Modifier.fillMaxWidth(),
-    ) { button ->
-        if (button != null && button.textReference != TextReference.EMPTY) {
-            val icon = button.iconRes?.let { TangemButtonIconPosition.End(iconResId = it) }
-                ?: TangemButtonIconPosition.None
-
-            TangemButton(
-                text = button.textReference.resolveReference(),
-                enabled = button.isEnabled,
-                onClick = button.onClick,
-                icon = icon,
-                showProgress = button.showProgress,
-                colors = TangemButtonsDefaults.secondaryButtonColors,
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
             )
         } else {
             Spacer(modifier = Modifier.fillMaxWidth())
@@ -179,6 +131,28 @@ private fun ExtraButtons(extraButtons: ImmutableList<NavigationButton>?, txUrl: 
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun rememberNavigationButton(button: NavigationButton?): MutableState<NavigationButton?> {
+    return remember(
+        button?.iconRes,
+        button?.isIconVisible,
+        button?.isEnabled,
+        button?.showProgress,
+        button?.textReference,
+    ) { mutableStateOf(button) }
+}
+
+private fun <T> AnimatedContentTransitionScope<T>.navigationButtonsTransition(): ContentTransform {
+    val isPrimaryToHide = targetState != null && initialState == null
+    val isPrimaryWasVisible = targetState == null && initialState != null
+    return if (isPrimaryToHide || isPrimaryWasVisible) {
+        slideInVertically(initialOffsetY = { it / 2 }).plus(fadeIn())
+            .togetherWith(slideOutVertically(targetOffsetY = { it / 2 }).plus(fadeOut()))
+    } else {
+        fadeIn().togetherWith(fadeOut())
     }
 }
 

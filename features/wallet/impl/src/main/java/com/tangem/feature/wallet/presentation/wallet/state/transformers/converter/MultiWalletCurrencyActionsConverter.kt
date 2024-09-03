@@ -62,7 +62,7 @@ internal class MultiWalletCurrencyActionsConverter(
             is TokenActionsState.ActionState.Stake -> {
                 title = resourceReference(R.string.common_stake)
                 icon = R.drawable.ic_staking_24
-                action = { clickIntents.onStakeClick(cryptoCurrencyStatus) }
+                action = { clickIntents.onStakeClick(cryptoCurrencyStatus, actionsState.yield) }
             }
             is TokenActionsState.ActionState.Sell -> {
                 title = resourceReference(R.string.common_sell)
@@ -77,7 +77,13 @@ internal class MultiWalletCurrencyActionsConverter(
             is TokenActionsState.ActionState.Swap -> {
                 title = resourceReference(R.string.swapping_swap_action)
                 icon = R.drawable.ic_exchange_horizontal_24
-                action = { clickIntents.onSwapClick(cryptoCurrencyStatus, ScenarioUnavailabilityReason.None) }
+                action = {
+                    clickIntents.onSwapClick(
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        userWalletId = userWallet.walletId,
+                        unavailabilityReason = ScenarioUnavailabilityReason.None,
+                    )
+                }
             }
             is TokenActionsState.ActionState.CopyAddress -> {
                 title = resourceReference(R.string.common_copy_address)
