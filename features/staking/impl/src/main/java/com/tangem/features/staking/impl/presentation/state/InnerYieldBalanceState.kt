@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.PendingAction
+import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.Yield
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
@@ -12,8 +13,7 @@ sealed class InnerYieldBalanceState {
     data class Data(
         val rewardsCrypto: String,
         val rewardsFiat: String,
-        val isRewardsToClaim: Boolean,
-        val isRewardsClaimable: Boolean,
+        val rewardBlockType: RewardBlockType,
         val balance: ImmutableList<BalanceGroupedState>,
     ) : InnerYieldBalanceState()
 
