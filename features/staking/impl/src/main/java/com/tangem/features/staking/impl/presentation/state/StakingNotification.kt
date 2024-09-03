@@ -29,6 +29,7 @@ internal object StakingNotification {
             subtitle = subtitle,
         )
     }
+
     sealed class Warning(
         title: TextReference,
         subtitle: TextReference,
@@ -41,16 +42,34 @@ internal object StakingNotification {
         buttonsState = buttonsState,
         onCloseClick = onCloseClick,
     ) {
+        data class TransactionInProgress(
+            val title: TextReference,
+            val description: TextReference,
+        ) : StakingNotification.Warning(title = title, subtitle = description)
+    }
+
+    sealed class Info(
+        title: TextReference,
+        subtitle: TextReference,
+        buttonsState: NotificationConfig.ButtonsState? = null,
+        onCloseClick: (() -> Unit)? = null,
+    ) : NotificationUM.Info(
+        title = title,
+        subtitle = subtitle,
+        buttonsState = buttonsState,
+        onCloseClick = onCloseClick,
+
+    ) {
         data class EarnRewards(
             val subtitleText: TextReference,
-        ) : StakingNotification.Warning(
+        ) : StakingNotification.Info(
             title = resourceReference(R.string.staking_notification_earn_rewards_title),
             subtitle = subtitleText,
         )
 
         data class Unstake(
             val cooldownPeriodDays: Int,
-        ) : StakingNotification.Warning(
+        ) : StakingNotification.Info(
             title = resourceReference(R.string.common_unstake),
             subtitle = resourceReference(
                 R.string.staking_notification_unstake_text,
@@ -64,9 +83,12 @@ internal object StakingNotification {
             ),
         )
 
-        data class TransactionInProgress(
+        data class PendingAction(
             val title: TextReference,
-            val description: TextReference,
-        ) : StakingNotification.Warning(title = title, subtitle = description)
+            val text: TextReference,
+        ) : StakingNotification.Info(
+            title = title,
+            subtitle = text,
+        )
     }
 }
