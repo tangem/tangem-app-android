@@ -2,6 +2,7 @@ package com.tangem.core.ui.components.token
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -47,12 +48,18 @@ private enum class LayoutId {
  * >Figma Component</a>
  */
 @Composable
-fun TokenItem(state: TokenItemState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
+fun TokenItem(
+    state: TokenItemState,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+    itemPaddingValues: PaddingValues = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
+) {
     TokenItem(
         state = state,
         isBalanceHidden = isBalanceHidden,
         modifier = modifier,
         reorderableTokenListState = null,
+        itemPaddingValues = itemPaddingValues,
     )
 }
 
@@ -63,6 +70,7 @@ fun TokenItem(state: TokenItemState, isBalanceHidden: Boolean, modifier: Modifie
  * @param isBalanceHidden           flag that shows/hides balance
  * @param reorderableTokenListState reorderable token list state
  * @param modifier                  modifier
+ * @param itemPaddingValues         padding values
  *
  * @see <a href = "https://www.figma.com/design/14ISV23YB1yVW1uNVwqrKv/Android?node-id=1051-866&t=ew8mbGp2lacuJfFm-4"
  * >Figma Component</a>
@@ -73,12 +81,15 @@ fun TokenItem(
     isBalanceHidden: Boolean,
     reorderableTokenListState: ReorderableLazyListState?,
     modifier: Modifier = Modifier,
+    itemPaddingValues: PaddingValues = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
 ) {
     val betweenRowsMargin = TangemTheme.dimens.spacing2
 
     CustomContainer(
         state = state,
-        modifier = modifier.tokenClickable(state = state),
+        modifier = modifier
+            .tokenClickable(state = state)
+            .padding(itemPaddingValues),
     ) {
         CurrencyIcon(
             state = state.iconState,
@@ -163,10 +174,7 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
     Layout(content = content, modifier = modifier) { measurables, constraints ->
 
         val layoutWidth = constraints.maxWidth
-        val horizontalPadding = with(density) { dimens.size12.roundToPx() }
         val verticalPadding = with(density) { dimens.size15.roundToPx() }
-        val layoutWidthWithoutPaddings = layoutWidth - 2 * horizontalPadding
-
         val titleMinWidth = (layoutWidth * TITLE_MIN_WIDTH_COEFFICIENT).toInt()
         val priceChangeMinWidth = (layoutWidth * PRICE_MIN_WIDTH_COEFFICIENT).toInt()
 
@@ -202,35 +210,35 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
             -> {
                 fiatAmount = measurables.measureFiatAmount(
                     state = state,
-                    maxWidth = layoutWidthWithoutPaddings - icon.width - titleMinWidth,
+                    maxWidth = layoutWidth - icon.width - titleMinWidth,
                     defaultConstraints = constraints,
                 )
 
                 cryptoAmount = measurables.measureCryptoAmount(
                     state = state,
-                    maxWidth = layoutWidthWithoutPaddings - icon.width - priceChangeMinWidth,
+                    maxWidth = layoutWidth - icon.width - priceChangeMinWidth,
                     defaultConstraints = constraints,
                 )
 
-                firstRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - fiatAmount.width
-                secondRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - cryptoAmount.width
+                firstRowRemainingFreeSpace = layoutWidth - icon.width - fiatAmount.width
+                secondRowRemainingFreeSpace = layoutWidth - icon.width - cryptoAmount.width
             }
             is TokenItemState.Draggable -> {
                 cryptoAmount = measurables.measureCryptoAmount(
                     state = state,
-                    maxWidth = layoutWidthWithoutPaddings - icon.width - nonFiatContent.width,
+                    maxWidth = layoutWidth - icon.width - nonFiatContent.width,
                     defaultConstraints = constraints,
                 )
 
-                firstRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - nonFiatContent.width
+                firstRowRemainingFreeSpace = layoutWidth - icon.width - nonFiatContent.width
             }
             is TokenItemState.NoAddress,
             is TokenItemState.Unreachable,
             -> {
-                firstRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - nonFiatContent.width
+                firstRowRemainingFreeSpace = layoutWidth - icon.width - nonFiatContent.width
 
                 if (state.subtitleState != null) {
-                    secondRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - nonFiatContent.width
+                    secondRowRemainingFreeSpace = layoutWidth - icon.width - nonFiatContent.width
                 }
             }
         }
@@ -262,10 +270,10 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
         )
 
         layout(width = constraints.maxWidth, height = layoutHeight) {
-            icon.placeRelative(x = horizontalPadding, y = (layoutHeight - icon.height).div(other = 2))
+            icon.placeRelative(x = 0, y = (layoutHeight - icon.height).div(other = 2))
 
             title.placeRelative(
-                x = horizontalPadding + icon.width,
+                x = icon.width,
                 y = when (state) {
                     is TokenItemState.NoAddress,
                     is TokenItemState.Unreachable,
@@ -280,23 +288,23 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
                 },
             )
 
-            fiatAmount?.placeRelative(x = layoutWidth - fiatAmount.width - horizontalPadding, y = verticalPadding)
+            fiatAmount?.placeRelative(x = layoutWidth - fiatAmount.width, y = verticalPadding)
 
             priceChange?.placeRelative(
-                x = horizontalPadding + icon.width,
+                x = icon.width,
                 y = layoutHeight - priceChange.height - verticalPadding,
             )
 
             cryptoAmount?.placeRelative(
                 x = when (state) {
-                    is TokenItemState.Draggable -> horizontalPadding + icon.width
-                    else -> layoutWidth - cryptoAmount.width - horizontalPadding
+                    is TokenItemState.Draggable -> icon.width
+                    else -> layoutWidth - cryptoAmount.width
                 },
                 y = layoutHeight - cryptoAmount.height - verticalPadding,
             )
 
             nonFiatContent.placeRelative(
-                x = layoutWidth - nonFiatContent.width - horizontalPadding,
+                x = layoutWidth - nonFiatContent.width,
                 y = (layoutHeight - nonFiatContent.height).div(other = 2),
             )
         }
