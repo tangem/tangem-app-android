@@ -23,6 +23,7 @@ import com.tangem.features.staking.impl.presentation.state.converters.RewardsVal
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.Provider
+import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -60,13 +61,15 @@ internal class SetInitialDataStateTransformer(
     }
 
     override fun transform(prevState: StakingUiState): StakingUiState {
+        val cryptoCurrencyName = cryptoCurrencyStatusProvider().currency.name
+
         return prevState.copy(
             title = TextReference.Res(
                 R.string.staking_title_stake,
-                wrappedList(cryptoCurrencyStatusProvider().currency.name),
+                wrappedList(cryptoCurrencyName),
             ),
             walletName = userWalletProvider.invoke().name,
-            cryptoCurrencyName = cryptoCurrencyStatusProvider.invoke().currency.name,
+            cryptoCurrencyName = cryptoCurrencyName,
             clickIntents = clickIntents,
             currentStep = StakingStep.InitialInfo,
             initialInfoState = createInitialInfoState(),
@@ -79,7 +82,7 @@ internal class SetInitialDataStateTransformer(
 
     private fun createInitialInfoState(): StakingStates.InitialInfoState.Data {
         return StakingStates.InitialInfoState.Data(
-            isPrimaryButtonEnabled = true,
+            isPrimaryButtonEnabled = !cryptoCurrencyStatusProvider().value.amount.isNullOrZero(),
             aprRange = getAprRange(yield.validators),
             infoItems = getInfoItems(),
             onInfoClick = clickIntents::onInfoClick,
