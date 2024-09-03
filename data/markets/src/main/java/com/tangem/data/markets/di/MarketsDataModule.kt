@@ -4,6 +4,7 @@ import com.tangem.data.markets.DefaultMarketsTokenRepository
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.DevTangemApi
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -21,12 +22,14 @@ internal object MarketsDataModule {
     fun provideMarketsRepository(
         @DevTangemApi marketsApi: TangemTechMarketsApi,
         @DevTangemApi tangemTechApi: TangemTechApi,
+        userWalletsStore: UserWalletsStore,
         dispatchers: CoroutineDispatcherProvider,
     ): MarketsTokenRepository {
         return DefaultMarketsTokenRepository(
             marketsApi = marketsApi,
             tangemTechApi = tangemTechApi,
             dispatcherProvider = dispatchers,
+            userWalletsStore = userWalletsStore,
         )
     }
 }
