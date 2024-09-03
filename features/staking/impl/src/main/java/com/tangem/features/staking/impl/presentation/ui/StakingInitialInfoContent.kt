@@ -39,6 +39,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.staking.model.stakekit.BalanceType
+import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceGroupedState
 import com.tangem.features.staking.impl.presentation.state.BalanceState
@@ -88,8 +89,7 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
                     StakingRewardBlock(
                         rewardCrypto = state.yieldBalance.rewardsCrypto,
                         rewardFiat = state.yieldBalance.rewardsFiat,
-                        isRewardsToClaim = state.yieldBalance.isRewardsToClaim,
-                        isRewardsClaimable = state.yieldBalance.isRewardsClaimable,
+                        rewardBlockType = state.yieldBalance.rewardBlockType,
                         onRewardsClick = clickIntents::openRewardsValidators,
                     )
                     SpacerH12()
@@ -143,27 +143,33 @@ private fun BannerBlock(onClick: () -> Unit) {
 private fun StakingRewardBlock(
     rewardCrypto: String,
     rewardFiat: String,
-    isRewardsToClaim: Boolean,
-    isRewardsClaimable: Boolean,
+    rewardBlockType: RewardBlockType,
     onRewardsClick: () -> Unit,
 ) {
-    val (text, textColor) = if (isRewardsToClaim) {
-        annotatedReference {
-            append(PLUS)
-            appendSpace()
-            append(rewardFiat)
-            appendSpace()
-            append(DOT)
-            appendSpace()
-            append(rewardCrypto)
-        } to TangemTheme.colors.text.primary1
-    } else {
-        resourceReference(R.string.staking_details_no_rewards_to_claim) to TangemTheme.colors.text.tertiary
+    val (text, textColor) = when (rewardBlockType) {
+        RewardBlockType.Rewards -> {
+            annotatedReference {
+                append(PLUS)
+                appendSpace()
+                append(rewardFiat)
+                appendSpace()
+                append(DOT)
+                appendSpace()
+                append(rewardCrypto)
+            } to TangemTheme.colors.text.primary1
+        }
+        RewardBlockType.RewardUnavailable -> {
+            resourceReference(R.string.staking_details_auto_claiming_rewards_daily_text) to
+                TangemTheme.colors.text.tertiary
+        }
+        RewardBlockType.NoRewards -> {
+            resourceReference(R.string.staking_details_no_rewards_to_claim) to TangemTheme.colors.text.tertiary
+        }
     }
     InputRowDefault(
         title = resourceReference(R.string.staking_rewards),
         text = text,
-        iconRes = R.drawable.ic_chevron_right_24.takeIf { isRewardsToClaim && isRewardsClaimable },
+        iconRes = R.drawable.ic_chevron_right_24.takeIf { rewardBlockType == RewardBlockType.Rewards },
         textColor = textColor,
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
@@ -171,7 +177,7 @@ private fun StakingRewardBlock(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(),
-                enabled = isRewardsToClaim && isRewardsClaimable,
+                enabled = rewardBlockType == RewardBlockType.Rewards,
                 onClick = onRewardsClick,
             ),
     )
