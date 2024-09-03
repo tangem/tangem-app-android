@@ -64,10 +64,7 @@ internal class SetInitialDataStateTransformer(
         val cryptoCurrencyName = cryptoCurrencyStatusProvider().currency.name
 
         return prevState.copy(
-            title = TextReference.Res(
-                R.string.staking_title_stake,
-                wrappedList(cryptoCurrencyName),
-            ),
+            title = TextReference.EMPTY,
             walletName = userWalletProvider.invoke().name,
             cryptoCurrencyName = cryptoCurrencyName,
             clickIntents = clickIntents,
