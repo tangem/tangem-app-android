@@ -12,6 +12,8 @@ interface MarketsTokenRepository {
 
     suspend fun getChart(fiatCurrencyCode: String, interval: PriceChangeInterval, tokenId: String): TokenChart
 
+    suspend fun getChartPreview(fiatCurrencyCode: String, interval: PriceChangeInterval, tokenId: String): TokenChart
+
     suspend fun getTokenInfo(fiatCurrencyCode: String, tokenId: String, languageCode: String): TokenMarketInfo
 
     suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String): TokenQuotes
