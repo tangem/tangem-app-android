@@ -1,12 +1,22 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
 
 internal class SetConfirmationStateLoadingTransformer(
     private val yield: Yield,
+    private val appCurrency: AppCurrency,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
@@ -25,12 +35,43 @@ internal class SetConfirmationStateLoadingTransformer(
                     availableValidators = yield.validators,
                 ),
                 notifications = persistentListOf(),
-                footerText = "",
+                footerText = getFooter(prevState),
                 transactionDoneState = TransactionDoneState.Empty,
                 pendingAction = possibleConfirmationState?.pendingAction,
                 isApprovalNeeded = false,
                 reduceAmountBy = null,
             ),
         )
+    }
+
+    private fun getFooter(state: StakingUiState): TextReference {
+        val amountState = state.amountState as? AmountState.Data
+        val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
+        val validatorState = confirmationState?.validatorState as? ValidatorState.Content
+
+        val isEnterAction = state.actionType == StakingActionCommonType.ENTER
+
+        val apr = validatorState?.chosenValidator?.apr.orZero()
+        val amountDecimal = amountState?.amountTextField?.fiatAmount?.value
+        val potentialReward = amountDecimal?.multiply(apr)
+
+        val amountValue = BigDecimalFormatter.formatFiatAmount(
+            fiatAmount = amountDecimal,
+            fiatCurrencyCode = appCurrency.code,
+            fiatCurrencySymbol = appCurrency.symbol,
+        )
+        val potentialRewardValue = BigDecimalFormatter.formatFiatAmount(
+            fiatAmount = potentialReward,
+            fiatCurrencyCode = appCurrency.code,
+            fiatCurrencySymbol = appCurrency.symbol,
+        )
+        return if (isEnterAction && amountDecimal != null && potentialReward != null) {
+            resourceReference(
+                id = R.string.staking_summary_description_text,
+                formatArgs = wrappedList(amountValue, potentialRewardValue),
+            )
+        } else {
+            TextReference.EMPTY
+        }
     }
 }
