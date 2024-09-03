@@ -44,11 +44,24 @@ inline fun <T> MutableList<T>.replaceBy(item: T, predicate: (T) -> Boolean): Boo
  */
 inline fun <T> List<T>.addOrReplace(item: T, predicate: (T) -> Boolean): List<T> {
     val mutableList = this.toMutableList()
-    val isReplaced = mutableList.replaceBy(item, predicate)
 
-    if (!isReplaced) {
-        mutableList.add(item)
-    }
+    mutableList.addOrReplace(item, predicate)
 
     return mutableList
+}
+
+/**
+ * Adds the specified element to the mutable list or replaces an existing element.
+ *
+ * !!!This function is not thread-safe!!!
+ *
+ * @param item The element to be added or replace the existing one.
+ * @param predicate The condition to replace an existing element.
+ */
+inline fun <T> MutableList<T>.addOrReplace(item: T, predicate: (T) -> Boolean) {
+    val isReplaced = replaceBy(item, predicate)
+
+    if (!isReplaced) {
+        add(item)
+    }
 }
