@@ -253,6 +253,7 @@ internal class StakingViewModel @Inject constructor(
                 ).getOrElse {
                     Timber.e(it.toString())
                     stakingEventFactory.createStakingErrorAlert(it)
+                    stateController.update(SetConfirmationStateResetAssentTransformer)
                     return@launch
                 }
 
@@ -266,6 +267,7 @@ internal class StakingViewModel @Inject constructor(
                         ).getOrElse {
                             Timber.e(it.toString())
                             stakingEventFactory.createStakingErrorAlert(it)
+                            stateController.update(SetConfirmationStateResetAssentTransformer)
                             return@launch
                         }
 
@@ -469,6 +471,7 @@ internal class StakingViewModel @Inject constructor(
                         ),
                     )
                     stakingEventFactory.createGenericErrorAlert(error.message ?: error.toString())
+                    stateController.update(SetConfirmationStateResetAssentTransformer)
                     return@launch
                 },
                 ifRight = { it },
@@ -489,6 +492,7 @@ internal class StakingViewModel @Inject constructor(
                         ),
                     )
                     stakingEventFactory.createSendTransactionErrorAlert(error)
+                    stateController.update(SetConfirmationStateResetAssentTransformer)
                 },
                 ifRight = {
                     stateController.update(SetApprovalInProgressTransformer)
@@ -686,6 +690,7 @@ internal class StakingViewModel @Inject constructor(
                 ifLeft = {
                     Timber.e(it.toString())
                     stakingEventFactory.createGenericErrorAlert(it.toString())
+                    stateController.update(SetConfirmationStateResetAssentTransformer)
                 },
             )
             getCryptoCurrencyStatusSyncUseCase(userWalletId, cryptoCurrencyId).fold(
@@ -710,6 +715,7 @@ internal class StakingViewModel @Inject constructor(
                 ifLeft = {
                     Timber.e(it.toString())
                     stakingEventFactory.createGenericErrorAlert(it.toString())
+                    stateController.update(SetConfirmationStateResetAssentTransformer)
                 },
             )
         }
@@ -758,6 +764,7 @@ internal class StakingViewModel @Inject constructor(
                     ),
                 )
                 stakingEventFactory.createSendTransactionErrorAlert(error)
+                stateController.update(SetConfirmationStateResetAssentTransformer)
             },
             ifRight = { transactionHashes ->
                 transactionsInProgress.clear()
