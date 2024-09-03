@@ -2,7 +2,7 @@ package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
@@ -79,12 +79,14 @@ interface SwapInteractor {
      */
     fun getTokenBalance(token: CryptoCurrencyStatus): SwapAmount
 
-    fun getSelectedWallet(): UserWallet?
-
     suspend fun selectInitialCurrencyToSwap(
         initialCryptoCurrency: CryptoCurrency,
         state: TokensDataStateExpress,
     ): CryptoCurrencyStatus?
 
     fun getNativeToken(networkId: String): CryptoCurrency
+
+    interface Factory {
+        fun create(selectedWalletId: UserWalletId): SwapInteractor
+    }
 }

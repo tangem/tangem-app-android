@@ -15,13 +15,14 @@ import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 @Suppress("TooManyFunctions")
 interface StakingRepository {
+
+    fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String
 
     fun isStakingSupported(integrationKey: String): Boolean
 
@@ -38,33 +39,33 @@ interface StakingRepository {
 
     suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
-        address: CryptoCurrencyAddress,
+        cryptoCurrency: CryptoCurrency,
         refresh: Boolean = false,
     )
 
-    fun getSingleYieldBalanceFlow(userWalletId: UserWalletId, address: CryptoCurrencyAddress): Flow<YieldBalance>
+    fun getSingleYieldBalanceFlow(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Flow<YieldBalance>
 
-    suspend fun getSingleYieldBalanceSync(userWalletId: UserWalletId, address: CryptoCurrencyAddress): YieldBalance
+    suspend fun getSingleYieldBalanceSync(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): YieldBalance
 
     suspend fun fetchMultiYieldBalance(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
         refresh: Boolean = false,
     )
 
     fun getMultiYieldBalanceFlow(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList>
 
     fun getMultiYieldBalanceLce(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): LceFlow<Throwable, YieldBalanceList>
 
     suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): YieldBalanceList
 
     suspend fun createAction(userWalletId: UserWalletId, network: Network, params: ActionParams): StakingAction
@@ -82,9 +83,6 @@ interface StakingRepository {
     suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata)
 
     suspend fun sendUnsubmittedHashes()
-
-    /** Returns whether additional staking is possible if there is already active staking */
-    fun isStakeMoreAvailable(networkId: Network.ID): Boolean
 
     /** Returns staking approval */
     fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval
