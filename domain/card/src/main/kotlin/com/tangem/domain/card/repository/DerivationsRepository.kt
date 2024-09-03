@@ -12,6 +12,8 @@ interface DerivationsRepository {
     @Throws
     suspend fun derivePublicKeys(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
 
+    suspend fun derivePublicKeysByNetworkIds(userWalletId: UserWalletId, networkIds: List<Network.ID>)
+
     @Throws
     suspend fun derivePublicKeysByNetworks(userWalletId: UserWalletId, networks: List<Network>)
 
