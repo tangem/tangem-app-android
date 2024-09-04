@@ -8,6 +8,7 @@ import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardClaimingDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.RewardTypeDTO
+import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.error.AccessDeniedErrorTypeDTO
@@ -38,6 +39,7 @@ fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
         StakingActionTypeDTO::class.java to StakingActionTypeDTO.UNKNOWN,
         StakingTransactionStatusDTO::class.java to StakingTransactionStatusDTO.UNKNOWN,
         StakingTransactionTypeDTO::class.java to StakingTransactionTypeDTO.UNKNOWN,
+        ValidatorStatusDTO::class.java to ValidatorStatusDTO.UNKNOWN,
         // error enums
         AccessDeniedErrorTypeDTO::class.java to AccessDeniedErrorTypeDTO.UNKNOWN,
         StakeKitErrorMessageDTO::class.java to StakeKitErrorMessageDTO.UNKNOWN,
