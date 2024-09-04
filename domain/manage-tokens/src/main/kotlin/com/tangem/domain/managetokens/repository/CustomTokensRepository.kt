@@ -26,6 +26,12 @@ interface CustomTokensRepository {
 
     fun createCoin(networkId: Network.ID, derivationPath: Network.DerivationPath): CryptoCurrency.Coin
 
+    fun createToken(
+        managedCryptoCurrency: ManagedCryptoCurrency.Token,
+        sourceNetwork: ManagedCryptoCurrency.SourceNetwork.Default,
+        rawId: String?,
+    ): CryptoCurrency.Token
+
     suspend fun createCustomToken(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
