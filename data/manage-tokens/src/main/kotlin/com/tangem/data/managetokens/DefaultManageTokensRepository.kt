@@ -3,21 +3,16 @@ package com.tangem.data.managetokens
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.currency.getBlockchain
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.data.managetokens.utils.ManagedCryptoCurrencyFactory
-import com.tangem.data.tokens.utils.UserTokensBackwardCompatibility
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
-import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.util.cardTypesResolver
@@ -29,7 +24,6 @@ import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.pagination.BatchFetchResult
@@ -45,15 +39,9 @@ internal class DefaultManageTokensRepository(
     private val manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val walletManagerFacade: WalletManagersFacade,
-    private val tangemExpressApi: TangemExpressApi,
-    private val expressAssetsStore: ExpressAssetsStore,
 ) : ManageTokensRepository {
 
     private val managedCryptoCurrencyFactory = ManagedCryptoCurrencyFactory()
-    private val cryptoCurrencyFactory = CryptoCurrencyFactory()
-    private val userTokensResponseFactory = UserTokensResponseFactory()
-    private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
 
     // region getTokenListBatchFlow
     override fun getTokenListBatchFlow(
@@ -147,8 +135,8 @@ internal class DefaultManageTokensRepository(
         tempAddedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
         tempRemovedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
     ): Boolean {
-        val addedTokens = tempAddedTokens.mapToUserResponseToken()
-        val removedTokens = tempRemovedTokens.mapToUserResponseToken()
+        val addedTokens = tempAddedTokens.mapToResponseTokens()
+        val removedTokens = tempRemovedTokens.mapToResponseTokens()
 
         val storedTokens = requireNotNull(
             value = getSavedUserTokensResponseSync(userWalletId),
@@ -163,7 +151,7 @@ internal class DefaultManageTokensRepository(
         }
     }
 
-    private fun Map<ManagedCryptoCurrency.Token, Set<Network>>.mapToUserResponseToken(): List<UserTokensResponse.Token> {
+    private fun Map<ManagedCryptoCurrency.Token, Set<Network>>.mapToResponseTokens(): List<UserTokensResponse.Token> {
         return flatMap { (token, networks) ->
             token.availableNetworks
                 .filter { sourceNetwork -> networks.contains(sourceNetwork.network) }
