@@ -99,7 +99,7 @@ data class YieldDTO(
             @Json(name = "jailed")
             JAILED,
 
-            UNKNOWN
+            UNKNOWN,
         }
     }
 

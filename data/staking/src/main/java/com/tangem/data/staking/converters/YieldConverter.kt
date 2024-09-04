@@ -9,6 +9,7 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.Yield.Metadata.RewardSchedule
 import com.tangem.domain.staking.model.stakekit.Yield.Validator.ValidatorStatus
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.toImmutableList
 
 class YieldConverter(
     private val tokenConverter: TokenConverter,
@@ -26,9 +27,11 @@ class YieldConverter(
             rewardType = convertRewardType(value.rewardType),
             metadata = convertMetadata(value.metadata),
             validators = value.validators
+                .asSequence()
                 .filter { it.preferred && it.status == ValidatorStatusDTO.ACTIVE }
+                .sortedByDescending { it.apr }
                 .map { convertValidator(it) }
-                .sortedByDescending { it.apr },
+                .toImmutableList(),
             isAvailable = value.isAvailable,
         )
     }
@@ -131,7 +134,7 @@ class YieldConverter(
         }
     }
 
-    private fun convertValidatorStatus(validatorStatusDTO: ValidatorStatusDTO) : ValidatorStatus {
+    private fun convertValidatorStatus(validatorStatusDTO: ValidatorStatusDTO): ValidatorStatus {
         return when (validatorStatusDTO) {
             ValidatorStatusDTO.ACTIVE -> ValidatorStatus.ACTIVE
             ValidatorStatusDTO.DEACTIVATING -> ValidatorStatus.DEACTIVATING
