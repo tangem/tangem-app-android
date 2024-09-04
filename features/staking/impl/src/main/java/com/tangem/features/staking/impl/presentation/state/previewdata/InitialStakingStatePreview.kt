@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.Yield.Validator.ValidatorStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -77,7 +78,7 @@ internal object InitialStakingStatePreview {
                             rawCurrencyId = null,
                             validator = Yield.Validator(
                                 address = "address",
-                                status = "status",
+                                status = ValidatorStatus.ACTIVE,
                                 name = "Binance",
                                 image = null,
                                 website = null,
