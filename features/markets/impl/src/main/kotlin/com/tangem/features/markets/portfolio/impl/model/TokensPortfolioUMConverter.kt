@@ -45,7 +45,7 @@ internal class TokensPortfolioUMConverter(
                         tokenActionsHandler = quickActionsIntents,
                     ).convert(value = cryptoData) to cryptoData
                 }
-                .setQuickActionsVisibility(currentTokensState)
+                .setQuickActionsVisibility(currentState = currentTokensState)
                 .toImmutableList(),
             buttonState = if (isAllAvailableNetworksAdded) AddButtonState.Unavailable else AddButtonState.Available,
             addToPortfolioBSConfig = bsConfig,
@@ -62,47 +62,30 @@ internal class TokensPortfolioUMConverter(
     private fun List<Pair<PortfolioTokenUM, PortfolioData.CryptoCurrencyData>>.setQuickActionsVisibility(
         currentState: MyPortfolioUM.Tokens?,
     ): List<PortfolioTokenUM> {
-        if (currentState == null) {
-            // if there are more than one token with empty balance, hide quick actions for all
-            if (this.count { (_, cryptoData) -> isEmptyBalance(cryptoData) } > 1) {
-                return this.map { (token, _) ->
-                    token.copy(isQuickActionsShown = false)
-                }
-            }
-
-            // if during first convert there is one token with empty balance, show quick actions for it
-            val firstWithEmptyBalance = this.firstOrNull { (_, cryptoData) -> isEmptyBalance(cryptoData) }?.first
-
-            return this.map { (token, cryptoData) ->
-                if (token == firstWithEmptyBalance) {
+        return when {
+            // if there is only one token and it has empty balance, show quick actions for it
+            currentState == null && this.size == 1 && isEmptyBalance(this.first().second) -> {
+                this.map { (token, _) ->
                     token.copy(isQuickActionsShown = true)
-                } else {
+                }
+            }
+            // if there is no previous state, hide quick actions for all tokens
+            currentState == null -> {
+                this.map { (token, _) ->
                     token.copy(isQuickActionsShown = false)
                 }
             }
-        }
+            else -> {
+                val previousList = currentState.tokens
 
-        val previousList = currentState.tokens
-
-        // if new token with empty balance appeared, show quick actions for it
-        val newTokenWithEmptyBalance: PortfolioTokenUM? = this.firstOrNull { (token, cryptoData) ->
-            val exist = previousList.any { it.matchWith(token) }
-
-            exist.not() && isEmptyBalance(cryptoData)
-        }?.first
-
-        return if (newTokenWithEmptyBalance != null) {
-            this.map { (token, _) ->
-                token.copy(isQuickActionsShown = token == newTokenWithEmptyBalance)
-            }
-        } else {
-            // otherwise, keep previous state
-            this.map { (token, _) ->
-                token.copy(
-                    isQuickActionsShown = previousList
-                        .firstOrNull { it.matchWith(token) }
-                        ?.isQuickActionsShown ?: false,
-                )
+                // otherwise, keep previous state
+                this.map { (token, _) ->
+                    token.copy(
+                        isQuickActionsShown = previousList
+                            .firstOrNull { it.matchWith(token) }
+                            ?.isQuickActionsShown ?: false,
+                    )
+                }
             }
         }
     }
