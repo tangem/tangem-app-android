@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -12,7 +13,9 @@ import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
+internal class SetButtonsStateTransformer(
+    private val urlOpener: UrlOpener,
+) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         val confirmState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
@@ -23,6 +26,7 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
                 prevButton = getPrevButton(prevState),
                 extraButtons = getExtraButtons(prevState),
                 txUrl = (confirmState?.transactionDoneState as? TransactionDoneState.Content)?.txUrl,
+                onTextClick = urlOpener::openUrl,
             )
         } else {
             NavigationButtonsState.Empty
