@@ -642,8 +642,6 @@
   <string name="settings_forget_wallet">Забути гаманець</string>
   <string name="settings_forget_wallet_footer">Це призведе до видалення гаманця з застосунку. Сам гаманець можна додати знову.</string>
   <string name="settings_wallet_name_title">Ім\'я</string>
-  <string name="staking_active">Активний</string>
-  <string name="staking_active_footer">Для завершення стейкінгу натисніть на блок вище</string>
   <string name="staking_amount_requirement_error">Сума для стейкінгу має бути не менше %s</string>
   <string name="staking_claim_unstaked">Зняти кошти</string>
   <string name="staking_details_annual_percentage_rate">Процентна ставка</string>
@@ -696,7 +694,6 @@
   <string name="staking_title_unstake">Зняти зі стейкінгу %s</string>
   <string name="staking_unlocked_locked">Розблокувати</string>
   <string name="staking_unstaked">Вивід зі стейкінгу</string>
-  <string name="staking_unstaked_footer">Перевірити незастейкані, щоб отримати свої активи</string>
   <string name="staking_unstaking">Зняти зі стейкінгу</string>
   <string name="staking_validator">Валідатор</string>
   <string name="staking_vote">Проголосувати</string>
