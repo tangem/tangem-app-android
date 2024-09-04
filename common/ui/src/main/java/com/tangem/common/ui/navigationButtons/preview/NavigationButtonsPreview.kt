@@ -54,5 +54,6 @@ internal object NavigationButtonsPreview {
         prevButton = prev,
         extraButtons = extraButtons,
         txUrl = "https://tangem.com",
+        onTextClick = {},
     )
 }
