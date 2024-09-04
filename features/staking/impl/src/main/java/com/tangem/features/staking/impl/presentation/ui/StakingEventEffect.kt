@@ -11,11 +11,13 @@ import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.shareText
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
 
 @Composable
 internal fun StakingEventEffect(event: StateEvent<StakingEvent>, snackbarHostState: SnackbarHostState) {
+    val context = LocalContext.current
     val resources = LocalContext.current.resources
     var alertConfig by remember { mutableStateOf<AlertUM?>(value = null) }
 
@@ -37,6 +39,9 @@ internal fun StakingEventEffect(event: StateEvent<StakingEvent>, snackbarHostSta
                 }
                 is StakingEvent.ShowAlert -> {
                     alertConfig = value.alert
+                }
+                is StakingEvent.ShowShareDialog -> {
+                    context.shareText(value.txUrl)
                 }
             }
         },
