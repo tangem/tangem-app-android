@@ -4,6 +4,9 @@ import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -57,11 +60,17 @@ internal object ManageTokensDomainModule {
     @Provides
     @Singleton
     fun provideSaveManagedTokensUseCase(
-        manageTokensRepository: ManageTokensRepository,
+        customTokensRepository: CustomTokensRepository,
+        walletManagersFacade: WalletManagersFacade,
+        currenciesRepository: CurrenciesRepository,
+        networksRepository: NetworksRepository,
         derivationsRepository: DerivationsRepository,
     ): SaveManagedTokensUseCase {
         return SaveManagedTokensUseCase(
-            manageTokensRepository = manageTokensRepository,
+            customTokensRepository = customTokensRepository,
+            walletManagersFacade = walletManagersFacade,
+            currenciesRepository = currenciesRepository,
+            networksRepository = networksRepository,
             derivationsRepository = derivationsRepository,
         )
     }
@@ -80,5 +89,11 @@ internal object ManageTokensDomainModule {
         customTokensRepository: CustomTokensRepository,
     ): ValidateDerivationPathUseCase {
         return ValidateDerivationPathUseCase(customTokensRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCheckHasLinkedTokensUseCase(repository: ManageTokensRepository): CheckHasLinkedTokensUseCase {
+        return CheckHasLinkedTokensUseCase(repository)
     }
 }
