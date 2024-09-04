@@ -28,6 +28,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Density
+import com.tangem.common.ui.navigationButtons.NavigationButtonsState
+import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
@@ -56,14 +59,21 @@ import kotlinx.collections.immutable.ImmutableList
 private const val BANNER_BLOCK_KEY = "BannerBlock"
 private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
 private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
+private const val STAKE_PRIMARY_BUTTON_KEY = "StakePrimaryButton"
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, clickIntents: StakingClickIntents) {
+internal fun StakingInitialInfoContent(
+    state: StakingStates.InitialInfoState,
+    buttonState: NavigationButtonsState,
+    clickIntents: StakingClickIntents,
+) {
     if (state !is StakingStates.InitialInfoState.Data) return
 
     LazyColumn(
+        verticalArrangement = alignLastToBottom(),
         modifier = Modifier
+            .fillMaxSize()
             .background(TangemTheme.colors.background.secondary)
             .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
@@ -104,6 +114,10 @@ internal fun StakingInitialInfoContent(state: StakingStates.InitialInfoState, cl
                     SpacerH12()
                 }
             }
+        }
+
+        item(STAKE_PRIMARY_BUTTON_KEY) {
+            StakeButtonBlock(buttonState)
         }
     }
 }
@@ -237,6 +251,21 @@ private fun ActiveStakingBlock(groups: ImmutableList<BalanceGroupedState>, onCli
 }
 
 @Composable
+private fun StakeButtonBlock(buttonState: NavigationButtonsState) {
+    val state = buttonState as? NavigationButtonsState.Data
+    val primaryButton = state?.primaryButton
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+    ) {
+        state?.onTextClick?.let { StakingTosText(it) }
+        NavigationPrimaryButton(primaryButton = primaryButton)
+    }
+}
+
+@Composable
 private fun getCaption(balanceType: BalanceType, balance: BalanceState): TextReference {
     return when (balanceType) {
         BalanceType.UNSTAKING -> {
@@ -289,6 +318,24 @@ private val textGradientColors = listOf(
     Color(0xff8fb4df),
 )
 
+@Composable
+private fun alignLastToBottom() = remember {
+    object : Arrangement.Vertical {
+        override fun Density.arrange(totalSize: Int, sizes: IntArray, outPositions: IntArray) {
+            var currentOffset = 0
+
+            sizes.forEachIndexed { index, size ->
+                if (index == sizes.lastIndex) {
+                    outPositions[index] = totalSize - size
+                } else {
+                    outPositions[index] = currentOffset
+                    currentOffset += size
+                }
+            }
+        }
+    }
+}
+
 // region preview
 
 @Preview(showBackground = true, widthDp = 360)
@@ -300,6 +347,7 @@ private fun StakingInitialInfoContent_Preview(
     TangemThemePreview {
         StakingInitialInfoContent(
             state = feeState,
+            buttonState = NavigationButtonsState.Empty,
             clickIntents = StakingClickIntentsStub,
         )
     }
