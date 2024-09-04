@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.Density
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.components.list.roundedListWithDividersItems
@@ -44,7 +43,6 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.BalanceGroupedState
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -198,53 +196,43 @@ private fun StakingRewardBlock(
 }
 
 @Composable
-private fun ActiveStakingBlock(groups: ImmutableList<BalanceGroupedState>, onClick: (BalanceState) -> Unit) {
+private fun ActiveStakingBlock(balances: ImmutableList<BalanceState>, onClick: (BalanceState) -> Unit) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .background(TangemTheme.colors.background.action),
     ) {
-        groups.forEach { group ->
-            key(group.title) {
-                FooterContainer(
-                    footer = group.footer?.resolveReference(),
-                    modifier = Modifier,
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(TangemTheme.shapes.roundedCornersXMedium)
-                            .background(TangemTheme.colors.background.action),
-                    ) {
-                        Text(
-                            text = group.title.resolveReference(),
-                            style = TangemTheme.typography.subtitle2,
-                            color = TangemTheme.colors.text.tertiary,
-                            modifier = Modifier.padding(
-                                top = TangemTheme.dimens.spacing12,
-                                start = TangemTheme.dimens.spacing12,
-                                end = TangemTheme.dimens.spacing12,
-                            ),
-                        )
-                        group.items.forEachIndexed { index, balance ->
-                            key(balance.title.resolveReference() + index) {
-                                InputRowImageInfo(
-                                    subtitle = balance.title,
-                                    caption = getCaption(group.type, balance),
-                                    isGrayscaleImage = !group.isClickable,
-                                    infoTitle = balance.fiatAmount,
-                                    infoSubtitle = balance.cryptoAmount,
-                                    imageUrl = balance.validator?.image,
-                                    iconEndRes = R.drawable.ic_chevron_right_24.takeIf { group.isClickable },
-                                    modifier = Modifier.clickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = rememberRipple(),
-                                        enabled = group.isClickable,
-                                        onClick = { onClick(balance) },
-                                    ),
-                                )
-                            }
-                        }
-                    }
-                }
+        Text(
+            text = stringResource(id = R.string.staking_your_stakes),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.padding(
+                top = TangemTheme.dimens.spacing12,
+                start = TangemTheme.dimens.spacing12,
+                end = TangemTheme.dimens.spacing12,
+                bottom = TangemTheme.dimens.spacing4,
+            ),
+        )
+        balances.forEach { balance ->
+            key(balance.id) {
+                val (icon, iconTint) = balance.type.getIcon()
+                InputRowImageInfo(
+                    subtitle = balance.title,
+                    caption = balance.subtitle ?: balance.getAprText(),
+                    isGrayscaleImage = !balance.isClickable,
+                    infoTitle = balance.fiatAmount,
+                    infoSubtitle = balance.cryptoAmount,
+                    imageUrl = balance.getImage(),
+                    iconRes = icon,
+                    iconTint = iconTint,
+                    modifier = Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(),
+                        enabled = balance.isClickable,
+                        onClick = { onClick(balance) },
+                    ),
+                )
             }
         }
     }
@@ -266,51 +254,35 @@ private fun StakeButtonBlock(buttonState: NavigationButtonsState) {
 }
 
 @Composable
-private fun getCaption(balanceType: BalanceType, balance: BalanceState): TextReference {
-    return when (balanceType) {
-        BalanceType.UNSTAKING -> {
-            combinedReference(
-                resourceReference(R.string.staking_unbonding),
-                annotatedReference {
-                    appendSpace()
-                    appendColored(
-                        text = balance.unbondingPeriod.resolveReference(),
-                        color = TangemTheme.colors.text.accent,
-                    )
-                },
-            )
-        }
-        BalanceType.UNSTAKED -> {
-            resourceReference(R.string.staking_ready_to_withdraw)
-        }
-        BalanceType.PREPARING -> {
-            combinedReference(
-                resourceReference(R.string.staking_details_warmup_period),
-                annotatedReference {
-                    appendSpace()
-                    appendColored(
-                        text = balance.warmupPeriod.resolveReference(),
-                        color = TangemTheme.colors.text.accent,
-                    )
-                },
-            )
-        }
-        else -> {
-            combinedReference(
-                resourceReference(R.string.staking_details_apr),
-                annotatedReference {
-                    appendSpace()
-                    appendColored(
-                        text = BigDecimalFormatter.formatPercent(
-                            percent = balance.validator?.apr.orZero(),
-                            useAbsoluteValue = true,
-                        ),
-                        color = TangemTheme.colors.text.accent,
-                    )
-                },
-            )
-        }
-    }
+private fun BalanceState.getAprText() = combinedReference(
+    resourceReference(R.string.staking_details_apr),
+    annotatedReference {
+        appendSpace()
+        appendColored(
+            text = BigDecimalFormatter.formatPercent(
+                percent = validator?.apr.orZero(),
+                useAbsoluteValue = true,
+            ),
+            color = TangemTheme.colors.text.accent,
+        )
+    },
+)
+
+@Composable
+private fun BalanceType.getIcon() = when (this) {
+    BalanceType.UNSTAKING -> R.drawable.ic_connection_18 to TangemTheme.colors.icon.accent
+    BalanceType.UNSTAKED -> R.drawable.ic_connection_18 to TangemTheme.colors.icon.informative
+    BalanceType.LOCKED -> R.drawable.ic_lock_24 to TangemTheme.colors.icon.informative
+    else -> null to TangemTheme.colors.icon.informative
+}
+
+@Composable
+private fun BalanceState.getImage() = when (type) {
+    BalanceType.UNSTAKING,
+    BalanceType.UNSTAKED,
+    BalanceType.LOCKED,
+    -> null
+    else -> validator?.image
 }
 
 private val textGradientColors = listOf(
