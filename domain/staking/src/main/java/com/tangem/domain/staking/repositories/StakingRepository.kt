@@ -83,4 +83,6 @@ interface StakingRepository {
 
     /** Returns staking approval */
     fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval
+
+    suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean
 }
