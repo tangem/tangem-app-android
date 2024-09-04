@@ -37,10 +37,7 @@ import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
-import com.tangem.domain.staking.model.stakekit.NetworkType
-import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalanceList
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
@@ -513,6 +510,16 @@ internal class DefaultStakingRepository(
                     value = emptyList(),
                 )
             }
+        }
+    }
+
+    override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean {
+        return withContext(dispatchers.io) {
+            stakingBalanceStore.getSyncOrNull(userWalletId)
+                ?.let {
+                    it.isNotEmpty() && it.any { yieldBalance -> yieldBalance.balances.isNotEmpty() }
+                }
+                ?: false
         }
     }
 
