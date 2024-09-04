@@ -130,6 +130,21 @@ internal class DefaultCustomTokensRepository(
         return cryptoCurrencyFactory.createCoin(network)
     }
 
+    override fun createToken(
+        managedCryptoCurrency: ManagedCryptoCurrency.Token,
+        sourceNetwork: ManagedCryptoCurrency.SourceNetwork.Default,
+        rawId: String?,
+    ): CryptoCurrency.Token {
+        return cryptoCurrencyFactory.createToken(
+            network = sourceNetwork.network,
+            rawId = rawId,
+            name = managedCryptoCurrency.name,
+            symbol = managedCryptoCurrency.symbol,
+            decimals = sourceNetwork.decimals,
+            contractAddress = sourceNetwork.contractAddress,
+        )
+    }
+
     override suspend fun createCustomToken(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,

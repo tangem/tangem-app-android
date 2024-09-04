@@ -478,26 +478,6 @@ internal class DefaultCurrenciesRepository(
         ) ?: error("Unable to create token")
     }
 
-    override suspend fun hasTokens(userWalletId: UserWalletId, network: Network): Boolean {
-        val userWallet = getUserWallet(userWalletId)
-        fetchTokensIfCacheExpired(userWallet, refresh = false)
-
-        val storedTokens = requireNotNull(
-            value = appPreferencesStore.getObjectSyncOrNull<UserTokensResponse>(
-                key = PreferencesKeys.getUserTokensKey(userWallet.walletId.stringValue),
-            ),
-            lazyMessage = {
-                "Unable to find tokens response for user wallet with provided ID: $userWalletId"
-            },
-        )
-
-        return storedTokens.tokens.any {
-            it.contractAddress != null &&
-                it.networkId == network.backendId &&
-                it.derivationPath == network.derivationPath.value
-        }
-    }
-
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return userWalletsStore.userWallets.flatMapLatest { userWallets ->
