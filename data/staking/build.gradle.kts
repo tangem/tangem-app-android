@@ -30,14 +30,18 @@ dependencies {
     implementation(projects.features.staking.api)
 
     // region DI
+
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
     // endregion
 
     // region Others dependencies
+
     implementation(deps.androidx.datastore)
     implementation(deps.jodatime)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.immutable.collections)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
 
