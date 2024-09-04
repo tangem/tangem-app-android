@@ -105,6 +105,7 @@ internal class StakingViewModel @Inject constructor(
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
+    private val isAnyTokenStakedUseCase: IsAnyTokenStakedUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
@@ -712,6 +713,7 @@ internal class StakingViewModel @Inject constructor(
             getCryptoCurrencyStatusSyncUseCase(userWalletId, cryptoCurrencyId).fold(
                 ifRight = {
                     feeCryptoCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, it).getOrNull()
+                    val isAnyTokenStaked = isAnyTokenStakedUseCase(userWalletId).getOrNull() ?: false
                     cryptoCurrencyStatus = it
 
                     setupApprovalNeeded()
@@ -722,6 +724,7 @@ internal class StakingViewModel @Inject constructor(
                             clickIntents = this@StakingViewModel,
                             yield = yield,
                             isApprovalNeeded = stakingApproval is StakingApproval.Needed,
+                            isAnyTokenStaked = isAnyTokenStaked,
                             cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                             userWalletProvider = Provider { userWallet },
                             appCurrencyProvider = Provider { appCurrency },

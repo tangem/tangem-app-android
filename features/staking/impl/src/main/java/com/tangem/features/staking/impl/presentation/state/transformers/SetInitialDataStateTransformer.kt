@@ -36,6 +36,7 @@ internal class SetInitialDataStateTransformer(
     private val clickIntents: StakingClickIntents,
     private val yield: Yield,
     private val isApprovalNeeded: Boolean,
+    private val isAnyTokenStaked: Boolean,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -79,12 +80,14 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createInitialInfoState(): StakingStates.InitialInfoState.Data {
+        val yieldBalance = yieldBalancesConverter.convert(Unit)
         return StakingStates.InitialInfoState.Data(
             isPrimaryButtonEnabled = !cryptoCurrencyStatusProvider().value.amount.isNullOrZero(),
+            showBanner = !isAnyTokenStaked && yieldBalance == InnerYieldBalanceState.Empty,
             aprRange = getAprRange(yield.validators),
             infoItems = getInfoItems(),
             onInfoClick = clickIntents::onInfoClick,
-            yieldBalance = yieldBalancesConverter.convert(Unit),
+            yieldBalance = yieldBalance,
         )
     }
 
