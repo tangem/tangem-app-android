@@ -15,7 +15,6 @@ import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -96,7 +95,6 @@ internal class StakingViewModel @Inject constructor(
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val isApproveNeededUseCase: IsApproveNeededUseCase,
-    private val clipboardManager: ClipboardManager,
     private val vibratorHapticManager: VibratorHapticManager,
     private val feedbackManager: FeedbackManager,
     private val getCardInfoUseCase: GetCardInfoUseCase,
@@ -643,7 +641,7 @@ internal class StakingViewModel @Inject constructor(
 
         if (txUrl != null) {
             vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
-            clipboardManager.setText(text = txUrl)
+            stakingEventFactory.createShareDialog(txUrl = txUrl)
         }
 
         // TODO staking [REDACTED_TASK_KEY]
