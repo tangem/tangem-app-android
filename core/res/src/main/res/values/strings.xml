@@ -696,6 +696,7 @@
   <string name="staking_rewards">Rewards</string>
   <string name="staking_stake_locked">Stake locked</string>
   <string name="staking_stake_more">Stake more</string>
+  <string name="staking_summary_description_text">You stake %1$s and will be receiving ~%2$s yearly</string>
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">Unstake %s</string>
   <string name="staking_unbonding">Unbonding</string>
