@@ -129,14 +129,13 @@ class GetCryptoCurrencyActionsUseCase(
 
         // staking
         if (stakingFeatureToggles.isStakingEnabled) {
-            if (isStakingAvailable(cryptoCurrency)) {
+            if (isStakingAvailable(userWallet, cryptoCurrency)) {
                 val yield = kotlin.runCatching {
                     stakingRepository.getYield(
                         cryptoCurrencyId = cryptoCurrency.id,
                         symbol = cryptoCurrency.symbol,
                     )
                 }.getOrNull()
-
                 activeList.add(
                     TokenActionsState.ActionState.Stake(
                         unavailabilityReason = ScenarioUnavailabilityReason.None,
@@ -301,10 +300,10 @@ class GetCryptoCurrencyActionsUseCase(
         return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
     }
 
-    private suspend fun isStakingAvailable(cryptoCurrency: CryptoCurrency): Boolean {
-        return stakingRepository.getStakingAvailabilityForActions(
-            cryptoCurrencyId = cryptoCurrency.id,
-            symbol = cryptoCurrency.symbol,
+    private suspend fun isStakingAvailable(userWallet: UserWallet, cryptoCurrency: CryptoCurrency): Boolean {
+        return stakingRepository.getStakingAvailability(
+            userWalletId = userWallet.walletId,
+            cryptoCurrency = cryptoCurrency,
         ) is StakingAvailability.Available
     }
 }
