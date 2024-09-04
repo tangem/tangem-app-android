@@ -323,14 +323,14 @@ internal class StateBuilder(
         return TosState(
             tosLink = swapProvider.termsOfUse?.let {
                 LegalState(
-                    title = resourceReference(R.string.express_terms_of_use),
+                    title = resourceReference(R.string.common_terms_of_use),
                     link = it,
                     onClick = actions.onTosClick,
                 )
             },
             policyLink = swapProvider.privacyPolicy?.let {
                 LegalState(
-                    title = resourceReference(R.string.express_privacy_policy),
+                    title = resourceReference(R.string.common_privacy_policy),
                     link = it,
                     onClick = actions.onPolicyClick,
                 )
