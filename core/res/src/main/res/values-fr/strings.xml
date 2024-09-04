@@ -132,6 +132,7 @@
   <string name="common_origin_card">Carte principale</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Coller</string>
+  <string name="common_privacy_policy">Politique de confidentialité</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">En savoir plus</string>
@@ -159,6 +160,7 @@
   <string name="common_support">Support</string>
   <string name="common_swap">Échanger</string>
   <string name="common_terms_and_conditions">termes et conditions</string>
+  <string name="common_terms_of_use">Conditions d\'utilisation</string>
   <string name="common_today">Aujourd\'hui</string>
   <string name="common_transaction_failed">La transaction a échoué</string>
   <string name="common_transactions">Transactions</string>
@@ -264,7 +266,6 @@
   <string name="express_legal_one_placeholder">En utilisant la fonctionnalité d\'échange, vous acceptez les %s</string>
   <string name="express_legal_two_placeholders">En utilisant la fonctionnalité d\'échange, vous acceptez les conditions %1$s et %2$s du fournisseur</string>
   <string name="express_more_providers_soon">D\'autres fournisseurs arriveront bientôt.\nRestez branchés !</string>
-  <string name="express_privacy_policy">Politique de confidentialité</string>
   <string name="express_provider">Fournisseur</string>
   <string name="express_provider_best_rate">Meilleur taux</string>
   <string name="express_provider_max_amount">Disponible jusqu\'à %s</string>
@@ -272,7 +273,6 @@
   <string name="express_provider_not_available">Indisponible pour cette paire</string>
   <string name="express_provider_permission_needed">Permission requise</string>
   <string name="express_provider_recommended">Recommandé</string>
-  <string name="express_terms_of_use">Conditions d\'utilisation</string>
   <string name="express_token_list_empty_search">Aucun jeton trouvé. Veuillez essayer une autre demande</string>
   <string name="express_transaction_id">ID : %s</string>
   <string name="express_transaction_id_copied">ID de transaction copié</string>
