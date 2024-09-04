@@ -168,4 +168,16 @@ internal object StakingDomainModule {
             stakingErrorResolver = stakingErrorResolver,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideIsAnyTokenStakedUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): IsAnyTokenStakedUseCase {
+        return IsAnyTokenStakedUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
+    }
 }
