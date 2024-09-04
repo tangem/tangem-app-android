@@ -32,5 +32,6 @@ dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
+    /** Other */
     implementation(deps.timber)
 }
