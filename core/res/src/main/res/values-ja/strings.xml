@@ -129,6 +129,7 @@
   <string name="common_origin_card">プライマリーカード</string>
   <string name="common_passphrase">パスフレーズ</string>
   <string name="common_paste">ペースト</string>
+  <string name="common_privacy_policy">プライバシーポリシー</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">続きを読む</string>
@@ -156,6 +157,7 @@
   <string name="common_support">サポート</string>
   <string name="common_swap">スワップ</string>
   <string name="common_terms_and_conditions">利用規約</string>
+  <string name="common_terms_of_use">利用規約</string>
   <string name="common_today">今日</string>
   <string name="common_transaction_failed">取引が失敗しました</string>
   <string name="common_transactions">取引</string>
@@ -261,7 +263,6 @@
   <string name="express_legal_one_placeholder">スワップ機能を使用すると、プロバイダーの%sに同意したことになります。</string>
   <string name="express_legal_two_placeholders">スワップ機能を使用すると、プロバイダーの%1$sおよび%2$sに同意したことになります。</string>
   <string name="express_more_providers_soon">さらに多くのプロバイダーを追加予定です。 \nお楽しみに。</string>
-  <string name="express_privacy_policy">プライバシーポリシー</string>
   <string name="express_provider">プロバイダー</string>
   <string name="express_provider_best_rate">ベストレート</string>
   <string name="express_provider_max_amount">最大 %s まで使用可能</string>
@@ -269,7 +270,6 @@
   <string name="express_provider_not_available">このペアは利用できません</string>
   <string name="express_provider_permission_needed">許可が必要です</string>
   <string name="express_provider_recommended">推奨</string>
-  <string name="express_terms_of_use">利用規約</string>
   <string name="express_token_list_empty_search">トークンが見つかりません。別のリクエストをお試しください。</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">取引IDをコピーしました</string>
