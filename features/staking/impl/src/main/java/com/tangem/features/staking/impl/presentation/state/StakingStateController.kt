@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
@@ -19,7 +20,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class StakingStateController @Inject constructor() {
+internal class StakingStateController @Inject constructor(
+    private val urlOpener: UrlOpener,
+) {
 
     val value: StakingUiState get() = uiState.value
 
@@ -27,7 +30,7 @@ internal class StakingStateController @Inject constructor() {
 
     val uiState: StateFlow<StakingUiState> get() = mutableUiState.asStateFlow()
 
-    private val buttonsTransformer = SetButtonsStateTransformer()
+    private val buttonsTransformer = SetButtonsStateTransformer(urlOpener)
     private val titleTransformer = SetTitleTransformer
 
     fun update(function: (StakingUiState) -> StakingUiState) {
