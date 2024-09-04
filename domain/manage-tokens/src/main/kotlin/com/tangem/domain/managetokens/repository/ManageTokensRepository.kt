@@ -15,4 +15,11 @@ interface ManageTokensRepository {
         currenciesToAdd: Map<ManagedCryptoCurrency.Token, Set<Network>>,
         currenciesToRemove: Map<ManagedCryptoCurrency.Token, Set<Network>>,
     )
+
+    suspend fun hasLinkedTokens(
+        userWalletId: UserWalletId,
+        network: Network,
+        tempAddedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
+        tempRemovedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
+    ): Boolean
 }

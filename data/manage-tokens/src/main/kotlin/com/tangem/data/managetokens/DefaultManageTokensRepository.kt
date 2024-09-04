@@ -108,7 +108,7 @@ internal class DefaultManageTokensRepository(
                 retryOnError(call = call)
             }
 
-            val tokensResponse = getStoredUserTokens(request.params.userWalletId)
+            val tokensResponse = request.params.userWalletId?.let { getSavedUserTokensResponseSync(it) }
             val items = if (isFirstBatchFetching &&
                 tokensResponse != null &&
                 userWallet != null &&
@@ -135,16 +135,6 @@ internal class DefaultManageTokensRepository(
         },
     )
 
-    private suspend fun getStoredUserTokens(userWalletId: UserWalletId?): UserTokensResponse? {
-        return if (userWalletId != null) {
-            appPreferencesStore.getObjectSyncOrNull(
-                key = PreferencesKeys.getUserTokensKey(userWalletId.stringValue),
-            )
-        } else {
-            null
-        }
-    }
-
     private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "Unable to find a user wallet with provided ID: $userWalletId"
@@ -160,6 +150,28 @@ internal class DefaultManageTokensRepository(
     }
     // endregion
 
+    override suspend fun hasLinkedTokens(
+        userWalletId: UserWalletId,
+        network: Network,
+        tempAddedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
+        tempRemovedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
+    ): Boolean {
+        val addedTokens = tempAddedTokens.mapToTokenDataList().mapToUserResponseToken()
+        val removedTokens = tempRemovedTokens.mapToTokenDataList().mapToUserResponseToken()
+
+        val storedTokens = requireNotNull(
+            value = getSavedUserTokensResponseSync(userWalletId),
+            lazyMessage = { "Unable to find tokens response for user wallet with provided ID: $userWalletId" },
+        )
+        val newTokensList = storedTokens.tokens + addedTokens - removedTokens.toSet()
+
+        return newTokensList.any {
+            it.contractAddress != null &&
+                it.networkId == network.backendId &&
+                it.derivationPath == network.derivationPath.value
+        }
+    }
+
     // region addManagedCurrencies
     override suspend fun saveManagedCurrencies(
         userWalletId: UserWalletId,
@@ -167,17 +179,22 @@ internal class DefaultManageTokensRepository(
         currenciesToRemove: Map<ManagedCryptoCurrency.Token, Set<Network>>,
     ) {
         return withContext(dispatchers.io) {
-            val savedCurrencies = requireNotNull(
+            val savedUserTokensResponse = requireNotNull(
                 value = getSavedUserTokensResponseSync(key = userWalletId),
                 lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
             )
+            val alreadySavedTokens = savedUserTokensResponse.tokens.toMutableList()
+
+            val tokensToRemove = currenciesToRemove.mapToTokenDataList()
+            alreadySavedTokens.removeAll(tokensToRemove.mapToUserResponseToken())
+            removeCurrenciesFromWalletManager(userWalletId = userWalletId, tokensDataList = tokensToRemove)
 
             val filteredTokens = currenciesToAdd.mapToTokenDataList()
                 .filterNot { tokenData ->
                     val blockchain = getBlockchain(networkId = tokenData.sourceNetwork.network.id)
                     val networkId = blockchain.toNetworkId()
                     val contractAddress = (tokenData.sourceNetwork as? SourceNetwork.Default)?.contractAddress
-                    savedCurrencies.tokens.firstOrNull { token ->
+                    savedUserTokensResponse.tokens.firstOrNull { token ->
                         token.contractAddress == contractAddress &&
                             token.networkId == networkId &&
                             token.derivationPath == tokenData.sourceNetwork.network.derivationPath.value
@@ -188,17 +205,11 @@ internal class DefaultManageTokensRepository(
                 newTokensNetworks = filteredTokens.mapNotNull { tokenData ->
                     (tokenData.sourceNetwork as? SourceNetwork.Default)?.network
                 },
-                savedCurrencies = savedCurrencies.tokens,
+                savedCurrencies = alreadySavedTokens,
             )
-            val tokensToSave = filteredTokens.mapToUserResponseToken()
 
-            val tokensToRemove = currenciesToRemove.mapToTokenDataList()
-            removeCurrenciesFromWalletManager(userWalletId = userWalletId, tokensDataList = tokensToRemove)
-
-            val newCurrencies = (newCoins + tokensToSave).distinct()
-            val updatedResponse = savedCurrencies.copy(
-                tokens = savedCurrencies.tokens + newCurrencies - tokensToRemove.mapToUserResponseToken().toSet(),
-            )
+            val newCurrencies = (newCoins + filteredTokens.mapToUserResponseToken()).distinct()
+            val updatedResponse = savedUserTokensResponse.copy(tokens = alreadySavedTokens + newCurrencies)
             storeAndPushTokens(userWalletId = userWalletId, response = updatedResponse)
             fetchExchangeableUserMarketCoinsByIds(userWalletId = userWalletId, userTokens = updatedResponse)
         }
