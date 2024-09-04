@@ -57,6 +57,7 @@ internal sealed class StakingStates {
     sealed class InitialInfoState : StakingStates() {
         data class Data(
             override val isPrimaryButtonEnabled: Boolean,
+            val showBanner: Boolean,
             val infoItems: ImmutableList<RoundedListWithDividersItemData>,
             val aprRange: TextReference,
             val onInfoClick: (InfoType) -> Unit,
