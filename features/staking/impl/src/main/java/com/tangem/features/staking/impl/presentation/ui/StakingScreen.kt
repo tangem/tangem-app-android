@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.withIndex
 @Composable
 internal fun StakingScreen(uiState: StakingUiState) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val confirmationState = uiState.confirmationState as? StakingStates.ConfirmationState.Data
 
     BackHandler(onBack = uiState.clickIntents::onPrevClick)
     Column(
@@ -55,6 +56,7 @@ internal fun StakingScreen(uiState: StakingUiState) {
         )
         NavigationButtonsBlock(
             buttonState = uiState.buttonsState,
+            footerText = confirmationState?.footerText.takeIf { uiState.currentStep == StakingStep.Confirmation },
             modifier = Modifier.padding(
                 start = TangemTheme.dimens.spacing16,
                 end = TangemTheme.dimens.spacing16,
