@@ -129,6 +129,7 @@
   <string name="common_origin_card">Основна картка</string>
   <string name="common_passphrase">Парольна фраза</string>
   <string name="common_paste">Вставити</string>
+  <string name="common_privacy_policy">Політикою конфіденційності</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Детальніше</string>
@@ -156,6 +157,7 @@
   <string name="common_support">Підтримка</string>
   <string name="common_swap">Обмін</string>
   <string name="common_terms_and_conditions">умови участі</string>
+  <string name="common_terms_of_use">Умовами використання</string>
   <string name="common_today">Сьогодні</string>
   <string name="common_transaction_failed">Помилка транзакції</string>
   <string name="common_transactions">Транзакції</string>
@@ -259,7 +261,6 @@
   <string name="express_legal_one_placeholder">Використовуючи сервіс обміну, ви погоджуєтеся з його %s</string>
   <string name="express_legal_two_placeholders">Використовуючи сервіс обміну, ви погоджуєтеся з його %1$s та %2$s</string>
   <string name="express_more_providers_soon">Незабаром з\'являться нові провайдери.\nСлідкуйте за новинами!</string>
-  <string name="express_privacy_policy">Політикою конфіденційності</string>
   <string name="express_provider">Провайдер</string>
   <string name="express_provider_best_rate">Найкращий курс</string>
   <string name="express_provider_max_amount">Доступно до %s</string>
@@ -267,7 +268,6 @@
   <string name="express_provider_not_available">Недоступно для цієї пари</string>
   <string name="express_provider_permission_needed">Потрібен дозвіл</string>
   <string name="express_provider_recommended">Рекомендовано</string>
-  <string name="express_terms_of_use">Умовами використання</string>
   <string name="express_token_list_empty_search">Токенів не знайдено. Будь ласка, спробуйте інший запит</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">ID транзакції скопійовано</string>

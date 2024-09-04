@@ -16,6 +16,7 @@ import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.common.ui.bottomsheet.permission.GiveTxPermissionBottomSheet
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.common.ui.navigationButtons.NavigationButtonsBlock
+import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resolveReference
@@ -55,7 +56,8 @@ internal fun StakingScreen(uiState: StakingUiState) {
             modifier = Modifier.weight(1f),
         )
         NavigationButtonsBlock(
-            buttonState = uiState.buttonsState,
+            buttonState = uiState.buttonsState.takeUnless { uiState.currentStep == StakingStep.InitialInfo }
+                ?: NavigationButtonsState.Empty,
             footerText = confirmationState?.footerText.takeIf { uiState.currentStep == StakingStep.Confirmation },
             modifier = Modifier.padding(
                 start = TangemTheme.dimens.spacing16,
@@ -153,6 +155,7 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
             when (state) {
                 StakingStep.InitialInfo -> StakingInitialInfoContent(
                     state = uiState.initialInfoState,
+                    buttonState = uiState.buttonsState,
                     clickIntents = uiState.clickIntents,
                 )
                 StakingStep.RewardsValidators -> {
