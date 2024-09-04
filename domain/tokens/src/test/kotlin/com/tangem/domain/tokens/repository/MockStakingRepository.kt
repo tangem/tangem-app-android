@@ -252,4 +252,6 @@ class MockStakingRepository : StakingRepository {
     }
 
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval = StakingApproval.Empty
+
+    override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean = false
 }
