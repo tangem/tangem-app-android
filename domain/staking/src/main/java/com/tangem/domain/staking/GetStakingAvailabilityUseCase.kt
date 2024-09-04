@@ -18,15 +18,13 @@ class GetStakingAvailabilityUseCase(
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
-        cryptoCurrencyId: CryptoCurrency.ID,
-        symbol: String,
+        cryptoCurrency: CryptoCurrency,
     ): Either<StakingError, StakingAvailability> {
         return Either
             .catch {
                 stakingRepository.getStakingAvailability(
                     userWalletId = userWalletId,
-                    cryptoCurrencyId = cryptoCurrencyId,
-                    symbol = symbol,
+                    cryptoCurrency = cryptoCurrency,
                 )
             }
             .mapLeft { stakingErrorResolver.resolve(it) }

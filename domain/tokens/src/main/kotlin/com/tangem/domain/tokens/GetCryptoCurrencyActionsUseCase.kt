@@ -303,8 +303,7 @@ class GetCryptoCurrencyActionsUseCase(
     private suspend fun isStakingAvailable(userWallet: UserWallet, cryptoCurrency: CryptoCurrency): Boolean {
         return stakingRepository.getStakingAvailability(
             userWalletId = userWallet.walletId,
-            cryptoCurrencyId = cryptoCurrency.id,
-            symbol = cryptoCurrency.symbol,
+            cryptoCurrency = cryptoCurrency,
         ) is StakingAvailability.Available
     }
 }

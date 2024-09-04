@@ -164,18 +164,17 @@ internal class DefaultStakingRepository(
 
     override suspend fun getStakingAvailability(
         userWalletId: UserWalletId,
-        cryptoCurrencyId: CryptoCurrency.ID,
-        symbol: String,
+        cryptoCurrency: CryptoCurrency,
     ): StakingAvailability {
         if (checkForInvalidBatch(userWalletId)) return StakingAvailability.Unavailable
 
-        val rawCurrencyId = cryptoCurrencyId.rawCurrencyId ?: return StakingAvailability.Unavailable
+        val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: return StakingAvailability.Unavailable
 
         return withContext(dispatchers.io) {
             val yields = getEnabledYields() ?: return@withContext StakingAvailability.Unavailable
 
-            val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, symbol)
-            val isSupported = isStakingSupported(getIntegrationKey(cryptoCurrencyId))
+            val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, cryptoCurrency.symbol)
+            val isSupported = isStakingSupported(getIntegrationKey(cryptoCurrency.id))
 
             when {
                 prefetchedYield != null && isSupported -> {
