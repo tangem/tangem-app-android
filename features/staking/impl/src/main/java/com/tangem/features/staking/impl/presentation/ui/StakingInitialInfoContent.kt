@@ -75,7 +75,7 @@ internal fun StakingInitialInfoContent(
             .background(TangemTheme.colors.background.secondary)
             .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
-        if (state.yieldBalance == InnerYieldBalanceState.Empty) {
+        if (state.showBanner) {
             item(key = BANNER_BLOCK_KEY) {
                 Column(
                     modifier = Modifier.animateItemPlacement(),
