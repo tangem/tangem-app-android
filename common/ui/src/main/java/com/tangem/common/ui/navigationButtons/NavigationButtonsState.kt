@@ -12,6 +12,7 @@ sealed class NavigationButtonsState {
         val prevButton: NavigationButton?,
         val extraButtons: ImmutableList<NavigationButton>,
         val txUrl: String? = null,
+        val onTextClick: (String) -> Unit,
     ) : NavigationButtonsState()
 }
 
