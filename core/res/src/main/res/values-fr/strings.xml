@@ -115,10 +115,6 @@
   <string name="common_go_to_provider">Aller au fournisseur</string>
   <string name="common_go_to_token">Aller au jeton</string>
   <string name="common_import">Importez</string>
-  <plurals name="common_in_days">
-    <item quantity="one">dans %d jour</item>
-    <item quantity="other">dans %d jours</item>
-  </plurals>
   <string name="common_later">Plus tard</string>
   <string name="common_locked">Verrouillé</string>
   <string name="common_main_network">Réseau principal</string>
@@ -637,8 +633,6 @@
   <string name="settings_forget_wallet">Oublier le portefeuille</string>
   <string name="settings_forget_wallet_footer">Cela supprimera le portefeuille de l\'application. Le portefeuille lui-même peut être ajouté à nouveau.</string>
   <string name="settings_wallet_name_title">Nom</string>
-  <string name="staking_active">Actif</string>
-  <string name="staking_active_footer">Afin d\'unstaker vos actifs, appuyez sur le bloc ci-dessus</string>
   <string name="staking_amount_requirement_error">Le montant à staker doit être au moins %s</string>
   <string name="staking_claim_unstaked">Réclamation déstakée</string>
   <string name="staking_details_annual_percentage_rate">Pourcentage de rendement annuel</string>
@@ -697,7 +691,6 @@
   <string name="staking_unbonding">Dissociation</string>
   <string name="staking_unlocked_locked">Débloquer</string>
   <string name="staking_unstaked">Non-staké</string>
-  <string name="staking_unstaked_footer">Vérifiez non-stakés pour réclamer vos actifs</string>
   <string name="staking_unstaking">Unstaking</string>
   <string name="staking_validator">Validateur</string>
   <string name="staking_validators">Validateurs</string>
