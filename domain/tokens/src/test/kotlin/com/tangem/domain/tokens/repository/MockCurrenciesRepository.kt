@@ -150,10 +150,6 @@ internal class MockCurrenciesRepository(
         error("not implemented")
     }
 
-    override suspend fun hasTokens(userWalletId: UserWalletId, network: Network): Boolean {
-        return false
-    }
-
     override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return emptyFlow()
     }
