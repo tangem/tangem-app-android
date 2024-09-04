@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType.Coin
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -77,7 +78,7 @@ internal object ConfirmationStatePreviewData {
             chosenValidator = validatorList[0],
             availableValidators = validatorList,
         ),
-        footerText = "You stake \$715.11 and will be receiving ~\$35 monthly",
+        footerText = stringReference("You stake \$715.11 and will be receiving ~\$35 monthly"),
         notifications = persistentListOf(
             StakingNotification.Info.EarnRewards(
                 subtitleText = resourceReference(
