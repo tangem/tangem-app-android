@@ -115,10 +115,6 @@
   <string name="common_go_to_provider">Zum Anbieter gehen</string>
   <string name="common_go_to_token">Zum Token</string>
   <string name="common_import">Importieren</string>
-  <plurals name="common_in_days">
-    <item quantity="one">in %d Tag</item>
-    <item quantity="other">in %d Tagen</item>
-  </plurals>
   <string name="common_later">Später</string>
   <string name="common_locked">Gesperrt</string>
   <string name="common_main_network">Hauptnetz</string>
@@ -641,8 +637,6 @@
   <string name="settings_forget_wallet">Entferne diese Wallet</string>
   <string name="settings_forget_wallet_footer">Hiermit wird die Wallet aus der Anwendung entfernt. Die Wallet selbst kann wieder hinzugefügt werden.</string>
   <string name="settings_wallet_name_title">Name</string>
-  <string name="staking_active">Aktiv</string>
-  <string name="staking_active_footer">Um deine Vermögenswerte freizugeben, tippe auf den Block oben</string>
   <string name="staking_amount_requirement_error">Die Anzahl der zu stakenden Krypros muss mindesten %s betragen</string>
   <string name="staking_claim_unstaked">Nicht gestakte beanspruche</string>
   <string name="staking_details_annual_percentage_rate">Jährliche prozentuale Rendite</string>
@@ -702,7 +696,6 @@
   <string name="staking_unbonding">Lösen der Bindungen</string>
   <string name="staking_unlocked_locked">Gelocktes unlocken</string>
   <string name="staking_unstaked">Unstaken</string>
-  <string name="staking_unstaked_footer">Prüfe, was nicht eingesetzt wurde, um dein Vermögen zu beanspruchen</string>
   <string name="staking_unstaking">Staking beenden</string>
   <string name="staking_validator">Validator/ Prüfer</string>
   <string name="staking_validators">Validatoren</string>
