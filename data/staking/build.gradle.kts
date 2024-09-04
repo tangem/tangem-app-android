@@ -21,8 +21,10 @@ dependencies {
     /** Domain modules */
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.staking)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
 
     /** Feature Api modules */
     implementation(projects.features.staking.api)

@@ -1,6 +1,7 @@
 package com.tangem.data.staking
 
 import android.util.Base64
+import arrow.core.getOrElse
 import arrow.core.raise.catch
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
@@ -51,6 +52,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
@@ -69,6 +71,7 @@ internal class DefaultStakingRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val stakingFeatureToggle: StakingFeatureToggles,
     private val walletManagersFacade: WalletManagersFacade,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     moshi: Moshi,
 ) : StakingRepository {
 
@@ -159,10 +162,13 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun getStakingAvailabilityForActions(
+    override suspend fun getStakingAvailability(
+        userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
         symbol: String,
     ): StakingAvailability {
+        if (checkForInvalidBatch(userWalletId)) return StakingAvailability.Unavailable
+
         val rawCurrencyId = cryptoCurrencyId.rawCurrencyId ?: return StakingAvailability.Unavailable
 
         return withContext(dispatchers.io) {
@@ -181,6 +187,14 @@ internal class DefaultStakingRepository(
                 else -> StakingAvailability.Unavailable
             }
         }
+    }
+
+    private fun checkForInvalidBatch(userWalletId: UserWalletId): Boolean {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
+            error("Failed to get user wallet")
+        }
+
+        return INVALID_BATCHES_FOR_SOLANA.contains(userWallet.scanResponse.card.batchId)
     }
 
     override suspend fun createAction(
@@ -624,6 +638,8 @@ internal class DefaultStakingRepository(
         const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
 
         const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
+
+        val INVALID_BATCHES_FOR_SOLANA = listOf("AC01", "CB79")
 
         // uncomment items as implementation is ready
         val integrationIdMap = mapOf(

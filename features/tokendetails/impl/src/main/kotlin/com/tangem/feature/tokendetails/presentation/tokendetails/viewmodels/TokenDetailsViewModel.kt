@@ -393,6 +393,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun updateStakingInfo() {
         viewModelScope.launch {
             val stakingAvailability = getStakingAvailabilityUseCase(
+                userWalletId = userWalletId,
                 cryptoCurrencyId = cryptoCurrency.id,
                 symbol = cryptoCurrency.symbol,
             ).getOrElse { StakingAvailability.Unavailable }

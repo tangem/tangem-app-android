@@ -6,6 +6,7 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.models.UserWalletId
 
 /**
  * Use case for getting info about staking capability in tangem app.
@@ -16,11 +17,18 @@ class GetStakingAvailabilityUseCase(
 ) {
 
     suspend operator fun invoke(
+        userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
         symbol: String,
     ): Either<StakingError, StakingAvailability> {
         return Either
-            .catch { stakingRepository.getStakingAvailabilityForActions(cryptoCurrencyId, symbol) }
+            .catch {
+                stakingRepository.getStakingAvailability(
+                    userWalletId = userWalletId,
+                    cryptoCurrencyId = cryptoCurrencyId,
+                    symbol = symbol,
+                )
+            }
             .mapLeft { stakingErrorResolver.resolve(it) }
     }
 }
