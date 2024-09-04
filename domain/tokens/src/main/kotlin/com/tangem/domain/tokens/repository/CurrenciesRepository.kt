@@ -234,8 +234,6 @@ interface CurrenciesRepository {
         networkId: String,
     ): CryptoCurrency.Token
 
-    suspend fun hasTokens(userWalletId: UserWalletId, network: Network): Boolean
-
     /** Get crypto currencies by [currencyRawId] from all user wallets */
     fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>>
 }
