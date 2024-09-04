@@ -83,6 +83,7 @@
   <string name="common_camera_denied_alert_message">カメラへのアクセスを許可していません。プライバシー設定を調整してください。</string>
   <string name="common_cancel">キャンセル</string>
   <string name="common_choose_action">アクションを選択</string>
+  <string name="common_claim">請求</string>
   <string name="common_claim_rewards">報酬を受け取る</string>
   <string name="common_close">閉じる</string>
   <string name="common_continue">続ける</string>
@@ -113,9 +114,6 @@
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
   <string name="common_import">インポート</string>
-  <plurals name="common_in_days">
-    <item quantity="other">%d日で</item>
-  </plurals>
   <string name="common_later">後で</string>
   <string name="common_locked">ロックされています</string>
   <string name="common_main_network">メインネットワーク</string>
@@ -628,8 +626,6 @@
   <string name="settings_forget_wallet">ウォレット削除</string>
   <string name="settings_forget_wallet_footer">これにより、ウォレットがアプリから削除されます。ウォレットは再度追加できます。</string>
   <string name="settings_wallet_name_title">名前</string>
-  <string name="staking_active">アクティブ</string>
-  <string name="staking_active_footer">資産のステーキングを解除するには、上のブロックをタップしてください</string>
   <string name="staking_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
   <string name="staking_claim_unstaked">ステーキング解除分を請求する</string>
   <string name="staking_details_annual_percentage_rate">年率</string>
@@ -654,14 +650,17 @@
   <string name="staking_details_unbonding_period_info">ステーキングから資金の引き出しを要求した後、トークンが利用可能になるまでの待機期間。</string>
   <string name="staking_details_warmup_period">ウォームアップ期間</string>
   <string name="staking_details_warmup_period_info">ステーキングへの参加を有効にするために割り当てられた時間。</string>
+  <string name="staking_legal">ステーキング機能を使用すると、プロバイダーの%1$sと%2$sに同意したことになります</string>
   <string name="staking_locked">ロック中</string>
   <string name="staking_migrate">移行</string>
   <string name="staking_native">ネイティブステーキング</string>
+  <string name="staking_notification_claim_rewards_text">獲得した報酬はあなたのアドレスに直接送られます。受け取り後、資金は使用可能になります。</string>
   <string name="staking_notification_earn_rewards_text_period_day">ステーキングにより%1$sを獲得できます。ステーキング報酬は毎日受け取れます。</string>
   <string name="staking_notification_earn_rewards_text_period_hour">ステーキングにより%1$sを獲得できます。ステーキング報酬は毎時間受け取れます。</string>
   <string name="staking_notification_earn_rewards_text_period_month">ステーキングにより%1$sを獲得できます。ステーキング報酬は毎月受け取れます。</string>
   <string name="staking_notification_earn_rewards_text_period_week">ステーキングにより%1$sを獲得できます。ステーキング報酬は毎週受け取れます。</string>
   <string name="staking_notification_earn_rewards_title">ステーキング報酬を獲得</string>
+  <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
   <string name="staking_notification_unstake_text">ステーキング解除プロセスの開始後、報酬の獲得はすぐに停止します。ステーキング解除には%sかかります。</string>
   <string name="staking_notification_withdraw_text">あなたの資金はステーキング解除されました。獲得した報酬とともに引き出すことができます。</string>
   <string name="staking_preparing">準備中</string>
@@ -684,13 +683,14 @@
   <string name="staking_rewards">報酬</string>
   <string name="staking_stake_locked">ステーキングはロックされています</string>
   <string name="staking_stake_more">もっとステーキングする</string>
+  <string name="staking_summary_description_text">%1$sをステーキングし、年間 ~ %2$sを受け取ります</string>
   <string name="staking_title_stake">%sをステーキングする</string>
   <string name="staking_title_unstake">%sのステーキング解除</string>
   <string name="staking_unbonding">ステーキング解約中</string>
   <string name="staking_unlocked_locked">ステーキング解除はロックされています</string>
   <string name="staking_unstaked">ステーキングされていない</string>
-  <string name="staking_unstaked_footer">資産を請求するために、unstakedを確認してください</string>
   <string name="staking_unstaking">ステーキング解除</string>
+  <string name="staking_unstaking_item_name">ステーキング解除中の資産%s</string>
   <string name="staking_validator">バリデーター</string>
   <string name="staking_validators">バリデーター</string>
   <string name="staking_vote">投票する</string>
