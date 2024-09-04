@@ -629,27 +629,28 @@ internal class DefaultStakingRepository(
         }
     }
 
+    @Suppress("UnusedPrivateMember")
     private companion object {
-        const val YIELDS_STORE_KEY = "yields"
+        private const val YIELDS_STORE_KEY = "yields"
 
-        const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
-        const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
-        const val ETHEREUM_POLYGON_INTEGRATION_ID = "ethereum-matic-native-staking"
-        const val BINANCE_INTEGRATION_ID = "bsc-bnb-native-staking"
-        const val POLKADOT_INTEGRATION_ID = "polkadot-dot-validator-staking"
-        const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
-        const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
-        const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
-        const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
-        const val NEAR_INTEGRATION_ID = "near-near-native-staking"
-        const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
+        private const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
+        private const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
+        private const val ETHEREUM_POLYGON_INTEGRATION_ID = "ethereum-matic-native-staking"
+        private const val BINANCE_INTEGRATION_ID = "bsc-bnb-native-staking"
+        private const val POLKADOT_INTEGRATION_ID = "polkadot-dot-validator-staking"
+        private const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
+        private const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
+        private const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
+        private const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
+        private const val NEAR_INTEGRATION_ID = "near-near-native-staking"
+        private const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
 
-        const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
+        private const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
 
-        val INVALID_BATCHES_FOR_SOLANA = listOf("AC01", "CB79")
+        private val INVALID_BATCHES_FOR_SOLANA = listOf("AC01", "CB79")
 
         // uncomment items as implementation is ready
-        val integrationIdMap = mapOf(
+        private val integrationIdMap = mapOf(
             Blockchain.Solana.run { id + toCoinId() } to SOLANA_INTEGRATION_ID,
             Blockchain.Cosmos.run { id + toCoinId() } to COSMOS_INTEGRATION_ID,
             Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
