@@ -10,12 +10,6 @@ interface ManageTokensRepository {
 
     fun getTokenListBatchFlow(context: ManageTokensListBatchingContext, batchSize: Int): ManageTokensListBatchFlow
 
-    suspend fun saveManagedCurrencies(
-        userWalletId: UserWalletId,
-        currenciesToAdd: Map<ManagedCryptoCurrency.Token, Set<Network>>,
-        currenciesToRemove: Map<ManagedCryptoCurrency.Token, Set<Network>>,
-    )
-
     suspend fun hasLinkedTokens(
         userWalletId: UserWalletId,
         network: Network,
