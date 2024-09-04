@@ -52,13 +52,13 @@ fun NavigationButtonsBlock(
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
             PreviousButton(state?.prevButton)
-            PrimaryButton(state?.primaryButton, modifier = Modifier.weight(1f))
+            NavigationPrimaryButton(state?.primaryButton, modifier = Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun PrimaryButton(primaryButton: NavigationButton?, modifier: Modifier = Modifier) {
+fun NavigationPrimaryButton(primaryButton: NavigationButton?, modifier: Modifier = Modifier) {
     val wrappedButton by rememberNavigationButton(primaryButton)
     AnimatedContent(
         targetState = wrappedButton,
