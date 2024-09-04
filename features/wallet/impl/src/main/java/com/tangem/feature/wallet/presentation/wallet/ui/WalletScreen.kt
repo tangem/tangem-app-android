@@ -3,10 +3,10 @@ package com.tangem.feature.wallet.presentation.wallet.ui
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.TweenSpec
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -22,7 +22,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -34,6 +37,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -58,6 +63,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
+import com.tangem.core.ui.utils.lineTo
+import com.tangem.core.ui.utils.moveTo
+import com.tangem.core.ui.utils.toPx
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
@@ -75,10 +83,11 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balances
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import com.tangem.features.markets.entry.BottomSheetState
-import com.tangem.features.markets.entry.BottomSheetState.*
 import com.tangem.features.markets.entry.MarketsEntryComponent
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @Composable
 internal fun WalletScreen(state: WalletScreenState, marketsEntryComponent: MarketsEntryComponent?) {
@@ -223,7 +232,7 @@ private fun WalletContent(
     }
 
     if (marketsEntryComponent != null) {
-        val bottomSheetState = remember { mutableStateOf(COLLAPSED) }
+        val bottomSheetState = remember { mutableStateOf(BottomSheetState.COLLAPSED) }
 
         var headerSize by remember { mutableStateOf(0.dp) }
 
@@ -357,8 +366,9 @@ private inline fun BaseScaffoldWithMarkets(
         snackbarHostState = snackbarHostState,
     )
 
-    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
-    val statusBarHeight = with(LocalDensity.current) { WindowInsets.statusBars.getTop(this).toDp() }
+    val density = LocalDensity.current
+    val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(density = this).toDp() }
+    val statusBarHeight = with(density) { WindowInsets.statusBars.getTop(density = this).toDp() }
     val peekHeight = bottomSheetHeaderHeightProvider() + handComposableComponentHeight + bottomBarHeight
     val maxHeight = LocalWindowSize.current.height
 
@@ -420,27 +430,138 @@ private inline fun BaseScaffoldWithMarkets(
                     },
                 )
 
-                Column {
-                    WalletTopBar(config = state.topBarConfig)
-                    Box(
-                        modifier = Modifier.pullRefresh(pullRefreshState),
-                    ) {
-                        content()
+                Box {
+                    Column {
+                        WalletTopBar(config = state.topBarConfig)
+                        Box(
+                            modifier = Modifier.pullRefresh(pullRefreshState),
+                        ) {
+                            content()
 
-                        WalletPullToRefreshIndicator(
-                            isRefreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                            state = pullRefreshState,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                        )
+                            WalletPullToRefreshIndicator(
+                                isRefreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
+                                state = pullRefreshState,
+                                modifier = Modifier.align(Alignment.TopCenter),
+                            )
+                        }
                     }
-                }
 
-                BottomSheetScrim(
-                    color = BottomSheetDefaults.ScrimColor,
-                    visible = bottomSheetState.targetValue == SheetValue.Expanded,
-                    onDismissRequest = { coroutineScope.launch { bottomSheetState.partialExpand() } },
-                )
+                    BottomSheetScrim(
+                        color = BottomSheetDefaults.ScrimColor,
+                        visible = bottomSheetState.targetValue == SheetValue.Expanded || state.showMarketsOnboarding,
+                        onDismissRequest = { coroutineScope.launch { bottomSheetState.partialExpand() } },
+                    )
+
+                    MarketsTooltip(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 24.dp)
+                            .fillMaxWidth(fraction = 0.7f),
+                        isVisible = state.showMarketsOnboarding,
+                        availableHeight = maxHeight - statusBarHeight - bottomBarHeight,
+                        bottomSheetState = bottomSheetState,
+                    )
+                }
             },
+        )
+
+        LaunchedEffect(state.showMarketsOnboarding, bottomSheetState.targetValue) {
+            if (state.showMarketsOnboarding && bottomSheetState.targetValue == SheetValue.Expanded) {
+                state.onDismissMarketsOnboarding()
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MarketsTooltip(
+    availableHeight: Dp,
+    bottomSheetState: SheetState,
+    isVisible: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val density = LocalDensity.current
+    val tooltipOffset by remember {
+        derivedStateOf {
+            val bottomSheetOffset = try {
+                // Can throw exception during the first composition
+                with(density) { bottomSheetState.requireOffset().toDp() }
+            } catch (e: Exception) {
+                0.dp
+            }
+
+            bottomSheetOffset - availableHeight
+        }
+    }
+
+    var visible by remember { mutableStateOf(value = false) }
+    LaunchedEffect(isVisible) {
+        if (isVisible) {
+            delay(timeMillis = 300)
+        }
+
+        visible = isVisible
+    }
+
+    val slideOffset = 40.dp.toPx()
+    AnimatedVisibility(
+        modifier = modifier.absoluteOffset(y = tooltipOffset),
+        visible = visible,
+        enter = slideIn(
+            animationSpec = spring(
+                stiffness = Spring.StiffnessLow,
+                visibilityThreshold = IntOffset.VisibilityThreshold,
+            ),
+            initialOffset = { _ -> IntOffset(y = -slideOffset.roundToInt(), x = 0) },
+        ) + fadeIn(),
+        exit = fadeOut(),
+    ) {
+        MarketsTooltipContent()
+    }
+}
+
+@Composable
+private fun MarketsTooltipContent(modifier: Modifier = Modifier) {
+    val backgroundColor = TangemTheme.colors.background.primary
+    val cornerRadius = CornerRadius(x = 14.dp.toPx())
+    val tipDpSize = DpSize(width = 20.dp, height = 8.dp)
+
+    Column(
+        modifier = modifier
+            .padding(bottom = tipDpSize.height)
+            .drawBehind {
+                val rect = size.toRect()
+                val tipSize = tipDpSize.toSize()
+                val tipRect = Rect(
+                    offset = Offset(
+                        x = rect.center.x - tipSize.center.x,
+                        y = rect.bottom,
+                    ),
+                    size = tipSize,
+                )
+                drawRoundRect(color = backgroundColor, cornerRadius = cornerRadius)
+
+                val tipPath = Path().apply {
+                    moveTo(tipRect.topLeft)
+                    lineTo(tipRect.bottomCenter)
+                    lineTo(tipRect.topRight)
+                }
+                drawPath(color = backgroundColor, path = tipPath)
+            }
+            .padding(all = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(space = 4.dp),
+        horizontalAlignment = Alignment.Start,
+    ) {
+        Text(
+            text = stringResource(id = R.string.markets_tooltip_title),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.primary1,
+        )
+        Text(
+            text = stringResource(id = R.string.markets_tooltip_message),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.secondary,
         )
     }
 }
@@ -449,7 +570,7 @@ private inline fun BaseScaffoldWithMarkets(
 private fun BottomSheetScrim(color: Color, visible: Boolean, onDismissRequest: () -> Unit) {
     val alpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
-        animationSpec = TweenSpec(),
+        animationSpec = tween(),
         label = "scrim",
     )
     val dismissSheet = if (visible) {
@@ -557,9 +678,9 @@ private fun BottomSheetStateEffects(
     LaunchedEffect(isSheetHidden) {
         onBottomSheetStateChange(
             if (isSheetHidden) {
-                COLLAPSED
+                BottomSheetState.COLLAPSED
             } else {
-                EXPANDED
+                BottomSheetState.EXPANDED
             },
         )
     }
