@@ -12,7 +12,7 @@ import com.tangem.domain.managetokens.model.ManageTokensListBatchingContext
 import com.tangem.domain.managetokens.model.ManageTokensListConfig
 import com.tangem.domain.managetokens.model.ManageTokensUpdateAction
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
-import com.tangem.domain.tokens.CheckHasLinkedTokensUseCase
+import com.tangem.domain.managetokens.CheckHasLinkedTokensUseCase
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
@@ -198,7 +198,12 @@ internal class ManageTokensListManager @Inject constructor(
     }
 
     override suspend fun checkHasLinkedTokens(userWalletId: UserWalletId, network: Network): Boolean {
-        return checkHasLinkedTokensUseCase(userWalletId, network).getOrElse {
+        return checkHasLinkedTokensUseCase(
+            userWalletId = userWalletId,
+            network = network,
+            tempAddedTokens = changedCurrenciesManager.currenciesToAdd.value,
+            tempRemovedTokens = changedCurrenciesManager.currenciesToRemove.value,
+        ).getOrElse {
             Timber.e(
                 it,
                 """
