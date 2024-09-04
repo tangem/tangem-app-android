@@ -113,9 +113,9 @@ class MockStakingRepository : StakingRepository {
         isAvailable = false,
     )
 
-    override suspend fun getStakingAvailabilityForActions(
-        cryptoCurrencyId: CryptoCurrency.ID,
-        symbol: String,
+    override suspend fun getStakingAvailability(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
     ): StakingAvailability = StakingAvailability.Unavailable
 
     override suspend fun fetchSingleYieldBalance(
