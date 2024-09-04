@@ -3,8 +3,10 @@ package com.tangem.domain.markets
 import arrow.core.Either
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
@@ -20,6 +22,7 @@ class SaveMarketTokensUseCase(
     private val derivationsRepository: DerivationsRepository,
     private val marketsTokenRepository: MarketsTokenRepository,
     private val currenciesRepository: CurrenciesRepository,
+    private val networksRepository: NetworksRepository,
 ) {
 
     suspend operator fun invoke(
@@ -44,17 +47,20 @@ class SaveMarketTokensUseCase(
             networkIds = addedNetworks.map { Network.ID(it.networkId) },
         )
 
-        currenciesRepository.addCurrencies(
-            userWalletId = userWalletId,
-            currencies = addedNetworks.mapNotNull {
-                marketsTokenRepository.createCryptoCurrency(
-                    userWalletId = userWalletId,
-                    token = tokenMarketParams,
-                    network = it,
-                )
-            },
-        )
+        val addedCurrencies = addedNetworks.mapNotNull {
+            marketsTokenRepository.createCryptoCurrency(
+                userWalletId = userWalletId,
+                token = tokenMarketParams,
+                network = it,
+            )
+        }
 
-        // TODO: https://tangem.atlassian.net/browse/AND-8214
+        currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = addedCurrencies)
+
+        networksRepository.getNetworkStatusesSync(
+            userWalletId = userWalletId,
+            networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
+            refresh = true,
+        )
     }
 }

@@ -20,6 +20,7 @@ import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -195,7 +196,8 @@ internal class MarketsPortfolioModel @Inject constructor(
         addedNetworks: Set<TokenMarketInfo.Network>,
         removedNetworks: Set<TokenMarketInfo.Network>,
     ) {
-        modelScope.launch {
+        // Use NonCancellable, otherwise network statuses won't update
+        modelScope.launch(NonCancellable) {
             saveMarketTokensUseCase(
                 userWalletId = userWalletId,
                 tokenMarketParams = params.token,

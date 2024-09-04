@@ -56,6 +56,7 @@ internal class PortfolioDataLoader @Inject constructor(
                     ids = portfolioData.walletsWithCurrencies.keys.map(UserWallet::walletId),
                 )
                     .map { portfolioData.copy(walletsWithBalance = it) }
+                    .onEmpty { emit(portfolioData) }
             }
     }
 
@@ -93,6 +94,19 @@ internal class PortfolioDataLoader @Inject constructor(
                         }
                     }
                 }
+                    .onEmpty {
+                        emit(
+                            walletsWithStatuses.mapValues { (wallet, statuses) ->
+                                statuses.map {
+                                    PortfolioData.CryptoCurrencyData(
+                                        userWallet = wallet,
+                                        status = it,
+                                        actions = emptyList(),
+                                    )
+                                }
+                            },
+                        )
+                    }
             }
             .distinctUntilChanged()
     }
