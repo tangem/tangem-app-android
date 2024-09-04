@@ -56,6 +56,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
+import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -166,7 +167,7 @@ internal class DefaultStakingRepository(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): StakingAvailability {
-        if (checkForInvalidBatch(userWalletId)) return StakingAvailability.Unavailable
+        if (checkForInvalidCardBatch(userWalletId, cryptoCurrency)) return StakingAvailability.Unavailable
 
         val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: return StakingAvailability.Unavailable
 
@@ -188,12 +189,19 @@ internal class DefaultStakingRepository(
         }
     }
 
-    private fun checkForInvalidBatch(userWalletId: UserWalletId): Boolean {
+    private fun checkForInvalidCardBatch(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
         val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
             error("Failed to get user wallet")
         }
 
-        return INVALID_BATCHES_FOR_SOLANA.contains(userWallet.scanResponse.card.batchId)
+        return when {
+            isSolana(cryptoCurrency.network.id.value) -> {
+                INVALID_BATCHES_FOR_SOLANA.contains(userWallet.scanResponse.card.batchId)
+            }
+            else -> {
+                false
+            }
+        }
     }
 
     override suspend fun createAction(
