@@ -4,6 +4,7 @@ import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import dagger.Module
 import dagger.Provides
@@ -53,7 +54,13 @@ object MarketsDomainModule {
         derivationsRepository: DerivationsRepository,
         marketsTokenRepository: MarketsTokenRepository,
         currenciesRepository: CurrenciesRepository,
+        networksRepository: NetworksRepository,
     ): SaveMarketTokensUseCase {
-        return SaveMarketTokensUseCase(derivationsRepository, marketsTokenRepository, currenciesRepository)
+        return SaveMarketTokensUseCase(
+            derivationsRepository = derivationsRepository,
+            marketsTokenRepository = marketsTokenRepository,
+            currenciesRepository = currenciesRepository,
+            networksRepository = networksRepository,
+        )
     }
 }
