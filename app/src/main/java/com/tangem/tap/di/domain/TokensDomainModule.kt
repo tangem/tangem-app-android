@@ -7,6 +7,7 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.features.markets.MarketsFeatureToggles
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -230,6 +231,7 @@ internal object TokensDomainModule {
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
         stakingFeatureToggles: StakingFeatureToggles,
+        marketsFeatureToggles: MarketsFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyActionsUseCase {
         return GetCryptoCurrencyActionsUseCase(
@@ -241,6 +243,7 @@ internal object TokensDomainModule {
             networksRepository = networksRepository,
             stakingRepository = stakingRepository,
             stakingFeatureToggles = stakingFeatureToggles,
+            marketsFeatureToggles = marketsFeatureToggles,
             dispatchers = dispatchers,
         )
     }

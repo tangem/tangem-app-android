@@ -30,6 +30,8 @@ data class TokenActionsState(
 
         data class Send(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
+        data class Analytics(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
+
         data class HideToken(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
     }
 }
