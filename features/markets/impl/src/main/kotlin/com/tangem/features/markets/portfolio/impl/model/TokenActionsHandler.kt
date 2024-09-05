@@ -53,6 +53,15 @@ internal class TokenActionsHandler @AssistedInject constructor(
     }
 
     fun onTokenLongClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        val actions = cryptoCurrencyData.actions
+            .mapNotNull { it.toAction(cryptoCurrencyData) }
+            .sortedBy { it.order }
+            .toImmutableList()
+
+        if (actions.isEmpty()) {
+            return
+        }
+
         updateTokenActionsBSConfig {
             TangemBottomSheetConfig(
                 isShow = true,
@@ -63,10 +72,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
                 },
                 content = TokenActionsBSContentUM(
                     title = cryptoCurrencyData.userWallet.name,
-                    actions = cryptoCurrencyData.actions
-                        .mapNotNull { it.toAction(cryptoCurrencyData) }
-                        .sortedBy { it.order }
-                        .toImmutableList(),
+                    actions = actions,
                     onActionClick = { action ->
                         handle(action, cryptoCurrencyData)
                         updateTokenActionsBSConfig {
