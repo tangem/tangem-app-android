@@ -67,13 +67,18 @@ internal class AddStakingNotificationsTransformer(
             isSubtractAvailable = isSubtractAvailable,
             reduceAmountBy = reduceAmountBy,
         )
-        val sendingAmount = checkAndCalculateSubtractedAmount(
-            isAmountSubtractAvailable = isSubtractAvailable,
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
-            amountValue = amountValue,
-            feeValue = feeValue,
-            reduceAmountBy = reduceAmountBy,
-        )
+        val sendingAmount = if (isEnterAction) {
+            checkAndCalculateSubtractedAmount(
+                isAmountSubtractAvailable = isSubtractAvailable,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                amountValue = amountValue,
+                feeValue = feeValue,
+                reduceAmountBy = reduceAmountBy,
+            )
+        } else {
+            // No amount is taken from account balance on exit or pending actions
+            BigDecimal.ZERO
+        }
 
         val notifications = buildList {
             // errors
