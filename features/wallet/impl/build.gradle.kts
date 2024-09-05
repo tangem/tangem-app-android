@@ -79,6 +79,7 @@ dependencies {
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
     implementation(projects.domain.staking.models)
+    implementation(projects.domain.markets.models)
 
     //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
     implementation(projects.features.onboarding)

@@ -271,5 +271,6 @@ sealed class AppRoute(val path: String) : Route {
     data class MarketsTokenDetails(
         val token: TokenMarketParams,
         val appCurrency: AppCurrency,
-    ) : AppRoute(path = "/markets_token_details/${token.id}")
+        val showPortfolio: Boolean,
+    ) : AppRoute(path = "/markets_token_details/${token.id}/$showPortfolio")
 }
