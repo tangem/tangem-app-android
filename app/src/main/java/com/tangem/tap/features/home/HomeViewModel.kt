@@ -47,6 +47,8 @@ internal class HomeViewModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
+    private val tangemErrorHandler = TangemTangemErrorsHandler(store)
+
     fun onScanClick() {
         analyticsEventHandler.send(IntroductionProcess.ButtonScanCard())
         scanCard()
@@ -83,7 +85,7 @@ internal class HomeViewModel @Inject constructor(
                     }
                 },
                 onFailure = {
-                    Timber.e(it, "Unable to scan card")
+                    tangemErrorHandler.onErrorReceived(error = it)
                     delay(HIDE_PROGRESS_DELAY)
                     store.dispatch(HomeAction.ScanInProgress(scanInProgress = false))
                 },
