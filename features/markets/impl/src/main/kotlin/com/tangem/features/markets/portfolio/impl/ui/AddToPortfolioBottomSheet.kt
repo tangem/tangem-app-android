@@ -224,9 +224,13 @@ private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifi
                             action = {
                                 TangemSwitch(
                                     checked = network.isSelected,
-                                    onCheckedChange = {
-                                        state.onNetworkSwitchClick(network, it)
+                                    checkedColor = if (network.isEnabled) {
+                                        TangemTheme.colors.control.checked
+                                    } else {
+                                        TangemTheme.colors.icon.inactive
                                     },
+                                    onCheckedChange = { state.onNetworkSwitchClick(network, it) },
+                                    enabled = network.isEnabled,
                                 )
                             },
                         )
