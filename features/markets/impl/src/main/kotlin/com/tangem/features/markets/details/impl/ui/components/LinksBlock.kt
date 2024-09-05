@@ -10,7 +10,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
-import com.tangem.core.ui.components.SmallButtonShimmer
+import com.tangem.core.ui.components.ChipShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.buttons.chip.Chip
@@ -145,9 +145,8 @@ private fun SubBlockPlaceholder(modifier: Modifier = Modifier, lastBlock: Boolea
                 horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
             ) {
                 repeat(times = 3) {
-                    SmallButtonShimmer(
+                    ChipShimmer(
                         modifier = Modifier.weight(1f),
-                        withIcon = true,
                     )
                 }
             }
