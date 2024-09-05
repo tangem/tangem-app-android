@@ -49,6 +49,8 @@ import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -343,6 +345,8 @@ private fun NetworksList(
     isEditable: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val hapticManager = LocalHapticManager.current
+
     AnimatedVisibility(
         modifier = modifier,
         visible = networks is NetworksUM.Expanded,
@@ -377,7 +381,14 @@ private fun NetworksList(
                                 if (isEditable) {
                                     TangemSwitch(
                                         checked = network.isSelected,
-                                        onCheckedChange = network.onSelectedStateChange,
+                                        onCheckedChange = { checked ->
+                                            if (checked) {
+                                                hapticManager.perform(TangemHapticEffect.View.ToggleOn)
+                                            } else {
+                                                hapticManager.perform(TangemHapticEffect.View.ToggleOff)
+                                            }
+                                            network.onSelectedStateChange(checked)
+                                        },
                                     )
                                 }
                             },

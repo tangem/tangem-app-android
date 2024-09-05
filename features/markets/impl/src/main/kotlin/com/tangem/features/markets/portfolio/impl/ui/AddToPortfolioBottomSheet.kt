@@ -36,6 +36,8 @@ import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.components.rows.BlockchainRow
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.impl.R
@@ -168,6 +170,8 @@ private fun ContinueButton(
 @Suppress("LongMethod")
 @Composable
 private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifier) {
+    val hapticManager = LocalHapticManager.current
+
     InformationBlock(
         modifier = modifier,
         title = {
@@ -224,8 +228,14 @@ private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifi
                             action = {
                                 TangemSwitch(
                                     checked = network.isSelected,
-                                    onCheckedChange = {
-                                        state.onNetworkSwitchClick(network, it)
+                                    onCheckedChange = { checked ->
+                                        if (checked) {
+                                            hapticManager.perform(TangemHapticEffect.View.ToggleOn)
+                                        } else {
+                                            hapticManager.perform(TangemHapticEffect.View.ToggleOff)
+                                        }
+
+                                        state.onNetworkSwitchClick(network, checked)
                                     },
                                 )
                             },

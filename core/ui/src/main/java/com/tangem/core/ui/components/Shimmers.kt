@@ -28,6 +28,7 @@ import com.tangem.core.ui.components.buttons.PrimarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.chip.Chip
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.*
 import com.valentinilk.shimmer.*
@@ -135,7 +136,7 @@ fun ChipShimmer(modifier: Modifier = Modifier) {
         modifier = modifier
             .clip(RoundedCornerShape(size = 100.dp))
             .shimmer(LocalTangemShimmer.current),
-        text = stringReference(""),
+        text = TextReference.EMPTY,
         iconResId = R.drawable.ic_plus_24,
         onClick = {},
     )
