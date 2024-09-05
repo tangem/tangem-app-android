@@ -116,11 +116,8 @@
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
   <string name="common_import">Import</string>
-  <plurals name="common_in_days">
-    <item quantity="one">in %d day</item>
-    <item quantity="other">in %d days</item>
-  </plurals>
   <string name="common_later">Later</string>
+  <string name="common_left">%1$s left</string>
   <string name="common_locked">Locked</string>
   <string name="common_main_network">Main network</string>
   <string name="common_network_fee_title">Network fee</string>
@@ -414,6 +411,8 @@
   <string name="markets_token_details_total_supply_description">The maximum number of coins or tokens that can ever exist for a particular cryptocurrency</string>
   <string name="markets_token_details_trading_volume">Trading volume (24h)</string>
   <string name="markets_token_details_trading_volume_24h_description">The total amount of a cryptocurrency that has been traded within the last 24 hours, indicating the level of activity and liquidity in the market</string>
+  <string name="markets_tooltip_message">Pull this up or tap the search bar to add tokens directly from the market</string>
+  <string name="markets_tooltip_title">Add tokens</string>
   <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your cards</string>
   <string name="onboarding_access_code_feature_1_title">Protect</string>
   <string name="onboarding_access_code_feature_2_description">You can set up an individual access code on each card later</string>
@@ -638,8 +637,6 @@
   <string name="settings_forget_wallet">Forget wallet</string>
   <string name="settings_forget_wallet_footer">This will remove the wallet from the application. The wallet itself can be added again.</string>
   <string name="settings_wallet_name_title">Name</string>
-  <string name="staking_active">Active</string>
-  <string name="staking_active_footer">To unstake your assets, tap the block above</string>
   <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
   <string name="staking_claim_unstaked">Claim unstaked</string>
   <string name="staking_details_annual_percentage_rate">Annual percentage rate</string>
@@ -698,12 +695,13 @@
   <string name="staking_stake_locked">Stake locked</string>
   <string name="staking_stake_more">Stake more</string>
   <string name="staking_summary_description_text">You stake %1$s and will be receiving ~%2$s yearly</string>
+  <string name="staking_tap_to_unlock">Tap to unlock</string>
+  <string name="staking_tap_to_withdraw">Tap to withdraw</string>
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">Unstake %s</string>
   <string name="staking_unbonding">Unbonding</string>
   <string name="staking_unlocked_locked">Unlock locked</string>
   <string name="staking_unstaked">Unstaked</string>
-  <string name="staking_unstaked_footer">Check unstaked to claim your assets</string>
   <string name="staking_unstaking">Unstaking</string>
   <string name="staking_unstaking_item_name">Unstaking assets %s</string>
   <string name="staking_validator">Validator</string>
@@ -711,6 +709,7 @@
   <string name="staking_vote">Vote</string>
   <string name="staking_vote_locked">Vote locked</string>
   <string name="staking_withdraw">Withdraw</string>
+  <string name="staking_your_stakes">Your stakes</string>
   <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
   <string name="story_awe_title">Revolutionary Hardware Wallet</string>
   <string name="story_backup_description">Up to 3 physical cards to one wallet</string>
