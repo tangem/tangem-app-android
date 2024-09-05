@@ -25,7 +25,9 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
-internal class PreviewManageTokensComponent : ManageTokensComponent {
+internal class PreviewManageTokensComponent(
+    private val isLoading: Boolean = false,
+) : ManageTokensComponent {
 
     private val changedItemsIds: MutableSet<String> = mutableSetOf()
 
@@ -94,10 +96,14 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
     }
 
     private fun initItems() = List(size = 30) { index ->
-        if (index < 2) {
-            getCustomItem(index)
+        if (isLoading) {
+            CurrencyItemUM.Loading(index)
         } else {
-            getBasicItem(index)
+            if (index < 2) {
+                getCustomItem(index)
+            } else {
+                getBasicItem(index)
+            }
         }
     }.toPersistentList()
 
@@ -138,8 +144,8 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
             network = Network(
                 id = Network.ID(networkIndex.toString()),
                 backendId = networkIndex.toString(),
-                name = "",
-                currencySymbol = "",
+                name = "Network $networkIndex",
+                currencySymbol = "N$networkIndex",
                 derivationPath = Network.DerivationPath.Card(""),
                 isTestnet = false,
                 standardType = Network.StandardType.ERC20,
@@ -164,7 +170,9 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
                     CurrencyItemUM.Basic.NetworksUM.Collapsed
                 },
             )
-            is CurrencyItemUM.Custom -> return
+            is CurrencyItemUM.Custom,
+            is CurrencyItemUM.Loading,
+            -> return
         }
 
         previewState.update { state ->
@@ -199,7 +207,9 @@ internal class PreviewManageTokensComponent : ManageTokensComponent {
 
                 item.copy(networks = updatedNetworks)
             }
-            is CurrencyItemUM.Custom -> return
+            is CurrencyItemUM.Custom,
+            is CurrencyItemUM.Loading,
+            -> return
         }
 
         val id = "${currencyIndex}_$networkIndex"

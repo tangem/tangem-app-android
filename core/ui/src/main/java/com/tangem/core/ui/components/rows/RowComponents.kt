@@ -12,7 +12,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-internal inline fun RowContentContainer(
+inline fun RowContentContainer(
     icon: @Composable BoxScope.() -> Unit,
     text: @Composable BoxScope.() -> Unit,
     action: @Composable BoxScope.() -> Unit,

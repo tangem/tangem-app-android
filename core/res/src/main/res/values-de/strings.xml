@@ -115,10 +115,6 @@
   <string name="common_go_to_provider">Zum Anbieter gehen</string>
   <string name="common_go_to_token">Zum Token</string>
   <string name="common_import">Importieren</string>
-  <plurals name="common_in_days">
-    <item quantity="one">in %d Tag</item>
-    <item quantity="other">in %d Tagen</item>
-  </plurals>
   <string name="common_later">Später</string>
   <string name="common_locked">Gesperrt</string>
   <string name="common_main_network">Hauptnetz</string>
@@ -132,6 +128,7 @@
   <string name="common_origin_card">Primär Karte</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Einfügen</string>
+  <string name="common_privacy_policy">Datenschutzbestimmungen</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Weiterlesen</string>
@@ -159,6 +156,7 @@
   <string name="common_support">Unterstützung</string>
   <string name="common_swap">Tauschen</string>
   <string name="common_terms_and_conditions">Allgemeine Geschäftsbedingungen</string>
+  <string name="common_terms_of_use">Nutzungsbedingungen</string>
   <string name="common_today">Heute</string>
   <string name="common_transaction_failed">Transaktion fehlgeschlagen</string>
   <string name="common_transactions">Transaktionen</string>
@@ -264,7 +262,6 @@
   <string name="express_legal_one_placeholder">Durch die Nutzung der Swap-Funktion erklärst du dich mit den folgenden Bedingungen des Anbieters einverstanden %s</string>
   <string name="express_legal_two_placeholders">Durch die Nutzung der Swap-Funktionalität erklärst du dich mit des Anbieters %1$s und %2$s einverstanden</string>
   <string name="express_more_providers_soon">Weitere Anbieter werden bald folgen.\nBleib dabei!</string>
-  <string name="express_privacy_policy">Datenschutzbestimmungen</string>
   <string name="express_provider">Anbieter</string>
   <string name="express_provider_best_rate">Bester Preis</string>
   <string name="express_provider_max_amount">Verfügbar bis zu %s</string>
@@ -272,7 +269,6 @@
   <string name="express_provider_not_available">Für dieses Paar nicht verfügbar</string>
   <string name="express_provider_permission_needed">Erlaubnis erforderlich</string>
   <string name="express_provider_recommended">Empfohlen</string>
-  <string name="express_terms_of_use">Nutzungsbedingungen</string>
   <string name="express_token_list_empty_search">Keine Token gefunden. Bitte versuche eine andere Anfrage</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaktions-ID kopiert</string>
@@ -641,8 +637,6 @@
   <string name="settings_forget_wallet">Entferne diese Wallet</string>
   <string name="settings_forget_wallet_footer">Hiermit wird die Wallet aus der Anwendung entfernt. Die Wallet selbst kann wieder hinzugefügt werden.</string>
   <string name="settings_wallet_name_title">Name</string>
-  <string name="staking_active">Aktiv</string>
-  <string name="staking_active_footer">Um deine Vermögenswerte freizugeben, tippe auf den Block oben</string>
   <string name="staking_amount_requirement_error">Die Anzahl der zu stakenden Krypros muss mindesten %s betragen</string>
   <string name="staking_claim_unstaked">Nicht gestakte beanspruche</string>
   <string name="staking_details_annual_percentage_rate">Jährliche prozentuale Rendite</string>
@@ -702,7 +696,6 @@
   <string name="staking_unbonding">Lösen der Bindungen</string>
   <string name="staking_unlocked_locked">Gelocktes unlocken</string>
   <string name="staking_unstaked">Unstaken</string>
-  <string name="staking_unstaked_footer">Prüfe, was nicht eingesetzt wurde, um dein Vermögen zu beanspruchen</string>
   <string name="staking_unstaking">Staking beenden</string>
   <string name="staking_validator">Validator/ Prüfer</string>
   <string name="staking_validators">Validatoren</string>
