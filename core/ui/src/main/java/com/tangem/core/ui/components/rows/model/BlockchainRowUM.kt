@@ -10,4 +10,5 @@ data class BlockchainRowUM(
     val iconResId: Int,
     val isMainNetwork: Boolean,
     val isSelected: Boolean,
+    val isEnabled: Boolean = true,
 )

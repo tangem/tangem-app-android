@@ -10,6 +10,10 @@ sealed class YieldBalance {
         val balance: YieldBalanceItem,
         val address: String,
     ) : YieldBalance() {
+        fun getTotalWithRewardsStakingBalance(): BigDecimal {
+            return balance.items.sumOf { it.amount }
+        }
+
         fun getTotalStakingBalance(): BigDecimal {
             return balance.items
                 .filterNot { it.type == BalanceType.REWARDS }
