@@ -33,17 +33,21 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
 
     private val model: MarketsTokenDetailsModel = getOrCreateModel(params)
 
-    private val portfolioComponent = portfolioComponentFactory.create(
-        context = child("my_portfolio"),
-        params = MarketsPortfolioComponent.Params(params.token),
-    )
+    private val portfolioComponent: MarketsPortfolioComponent? = if (params.showPortfolio) {
+        portfolioComponentFactory.create(
+            context = child("my_portfolio"),
+            params = MarketsPortfolioComponent.Params(params.token),
+        )
+    } else {
+        null
+    }
 
     init {
         componentScope.launch {
             model.networksState.collectLatest {
                 when (it) {
-                    is TokenNetworksState.NetworksAvailable -> portfolioComponent.setTokenNetworks(it.networks)
-                    TokenNetworksState.NoNetworksAvailable -> portfolioComponent.setNoNetworksAvailable()
+                    is TokenNetworksState.NetworksAvailable -> portfolioComponent?.setTokenNetworks(it.networks)
+                    TokenNetworksState.NoNetworksAvailable -> portfolioComponent?.setNoNetworksAvailable()
                     else -> {}
                 }
             }
@@ -79,10 +83,16 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
             backgroundColor = LocalMainBottomSheetColor.current.value,
             addTopBarStatusBarPadding = false,
             state = state,
-            onBackClick = ::navigateBack,
+            onBackClick = {
+                if (bsState == BottomSheetState.EXPANDED) {
+                    navigateBack()
+                }
+            },
             onHeaderSizeChange = onHeaderSizeChange,
-            portfolioBlock = { blockModifier ->
-                portfolioComponent.Content(blockModifier)
+            portfolioBlock = portfolioComponent?.let { component ->
+                { blockModifier ->
+                    component.Content(blockModifier)
+                }
             },
         )
     }
@@ -109,8 +119,10 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
             state = state,
             onBackClick = ::navigateBack,
             onHeaderSizeChange = {},
-            portfolioBlock = { blockModifier ->
-                portfolioComponent.Content(blockModifier)
+            portfolioBlock = portfolioComponent?.let { component ->
+                { blockModifier ->
+                    component.Content(blockModifier)
+                }
             },
         )
     }
