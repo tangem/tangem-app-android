@@ -56,9 +56,11 @@ import com.tangem.features.staking.impl.presentation.state.transformers.approval
 import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetConfirmationStateAssentApprovalTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.approval.ShowApprovalBottomSheetTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
+import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
+import com.tangem.utils.extensions.orZero
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -236,7 +238,7 @@ internal class StakingViewModel @Inject constructor(
                 val validatorState = confirmationState.validatorState as? ValidatorState.Content
                     ?: error("No validator provided")
                 val amountState = value.amountState as? AmountState.Data ?: error("No amount provided")
-                val amountValue = amountState.amountTextField.cryptoAmount.value ?: error("No amount value")
+
                 val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: error("No fee provided")
                 val defaultAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
                     ?: error("No available address")
@@ -248,7 +250,7 @@ internal class StakingViewModel @Inject constructor(
                     params = ActionParams(
                         actionCommonType = value.actionType,
                         integrationId = yield.id,
-                        amount = amountValue,
+                        amount = getAmount(amountState, fee, confirmationState.reduceAmountBy),
                         address = defaultAddress,
                         validatorAddress = validatorState.chosenValidator.address,
                         token = yield.token,
@@ -891,6 +893,20 @@ internal class StakingViewModel @Inject constructor(
     private suspend fun checkIfSubtractAvailable() {
         isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(userWalletId, cryptoCurrencyStatus.currency)
             .getOrElse { false }
+    }
+
+    private fun getAmount(amountState: AmountState.Data, fee: Fee, reduceAmountBy: BigDecimal?): BigDecimal {
+        val amountValue = amountState.amountTextField.cryptoAmount.value ?: error("No amount value")
+        val feeValue = fee.amount.value ?: error("No fee value")
+        val isEnterAction = stateController.value.actionType == StakingActionCommonType.ENTER
+
+        return checkAndCalculateSubtractedAmount(
+            isAmountSubtractAvailable = isAmountSubtractAvailable && isEnterAction,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            amountValue = amountValue,
+            feeValue = feeValue,
+            reduceAmountBy = reduceAmountBy.orZero(),
+        )
     }
 
     private data class FullTransactionData(
