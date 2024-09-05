@@ -22,6 +22,7 @@ import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
+import com.tangem.lib.crypto.BlockchainUtils.isPolkadot
 import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
@@ -145,6 +146,7 @@ internal class SetInitialDataStateTransformer(
         minimumCryptoAmount: SerializedBigDecimal?,
     ): RoundedListWithDividersItemData? {
         minimumCryptoAmount ?: return null
+        if (!isPolkadot(cryptoCurrencyStatus.currency.network.id.value)) return null
 
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_minimum_requirement,
