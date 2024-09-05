@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -17,6 +16,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetTitle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable
 internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
@@ -35,10 +35,14 @@ internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = TangemTheme.dimens.spacing28),
             ) {
-                Text(
-                    text = it.body.resolveReference(),
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                MarkdownText(
+                    markdown = it.body.resolveReference(),
+                    disableLinkMovementMethod = true,
+                    linkifyMask = 0,
+                    syntaxHighlightColor = TangemTheme.colors.text.secondary,
+                    style = TangemTheme.typography.body2.copy(
+                        color = TangemTheme.colors.text.secondary,
+                    ),
                 )
                 SpacerH(bottomBarHeight)
             }
