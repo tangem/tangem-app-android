@@ -55,7 +55,7 @@ sealed class Basic(
                 this[AnalyticsParam.SOURCE] = sentFrom.value
                 if (sentFrom is AnalyticsParam.TxData) {
                     this[AnalyticsParam.BLOCKCHAIN] = sentFrom.blockchain
-                    this[AnalyticsParam.TOKEN] = sentFrom.token
+                    this[AnalyticsParam.TOKEN_PARAM] = sentFrom.token
                     this[AnalyticsParam.FEE_TYPE] = sentFrom.feeType.value
                 }
                 if (sentFrom is AnalyticsParam.TxSentFrom.Approve) {
