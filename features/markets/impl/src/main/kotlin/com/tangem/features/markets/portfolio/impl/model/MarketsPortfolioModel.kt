@@ -10,7 +10,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.markets.SaveMarketTokensUseCase
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
@@ -19,7 +18,6 @@ import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -62,7 +60,6 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private val factory = MyPortfolioUMFactory(
         onAddClick = { onAddToPortfolioBSVisibilityChange(isShow = true) },
-        onTokenItemClick = ::onTokenItemClick,
         addToPortfolioBSContentUMFactory = AddToPortfolioBSContentUMFactory(
             token = params.token,
             onAddToPortfolioVisibilityChange = ::onAddToPortfolioBSVisibilityChange,
@@ -71,6 +68,7 @@ internal class MarketsPortfolioModel @Inject constructor(
             onWalletSelect = ::onWalletSelect,
             onContinueClick = ::onContinueClick,
         ),
+        currentState = Provider { _state.value },
         tokenActionsHandler = tokenActionsIntentsFactory.create(
             currentAppCurrency = Provider { currentAppCurrency.value },
             updateTokenActionsBSConfig = { updateBlock ->
@@ -80,6 +78,11 @@ internal class MarketsPortfolioModel @Inject constructor(
                 updateTokensState { it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig)) }
             },
         ),
+        updateTokens = { updateBlock ->
+            updateTokensState { state ->
+                state.copy(tokens = updateBlock(state.tokens))
+            }
+        },
     )
 
     init {
@@ -147,23 +150,6 @@ internal class MarketsPortfolioModel @Inject constructor(
             )
         } else {
             false
-        }
-    }
-
-    private fun onTokenItemClick(index: Int, id: CryptoCurrency.ID) {
-        updateTokensState { state ->
-            state.copy(
-                tokens = state.tokens
-                    .mapIndexed { i, tokenUM ->
-                        // check by index and id because id can be the same
-                        if (index == i && id.value == tokenUM.tokenItemState.id) {
-                            tokenUM.copy(isQuickActionsShown = !tokenUM.isQuickActionsShown)
-                        } else {
-                            tokenUM.copy(isQuickActionsShown = false)
-                        }
-                    }
-                    .toImmutableList(),
-            )
         }
     }
 
