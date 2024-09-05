@@ -481,6 +481,8 @@ internal class DefaultCurrenciesRepository(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return userWalletsStore.userWallets.flatMapLatest { userWallets ->
+            userWallets.forEach { fetchTokensIfCacheExpired(userWallet = it, refresh = false) }
+
             val userWalletsWithCurrencies = userWallets
                 .filterNot(UserWallet::isLocked)
                 .map { userWallet ->
