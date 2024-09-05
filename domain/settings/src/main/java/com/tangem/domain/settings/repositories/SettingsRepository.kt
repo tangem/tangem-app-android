@@ -29,4 +29,8 @@ interface SettingsRepository {
     suspend fun setShouldSaveAccessCodes(value: Boolean)
 
     suspend fun incrementAppLaunchCounter()
+
+    suspend fun shouldShowMarketsTooltip(): Boolean
+
+    suspend fun setMarketsTooltipShown(value: Boolean)
 }
