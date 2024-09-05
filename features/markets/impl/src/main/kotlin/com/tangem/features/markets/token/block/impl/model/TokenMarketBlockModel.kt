@@ -143,6 +143,7 @@ internal class TokenMarketBlockModel @Inject constructor(
             AppRoute.MarketsTokenDetails(
                 token = tokenParam,
                 appCurrency = currentAppCurrency.value,
+                showPortfolio = false,
             ),
         )
     }
