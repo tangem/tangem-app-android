@@ -161,7 +161,7 @@ internal fun PricePerformanceBlockPlaceholder(modifier: Modifier = Modifier) {
         },
         content = {
             Column(
-                modifier = modifier.padding(vertical = TangemTheme.dimens.spacing8),
+                modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8),
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
             ) {
                 Row(
