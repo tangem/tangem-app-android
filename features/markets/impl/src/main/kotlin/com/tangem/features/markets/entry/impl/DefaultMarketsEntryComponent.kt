@@ -70,6 +70,7 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
                 params = MarketsTokenDetailsComponent.Params(
                     token = token.toSerializableParam(),
                     appCurrency = appCurrency,
+                    showPortfolio = true,
                 ),
             ),
         )
