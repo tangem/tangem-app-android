@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
-import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
@@ -54,7 +53,7 @@ internal fun MarketsTokenDetailsContent(
     addTopBarStatusBarPadding: Boolean,
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
-    portfolioBlock: @Composable (Modifier) -> Unit,
+    portfolioBlock: @Composable ((Modifier) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Content(
@@ -78,7 +77,7 @@ private fun Content(
     addTopBarStatusBarInsets: Boolean,
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
-    portfolioBlock: @Composable (Modifier) -> Unit,
+    portfolioBlock: @Composable ((Modifier) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -129,9 +128,7 @@ private fun Content(
                 )
             }
             item { SpacerH32() }
-            item(
-                contentType = "chart",
-            ) {
+            item("chart") {
                 MarketTokenDetailsChart(
                     modifier = Modifier.fillMaxWidth(),
                     backgroundColor = backgroundColor,
@@ -167,11 +164,13 @@ private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) 
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                 )
-                PriceChangeInPercent(
-                    valueInPercent = state.priceChangePercentText,
-                    type = state.priceChangeType,
-                    textStyle = TangemTheme.typography.caption2,
-                )
+                if (state.priceChangePercentText != null) {
+                    PriceChangeInPercent(
+                        valueInPercent = state.priceChangePercentText,
+                        type = state.priceChangeType,
+                        textStyle = TangemTheme.typography.caption2,
+                    )
+                }
             }
         }
         SpacerW4()
@@ -290,7 +289,6 @@ private fun Preview() {
                 priceChangeType = PriceChangeType.UP,
                 chartState = MarketsTokenDetailsUM.ChartState(
                     dataProducer = MarketChartDataProducer.build { },
-                    chartLook = MarketChartLook(),
                     onLoadRetryClick = {},
                     status = MarketsTokenDetailsUM.ChartState.Status.LOADING,
                     onMarkerPointSelected = { _, _ -> },
