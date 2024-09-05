@@ -41,6 +41,7 @@ internal class PortfolioTokenUMConverter(
 
         return PortfolioTokenUM(
             tokenItemState = tokenItemStateConverter.convert(value = value.status),
+            walletId = value.userWallet.walletId,
             isBalanceHidden = isBalanceHidden,
             isQuickActionsShown = false,
             quickActions = quickActions(cryptoData = value),
