@@ -143,7 +143,6 @@ internal class DefaultQuotesRepository(
                     block = { acc.add(rawCurrencyId) },
                 )
             }
-
             acc
         }
     }
