@@ -95,6 +95,11 @@ internal class MultiWalletCurrencyActionsConverter(
                 icon = R.drawable.ic_hide_24
                 action = { clickIntents.onHideTokensClick(cryptoCurrencyStatus) }
             }
+            is TokenActionsState.ActionState.Analytics -> {
+                title = resourceReference(R.string.common_analytics)
+                icon = R.drawable.ic_analytics_24
+                action = { clickIntents.onAnalyticsClick(cryptoCurrencyStatus) }
+            }
         }
 
         return TokenActionButtonConfig(
