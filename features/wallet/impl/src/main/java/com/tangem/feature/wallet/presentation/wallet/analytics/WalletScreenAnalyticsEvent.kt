@@ -43,7 +43,7 @@ sealed class WalletScreenAnalyticsEvent {
             event = "Token Balance",
             params = mapOf(
                 AnalyticsParam.STATE to balance.value,
-                AnalyticsParam.TOKEN to token,
+                AnalyticsParam.TOKEN_PARAM to token,
             ),
         )
     }
