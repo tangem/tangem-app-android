@@ -2,11 +2,13 @@ package com.tangem.features.markets.portfolio.impl.model
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
+import com.tangem.features.markets.portfolio.impl.ui.state.PortfolioTokenUM
+import com.tangem.utils.Provider
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Factory for creating [MyPortfolioUM]
@@ -18,9 +20,10 @@ import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
  */
 internal class MyPortfolioUMFactory(
     private val onAddClick: () -> Unit,
-    private val onTokenItemClick: (Int, CryptoCurrency.ID) -> Unit,
     private val addToPortfolioBSContentUMFactory: AddToPortfolioBSContentUMFactory,
     private val tokenActionsHandler: TokenActionsHandler,
+    private val currentState: Provider<MyPortfolioUM>,
+    private val updateTokens: ((ImmutableList<PortfolioTokenUM>) -> ImmutableList<PortfolioTokenUM>) -> Unit,
 ) {
 
     fun create(portfolioData: PortfolioData, portfolioUIData: PortfolioUIData): MyPortfolioUM {
@@ -58,8 +61,9 @@ internal class MyPortfolioUMFactory(
             ),
             bsConfig = createAddToPortfolioBSConfig(portfolioData = portfolioData, portfolioUIData = portfolioUIData),
             onAddClick = onAddClick,
-            onTokenItemClick = onTokenItemClick,
             quickActionsIntents = tokenActionsHandler,
+            currentState = currentState,
+            updateTokens = updateTokens,
         )
             .convert(walletsWithCurrencies)
     }
