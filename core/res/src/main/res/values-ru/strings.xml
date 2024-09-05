@@ -117,12 +117,6 @@
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
   <string name="common_import">Импортировать</string>
-  <plurals name="common_in_days">
-    <item quantity="one">через %d день</item>
-    <item quantity="few">через %d дня</item>
-    <item quantity="many">через %d дней</item>
-    <item quantity="other">через %d дней</item>
-  </plurals>
   <string name="common_later">Позже</string>
   <string name="common_locked">Заблокирован</string>
   <string name="common_main_network">Основная сеть</string>
@@ -645,8 +639,6 @@
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
-  <string name="staking_active">Активно</string>
-  <string name="staking_active_footer">Для завершения стейкинга нажмите на блок выше</string>
   <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_claim_unstaked">Забрать средства</string>
   <string name="staking_details_annual_percentage_rate">Процентная ставка</string>
@@ -701,7 +693,6 @@
   <string name="staking_unbonding">Отзыв</string>
   <string name="staking_unlocked_locked">Разблокировать</string>
   <string name="staking_unstaked">Вывод из стейкинга</string>
-  <string name="staking_unstaked_footer">Проверьте процесс завершения стейкинга, чтобы вывести свои средства.</string>
   <string name="staking_unstaking">Завершение стейкинга</string>
   <string name="staking_unstaking_item_name">Завершение стейкинга %s</string>
   <string name="staking_validator">Валидатор</string>
