@@ -86,7 +86,8 @@ internal class AddToPortfolioBSContentUMFactory(
                     portfolioData = portfolioData,
                     selectedWalletId = selectedWallet.walletId,
                 ),
-                isWalletBlockVisible = portfolioData.walletsWithBalance.size > 1,
+                isWalletBlockVisible = portfolioData.walletsWithCurrencies
+                    .filterKeys(UserWallet::isMultiCurrency).size > 1,
             ),
         )
     }
