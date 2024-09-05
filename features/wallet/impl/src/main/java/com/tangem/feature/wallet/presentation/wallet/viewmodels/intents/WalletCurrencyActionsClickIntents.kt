@@ -401,6 +401,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                         imageUrl = cryptoCurrencyStatus.currency.iconUrl,
                     ),
                     appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
+                    showPortfolio = true,
                 ),
             )
         }

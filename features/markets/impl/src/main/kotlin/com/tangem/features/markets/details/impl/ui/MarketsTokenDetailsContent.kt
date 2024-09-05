@@ -53,7 +53,7 @@ internal fun MarketsTokenDetailsContent(
     addTopBarStatusBarPadding: Boolean,
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
-    portfolioBlock: @Composable (Modifier) -> Unit,
+    portfolioBlock: @Composable ((Modifier) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Content(
@@ -77,7 +77,7 @@ private fun Content(
     addTopBarStatusBarInsets: Boolean,
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
-    portfolioBlock: @Composable (Modifier) -> Unit,
+    portfolioBlock: @Composable ((Modifier) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current

@@ -193,6 +193,7 @@ internal class ChildFactory @Inject constructor(
                     params = MarketsTokenDetailsComponent.Params(
                         token = route.token,
                         appCurrency = route.appCurrency,
+                        showPortfolio = route.showPortfolio,
                     ),
                     componentFactory = marketsTokenDetailsComponentFactory,
                 )
