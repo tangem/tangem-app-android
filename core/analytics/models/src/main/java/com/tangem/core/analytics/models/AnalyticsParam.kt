@@ -131,7 +131,7 @@ sealed class AnalyticsParam {
 
     companion object Key {
         const val BLOCKCHAIN = "blockchain"
-        const val TOKEN = "Token"
+        const val TOKEN_PARAM = "Token"
         const val SOURCE = "Source"
         const val BALANCE = "Balance"
         const val STATE = "State"
@@ -152,5 +152,12 @@ sealed class AnalyticsParam {
         const val VALIDATION = "Validation"
         const val BLOCKCHAIN_EXCEPTION_HOST = "exception_host"
         const val BLOCKCHAIN_SELECTED_HOST = "selected_host"
+
+        // region swap
+        const val TOKEN_CATEGORY = "Token"
+        const val STATUS = "Status"
+        const val PROVIDER = "Provider"
+        const val PLACE = "Place"
+        //
     }
 }
