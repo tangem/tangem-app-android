@@ -15,7 +15,7 @@ data class TokenMarketParams(
     @Serializable
     data class Quotes(
         val currentPrice: SerializedBigDecimal,
-        val h24Percent: SerializedBigDecimal,
+        val h24Percent: SerializedBigDecimal?,
         val weekPercent: SerializedBigDecimal?,
         val monthPercent: SerializedBigDecimal?,
     )
