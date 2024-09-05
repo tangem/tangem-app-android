@@ -126,7 +126,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 userWalletId = userWallet.walletId,
                 currencies = missedAddressCurrencies,
             )
-                .onRight { fetchTokenListUseCase(userWalletId = userWallet.walletId) }
+                .onRight {
+                    // Refresh must be set to true to ensure that yield balances are updated
+                    fetchTokenListUseCase(userWalletId = userWallet.walletId, refresh = true)
+                }
                 .onLeft { Timber.e("Failed to derive public keys: $it") }
         }
     }
