@@ -176,17 +176,13 @@ internal class MarketsPortfolioModel @Inject constructor(
         }
     }
 
-    private fun onContinueClick(
-        userWalletId: UserWalletId,
-        addedNetworks: Set<TokenMarketInfo.Network>,
-        removedNetworks: Set<TokenMarketInfo.Network>,
-    ) {
+    private fun onContinueClick(userWalletId: UserWalletId, addedNetworks: Set<TokenMarketInfo.Network>) {
         modelScope.launch {
             saveMarketTokensUseCase(
                 userWalletId = userWalletId,
                 tokenMarketParams = params.token,
                 addedNetworks = addedNetworks,
-                removedNetworks = removedNetworks,
+                removedNetworks = emptySet(),
             )
 
             onAddToPortfolioBSVisibilityChange(isShow = false)
