@@ -228,6 +228,11 @@ private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifi
                             action = {
                                 TangemSwitch(
                                     checked = network.isSelected,
+                                    checkedColor = if (network.isEnabled) {
+                                        TangemTheme.colors.control.checked
+                                    } else {
+                                        TangemTheme.colors.icon.inactive
+                                    },
                                     onCheckedChange = { checked ->
                                         if (checked) {
                                             hapticManager.perform(TangemHapticEffect.View.ToggleOn)
@@ -237,6 +242,7 @@ private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifi
 
                                         state.onNetworkSwitchClick(network, checked)
                                     },
+                                    enabled = network.isEnabled,
                                 )
                             },
                         )

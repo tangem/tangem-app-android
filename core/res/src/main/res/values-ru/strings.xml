@@ -117,12 +117,6 @@
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
   <string name="common_import">Импортировать</string>
-  <plurals name="common_in_days">
-    <item quantity="one">через %d день</item>
-    <item quantity="few">через %d дня</item>
-    <item quantity="many">через %d дней</item>
-    <item quantity="other">через %d дней</item>
-  </plurals>
   <string name="common_later">Позже</string>
   <string name="common_locked">Заблокирован</string>
   <string name="common_main_network">Основная сеть</string>
@@ -136,6 +130,7 @@
   <string name="common_origin_card">Основная карта</string>
   <string name="common_passphrase">Парольная фраза</string>
   <string name="common_paste">Вставить</string>
+  <string name="common_privacy_policy">Политикой конфиденциальности</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Подробнее</string>
@@ -163,6 +158,7 @@
   <string name="common_support">Поддержка</string>
   <string name="common_swap">Обмен</string>
   <string name="common_terms_and_conditions">условия участия</string>
+  <string name="common_terms_of_use">Условиями использования</string>
   <string name="common_today">Сегодня</string>
   <string name="common_transaction_failed">Ошибка транзакции</string>
   <string name="common_transactions">Транзакции</string>
@@ -266,7 +262,6 @@
   <string name="express_legal_one_placeholder">Пользуясь сервисом, вы соглашаетесь с %s</string>
   <string name="express_legal_two_placeholders">Пользуясь сервисом, вы соглашаетесь с %1$s и %2$s</string>
   <string name="express_more_providers_soon">Больше провайдеров на подходе.\nСледите за обновлениями!</string>
-  <string name="express_privacy_policy">Политикой конфиденциальности</string>
   <string name="express_provider">Провайдер</string>
   <string name="express_provider_best_rate">Лучший курс</string>
   <string name="express_provider_max_amount">Доступно до %s</string>
@@ -274,7 +269,6 @@
   <string name="express_provider_not_available">Недоступно для этой пары</string>
   <string name="express_provider_permission_needed">Требуется разрешение</string>
   <string name="express_provider_recommended">Рекомендовано</string>
-  <string name="express_terms_of_use">Условиями использования</string>
   <string name="express_token_list_empty_search">Токены не найдены. Пожалуйста, попробуйте другой запрос</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">ID транзакции скопирован</string>
@@ -645,8 +639,6 @@
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
-  <string name="staking_active">Активно</string>
-  <string name="staking_active_footer">Для завершения стейкинга нажмите на блок выше</string>
   <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_claim_unstaked">Забрать средства</string>
   <string name="staking_details_annual_percentage_rate">Процентная ставка</string>
@@ -701,7 +693,6 @@
   <string name="staking_unbonding">Отзыв</string>
   <string name="staking_unlocked_locked">Разблокировать</string>
   <string name="staking_unstaked">Вывод из стейкинга</string>
-  <string name="staking_unstaked_footer">Проверьте процесс завершения стейкинга, чтобы вывести свои средства.</string>
   <string name="staking_unstaking">Завершение стейкинга</string>
   <string name="staking_unstaking_item_name">Завершение стейкинга %s</string>
   <string name="staking_validator">Валидатор</string>

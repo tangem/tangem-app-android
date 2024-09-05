@@ -95,11 +95,7 @@ internal class MyPortfolioUMFactory(
             portfolioData = portfolioData,
             portfolioUIData = portfolioUIData,
             selectedWallet = selectedWallet,
-            networksWithToggle = portfolioUIData.addToPortfolioData.associateWithToggle(
-                userWalletId = selectedWallet.walletId,
-                alreadyAddedNetworkIds = alreadyAddedNetworks,
-            ),
-            isUserChangedNetworks = portfolioUIData.addToPortfolioData.isUserChangedNetworks(selectedWallet.walletId),
+            alreadyAddedNetworks = alreadyAddedNetworks,
         )
     }
 
