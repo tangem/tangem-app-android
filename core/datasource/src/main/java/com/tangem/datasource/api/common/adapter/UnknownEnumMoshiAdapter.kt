@@ -11,6 +11,8 @@ import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.RewardT
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
+import com.tangem.datasource.api.stakekit.models.response.model.error.AccessDeniedErrorTypeDTO
+import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorMessageDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionTypeDTO
 
@@ -27,6 +29,7 @@ object UnknownEnumMoshiAdapter {
 
 fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
     val map = mapOf(
+        // valid response enums
         BalanceTypeDTO::class.java to BalanceTypeDTO.UNKNOWN,
         NetworkTypeDTO::class.java to NetworkTypeDTO.UNKNOWN,
         RewardClaimingDTO::class.java to RewardClaimingDTO.UNKNOWN,
@@ -37,6 +40,9 @@ fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
         StakingTransactionStatusDTO::class.java to StakingTransactionStatusDTO.UNKNOWN,
         StakingTransactionTypeDTO::class.java to StakingTransactionTypeDTO.UNKNOWN,
         ValidatorStatusDTO::class.java to ValidatorStatusDTO.UNKNOWN,
+        // error enums
+        AccessDeniedErrorTypeDTO::class.java to AccessDeniedErrorTypeDTO.UNKNOWN,
+        StakeKitErrorMessageDTO::class.java to StakeKitErrorMessageDTO.UNKNOWN,
     )
 
     return apply {
