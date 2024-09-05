@@ -20,6 +20,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.*
@@ -48,6 +49,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 interface WalletCurrencyActionsClickIntents {
@@ -77,6 +79,8 @@ interface WalletCurrencyActionsClickIntents {
     fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onExploreClick()
+
+    fun onAnalyticsClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 }
 
 @Suppress("LongParameterList", "LargeClass")
@@ -376,6 +380,31 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onExploreClick() {
         showErrorIfDemoModeOrElse(action = ::openExplorer)
+    }
+
+    override fun onAnalyticsClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        viewModelScope.launch {
+            val rawId = cryptoCurrencyStatus.currency.id.rawCurrencyId ?: return@launch
+
+            appRouter.push(
+                AppRoute.MarketsTokenDetails(
+                    TokenMarketParams(
+                        id = rawId,
+                        name = cryptoCurrencyStatus.currency.name,
+                        symbol = cryptoCurrencyStatus.currency.symbol,
+                        tokenQuotes = TokenMarketParams.Quotes(
+                            currentPrice = cryptoCurrencyStatus.value.fiatRate ?: BigDecimal.ZERO,
+                            h24Percent = cryptoCurrencyStatus.value.priceChange,
+                            weekPercent = null,
+                            monthPercent = null,
+                        ),
+                        imageUrl = cryptoCurrencyStatus.currency.iconUrl,
+                    ),
+                    appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
+                    showPortfolio = true,
+                ),
+            )
+        }
     }
 
     override fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?) {
