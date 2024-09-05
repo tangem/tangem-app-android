@@ -16,10 +16,6 @@
         "version": "undefined"
     },
     {
-        "name": "CARDANO_TOKENS_SUPPORT_ENABLED",
-        "version": "5.12.0"
-    },
-    {
         "name": "STAKING_ENABLED",
         "version": "undefined"
     },
@@ -34,10 +30,6 @@
     {
         "name": "MARKETS_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "HOME_SCREEN_CALLBACKS_REFACTORING_ENABLED",
-        "version": "5.14.0"
     },
     {
         "name": "NEW_MANAGE_TOKENS",
