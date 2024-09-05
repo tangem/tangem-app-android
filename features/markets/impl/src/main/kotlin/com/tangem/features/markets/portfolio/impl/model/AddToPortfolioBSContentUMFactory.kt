@@ -30,28 +30,22 @@ internal class AddToPortfolioBSContentUMFactory(
     private val onWalletSelectorVisibilityChange: (Boolean) -> Unit,
     private val onNetworkSwitchClick: (String, Boolean) -> Unit,
     private val onWalletSelect: (UserWalletId) -> Unit,
-    private val onContinueClick: (
-        selectedWalletId: UserWalletId,
-        addedNetworks: Set<TokenMarketInfo.Network>,
-        removedNetworks: Set<TokenMarketInfo.Network>,
-    ) -> Unit,
+    private val onContinueClick: (selectedWalletId: UserWalletId, addedNetworks: Set<TokenMarketInfo.Network>) -> Unit,
 ) {
 
     /**
      * Create [TangemBottomSheetConfig]
      *
-     * @param portfolioData         portfolio data
-     * @param portfolioUIData       portfolio bottom sheet visibility model
-     * @param selectedWallet        selected wallet
-     * @param networksWithToggle    networks with toggle
-     * @param isUserChangedNetworks flag indicates if user changed networks
+     * @param portfolioData        portfolio data
+     * @param portfolioUIData      portfolio bottom sheet visibility model
+     * @param selectedWallet       selected wallet
+     * @param alreadyAddedNetworks already added networks
      */
     fun create(
         portfolioData: PortfolioData,
         portfolioUIData: PortfolioUIData,
         selectedWallet: UserWallet,
-        networksWithToggle: Map<TokenMarketInfo.Network, Boolean>,
-        isUserChangedNetworks: Boolean,
+        alreadyAddedNetworks: Set<String>,
     ): TangemBottomSheetConfig {
         return TangemBottomSheetConfig(
             isShow = portfolioUIData.portfolioBSVisibilityModel.addToPortfolioBSVisibility,
@@ -59,11 +53,17 @@ internal class AddToPortfolioBSContentUMFactory(
             content = AddToPortfolioBSContentUM(
                 selectedWallet = selectedWallet.toSelectedUserWalletItemUM(),
                 selectNetworkUM = SelectNetworkUMConverter(
-                    networksWithToggle = networksWithToggle,
+                    networksWithToggle = portfolioUIData.addToPortfolioData.associateWithToggle(
+                        userWalletId = selectedWallet.walletId,
+                        alreadyAddedNetworkIds = alreadyAddedNetworks,
+                    ),
+                    alreadyAddedNetworks = alreadyAddedNetworks,
                     onNetworkSwitchClick = onNetworkSwitchClick,
                 ).convert(value = token),
                 isScanCardNotificationVisible = portfolioUIData.hasMissedDerivations,
-                continueButtonEnabled = isUserChangedNetworks,
+                continueButtonEnabled = portfolioUIData.addToPortfolioData.isUserChangedNetworks(
+                    userWalletId = selectedWallet.walletId,
+                ),
                 onContinueButtonClick = {
                     val alreadyAddedNetworkIds = portfolioData.walletsWithCurrencies[selectedWallet].orEmpty()
                         .map { it.status.currency.network.backendId }
@@ -72,10 +72,6 @@ internal class AddToPortfolioBSContentUMFactory(
                     onContinueClick(
                         selectedWallet.walletId,
                         portfolioUIData.addToPortfolioData.getAddedNetworks(
-                            userWalletId = selectedWallet.walletId,
-                            alreadyAddedNetworkIds = alreadyAddedNetworkIds,
-                        ),
-                        portfolioUIData.addToPortfolioData.getRemovedNetworks(
                             userWalletId = selectedWallet.walletId,
                             alreadyAddedNetworkIds = alreadyAddedNetworkIds,
                         ),
