@@ -13,10 +13,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
-import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
-import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
-import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
-import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSwapTransactionsStateConverter
@@ -109,7 +106,7 @@ internal class ExchangeStatusFactory(
     suspend fun updateSwapTxStatuses(swapTxList: PersistentList<SwapTransactionsState>) = withContext(dispatchers.io) {
         swapTxList.map { tx ->
             async {
-                val statusModel = getExchangeStatus(tx.txId)
+                val statusModel = getExchangeStatus(tx.txId, tx.provider)
                 val isRefundTerminalStatus = statusModel?.refundNetwork == null &&
                     statusModel?.refundContractAddress == null &&
                     tx.provider.type != ExchangeProviderType.DEX_BRIDGE
@@ -130,26 +127,26 @@ internal class ExchangeStatusFactory(
             .toPersistentList()
     }
 
-    private suspend fun getExchangeStatus(txId: String): ExchangeStatusModel? {
+    private suspend fun getExchangeStatus(txId: String, provider: SwapProvider): ExchangeStatusModel? {
         return swapRepository.getExchangeStatus(txId)
             .fold(
                 ifLeft = { null },
                 ifRight = { statusModel ->
-                    sendStatusUpdateAnalytics(statusModel)
+                    sendStatusUpdateAnalytics(statusModel, provider)
                     swapTransactionRepository.storeTransactionState(txId, statusModel)
                     statusModel
                 },
             )
     }
 
-    private suspend fun sendStatusUpdateAnalytics(statusModel: ExchangeStatusModel) {
+    private suspend fun sendStatusUpdateAnalytics(statusModel: ExchangeStatusModel, provider: SwapProvider) {
         val txId = statusModel.txId ?: return
         val status = toAnalyticStatus(statusModel.status) ?: return
         val savedStatus = swapTransactionStatusStore.getTransactionStatus(txId)
 
         if (savedStatus != status) {
             analyticsEventsHandlerProvider().send(
-                TokenExchangeAnalyticsEvent.CexTxStatusChanged(cryptoCurrency.symbol, status.value),
+                TokenExchangeAnalyticsEvent.CexTxStatusChanged(cryptoCurrency.symbol, status.value, provider.name),
             )
             swapTransactionStatusStore.setTransactionStatus(txId, status)
         }
