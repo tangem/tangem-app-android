@@ -46,6 +46,7 @@ dependencies {
     implementation(deps.compose.ui.utils)
     implementation(deps.lifecycle.compose)
     implementation(deps.androidx.activity.compose)
+    implementation(deps.markdown.composeview)
 
     /* DI */
     implementation(deps.hilt.android)
