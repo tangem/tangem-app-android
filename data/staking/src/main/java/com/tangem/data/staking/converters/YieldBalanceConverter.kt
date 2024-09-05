@@ -3,6 +3,7 @@ package com.tangem.data.staking.converters
 import com.tangem.data.staking.converters.action.PendingActionConverter
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.utils.converter.Converter
 
 internal class YieldBalanceConverter : Converter<YieldBalanceWrapperDTO, YieldBalance> {
@@ -27,7 +28,10 @@ internal class YieldBalanceConverter : Converter<YieldBalanceWrapperDTO, YieldBa
                             // tron-specific. operates validatorAddresses instead of validatorAddress
                             validatorAddress = item.validatorAddress ?: item.validatorAddresses?.get(0),
                             date = item.date?.toDateTime(),
-                            pendingActions = pendingActionConverter.convertList(item.pendingActions),
+                            pendingActions = pendingActionConverter
+                                .convertList(item.pendingActions)
+                                // temporarily exclude VOTE_LOCKED, it will be implemented in future iterations
+                                .filterNot { it.type == StakingActionType.VOTE_LOCKED },
                         )
                     },
                     integrationId = value.integrationId,
