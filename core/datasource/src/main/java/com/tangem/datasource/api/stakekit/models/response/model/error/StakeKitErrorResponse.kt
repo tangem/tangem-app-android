@@ -35,6 +35,8 @@ data class StakeKitErrorDetailsDTO(
 enum class AccessDeniedErrorTypeDTO {
     @Json(name = "GEO_LOCATION")
     GEO_LOCATION,
+
+    UNKNOWN,
 }
 
 enum class StakeKitErrorMessageDTO {
@@ -157,4 +159,6 @@ enum class StakeKitErrorMessageDTO {
 
     @Json(name = "GRTStakingDisabledLedgerLiveError")
     GRT_STAKING_DISABLED_LEDGER_LIVE_ERROR,
+
+    UNKNOWN,
 }
