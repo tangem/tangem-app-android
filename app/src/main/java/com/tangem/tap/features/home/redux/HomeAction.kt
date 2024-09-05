@@ -15,7 +15,6 @@ sealed class HomeAction : Action {
     data class ReadCard(val scope: CoroutineScope) : HomeAction()
 
     data class ScanInProgress(val scanInProgress: Boolean) : HomeAction()
-    data object GoToShop : HomeAction()
 
     data class UpdateCountryCode(val userCountryCode: String) : HomeAction()
 }

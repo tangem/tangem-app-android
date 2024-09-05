@@ -2,6 +2,8 @@ package com.tangem.tap.features.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -54,7 +56,9 @@ internal class HomeViewModel @Inject constructor(
         analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards())
         analyticsEventHandler.send(Shop.ScreenOpened())
 
-        urlOpener.openUrl(NEW_BUY_WALLET_URL)
+        Firebase.analytics.appInstanceId
+            .addOnSuccessListener { urlOpener.openUrl(url = "$NEW_BUY_WALLET_URL&app_instance_id=$it") }
+            .addOnFailureListener { urlOpener.openUrl(url = NEW_BUY_WALLET_URL) }
     }
 
     fun onSearchClick() {
