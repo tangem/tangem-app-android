@@ -23,7 +23,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
     private val accountCreator: AccountCreator,
     private val blockchainDataStorage: BlockchainDataStorage,
     private val blockchainSDKLogger: BlockchainSDKLogger,
-    private val blockchainSDKFeatureToggles: BlockchainSDKFeatureToggles,
+    @Suppress("UnusedPrivateMember") private val blockchainSDKFeatureToggles: BlockchainSDKFeatureToggles,
 ) {
 
     fun create(config: BlockchainSdkConfig, blockchainProviderTypes: BlockchainProviderTypes): WalletManagerFactory {
@@ -33,9 +33,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
             config = config,
             blockchainProviderTypes = blockchainProviderTypes,
             accountCreator = accountCreator,
-            featureToggles = BlockchainFeatureToggles(
-                isCardanoTokenSupport = blockchainSDKFeatureToggles.isCardanoTokensSupportEnabled,
-            ),
+            featureToggles = BlockchainFeatureToggles(isCardanoTokenSupport = true),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
         )
