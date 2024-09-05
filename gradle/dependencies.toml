@@ -85,6 +85,7 @@ leakcanary = "2.13"
 decompose = "2.2.2"
 room = "2.6.1"
 markdown = "0.7.2"
+markdownComposeView = "0.5.4"
 # endregion Other libraries
 
 # region Tangem
@@ -270,4 +271,5 @@ room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 markdown = { module = "org.jetbrains:markdown", version.ref = "markdown" }
+markdown-composeview = { module = "com.github.jeziellago:compose-markdown", version.ref = "markdownComposeView" }
 # endregion Other
