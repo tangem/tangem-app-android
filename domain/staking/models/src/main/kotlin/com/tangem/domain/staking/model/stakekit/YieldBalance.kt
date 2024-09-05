@@ -34,6 +34,7 @@ data class YieldBalanceItem(
 )
 
 data class BalanceItem(
+    val id: String,
     val type: BalanceType,
     val amount: BigDecimal,
     val pricePerShare: BigDecimal,
@@ -76,16 +77,21 @@ data class PendingAction(
     }
 }
 
-enum class BalanceType {
-    AVAILABLE,
-    STAKED,
-    PREPARING,
-    UNSTAKING,
-    UNLOCKING,
-    UNSTAKED,
-    LOCKED,
-    REWARDS,
-    UNKNOWN,
+/**
+ * IMPORTANT!!!
+ * Order is used to sort balances.
+ */
+@Suppress("MagicNumber")
+enum class BalanceType(val order: Int) {
+    AVAILABLE(1),
+    STAKED(2),
+    PREPARING(3),
+    LOCKED(4),
+    UNSTAKING(5),
+    UNLOCKING(6),
+    UNSTAKED(7),
+    REWARDS(8),
+    UNKNOWN(9),
     ;
 
     companion object {
