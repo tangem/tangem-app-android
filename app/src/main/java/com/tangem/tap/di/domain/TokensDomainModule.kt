@@ -39,8 +39,9 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
     ): FetchTokenListUseCase {
-        return FetchTokenListUseCase(currenciesRepository, networksRepository, quotesRepository)
+        return FetchTokenListUseCase(currenciesRepository, networksRepository, quotesRepository, stakingRepository)
     }
 
     @Provides
