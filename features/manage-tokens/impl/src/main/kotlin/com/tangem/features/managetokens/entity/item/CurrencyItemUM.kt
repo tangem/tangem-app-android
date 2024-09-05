@@ -40,4 +40,12 @@ internal sealed class CurrencyItemUM {
         override val icon: CurrencyIconState,
         val onRemoveClick: () -> Unit,
     ) : CurrencyItemUM()
+
+    class Loading(val index: Int) : CurrencyItemUM() {
+
+        override val id: ManagedCryptoCurrency.ID = ManagedCryptoCurrency.ID(value = "loading_$index")
+        override val name: String = "loading"
+        override val symbol: String = "loading"
+        override val icon: CurrencyIconState = CurrencyIconState.Loading
+    }
 }

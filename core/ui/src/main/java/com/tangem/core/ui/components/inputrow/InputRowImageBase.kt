@@ -1,7 +1,9 @@
 package com.tangem.core.ui.components.inputrow
 
 import android.content.res.Configuration
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -42,11 +44,13 @@ import com.tangem.core.ui.res.TangemThemePreview
 @Composable
 internal fun InputRowImageBase(
     subtitle: TextReference,
-    imageUrl: String?,
     modifier: Modifier = Modifier,
     caption: TextReference? = null,
+    imageUrl: String? = null,
+    @DrawableRes iconRes: Int? = null,
     subtitleColor: Color = TangemTheme.colors.text.primary1,
     captionColor: Color = TangemTheme.colors.text.tertiary,
+    iconTint: Color = TangemTheme.colors.icon.informative,
     isGrayscaleImage: Boolean = false,
     iconEndRes: Int? = null,
     extraContent: (@Composable RowScope.() -> Unit)? = null,
@@ -63,6 +67,23 @@ internal fun InputRowImageBase(
                     .size(TangemTheme.dimens.spacing36)
                     .clip(TangemTheme.shapes.roundedCornersXLarge),
             )
+            SpacerW12()
+        }
+        if (iconRes != null) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(TangemTheme.dimens.spacing36)
+                    .clip(TangemTheme.shapes.roundedCornersXLarge)
+                    .background(iconTint.copy(alpha = 0.08f)),
+            ) {
+                Icon(
+                    painter = rememberVectorPainter(image = ImageVector.vectorResource(id = iconRes)),
+                    tint = iconTint,
+                    contentDescription = null,
+                    modifier = Modifier.size(TangemTheme.dimens.size18),
+                )
+            }
             SpacerW12()
         }
         Column {
