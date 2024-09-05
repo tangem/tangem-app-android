@@ -72,21 +72,16 @@ internal class MyPortfolioUMFactory(
         portfolioData: PortfolioData,
         portfolioUIData: PortfolioUIData,
     ): TangemBottomSheetConfig {
-        val walletId = portfolioUIData.selectedWalletId
-            ?: portfolioData.walletsWithCurrencies.keys.firstOrNull { it.isMultiCurrency }?.walletId
-
         val selectedWallet = portfolioData.walletsWithCurrencies.keys
-            .firstOrNull { it.walletId == walletId }
-            ?: error("portfolioModel.walletsWithCurrencyStatuses doesn't contain selected wallet: $walletId")
+            .firstOrNull { it.walletId == portfolioUIData.selectedWalletId }
+            ?: portfolioData.walletsWithCurrencies.keys.firstOrNull { it.isMultiCurrency }
+            ?: error("walletsWithCurrencies don't contain selected wallet or any multi-currency wallet")
 
         val availableNetworks = portfolioUIData.addToPortfolioData.availableNetworks.orEmpty()
 
         val alreadyAddedNetworks = requireNotNull(
-            value = portfolioData.walletsWithCurrencies
-                .filterAvailableNetworks(availableNetworks)[selectedWallet],
-            lazyMessage = {
-                "portfolioModel.walletsWithCurrencyStatuses doesn't contain selected wallet: $walletId"
-            },
+            value = portfolioData.walletsWithCurrencies.filterAvailableNetworks(availableNetworks)[selectedWallet],
+            lazyMessage = { "walletsWithCurrencies don't contain ${selectedWallet.walletId}" },
         )
             .map { it.status.currency.network.backendId }
             .toSet()
