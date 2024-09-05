@@ -158,5 +158,7 @@ internal object WalletScreenPreviewData {
         onWalletChange = {},
         event = consumedEvent(),
         isHidingMode = false,
+        showMarketsOnboarding = false,
+        onDismissMarketsOnboarding = {},
     )
 }
