@@ -16,6 +16,7 @@ import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.sdk.DefaultSessionViewDelegate
 import com.tangem.sdk.extensions.*
+import com.tangem.sdk.nfc.AndroidNfcAvailabilityProvider
 import com.tangem.sdk.nfc.NfcManager
 import com.tangem.sdk.storage.create
 import com.tangem.tap.foregroundActivityObserver
@@ -98,9 +99,11 @@ internal class DefaultCardSdkProvider @Inject constructor(
         val viewDelegate = DefaultSessionViewDelegate(nfcManager, activity)
         viewDelegate.sdkConfig = config
 
+        val androidNfcAvailabilityProvider = AndroidNfcAvailabilityProvider(activity)
         val sdk = TangemSdk(
             reader = nfcManager.reader,
             viewDelegate = viewDelegate,
+            nfcAvailabilityProvider = androidNfcAvailabilityProvider,
             secureStorage = secureStorage,
             authenticationManager = authenticationManager,
             keystoreManager = keystoreManager,
