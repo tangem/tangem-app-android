@@ -222,6 +222,9 @@ internal class AddStakingNotificationsTransformer(
                     StakingActionType.RESTAKE_REWARDS -> {
                         R.string.staking_restake to R.string.staking_notification_restake_rewards_text
                     }
+                    StakingActionType.WITHDRAW -> {
+                        R.string.staking_withdraw to R.string.staking_notification_withdraw_text
+                    }
                     else -> null to null
                 }
 
