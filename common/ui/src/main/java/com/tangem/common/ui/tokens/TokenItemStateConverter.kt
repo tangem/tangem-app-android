@@ -91,7 +91,7 @@ class TokenItemStateConverter(
     }
 
     private fun CryptoCurrencyStatus.getStakedBalance() =
-        (value.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance().orZero()
+        (value.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance().orZero()
 
     private fun CryptoCurrencyStatus.mapToUnreachableTokenItemState(): TokenItemState.Unreachable {
         return TokenItemState.Unreachable(
