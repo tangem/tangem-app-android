@@ -28,7 +28,7 @@ import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -91,7 +91,7 @@ internal class ManageTokensModel @Inject constructor(
             popBack = router::pop,
             isInitialBatchLoading = true,
             isNextBatchLoading = false,
-            items = persistentListOf(),
+            items = getLoadingItems(),
             topBar = ManageTokensTopBarUM.ReadContent(
                 title = resourceReference(R.string.common_search_tokens),
                 onBackButtonClick = router::pop,
@@ -112,7 +112,7 @@ internal class ManageTokensModel @Inject constructor(
             popBack = router::pop,
             isInitialBatchLoading = true,
             isNextBatchLoading = false,
-            items = persistentListOf(),
+            items = getLoadingItems(),
             topBar = ManageTokensTopBarUM.ManageContent(
                 title = resourceReference(id = R.string.main_manage_tokens),
                 onBackButtonClick = router::pop,
@@ -175,9 +175,12 @@ internal class ManageTokensModel @Inject constructor(
                 is PaginationStatus.InitialLoading,
                 -> {
                     if (state.search.isActive) {
-                        state
+                        state.copySealed(
+                            items = getLoadingItems(),
+                        )
                     } else {
                         state.copySealed(
+                            items = getLoadingItems(),
                             isInitialBatchLoading = true,
                         )
                     }
@@ -222,6 +225,12 @@ internal class ManageTokensModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun getLoadingItems(): ImmutableList<CurrencyItemUM> {
+        return List(size = 10) { index ->
+            CurrencyItemUM.Loading(index)
+        }.toPersistentList()
     }
 
     private fun consumeScrollToTopEvent() {
