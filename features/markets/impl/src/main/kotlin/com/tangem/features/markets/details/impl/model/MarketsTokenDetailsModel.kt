@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
-import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.sorted
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
@@ -135,15 +134,16 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 fiatCurrencySymbol = currentAppCurrency.value.symbol,
             ),
             dateTimeText = resourceReference(R.string.common_today),
-            priceChangePercentText = BigDecimalFormatter.formatPercent(
-                percent = params.token.tokenQuotes.h24Percent,
-                useAbsoluteValue = true,
-            ),
+            priceChangePercentText = params.token.tokenQuotes.h24Percent?.let {
+                BigDecimalFormatter.formatPercent(
+                    percent = it,
+                    useAbsoluteValue = true,
+                )
+            },
             priceChangeType = params.token.tokenQuotes.h24Percent.percentChangeType(),
             iconUrl = params.token.imageUrl,
             chartState = MarketsTokenDetailsUM.ChartState(
                 dataProducer = chartDataProducer,
-                chartLook = MarketChartLook(),
                 onLoadRetryClick = ::onLoadRetryClicked,
                 status = MarketsTokenDetailsUM.ChartState.Status.LOADING,
                 onMarkerPointSelected = ::onMarkerPointSelected,
@@ -320,6 +320,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         currentQuotes.value = newInfo.quotes
 
         val percent = newInfo.quotes.getPercentByInterval(interval = state.value.selectedInterval)
+
         state.update {
             it.copy(
                 priceText = newInfo.quotes.currentPrice.formatAsPrice(currentAppCurrency.value),

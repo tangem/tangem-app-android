@@ -182,13 +182,12 @@ internal class TokenActionsHandler @AssistedInject constructor(
         is TokenActionsState.ActionState.HideToken -> null
         is TokenActionsState.ActionState.Receive -> TokenActionsBSContentUM.Action.Receive
         is TokenActionsState.ActionState.Sell -> TokenActionsBSContentUM.Action.Sell
-        is TokenActionsState.ActionState.Send -> {
-            TokenActionsBSContentUM.Action.Send.takeIf {
-                cryptoCurrencyData.status.value.amount.isNullOrZero().not()
-            }
+        is TokenActionsState.ActionState.Send -> TokenActionsBSContentUM.Action.Send.takeIf {
+            cryptoCurrencyData.status.value.amount.isNullOrZero().not()
         }
         is TokenActionsState.ActionState.Stake -> TokenActionsBSContentUM.Action.Stake
         is TokenActionsState.ActionState.Swap -> TokenActionsBSContentUM.Action.Exchange
+        is TokenActionsState.ActionState.Analytics -> null
     }
         .takeIf { this.unavailabilityReason == ScenarioUnavailabilityReason.None }
 

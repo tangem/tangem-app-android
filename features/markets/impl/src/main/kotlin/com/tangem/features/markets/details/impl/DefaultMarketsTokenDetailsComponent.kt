@@ -79,7 +79,11 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
             backgroundColor = LocalMainBottomSheetColor.current.value,
             addTopBarStatusBarPadding = false,
             state = state,
-            onBackClick = ::navigateBack,
+            onBackClick = {
+                if (bsState == BottomSheetState.EXPANDED) {
+                    navigateBack()
+                }
+            },
             onHeaderSizeChange = onHeaderSizeChange,
             portfolioBlock = { blockModifier ->
                 portfolioComponent.Content(blockModifier)

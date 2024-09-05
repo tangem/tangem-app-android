@@ -125,6 +125,8 @@ fun MarketChart(
             // Sometimes the chart is not drawn correctly (ex. in LazyLayout), so we need to force the redraw
             .drawBehind {
                 state.markerFraction
+                state.chartColor
+                state.markerHighlightRightSide
             },
         chart = chart,
         modelProducer = state.modelProducer,
