@@ -6,13 +6,11 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
 import com.tangem.domain.managetokens.GetManagedTokensUseCase
 import com.tangem.domain.managetokens.RemoveCustomManagedCryptoCurrencyUseCase
-import com.tangem.domain.managetokens.model.ManageTokensListBatchingContext
-import com.tangem.domain.managetokens.model.ManageTokensListConfig
-import com.tangem.domain.managetokens.model.ManageTokensUpdateAction
-import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.CheckHasLinkedTokensUseCase
+import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
@@ -39,6 +37,7 @@ internal class ManageTokensListManager @Inject constructor(
     private val getManagedTokensUseCase: GetManagedTokensUseCase,
     private val checkHasLinkedTokensUseCase: CheckHasLinkedTokensUseCase,
     private val removeCustomCurrencyUseCase: RemoveCustomManagedCryptoCurrencyUseCase,
+    private val checkCurrencyUnsupportedUseCase: CheckCurrencyUnsupportedUseCase,
     private val messageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ManageTokensUiActions {
@@ -221,6 +220,34 @@ internal class ManageTokensListManager @Inject constructor(
             messageSender.send(message)
 
             false
+        }
+    }
+
+    override suspend fun checkCurrencyUnsupportedState(
+        userWalletId: UserWalletId,
+        sourceNetwork: ManagedCryptoCurrency.SourceNetwork,
+    ): CurrencyUnsupportedState? {
+        return checkCurrencyUnsupportedUseCase(
+            userWalletId = userWalletId,
+            sourceNetwork = sourceNetwork,
+        ).getOrElse {
+            Timber.e(
+                it,
+                """
+                    Failed to check currency unsupported state
+                    |- User wallet ID: $userWalletId
+                    |- Source Network: $sourceNetwork
+                """.trimIndent(),
+            )
+
+            val message = SnackbarMessage(
+                message = it.localizedMessage
+                    ?.let(::stringReference)
+                    ?: resourceReference(R.string.common_error),
+            )
+            messageSender.send(message)
+
+            null
         }
     }
 }
