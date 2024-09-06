@@ -34,7 +34,7 @@ internal fun StakingFeeBlock(feeState: FeeState) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors.button.disabled)
             .padding(TangemTheme.dimens.spacing12),
     ) {
         Text(
