@@ -77,6 +77,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.Solana
     }
 
+    fun isPolkadot(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Polkadot || blockchain == Blockchain.PolkadotTestnet
+    }
+
     data class BlockchainInfo(
         val blockchainId: String,
         val name: String,
