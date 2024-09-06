@@ -96,4 +96,10 @@ internal object ManageTokensDomainModule {
     fun provideCheckHasLinkedTokensUseCase(repository: ManageTokensRepository): CheckHasLinkedTokensUseCase {
         return CheckHasLinkedTokensUseCase(repository)
     }
+
+    @Provides
+    @Singleton
+    fun provideCheckCurrencyUnsupportedUseCase(repository: ManageTokensRepository): CheckCurrencyUnsupportedUseCase {
+        return CheckCurrencyUnsupportedUseCase(repository)
+    }
 }
