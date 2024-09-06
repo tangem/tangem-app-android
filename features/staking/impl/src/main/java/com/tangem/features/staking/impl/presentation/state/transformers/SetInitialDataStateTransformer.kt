@@ -22,6 +22,7 @@ import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
+import com.tangem.lib.crypto.BlockchainUtils.isPolkadot
 import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
@@ -35,6 +36,7 @@ internal class SetInitialDataStateTransformer(
     private val clickIntents: StakingClickIntents,
     private val yield: Yield,
     private val isApprovalNeeded: Boolean,
+    private val isAnyTokenStaked: Boolean,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -78,12 +80,14 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createInitialInfoState(): StakingStates.InitialInfoState.Data {
+        val yieldBalance = yieldBalancesConverter.convert(Unit)
         return StakingStates.InitialInfoState.Data(
             isPrimaryButtonEnabled = !cryptoCurrencyStatusProvider().value.amount.isNullOrZero(),
+            showBanner = !isAnyTokenStaked && yieldBalance == InnerYieldBalanceState.Empty,
             aprRange = getAprRange(yield.validators),
             infoItems = getInfoItems(),
             onInfoClick = clickIntents::onInfoClick,
-            yieldBalance = yieldBalancesConverter.convert(Unit),
+            yieldBalance = yieldBalance,
         )
     }
 
@@ -144,18 +148,19 @@ internal class SetInitialDataStateTransformer(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         minimumCryptoAmount: SerializedBigDecimal?,
     ): RoundedListWithDividersItemData? {
-        minimumCryptoAmount ?: return null
+        if (minimumCryptoAmount == null) return null
+        if (!isPolkadot(cryptoCurrencyStatus.currency.network.id.value)) return null
+
+        val formattedAmount = BigDecimalFormatter.formatCryptoAmount(
+            cryptoAmount = minimumCryptoAmount,
+            cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
+            decimals = cryptoCurrencyStatus.currency.decimals,
+        )
 
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_minimum_requirement,
             startText = TextReference.Res(R.string.staking_details_minimum_requirement),
-            endText = TextReference.Str(
-                value = BigDecimalFormatter.formatCryptoAmount(
-                    cryptoAmount = minimumCryptoAmount,
-                    cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-                    decimals = cryptoCurrencyStatus.currency.decimals,
-                ),
-            ),
+            endText = TextReference.Str(formattedAmount),
         )
     }
 
