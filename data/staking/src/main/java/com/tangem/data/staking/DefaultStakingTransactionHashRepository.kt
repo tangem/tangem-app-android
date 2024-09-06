@@ -1,6 +1,5 @@
 package com.tangem.data.staking
 
-import arrow.core.Either
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.*
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -9,7 +8,6 @@ import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
 import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -47,13 +45,13 @@ internal class DefaultStakingTransactionHashRepository(
     }
 
     override suspend fun sendUnsubmittedHashes() {
-        withContext(NonCancellable) {
+        withContext(dispatchers.io) {
             val savedTransactions = appPreferencesStore.getObjectListSync<UnsubmittedTransactionMetadata>(
                 key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
             )
 
             savedTransactions.forEach { transaction ->
-                Either.catch {
+                try {
                     stakeKitApi.submitTransactionHash(
                         transactionId = transaction.transactionId,
                         body = SubmitTransactionHashRequestBody(hash = transaction.transactionHash),
@@ -71,7 +69,7 @@ internal class DefaultStakingTransactionHashRepository(
                             value = updatedTransactions,
                         )
                     }
-                }.onLeft {
+                } catch (e: Exception) {
                     val logMessage = buildString {
                         append("Error while submitting transaction with\n")
                         append("StakeKit id = ${transaction.transactionId} and\n")
