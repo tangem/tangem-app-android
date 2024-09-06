@@ -28,6 +28,7 @@ dependencies {
     /** Project - Api */
     implementation(projects.features.send.api)
     implementation(projects.features.staking.api)
+    implementation(projects.features.markets.api)
 
     /** Project - Other */
     implementation(projects.core.utils)

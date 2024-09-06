@@ -13,10 +13,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.features.managetokens.component.ManageTokensComponent
-import com.tangem.features.managetokens.entity.CurrencyItemUM
-import com.tangem.features.managetokens.entity.CurrencyNetworkUM
-import com.tangem.features.managetokens.entity.ManageTokensTopBarUM
-import com.tangem.features.managetokens.entity.ManageTokensUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
+import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
+import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.ui.ManageTokensScreen
 import kotlinx.collections.immutable.mutate
@@ -25,6 +25,9 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
+internal class PreviewManageTokensComponent(
+    private val isLoading: Boolean = false,
+) : ManageTokensComponent {
 internal class PreviewManageTokensComponent(params: ManageTokensComponent.Params) : ManageTokensComponent {
 
     private val changedItemsIds: MutableSet<String> = mutableSetOf()
@@ -64,6 +67,7 @@ internal class PreviewManageTokensComponent(params: ManageTokensComponent.Params
             isNextBatchLoading = true,
             loadMore = { false },
             saveChanges = {},
+            isSavingInProgress = false,
         ),
     )
 
@@ -103,10 +107,14 @@ internal class PreviewManageTokensComponent(params: ManageTokensComponent.Params
     }
 
     private fun initItems() = List(size = 30) { index ->
-        if (index < 2) {
-            getCustomItem(index)
+        if (isLoading) {
+            CurrencyItemUM.Loading(index)
         } else {
-            getBasicItem(index)
+            if (index < 2) {
+                getCustomItem(index)
+            } else {
+                getBasicItem(index)
+            }
         }
     }.toPersistentList()
 
@@ -144,7 +152,17 @@ internal class PreviewManageTokensComponent(params: ManageTokensComponent.Params
 
     private fun getCurrencyNetworks(currencyIndex: Int) = List(size = 3) { networkIndex ->
         CurrencyNetworkUM(
-            id = Network.ID(networkIndex.toString()),
+            network = Network(
+                id = Network.ID(networkIndex.toString()),
+                backendId = networkIndex.toString(),
+                name = "Network $networkIndex",
+                currencySymbol = "N$networkIndex",
+                derivationPath = Network.DerivationPath.Card(""),
+                isTestnet = false,
+                standardType = Network.StandardType.ERC20,
+                hasFiatFeeRate = false,
+                canHandleTokens = false,
+            ),
             name = "NETWORK$networkIndex",
             type = "N$networkIndex",
             iconResId = R.drawable.ic_eth_16,
@@ -163,7 +181,9 @@ internal class PreviewManageTokensComponent(params: ManageTokensComponent.Params
                     CurrencyItemUM.Basic.NetworksUM.Collapsed
                 },
             )
-            is CurrencyItemUM.Custom -> return
+            is CurrencyItemUM.Custom,
+            is CurrencyItemUM.Loading,
+            -> return
         }
 
         previewState.update { state ->
@@ -198,7 +218,9 @@ internal class PreviewManageTokensComponent(params: ManageTokensComponent.Params
 
                 item.copy(networks = updatedNetworks)
             }
-            is CurrencyItemUM.Custom -> return
+            is CurrencyItemUM.Custom,
+            is CurrencyItemUM.Loading,
+            -> return
         }
 
         val id = "${currencyIndex}_$networkIndex"

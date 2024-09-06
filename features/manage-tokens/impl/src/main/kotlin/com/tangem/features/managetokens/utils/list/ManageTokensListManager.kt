@@ -6,15 +6,14 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
 import com.tangem.domain.managetokens.GetManagedTokensUseCase
-import com.tangem.domain.managetokens.model.ManageTokensListBatchingContext
-import com.tangem.domain.managetokens.model.ManageTokensListConfig
-import com.tangem.domain.managetokens.model.ManageTokensUpdateAction
-import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
-import com.tangem.domain.tokens.CheckHasLinkedTokensUseCase
+import com.tangem.domain.managetokens.RemoveCustomManagedCryptoCurrencyUseCase
+import com.tangem.domain.managetokens.CheckHasLinkedTokensUseCase
+import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.managetokens.entity.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
@@ -29,6 +28,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -36,6 +36,8 @@ import javax.inject.Inject
 internal class ManageTokensListManager @Inject constructor(
     private val getManagedTokensUseCase: GetManagedTokensUseCase,
     private val checkHasLinkedTokensUseCase: CheckHasLinkedTokensUseCase,
+    private val removeCustomCurrencyUseCase: RemoveCustomManagedCryptoCurrencyUseCase,
+    private val checkCurrencyUnsupportedUseCase: CheckCurrencyUnsupportedUseCase,
     private val messageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ManageTokensUiActions {
@@ -59,8 +61,8 @@ internal class ManageTokensListManager @Inject constructor(
         scopeProvider = Provider { scope },
     )
 
-    val currenciesToAdd: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToAdd
-    val currenciesToRemove: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToRemove
+    val currenciesToAdd: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToAdd.asStateFlow()
+    val currenciesToRemove: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToRemove.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val paginationStatus: Flow<PaginationStatus<*>> = state
@@ -89,6 +91,7 @@ internal class ManageTokensListManager @Inject constructor(
     }
 
     suspend fun reload(userWalletId: UserWalletId?) {
+        state.value = ManageTokensListState()
         actionsFlow.emit(
             BatchAction.Reload(
                 requestParams = ManageTokensListConfig(userWalletId, searchText = null),
@@ -148,32 +151,40 @@ internal class ManageTokensListManager @Inject constructor(
         }
     }
 
-    override fun addCurrency(batchKey: Int, currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID) {
-        changedCurrenciesManager.addCurrency(currencyId, networkId)
+    override fun addCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network) {
+        changedCurrenciesManager.addCurrency(currency, network)
 
-        sendSelectCurrencyAction(batchKey, currencyId, networkId, isSelected = true)
+        sendSelectCurrencyAction(batchKey, currency.id, network, isSelected = true)
     }
 
-    override fun removeCurrency(batchKey: Int, currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID) {
-        changedCurrenciesManager.removeCurrency(currencyId, networkId)
+    override fun removeCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network) {
+        changedCurrenciesManager.removeCurrency(currency, network)
 
-        sendSelectCurrencyAction(batchKey, currencyId, networkId, isSelected = false)
+        sendSelectCurrencyAction(batchKey, currency.id, network, isSelected = false)
+    }
+
+    override fun removeCustomCurrency(userWalletId: UserWalletId, currency: ManagedCryptoCurrency.Custom) {
+        scope.launch {
+            removeCustomCurrencyUseCase.invoke(userWalletId, currency)
+                .onRight { reload(userWalletId) }
+                .onLeft { Timber.e(it) }
+        }
     }
 
     override fun checkNeedToShowRemoveNetworkWarning(
-        currencyId: ManagedCryptoCurrency.ID,
-        networkId: Network.ID,
-    ): Boolean = !changedCurrenciesManager.containsCurrency(currencyId, networkId)
+        currency: ManagedCryptoCurrency.Token,
+        network: Network,
+    ): Boolean = !changedCurrenciesManager.containsCurrency(currency, network)
 
     private fun sendSelectCurrencyAction(
         batchKey: Int,
         currencyId: ManagedCryptoCurrency.ID,
-        networkId: Network.ID,
+        network: Network,
         isSelected: Boolean,
     ) {
         val request = ManageTokensUpdateAction.AddCurrency(
             currencyId = currencyId,
-            networkId = networkId,
+            network = network,
             isSelected = isSelected,
         )
         val action = BatchAction.UpdateBatches(
@@ -186,7 +197,12 @@ internal class ManageTokensListManager @Inject constructor(
     }
 
     override suspend fun checkHasLinkedTokens(userWalletId: UserWalletId, network: Network): Boolean {
-        return checkHasLinkedTokensUseCase(userWalletId, network).getOrElse {
+        return checkHasLinkedTokensUseCase(
+            userWalletId = userWalletId,
+            network = network,
+            tempAddedTokens = changedCurrenciesManager.currenciesToAdd.value,
+            tempRemovedTokens = changedCurrenciesManager.currenciesToRemove.value,
+        ).getOrElse {
             Timber.e(
                 it,
                 """
@@ -204,6 +220,34 @@ internal class ManageTokensListManager @Inject constructor(
             messageSender.send(message)
 
             false
+        }
+    }
+
+    override suspend fun checkCurrencyUnsupportedState(
+        userWalletId: UserWalletId,
+        sourceNetwork: ManagedCryptoCurrency.SourceNetwork,
+    ): CurrencyUnsupportedState? {
+        return checkCurrencyUnsupportedUseCase(
+            userWalletId = userWalletId,
+            sourceNetwork = sourceNetwork,
+        ).getOrElse {
+            Timber.e(
+                it,
+                """
+                    Failed to check currency unsupported state
+                    |- User wallet ID: $userWalletId
+                    |- Source Network: $sourceNetwork
+                """.trimIndent(),
+            )
+
+            val message = SnackbarMessage(
+                message = it.localizedMessage
+                    ?.let(::stringReference)
+                    ?: resourceReference(R.string.common_error),
+            )
+            messageSender.send(message)
+
+            null
         }
     }
 }

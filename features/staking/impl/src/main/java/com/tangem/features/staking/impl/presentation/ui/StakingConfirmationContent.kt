@@ -3,18 +3,18 @@ package com.tangem.features.staking.impl.presentation.ui
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.common.ui.amountScreen.ui.AmountBlock
-import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -45,11 +45,12 @@ internal fun StakingConfirmationContent(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
+        val doneState = state.transactionDoneState
         AnimatedVisibility(
-            visible = state.transactionDoneState is TransactionDoneState.Content,
+            visible = doneState is TransactionDoneState.Content,
             modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
         ) {
-            val transactionDoneStateContent = state.transactionDoneState as TransactionDoneState.Content
+            val transactionDoneStateContent = remember(this) { doneState as TransactionDoneState.Content }
             TransactionDoneTitle(
                 titleRes = R.string.sent_transaction_sent_title,
                 date = transactionDoneStateContent.timestamp,
@@ -66,20 +67,7 @@ internal fun StakingConfirmationContent(
         }
         StakingFeeBlock(feeState = state.feeState)
         NotificationsBlock(notifications = state.notifications)
-        SpacerHMax()
-        FooterText(text = state.footerText)
     }
-}
-
-@Composable
-private fun FooterText(text: String) {
-    Text(
-        modifier = Modifier.fillMaxWidth(),
-        text = text,
-        color = TangemTheme.colors.text.tertiary,
-        style = TangemTheme.typography.caption2,
-        textAlign = TextAlign.Center,
-    )
 }
 
 @Preview(widthDp = 360, showBackground = true)

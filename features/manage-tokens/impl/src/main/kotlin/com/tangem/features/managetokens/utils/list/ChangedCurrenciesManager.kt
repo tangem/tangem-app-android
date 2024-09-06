@@ -5,54 +5,54 @@ import com.tangem.domain.tokens.model.Network
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
-internal typealias ChangedCurrencies = Map<ManagedCryptoCurrency.ID, Set<Network.ID>>
+internal typealias ChangedCurrencies = Map<ManagedCryptoCurrency.Token, Set<Network>>
 
 internal class ChangedCurrenciesManager {
 
     val currenciesToAdd: MutableStateFlow<ChangedCurrencies> = MutableStateFlow(emptyMap())
     val currenciesToRemove: MutableStateFlow<ChangedCurrencies> = MutableStateFlow(emptyMap())
 
-    fun addCurrency(currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID) {
-        updateChangedItems(currencyId, networkId, currenciesToRemove, currenciesToAdd)
+    fun addCurrency(currency: ManagedCryptoCurrency.Token, network: Network) {
+        updateChangedItems(currency, network, currenciesToRemove, currenciesToAdd)
     }
 
-    fun removeCurrency(currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID) {
-        updateChangedItems(currencyId, networkId, currenciesToAdd, currenciesToRemove)
+    fun removeCurrency(currency: ManagedCryptoCurrency.Token, network: Network) {
+        updateChangedItems(currency, network, currenciesToAdd, currenciesToRemove)
     }
 
-    fun containsCurrency(currencyId: ManagedCryptoCurrency.ID, networkId: Network.ID): Boolean {
-        return networkId in currenciesToAdd.value[currencyId].orEmpty() ||
-            networkId in currenciesToRemove.value[currencyId].orEmpty()
+    fun containsCurrency(currency: ManagedCryptoCurrency.Token, network: Network): Boolean {
+        return network in currenciesToAdd.value[currency].orEmpty() ||
+            network in currenciesToRemove.value[currency].orEmpty()
     }
 
     private fun updateChangedItems(
-        currencyId: ManagedCryptoCurrency.ID,
-        networkId: Network.ID,
+        currency: ManagedCryptoCurrency.Token,
+        network: Network,
         removeFromIfPresent: MutableStateFlow<ChangedCurrencies>,
         addToIfNotPresent: MutableStateFlow<ChangedCurrencies>,
     ) {
-        val present = removeFromIfPresent.value[currencyId].orEmpty()
+        val present = removeFromIfPresent.value[currency].orEmpty()
 
-        if (networkId in present) {
+        if (network in present) {
             removeFromIfPresent.update { items ->
                 items.toMutableMap().apply {
-                    val ids = present - networkId
+                    val ids = present - network
 
                     if (ids.isEmpty()) {
-                        remove(currencyId)
+                        remove(currency)
                     } else {
-                        set(currencyId, ids)
+                        set(currency, ids)
                     }
                 }
             }
         } else {
             addToIfNotPresent.update { items ->
-                val alreadyAdded = items[currencyId] ?: emptySet()
-                if (networkId in alreadyAdded) {
+                val alreadyAdded = items[currency] ?: emptySet()
+                if (network in alreadyAdded) {
                     return@update items
                 }
 
-                items + (currencyId to alreadyAdded + networkId)
+                items + (currency to alreadyAdded + network)
             }
         }
     }

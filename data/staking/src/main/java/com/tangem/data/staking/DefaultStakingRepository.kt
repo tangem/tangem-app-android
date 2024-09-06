@@ -1,8 +1,8 @@
 package com.tangem.data.staking
 
 import android.util.Base64
+import arrow.core.getOrElse
 import arrow.core.raise.catch
-import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
@@ -37,10 +37,7 @@ import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
-import com.tangem.domain.staking.model.stakekit.NetworkType
-import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalanceList
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
@@ -52,9 +49,11 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
+import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -70,7 +69,8 @@ internal class DefaultStakingRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val stakingFeatureToggle: StakingFeatureToggles,
     private val walletManagersFacade: WalletManagersFacade,
-    private val moshi: Moshi,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    moshi: Moshi,
 ) : StakingRepository {
 
     private val stakingNetworkTypeConverter = StakingNetworkTypeConverter()
@@ -108,8 +108,11 @@ internal class DefaultStakingRepository(
         value = emptyMap<UserWalletId, Boolean>(),
     )
 
-    private val tronStakeKitTransactionAdapter: JsonAdapter<TronStakeKitTransaction> =
-        moshi.adapter(TronStakeKitTransaction::class.java)
+    private val tronStakeKitTransactionAdapter by lazy { moshi.adapter(TronStakeKitTransaction::class.java) }
+
+    override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = with(cryptoCurrencyId) {
+        rawNetworkId.plus(rawCurrencyId)
+    }
 
     override fun isStakingSupported(integrationKey: String): Boolean {
         return integrationIdMap.containsKey(integrationKey)
@@ -121,7 +124,9 @@ internal class DefaultStakingRepository(
                 key = YIELDS_STORE_KEY,
                 skipCache = refresh,
                 block = {
-                    val stakingTokensWithYields = stakeKitApi.getMultipleYields().getOrThrow()
+                    val stakingTokensWithYields = stakeKitApi.getMultipleYields(preferredValidatorsOnly = true)
+                        .getOrThrow()
+
                     stakingYieldsStore.store(stakingTokensWithYields.data)
                 },
             )
@@ -148,24 +153,26 @@ internal class DefaultStakingRepository(
             val yield = getYield(cryptoCurrencyId, symbol)
 
             StakingEntryInfo(
-                interestRate = requireNotNull(yield.validators.maxByOrNull { it.apr.orZero() }?.apr),
-                periodInDays = yield.metadata.cooldownPeriod.days,
+                apr = requireNotNull(yield.validators.maxByOrNull { it.apr.orZero() }?.apr),
+                rewardSchedule = yield.metadata.rewardSchedule,
                 tokenSymbol = yield.token.symbol,
             )
         }
     }
 
-    override suspend fun getStakingAvailabilityForActions(
-        cryptoCurrencyId: CryptoCurrency.ID,
-        symbol: String,
+    override suspend fun getStakingAvailability(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
     ): StakingAvailability {
-        val rawCurrencyId = cryptoCurrencyId.rawCurrencyId ?: return StakingAvailability.Unavailable
+        if (checkForInvalidCardBatch(userWalletId, cryptoCurrency)) return StakingAvailability.Unavailable
+
+        val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: return StakingAvailability.Unavailable
 
         return withContext(dispatchers.io) {
             val yields = getEnabledYields() ?: return@withContext StakingAvailability.Unavailable
 
-            val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, symbol)
-            val isSupported = isStakingSupported(cryptoCurrencyId.getIntegrationKey())
+            val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, cryptoCurrency.symbol)
+            val isSupported = isStakingSupported(getIntegrationKey(cryptoCurrency.id))
 
             when {
                 prefetchedYield != null && isSupported -> {
@@ -175,6 +182,21 @@ internal class DefaultStakingRepository(
                     StakingAvailability.TemporaryDisabled
                 }
                 else -> StakingAvailability.Unavailable
+            }
+        }
+    }
+
+    private fun checkForInvalidCardBatch(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
+            error("Failed to get user wallet")
+        }
+
+        return when {
+            isSolana(cryptoCurrency.network.id.value) -> {
+                INVALID_BATCHES_FOR_SOLANA.contains(userWallet.scanResponse.card.batchId)
+            }
+            else -> {
+                false
             }
         }
     }
@@ -273,7 +295,7 @@ internal class DefaultStakingRepository(
     ) = withContext(dispatchers.io) {
         if (!stakingFeatureToggle.isStakingEnabled) return@withContext
 
-        val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()] ?: return@withContext
+        val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)] ?: return@withContext
 
         val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network).orEmpty()
 
@@ -293,6 +315,7 @@ internal class DefaultStakingRepository(
                     YieldBalanceWrapperDTO(
                         balances = result,
                         integrationId = requestBody.integrationId,
+                        addresses = requestBody.addresses,
                     ),
                 )
             },
@@ -307,18 +330,11 @@ internal class DefaultStakingRepository(
             send(YieldBalance.Empty)
         } else {
             launch(dispatchers.io) {
-                val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()]
+                val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)]
                     ?: error("Could not get integrationId")
                 stakingBalanceStore.get(userWalletId, integrationId)
                     .collectLatest {
-                        send(
-                            yieldBalanceConverter.convert(
-                                YieldBalanceConverter.Data(
-                                    balance = it,
-                                    integrationId = integrationId,
-                                ),
-                            ),
-                        )
+                        send(yieldBalanceConverter.convert(it))
                     }
             }
 
@@ -340,17 +356,12 @@ internal class DefaultStakingRepository(
         } else {
             fetchSingleYieldBalance(userWalletId, cryptoCurrency)
 
-            val integrationId = integrationIdMap[cryptoCurrency.id.getIntegrationKey()]
+            val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)]
                 ?: error("Could not get integrationId")
             val result = stakingBalanceStore.getSyncOrNull(userWalletId, integrationId)
                 ?: return@withContext YieldBalance.Error
 
-            yieldBalanceConverter.convert(
-                YieldBalanceConverter.Data(
-                    balance = result,
-                    integrationId = integrationId,
-                ),
-            )
+            yieldBalanceConverter.convert(result)
         }
     }
 
@@ -371,7 +382,7 @@ internal class DefaultStakingRepository(
                     val availableCurrencies = cryptoCurrencies
                         .mapNotNull { currency ->
                             val address = walletManagersFacade.getDefaultAddress(userWalletId, currency.network)
-                            val integrationId = integrationIdMap[currency.id.getIntegrationKey()]
+                            val integrationId = integrationIdMap[getIntegrationKey(currency.id)]
 
                             if (integrationId != null && address != null) {
                                 address to integrationId
@@ -379,7 +390,7 @@ internal class DefaultStakingRepository(
                                 null
                             }
                         }
-                        .distinct()
+                        .distinctBy { it.second }
                         .map { getBalanceRequestData(it.first, it.second) }
                         .ifEmpty { return@invokeOnExpire }
                     val result = stakeKitApi.getMultipleYieldBalances(availableCurrencies).getOrThrow()
@@ -502,6 +513,16 @@ internal class DefaultStakingRepository(
         }
     }
 
+    override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean {
+        return withContext(dispatchers.io) {
+            stakingBalanceStore.getSyncOrNull(userWalletId)
+                ?.let {
+                    it.isNotEmpty() && it.any { yieldBalance -> yieldBalance.balances.isNotEmpty() }
+                }
+                ?: false
+        }
+    }
+
     private suspend fun createActionRequestBody(
         userWalletId: UserWalletId,
         network: Network,
@@ -531,6 +552,7 @@ internal class DefaultStakingRepository(
             args = ActionRequestBodyArgs(
                 amount = params.amount.toPlainString(),
                 validatorAddress = params.validatorAddress,
+                validatorAddresses = listOf(params.validatorAddress),
             ),
         )
     }
@@ -552,16 +574,8 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override fun isStakeMoreAvailable(networkId: Network.ID): Boolean {
-        val blockchain = Blockchain.fromId(networkId.value)
-        return when (blockchain) {
-            Blockchain.Solana -> false
-            else -> true
-        }
-    }
-
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval {
-        return when (cryptoCurrency.id.getIntegrationKey()) {
+        return when (getIntegrationKey(cryptoCurrency.id)) {
             Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() -> {
                 StakingApproval.Needed(ETHEREUM_POLYGON_APPROVE_SPENDER)
             }
@@ -575,6 +589,7 @@ internal class DefaultStakingRepository(
             Blockchain.Solana,
             Blockchain.Cosmos,
             -> TransactionData.Compiled.Data.Bytes(unsignedTransaction.hexToBytes())
+            Blockchain.BSC,
             Blockchain.Ethereum,
             -> TransactionData.Compiled.Data.RawString(unsignedTransaction)
             Blockchain.Tron -> {
@@ -611,8 +626,6 @@ internal class DefaultStakingRepository(
 
     private fun getYieldBalancesKey(userWalletId: UserWalletId) = "yield_balance_${userWalletId.stringValue}"
 
-    private fun CryptoCurrency.ID.getIntegrationKey(): String = rawNetworkId.plus(rawCurrencyId)
-
     private fun getTronResource(network: Network): TronResource? {
         val blockchain = Blockchain.fromNetworkId(network.backendId)
 
@@ -629,27 +642,29 @@ internal class DefaultStakingRepository(
         const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
         const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
         const val ETHEREUM_POLYGON_INTEGRATION_ID = "ethereum-matic-native-staking"
+        const val BINANCE_INTEGRATION_ID = "bsc-bnb-native-staking"
         const val POLKADOT_INTEGRATION_ID = "polkadot-dot-validator-staking"
         const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
         const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
         const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
-        const val BINANCE_INTEGRATION_ID = "bsc-bnb-native-staking"
         const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
         const val NEAR_INTEGRATION_ID = "near-near-native-staking"
         const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
 
         const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
 
+        val INVALID_BATCHES_FOR_SOLANA = listOf("AC01", "CB79")
+
         // uncomment items as implementation is ready
         val integrationIdMap = mapOf(
             Blockchain.Solana.run { id + toCoinId() } to SOLANA_INTEGRATION_ID,
             Blockchain.Cosmos.run { id + toCoinId() } to COSMOS_INTEGRATION_ID,
             Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
+            Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
             // Blockchain.Polkadot.run { id + toCoinId() } to POLKADOT_INTEGRATION_ID,
             // Blockchain.Avalanche.run { id + toCoinId() } to AVALANCHE_INTEGRATION_ID,
             Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
             // Blockchain.Cronos.run { id + toCoinId() } to CRONOS_INTEGRATION_ID,
-            // Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
             // Blockchain.Kava.run { id + toCoinId() } to KAVA_INTEGRATION_ID,
             // Blockchain.Near.run { id + toCoinId() } to NEAR_INTEGRATION_ID,
             // Blockchain.Tezos.run { id + toCoinId() } to TEZOS_INTEGRATION_ID,

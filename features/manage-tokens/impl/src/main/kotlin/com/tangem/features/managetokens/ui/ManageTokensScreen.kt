@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,34 +30,43 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.util.fastForEachIndexed
-import com.tangem.core.ui.components.BottomFade
-import com.tangem.core.ui.components.PrimaryButtonIconEnd
-import com.tangem.core.ui.components.TangemSwitch
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.components.rows.BlockchainRow
 import com.tangem.core.ui.components.rows.ChainRow
+import com.tangem.core.ui.components.rows.ChainRowContainer
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.components.rows.model.ChainRowUM
+import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
+import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
+import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.preview.PreviewManageTokensComponent
-import com.tangem.features.managetokens.entity.CurrencyItemUM
-import com.tangem.features.managetokens.entity.CurrencyItemUM.Basic.NetworksUM
-import com.tangem.features.managetokens.entity.ManageTokensTopBarUM
-import com.tangem.features.managetokens.entity.ManageTokensUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
+import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
+import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
 import kotlinx.collections.immutable.ImmutableList
 
@@ -96,6 +106,12 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
                 state = state,
             )
         },
+        snackbarHost = {
+            TangemSnackbarHost(
+                modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
+                hostState = LocalSnackbarHostState.current,
+            )
+        },
         floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
             if (state is ManageTokensUM.ManageContent) {
@@ -105,6 +121,7 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
                         .padding(horizontal = TangemTheme.dimens.spacing16)
                         .fillMaxWidth(),
                     isVisible = state.hasChanges,
+                    showProgress = state.isSavingInProgress,
                     onClick = state.saveChanges,
                 )
             }
@@ -138,7 +155,12 @@ private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM?, search: SearchBarU
 }
 
 @Composable
-private fun SaveChangesButton(isVisible: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun SaveChangesButton(
+    isVisible: Boolean,
+    showProgress: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     AnimatedVisibility(
         modifier = modifier,
         visible = isVisible,
@@ -149,6 +171,7 @@ private fun SaveChangesButton(isVisible: Boolean, onClick: () -> Unit, modifier:
         PrimaryButtonIconEnd(
             text = stringResource(id = R.string.common_save),
             iconResId = R.drawable.ic_tangem_24,
+            showProgress = showProgress,
             onClick = onClick,
         )
     }
@@ -156,9 +179,12 @@ private fun SaveChangesButton(isVisible: Boolean, onClick: () -> Unit, modifier:
 
 @Composable
 private fun Content(state: ManageTokensUM, modifier: Modifier = Modifier) {
+    val listState = rememberLazyListState()
+
     Box(modifier = modifier) {
         Currencies(
             modifier = Modifier.fillMaxSize(),
+            listState = listState,
             items = state.items,
             showLoadingItem = state.isNextBatchLoading,
             onLoadMore = state.loadMore,
@@ -168,17 +194,14 @@ private fun Content(state: ManageTokensUM, modifier: Modifier = Modifier) {
         BottomFade(modifier = Modifier.align(Alignment.BottomCenter))
     }
 
-    Crossfade(targetState = state.isInitialBatchLoading, label = "ManageTokensLoadingContent") { isVisible ->
-        if (isVisible) {
-            ProgressIndicator(
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
+    EventEffect(event = state.scrollToTop) {
+        listState.animateScrollToItem(index = 0)
     }
 }
 
 @Composable
 private fun Currencies(
+    listState: LazyListState,
     items: ImmutableList<CurrencyItemUM>,
     showLoadingItem: Boolean,
     isEditable: Boolean,
@@ -188,7 +211,6 @@ private fun Currencies(
     val bottomBarHeight = with(LocalDensity.current) {
         WindowInsets.systemBars.getBottom(density = this).toDp()
     }
-    val listState = rememberLazyListState()
 
     LazyColumn(
         modifier = modifier,
@@ -213,6 +235,11 @@ private fun Currencies(
                     CustomCurrencyItem(
                         modifier = Modifier.fillMaxWidth(),
                         item = item,
+                    )
+                }
+                is CurrencyItemUM.Loading -> {
+                    LoadingItem(
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
@@ -244,6 +271,30 @@ private fun ProgressIndicator(modifier: Modifier = Modifier) {
     ) {
         CircularProgressIndicator(color = TangemTheme.colors.icon.informative)
     }
+}
+
+@Composable
+private fun LoadingItem(modifier: Modifier = Modifier) {
+    ChainRowContainer(
+        modifier = modifier,
+        icon = {
+            CurrencyIcon(CurrencyIconState.Loading)
+        },
+        text = {
+            TextShimmer(
+                modifier = Modifier.width(70.dp),
+                style = TangemTheme.typography.subtitle2,
+            )
+        },
+        action = {
+            RectangleShimmer(
+                modifier = Modifier.size(
+                    width = 24.dp,
+                    height = 16.dp,
+                ),
+            )
+        },
+    )
 }
 
 @Composable
@@ -324,6 +375,8 @@ private fun NetworksList(
     isEditable: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val hapticManager = LocalHapticManager.current
+
     AnimatedVisibility(
         modifier = modifier,
         visible = networks is NetworksUM.Expanded,
@@ -346,6 +399,7 @@ private fun NetworksList(
                             modifier = Modifier.padding(end = TangemTheme.dimens.spacing8),
                             model = with(network) {
                                 BlockchainRowUM(
+                                    id = id,
                                     name = name,
                                     type = type,
                                     iconResId = iconResId,
@@ -357,7 +411,14 @@ private fun NetworksList(
                                 if (isEditable) {
                                     TangemSwitch(
                                         checked = network.isSelected,
-                                        onCheckedChange = network.onSelectedStateChange,
+                                        onCheckedChange = { checked ->
+                                            if (checked) {
+                                                hapticManager.perform(TangemHapticEffect.View.ToggleOn)
+                                            } else {
+                                                hapticManager.perform(TangemHapticEffect.View.ToggleOff)
+                                            }
+                                            network.onSelectedStateChange(checked)
+                                        },
                                     )
                                 }
                             },
@@ -374,11 +435,23 @@ private fun NetworksList(
 @Preview(showBackground = true, widthDp = 360, heightDp = 800, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview_ManageTokens(
+    @PreviewParameter(PreviewManageTokensComponentProvider::class) component: ManageTokensComponent,
+) {
+private fun Preview_ManageTokens(
     @PreviewParameter(ManageTokensComponentParamsProvider::class) params: ManageTokensComponent.Params,
 ) {
     TangemThemePreview {
+        component.Content(Modifier.fillMaxWidth())
         PreviewManageTokensComponent(params).Content(Modifier.fillMaxWidth())
     }
+}
+
+private class PreviewManageTokensComponentProvider : PreviewParameterProvider<ManageTokensComponent> {
+    override val values: Sequence<ManageTokensComponent>
+        get() = sequenceOf(
+            PreviewManageTokensComponent(),
+            PreviewManageTokensComponent(isLoading = true),
+        )
 }
 
 private class ManageTokensComponentParamsProvider : CollectionPreviewParameterProvider<ManageTokensComponent.Params>(

@@ -13,7 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -21,6 +20,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.haptic.TangemHapticEffect
@@ -28,34 +28,33 @@ import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.portfolio.impl.ui.state.QuickActionUM
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun PortfolioQuickActions(
+    actions: ImmutableList<QuickActionUM>,
     isVisible: Boolean,
     onActionClick: (QuickActionUM) -> Unit,
+    onActionLongClick: (QuickActionUM) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (actions.isEmpty()) return
+
     AnimatedVisibility(
         visible = isVisible,
         enter = expandVertically(expandFrom = Alignment.Top),
         exit = shrinkVertically(shrinkTowards = Alignment.Top),
     ) {
         Column(modifier = modifier) {
-            LineSeparator()
-            QuickActionItem(
-                state = QuickActionUM.Buy,
-                onClick = { onActionClick(QuickActionUM.Buy) },
-            )
-            LineSeparator()
-            QuickActionItem(
-                state = QuickActionUM.Exchange,
-                onClick = { onActionClick(QuickActionUM.Exchange) },
-            )
-            LineSeparator()
-            QuickActionItem(
-                state = QuickActionUM.Receive,
-                onClick = { onActionClick(QuickActionUM.Receive) },
-            )
+            actions.fastForEach { action ->
+                LineSeparator()
+                QuickActionItem(
+                    state = action,
+                    onClick = { onActionClick(action) },
+                    onLongClick = { onActionLongClick(action) }.takeIf { action.longClickAvailable },
+                )
+            }
         }
     }
 }
@@ -66,10 +65,9 @@ private fun AnimatedVisibilityScope.LineSeparator(modifier: Modifier = Modifier)
     val lineColor = TangemTheme.colors.stroke.primary
     val strokeWidth = TangemTheme.dimens.size1
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
-    val verticalPadding = TangemTheme.dimens.spacing2
-    val startPadding = TangemTheme.dimens.spacing28
+    val startPadding = TangemTheme.dimens.spacing30
 
-    val height = TangemTheme.dimens.size16 + verticalPadding * 2
+    val height = TangemTheme.dimens.size16
 
     Canvas(
         modifier = modifier
@@ -94,34 +92,42 @@ private fun AnimatedVisibilityScope.LineSeparator(modifier: Modifier = Modifier)
 
         drawLine(
             color = lineColor,
-            start = Offset(x, verticalPadding.toPx()),
-            end = Offset(x, size.height - verticalPadding.toPx()),
+            start = Offset(x, 0f),
+            end = Offset(x, size.height),
             strokeWidth = strokeWidth.toPx(),
         )
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun AnimatedVisibilityScope.QuickActionItem(
     state: QuickActionUM,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val hapticManager = LocalHapticManager.current
+    val onLongClickInternal: (() -> Unit)? = if (onLongClick != null) {
+        {
+            hapticManager.perform(TangemHapticEffect.View.LongPress)
+            onLongClick()
+        }
+    } else {
+        null
+    }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(TangemTheme.shapes.roundedCornersMedium)
-            .clickable {
-                hapticManager.perform(TangemHapticEffect.View.SegmentTick)
-                onClick()
-            }
-            .padding(
-                vertical = TangemTheme.dimens.spacing2,
-                horizontal = TangemTheme.dimens.spacing12,
-            ),
+            .combinedClickable(
+                onLongClick = onLongClickInternal,
+                onClick = {
+                    hapticManager.perform(TangemHapticEffect.View.SegmentTick)
+                    onClick()
+                },
+            )
+            .padding(horizontal = TangemTheme.dimens.spacing14, vertical = TangemTheme.dimens.spacing4),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing18),
     ) {
@@ -191,8 +197,10 @@ private fun Preview() {
                 modifier = Modifier.background(color = TangemTheme.colors.background.action),
             ) {
                 PortfolioQuickActions(
+                    actions = QuickActionUM.entries.toImmutableList(),
                     isVisible = isVisible,
                     onActionClick = {},
+                    onActionLongClick = {},
                 )
             }
         }
@@ -206,8 +214,10 @@ private fun PreviewRtl() {
     TangemThemePreview(rtl = true) {
         Box(modifier = Modifier.background(color = TangemTheme.colors.background.action)) {
             PortfolioQuickActions(
+                actions = QuickActionUM.entries.toImmutableList(),
                 isVisible = true,
                 onActionClick = {},
+                onActionLongClick = {},
             )
         }
     }

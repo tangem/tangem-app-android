@@ -24,6 +24,9 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 
 class MockStakingRepository : StakingRepository {
+
+    override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = ""
+
     override fun isStakingSupported(currencyId: String): Boolean = true
 
     override suspend fun fetchEnabledYields(refresh: Boolean) {
@@ -32,9 +35,9 @@ class MockStakingRepository : StakingRepository {
 
     override suspend fun getEntryInfo(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingEntryInfo =
         StakingEntryInfo(
-            interestRate = 1.toBigDecimal(),
-            periodInDays = 2,
+            apr = 1.toBigDecimal(),
             tokenSymbol = "SOL",
+            rewardSchedule = Yield.Metadata.RewardSchedule.DAY,
         )
 
     override suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield = Yield(
@@ -110,9 +113,9 @@ class MockStakingRepository : StakingRepository {
         isAvailable = false,
     )
 
-    override suspend fun getStakingAvailabilityForActions(
-        cryptoCurrencyId: CryptoCurrency.ID,
-        symbol: String,
+    override suspend fun getStakingAvailability(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
     ): StakingAvailability = StakingAvailability.Unavailable
 
     override suspend fun fetchSingleYieldBalance(
@@ -248,7 +251,7 @@ class MockStakingRepository : StakingRepository {
         /* no-op */
     }
 
-    override fun isStakeMoreAvailable(networkId: Network.ID): Boolean = true
-
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval = StakingApproval.Empty
+
+    override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean = false
 }

@@ -1,10 +1,15 @@
 package com.tangem.features.managetokens.utils.list
 
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.ContentMessage
+import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.tokens.model.Network
-import com.tangem.features.managetokens.entity.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
+import com.tangem.features.managetokens.impl.R
+import com.tangem.features.managetokens.ui.dialog.CurrencyUnsupportedDialog
 import com.tangem.features.managetokens.ui.dialog.HasLinkedTokensWarning
 import com.tangem.features.managetokens.ui.dialog.HideTokenWarning
 import com.tangem.features.managetokens.utils.mapper.toUiModel
@@ -13,6 +18,7 @@ import com.tangem.features.managetokens.utils.ui.update
 import com.tangem.pagination.Batch
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.addOrReplace
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -49,8 +55,9 @@ internal class ManageTokensUiManager(
 
         newCurrencyBatches.forEach { (key, data) ->
             val indexToUpdate = currentUiBatches.indexOfFirst { it.key == key }
+            val currencyBatch = state.value.currencyBatches.getOrNull(indexToUpdate)
 
-            if (indexToUpdate == -1) {
+            if (indexToUpdate == -1 || currencyBatch == null) {
                 val newBatch = Batch(
                     key = key,
                     data = data.map { item ->
@@ -62,7 +69,7 @@ internal class ManageTokensUiManager(
                     },
                 )
 
-                batches.add(newBatch)
+                batches.addOrReplace(newBatch) { it.key == key }
             } else {
                 val uiBatchToUpdate = currentUiBatches[indexToUpdate]
 
@@ -70,8 +77,6 @@ internal class ManageTokensUiManager(
                     return@forEach
                 }
 
-                val currentCurrencyBatches = state.value.currencyBatches
-                val currencyBatch = currentCurrencyBatches[indexToUpdate]
                 val updatedBatch = uiBatchToUpdate.copy(
                     data = data.mapIndexed { index, item ->
                         if (item == currencyBatch.data[index]) {
@@ -104,7 +109,8 @@ internal class ManageTokensUiManager(
             network = currency.network,
             isCoin = currency is ManagedCryptoCurrency.Custom.Coin,
             onConfirm = {
-                // TODO: https://tangem.atlassian.net/browse/AND-7969
+                val userWalletId = requireNotNull(state.value.userWalletId) { "UserWalletId is null. Can not remove" }
+                actions.removeCustomCurrency(userWalletId = userWalletId, currency = currency)
             },
         )
     }
@@ -142,21 +148,52 @@ internal class ManageTokensUiManager(
         if (currency !is ManagedCryptoCurrency.Token) return@launch
 
         if (isSelected) {
-            actions.addCurrency(batchKey, currency.id, source.id)
+            val userWalletId = state.value.userWalletId
+            val unsupportedState = userWalletId?.let { actions.checkCurrencyUnsupportedState(it, source) }
+            if (unsupportedState != null) {
+                showUnsupportedWarning(unsupportedState)
+            } else {
+                actions.addCurrency(batchKey, currency, source.network)
+            }
         } else {
-            if (actions.checkNeedToShowRemoveNetworkWarning(currency.id, source.id)) {
+            if (actions.checkNeedToShowRemoveNetworkWarning(currency, source.network)) {
                 showRemoveNetworkWarning(
                     currency = currency,
                     network = source.network,
                     isCoin = source is ManagedCryptoCurrency.SourceNetwork.Main,
                     onConfirm = {
-                        actions.removeCurrency(batchKey, currency.id, source.id)
+                        actions.removeCurrency(batchKey, currency, source.network)
                     },
                 )
             } else {
-                actions.removeCurrency(batchKey, currency.id, source.id)
+                actions.removeCurrency(batchKey, currency, source.network)
             }
         }
+    }
+
+    private fun showUnsupportedWarning(unsupportedState: CurrencyUnsupportedState) {
+        val message = ContentMessage { onDismiss ->
+            CurrencyUnsupportedDialog(
+                title = resourceReference(R.string.common_warning),
+                message = when (unsupportedState) {
+                    is CurrencyUnsupportedState.Token.NetworkTokensUnsupported -> resourceReference(
+                        id = R.string.alert_manage_tokens_unsupported_message,
+                        formatArgs = wrappedList(unsupportedState.networkName),
+                    )
+                    is CurrencyUnsupportedState.Token.UnsupportedCurve -> resourceReference(
+                        id = R.string.alert_manage_tokens_unsupported_curve_message,
+                        formatArgs = wrappedList(unsupportedState.networkName),
+                    )
+                    is CurrencyUnsupportedState.UnsupportedNetwork -> resourceReference(
+                        id = R.string.alert_manage_tokens_unsupported_curve_message,
+                        formatArgs = wrappedList(unsupportedState.networkName),
+                    )
+                },
+                onDismiss = onDismiss,
+            )
+        }
+
+        messageSender.send(message)
     }
 
     private suspend fun showRemoveNetworkWarning(

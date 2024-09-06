@@ -5,8 +5,8 @@ import com.tangem.core.ui.extensions.getTintForTokenIcon
 import com.tangem.core.ui.extensions.tryGetBackgroundForTokenIcon
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
-import com.tangem.features.managetokens.entity.CurrencyItemUM
-import com.tangem.features.managetokens.entity.CurrencyItemUM.Basic.NetworksUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
 import com.tangem.features.managetokens.utils.ui.getIconRes
 
 internal fun ManagedCryptoCurrency.toUiModel(

@@ -1,10 +1,12 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
-import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.extensions.isZero
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.features.send.impl.presentation.state.SendNotification
@@ -15,6 +17,7 @@ import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import com.tangem.blockchain.common.AmountType as SdkAmountType
 
 /**
  * Factory to produce fee state for [SendUiState]
@@ -94,7 +97,7 @@ internal class FeeStateFactory(
             feeState = feeState.copy(
                 feeSelectorState = updatedFeeSelectorState,
                 fee = fee,
-                isFeeApproximate = isFeeApproximate(fee),
+                isFeeApproximate = isFeeApproximate(state.amountState),
             ),
         )
     }
@@ -180,11 +183,29 @@ internal class FeeStateFactory(
         return noErrors && (isNotEmptyCustom || isNotCustom)
     }
 
-    private fun isFeeApproximate(fee: Fee): Boolean {
+    private fun isFeeApproximate(state: AmountState): Boolean {
         val cryptoCurrencyStatus = feeCryptoCurrencyStatusProvider() ?: return false
+        val amount = (state as? AmountState.Data)?.amountTextField?.cryptoAmount ?: return false
         return isFeeApproximateUseCase(
             networkId = cryptoCurrencyStatus.currency.network.id,
-            amountType = fee.amount.type,
+            amountType = amount.type.toSdkAmountType(),
         )
+    }
+
+    private fun AmountType.toSdkAmountType(): SdkAmountType {
+        return when (this) {
+            AmountType.CoinType -> SdkAmountType.Coin
+            is AmountType.FiatType -> error("unsupported type FiatType")
+            AmountType.ReserveType -> SdkAmountType.Reserve
+            is AmountType.TokenType -> SdkAmountType.Token(
+                Token(
+                    name = this.token.name,
+                    symbol = this.token.symbol,
+                    contractAddress = this.token.contractAddress,
+                    decimals = this.token.decimals,
+                    id = this.token.id.rawCurrencyId,
+                ),
+            )
+        }
     }
 }

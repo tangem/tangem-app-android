@@ -147,18 +147,6 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideIsStakeMoreAvailableUseCase(
-        stakingRepository: StakingRepository,
-        stakingErrorResolver: StakingErrorResolver,
-    ): IsStakeMoreAvailableUseCase {
-        return IsStakeMoreAvailableUseCase(
-            stakingRepository = stakingRepository,
-            stakingErrorResolver = stakingErrorResolver,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideIsApproveNeededUseCase(
         stakingRepository: StakingRepository,
         stakingErrorResolver: StakingErrorResolver,
@@ -176,6 +164,18 @@ internal object StakingDomainModule {
         stakingErrorResolver: StakingErrorResolver,
     ): GetConstructedStakingTransactionUseCase {
         return GetConstructedStakingTransactionUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsAnyTokenStakedUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): IsAnyTokenStakedUseCase {
+        return IsAnyTokenStakedUseCase(
             stakingRepository = stakingRepository,
             stakingErrorResolver = stakingErrorResolver,
         )

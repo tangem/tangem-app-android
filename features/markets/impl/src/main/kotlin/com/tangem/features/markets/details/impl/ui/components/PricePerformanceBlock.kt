@@ -124,15 +124,16 @@ private fun Content(state: PricePerformanceUM.Value, modifier: Modifier = Modifi
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
             Text(
+                modifier = Modifier.weight(1f),
                 text = state.low,
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
             )
-            SpacerW8()
             Text(
+                modifier = Modifier.weight(1f),
                 text = state.high,
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
@@ -160,7 +161,7 @@ internal fun PricePerformanceBlockPlaceholder(modifier: Modifier = Modifier) {
         },
         content = {
             Column(
-                modifier = modifier.padding(vertical = TangemTheme.dimens.spacing8),
+                modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8),
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
             ) {
                 Row(

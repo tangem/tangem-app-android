@@ -118,6 +118,7 @@ class ResponseCryptoCurrenciesFactory {
             // get name and symbol from enum Blockchain until backend renamed
             // https://tangem.atlassian.net/browse/AND-6158
             Blockchain.Dischain,
+            Blockchain.Polygon,
             -> this.currency
             else -> responseToken.symbol
         }

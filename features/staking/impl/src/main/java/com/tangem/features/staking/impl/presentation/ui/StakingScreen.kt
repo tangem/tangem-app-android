@@ -16,6 +16,7 @@ import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.common.ui.bottomsheet.permission.GiveTxPermissionBottomSheet
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.common.ui.navigationButtons.NavigationButtonsBlock
+import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resolveReference
@@ -24,7 +25,9 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingActionSelectionBottomSheetConfig
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingInfoBottomSheetConfig
+import com.tangem.features.staking.impl.presentation.ui.bottomsheet.StakingActionSelectorBottomSheet
 import com.tangem.features.staking.impl.presentation.ui.bottomsheet.StakingInfoBottomSheet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -34,6 +37,7 @@ import kotlinx.coroutines.flow.withIndex
 @Composable
 internal fun StakingScreen(uiState: StakingUiState) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val confirmationState = uiState.confirmationState as? StakingStates.ConfirmationState.Data
 
     BackHandler(onBack = uiState.clickIntents::onPrevClick)
     Column(
@@ -52,7 +56,9 @@ internal fun StakingScreen(uiState: StakingUiState) {
             modifier = Modifier.weight(1f),
         )
         NavigationButtonsBlock(
-            buttonState = uiState.buttonsState,
+            buttonState = uiState.buttonsState.takeUnless { uiState.currentStep == StakingStep.InitialInfo }
+                ?: NavigationButtonsState.Empty,
+            footerText = confirmationState?.footerText.takeIf { uiState.currentStep == StakingStep.Confirmation },
             modifier = Modifier.padding(
                 start = TangemTheme.dimens.spacing16,
                 end = TangemTheme.dimens.spacing16,
@@ -74,6 +80,7 @@ fun StakingBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
     when (bottomSheetConfig.content) {
         is StakingInfoBottomSheetConfig -> StakingInfoBottomSheet(bottomSheetConfig)
         is GiveTxPermissionBottomSheetConfig -> GiveTxPermissionBottomSheet(bottomSheetConfig)
+        is StakingActionSelectionBottomSheetConfig -> StakingActionSelectorBottomSheet(bottomSheetConfig)
     }
 }
 
@@ -94,6 +101,7 @@ private fun SendAppBar(uiState: StakingUiState) {
     }
     AppBarWithBackButtonAndIcon(
         text = uiState.title.resolveReference(),
+        subtitle = uiState.subtitle?.resolveReference(),
         backIconRes = backIcon,
         onBackClick = uiState.clickIntents::onBackClick,
         backgroundColor = TangemTheme.colors.background.secondary,
@@ -147,6 +155,7 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
             when (state) {
                 StakingStep.InitialInfo -> StakingInitialInfoContent(
                     state = uiState.initialInfoState,
+                    buttonState = uiState.buttonsState,
                     clickIntents = uiState.clickIntents,
                 )
                 StakingStep.RewardsValidators -> {

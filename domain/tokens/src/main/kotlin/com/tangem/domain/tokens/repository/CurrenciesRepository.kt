@@ -6,6 +6,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -149,6 +150,17 @@ interface CurrenciesRepository {
     ): List<CryptoCurrency>
 
     /**
+     * Retrieves the list of cryptocurrencies within a multi-currency wallet.
+     * Returns previously loaded currencies or empty list
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @return A list of [CryptoCurrency].
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun getMultiCurrencyWalletCachedCurrenciesSync(userWalletId: UserWalletId): List<CryptoCurrency>
+
+    /**
      * Retrieves the cryptocurrency for a specific multi-currency user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
@@ -215,14 +227,13 @@ interface CurrenciesRepository {
      */
     fun createTokenCurrency(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token
 
-    /**
-     * Creates token [cryptoCurrency] based on [contractAddress] and [networkId] it`s will be added
-     */
+    /** Creates token [CryptoCurrency.Token] based on [contractAddress] and [networkId] for specified [userWalletId] */
     suspend fun createTokenCurrency(
         userWalletId: UserWalletId,
         contractAddress: String,
         networkId: String,
     ): CryptoCurrency.Token
 
-    suspend fun hasTokens(userWalletId: UserWalletId, network: Network): Boolean
+    /** Get crypto currencies by [currencyRawId] from all user wallets */
+    fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>>
 }

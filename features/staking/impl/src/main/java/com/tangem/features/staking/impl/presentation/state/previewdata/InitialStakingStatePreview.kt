@@ -4,14 +4,18 @@ import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.staking.model.stakekit.BalanceType
+import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.BalanceState
+import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
+import com.tangem.features.staking.impl.presentation.state.StakingStates
 import kotlinx.collections.immutable.persistentListOf
 
 internal object InitialStakingStatePreview {
     val defaultState = StakingStates.InitialInfoState.Data(
         isPrimaryButtonEnabled = true,
+        showBanner = true,
         aprRange = stringReference("2.54-5.12%"),
         infoItems = persistentListOf(
             RoundedListWithDividersItemData(
@@ -52,44 +56,38 @@ internal object InitialStakingStatePreview {
         ),
         onInfoClick = {},
         yieldBalance = InnerYieldBalanceState.Empty,
-        isStakeMoreAvailable = true,
     )
 
     val stateWithYield = defaultState.copy(
         yieldBalance = InnerYieldBalanceState.Data(
             rewardsFiat = "100 $",
             rewardsCrypto = "100 SOL",
-            isRewardsToClaim = false,
-            isRewardsClaimable = false,
+            rewardBlockType = RewardBlockType.RewardUnavailable,
             balance = persistentListOf(
-                BalanceGroupedState(
-                    title = stringReference("Staked"),
-                    footer = null,
-                    type = BalanceType.STAKED,
-                    isClickable = true,
-                    items = persistentListOf(
-                        BalanceState(
-                            cryptoValue = "100",
-                            cryptoAmount = stringReference("100 SOL"),
-                            cryptoDecimal = "100".toBigDecimal(),
-                            fiatAmount = stringReference("100 $"),
-                            rawCurrencyId = null,
-                            validator = Yield.Validator(
-                                address = "address",
-                                status = "status",
-                                name = "Binance",
-                                image = null,
-                                website = null,
-                                apr = "5".toBigDecimal(),
-                                commission = null,
-                                stakedBalance = null,
-                                votingPower = null,
-                                preferred = false,
-                            ),
-                            unbondingPeriod = stringReference("3 days"),
-                            pendingActions = persistentListOf(),
-                        ),
+                BalanceState(
+                    id = "id",
+                    title = stringReference("Binance"),
+                    cryptoValue = "100",
+                    cryptoAmount = stringReference("100 SOL"),
+                    cryptoDecimal = "100".toBigDecimal(),
+                    fiatAmount = stringReference("100 $"),
+                    rawCurrencyId = null,
+                    validator = Yield.Validator(
+                        address = "address",
+                        status = Yield.Validator.ValidatorStatus.ACTIVE,
+                        name = "Binance",
+                        image = null,
+                        website = null,
+                        apr = "5".toBigDecimal(),
+                        commission = null,
+                        stakedBalance = null,
+                        votingPower = null,
+                        preferred = false,
                     ),
+                    pendingActions = persistentListOf(),
+                    isClickable = true,
+                    type = BalanceType.STAKED,
+                    subtitle = null,
                 ),
             ),
         ),

@@ -13,7 +13,7 @@ import com.tangem.features.markets.tokenlist.impl.ui.components.UnableToLoadData
 
 internal fun LazyListScope.tokenMarketDetailsBody(
     state: MarketsTokenDetailsUM.Body,
-    portfolioBlock: @Composable (Modifier) -> Unit,
+    portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
     when (state) {
         MarketsTokenDetailsUM.Body.Loading -> {
@@ -21,8 +21,10 @@ internal fun LazyListScope.tokenMarketDetailsBody(
                 DescriptionPlaceholder(modifier = Modifier.blockPaddings())
             }
 
-            item(key = "portfolio") {
-                portfolioBlock(Modifier.blockPaddings())
+            if (portfolioBlock != null) {
+                item(key = "portfolio") {
+                    portfolioBlock(Modifier.blockPaddings())
+                }
             }
 
             loadingInfoBlocks()
@@ -32,8 +34,10 @@ internal fun LazyListScope.tokenMarketDetailsBody(
                 description(state.description)
             }
 
-            item(key = "portfolio") {
-                portfolioBlock(Modifier.blockPaddings())
+            if (portfolioBlock != null) {
+                item(key = "portfolio") {
+                    portfolioBlock(Modifier.blockPaddings())
+                }
             }
 
             infoBlocksList(state.infoBlocks)
@@ -126,9 +130,10 @@ private fun LazyListScope.loadingInfoBlocks() {
         InsightsBlockPlaceholder(modifier = Modifier.blockPaddings())
     }
 
-    item("securityScore-loading") {
-        SecurityScorePlaceHolder(modifier = Modifier.blockPaddings())
-    }
+    // TODO second markets iteration
+    // item("securityScore-loading") {
+    //     SecurityScorePlaceHolder(modifier = Modifier.blockPaddings())
+    // }
 
     item("metrics-loading") {
         MetricsBlockPlaceholder(modifier = Modifier.blockPaddings())

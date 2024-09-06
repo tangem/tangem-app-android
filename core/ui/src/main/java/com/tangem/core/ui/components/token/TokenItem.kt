@@ -1,8 +1,8 @@
 package com.tangem.core.ui.components.token
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -37,12 +37,51 @@ private enum class LayoutId {
     ICON, TITLE, FIAT_AMOUNT, CRYPTO_AMOUNT, CRYPTO_PRICE, NON_FIAT_CONTENT
 }
 
+/**
+ * Token item for non reorderable list
+ *
+ * @param state           token item state
+ * @param isBalanceHidden flag that shows/hides balance
+ * @param modifier        modifier
+ *
+ * @see <a href = "https://www.figma.com/design/14ISV23YB1yVW1uNVwqrKv/Android?node-id=1051-866&t=ew8mbGp2lacuJfFm-4"
+ * >Figma Component</a>
+ */
 @Composable
 fun TokenItem(
     state: TokenItemState,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
-    reorderableTokenListState: ReorderableLazyListState? = null,
+    itemPaddingValues: PaddingValues = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
+) {
+    TokenItem(
+        state = state,
+        isBalanceHidden = isBalanceHidden,
+        modifier = modifier,
+        reorderableTokenListState = null,
+        itemPaddingValues = itemPaddingValues,
+    )
+}
+
+/**
+ * Token item for reorderable list
+ *
+ * @param state                     token item state
+ * @param isBalanceHidden           flag that shows/hides balance
+ * @param reorderableTokenListState reorderable token list state
+ * @param modifier                  modifier
+ * @param itemPaddingValues         padding values
+ *
+ * @see <a href = "https://www.figma.com/design/14ISV23YB1yVW1uNVwqrKv/Android?node-id=1051-866&t=ew8mbGp2lacuJfFm-4"
+ * >Figma Component</a>
+ */
+@Composable
+fun TokenItem(
+    state: TokenItemState,
+    isBalanceHidden: Boolean,
+    reorderableTokenListState: ReorderableLazyListState?,
+    modifier: Modifier = Modifier,
+    itemPaddingValues: PaddingValues = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
 ) {
     val betweenRowsMargin = TangemTheme.dimens.spacing2
 
@@ -50,7 +89,7 @@ fun TokenItem(
         state = state,
         modifier = modifier
             .tokenClickable(state = state)
-            .background(color = TangemTheme.colors.background.primary),
+            .padding(itemPaddingValues),
     ) {
         CurrencyIcon(
             state = state.iconState,
@@ -76,7 +115,7 @@ fun TokenItem(
         )
 
         TokenPrice(
-            state = state.cryptoPriceState,
+            state = state.subtitleState,
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.CRYPTO_PRICE)
                 .padding(end = TangemTheme.dimens.spacing8),
@@ -99,17 +138,22 @@ fun TokenItem(
 @OptIn(ExperimentalFoundationApi::class)
 private fun Modifier.tokenClickable(state: TokenItemState): Modifier = composed {
     when (state) {
-        is TokenItemState.Content -> {
-            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
-            combinedClickable(onClick = state.onItemClick, onLongClick = onLongClick)
-        }
-        is TokenItemState.Unreachable -> {
-            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
-            combinedClickable(onClick = state.onItemClick, onLongClick = onLongClick)
-        }
-        is TokenItemState.NoAddress -> {
-            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
-            combinedClickable(onClick = {}, onLongClick = onLongClick)
+        is TokenItemState.Content,
+        is TokenItemState.NoAddress,
+        is TokenItemState.Unreachable,
+        -> {
+            val onClick = state.onItemClick
+            val onLongClick = state.onItemLongClick?.let { rememberHapticFeedback(state = state, onAction = it) }
+
+            when {
+                onClick == null && onLongClick == null -> this
+                onClick == null && onLongClick != null -> combinedClickable(onClick = {}, onLongClick = onLongClick)
+                onClick != null && onLongClick == null -> combinedClickable(onClick = onClick)
+                onClick != null && onLongClick != null -> {
+                    combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                }
+                else -> this
+            }
         }
         is TokenItemState.Draggable,
         is TokenItemState.Loading,
@@ -130,10 +174,7 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
     Layout(content = content, modifier = modifier) { measurables, constraints ->
 
         val layoutWidth = constraints.maxWidth
-        val horizontalPadding = with(density) { dimens.size12.roundToPx() }
         val verticalPadding = with(density) { dimens.size15.roundToPx() }
-        val layoutWidthWithoutPaddings = layoutWidth - 2 * horizontalPadding
-
         val titleMinWidth = (layoutWidth * TITLE_MIN_WIDTH_COEFFICIENT).toInt()
         val priceChangeMinWidth = (layoutWidth * PRICE_MIN_WIDTH_COEFFICIENT).toInt()
 
@@ -169,32 +210,36 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
             -> {
                 fiatAmount = measurables.measureFiatAmount(
                     state = state,
-                    maxWidth = layoutWidthWithoutPaddings - icon.width - titleMinWidth,
+                    maxWidth = layoutWidth - icon.width - titleMinWidth,
                     defaultConstraints = constraints,
                 )
 
                 cryptoAmount = measurables.measureCryptoAmount(
                     state = state,
-                    maxWidth = layoutWidthWithoutPaddings - icon.width - priceChangeMinWidth,
+                    maxWidth = layoutWidth - icon.width - priceChangeMinWidth,
                     defaultConstraints = constraints,
                 )
 
-                firstRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - fiatAmount.width
-                secondRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - cryptoAmount.width
+                firstRowRemainingFreeSpace = layoutWidth - icon.width - fiatAmount.width
+                secondRowRemainingFreeSpace = layoutWidth - icon.width - cryptoAmount.width
             }
             is TokenItemState.Draggable -> {
                 cryptoAmount = measurables.measureCryptoAmount(
                     state = state,
-                    maxWidth = layoutWidthWithoutPaddings - icon.width - nonFiatContent.width,
+                    maxWidth = layoutWidth - icon.width - nonFiatContent.width,
                     defaultConstraints = constraints,
                 )
 
-                firstRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - nonFiatContent.width
+                firstRowRemainingFreeSpace = layoutWidth - icon.width - nonFiatContent.width
             }
             is TokenItemState.NoAddress,
             is TokenItemState.Unreachable,
             -> {
-                firstRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - nonFiatContent.width
+                firstRowRemainingFreeSpace = layoutWidth - icon.width - nonFiatContent.width
+
+                if (state.subtitleState != null) {
+                    secondRowRemainingFreeSpace = layoutWidth - icon.width - nonFiatContent.width
+                }
             }
         }
 
@@ -225,35 +270,41 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
         )
 
         layout(width = constraints.maxWidth, height = layoutHeight) {
-            icon.placeRelative(x = horizontalPadding, y = (layoutHeight - icon.height).div(other = 2))
+            icon.placeRelative(x = 0, y = (layoutHeight - icon.height).div(other = 2))
 
             title.placeRelative(
-                x = horizontalPadding + icon.width,
+                x = icon.width,
                 y = when (state) {
                     is TokenItemState.NoAddress,
                     is TokenItemState.Unreachable,
-                    -> (layoutHeight - title.height).div(other = 2)
+                    -> {
+                        if (state.subtitleState == null) {
+                            (layoutHeight - title.height).div(other = 2)
+                        } else {
+                            verticalPadding
+                        }
+                    }
                     else -> verticalPadding
                 },
             )
 
-            fiatAmount?.placeRelative(x = layoutWidth - fiatAmount.width - horizontalPadding, y = verticalPadding)
+            fiatAmount?.placeRelative(x = layoutWidth - fiatAmount.width, y = verticalPadding)
 
             priceChange?.placeRelative(
-                x = horizontalPadding + icon.width,
+                x = icon.width,
                 y = layoutHeight - priceChange.height - verticalPadding,
             )
 
             cryptoAmount?.placeRelative(
                 x = when (state) {
-                    is TokenItemState.Draggable -> horizontalPadding + icon.width
-                    else -> layoutWidth - cryptoAmount.width - horizontalPadding
+                    is TokenItemState.Draggable -> icon.width
+                    else -> layoutWidth - cryptoAmount.width
                 },
                 y = layoutHeight - cryptoAmount.height - verticalPadding,
             )
 
             nonFiatContent.placeRelative(
-                x = layoutWidth - nonFiatContent.width - horizontalPadding,
+                x = layoutWidth - nonFiatContent.width,
                 y = (layoutHeight - nonFiatContent.height).div(other = 2),
             )
         }
@@ -411,7 +462,7 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
                 hasStaked = true,
             ),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,4123123213123123123123123123 MATIC"),
-            cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+            subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                 price = "312 USD",
                 priceChangePercent = "42.0%",
                 type = PriceChangeType.UP,
@@ -424,10 +475,25 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
             onItemClick = {},
             onItemLongClick = {},
         ),
+        TokenItemState.Unreachable(
+            id = UUID.randomUUID().toString(),
+            iconState = tokenIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            subtitleState = TokenItemState.SubtitleState.TextContent("Token"),
+            onItemClick = {},
+            onItemLongClick = {},
+        ),
         TokenItemState.NoAddress(
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
             titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            onItemLongClick = {},
+        ),
+        TokenItemState.NoAddress(
+            id = UUID.randomUUID().toString(),
+            iconState = tokenIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            subtitleState = TokenItemState.SubtitleState.TextContent("Token"),
             onItemLongClick = {},
         ),
         TokenItemState.Draggable(
@@ -442,7 +508,7 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
             titleState = TokenItemState.TitleState.Content(text = "Polygon"),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = false),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
-            cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+            subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                 price = "312 USD",
                 priceChangePercent = "2.0%",
                 type = PriceChangeType.UP,
@@ -508,7 +574,7 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
                 titleState = TokenItemState.TitleState.Content(text = "Polygon", hasPending = true),
                 fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = true),
                 cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
-                cryptoPriceState = TokenItemState.CryptoPriceState.Unknown,
+                subtitleState = TokenItemState.SubtitleState.Unknown,
                 onItemClick = {},
                 onItemLongClick = {},
             )

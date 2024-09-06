@@ -9,6 +9,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
@@ -26,29 +27,44 @@ import kotlinx.collections.immutable.persistentListOf
 @Immutable
 class InformationBlockContentScope(val scope: BoxScope) : BoxScope by scope
 
+// TODO: https://tangem.atlassian.net/browse/AND-8044
 @Composable
 fun InformationBlock(
     title: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
     contentHorizontalPadding: Dp = TangemTheme.dimens.spacing12,
+    shape: Shape = TangemTheme.shapes.roundedCornersXMedium,
     action: (@Composable BoxScope.() -> Unit)? = null,
     content: (@Composable InformationBlockContentScope.() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .clip(shape)
             .background(color = TangemTheme.colors.background.action),
         horizontalAlignment = Alignment.Start,
     ) {
+        val minHeight = if (action == null) TangemTheme.dimens.size36 else TangemTheme.dimens.size40
+        val padding = if (action == null) {
+            PaddingValues(
+                start = TangemTheme.dimens.spacing12,
+                top = TangemTheme.dimens.spacing12,
+                end = TangemTheme.dimens.spacing12,
+                bottom = TangemTheme.dimens.spacing4,
+            )
+        } else {
+            PaddingValues(
+                start = TangemTheme.dimens.spacing12,
+                top = TangemTheme.dimens.spacing11,
+                end = TangemTheme.dimens.spacing12,
+                bottom = TangemTheme.dimens.spacing5,
+            )
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = TangemTheme.dimens.size40)
-                .padding(
-                    top = TangemTheme.dimens.spacing12,
-                    bottom = TangemTheme.dimens.spacing6,
-                )
-                .padding(horizontal = TangemTheme.dimens.spacing12),
+                .heightIn(min = minHeight)
+                .padding(paddingValues = padding),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {

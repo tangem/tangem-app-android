@@ -27,6 +27,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.features.markets.MarketsFeatureToggles
 import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
@@ -55,6 +56,7 @@ internal class WalletViewModel @Inject constructor(
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
+    private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -66,6 +68,7 @@ internal class WalletViewModel @Inject constructor(
     private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles,
+    private val marketsFeatureToggles: MarketsFeatureToggles,
     analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
@@ -80,6 +83,7 @@ internal class WalletViewModel @Inject constructor(
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
 
         suggestToEnableBiometrics()
+        suggestToOpenMarkets()
 
         maybeMigrateNames()
         subscribeToUserWalletsUpdates()
@@ -115,6 +119,20 @@ internal class WalletViewModel @Inject constructor(
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
 
             if (isShowSaveWalletScreenEnabled()) router.openSaveUserWalletScreen()
+        }
+    }
+
+    private fun suggestToOpenMarkets() {
+        viewModelScope.launch {
+            withContext(dispatchers.io) { delay(timeMillis = 1_800) }
+
+            if (marketsFeatureToggles.isFeatureEnabled && shouldShowMarketsTooltipUseCase()) {
+                stateHolder.update {
+                    it.copy(showMarketsOnboarding = true)
+                }
+            }
+
+            shouldShowMarketsTooltipUseCase(isShown = true)
         }
     }
 
@@ -190,6 +208,8 @@ internal class WalletViewModel @Inject constructor(
 
     /** Change selected wallet state if selected wallet [selectedWalletId] was changed in the background */
     private suspend fun changeSelectedWalletState(selectedWalletId: UserWalletId) {
+        if (!stateHolder.isInitialized) return
+
         if (screenLifecycleProvider.isBackgroundState.value && selectedWalletId != stateHolder.getSelectedWalletId()) {
             stateHolder.value.wallets
                 .indexOfFirstOrNull { prevState -> prevState.walletCardState.id == selectedWalletId }

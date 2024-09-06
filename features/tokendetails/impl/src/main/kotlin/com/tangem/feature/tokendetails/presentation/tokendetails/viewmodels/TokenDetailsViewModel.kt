@@ -6,6 +6,7 @@ import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -72,7 +73,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.e
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -123,10 +123,11 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
+    getUserWalletUseCase: GetUserWalletUseCase,
     tokenDetailsFeatureToggles: TokenDetailsFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
+    private val appRouter: AppRouter,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
     private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.USER_WALLET_ID_KEY)
@@ -392,8 +393,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun updateStakingInfo() {
         viewModelScope.launch {
             val stakingAvailability = getStakingAvailabilityUseCase(
-                cryptoCurrencyId = cryptoCurrency.id,
-                symbol = cryptoCurrency.symbol,
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
             ).getOrElse { StakingAvailability.Unavailable }
 
             internalUiState.value = stateFactory.getStateWithUpdatedStakingAvailability(stakingAvailability)
@@ -412,10 +413,13 @@ internal class TokenDetailsViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             val hasDerivations =
                 networkHasDerivationUseCase(userWallet.scanResponse, cryptoCurrency.network).getOrElse { false }
+
+            val isSupported = getExtendedPublicKeyForCurrencyUseCase.isSupported(userWalletId, cryptoCurrency.network)
+
             internalUiState.value = stateFactory.getStateWithUpdatedMenu(
                 cardTypesResolver = userWallet.scanResponse.cardTypesResolver,
                 hasDerivations = hasDerivations,
-                isBitcoin = isBitcoin(cryptoCurrency.network.id.value),
+                isSupported = isSupported,
             )
         }
     }
@@ -614,7 +618,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        reduxStateHolder.dispatch(TradeCryptoAction.Swap(cryptoCurrency))
+        appRouter.push(AppRoute.Swap(currency = cryptoCurrency, userWalletId = userWalletId))
     }
 
     override fun onDismissDialog() {

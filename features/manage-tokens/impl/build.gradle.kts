@@ -23,6 +23,7 @@ dependencies {
 
     /* Project - Domain */
     implementation(projects.domain.manageTokens)
+    implementation(projects.domain.card)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
@@ -45,5 +46,6 @@ dependencies {
 
     /* Other */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.decompose.ext.compose)
     implementation(deps.timber)
 }

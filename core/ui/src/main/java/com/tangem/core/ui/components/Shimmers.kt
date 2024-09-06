@@ -22,10 +22,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.PrimarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
+import com.tangem.core.ui.components.buttons.chip.Chip
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.*
 import com.valentinilk.shimmer.*
@@ -123,6 +126,22 @@ fun SmallButtonShimmer(
     )
 }
 
+/**
+ * Shimmer for Chip
+ * Height and min width will be set automatically
+ */
+@Composable
+fun ChipShimmer(modifier: Modifier = Modifier) {
+    Chip(
+        modifier = modifier
+            .clip(RoundedCornerShape(size = 100.dp))
+            .shimmer(LocalTangemShimmer.current),
+        text = TextReference.EMPTY,
+        iconResId = R.drawable.ic_plus_24,
+        onClick = {},
+    )
+}
+
 internal val TangemShimmer: Shimmer
     @Composable
     get() = rememberShimmer(
@@ -195,6 +214,7 @@ private fun ShimmersPreview() {
             )
             SmallButtonShimmer(withIcon = true)
             SmallButtonShimmer(withIcon = false)
+            ChipShimmer()
         }
     }
 }

@@ -201,4 +201,9 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
             formatArgs = wrappedList(manaBalanceAmount, maxManaBalanceAmount),
         ),
     )
+
+    data object MigrationMaticToPol : Warning(
+        title = resourceReference(id = R.string.warning_matic_migration_title),
+        subtitle = resourceReference(id = R.string.warning_matic_migration_message),
+    )
 }

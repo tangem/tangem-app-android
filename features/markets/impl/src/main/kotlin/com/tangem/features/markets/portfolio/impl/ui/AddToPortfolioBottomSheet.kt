@@ -35,8 +35,9 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.components.rows.BlockchainRow
-import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.impl.R
@@ -55,8 +56,10 @@ internal fun AddToPortfolioBottomSheet(config: TangemBottomSheetConfig) {
     ) {
         Content(
             modifier = Modifier.fillMaxWidth(),
-            state = config.content as AddToPortfolioBSContentUM,
+            state = it,
         )
+
+        WalletSelectorBottomSheet(it.walletSelectorConfig)
     }
 }
 
@@ -72,15 +75,16 @@ private fun Content(state: AddToPortfolioBSContentUM, modifier: Modifier = Modif
                 .verticalScroll(state = scrollState)
                 .padding(horizontal = TangemTheme.dimens.spacing16),
         ) {
-            UserWalletItem(
-                state = state.selectedWallet,
-                blockColors = TangemBlockCardColors.copy(
-                    containerColor = TangemTheme.colors.background.action,
-                    disabledContainerColor = TangemTheme.colors.background.action,
-                ),
-            )
-
-            SpacerH12()
+            if (state.isWalletBlockVisible) {
+                UserWalletItem(
+                    state = state.selectedWallet,
+                    blockColors = TangemBlockCardColors.copy(
+                        containerColor = TangemTheme.colors.background.action,
+                        disabledContainerColor = TangemTheme.colors.background.action,
+                    ),
+                )
+                SpacerH12()
+            }
 
             NetworkSelection(
                 modifier = Modifier.fillMaxWidth(),
@@ -126,13 +130,19 @@ private fun Content(state: AddToPortfolioBSContentUM, modifier: Modifier = Modif
                     continueButtonAreaHeight = it.size.height
                 },
             enabled = state.continueButtonEnabled,
+            isTangemIconVisible = state.isScanCardNotificationVisible,
             onClick = state.onContinueButtonClick,
         )
     }
 }
 
 @Composable
-private fun ContinueButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ContinueButton(
+    enabled: Boolean,
+    isTangemIconVisible: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     TangemButton(
         enabled = enabled,
         modifier = modifier
@@ -144,7 +154,7 @@ private fun ContinueButton(enabled: Boolean, onClick: () -> Unit, modifier: Modi
             .navigationBarsPadding()
             .fillMaxWidth(),
         text = stringResource(R.string.common_continue),
-        icon = if (enabled) {
+        icon = if (enabled && isTangemIconVisible) {
             TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
         } else {
             TangemButtonIconPosition.None
@@ -160,6 +170,8 @@ private fun ContinueButton(enabled: Boolean, onClick: () -> Unit, modifier: Modi
 @Suppress("LongMethod")
 @Composable
 private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifier) {
+    val hapticManager = LocalHapticManager.current
+
     InformationBlock(
         modifier = modifier,
         title = {
@@ -212,21 +224,25 @@ private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifi
                             modifier = Modifier.padding(
                                 end = TangemTheme.dimens.spacing4,
                             ),
-                            model = with(network) {
-                                BlockchainRowUM(
-                                    name = name,
-                                    type = type,
-                                    iconResId = iconResId,
-                                    isMainNetwork = isMainNetwork,
-                                    isSelected = isSelected,
-                                )
-                            },
+                            model = network,
                             action = {
                                 TangemSwitch(
                                     checked = network.isSelected,
-                                    onCheckedChange = {
-                                        state.onNetworkSwitchClick(network, it)
+                                    checkedColor = if (network.isEnabled) {
+                                        TangemTheme.colors.control.checked
+                                    } else {
+                                        TangemTheme.colors.icon.inactive
                                     },
+                                    onCheckedChange = { checked ->
+                                        if (checked) {
+                                            hapticManager.perform(TangemHapticEffect.View.ToggleOn)
+                                        } else {
+                                            hapticManager.perform(TangemHapticEffect.View.ToggleOff)
+                                        }
+
+                                        state.onNetworkSwitchClick(network, checked)
+                                    },
+                                    enabled = network.isEnabled,
                                 )
                             },
                         )

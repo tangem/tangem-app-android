@@ -2,8 +2,8 @@ package com.tangem.features.managetokens.utils.ui
 
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
-import com.tangem.features.managetokens.entity.CurrencyItemUM
-import com.tangem.features.managetokens.entity.CurrencyItemUM.Basic.NetworksUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
 import com.tangem.features.managetokens.utils.mapper.toUiNetworksModel
 import kotlinx.collections.immutable.toImmutableList
 
@@ -15,7 +15,9 @@ internal fun CurrencyItemUM.toggleExpanded(
     if (currency !is ManagedCryptoCurrency.Token) return this
 
     return when (this) {
-        is CurrencyItemUM.Custom -> this
+        is CurrencyItemUM.Custom,
+        is CurrencyItemUM.Loading,
+        -> this
         is CurrencyItemUM.Basic -> {
             val isExpanded = networks !is NetworksUM.Expanded
 
@@ -35,7 +37,9 @@ internal fun CurrencyItemUM.toggleExpanded(
 
 internal fun CurrencyItemUM.update(currency: ManagedCryptoCurrency): CurrencyItemUM {
     return when (this) {
-        is CurrencyItemUM.Custom -> this
+        is CurrencyItemUM.Custom,
+        is CurrencyItemUM.Loading,
+        -> this
         is CurrencyItemUM.Basic -> {
             if (currency !is ManagedCryptoCurrency.Token) {
                 return this
@@ -55,10 +59,10 @@ private fun CurrencyItemUM.Basic.updateNetworks(currency: ManagedCryptoCurrency.
     is NetworksUM.Collapsed -> networks
     is NetworksUM.Expanded -> networks.copy(
         networks = networks.networks.map { network ->
-            val isSelected = network.id in currency.addedIn
+            val isSelected = network.network in currency.addedIn
 
             network.copy(
-                iconResId = network.id.getIconRes(isSelected),
+                iconResId = network.network.id.getIconRes(isSelected),
                 isSelected = isSelected,
             )
         }.toImmutableList(),

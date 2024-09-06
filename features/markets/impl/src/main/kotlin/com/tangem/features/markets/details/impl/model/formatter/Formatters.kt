@@ -48,11 +48,13 @@ internal fun TokenQuotes.getPercentByInterval(interval: PriceChangeInterval): Bi
     }
 }
 
+@Suppress("MagicNumber")
 internal fun BigDecimal?.percentChangeType(): PriceChangeType {
+    val scaled = this?.setScale(4, RoundingMode.HALF_UP)
     return when {
-        this == null -> PriceChangeType.NEUTRAL
-        this > BigDecimal.ZERO -> PriceChangeType.UP
-        this < BigDecimal.ZERO -> PriceChangeType.DOWN
+        scaled == null -> PriceChangeType.NEUTRAL
+        scaled > BigDecimal.ZERO -> PriceChangeType.UP
+        scaled < BigDecimal.ZERO -> PriceChangeType.DOWN
         else -> PriceChangeType.NEUTRAL
     }
 }
@@ -84,16 +86,5 @@ internal fun PriceChangeType.toChartType(): MarketChartLook.Type {
         PriceChangeType.UP -> MarketChartLook.Type.Growing
         PriceChangeType.DOWN -> MarketChartLook.Type.Falling
         PriceChangeType.NEUTRAL -> MarketChartLook.Type.Neutral
-    }
-}
-
-@Suppress("MagicNumber")
-internal fun getChartTypeByPercent(percent: BigDecimal?): MarketChartLook.Type {
-    val scaled = percent?.setScale(4, RoundingMode.HALF_UP)
-    return when {
-        scaled == null -> return MarketChartLook.Type.Neutral
-        scaled > BigDecimal.ZERO -> MarketChartLook.Type.Growing
-        scaled < BigDecimal.ZERO -> MarketChartLook.Type.Falling
-        else -> MarketChartLook.Type.Neutral
     }
 }

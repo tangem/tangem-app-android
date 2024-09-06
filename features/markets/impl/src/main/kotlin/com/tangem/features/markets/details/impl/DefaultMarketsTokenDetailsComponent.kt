@@ -1,5 +1,6 @@
 package com.tangem.features.markets.details.impl
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -8,11 +9,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.features.markets.component.BottomSheetState
-import com.tangem.features.markets.details.api.MarketsTokenDetailsComponent
+import com.tangem.core.ui.res.LocalMainBottomSheetColor
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.markets.details.MarketsTokenDetailsComponent
+import com.tangem.features.markets.details.MarketsTokenDetailsComponent.Params
 import com.tangem.features.markets.details.impl.model.MarketsTokenDetailsModel
 import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
 import com.tangem.features.markets.details.impl.ui.MarketsTokenDetailsContent
+import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -23,24 +27,27 @@ import kotlinx.coroutines.launch
 @Stable
 internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: MarketsTokenDetailsComponent.Params,
-    @Assisted private val onBack: () -> Unit,
+    @Assisted params: Params,
     portfolioComponentFactory: MarketsPortfolioComponent.Factory,
 ) : AppComponentContext by appComponentContext, MarketsTokenDetailsComponent {
 
     private val model: MarketsTokenDetailsModel = getOrCreateModel(params)
 
-    private val portfolioComponent = portfolioComponentFactory.create(
-        context = child("my_portfolio"),
-        params = MarketsPortfolioComponent.Params(params.token.id),
-    )
+    private val portfolioComponent: MarketsPortfolioComponent? = if (params.showPortfolio) {
+        portfolioComponentFactory.create(
+            context = child("my_portfolio"),
+            params = MarketsPortfolioComponent.Params(params.token),
+        )
+    } else {
+        null
+    }
 
     init {
         componentScope.launch {
             model.networksState.collectLatest {
                 when (it) {
-                    is TokenNetworksState.NetworksAvailable -> portfolioComponent.setTokenNetworks(it.networks)
-                    TokenNetworksState.NoNetworksAvailable -> portfolioComponent.setNoNetworksAvailable()
+                    is TokenNetworksState.NetworksAvailable -> portfolioComponent?.setTokenNetworks(it.networks)
+                    TokenNetworksState.NoNetworksAvailable -> portfolioComponent?.setNoNetworksAvailable()
                     else -> {}
                 }
             }
@@ -64,26 +71,66 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
         val bsState by bottomSheetState
 
         LaunchedEffect(bsState) {
-            model.containerBottomSheetState.value = bsState
+            model.isVisibleOnScreen.value = bsState == BottomSheetState.EXPANDED
+        }
+
+        BackHandler(enabled = bsState == BottomSheetState.EXPANDED) {
+            navigateBack()
         }
 
         MarketsTokenDetailsContent(
-            state = state,
-            onBackClick = onBack,
-            onHeaderSizeChange = onHeaderSizeChange,
-            portfolioBlock = { modifier ->
-                portfolioComponent.Content(modifier)
-            },
             modifier = modifier,
+            backgroundColor = LocalMainBottomSheetColor.current.value,
+            addTopBarStatusBarPadding = false,
+            state = state,
+            onBackClick = {
+                if (bsState == BottomSheetState.EXPANDED) {
+                    navigateBack()
+                }
+            },
+            onHeaderSizeChange = onHeaderSizeChange,
+            portfolioBlock = portfolioComponent?.let { component ->
+                { blockModifier ->
+                    component.Content(blockModifier)
+                }
+            },
         )
     }
 
+    @Composable
+    override fun Content(modifier: Modifier) {
+        BackHandler {
+            navigateBack()
+        }
+
+        LifecycleStartEffect(Unit) {
+            model.isVisibleOnScreen.value = true
+            onStopOrDispose {
+                model.isVisibleOnScreen.value = false
+            }
+        }
+
+        val state by model.state.collectAsStateWithLifecycle()
+
+        MarketsTokenDetailsContent(
+            modifier = modifier,
+            backgroundColor = TangemTheme.colors.background.tertiary,
+            addTopBarStatusBarPadding = true,
+            state = state,
+            onBackClick = ::navigateBack,
+            onHeaderSizeChange = {},
+            portfolioBlock = portfolioComponent?.let { component ->
+                { blockModifier ->
+                    component.Content(blockModifier)
+                }
+            },
+        )
+    }
+
+    private fun navigateBack() = router.pop()
+
     @AssistedFactory
     interface Factory : MarketsTokenDetailsComponent.Factory {
-        override fun create(
-            context: AppComponentContext,
-            params: MarketsTokenDetailsComponent.Params,
-            onBack: () -> Unit,
-        ): DefaultMarketsTokenDetailsComponent
+        override fun create(context: AppComponentContext, params: Params): DefaultMarketsTokenDetailsComponent
     }
 }

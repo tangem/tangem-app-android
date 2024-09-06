@@ -2,7 +2,9 @@ package com.tangem.features.markets.details.impl.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
-import com.tangem.common.ui.charts.state.*
+import com.tangem.common.ui.charts.state.MarketChartData
+import com.tangem.common.ui.charts.state.MarketChartDataProducer
+import com.tangem.common.ui.charts.state.sorted
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,25 +13,25 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
-import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
-import com.tangem.features.markets.component.BottomSheetState
-import com.tangem.features.markets.details.api.MarketsTokenDetailsComponent
+import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.impl.model.converters.DescriptionConverter
 import com.tangem.features.markets.details.impl.model.converters.TokenMarketInfoConverter
 import com.tangem.features.markets.details.impl.model.formatter.*
 import com.tangem.features.markets.details.impl.model.formatter.formatAsPrice
 import com.tangem.features.markets.details.impl.model.formatter.getChangePercentBetween
 import com.tangem.features.markets.details.impl.model.formatter.getPercentByInterval
+import com.tangem.features.markets.details.impl.model.state.QuotesStateUpdater
 import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -52,7 +54,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
-    private val getTokenQuotesUseCase: GetTokenQuotesUseCase,
+    private val getTokenFullQuotesUseCase: GetTokenFullQuotesUseCase,
     private val urlOpener: UrlOpener,
 ) : Model() {
 
@@ -77,6 +79,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             urlOpener.openUrl(it.url)
         },
     )
+
     private val descriptionConverter = DescriptionConverter(
         onReadModeClicked = {
             showInfoBottomSheet(it)
@@ -96,7 +99,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     BigDecimalFormatter.formatFiatPriceUncapped(
                         fiatAmount = value,
                         fiatCurrencyCode = currentAppCurrency.value.code,
-                        fiatCurrencySymbol = "",
+                        fiatCurrencySymbol = currentAppCurrency.value.symbol,
                     )
                 },
             )
@@ -116,9 +119,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         ),
     )
 
-    private var lastUpdatedTimestamp: Long = DateTime.now().millis
+    private val currentTokenInfo = MutableStateFlow<TokenMarketInfo?>(null)
+    private val lastUpdatedTimestamp = MutableStateFlow(DateTime.now().millis)
 
-    val containerBottomSheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
     val isVisibleOnScreen = MutableStateFlow(false)
     val networksState = MutableStateFlow<TokenNetworksState>(TokenNetworksState.Loading)
 
@@ -131,19 +134,16 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 fiatCurrencySymbol = currentAppCurrency.value.symbol,
             ),
             dateTimeText = resourceReference(R.string.common_today),
-            priceChangePercentText = BigDecimalFormatter.formatPercent(
-                percent = params.token.tokenQuotes.h24Percent,
-                useAbsoluteValue = true,
-            ),
-            priceChangeType = if (params.token.tokenQuotes.h24Percent < BigDecimal.ZERO) {
-                PriceChangeType.DOWN
-            } else {
-                PriceChangeType.UP
+            priceChangePercentText = params.token.tokenQuotes.h24Percent?.let {
+                BigDecimalFormatter.formatPercent(
+                    percent = it,
+                    useAbsoluteValue = true,
+                )
             },
+            priceChangeType = params.token.tokenQuotes.h24Percent.percentChangeType(),
             iconUrl = params.token.imageUrl,
             chartState = MarketsTokenDetailsUM.ChartState(
                 dataProducer = chartDataProducer,
-                chartLook = MarketChartLook(),
                 onLoadRetryClick = ::onLoadRetryClicked,
                 status = MarketsTokenDetailsUM.ChartState.Status.LOADING,
                 onMarkerPointSelected = ::onMarkerPointSelected,
@@ -159,6 +159,14 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 content = TangemBottomSheetConfigContent.Empty,
             ),
         ),
+    )
+
+    private val quotesStateUpdater = QuotesStateUpdater(
+        currentAppCurrency = Provider { currentAppCurrency.value },
+        state = state,
+        currentQuotes = currentQuotes,
+        lastUpdatedTimestamp = lastUpdatedTimestamp,
+        currentTokenInfo = currentTokenInfo,
     )
 
     private val loadChartJobHolder = JobHolder()
@@ -184,7 +192,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private fun loadQuotes() {
         modelScope.launch {
-            val result = getTokenQuotesUseCase(
+            val result = getTokenFullQuotesUseCase(
                 tokenId = params.token.id,
                 appCurrency = currentAppCurrency.value,
             )
@@ -213,6 +221,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 appCurrency = currentAppCurrency.value,
                 interval = interval,
                 tokenId = params.token.id,
+                preview = false,
             )
 
             state.update {
@@ -229,9 +238,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             chart.onRight {
                 chartDataProducer.runTransactionSuspend {
                     chartData = MarketChartData.Data(
-                        x = it.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
                         y = it.priceY.toImmutableList(),
-                    )
+                        x = it.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
+                    ).sorted()
 
                     updateLook {
                         it.copy(
@@ -246,6 +255,11 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                         chartState = it.chartState.copy(
                             status = MarketsTokenDetailsUM.ChartState.Status.DATA,
                         ),
+                        body = if (it.body is MarketsTokenDetailsUM.Body.Nothing) {
+                            MarketsTokenDetailsUM.Body.Error(onLoadRetryClick = ::onLoadRetryClicked)
+                        } else {
+                            it.body
+                        },
                     )
                 }
             }.onLeft {
@@ -279,39 +293,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             )
 
             tokenMarketInfo.fold(
-                ifRight = { result ->
-                    currentQuotes.value = result.quotes
-                    val percent = result.quotes.getPercentByInterval(interval = state.value.selectedInterval)
-                    state.update {
-                        it.copy(
-                            priceText = result.quotes.currentPrice.formatAsPrice(currentAppCurrency.value),
-                            priceChangePercentText = result.quotes.getFormattedPercentByInterval(
-                                interval = it.selectedInterval,
-                            ),
-                            priceChangeType = percent.percentChangeType(),
-                            body = MarketsTokenDetailsUM.Body.Content(
-                                description = descriptionConverter.convert(result),
-                                infoBlocks = infoConverter.convert(result),
-                            ),
-                        )
-                    }
-
-                    val networks = result.networks
-
-                    networksState.value = if (networks.isNullOrEmpty()) {
-                        TokenNetworksState.NoNetworksAvailable
-                    } else {
-                        TokenNetworksState.NetworksAvailable(networks)
-                    }
-
-                    chartDataProducer.runTransaction {
-                        updateLook {
-                            it.copy(
-                                type = getChartTypeByPercent(percent),
-                            )
-                        }
-                    }
-                },
+                ifRight = { result -> updateInfo(result) },
                 ifLeft = {
                     state.update {
                         if (it.chartState.status == MarketsTokenDetailsUM.ChartState.Status.DATA) {
@@ -331,48 +313,54 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
     }
 
-    private suspend fun updateQuotes(newQuotes: TokenQuotes) {
-        val triggerPriceChangeType = getFormattedPriceChange(
-            currentPrice = currentQuotes.value.currentPrice,
-            updatedPrice = newQuotes.currentPrice,
-        )
-        val trigger = if (triggerPriceChangeType != PriceChangeType.NEUTRAL) {
-            triggeredEvent(
-                data = triggerPriceChangeType,
-                onConsume = {
-                    state.update { it.copy(triggerPriceChange = consumedEvent()) }
-                },
+    private fun updateInfo(newInfo: TokenMarketInfo) {
+        lastUpdatedTimestamp.value = DateTime.now().millis
+
+        currentTokenInfo.value = newInfo
+        currentQuotes.value = newInfo.quotes
+
+        val percent = newInfo.quotes.getPercentByInterval(interval = state.value.selectedInterval)
+
+        state.update {
+            it.copy(
+                priceText = newInfo.quotes.currentPrice.formatAsPrice(currentAppCurrency.value),
+                priceChangePercentText = newInfo.quotes.getFormattedPercentByInterval(
+                    interval = it.selectedInterval,
+                ),
+                priceChangeType = percent.percentChangeType(),
+                body = MarketsTokenDetailsUM.Body.Content(
+                    description = descriptionConverter.convert(newInfo),
+                    infoBlocks = infoConverter.convert(newInfo),
+                ),
             )
-        } else {
-            consumedEvent()
         }
 
-        val percent = newQuotes.getPercentByInterval(interval = state.value.selectedInterval)
-        val priceChangeType = percent.percentChangeType()
+        val networks = newInfo.networks?.filter {
+            BlockchainUtils.isSupportedNetworkId(it.networkId)
+        }
 
-        // wait until marker is removed
-        state.first { it.markerSet.not() }
-
-        currentQuotes.value = newQuotes
-        lastUpdatedTimestamp = DateTime.now().millis
-
-        state.update { stateToUpdate ->
-            stateToUpdate.copy(
-                priceText = newQuotes.currentPrice.formatAsPrice(currentAppCurrency.value),
-                priceChangePercentText = newQuotes.getFormattedPercentByInterval(
-                    interval = stateToUpdate.selectedInterval,
-                ),
-                priceChangeType = priceChangeType,
-                triggerPriceChange = trigger,
-                dateTimeText = getDefaultDateTimeString(stateToUpdate.selectedInterval),
-            )
+        networksState.value = if (networks.isNullOrEmpty()) {
+            TokenNetworksState.NoNetworksAvailable
+        } else {
+            TokenNetworksState.NetworksAvailable(networks)
         }
 
         chartDataProducer.runTransaction {
             updateLook {
-                it.copy(
-                    type = getChartTypeByPercent(percent),
-                )
+                it.copy(type = percent.percentChangeType().toChartType())
+            }
+        }
+    }
+
+    private suspend fun updateQuotes(newQuotes: TokenQuotes) {
+        quotesStateUpdater.updateQuotes(newQuotes)
+
+        val percent = newQuotes
+            .getPercentByInterval(interval = state.value.selectedInterval)
+
+        chartDataProducer.runTransaction {
+            updateLook {
+                it.copy(type = percent.percentChangeType().toChartType())
             }
         }
     }
@@ -440,7 +428,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         chartDataProducer.runTransaction {
             updateLook {
                 it.copy(
-                    type = getChartTypeByPercent(percent),
+                    type = percent.percentChangeType().toChartType(),
                 )
             }
         }
@@ -487,9 +475,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         launch {
             while (true) {
                 delay(timeMillis)
-                // Update quotes only when the container bottom sheet is in the expanded state
-                containerBottomSheetState.first { it == BottomSheetState.EXPANDED }
-                // and is visible on the screen
+                // Update quotes only when content is visible on the screen
                 isVisibleOnScreen.first { it }
 
                 loadQuotes()
@@ -502,7 +488,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             interval = interval,
             startTimestamp = MarketsDateTimeFormatters.getStartTimestampByInterval(
                 interval = interval,
-                currentTimestamp = lastUpdatedTimestamp,
+                currentTimestamp = lastUpdatedTimestamp.value,
             ),
         )
     }

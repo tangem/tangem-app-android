@@ -1,8 +1,12 @@
 package com.tangem.tap.domain.card
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
+import com.tangem.data.common.currency.getNetworkDerivationPath
+import com.tangem.data.common.currency.getNetworkStandardType
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -40,11 +44,23 @@ internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
     }
 
     private fun createCoin(blockchain: Blockchain): CryptoCurrency {
-        return factory.createCoin(
-            blockchain = blockchain,
-            extraDerivationPath = null,
-            derivationStyleProvider = scanResponse.derivationStyleProvider,
-        )!!
+        val network = Network(
+            id = Network.ID(blockchain.id),
+            backendId = blockchain.toNetworkId(),
+            name = blockchain.getNetworkName(),
+            isTestnet = blockchain.isTestnet(),
+            derivationPath = getNetworkDerivationPath(
+                blockchain,
+                extraDerivationPath = null,
+                scanResponse.derivationStyleProvider,
+            ),
+            currencySymbol = blockchain.currency,
+            standardType = getNetworkStandardType(blockchain),
+            hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
+            canHandleTokens = false,
+        )
+
+        return factory.createCoin(network = network)
     }
 
     // Impossible to create custom token by CryptoCurrencyFactory because it works with URI under the hood
@@ -68,6 +84,7 @@ internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
                 isTestnet = false,
                 standardType = Network.StandardType.ERC20,
                 hasFiatFeeRate = true,
+                canHandleTokens = true,
             ),
             name = "NEVER-MIND",
             symbol = "NEVER-MIND",

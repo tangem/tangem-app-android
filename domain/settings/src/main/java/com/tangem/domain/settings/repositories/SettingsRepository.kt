@@ -10,8 +10,6 @@ interface SettingsRepository {
 
     suspend fun setWalletScrollPreviewAvailability(isEnabled: Boolean)
 
-    fun saveLogMessage(message: String)
-
     fun deleteDeprecatedLogs(maxSize: Int)
 
     suspend fun isSendTapHelpPreviewEnabled(): Boolean
@@ -31,4 +29,8 @@ interface SettingsRepository {
     suspend fun setShouldSaveAccessCodes(value: Boolean)
 
     suspend fun incrementAppLaunchCounter()
+
+    suspend fun shouldShowMarketsTooltip(): Boolean
+
+    suspend fun setMarketsTooltipShown(value: Boolean)
 }

@@ -5,6 +5,8 @@ import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -218,12 +220,14 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Swap(
         val currency: CryptoCurrency,
-    ) : AppRoute(path = "/swap/${currency.id.value}"), RouteBundleParams {
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/swap/${currency.id.value}/${userWalletId.stringValue}"), RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
 
         companion object {
             const val CURRENCY_BUNDLE_KEY = "currency"
+            const val USER_WALLET_ID_KEY = "userWalletId"
         }
     }
 
@@ -263,4 +267,11 @@ sealed class AppRoute(val path: String) : Route {
     data class WalletSettings(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/wallet_settings/${userWalletId.stringValue}")
+
+    @Serializable
+    data class MarketsTokenDetails(
+        val token: TokenMarketParams,
+        val appCurrency: AppCurrency,
+        val showPortfolio: Boolean,
+    ) : AppRoute(path = "/markets_token_details/${token.id}/$showPortfolio")
 }

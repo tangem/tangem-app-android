@@ -78,8 +78,8 @@
   <string name="common_attention">Увага</string>
   <string name="common_balance">Баланс: %s</string>
   <string name="common_balance_title">Баланс</string>
-  <string name="common_biometric_authentication">біометрична автентифікація</string>
-  <string name="common_biometrics">біометрією</string>
+  <string name="common_biometric_authentication">біометричну автентифікацію</string>
+  <string name="common_biometrics">біометрії</string>
   <string name="common_buy">Купити</string>
   <string name="common_buy_currency">Перейдіть до %1$s</string>
   <string name="common_camera_denied_alert_message">Ви не надали доступ до камери, будь ласка, змініть налаштування конфіденційності</string>
@@ -107,7 +107,6 @@
   <string name="common_explore">Оглядач</string>
   <string name="common_explore_transaction_history">Переглянути історію транзакцій</string>
   <string name="common_explorer">Оглядач</string>
-  <string name="common_fee_label">Комісія</string>
   <string name="common_fee_selector_footer">Мережеві комісії – це збори, які користувачі сплачують за обробку та підтвердження транзакцій. На розмір комісії може впливати перевантаження мережі, розмір транзакції та пріоритет виконання. %s</string>
   <string name="common_fee_selector_option_fast">Швидко</string>
   <string name="common_fee_selector_option_market">За ринком</string>
@@ -130,6 +129,7 @@
   <string name="common_origin_card">Основна картка</string>
   <string name="common_passphrase">Парольна фраза</string>
   <string name="common_paste">Вставити</string>
+  <string name="common_privacy_policy">Політикою конфіденційності</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Детальніше</string>
@@ -152,11 +152,12 @@
   <string name="common_stake">Застейкати</string>
   <string name="common_staking">Стейкінг</string>
   <string name="common_start">Почати</string>
-  <string name="common_submit">Надіслати</string>
+  <string name="common_submit">Продовжити</string>
   <string name="common_success">Успіх</string>
   <string name="common_support">Підтримка</string>
   <string name="common_swap">Обмін</string>
   <string name="common_terms_and_conditions">умови участі</string>
+  <string name="common_terms_of_use">Умовами використання</string>
   <string name="common_today">Сьогодні</string>
   <string name="common_transaction_failed">Помилка транзакції</string>
   <string name="common_transactions">Транзакції</string>
@@ -172,7 +173,7 @@
   <string name="custom_token_contract_address_input_title">Адреса контракту</string>
   <string name="custom_token_creation_error_invalid_contract_address">Адреса контракту недійсна</string>
   <string name="custom_token_creation_error_network_not_selected">Будь ласка, оберіть мережу</string>
-  <string name="custom_token_creation_error_wrong_decimals">Десяткове число повинно бути дійсним цілим числом, до %li</string>
+  <string name="custom_token_creation_error_wrong_decimals">Десяткове число повинно бути дійсним цілим числом, до %d</string>
   <string name="custom_token_custom_derivation">Власна деривація</string>
   <string name="custom_token_custom_derivation_placeholder">Наприклад, m/00\'/0000\'/0\'/0/0</string>
   <string name="custom_token_custom_derivation_title">Введіть власну деривацію</string>
@@ -225,7 +226,6 @@
   <string name="express_choose_providers_subtitle">Tangem пропонує обмін токенів через сторонніх провайдерів відповідно до умов кожного провайдера</string>
   <string name="express_choose_providers_title">Оберіть провайдера</string>
   <string name="express_error_code">Виникла помилка. Код: %s</string>
-  <string name="express_error_provider_unavailable">На жаль, обмін вказаної пари через обраного провайдера тимчасово неможливий. Спробуйте здійснити обмін пізніше. (Код: %s)</string>
   <string name="express_error_swap_pair_unavailable">Наразі обраний провайдер недоступний для обміну. Спробуй пізніше. (Код: %s)</string>
   <string name="express_error_swap_unavailable">Наразі обмін неможливий. Спробуй пізніше. (Код: %s)</string>
   <string name="express_estimated_amount">Курс обміну</string>
@@ -261,7 +261,6 @@
   <string name="express_legal_one_placeholder">Використовуючи сервіс обміну, ви погоджуєтеся з його %s</string>
   <string name="express_legal_two_placeholders">Використовуючи сервіс обміну, ви погоджуєтеся з його %1$s та %2$s</string>
   <string name="express_more_providers_soon">Незабаром з\'являться нові провайдери.\nСлідкуйте за новинами!</string>
-  <string name="express_privacy_policy">Політикою конфіденційності</string>
   <string name="express_provider">Провайдер</string>
   <string name="express_provider_best_rate">Найкращий курс</string>
   <string name="express_provider_max_amount">Доступно до %s</string>
@@ -269,7 +268,6 @@
   <string name="express_provider_not_available">Недоступно для цієї пари</string>
   <string name="express_provider_permission_needed">Потрібен дозвіл</string>
   <string name="express_provider_recommended">Рекомендовано</string>
-  <string name="express_terms_of_use">Умовами використання</string>
   <string name="express_token_list_empty_search">Токенів не знайдено. Будь ласка, спробуйте інший запит</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">ID транзакції скопійовано</string>
@@ -353,7 +351,7 @@
   <string name="markets_loading_error_title">Не вдалося завантажити дані...</string>
   <string name="markets_quick_actions">Швидкі дії</string>
   <string name="markets_search_result_title">Результат</string>
-  <string name="markets_search_see_tokens_under_100k">Переглянути токени до 100к ринкової капіталізації</string>
+  <string name="markets_search_see_tokens_under_100k">Переглянути токени до 100к USD ринкової капіталізації</string>
   <string name="markets_search_show_tokens">Показати токени</string>
   <string name="markets_search_token_no_result_title">Жодного результату</string>
   <string name="markets_select_network">Виберіть мережу</string>
@@ -378,7 +376,7 @@
     <item quantity="many">На основі %d оцінок</item>
     <item quantity="other">На основі %d оцінок</item>
   </plurals>
-  <string name="markets_token_details_blockchain_site">Блокчейн сайт</string>
+  <string name="markets_token_details_blockchain_site">Веб-сайт</string>
   <string name="markets_token_details_buy_pressure">Давлення покупця</string>
   <string name="markets_token_details_buy_pressure_description">Різниця між обсягом покупців та обсягом продавців</string>
   <string name="markets_token_details_circulating_supply">Циркуляційний запас</string>
@@ -474,7 +472,7 @@
   <string name="onboarding_seed_intro_title">Використовувати seed-фразу</string>
   <string name="onboarding_seed_mnemonic_invalid_checksum">Невірна seed-фраза. Будь ласка, перевірте порядок слів.</string>
   <string name="onboarding_seed_mnemonic_wrong_words">Невірна seed-фраза. Будь ласка, перевірте правопис.</string>
-  <string name="onboarding_seed_phrase_intro_legacy">Застарілий</string>
+  <string name="onboarding_seed_phrase_intro_legacy">Застаріло</string>
   <string name="onboarding_seed_user_validation_message">Щоб перевірити чи правильно ви записали seed-фразу, введіть 2-е, 7-е та 11-те слова</string>
   <string name="onboarding_seed_user_validation_title">Отже, давайте перевіримо</string>
   <string name="onboarding_subtitle_no_backup_cards">Щоб почати процес резервного копіювання, додайте одну або дві резервні картки.</string>
@@ -531,7 +529,7 @@
     <item quantity="many">за %d гаманців</item>
     <item quantity="other">за %d гаманців</item>
   </plurals>
-  <string name="referral_point_currencies_description">Отримайте ^^%1$s^^ на вашу адресу в мережі %2$s%3$s ^^через 30 днів^^ за кожен гаманець, який придбає ваш друг</string>
+  <string name="referral_point_currencies_description">Отримаєте ^^%1$s^^ на вашу адресу в мережі %2$s %3$s ^^через 30 днів^^ за кожен гаманець, який придбає ваш друг</string>
   <string name="referral_point_currencies_title">Ви</string>
   <string name="referral_point_discount_description_prefix">Отримає</string>
   <string name="referral_point_discount_description_suffix">при купівлі гаманця на сайті tangem.com</string>
@@ -584,18 +582,11 @@
   <string name="send_custom_kaspa_per_utxo_footer">Комісія, необхідна за використання кожної невитраченої транзакції (UTXO) у мережі Kaspa. Чим більше UTXO ви використовуєте в транзакції, тим вищою буде комісія.</string>
   <string name="send_custom_kaspa_per_utxo_title">KAS за UTXO</string>
   <string name="send_date_format">%1$s, %2$s</string>
-  <string name="send_destination_hint_address">Адреса</string>
   <string name="send_destination_tag_field">Тег призначення</string>
   <string name="send_enter_address_field">Введіть адресу</string>
   <string name="send_error_address_same_as_wallet">Адреса збігається з адресою гаманця</string>
-  <string name="send_extras_error_invalid_destination_tag">Недопустимий Tag. Він не буде доданий у транзакцію.</string>
   <string name="send_extras_error_invalid_memo">Недопустимий Memo. Він не буде доданий до транзакції.</string>
-  <string name="send_extras_hint_destination_tag">Tag</string>
   <string name="send_extras_hint_memo">Memo</string>
-  <string name="send_fee_include_description">Включаючи комісію</string>
-  <string name="send_fee_picker_low">Низька</string>
-  <string name="send_fee_picker_normal">Нормальна</string>
-  <string name="send_fee_picker_priority">Пріоритетна</string>
   <string name="send_fee_unreachable_error_text">Перевірте підключення до мережі</string>
   <string name="send_fee_unreachable_error_title">Інформація щодо комісії в мережі недоступна</string>
   <string name="send_from_wallet_android">Із</string>
@@ -610,7 +601,7 @@
   <string name="send_network_fee_warning_title">Покриття мережевої комісії</string>
   <string name="send_notification_exceed_balance_text">Недостатньо коштів для здійснення переказу, оскільки загальна сума комісії та переказу перевищує наявний баланс</string>
   <string name="send_notification_exceed_balance_title">Сума перевищує баланс</string>
-  <string name="send_notification_existential_deposit_text">Рахунок буде видалено з блокчейну, якщо баланс стане нижчим за екзистенційний депозит. Будь ласка, залиште %s на своєму балансі.</string>
+  <string name="send_notification_existential_deposit_text">Для збереження вашого акаунту у блокчейні та захисту від можливих ризиків необхідний баланс не менше %s. Ця сума залишиться на вашому рахунку та не може бути знята.</string>
   <string name="send_notification_existential_deposit_title">Екзистенційний депозит</string>
   <string name="send_notification_fee_too_high_text">Сума комісії в %s разів перевищує рекомендовану. Переконайтеся, що користувацькі налаштування вірні.</string>
   <string name="send_notification_fee_too_high_title">Встановлена комісія завелика</string>
@@ -644,23 +635,16 @@
   <string name="send_summary_title">Надіслати %s</string>
   <string name="send_summary_transaction_description">Ви надсилаєте **%1$s**, включно з комісію мережі %2$s</string>
   <string name="send_summary_transaction_description_no_fiat_fee">Ви надсилаєте **%1$s** і %2$s</string>
-  <string name="send_title_currency_format">Надсилання %s</string>
-  <string name="send_total_label">Всього</string>
-  <string name="send_total_subtitle_asset_format">%1$s та %2$s буде надіслано</string>
-  <string name="send_total_subtitle_fiat_format">≈ %1$s (вкл. комісію: %2$s )</string>
-  <string name="send_total_subtitle_format">%s буде надіслано</string>
   <string name="send_transaction_success">Транзакція успішно підписана і відправлена до блокчейну. Баланс гаманця буде оновлено через деякий час</string>
   <string name="send_tron_account_activation_error">%1$s — це монета у мережі Tron. Щоб розрахувати комісію та здійснити транзакцію, вам необхідно внести певну кількість Tron (TRX) на свій рахунок.</string>
-  <string name="send_validation_invalid_address">Недійсна адреса</string>
   <string name="sent_transaction_sent_title">Трансакцію надіслано</string>
-  <string name="settings_card_settings_footer">Підготуйтеся до сканування картку, яку потрібно налаштувати.</string>
+  <string name="settings_card_settings_footer">Підготуйте до сканування картку, яку потрібно налаштувати.</string>
   <string name="settings_forget_wallet">Забути гаманець</string>
   <string name="settings_forget_wallet_footer">Це призведе до видалення гаманця з застосунку. Сам гаманець можна додати знову.</string>
   <string name="settings_wallet_name_title">Ім\'я</string>
-  <string name="staking_active">Активний</string>
-  <string name="staking_active_footer">Щоб вивести активи зі стейкінгу, натисніть тут.</string>
   <string name="staking_amount_requirement_error">Сума для стейкінгу має бути не менше %s</string>
   <string name="staking_claim_unstaked">Зняти кошти</string>
+  <string name="staking_details_annual_percentage_rate">Процентна ставка</string>
   <string name="staking_details_annual_percentage_rate_info">Річний відсоток, який ви можете отримати, беручи участь у стейкінгу.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_available">Доступно</string>
@@ -688,7 +672,7 @@
   <string name="staking_notification_earn_rewards_text_period_month">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються щомісяця.</string>
   <string name="staking_notification_earn_rewards_text_period_week">Стейкінг дозволяє заробляти %1$s. Ваші винагороди за стейкінг зараховуються щотиждня.</string>
   <string name="staking_notification_earn_rewards_title">Отримуйте винагороду за стейкінг</string>
-  <string name="staking_notification_unstake_text">Винагороди припиняють нараховуватися одразу після того, як ви знімаєте ставку. Процес зняття займає %s.</string>
+  <string name="staking_notification_unstake_text">Винагорода припиняє нараховуватися одразу після того, як ви почнете процес завершення стейкінгу. Процес завершення триває %s.</string>
   <string name="staking_rebond">Зʼєднати ще раз</string>
   <string name="staking_restake">Повторно застейкати</string>
   <string name="staking_restake_rewards">Застейкати винагороди</string>
@@ -704,13 +688,12 @@
   <string name="staking_reward_schedule_month">Місяць</string>
   <string name="staking_reward_schedule_week">Тиждень</string>
   <string name="staking_rewards">Винагороди</string>
-  <string name="staking_stake_locked">Застейкати</string>
+  <string name="staking_stake_locked">Стейкінг закрито</string>
   <string name="staking_stake_more">Застейкати більше</string>
   <string name="staking_title_stake">Застейкати %s</string>
   <string name="staking_title_unstake">Зняти зі стейкінгу %s</string>
   <string name="staking_unlocked_locked">Розблокувати</string>
-  <string name="staking_unstaked">Скасовано зі стейкінгу</string>
-  <string name="staking_unstaked_footer">Перевірити незастейкані, щоб отримати свої активи</string>
+  <string name="staking_unstaked">Вивід зі стейкінгу</string>
   <string name="staking_unstaking">Зняти зі стейкінгу</string>
   <string name="staking_validator">Валідатор</string>
   <string name="staking_vote">Проголосувати</string>
@@ -844,8 +827,6 @@
   <string name="wallet_settings_title">Налаштування гаманця</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Використовуйте %s або відскануйте картку, щоб розблокувати доступ до гаманця</string>
-  <string name="warning_approval_in_progress_message">Затвердження обміну триває і незабаром буде завершено</string>
-  <string name="warning_approval_in_progress_title">Затвердження в процесі</string>
   <string name="warning_backup_errors_message">Схоже, що активація картки була виконана неправильно. Це може бути пов\'язано з проблемою з модулем NFC вашого пристрою або неправильним прикладанням картки до пристрою. Зверніться за допомогою до нашої служби підтримки.</string>
   <string name="warning_backup_errors_title">Помилка активації</string>
   <string name="warning_beacon_chain_retirement_content">За рішенням розробників мережі BNB стандарт BEP-2 перестане підтримуватись у червні 2024 року. Щоб не втратити свої активи, їх необхідно конвертувати у стандарт BEP-20. Використовуйте функцію обміну, щоб перевести їх у мережу BNB Smart Chain.</string>
@@ -863,12 +844,16 @@
   <string name="warning_existential_deposit_title">Для роботи з мережею вимагається депозит</string>
   <string name="warning_express_active_transaction_message">Обмін буде доступний після завершення %s транзакції</string>
   <string name="warning_express_active_transaction_title">У вас є активна транзакція</string>
+  <string name="warning_express_approval_in_progress_message">Затвердження обміну триває і незабаром буде завершено</string>
+  <string name="warning_express_approval_in_progress_title">Затвердження в процесі</string>
   <string name="warning_express_dust_message">Мінімальна сума обміну становить - %1$s. Будь ласка, переконайтеся, що залишок на рахунку після обміну буде не менше за %2$s.</string>
   <string name="warning_express_no_exchangeable_coins_description">У вашому списку немає доступних монет для обміну %s</string>
   <string name="warning_express_no_exchangeable_coins_title">Немає доступних токенів для обміну</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">Щоб здійснити транзакцію, вам потрібно внести трохи %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">Неможливо покрити комісію %s</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">Сума отримання не може бути меншою за %s</string>
+  <string name="warning_express_pair_unavailable_message">Це може статися тому, що провайдер наразі не може обміняти обрану пару. Будь ласка, зачекайте трохи та спробуйте ще раз. (Код %s)</string>
+  <string name="warning_express_pair_unavailable_title">Обрана пара тимчасово недоступна</string>
   <string name="warning_express_refresh_required_title">Сервіс тимчасово недоступний</string>
   <string name="warning_express_too_maximum_amount_title">Сума до обміну не повинна перевищувати %s</string>
   <string name="warning_express_too_minimal_amount_title">Сума для обміну має бути не менше %s</string>
@@ -883,6 +868,7 @@
   <string name="warning_low_signatures_message">На цій картці залишається лише %s підписів. Ви повинні вивести всі свої кошти.</string>
   <string name="warning_low_signatures_title">Низька кількість підписів</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токени в різних мережах можуть мати різні адреси. Переконайтеся, що ваша адреса відповідає мережі, коли переказуєте кошти.</string>
+  <string name="warning_matic_migration_message">Токен MATIC мігрує до POL. Однак кінцевого терміну не встановлено і MATIC ще не застарілий. Ви можете безпечно продовжувати використовувати токен MATIC або скористатися біржами, щоб обміняти його на POL.</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="one">Використовуйте вашу картку, щоб отримати адресу для %d мережі</item>
     <item quantity="few">Використовуйте вашу картку, щоб отримати адреси для %d мереж</item>

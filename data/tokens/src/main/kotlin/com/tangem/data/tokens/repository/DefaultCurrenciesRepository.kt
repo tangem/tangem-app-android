@@ -40,6 +40,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -131,7 +132,7 @@ internal class DefaultCurrenciesRepository(
         savedCurrencies: List<UserTokensResponse.Token>,
     ): List<CryptoCurrency.Coin> {
         return newTokens
-            .filterNot { savedCurrencies.hasCoinForToken(it) } // tokens without coins
+            .filterNot { savedCurrencies.hasCoinForToken(it.network) } // tokens without coins
             .mapNotNull {
                 cryptoCurrencyFactory.createCoin(
                     blockchain = getBlockchain(networkId = it.network.id),
@@ -152,15 +153,7 @@ internal class DefaultCurrenciesRepository(
             val token = userTokensResponseFactory.createResponseToken(currency)
             storeAndPushTokens(
                 userWalletId = userWalletId,
-                response = savedCurrencies.copy(
-                    tokens = savedCurrencies.tokens.filterNot {
-                        // it's better to compare by fields, to support renaming and etc
-                        it.contractAddress == token.contractAddress &&
-                            it.networkId == token.networkId &&
-                            it.derivationPath == token.derivationPath &&
-                            it.decimals == token.decimals
-                    },
-                ),
+                response = savedCurrencies.copy(tokens = savedCurrencies.tokens.filterNot { it == token }),
             )
         }
 
@@ -289,6 +282,21 @@ internal class DefaultCurrenciesRepository(
 
         responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
     }
+
+    override suspend fun getMultiCurrencyWalletCachedCurrenciesSync(userWalletId: UserWalletId) =
+        withContext(dispatchers.io) {
+            val userWallet = getUserWallet(userWalletId)
+            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
+
+            val storedTokens = requireNotNull(
+                value = getSavedUserTokensResponseSync(key = userWallet.walletId),
+                lazyMessage = {
+                    "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+                },
+            )
+
+            responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
+        }
 
     override suspend fun getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
@@ -470,23 +478,41 @@ internal class DefaultCurrenciesRepository(
         ) ?: error("Unable to create token")
     }
 
-    override suspend fun hasTokens(userWalletId: UserWalletId, network: Network): Boolean {
-        val userWallet = getUserWallet(userWalletId)
-        fetchTokensIfCacheExpired(userWallet, refresh = false)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
+        return userWalletsStore.userWallets.flatMapLatest { userWallets ->
+            userWallets.forEach { fetchTokensIfCacheExpired(userWallet = it, refresh = false) }
 
-        val storedTokens = requireNotNull(
-            value = appPreferencesStore.getObjectSyncOrNull<UserTokensResponse>(
-                key = PreferencesKeys.getUserTokensKey(userWallet.walletId.stringValue),
-            ),
-            lazyMessage = {
-                "Unable to find tokens response for user wallet with provided ID: $userWalletId"
-            },
-        )
+            val userWalletsWithCurrencies = userWallets
+                .filterNot(UserWallet::isLocked)
+                .map { userWallet ->
+                    if (userWallet.isMultiCurrency) {
+                        getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
+                            val filterResponse = storedTokens.tokens.filter { it.id == currencyRawId }
 
-        return storedTokens.tokens.any {
-            it.contractAddress != null &&
-                it.networkId == network.backendId &&
-                it.derivationPath == network.derivationPath.value
+                            responseCurrenciesFactory.createCurrencies(
+                                response = storedTokens.copy(tokens = filterResponse),
+                                scanResponse = userWallet.scanResponse,
+                            )
+                        }
+                    } else {
+                        flow {
+                            val currency = getSingleCurrencyWalletPrimaryCurrency(userWalletId = userWallet.walletId)
+
+                            val currencies = if (currency.id.rawCurrencyId == currencyRawId) {
+                                listOf(currency)
+                            } else {
+                                emptyList()
+                            }
+
+                            emit(currencies)
+                        }
+                    }
+                        .map { userWallet to it }
+                }
+
+            combine(userWalletsWithCurrencies) { it.toMap() }
+                .onEmpty { emit(value = emptyMap()) }
         }
     }
 

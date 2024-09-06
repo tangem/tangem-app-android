@@ -3,10 +3,13 @@ package com.tangem.data.staking.converters
 import com.tangem.datasource.api.stakekit.models.response.model.AddressArgumentDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
+import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
 import com.tangem.domain.staking.model.stakekit.AddressArgument
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.Yield.Metadata.RewardSchedule
+import com.tangem.domain.staking.model.stakekit.Yield.Validator.ValidatorStatus
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.toImmutableList
 
 class YieldConverter(
     private val tokenConverter: TokenConverter,
@@ -24,9 +27,11 @@ class YieldConverter(
             rewardType = convertRewardType(value.rewardType),
             metadata = convertMetadata(value.metadata),
             validators = value.validators
-                .filter { it.preferred }
+                .asSequence()
+                .filter { it.preferred && it.status == ValidatorStatusDTO.ACTIVE }
+                .sortedByDescending { it.apr }
                 .map { convertValidator(it) }
-                .sortedByDescending { it.apr },
+                .toImmutableList(),
             isAvailable = value.isAvailable,
         )
     }
@@ -109,7 +114,7 @@ class YieldConverter(
     private fun convertValidator(validatorDTO: YieldDTO.ValidatorDTO): Yield.Validator {
         return Yield.Validator(
             address = validatorDTO.address,
-            status = validatorDTO.status,
+            status = convertValidatorStatus(validatorDTO.status),
             name = validatorDTO.name,
             image = validatorDTO.image,
             website = validatorDTO.website,
@@ -126,6 +131,16 @@ class YieldConverter(
             YieldDTO.RewardTypeDTO.APY -> Yield.RewardType.APY
             YieldDTO.RewardTypeDTO.APR -> Yield.RewardType.APR
             else -> Yield.RewardType.UNKNOWN
+        }
+    }
+
+    private fun convertValidatorStatus(validatorStatusDTO: ValidatorStatusDTO): ValidatorStatus {
+        return when (validatorStatusDTO) {
+            ValidatorStatusDTO.ACTIVE -> ValidatorStatus.ACTIVE
+            ValidatorStatusDTO.DEACTIVATING -> ValidatorStatus.DEACTIVATING
+            ValidatorStatusDTO.INACTIVE -> ValidatorStatus.INACTIVE
+            ValidatorStatusDTO.JAILED -> ValidatorStatus.JAILED
+            else -> ValidatorStatus.UNKNOWN
         }
     }
 

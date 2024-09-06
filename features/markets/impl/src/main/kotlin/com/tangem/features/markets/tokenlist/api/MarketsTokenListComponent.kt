@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.Dp
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
-import com.tangem.features.markets.component.BottomSheetState
+import com.tangem.features.markets.entry.BottomSheetState
 
 @Stable
 interface MarketsTokenListComponent {

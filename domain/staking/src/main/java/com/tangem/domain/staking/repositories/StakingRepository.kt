@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.Flow
 @Suppress("TooManyFunctions")
 interface StakingRepository {
 
+    fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String
+
     fun isStakingSupported(integrationKey: String): Boolean
 
     suspend fun fetchEnabledYields(refresh: Boolean)
@@ -30,10 +32,7 @@ interface StakingRepository {
 
     suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield
 
-    suspend fun getStakingAvailabilityForActions(
-        cryptoCurrencyId: CryptoCurrency.ID,
-        symbol: String,
-    ): StakingAvailability
+    suspend fun getStakingAvailability(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): StakingAvailability
 
     suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
@@ -82,9 +81,8 @@ interface StakingRepository {
 
     suspend fun sendUnsubmittedHashes()
 
-    /** Returns whether additional staking is possible if there is already active staking */
-    fun isStakeMoreAvailable(networkId: Network.ID): Boolean
-
     /** Returns staking approval */
     fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval
+
+    suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean
 }

@@ -37,10 +37,6 @@ internal class DefaultSettingsRepository(
         )
     }
 
-    override fun saveLogMessage(message: String) {
-        appLogsStore.saveLogMessage(message)
-    }
-
     override fun deleteDeprecatedLogs(maxSize: Int) {
         appLogsStore.deleteDeprecatedLogs(maxSize)
     }
@@ -91,5 +87,16 @@ internal class DefaultSettingsRepository(
             val count = preferences.getOrDefault(key = PreferencesKeys.APP_LAUNCH_COUNT_KEY, default = 0)
             preferences[PreferencesKeys.APP_LAUNCH_COUNT_KEY] = count + 1
         }
+    }
+
+    override suspend fun shouldShowMarketsTooltip(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.SHOULD_SHOW_MARKETS_TOOLTIP_KEY,
+            default = true,
+        )
+    }
+
+    override suspend fun setMarketsTooltipShown(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.SHOULD_SHOW_MARKETS_TOOLTIP_KEY, value = !value)
     }
 }

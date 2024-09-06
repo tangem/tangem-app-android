@@ -36,6 +36,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.ui.extensions.setStatusBarColor
+import com.tangem.datasource.utils.isNullOrEmpty
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.domain.common.util.cardTypesResolver
@@ -232,6 +233,16 @@ class OnboardingWalletFragment :
             pbBinding.pbState.progress = state.getProgressStep()
             Log.d("ddk9499", "newState: after progress")
 
+        when {
+            state.wallet2State != null -> {
+                seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
+                updateWalletImagesState(state.walletImages)
+            }
+            else -> {
+                updateWalletImagesState(state.walletImages)
+                handleOnboardingStep(state)
+            }
+        }
             when {
                 state.wallet2State != null -> {
                     Log.d("ddk9499", "newState: wallet2state != null")
@@ -259,6 +270,18 @@ class OnboardingWalletFragment :
                     handleOnboardingStep(state)
                 }
             }
+        }
+    }
+
+    private fun updateWalletImagesState(walletImages: WalletImages) {
+        if (!walletImages.primaryCardImage.isNullOrEmpty()) {
+            loadImageIntoImageView(walletImages.primaryCardImage, binding.imvFrontCard)
+        }
+        if (!walletImages.secondCardImage.isNullOrEmpty()) {
+            loadImageIntoImageView(walletImages.secondCardImage, binding.imvFirstBackupCard)
+        }
+        if (!walletImages.thirdCardImage.isNullOrEmpty()) {
+            loadImageIntoImageView(walletImages.thirdCardImage, binding.imvSecondBackupCard)
         }
     }
 

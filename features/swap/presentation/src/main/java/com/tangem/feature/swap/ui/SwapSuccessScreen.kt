@@ -28,7 +28,7 @@ import com.tangem.feature.swap.presentation.R
 fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
     Scaffold(
         modifier = Modifier.systemBarsPadding(),
-        backgroundColor = TangemTheme.colors.background.tertiary,
+        backgroundColor = TangemTheme.colors.background.secondary,
         content = { padding ->
             SwapSuccessScreenContent(padding = padding, state = state)
         },
