@@ -177,6 +177,7 @@ private fun ContentPreview() {
                     ),
                 ),
                 onInfoClick = {},
+                onIntervalChanged = {},
             ),
         )
     }

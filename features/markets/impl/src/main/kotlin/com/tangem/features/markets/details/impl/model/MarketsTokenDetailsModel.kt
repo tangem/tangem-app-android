@@ -193,6 +193,14 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         currentQuotes = currentQuotes,
         lastUpdatedTimestamp = lastUpdatedTimestamp,
         currentTokenInfo = currentTokenInfo,
+        onPricePerformanceIntervalChanged = {
+            analyticsEventHandler.send(
+                analyticsEventBuilder.intervalChanged(
+                    intervalType = MarketDetailsAnalyticsEvent.IntervalType.PricePerformance,
+                    interval = it,
+                ),
+            )
+        },
     )
 
     private val loadChartJobHolder = JobHolder()
