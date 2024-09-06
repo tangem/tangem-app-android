@@ -1,5 +1,6 @@
 package com.tangem.data.staking
 
+import arrow.core.Either
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.*
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -10,6 +11,7 @@ import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 internal class DefaultStakingTransactionHashRepository(
     private val stakeKitApi: StakeKitApi,
@@ -50,18 +52,33 @@ internal class DefaultStakingTransactionHashRepository(
                 key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
             )
 
-            savedTransactions.forEach {
-                stakeKitApi.submitTransactionHash(
-                    transactionId = it.transactionId,
-                    body = SubmitTransactionHashRequestBody(hash = it.transactionHash),
-                )
-            }
+            savedTransactions.forEach { transaction ->
+                Either.catch {
+                    stakeKitApi.submitTransactionHash(
+                        transactionId = transaction.transactionId,
+                        body = SubmitTransactionHashRequestBody(hash = transaction.transactionHash),
+                    )
 
-            appPreferencesStore.editData { mutablePreferences ->
-                mutablePreferences.setObjectList<UnsubmittedTransactionMetadata>(
-                    key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
-                    value = emptyList(),
-                )
+                    appPreferencesStore.editData { mutablePreferences ->
+                        val updatedTransactions =
+                            mutablePreferences.getObjectListOrDefault<UnsubmittedTransactionMetadata>(
+                                key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
+                                default = emptyList(),
+                            ).filterNot { it.transactionId == transaction.transactionId }
+
+                        mutablePreferences.setObjectList(
+                            key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
+                            value = updatedTransactions,
+                        )
+                    }
+                }.onLeft {
+                    val logMessage = buildString {
+                        append("Error while submitting transaction with\n")
+                        append("StakeKit id = ${transaction.transactionId} and\n")
+                        append("transaction hash = ${transaction.transactionHash}")
+                    }
+                    Timber.e(logMessage)
+                }
             }
         }
     }
