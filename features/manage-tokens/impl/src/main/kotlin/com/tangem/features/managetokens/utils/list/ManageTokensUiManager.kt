@@ -1,10 +1,15 @@
 package com.tangem.features.managetokens.utils.list
 
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.ContentMessage
+import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
+import com.tangem.features.managetokens.impl.R
+import com.tangem.features.managetokens.ui.dialog.CurrencyUnsupportedDialog
 import com.tangem.features.managetokens.ui.dialog.HasLinkedTokensWarning
 import com.tangem.features.managetokens.ui.dialog.HideTokenWarning
 import com.tangem.features.managetokens.utils.mapper.toUiModel
@@ -143,7 +148,13 @@ internal class ManageTokensUiManager(
         if (currency !is ManagedCryptoCurrency.Token) return@launch
 
         if (isSelected) {
-            actions.addCurrency(batchKey, currency, source.network)
+            val userWalletId = state.value.userWalletId
+            val unsupportedState = userWalletId?.let { actions.checkCurrencyUnsupportedState(it, source) }
+            if (unsupportedState != null) {
+                showUnsupportedWarning(unsupportedState)
+            } else {
+                actions.addCurrency(batchKey, currency, source.network)
+            }
         } else {
             if (actions.checkNeedToShowRemoveNetworkWarning(currency, source.network)) {
                 showRemoveNetworkWarning(
@@ -158,6 +169,31 @@ internal class ManageTokensUiManager(
                 actions.removeCurrency(batchKey, currency, source.network)
             }
         }
+    }
+
+    private fun showUnsupportedWarning(unsupportedState: CurrencyUnsupportedState) {
+        val message = ContentMessage { onDismiss ->
+            CurrencyUnsupportedDialog(
+                title = resourceReference(R.string.common_warning),
+                message = when (unsupportedState) {
+                    is CurrencyUnsupportedState.Token.NetworkTokensUnsupported -> resourceReference(
+                        id = R.string.alert_manage_tokens_unsupported_message,
+                        formatArgs = wrappedList(unsupportedState.networkName),
+                    )
+                    is CurrencyUnsupportedState.Token.UnsupportedCurve -> resourceReference(
+                        id = R.string.alert_manage_tokens_unsupported_curve_message,
+                        formatArgs = wrappedList(unsupportedState.networkName),
+                    )
+                    is CurrencyUnsupportedState.UnsupportedNetwork -> resourceReference(
+                        id = R.string.alert_manage_tokens_unsupported_curve_message,
+                        formatArgs = wrappedList(unsupportedState.networkName),
+                    )
+                },
+                onDismiss = onDismiss,
+            )
+        }
+
+        messageSender.send(message)
     }
 
     private suspend fun showRemoveNetworkWarning(
