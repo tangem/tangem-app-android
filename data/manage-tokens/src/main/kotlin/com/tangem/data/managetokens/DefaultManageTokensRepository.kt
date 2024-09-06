@@ -14,13 +14,13 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.extensions.canHandleBlockchain
+import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.supportedBlockchains
+import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.domain.managetokens.model.ManageTokensListBatchFlow
-import com.tangem.domain.managetokens.model.ManageTokensListBatchingContext
-import com.tangem.domain.managetokens.model.ManageTokensListConfig
-import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
+import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.tokens.model.Network
@@ -175,7 +175,51 @@ internal class DefaultManageTokensRepository(
             key = PreferencesKeys.getUserTokensKey(key.stringValue),
         )
     }
-    // endregion
 
-    data class TokenWithSourceNetwork(val token: ManagedCryptoCurrency.Token, val sourceNetwork: SourceNetwork)
+    override suspend fun checkCurrencyUnsupportedState(
+        userWalletId: UserWalletId,
+        sourceNetwork: SourceNetwork,
+    ): CurrencyUnsupportedState? {
+        val userWallet = getUserWallet(userWalletId = userWalletId)
+        val blockchain = getBlockchain(sourceNetwork.id)
+        return when (sourceNetwork) {
+            is SourceNetwork.Default -> checkTokenUnsupportedState(userWallet = userWallet, blockchain = blockchain)
+            is SourceNetwork.Main -> checkBlockchainUnsupportedState(userWallet = userWallet, blockchain = blockchain)
+        }
+    }
+
+    private fun checkBlockchainUnsupportedState(
+        userWallet: UserWallet,
+        blockchain: Blockchain,
+    ): CurrencyUnsupportedState? {
+        val canHandleBlockchain = userWallet.scanResponse.card.canHandleBlockchain(
+            blockchain = blockchain,
+            cardTypesResolver = userWallet.cardTypesResolver,
+        )
+
+        return if (!canHandleBlockchain) {
+            CurrencyUnsupportedState.UnsupportedNetwork(networkName = blockchain.getNetworkName())
+        } else {
+            null
+        }
+    }
+
+    private fun checkTokenUnsupportedState(
+        userWallet: UserWallet,
+        blockchain: Blockchain,
+    ): CurrencyUnsupportedState.Token? {
+        val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
+        val supportedTokens = userWallet.scanResponse.card.supportedTokens(cardTypesResolver)
+
+        return when {
+            // refactor this later by moving all this logic in card config
+            blockchain == Blockchain.Solana && !supportedTokens.contains(Blockchain.Solana) -> {
+                CurrencyUnsupportedState.Token.NetworkTokensUnsupported(networkName = blockchain.getNetworkName())
+            }
+            !userWallet.scanResponse.card.canHandleToken(supportedTokens, blockchain, cardTypesResolver) -> {
+                CurrencyUnsupportedState.Token.UnsupportedCurve(networkName = blockchain.getNetworkName())
+            }
+            else -> null
+        }
+    }
 }
