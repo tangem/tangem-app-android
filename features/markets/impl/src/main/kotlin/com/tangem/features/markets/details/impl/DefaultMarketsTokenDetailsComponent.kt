@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -14,6 +15,7 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent.Params
+import com.tangem.features.markets.details.impl.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.markets.details.impl.model.MarketsTokenDetailsModel
 import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
 import com.tangem.features.markets.details.impl.ui.MarketsTokenDetailsContent
@@ -29,6 +31,8 @@ import kotlinx.coroutines.launch
 internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: Params,
+    @Assisted analyticsParams: MarketsTokenDetailsComponent.AnalyticsParams,
+    analyticsEventHandler: AnalyticsEventHandler,
     portfolioComponentFactory: MarketsPortfolioComponent.Factory,
 ) : AppComponentContext by appComponentContext, MarketsTokenDetailsComponent {
 
@@ -59,6 +63,16 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
                 }
             }
         }
+
+        // === Analytics ===
+        analyticsEventHandler.send(
+            MarketDetailsAnalyticsEvent.EventBuilder(
+                token = params.token,
+            ).screenOpened(
+                blockchain = analyticsParams.blockchain,
+                source = analyticsParams.source,
+            ),
+        )
     }
 
     @Composable
@@ -138,6 +152,10 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : MarketsTokenDetailsComponent.Factory {
-        override fun create(context: AppComponentContext, params: Params): DefaultMarketsTokenDetailsComponent
+        override fun create(
+            appComponentContext: AppComponentContext,
+            params: Params,
+            analyticsParams: MarketsTokenDetailsComponent.AnalyticsParams,
+        ): DefaultMarketsTokenDetailsComponent
     }
 }

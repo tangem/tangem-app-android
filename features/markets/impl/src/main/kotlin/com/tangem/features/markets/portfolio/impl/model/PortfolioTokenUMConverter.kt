@@ -72,14 +72,17 @@ internal class PortfolioTokenUMConverter(
                     QuickActionUM.Buy -> tokenActionsHandler.handle(
                         action = TokenActionsBSContentUM.Action.Buy,
                         cryptoCurrencyData = cryptoData,
+                        isQuickAction = true,
                     )
                     QuickActionUM.Exchange -> tokenActionsHandler.handle(
                         action = TokenActionsBSContentUM.Action.Exchange,
                         cryptoCurrencyData = cryptoData,
+                        isQuickAction = true,
                     )
                     QuickActionUM.Receive -> tokenActionsHandler.handle(
                         action = TokenActionsBSContentUM.Action.Receive,
                         cryptoCurrencyData = cryptoData,
+                        isQuickAction = true,
                     )
                 }
             },
@@ -88,6 +91,7 @@ internal class PortfolioTokenUMConverter(
                     tokenActionsHandler.handle(
                         action = TokenActionsBSContentUM.Action.CopyAddress,
                         cryptoCurrencyData = cryptoData,
+                        isQuickAction = true,
                     )
                 }
             },

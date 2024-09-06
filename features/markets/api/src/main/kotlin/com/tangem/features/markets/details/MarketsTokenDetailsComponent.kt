@@ -5,7 +5,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import com.tangem.core.decompose.factory.ComponentFactory
+import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
@@ -22,6 +22,12 @@ interface MarketsTokenDetailsComponent : ComposableContentComponent {
         val showPortfolio: Boolean,
     )
 
+    @Serializable
+    data class AnalyticsParams(
+        val blockchain: String?,
+        val source: String,
+    )
+
     @Composable
     fun BottomSheetContent(
         bottomSheetState: State<BottomSheetState>,
@@ -29,5 +35,11 @@ interface MarketsTokenDetailsComponent : ComposableContentComponent {
         modifier: Modifier,
     )
 
-    interface Factory : ComponentFactory<Params, MarketsTokenDetailsComponent>
+    interface Factory {
+        fun create(
+            appComponentContext: AppComponentContext,
+            params: Params,
+            analyticsParams: AnalyticsParams,
+        ): MarketsTokenDetailsComponent
+    }
 }

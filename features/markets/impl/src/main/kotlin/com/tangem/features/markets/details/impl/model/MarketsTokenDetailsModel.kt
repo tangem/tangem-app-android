@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.sorted
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -20,6 +21,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
+import com.tangem.features.markets.details.impl.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.markets.details.impl.model.converters.DescriptionConverter
 import com.tangem.features.markets.details.impl.model.converters.TokenMarketInfoConverter
 import com.tangem.features.markets.details.impl.model.formatter.*
@@ -56,10 +58,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
     private val getTokenFullQuotesUseCase: GetTokenFullQuotesUseCase,
     private val urlOpener: UrlOpener,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private var quotesJob = JobHolder()
     private val params = paramsContainer.require<MarketsTokenDetailsComponent.Params>()
+    private val analyticsEventBuilder = MarketDetailsAnalyticsEvent.EventBuilder(token = params.token)
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase()
         .map { maybeAppCurrency ->
@@ -75,14 +79,36 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         onInfoClick = {
             showInfoBottomSheet(it)
         },
-        onLinkClick = {
-            urlOpener.openUrl(it.url)
+        onLinkClick = { link ->
+            urlOpener.openUrl(link.url)
+            // === Analytics ===
+            analyticsEventHandler.send(analyticsEventBuilder.linkClicked(linkTitle = link.title))
         },
+        // === Analytics ===
+        onPricePerformanceIntervalChanged = {
+            analyticsEventHandler.send(
+                analyticsEventBuilder.intervalChanged(
+                    intervalType = MarketDetailsAnalyticsEvent.IntervalType.PricePerformance,
+                    interval = it,
+                ),
+            )
+        },
+        onInsightsIntervalChanged = {
+            analyticsEventHandler.send(
+                analyticsEventBuilder.intervalChanged(
+                    intervalType = MarketDetailsAnalyticsEvent.IntervalType.Insights,
+                    interval = it,
+                ),
+            )
+        },
+        // ==================
     )
 
     private val descriptionConverter = DescriptionConverter(
         onReadModeClicked = {
             showInfoBottomSheet(it)
+            // === Analytics ===
+            analyticsEventHandler.send(analyticsEventBuilder.readMoreClicked())
         },
     )
 
@@ -182,7 +208,24 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
 
         initialLoad()
+        initAnalytics()
     }
+
+    // === Analytics ===
+    private fun initAnalytics() {
+        state
+            .map { it.selectedInterval }
+            .drop(1)
+            .onEach {
+                analyticsEventHandler.send(
+                    analyticsEventBuilder.intervalChanged(
+                        intervalType = MarketDetailsAnalyticsEvent.IntervalType.Chart,
+                        interval = it,
+                    ),
+                )
+            }.launchIn(modelScope)
+    }
+    // ==================
 
     private fun initialLoad() {
         loadInfo()
