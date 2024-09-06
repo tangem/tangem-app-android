@@ -37,6 +37,7 @@ internal fun StakingConfirmationContent(
     type: StakingActionCommonType,
 ) {
     if (state !is StakingStates.ConfirmationState.Data) return
+    val isEnterAction = type == StakingActionCommonType.ENTER
 
     Column(
         modifier = Modifier
@@ -58,11 +59,11 @@ internal fun StakingConfirmationContent(
         }
         AmountBlock(
             amountState = amountState,
-            isClickDisabled = true,
-            isEditingDisabled = true,
-            onClick = {},
+            isClickDisabled = !isEnterAction,
+            isEditingDisabled = !isEnterAction,
+            onClick = clickIntents::onPrevClick,
         )
-        if (type == StakingActionCommonType.ENTER) {
+        if (isEnterAction) {
             ValidatorBlock(validatorState = state.validatorState, onClick = clickIntents::openValidators)
         }
         StakingFeeBlock(feeState = state.feeState)
