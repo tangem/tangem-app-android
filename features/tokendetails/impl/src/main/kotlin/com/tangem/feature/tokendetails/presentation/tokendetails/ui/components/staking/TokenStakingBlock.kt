@@ -38,11 +38,7 @@ import com.tangem.features.tokendetails.impl.R
  * @param modifier         modifier
  */
 @Composable
-internal fun TokenStakingBlock(
-    state: StakingBlockUM,
-    isBalanceHidden: Boolean,
-    modifier: Modifier = Modifier,
-) {
+internal fun TokenStakingBlock(state: StakingBlockUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = state,
         contentAlignment = Alignment.CenterStart,
@@ -130,7 +126,7 @@ private fun StakingLoading(iconState: IconState, modifier: Modifier = Modifier) 
             .heightIn(min = TangemTheme.dimens.size72)
             .padding(all = TangemTheme.dimens.spacing12),
 
-        ) {
+    ) {
         Row {
             val (alpha, colorFilter) = remember(iconState.isGrayscale) {
                 getGreyScaleColorFilter(iconState.isGrayscale)
@@ -180,7 +176,7 @@ private fun Preview_TokenStakingBlock(
     TangemThemePreview {
         TokenStakingBlock(
             state = state,
-            isBalanceHidden = false
+            isBalanceHidden = false,
         )
     }
 }
