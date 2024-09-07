@@ -13,10 +13,10 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.rows.CornersToRound
 import com.tangem.core.ui.components.rows.RoundableCornersRow
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.utils.extensions.orHide
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -57,7 +57,7 @@ fun LazyListScope.roundedListWithDividersItems(
     ) { index, row ->
         InitialInfoContentRow(
             startText = row.startText.resolveReference(),
-            endText = row.endText.resolveReference().orHide(hideEndText && row.isEndTextHideable),
+            endText = row.endText.resolveReference().orMaskWithStars(hideEndText && row.isEndTextHideable),
             cornersToRound = getCornersToRound(index, rows.size),
             iconClick = row.iconClick,
         )
