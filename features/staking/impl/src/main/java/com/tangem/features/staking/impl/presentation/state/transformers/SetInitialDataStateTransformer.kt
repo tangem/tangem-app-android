@@ -128,6 +128,7 @@ internal class SetInitialDataStateTransformer(
                     decimals = cryptoCurrencyStatus.currency.decimals,
                 ),
             ),
+            isEndTextHideable = true,
         )
     }
 
