@@ -65,6 +65,7 @@ internal fun StakingInitialInfoContent(
     state: StakingStates.InitialInfoState,
     buttonState: NavigationButtonsState,
     clickIntents: StakingClickIntents,
+    isBalanceHidden: Boolean,
 ) {
     if (state !is StakingStates.InitialInfoState.Data) return
 
@@ -321,6 +322,7 @@ private fun StakingInitialInfoContent_Preview(
             state = feeState,
             buttonState = NavigationButtonsState.Empty,
             clickIntents = StakingClickIntentsStub,
+            isBalanceHidden = false,
         )
     }
 }
