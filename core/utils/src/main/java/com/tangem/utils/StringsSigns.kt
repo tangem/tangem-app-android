@@ -1,7 +1,5 @@
 package com.tangem.utils
 
-import com.tangem.utils.StringsSigns.STARS
-
 object StringsSigns {
 
     const val STARS = "\u2217\u2217\u2217"
