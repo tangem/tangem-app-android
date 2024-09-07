@@ -11,6 +11,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.AnnotatedString.Builder
 import androidx.compose.ui.text.buildAnnotatedString
+import com.tangem.utils.StringsSigns.STARS
 import org.intellij.markdown.MarkdownElementTypes
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -251,3 +252,17 @@ private fun formatAnnotated(rawString: String): AnnotatedString {
         appendMarkdown(markdownText = rawString, node = parsedTree)
     }
 }
+
+/**
+ * Returns the TextReference itself if hide is false, otherwise returns a reference with STARS.
+ *
+ * @param mask A boolean flag that determines whether to hide the string.
+ * If true, the original TextReference will be replaced by reference with STARS.
+ * If false, the original TextReference will be returned.
+ *
+ * @return The original reference if hide is false, or reference with STARS if hide is true.
+ */
+fun TextReference.orMaskWithStars(mask: Boolean) : TextReference {
+    return if (mask) stringReference(STARS) else this
+}
+
