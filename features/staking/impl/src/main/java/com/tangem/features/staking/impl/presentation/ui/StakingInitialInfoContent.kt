@@ -51,7 +51,6 @@ import com.tangem.features.staking.impl.presentation.state.stub.StakingClickInte
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.PLUS
-import com.tangem.utils.extensions.orHide
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 
@@ -172,11 +171,11 @@ private fun StakingRewardBlock(
             annotatedReference {
                 append(PLUS)
                 appendSpace()
-                append(rewardFiat.orHide(isBalanceHidden))
+                append(rewardFiat.orMaskWithStars(isBalanceHidden))
                 appendSpace()
                 append(DOT)
                 appendSpace()
-                append(rewardCrypto.orHide(isBalanceHidden))
+                append(rewardCrypto.orMaskWithStars(isBalanceHidden))
             } to TangemTheme.colors.text.primary1
         }
         RewardBlockType.RewardUnavailable -> {
