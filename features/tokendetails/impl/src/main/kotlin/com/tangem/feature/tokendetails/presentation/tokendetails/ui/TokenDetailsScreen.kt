@@ -168,8 +168,9 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                         contentType = StakingBlockUM::class.java,
                         content = {
                             TokenStakingBlock(
-                                modifier = itemModifier,
                                 state = state.stakingBlocksState,
+                                isBalanceHidden = state.isBalanceHidden,
+                                modifier = itemModifier,
                             )
                         },
                     )
