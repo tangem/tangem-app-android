@@ -262,6 +262,6 @@ private fun formatAnnotated(rawString: String): AnnotatedString {
  *
  * @return The original reference if hide is false, or reference with STARS if hide is true.
  */
-fun TextReference.orMaskWithStars(mask: Boolean) : TextReference {
+fun TextReference.orMaskWithStars(mask: Boolean): TextReference {
     return if (mask) stringReference(STARS) else this
 }
