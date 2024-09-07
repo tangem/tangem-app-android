@@ -51,6 +51,7 @@ import com.tangem.features.staking.impl.presentation.state.stub.StakingClickInte
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.PLUS
+import com.tangem.utils.extensions.orHide
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 
@@ -90,6 +91,7 @@ internal fun StakingInitialInfoContent(
         this.roundedListWithDividersItems(
             rows = state.infoItems,
             footerContent = { SpacerH12() },
+            hideEndText = isBalanceHidden,
         )
 
         if (state.yieldBalance is InnerYieldBalanceState.Data) {
@@ -100,6 +102,7 @@ internal fun StakingInitialInfoContent(
                         rewardFiat = state.yieldBalance.rewardsFiat,
                         rewardBlockType = state.yieldBalance.rewardBlockType,
                         onRewardsClick = clickIntents::openRewardsValidators,
+                        isBalanceHidden = isBalanceHidden,
                     )
                     SpacerH12()
                 }
@@ -109,7 +112,11 @@ internal fun StakingInitialInfoContent(
         if (state.yieldBalance is InnerYieldBalanceState.Data) {
             item(key = ACTIVE_STAKING_BLOCK_KEY) {
                 Column(modifier = Modifier.animateItemPlacement()) {
-                    ActiveStakingBlock(state.yieldBalance.balance, clickIntents::onActiveStake)
+                    ActiveStakingBlock(
+                        balances = state.yieldBalance.balance,
+                        onClick = clickIntents::onActiveStake,
+                        isBalanceHidden = isBalanceHidden,
+                    )
                     SpacerH12()
                 }
             }
@@ -158,17 +165,18 @@ private fun StakingRewardBlock(
     rewardFiat: String,
     rewardBlockType: RewardBlockType,
     onRewardsClick: () -> Unit,
+    isBalanceHidden: Boolean,
 ) {
     val (text, textColor) = when (rewardBlockType) {
         RewardBlockType.Rewards -> {
             annotatedReference {
                 append(PLUS)
                 appendSpace()
-                append(rewardFiat)
+                append(rewardFiat.orHide(isBalanceHidden))
                 appendSpace()
                 append(DOT)
                 appendSpace()
-                append(rewardCrypto)
+                append(rewardCrypto.orHide(isBalanceHidden))
             } to TangemTheme.colors.text.primary1
         }
         RewardBlockType.RewardUnavailable -> {
@@ -197,7 +205,11 @@ private fun StakingRewardBlock(
 }
 
 @Composable
-private fun ActiveStakingBlock(balances: ImmutableList<BalanceState>, onClick: (BalanceState) -> Unit) {
+private fun ActiveStakingBlock(
+    balances: ImmutableList<BalanceState>,
+    onClick: (BalanceState) -> Unit,
+    isBalanceHidden: Boolean,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -222,8 +234,8 @@ private fun ActiveStakingBlock(balances: ImmutableList<BalanceState>, onClick: (
                     subtitle = balance.title,
                     caption = balance.subtitle ?: balance.getAprText(),
                     isGrayscaleImage = !balance.isClickable,
-                    infoTitle = balance.fiatAmount,
-                    infoSubtitle = balance.cryptoAmount,
+                    infoTitle = balance.fiatAmount.orMaskWithStars(isBalanceHidden),
+                    infoSubtitle = balance.cryptoAmount.orMaskWithStars(isBalanceHidden),
                     imageUrl = balance.getImage(),
                     iconRes = icon,
                     iconTint = iconTint,
