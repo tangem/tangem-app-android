@@ -22,6 +22,7 @@ internal object InitialStakingStatePreview {
                 id = R.string.staking_details_available,
                 startText = TextReference.Res(R.string.staking_details_available),
                 endText = TextReference.Str("15 SOL"),
+                isEndTextHideable = true,
             ),
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_annual_percentage_rate,
