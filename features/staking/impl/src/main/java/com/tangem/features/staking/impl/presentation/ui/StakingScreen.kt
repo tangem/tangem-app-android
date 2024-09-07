@@ -157,6 +157,7 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                     state = uiState.initialInfoState,
                     buttonState = uiState.buttonsState,
                     clickIntents = uiState.clickIntents,
+                    isBalanceHidden = uiState.isBalanceHidden,
                 )
                 StakingStep.RewardsValidators -> {
                     StakingClaimRewardsValidatorContent(
@@ -166,7 +167,7 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                 }
                 StakingStep.Amount -> AmountScreenContent(
                     amountState = uiState.amountState,
-                    isBalanceHiding = uiState.isBalanceHidden,
+                    isBalanceHidden = uiState.isBalanceHidden,
                     clickIntents = uiState.clickIntents,
                 )
                 StakingStep.Confirmation -> StakingConfirmationContent(
