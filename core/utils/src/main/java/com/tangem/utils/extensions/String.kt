@@ -11,6 +11,6 @@ import com.tangem.utils.StringsSigns.STARS
  *
  * @return The original string if hide is false, or STARS if hide is true.
  */
-fun String.orHide(hide: Boolean) : String {
+fun String.orHide(hide: Boolean): String {
     return if (hide) STARS else this
 }
