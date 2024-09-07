@@ -22,7 +22,7 @@ private const val AMOUNT_FIELD_KEY = "amountFieldKey"
 
 internal fun LazyListScope.amountField(
     amountState: AmountState.Data,
-    isBalanceHiding: Boolean,
+    isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
     item(key = AMOUNT_FIELD_KEY) {
@@ -41,7 +41,7 @@ internal fun LazyListScope.amountField(
                     .padding(top = TangemTheme.dimens.spacing14),
             )
 
-            val balance = if (isBalanceHiding) STARS else amountState.walletBalance.resolveReference()
+            val balance = if (isBalanceHidden) STARS else amountState.walletBalance.resolveReference()
             AnimatedContent(
                 targetState = balance,
                 label = "Hide Balance Animation",
