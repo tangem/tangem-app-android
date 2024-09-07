@@ -6,6 +6,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import com.tangem.utils.StringsSigns.STARS
 import java.util.Hashtable
 
 @Suppress("MagicNumber")
@@ -32,3 +33,7 @@ fun String.toQrCode(sizePx: Int = 256, paddingPx: Int = 0): Bitmap {
 }
 
 fun String.capitalize(): String = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+
+fun String.orMaskWithStars(maskWithStars: Boolean): String {
+    return if (maskWithStars) STARS else this
+}
