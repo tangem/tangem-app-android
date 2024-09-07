@@ -20,11 +20,11 @@ import com.tangem.core.ui.res.TangemThemePreview
 /**
  * Amount screen with field
  * @param amountState amount state
- * @param isBalanceHiding flag hidden balances
+ * @param isBalanceHidden flag hidden balances
  * @param clickIntents amount screen clicks
  */
 @Composable
-fun AmountScreenContent(amountState: AmountState, isBalanceHiding: Boolean, clickIntents: AmountScreenClickIntents) {
+fun AmountScreenContent(amountState: AmountState, isBalanceHidden: Boolean, clickIntents: AmountScreenClickIntents) {
     if (amountState !is AmountState.Data) return
 
     // Do not put fillMaxSize() in here
@@ -37,7 +37,7 @@ fun AmountScreenContent(amountState: AmountState, isBalanceHiding: Boolean, clic
                 bottom = TangemTheme.dimens.spacing16,
             ),
     ) {
-        amountField(amountState = amountState, isBalanceHiding = isBalanceHiding)
+        amountField(amountState = amountState, isBalanceHidden = isBalanceHidden)
         buttons(
             segmentedButtonConfig = amountState.segmentedButtonConfig,
             clickIntents = clickIntents,
@@ -57,7 +57,7 @@ private fun SendAmountContentPreview(
     TangemThemePreview {
         AmountScreenContent(
             amountState = amountState,
-            isBalanceHiding = false,
+            isBalanceHidden = false,
             clickIntents = AmountScreenClickIntentsStub,
         )
     }
