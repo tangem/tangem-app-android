@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.utils
 
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
@@ -71,8 +72,8 @@ internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIn
         )
     }
 
-    private fun createPullToRefreshConfig(): WalletPullToRefreshConfig {
-        return WalletPullToRefreshConfig(onRefresh = { clickIntents.onRefreshSwipe(it.value) }, isRefreshing = false)
+    private fun createPullToRefreshConfig(): PullToRefreshConfig {
+        return PullToRefreshConfig(onRefresh = { clickIntents.onRefreshSwipe(it.value) }, isRefreshing = false)
     }
 
     private fun UserWallet.toLoadingWalletCardState(): WalletCardState {
