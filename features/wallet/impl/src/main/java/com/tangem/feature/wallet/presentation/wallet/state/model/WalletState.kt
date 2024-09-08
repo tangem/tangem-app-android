@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.LockedTxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.LockedWalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
@@ -22,7 +23,7 @@ internal sealed interface WalletState : WalletStateHolder {
         abstract val manageTokensButtonConfig: ManageTokensButtonConfig?
 
         data class Content(
-            override val pullToRefreshConfig: WalletPullToRefreshConfig,
+            override val pullToRefreshConfig: PullToRefreshConfig,
             override val walletCardState: WalletCardState,
             override val warnings: ImmutableList<WalletNotification>,
             override val bottomSheetConfig: TangemBottomSheetConfig?,
@@ -52,7 +53,7 @@ internal sealed interface WalletState : WalletStateHolder {
         abstract val marketPriceBlockState: MarketPriceBlockState?
 
         data class Content(
-            override val pullToRefreshConfig: WalletPullToRefreshConfig,
+            override val pullToRefreshConfig: PullToRefreshConfig,
             override val walletCardState: WalletCardState,
             override val warnings: ImmutableList<WalletNotification>,
             override val bottomSheetConfig: TangemBottomSheetConfig?,
@@ -84,7 +85,7 @@ internal sealed interface WalletState : WalletStateHolder {
         abstract val balancesAndLimitBlockState: BalancesAndLimitsBlockState?
 
         data class Content(
-            override val pullToRefreshConfig: WalletPullToRefreshConfig,
+            override val pullToRefreshConfig: PullToRefreshConfig,
             override val walletCardState: WalletCardState,
             override val warnings: ImmutableList<WalletNotification>,
             override val bottomSheetConfig: TangemBottomSheetConfig?,
