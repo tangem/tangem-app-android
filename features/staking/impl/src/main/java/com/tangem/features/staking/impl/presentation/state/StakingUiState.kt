@@ -8,6 +8,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
@@ -62,6 +63,7 @@ internal sealed class StakingStates {
             val aprRange: TextReference,
             val onInfoClick: (InfoType) -> Unit,
             val yieldBalance: InnerYieldBalanceState,
+            val pullToRefreshConfig: PullToRefreshConfig,
         ) : InitialInfoState()
 
         data class Empty(
