@@ -14,9 +14,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.utils.StringsSigns.STARS
 
 private const val AMOUNT_FIELD_KEY = "amountFieldKey"
 
@@ -41,7 +41,7 @@ internal fun LazyListScope.amountField(
                     .padding(top = TangemTheme.dimens.spacing14),
             )
 
-            val balance = if (isBalanceHidden) STARS else amountState.walletBalance.resolveReference()
+            val balance = amountState.walletBalance.orMaskWithStars(isBalanceHidden).resolveReference()
             AnimatedContent(
                 targetState = balance,
                 label = "Hide Balance Animation",
