@@ -8,11 +8,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,7 +40,9 @@ import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.components.list.roundedListWithDividersItems
+import com.tangem.core.ui.components.rows.CornersToRound
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -52,14 +59,13 @@ import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickInten
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.extensions.orZero
-import kotlinx.collections.immutable.ImmutableList
 
 private const val BANNER_BLOCK_KEY = "BannerBlock"
 private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
 private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
 private const val STAKE_PRIMARY_BUTTON_KEY = "StakePrimaryButton"
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 internal fun StakingInitialInfoContent(
     state: StakingStates.InitialInfoState,
@@ -69,60 +75,116 @@ internal fun StakingInitialInfoContent(
 ) {
     if (state !is StakingStates.InitialInfoState.Data) return
 
-    LazyColumn(
-        verticalArrangement = alignLastToBottom(),
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TangemTheme.colors.background.secondary)
-            .padding(horizontal = TangemTheme.dimens.spacing16),
-    ) {
-        if (state.showBanner) {
-            item(key = BANNER_BLOCK_KEY) {
-                Column(
-                    modifier = Modifier.animateItemPlacement(),
-                ) {
-                    BannerBlock(onClick = clickIntents::onInitialInfoBannerClick)
-                    SpacerH12()
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = state.pullToRefreshConfig.isRefreshing,
+        onRefresh = { state.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState()) },
+    )
+    Box(modifier = Modifier.pullRefresh(pullRefreshState)) {
+        LazyColumn(
+            verticalArrangement = alignLastToBottom(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(TangemTheme.colors.background.secondary)
+                .padding(horizontal = TangemTheme.dimens.spacing16),
+        ) {
+            if (state.showBanner) {
+                item(key = BANNER_BLOCK_KEY) {
+                    Column(
+                        modifier = Modifier.animateItemPlacement(),
+                    ) {
+                        BannerBlock(onClick = clickIntents::onInitialInfoBannerClick)
+                        SpacerH12()
+                    }
                 }
+            }
+
+            this.roundedListWithDividersItems(
+                rows = state.infoItems,
+                footerContent = { SpacerH12() },
+                hideEndText = isBalanceHidden,
+            )
+
+            if (state.yieldBalance is InnerYieldBalanceState.Data) {
+                item(key = STAKING_REWARD_BLOCK_KEY) {
+                    Column(modifier = Modifier.animateItemPlacement()) {
+                        StakingRewardBlock(
+                            rewardCrypto = state.yieldBalance.rewardsCrypto,
+                            rewardFiat = state.yieldBalance.rewardsFiat,
+                            rewardBlockType = state.yieldBalance.rewardBlockType,
+                            onRewardsClick = clickIntents::openRewardsValidators,
+                            isBalanceHidden = isBalanceHidden,
+                        )
+                        SpacerH12()
+                    }
+                }
+            }
+
+            activeStakingBlock(
+                state = state,
+                clickIntents = clickIntents,
+                isBalanceHidden = isBalanceHidden,
+            )
+
+            item(STAKE_PRIMARY_BUTTON_KEY) {
+                SpacerH12()
+                StakeButtonBlock(buttonState)
             }
         }
 
-        this.roundedListWithDividersItems(
-            rows = state.infoItems,
-            footerContent = { SpacerH12() },
-            hideEndText = isBalanceHidden,
+        PullRefreshIndicator(
+            modifier = Modifier.align(Alignment.TopCenter),
+            refreshing = state.pullToRefreshConfig.isRefreshing,
+            state = pullRefreshState,
         )
+    }
+}
 
-        if (state.yieldBalance is InnerYieldBalanceState.Data) {
-            item(key = STAKING_REWARD_BLOCK_KEY) {
-                Column(modifier = Modifier.animateItemPlacement()) {
-                    StakingRewardBlock(
-                        rewardCrypto = state.yieldBalance.rewardsCrypto,
-                        rewardFiat = state.yieldBalance.rewardsFiat,
-                        rewardBlockType = state.yieldBalance.rewardBlockType,
-                        onRewardsClick = clickIntents::openRewardsValidators,
-                        isBalanceHidden = isBalanceHidden,
-                    )
-                    SpacerH12()
-                }
-            }
+@OptIn(ExperimentalFoundationApi::class)
+private fun LazyListScope.activeStakingBlock(
+    state: StakingStates.InitialInfoState.Data,
+    clickIntents: StakingClickIntents,
+    isBalanceHidden: Boolean,
+) {
+    if (state.yieldBalance is InnerYieldBalanceState.Data) {
+        item(ACTIVE_STAKING_BLOCK_KEY) {
+            Text(
+                text = stringResource(id = R.string.staking_your_stakes),
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(CornersToRound.TOP_2.getShape())
+                    .background(TangemTheme.colors.background.action)
+                    .padding(
+                        top = TangemTheme.dimens.spacing12,
+                        start = TangemTheme.dimens.spacing12,
+                        end = TangemTheme.dimens.spacing12,
+                        bottom = TangemTheme.dimens.spacing4,
+                    ),
+            )
         }
-
-        if (state.yieldBalance is InnerYieldBalanceState.Data) {
-            item(key = ACTIVE_STAKING_BLOCK_KEY) {
-                Column(modifier = Modifier.animateItemPlacement()) {
-                    ActiveStakingBlock(
-                        balances = state.yieldBalance.balance,
-                        onClick = clickIntents::onActiveStake,
-                        isBalanceHidden = isBalanceHidden,
-                    )
-                    SpacerH12()
-                }
-            }
-        }
-
-        item(STAKE_PRIMARY_BUTTON_KEY) {
-            StakeButtonBlock(buttonState)
+        items(
+            items = state.yieldBalance.balance,
+            key = {
+                // Staked balance does not have unique identifier.
+                // Balance type and group id is used to identify item.
+                it.id + it.type
+            },
+        ) { balance ->
+            ActiveStakingBlock(
+                balance = balance,
+                onClick = clickIntents::onActiveStake,
+                isBalanceHidden = isBalanceHidden,
+                modifier = Modifier
+                    .animateItemPlacement()
+                    .then(
+                        if (state.yieldBalance.balance.last() == balance) {
+                            Modifier.clip(CornersToRound.BOTTOM_2.getShape())
+                        } else {
+                            Modifier
+                        },
+                    ),
+            )
         }
     }
 }
@@ -205,49 +267,29 @@ private fun StakingRewardBlock(
 
 @Composable
 private fun ActiveStakingBlock(
-    balances: ImmutableList<BalanceState>,
+    balance: BalanceState,
     onClick: (BalanceState) -> Unit,
     isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action),
-    ) {
-        Text(
-            text = stringResource(id = R.string.staking_your_stakes),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
-            modifier = Modifier.padding(
-                top = TangemTheme.dimens.spacing12,
-                start = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing4,
+    val (icon, iconTint) = balance.type.getIcon()
+    InputRowImageInfo(
+        subtitle = balance.title,
+        caption = balance.subtitle ?: balance.getAprText(),
+        infoTitle = balance.fiatAmount.orMaskWithStars(isBalanceHidden),
+        infoSubtitle = balance.cryptoAmount.orMaskWithStars(isBalanceHidden),
+        imageUrl = balance.getImage(),
+        iconRes = icon,
+        iconTint = iconTint,
+        modifier = modifier
+            .background(TangemTheme.colors.background.action)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(),
+                enabled = balance.isClickable,
+                onClick = { onClick(balance) },
             ),
-        )
-        balances.forEach { balance ->
-            key(balance.id) {
-                val (icon, iconTint) = balance.type.getIcon()
-                InputRowImageInfo(
-                    subtitle = balance.title,
-                    caption = balance.subtitle ?: balance.getAprText(),
-                    isGrayscaleImage = !balance.isClickable,
-                    infoTitle = balance.fiatAmount.orMaskWithStars(isBalanceHidden),
-                    infoSubtitle = balance.cryptoAmount.orMaskWithStars(isBalanceHidden),
-                    imageUrl = balance.getImage(),
-                    iconRes = icon,
-                    iconTint = iconTint,
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        enabled = balance.isClickable,
-                        onClick = { onClick(balance) },
-                    ),
-                )
-            }
-        }
-    }
+    )
 }
 
 @Composable
