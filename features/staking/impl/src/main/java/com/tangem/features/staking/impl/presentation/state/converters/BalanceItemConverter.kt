@@ -65,8 +65,9 @@ internal class BalanceItemConverter(
     }
 
     private fun BalanceType.getTitle(validatorName: String?) = when (this) {
-        BalanceType.STAKED -> validatorName?.let { stringReference(it) }
-        BalanceType.PREPARING -> resourceReference(R.string.staking_preparing)
+        BalanceType.PREPARING,
+        BalanceType.STAKED,
+        -> validatorName?.let { stringReference(it) }
         BalanceType.UNSTAKED -> resourceReference(R.string.staking_unstaked)
         BalanceType.UNSTAKING -> resourceReference(R.string.staking_unstaking)
         BalanceType.LOCKED -> resourceReference(R.string.staking_locked)
@@ -81,9 +82,16 @@ internal class BalanceItemConverter(
         BalanceType.UNSTAKING -> getUnbondingDate(balance.date)
         BalanceType.UNSTAKED -> resourceReference(R.string.staking_tap_to_withdraw)
         BalanceType.LOCKED -> resourceReference(R.string.staking_tap_to_unlock)
+        BalanceType.PREPARING -> {
+            val warmupPeriod = yield.metadata.warmupPeriod.days
+            combinedReference(
+                resourceReference(R.string.staking_details_warmup_period),
+                stringReference(" "),
+                pluralReference(R.plurals.common_days, warmupPeriod, wrappedList(warmupPeriod)),
+            )
+        }
         BalanceType.AVAILABLE,
         BalanceType.STAKED,
-        BalanceType.PREPARING,
         BalanceType.UNLOCKING,
         BalanceType.REWARDS,
         BalanceType.UNKNOWN,
@@ -91,12 +99,20 @@ internal class BalanceItemConverter(
     }
 
     private fun getUnbondingDate(date: DateTime?): TextReference {
-        val now = DateTime.now().millis
+        val unbondingPeriod = yield.metadata.cooldownPeriod.days
+        if (date == null) {
+            return combinedReference(
+                resourceReference(R.string.staking_details_unbonding_period),
+                stringReference(" "),
+                pluralReference(R.plurals.common_days, unbondingPeriod, wrappedList(unbondingPeriod)),
+            )
+        }
+
         val nowCalendar = Calendar.getInstance()
         nowCalendar.resetHours()
 
         val endDate = Calendar.getInstance()
-        endDate.timeInMillis = date?.millis ?: now
+        endDate.timeInMillis = date.millis
         endDate.resetHours()
 
         val days = ((endDate.timeInMillis - nowCalendar.timeInMillis) / DAY_IN_MILLIS).toInt()
