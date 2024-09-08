@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import kotlinx.collections.immutable.PersistentList
@@ -38,7 +39,7 @@ internal class SetRefreshStateTransformer(
         }
     }
 
-    private fun WalletPullToRefreshConfig.toUpdatedState(isRefreshing: Boolean): WalletPullToRefreshConfig {
+    private fun PullToRefreshConfig.toUpdatedState(isRefreshing: Boolean): PullToRefreshConfig {
         return copy(isRefreshing = isRefreshing)
     }
 
