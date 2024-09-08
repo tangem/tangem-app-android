@@ -21,6 +21,8 @@ internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onPrevClick() {}
 
+    override fun onRefreshSwipe(isRefreshing: Boolean) {}
+
     override fun onInitialInfoBannerClick() {}
 
     override fun onInfoClick(infoType: InfoType) {}
@@ -59,7 +61,8 @@ internal object StakingClickIntentsStub : StakingClickIntents {
         reduceAmountBy: BigDecimal,
         reduceAmountByDiff: BigDecimal,
         notification: Class<out NotificationUM>,
-    ) {}
+    ) {
+    }
 
     override fun onAmountReduceToClick(reduceAmountTo: BigDecimal, notification: Class<out NotificationUM>) {}
 
