@@ -57,7 +57,7 @@ fun LazyListScope.roundedListWithDividersItems(
     ) { index, row ->
         InitialInfoContentRow(
             startText = row.startText.resolveReference(),
-            endText = row.endText.resolveReference().orMaskWithStars(hideEndText && row.isEndTextHideable),
+            endText = row.endText.orMaskWithStars(hideEndText && row.isEndTextHideable).resolveReference(),
             cornersToRound = getCornersToRound(index, rows.size),
             iconClick = row.iconClick,
         )
