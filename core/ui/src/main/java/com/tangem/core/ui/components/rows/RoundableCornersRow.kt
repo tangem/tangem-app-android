@@ -20,6 +20,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
@@ -95,8 +96,7 @@ enum class CornersToRound {
 
     @Suppress("TopLevelComposableFunctions")
     @Composable
-    fun getShape(): RoundedCornerShape {
-        val radius = TangemTheme.dimens.radius12
+    fun getShape(radius: Dp = TangemTheme.dimens.radius12): RoundedCornerShape {
         return when (this) {
             ALL_4 -> RoundedCornerShape(radius)
             TOP_2 -> RoundedCornerShape(topStart = radius, topEnd = radius)

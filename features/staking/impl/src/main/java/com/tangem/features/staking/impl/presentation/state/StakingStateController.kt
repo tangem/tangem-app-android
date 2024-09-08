@@ -21,7 +21,7 @@ import javax.inject.Singleton
 
 @Singleton
 internal class StakingStateController @Inject constructor(
-    private val urlOpener: UrlOpener,
+    urlOpener: UrlOpener,
 ) {
 
     val value: StakingUiState get() = uiState.value
