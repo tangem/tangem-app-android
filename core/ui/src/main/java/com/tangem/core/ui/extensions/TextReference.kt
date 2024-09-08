@@ -233,21 +233,6 @@ operator fun TextReference.plus(ref: TextReference): TextReference {
     }
 }
 
-
-/**
- * Returns the TextReference itself if hide is false, otherwise returns a reference with STARS.
- *
- * @param mask A boolean flag that determines whether to hide the string.
- * If true, the original TextReference will be replaced by reference with STARS.
- * If false, the original TextReference will be returned.
- *
- * @return The original reference if hide is false, or reference with STARS if hide is true.
- */
-fun TextReference.orMaskWithStars(mask: Boolean): TextReference {
-    return if (mask) stringReference(STARS) else this
-}
-
-
 @Suppress("NOTHING_TO_INLINE")
 @OptIn(ExperimentalContracts::class)
 inline fun TextReference?.isNullOrEmpty(): Boolean {
@@ -266,4 +251,17 @@ private fun formatAnnotated(rawString: String): AnnotatedString {
     return buildAnnotatedString {
         appendMarkdown(markdownText = rawString, node = parsedTree)
     }
+}
+
+/**
+ * Returns the TextReference itself if hide is false, otherwise returns a reference with STARS.
+ *
+ * @param maskWithStars A boolean flag that determines whether to hide the string.
+ * If true, the original TextReference will be replaced by reference with STARS.
+ * If false, the original TextReference will be returned.
+ *
+ * @return The original reference if hide is false, or reference with STARS if hide is true.
+ */
+fun TextReference.orMaskWithStars(maskWithStars: Boolean): TextReference {
+    return if (maskWithStars) stringReference(STARS) else this
 }
