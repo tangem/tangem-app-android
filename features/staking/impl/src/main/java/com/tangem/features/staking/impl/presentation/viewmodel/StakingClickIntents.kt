@@ -21,6 +21,8 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onPrevClick()
 
+    fun onRefreshSwipe(isRefreshing: Boolean)
+
     fun onInitialInfoBannerClick()
 
     fun onInfoClick(infoType: InfoType)
