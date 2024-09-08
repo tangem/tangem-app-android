@@ -12,10 +12,10 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsPullToRefreshConfig
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -164,7 +164,7 @@ internal object TokenDetailsPreviewData {
         onStakeClicked = {},
     )
 
-    private val pullToRefreshConfig = TokenDetailsPullToRefreshConfig(
+    private val pullToRefreshConfig = PullToRefreshConfig(
         isRefreshing = false,
         onRefresh = {},
     )
