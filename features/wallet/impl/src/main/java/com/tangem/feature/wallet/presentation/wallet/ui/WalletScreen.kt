@@ -57,6 +57,7 @@ import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -305,7 +306,7 @@ private fun BaseScaffold(
             val pullRefreshState = rememberPullRefreshState(
                 refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
                 onRefresh = {
-                    selectedWallet.pullToRefreshConfig.onRefresh(WalletPullToRefreshConfig.ShowRefreshState(true))
+                    selectedWallet.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
                 },
             )
 
@@ -426,7 +427,7 @@ private inline fun BaseScaffoldWithMarkets(
                 val pullRefreshState = rememberPullRefreshState(
                     refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
                     onRefresh = {
-                        selectedWallet.pullToRefreshConfig.onRefresh(WalletPullToRefreshConfig.ShowRefreshState(true))
+                        selectedWallet.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
                     },
                 )
 
