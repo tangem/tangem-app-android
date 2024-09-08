@@ -81,7 +81,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
     ) { scaffoldPaddings ->
         val pullRefreshState = rememberPullRefreshState(
             refreshing = state.pullToRefreshConfig.isRefreshing,
-            onRefresh = { state.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState()) } ,
+            onRefresh = { state.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState()) },
         )
 
         val txHistoryItems = if (state.txHistoryState is TxHistoryState.Content) {
