@@ -20,6 +20,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
@@ -38,7 +39,7 @@ internal fun StakingConfirmationContent(
 ) {
     if (state !is StakingStates.ConfirmationState.Data) return
     val isEnterAction = type == StakingActionCommonType.ENTER
-
+    val isTransactionSent = state.innerState == InnerConfirmationStakingState.COMPLETED
     Column(
         modifier = Modifier
             .background(TangemTheme.colors.background.secondary)
@@ -60,13 +61,13 @@ internal fun StakingConfirmationContent(
         AmountBlock(
             amountState = amountState,
             isClickDisabled = !isEnterAction,
-            isEditingDisabled = !isEnterAction,
+            isEditingDisabled = !isEnterAction || isTransactionSent,
             onClick = clickIntents::onPrevClick,
         )
         if (isEnterAction) {
             ValidatorBlock(validatorState = state.validatorState, onClick = clickIntents::openValidators)
         }
-        StakingFeeBlock(feeState = state.feeState)
+        StakingFeeBlock(feeState = state.feeState, isTransactionSent = isTransactionSent)
         NotificationsBlock(notifications = state.notifications)
     }
 }
