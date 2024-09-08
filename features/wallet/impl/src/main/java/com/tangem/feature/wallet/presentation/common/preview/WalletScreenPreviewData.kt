@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.impl.R
@@ -112,7 +113,7 @@ internal object WalletScreenPreviewData {
     }
     private val multiWalletState by lazy {
         WalletState.MultiCurrency.Content(
-            pullToRefreshConfig = WalletPullToRefreshConfig(
+            pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
                 onRefresh = {},
             ),
