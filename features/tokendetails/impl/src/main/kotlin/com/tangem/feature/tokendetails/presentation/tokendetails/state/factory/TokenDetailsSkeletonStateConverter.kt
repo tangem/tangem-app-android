@@ -139,6 +139,6 @@ internal class TokenDetailsSkeletonStateConverter(
 
     private fun createPullToRefresh(): PullToRefreshConfig = PullToRefreshConfig(
         isRefreshing = false,
-        onRefresh = { clickIntents.onRefreshSwipe(it.value) } ,
+        onRefresh = { clickIntents.onRefreshSwipe(it.value) },
     )
 }
