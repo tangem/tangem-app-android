@@ -26,9 +26,6 @@ import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.*
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.tron.TronStakeKitTransaction
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.core.lce.LceFlow
@@ -36,7 +33,10 @@ import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
+import com.tangem.domain.staking.model.stakekit.NetworkType
+import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
@@ -54,7 +54,6 @@ import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -62,7 +61,6 @@ import kotlinx.coroutines.withContext
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
-    private val appPreferencesStore: AppPreferencesStore,
     private val stakingYieldsStore: StakingYieldsStore,
     private val stakingBalanceStore: StakingBalanceStore,
     private val cacheRegistry: CacheRegistry,
@@ -461,55 +459,6 @@ internal class DefaultStakingRepository(
             fetchMultiYieldBalance(userWalletId, cryptoCurrencies)
             val result = stakingBalanceStore.getSyncOrNull(userWalletId) ?: return@withContext YieldBalanceList.Error
             yieldBalanceListConverter.convert(result)
-        }
-    }
-
-    override suspend fun submitHash(transactionId: String, transactionHash: String) {
-        withContext(dispatchers.io) {
-            stakeKitApi.submitTransactionHash(
-                transactionId = transactionId,
-                body = SubmitTransactionHashRequestBody(
-                    hash = transactionHash,
-                ),
-            )
-        }
-    }
-
-    override suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata) {
-        withContext(dispatchers.io) {
-            appPreferencesStore.editData { preferences ->
-                val savedTransactions = preferences.getObjectListOrDefault<UnsubmittedTransactionMetadata>(
-                    key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
-                    default = emptyList(),
-                )
-
-                preferences.setObjectList(
-                    key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
-                    value = savedTransactions + unsubmittedTransactionMetadata,
-                )
-            }
-        }
-    }
-
-    override suspend fun sendUnsubmittedHashes() {
-        withContext(NonCancellable) {
-            val savedTransactions = appPreferencesStore.getObjectListSync<UnsubmittedTransactionMetadata>(
-                key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
-            )
-
-            savedTransactions.forEach {
-                stakeKitApi.submitTransactionHash(
-                    transactionId = it.transactionId,
-                    body = SubmitTransactionHashRequestBody(hash = it.transactionHash),
-                )
-            }
-
-            appPreferencesStore.editData { mutablePreferences ->
-                mutablePreferences.setObjectList<UnsubmittedTransactionMetadata>(
-                    key = PreferencesKeys.UNSUBMITTED_TRANSACTIONS_KEY,
-                    value = emptyList(),
-                )
-            }
         }
     }
 
