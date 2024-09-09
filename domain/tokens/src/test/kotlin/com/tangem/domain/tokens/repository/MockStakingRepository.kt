@@ -8,7 +8,6 @@ import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
 import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
@@ -238,18 +237,6 @@ class MockStakingRepository : StakingRepository {
         value = TransactionData.Compiled.Data.RawString(""),
         status = TransactionStatus.Unconfirmed,
     )
-
-    override suspend fun submitHash(transactionId: String, transactionHash: String) {
-        /* no-op */
-    }
-
-    override suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata) {
-        /* no-op */
-    }
-
-    override suspend fun sendUnsubmittedHashes() {
-        /* no-op */
-    }
 
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval = StakingApproval.Empty
 
