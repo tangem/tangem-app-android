@@ -74,6 +74,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "filecoin" -> R.drawable.img_filecoin_22
         "cyber", "cyber/test" -> R.drawable.img_cyber_22
         "sei", "sei/test" -> R.drawable.img_sei_22
+        "internet-computer" -> R.drawable.img_icp_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -149,11 +150,12 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "filecoin" -> R.drawable.img_filecoin_22
         "cyber", "cyber/test" -> R.drawable.img_cyber_22
         "sei", "sei/test" -> R.drawable.img_sei_22
+        "internet-computer" -> R.drawable.img_icp_22
         else -> R.drawable.ic_alert_24
     }
 }
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 @DrawableRes
 fun getActiveIconResByCoinId(coinId: String): Int {
     return when (coinId) {
@@ -221,6 +223,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "filecoin" -> R.drawable.img_filecoin_22
         "cyber", "cyber/test" -> R.drawable.img_cyber_22
         "sei", "sei/test" -> R.drawable.img_sei_22
+        "internet-computer" -> R.drawable.img_icp_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -296,6 +299,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "filecoin" -> R.drawable.ic_filecoin_22
         "cyber", "cyber/test" -> R.drawable.ic_cyber_22
         "sei", "sei/test" -> R.drawable.ic_sei_22
+        "internet-computer" -> R.drawable.ic_icp_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -371,6 +375,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "filecoin" -> R.drawable.ic_filecoin_22
         "cyber", "cyber/test" -> R.drawable.ic_cyber_22
         "sei", "sei/test" -> R.drawable.ic_sei_22
+        "internet-computer" -> R.drawable.ic_icp_22
         else -> R.drawable.ic_alert_24
     }
 }
