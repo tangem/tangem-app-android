@@ -6,6 +6,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.serialization.SerializedBigDecimal
@@ -14,10 +15,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
-import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.StakingUiState
-import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
-import com.tangem.features.staking.impl.presentation.state.ValidatorState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
@@ -88,6 +85,10 @@ internal class SetInitialDataStateTransformer(
             infoItems = getInfoItems(),
             onInfoClick = clickIntents::onInfoClick,
             yieldBalance = yieldBalance,
+            pullToRefreshConfig = PullToRefreshConfig(
+                onRefresh = { clickIntents.onRefreshSwipe(it.value) },
+                isRefreshing = false,
+            ),
         )
     }
 
