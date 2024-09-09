@@ -1,7 +1,6 @@
 package com.tangem.common.ui.amountScreen
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
@@ -24,13 +23,17 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param clickIntents amount screen clicks
  */
 @Composable
-fun AmountScreenContent(amountState: AmountState, isBalanceHidden: Boolean, clickIntents: AmountScreenClickIntents) {
+fun AmountScreenContent(
+    amountState: AmountState,
+    isBalanceHidden: Boolean,
+    clickIntents: AmountScreenClickIntents,
+    modifier: Modifier = Modifier,
+) {
     if (amountState !is AmountState.Data) return
 
     // Do not put fillMaxSize() in here
     LazyColumn(
-        modifier = Modifier
-            .background(TangemTheme.colors.background.tertiary)
+        modifier = modifier
             .padding(
                 start = TangemTheme.dimens.spacing16,
                 end = TangemTheme.dimens.spacing16,
