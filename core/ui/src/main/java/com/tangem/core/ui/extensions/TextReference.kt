@@ -67,6 +67,9 @@ sealed interface TextReference {
 
         /** Empty string as [TextReference] */
         val EMPTY: TextReference by lazy(mode = LazyThreadSafetyMode.NONE) { Str(value = "") }
+
+        /** Stars string as [TextReference] */
+        val STARS: TextReference by lazy(mode = LazyThreadSafetyMode.NONE) { Str(value = THREE_STARS) }
     }
 }
 
@@ -250,4 +253,17 @@ private fun formatAnnotated(rawString: String): AnnotatedString {
     return buildAnnotatedString {
         appendMarkdown(markdownText = rawString, node = parsedTree)
     }
+}
+
+/**
+ * Returns the TextReference itself if hide is false, otherwise returns a reference with STARS.
+ *
+ * @param maskWithStars A boolean flag that determines whether to hide the string.
+ * If true, the original TextReference will be replaced by reference with STARS.
+ * If false, the original TextReference will be returned.
+ *
+ * @return The original reference if hide is false, or reference with STARS if hide is true.
+ */
+fun TextReference.orMaskWithStars(maskWithStars: Boolean): TextReference {
+    return if (maskWithStars) stringReference(THREE_STARS) else this
 }

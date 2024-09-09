@@ -44,6 +44,7 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
+    implementation(deps.timber)
 
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)

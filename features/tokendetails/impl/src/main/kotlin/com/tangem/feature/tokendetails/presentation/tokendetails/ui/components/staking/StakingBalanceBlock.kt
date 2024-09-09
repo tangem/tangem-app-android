@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -28,7 +29,11 @@ import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.StringsSigns
 
 @Composable
-internal fun StakingBalanceBlock(state: StakingBlockUM.Staked, modifier: Modifier = Modifier) {
+internal fun StakingBalanceBlock(
+    state: StakingBlockUM.Staked,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -54,7 +59,7 @@ internal fun StakingBalanceBlock(state: StakingBlockUM.Staked, modifier: Modifie
             )
             Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
                 Text(
-                    text = state.fiatValue.resolveReference(),
+                    text = state.fiatValue.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.primary1,
                 )
@@ -64,14 +69,14 @@ internal fun StakingBalanceBlock(state: StakingBlockUM.Staked, modifier: Modifie
                     color = TangemTheme.colors.text.primary1,
                 )
                 Text(
-                    text = state.cryptoValue.resolveReference(),
+                    text = state.cryptoValue.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
                 )
             }
             if (state.rewardValue != TextReference.EMPTY) {
                 Text(
-                    text = state.rewardValue.resolveReference(),
+                    text = state.rewardValue.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                 )
@@ -95,6 +100,7 @@ private fun StakingBalanceBlock_Preview(
     TangemThemePreview {
         StakingBalanceBlock(
             state = data,
+            isBalanceHidden = false,
             modifier = Modifier.padding(TangemTheme.dimens.spacing16),
         )
     }

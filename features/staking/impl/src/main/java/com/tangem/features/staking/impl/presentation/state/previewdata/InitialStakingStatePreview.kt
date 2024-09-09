@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.presentation.state.previewdata
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -22,6 +23,7 @@ internal object InitialStakingStatePreview {
                 id = R.string.staking_details_available,
                 startText = TextReference.Res(R.string.staking_details_available),
                 endText = TextReference.Str("15 SOL"),
+                isEndTextHideable = true,
             ),
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_annual_percentage_rate,
@@ -56,6 +58,7 @@ internal object InitialStakingStatePreview {
         ),
         onInfoClick = {},
         yieldBalance = InnerYieldBalanceState.Empty,
+        pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
     )
 
     val stateWithYield = defaultState.copy(

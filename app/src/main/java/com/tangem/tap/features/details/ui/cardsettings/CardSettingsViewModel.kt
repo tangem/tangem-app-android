@@ -160,6 +160,8 @@ internal class CardSettingsViewModel @Inject constructor(
         }
 
         if (scanResponse.cardTypesResolver.isTangemTwins()) {
+            // needs to prepare twin state if it's twin cards (depends on onboarding refactoring)
+            store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
             store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet(scanResponse)))
 
             cardSettingsInteractor.clear()

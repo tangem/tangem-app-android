@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -22,7 +23,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPre
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.utils.StringsSigns.STARS
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -94,13 +94,13 @@ private fun FiatBalance(
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
             modifier = modifier,
-            text = if (isBalanceHidden) STARS else state.displayFiatBalance,
+            text = state.displayFiatBalance.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
-            text = if (isBalanceHidden) STARS else BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+            text = BigDecimalFormatter.EMPTY_BALANCE_SIGN.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
@@ -122,13 +122,13 @@ private fun CryptoBalance(
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
             modifier = modifier,
-            text = if (isBalanceHidden) STARS else state.displayCryptoBalance,
+            text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
-            text = if (isBalanceHidden) STARS else BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+            text = BigDecimalFormatter.EMPTY_BALANCE_SIGN.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
         )
