@@ -104,7 +104,7 @@ internal class AddStakingNotificationsTransformer(
         return prevState.copy(
             confirmationState = confirmationState.copy(
                 notifications = notifications.toImmutableList(),
-                isPrimaryButtonEnabled = !notifications.any { it is StakingNotification.Error },
+                isPrimaryButtonEnabled = notifications.any { it is StakingNotification.Error },
             ),
         )
     }

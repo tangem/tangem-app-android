@@ -2,11 +2,15 @@ package com.tangem.core.ui.components.list
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
@@ -60,10 +64,8 @@ fun LazyListScope.roundedListWithDividersItems(
             endText = row.endText.orMaskWithStars(hideEndText && row.isEndTextHideable).resolveReference(),
             cornersToRound = getCornersToRound(index, rows.size),
             iconClick = row.iconClick,
+            showDivider = index < rows.lastIndex,
         )
-        if (index < rows.lastIndex) {
-            RoundedListDivider()
-        }
     }
 
     if (footerContent != null) {
@@ -78,41 +80,38 @@ private fun InitialInfoContentRow(
     startText: String,
     endText: String,
     cornersToRound: CornersToRound,
+    showDivider: Boolean,
     iconClick: (() -> Unit)? = null,
 ) {
-    RoundableCornersRow(
-        startText = startText,
-        startTextColor = TangemTheme.colors.text.primary1,
-        startTextStyle = TangemTheme.typography.body2,
-        endText = endText,
-        endTextColor = TangemTheme.colors.text.tertiary,
-        endTextStyle = TangemTheme.typography.body2,
-        cornersToRound = cornersToRound,
-        iconResId = R.drawable.ic_information_24,
-        iconClick = iconClick,
-    )
+    Box {
+        RoundableCornersRow(
+            startText = startText,
+            startTextColor = TangemTheme.colors.text.primary1,
+            startTextStyle = TangemTheme.typography.body2,
+            endText = endText,
+            endTextColor = TangemTheme.colors.text.tertiary,
+            endTextStyle = TangemTheme.typography.body2,
+            cornersToRound = cornersToRound,
+            iconResId = R.drawable.ic_information_24,
+            iconClick = iconClick,
+        )
+        if (showDivider) {
+            RoundedListDivider(
+                modifier = Modifier.align(Alignment.BottomEnd),
+            )
+        }
+    }
 }
 
 @Composable
-fun RoundedListDivider() {
-    Row(
-        modifier = Modifier
+fun RoundedListDivider(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .padding(start = TangemTheme.dimens.spacing16)
             .fillMaxWidth()
-            .height(TangemTheme.dimens.size0_5),
-    ) {
-        Box(
-            modifier = Modifier
-                .width(TangemTheme.dimens.size16)
-                .height(TangemTheme.dimens.size0_5)
-                .background(TangemTheme.colors.background.primary),
-        )
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(TangemTheme.dimens.size0_5)
-                .background(TangemTheme.colors.background.tertiary),
-        )
-    }
+            .height(TangemTheme.dimens.size0_5)
+            .background(TangemTheme.colors.stroke.primary),
+    )
 }
 
 private fun getCornersToRound(currentIndex: Int, listSize: Int): CornersToRound {
