@@ -2,7 +2,9 @@ package com.tangem.tests
 
 import android.content.Intent.ACTION_VIEW
 import com.tangem.common.BaseTestCase
-import com.tangem.screens.StoriesScreen
+import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.screens.DisclaimerTestScreen
+import com.tangem.screens.StoriesTestScreen
 import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -13,22 +15,16 @@ import org.junit.Test
 class StoriesTest : BaseTestCase() {
 
     @Test
-    fun clickOnButtons() =
+    fun clickOnOrderButton() =
         setupHooks().run {
-            ComposeScreen.onComposeScreen<StoriesScreen>(composeTestRule) {
-                step("Click on \"Scan\" button") {
-                    scanButton {
-                        assertIsDisplayed()
-                        performClick()
-                    }
+            ComposeScreen.onComposeScreen<DisclaimerTestScreen>(composeTestRule) {
+                step("Click on \"Accept\" button") {
+                    acceptButton.clickWithAssertion()
                 }
-                step("Assert: \"Scan card\" popup opened") {
-                    enableNFCAlert.isDisplayed()
-                    cancelButton.click()
-                    device.uiDevice.pressBack()
-                }
+            }
+            ComposeScreen.onComposeScreen<StoriesTestScreen>(composeTestRule) {
                 step("Click on \"Order\" button") {
-                    orderButton.performClick()
+                    orderButton.clickWithAssertion()
                 }
                 step("Assert: browser opened") {
                     val expectedIntent = KIntent {
