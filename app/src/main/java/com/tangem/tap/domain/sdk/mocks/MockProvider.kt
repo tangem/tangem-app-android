@@ -4,6 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.models.scan.ProductType
+import com.tangem.tap.domain.sdk.mocks.content.NoteMockContent
 import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
 import com.tangem.tap.domain.sdk.mocks.content.Wallet2MockContent
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
@@ -67,6 +68,7 @@ object MockProvider {
         return when (productType) {
             ProductType.Wallet -> WalletMockContent
             ProductType.Wallet2 -> Wallet2MockContent
+            ProductType.Note -> NoteMockContent
             else -> TODO()
         }
     }
