@@ -17,7 +17,7 @@
     },
     {
         "name": "STAKING_ENABLED",
-        "version": "undefined"
+        "version": "5.15.0"
     },
     {
         "name": "DETAILS_REDESIGN_ENABLED",
@@ -29,10 +29,10 @@
     },
     {
         "name": "MARKETS_ENABLED",
-        "version": "undefined"
+        "version": "5.15.0"
     },
     {
         "name": "NEW_MANAGE_TOKENS",
-        "version": "undefined"
+        "version": "5.15.0"
     }
 ]
