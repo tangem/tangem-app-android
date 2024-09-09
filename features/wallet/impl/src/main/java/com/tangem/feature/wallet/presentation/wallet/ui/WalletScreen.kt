@@ -164,7 +164,7 @@ private fun WalletContent(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .testTag(TestTags.WALLET_SCREEN),
+                .testTag(TestTags.MAIN_SCREEN),
             contentPadding = PaddingValues(
                 bottom = TangemTheme.dimens.spacing92 + bottomBarHeight,
             ),
