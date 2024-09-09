@@ -1,6 +1,5 @@
 package com.tangem.tap.features.onboarding
 
-import android.util.Log
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
@@ -213,11 +212,9 @@ object OnboardingHelper {
         userWalletsListManager.save(userWallet, canOverride = true)
             .doOnFailure { error ->
                 Timber.e(error, "Unable to save user wallet")
-                Log.e("ddk9499", "proceedWithScanResponse: wallet save error: ${error.message}", error)
             }
             .doOnSuccess {
                 mainScope.launch { store.onUserWalletSelected(userWallet) }
-                Log.d("ddk9499", "proceedWithScanResponse: wallet saved successfully")
                 store.dispatch(OnboardingWalletAction.WalletSaved)
             }
     }

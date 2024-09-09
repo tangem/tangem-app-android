@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -36,9 +35,9 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.ui.extensions.setStatusBarColor
-import com.tangem.datasource.utils.isNullOrEmpty
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.windowsize.rememberWindowSize
+import com.tangem.datasource.utils.isNullOrEmpty
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
@@ -92,15 +91,17 @@ class OnboardingWalletFragment :
         val componentContext = rootComponentContext.childByContext(
             componentContext = defaultComponentContext(onBackPressedDispatcher = null),
         )
-        val wallet = getSelectedWalletSyncUseCase.invoke().getOrNull()
-        Log.d("ddk9499", "OnboardingWalletFragment: $wallet")
+        val wallet = requireNotNull(getSelectedWalletSyncUseCase.invoke().getOrNull()) {
+            "Can not find selected wallet."
+        }
 
         manageTokensComponentFactory.create(
             context = componentContext,
             params = ManageTokensComponent.Params(
-                userWalletId = wallet?.walletId,
                 mode = ManageTokensComponent.Mode.Manage(
                     showToolbar = false,
+                    userWalletId = wallet.walletId,
+                    forceShowSaveButton = true,
                     onSaved = ::manageTokensCurrenciesSaved,
                 ),
             ),
@@ -223,50 +224,19 @@ class OnboardingWalletFragment :
     override fun newState(state: OnboardingWalletState) {
         if (activity == null || view == null) return
         Handler(Looper.getMainLooper()).post {
-            Log.d("ddk9499", "newState: ${state.step}")
-
             animator.updateBackupState(state.backupState)
             requireActivity().invalidateOptionsMenu()
 
-            Log.d("ddk9499", "newState: ${state.getProgressStep()}/${state.getMaxProgress()}")
             pbBinding.pbState.max = state.getMaxProgress()
             pbBinding.pbState.progress = state.getProgressStep()
-            Log.d("ddk9499", "newState: after progress")
 
-        when {
-            state.wallet2State != null -> {
-                seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
-                updateWalletImagesState(state.walletImages)
-            }
-            else -> {
-                updateWalletImagesState(state.walletImages)
-                handleOnboardingStep(state)
-            }
-        }
             when {
                 state.wallet2State != null -> {
-                    Log.d("ddk9499", "newState: wallet2state != null")
                     seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
-                    state.cardArtworkUri?.let {
-                        seedPhraseViewModel.setCardArtworkUri(it.toString())
-                        if (state.isRingOnboarding) {
-                            binding.imvFrontCard.load(R.drawable.img_ring_placeholder)
-                        } else {
-                            loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
-                        }
-                        loadImageIntoImageView(it, binding.imvFirstBackupCard)
-                        loadImageIntoImageView(it, binding.imvSecondBackupCard)
-                    }
+                    updateWalletImagesState(state.walletImages)
                 }
                 else -> {
-                    Log.d("ddk9499", "newState: else branch")
-                    if (state.isRingOnboarding) {
-                        binding.imvFrontCard.load(R.drawable.img_ring_placeholder)
-                    } else {
-                        loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
-                    }
-                    loadImageIntoImageView(state.cardArtworkUri, binding.imvFirstBackupCard)
-                    loadImageIntoImageView(state.cardArtworkUri, binding.imvSecondBackupCard)
+                    updateWalletImagesState(state.walletImages)
                     handleOnboardingStep(state)
                 }
             }
@@ -294,7 +264,6 @@ class OnboardingWalletFragment :
     }
 
     internal fun handleOnboardingStep(state: OnboardingWalletState) {
-        Log.d("ddk9499", "handleOnboardingStep: ${state.step}")
         when (state.step) {
             OnboardingWalletStep.CreateWallet -> setupCreateWalletState()
             OnboardingWalletStep.Backup -> setBackupState(state = state.backupState)
@@ -312,17 +281,11 @@ class OnboardingWalletFragment :
         binding.onboardingWalletContainer.show()
         bindingManageTokens.onboardingManageTokensContainer.hide()
         binding.layoutButtonsCommon.btnWalletAlternativeAction.hide()
-        Log.d("ddk9499", "setManageTokensState: ")
         pbBinding.pbState.show()
-        Log.d("ddk9499", "setManageTokensState: after pbBinding.pbState.show")
         binding.onboardingWalletContainer.hide()
-        Log.d("ddk9499", "setManageTokensState: after binding.onboardingWalletContainer.hide()")
         bindingSeedPhrase.onboardingSeedPhraseContainer.hide()
-        Log.d("ddk9499", "setManageTokensState: after bindingSeedPhrase.onboardingSeedPhraseContainer.hide")
         bindingManageTokens.onboardingManageTokensContainer.show()
-        Log.d("ddk9499", "setManageTokensState: after bindingManageTokens.onboardingManageTokensContainer.show")
         binding.toolbar.title = getText(R.string.onboarding_add_tokens)
-        Log.d("ddk9499", "setManageTokensState: after set title")
         bindingManageTokens.onboardingManageTokensContainer.setContent {
             TangemTheme(
                 isDark = isSystemInDarkTheme(),
@@ -356,7 +319,6 @@ class OnboardingWalletFragment :
     }
 
     private fun setBackupState(state: BackupState) {
-        Log.d("ddk9499", "setBackupState: $state")
         when (state.backupStep) {
             BackupStep.InitBackup -> showBackupIntro(state)
             BackupStep.ScanOriginCard -> showScanOriginCard()
@@ -368,7 +330,6 @@ class OnboardingWalletFragment :
             is BackupStep.WriteBackupCard -> showWriteBackupCard(state)
             BackupStep.Finished -> {
                 // don't need to navigate here
-                Log.d("ddk9499", "setBackupState: showSuccess")
                 // showSuccess()
             }
         }

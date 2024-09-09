@@ -1,6 +1,5 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
-import android.util.Log
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.backupService
 import com.tangem.tap.common.redux.AppState
@@ -13,10 +12,6 @@ object OnboardingWalletReducer {
 
 private fun internalReduce(action: Action, appState: AppState): OnboardingWalletState {
     val state = appState.onboardingWalletState
-
-    if (action is OnboardingWalletAction) {
-        Log.d("ddk9499", "internalReduce: $action")
-    }
 
     return when (action) {
         is GlobalAction.Onboarding -> ReducerForGlobalAction.reduce(action, state)

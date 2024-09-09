@@ -56,7 +56,15 @@ internal class ItemsBuilder @Inject constructor(
                 BlockUM(
                     text = resourceReference(R.string.add_tokens_title),
                     iconRes = R.drawable.ic_tether_24,
-                    onClick = { router.push(AppRoute.ManageTokens(userWalletId = userWalletId, showToolbar = true)) },
+                    onClick = {
+                        router.push(
+                            AppRoute.ManageTokens(
+                                userWalletId = userWalletId,
+                                showToolbar = true,
+                                onSaved = { router.replaceAll(AppRoute.Wallet) },
+                            ),
+                        )
+                    },
                 ).let(::add)
             }
 

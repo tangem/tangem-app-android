@@ -32,8 +32,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
@@ -61,6 +59,7 @@ import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.preview.PreviewManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
@@ -437,34 +436,62 @@ private fun NetworksList(
 private fun Preview_ManageTokens(
     @PreviewParameter(PreviewManageTokensComponentProvider::class) component: ManageTokensComponent,
 ) {
-private fun Preview_ManageTokens(
-    @PreviewParameter(ManageTokensComponentParamsProvider::class) params: ManageTokensComponent.Params,
-) {
     TangemThemePreview {
         component.Content(Modifier.fillMaxWidth())
-        PreviewManageTokensComponent(params).Content(Modifier.fillMaxWidth())
     }
 }
 
 private class PreviewManageTokensComponentProvider : PreviewParameterProvider<ManageTokensComponent> {
     override val values: Sequence<ManageTokensComponent>
         get() = sequenceOf(
-            PreviewManageTokensComponent(),
-            PreviewManageTokensComponent(isLoading = true),
+            PreviewManageTokensComponent(
+                isLoading = false,
+                params = ManageTokensComponent.Params(
+                    mode = ManageTokensComponent.Mode.Manage(
+                        showToolbar = true,
+                        userWalletId = UserWalletId("wallet_id"),
+                        onSaved = {},
+                    ),
+                ),
+            ),
+            PreviewManageTokensComponent(
+                isLoading = true,
+                params = ManageTokensComponent.Params(
+                    mode = ManageTokensComponent.Mode.Manage(
+                        showToolbar = true,
+                        userWalletId = UserWalletId("wallet_id"),
+                        onSaved = {},
+                    ),
+                ),
+            ),
+            PreviewManageTokensComponent(
+                isLoading = false,
+                params = ManageTokensComponent.Params(
+                    mode = ManageTokensComponent.Mode.Manage(
+                        showToolbar = false,
+                        userWalletId = UserWalletId("wallet_id"),
+                        onSaved = {},
+                    ),
+                ),
+            ),
+            PreviewManageTokensComponent(
+                isLoading = true,
+                params = ManageTokensComponent.Params(
+                    mode = ManageTokensComponent.Mode.Manage(
+                        showToolbar = false,
+                        userWalletId = UserWalletId("wallet_id"),
+                        onSaved = {},
+                    ),
+                ),
+            ),
+            PreviewManageTokensComponent(
+                isLoading = false,
+                params = ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true)),
+            ),
+            PreviewManageTokensComponent(
+                isLoading = true,
+                params = ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true)),
+            ),
         )
 }
-
-private class ManageTokensComponentParamsProvider : CollectionPreviewParameterProvider<ManageTokensComponent.Params>(
-    collection = listOf(
-        ManageTokensComponent.Params(userWalletId = null, mode = ManageTokensComponent.Mode.Manage(showToolbar = true)),
-        ManageTokensComponent.Params(
-            userWalletId = null,
-            mode = ManageTokensComponent.Mode.Manage(showToolbar = false),
-        ),
-        ManageTokensComponent.Params(
-            userWalletId = null,
-            mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true),
-        ),
-    ),
-)
 // endregion Preview

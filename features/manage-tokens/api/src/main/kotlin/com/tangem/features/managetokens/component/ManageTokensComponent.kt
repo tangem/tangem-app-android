@@ -6,13 +6,18 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 interface ManageTokensComponent : ComposableContentComponent {
 
-    data class Params(val userWalletId: UserWalletId?, val mode: Mode)
+    data class Params(val mode: Mode)
 
     sealed class Mode {
         abstract val showToolbar: Boolean
 
         data class ReadOnly(override val showToolbar: Boolean) : Mode()
-        data class Manage(override val showToolbar: Boolean, val onSaved: () -> Unit = {}) : Mode()
+        data class Manage(
+            override val showToolbar: Boolean,
+            val userWalletId: UserWalletId,
+            val onSaved: () -> Unit,
+            val forceShowSaveButton: Boolean = false,
+        ) : Mode()
     }
 
     interface Factory : ComponentFactory<Params, ManageTokensComponent>

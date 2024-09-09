@@ -1,6 +1,5 @@
 package com.tangem.tap.features.saveWallet.redux
 
-import android.util.Log
 import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
@@ -86,12 +85,10 @@ internal class SaveWalletMiddleware {
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to save user wallet")
-                    Log.e("ddk9499", "saveWalletAfterBackup: wallet save error: ${error.message}", error)
                 }
                 .doOnSuccess {
                     mainScope.launch { store.onUserWalletSelected(userWallet) }
                     if (!shouldNavigateToWallet) {
-                        Log.d("ddk9499", "saveWalletAfterBackup: wallet saved successfully")
                         store.dispatch(OnboardingWalletAction.WalletSaved)
                     }
                 }

@@ -126,14 +126,18 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.ManageTokens -> {
                 if (manageTokensToggles.isFeatureEnabled) {
+                    val userWalletId = route.userWalletId
                     route.asComponentChild(
                         contextProvider = contextProvider(route, contextFactory),
                         params = ManageTokensComponent.Params(
-                            userWalletId = route.userWalletId,
-                            mode = if (route.userWalletId == null) {
+                            mode = if (userWalletId == null) {
                                 ManageTokensComponent.Mode.ReadOnly(showToolbar = route.showToolbar)
                             } else {
-                                ManageTokensComponent.Mode.Manage(showToolbar = route.showToolbar)
+                                ManageTokensComponent.Mode.Manage(
+                                    userWalletId = userWalletId,
+                                    showToolbar = route.showToolbar,
+                                    onSaved = route.onSaved,
+                                )
                             },
                         ),
                         componentFactory = manageTokensComponentFactory,

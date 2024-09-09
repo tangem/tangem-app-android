@@ -1,7 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
 import android.app.Activity
-import android.util.Log
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import com.tangem.core.ui.res.TangemTheme
@@ -29,11 +28,9 @@ internal class OnboardingSeedPhraseStateHandler(
         state: OnboardingWalletState,
         seedPhraseViewModel: SeedPhraseViewModel,
     ) {
-        Log.d("ddk9499", "OnboardingSeedPhraseStateHandler newState")
         if (state.step == OnboardingWalletStep.CreateWallet && !seedPhraseViewModel.isFinished) {
             switchToWallet2SeedPhraseOnboarding(walletFragment, seedPhraseViewModel, state.getMaxProgress())
         } else {
-            Log.d("ddk9499", "OnboardingSeedPhraseStateHandler newState")
             switchToWalletOnboarding(walletFragment, state)
         }
     }

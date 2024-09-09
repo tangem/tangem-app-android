@@ -15,7 +15,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.SaveManagedTokensUseCase
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensBottomSheetConfig
@@ -46,10 +45,10 @@ internal class ManageTokensModel @Inject constructor(
 ) : Model() {
 
     private val params: ManageTokensComponent.Params = paramsContainer.require()
+    private val userWalletId = (params.mode as? ManageTokensComponent.Mode.Manage)?.userWalletId
 
-    val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState(params.userWalletId))
-    val bottomSheetNavigation: SlotNavigation<ManageTokensBottomSheetConfig> = SlotNavigation()
     val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState(params.mode))
+    val bottomSheetNavigation: SlotNavigation<ManageTokensBottomSheetConfig> = SlotNavigation()
 
     init {
         manageTokensListManager.uiItems
@@ -68,7 +67,7 @@ internal class ManageTokensModel @Inject constructor(
         observeSearchQueryChanges()
 
         modelScope.launch {
-            manageTokensListManager.launchPagination(params.userWalletId)
+            manageTokensListManager.launchPagination(userWalletId)
         }
     }
 
@@ -78,17 +77,10 @@ internal class ManageTokensModel @Inject constructor(
             is ManageTokensComponent.Mode.Manage -> createManageContentModel(mode)
         }
     }
+
     fun reloadList() {
         modelScope.launch {
-            manageTokensListManager.reload(params.userWalletId)
-        }
-    }
-
-    private fun getInitialState(userWalletId: UserWalletId?): ManageTokensUM {
-        return if (userWalletId == null) {
-            createReadContentModel()
-        } else {
-            createManageContentModel()
+            manageTokensListManager.reload(userWalletId)
         }
     }
 
@@ -97,7 +89,7 @@ internal class ManageTokensModel @Inject constructor(
             popBack = router::pop,
             isInitialBatchLoading = true,
             isNextBatchLoading = false,
-            items = getInitialItems(),
+            items = getLoadingItems(),
             topBar = if (mode.showToolbar) {
                 ManageTokensTopBarUM.ReadContent(
                     title = resourceReference(R.string.common_search_tokens),
@@ -106,11 +98,6 @@ internal class ManageTokensModel @Inject constructor(
             } else {
                 null
             },
-            items = getLoadingItems(),
-            topBar = ManageTokensTopBarUM.ReadContent(
-                title = resourceReference(R.string.common_search_tokens),
-                onBackButtonClick = router::pop,
-            ),
             search = SearchBarUM(
                 placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
                 query = "",
@@ -128,22 +115,13 @@ internal class ManageTokensModel @Inject constructor(
             isInitialBatchLoading = true,
             isNextBatchLoading = false,
             items = getLoadingItems(),
-            topBar = ManageTokensTopBarUM.ManageContent(
-                title = resourceReference(id = R.string.main_manage_tokens),
-                onBackButtonClick = router::pop,
-                endButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_plus_24,
-                    onIconClicked = ::navigateToAddCustomToken,
-                ),
-            ),
-            items = getInitialItems(),
             topBar = if (mode.showToolbar) {
                 ManageTokensTopBarUM.ManageContent(
                     title = resourceReference(id = R.string.main_manage_tokens),
                     onBackButtonClick = router::pop,
                     endButton = TopAppBarButtonUM(
                         iconRes = R.drawable.ic_plus_24,
-                        onIconClicked = ::onAddCustomToken,
+                        onIconClicked = ::navigateToAddCustomToken,
                     ),
                 )
             } else {
@@ -156,7 +134,7 @@ internal class ManageTokensModel @Inject constructor(
                 isActive = false,
                 onActiveChange = ::toggleSearchBar,
             ),
-            hasChanges = false,
+            hasChanges = mode.forceShowSaveButton,
             saveChanges = { saveChanges(mode.onSaved) },
             loadMore = ::loadMoreItems,
             isSavingInProgress = false,
@@ -179,12 +157,7 @@ internal class ManageTokensModel @Inject constructor(
                 }
             }
             .sample(periodMillis = 1_000)
-            .onEach { query ->
-                manageTokensListManager.search(
-                    userWalletId = params.userWalletId,
-                    query = query,
-                )
-            }
+            .onEach { query -> manageTokensListManager.search(userWalletId = userWalletId, query = query) }
             .launchIn(modelScope)
     }
 
@@ -270,9 +243,10 @@ internal class ManageTokensModel @Inject constructor(
     }
 
     private fun updateChangedItems(currenciesToAdd: ChangedCurrencies, currenciesToRemove: ChangedCurrencies) {
+        val forceShowSaveButton = (params.mode as? ManageTokensComponent.Mode.Manage)?.forceShowSaveButton ?: false
         state.update { state ->
             state.copySealed(
-                hasChanges = currenciesToAdd.isNotEmpty() || currenciesToRemove.isNotEmpty(),
+                hasChanges = forceShowSaveButton || currenciesToAdd.isNotEmpty() || currenciesToRemove.isNotEmpty(),
             )
         }
     }
@@ -282,37 +256,31 @@ internal class ManageTokensModel @Inject constructor(
         if (state.isInitialBatchLoading || state.isNextBatchLoading) return false
 
         modelScope.launch {
-            manageTokensListManager.loadMore(
-                userWalletId = params.userWalletId,
-                query = state.search.query,
-            )
+            manageTokensListManager.loadMore(userWalletId = userWalletId, query = state.search.query)
         }
 
         return true
     }
 
     private fun navigateToAddCustomToken() {
-        params.userWalletId?.let {
+        userWalletId?.let {
             bottomSheetNavigation.activate(ManageTokensBottomSheetConfig.AddCustomToken(it))
         }
     }
 
-    private fun saveChanges() {
+    private fun saveChanges(onSavedCallback: () -> Unit) {
         modelScope.launch {
             state.update { state -> state.copySealed(isSavingInProgress = true) }
             saveManagedTokensUseCase.invoke(
-                userWalletId = requireNotNull(params.userWalletId),
+                userWalletId = requireNotNull(userWalletId),
                 currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
                 currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
             ).fold(
                 ifLeft = { Timber.e(it, "Failed to save changes") },
-                ifRight = { router.pop() },
+                ifRight = { onSavedCallback() },
             )
             state.update { state -> state.copySealed(isSavingInProgress = false) }
         }
-    private fun saveChanges(onSaved: () -> Unit) {
-        // TODO: https://tangem.atlassian.net/browse/AND-7551
-        onSaved()
     }
 
     private fun searchCurrencies(query: String) {

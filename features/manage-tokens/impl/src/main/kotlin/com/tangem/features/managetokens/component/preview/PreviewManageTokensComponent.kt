@@ -26,9 +26,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
 internal class PreviewManageTokensComponent(
-    private val isLoading: Boolean = false,
+    private val isLoading: Boolean,
+    params: ManageTokensComponent.Params,
 ) : ManageTokensComponent {
-internal class PreviewManageTokensComponent(params: ManageTokensComponent.Params) : ManageTokensComponent {
 
     private val changedItemsIds: MutableSet<String> = mutableSetOf()
 
