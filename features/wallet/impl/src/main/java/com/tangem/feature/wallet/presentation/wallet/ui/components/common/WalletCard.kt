@@ -46,6 +46,7 @@ import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
@@ -53,7 +54,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
-import com.tangem.utils.StringsSigns
 
 private const val HALF_OF_ITEM_WIDTH = 0.5
 
@@ -104,11 +104,9 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
 
         val additionalText by remember(state.additionalInfo, isBalanceHidden) {
             mutableStateOf(
-                if (state.additionalInfo?.hideable == true && isBalanceHidden) {
-                    WalletCardState.HIDDEN_BALANCE_TEXT
-                } else {
-                    state.additionalInfo?.content
-                },
+                state.additionalInfo?.content?.orMaskWithStars(
+                    maskWithStars = state.additionalInfo?.hideable == true && isBalanceHidden,
+                ),
             )
         }
         AdditionalInfo(
@@ -291,7 +289,7 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
         when (walletCardState) {
             is WalletCardState.Content -> {
                 ResizableText(
-                    text = if (isBalanceHidden) StringsSigns.STARS else walletCardState.balance,
+                    text = walletCardState.balance.orMaskWithStars(isBalanceHidden),
                     fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
                     modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
                     color = TangemTheme.colors.text.primary1,
@@ -301,7 +299,7 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
                 )
             }
             is WalletCardState.Error -> NonContentBalanceText(
-                text = if (isBalanceHidden) WalletCardState.HIDDEN_BALANCE_TEXT else WalletCardState.EMPTY_BALANCE_TEXT,
+                text = WalletCardState.EMPTY_BALANCE_TEXT.orMaskWithStars(isBalanceHidden),
             )
             is WalletCardState.Loading -> {
                 RectangleShimmer(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
