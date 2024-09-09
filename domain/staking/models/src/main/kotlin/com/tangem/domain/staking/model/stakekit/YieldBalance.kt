@@ -25,6 +25,13 @@ sealed class YieldBalance {
                 .filter { it.type == BalanceType.REWARDS }
                 .sumOf { it.amount }
         }
+
+        fun getValidatorsCount(): Int {
+            return balance.items
+                .filterNot { it.validatorAddress.isNullOrBlank() }
+                .distinctBy { it.validatorAddress }
+                .size
+        }
     }
 
     data object Empty : YieldBalance()
