@@ -116,6 +116,7 @@
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
   <string name="common_import">Import</string>
+  <string name="common_in_progress">In progress</string>
   <string name="common_later">Later</string>
   <string name="common_left">%1$s left</string>
   <string name="common_locked">Locked</string>
@@ -396,7 +397,7 @@
   <string name="markets_token_details_liquidity_description">The change in how much liquidity is available for the token during the specified timeframe</string>
   <string name="markets_token_details_liquidity_index">Liquidity index</string>
   <string name="markets_token_details_low">Low</string>
-  <string name="markets_token_details_market_capitalization">Market capitalization</string>
+  <string name="markets_token_details_market_capitalization">Market cap</string>
   <string name="markets_token_details_market_capitalization_description">The total market value of a cryptocurrency, calculated by multiplying the current price of the coin by the total number of coins in circulation</string>
   <string name="markets_token_details_market_rating">Market rating</string>
   <string name="markets_token_details_market_rating_description">Position in crypto rating between all coins based on market capitalization</string>
@@ -666,15 +667,15 @@
   <string name="staking_locked">Locked</string>
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
-  <string name="staking_notification_claim_rewards_text">Earned rewards are sent directly to your address. Once claimed, the funds are available for use.</string>
+  <string name="staking_notification_claim_rewards_text">Earned rewards will be sent to your wallet and available for use immediately</string>
   <string name="staking_notification_earn_rewards_text_period_day">Staking allows you to earn %1$s. Your staking rewards arrive every day.</string>
   <string name="staking_notification_earn_rewards_text_period_hour">Staking allows you to earn %1$s. Your staking rewards arrive every hour.</string>
   <string name="staking_notification_earn_rewards_text_period_month">Staking allows you to earn %1$s. Your staking rewards arrive every month.</string>
   <string name="staking_notification_earn_rewards_text_period_week">Staking allows you to earn %1$s. Your staking rewards arrive every week.</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
-  <string name="staking_notification_unstake_text">Rewards stop accruing immediately after you start unstaking. The unstaking process takes %s.</string>
-  <string name="staking_notification_withdraw_text">Your funds have been unstaked. You can now withdraw them along with your earned rewards.</string>
+  <string name="staking_notification_unstake_text">Your funds will be available for use after the %s unbonding period.</string>
+  <string name="staking_notification_withdraw_text">You can now withdraw your funds, it will be available to use immediatly</string>
   <string name="staking_preparing">Preparing</string>
   <string name="staking_ready_to_withdraw">Ready to withdraw</string>
   <string name="staking_rebond">Rebond</string>
@@ -700,6 +701,7 @@
   <string name="staking_tap_to_withdraw">Tap to withdraw</string>
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">Unstake %s</string>
+  <string name="staking_transaction_in_progress_text">The transaction is being processed! Validation is currently underway in the blockchain. This may take a few minutes.</string>
   <string name="staking_unbonding">Unbonding</string>
   <string name="staking_unlocked_locked">Unlock locked</string>
   <string name="staking_unstaked">Unstaked</string>
@@ -734,7 +736,6 @@
   <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
   <string name="swapping_insufficient_funds">Insufficient funds</string>
   <string name="swapping_permission_header">Give Permission</string>
-  <string name="swapping_success_view_title">In progress</string>
   <string name="swapping_swap_action">Swap</string>
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>

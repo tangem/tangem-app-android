@@ -466,6 +466,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onStakeBannerClick() {
+        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.StakingClicked(cryptoCurrency.symbol))
         openStaking()
     }
 

@@ -27,6 +27,7 @@ internal data class StakingUiState(
     val clickIntents: StakingClickIntents,
     val walletName: String,
     val cryptoCurrencyName: String,
+    val cryptoCurrencySymbol: String,
     val currentStep: StakingStep,
     val initialInfoState: StakingStates.InitialInfoState,
     val amountState: AmountState,
