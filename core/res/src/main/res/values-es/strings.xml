@@ -115,10 +115,7 @@
   <string name="common_go_to_provider">Ir al proveedor</string>
   <string name="common_go_to_token">Ir al token</string>
   <string name="common_import">Importe</string>
-  <plurals name="common_in_days">
-    <item quantity="one">en %d día</item>
-    <item quantity="other">en %d días</item>
-  </plurals>
+  <string name="common_in_progress">En progreso</string>
   <string name="common_later">Más tarde</string>
   <string name="common_locked">Bloqueado</string>
   <string name="common_main_network">Red principal</string>
@@ -132,6 +129,7 @@
   <string name="common_origin_card">Tarjeta principal</string>
   <string name="common_passphrase">Frase de contraseña</string>
   <string name="common_paste">Pegar</string>
+  <string name="common_privacy_policy">Política de privacidad</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Leer más</string>
@@ -159,6 +157,7 @@
   <string name="common_support">Soporte</string>
   <string name="common_swap">Intercambiar</string>
   <string name="common_terms_and_conditions">términos y condiciones</string>
+  <string name="common_terms_of_use">Condiciones de uso</string>
   <string name="common_today">Hoy</string>
   <string name="common_transaction_failed">Transacción fallida</string>
   <string name="common_transactions">Transacciones</string>
@@ -264,7 +263,6 @@
   <string name="express_legal_one_placeholder">Al utilizar la función de intercambio, acepta el %s</string>
   <string name="express_legal_two_placeholders">Al utilizar la función de intercambio, aceptas las condiciones de %1$s y %2$s del proveedor</string>
   <string name="express_more_providers_soon">Próximamente habrá más proveedores.\n¡Estén atentos!</string>
-  <string name="express_privacy_policy">Política de privacidad</string>
   <string name="express_provider">Proveedor</string>
   <string name="express_provider_best_rate">Mejor tarifa</string>
   <string name="express_provider_max_amount">Disponible hasta %s</string>
@@ -272,7 +270,6 @@
   <string name="express_provider_not_available">No disponible para este par</string>
   <string name="express_provider_permission_needed">Permiso requerido</string>
   <string name="express_provider_recommended">Recomendado</string>
-  <string name="express_terms_of_use">Condiciones de uso</string>
   <string name="express_token_list_empty_search">No se encontraron fichas. Por favor intenta con otra solicitud</string>
   <string name="express_transaction_id">ID : %s</string>
   <string name="express_transaction_id_copied">ID de transacción copiado</string>
@@ -413,6 +410,8 @@
   <string name="markets_token_details_total_supply_description">La cantidad máxima de monedas o tokens que pueden existir para una criptomoneda en particular</string>
   <string name="markets_token_details_trading_volume">Volumen de operaciones (24 horas)</string>
   <string name="markets_token_details_trading_volume_24h_description">La cantidad total de una criptomoneda que se ha negociado en las últimas 24 horas, lo que indica el nivel de actividad y liquidez en el mercado.</string>
+  <string name="markets_tooltip_message">Tire hacia arriba o toque la barra de búsqueda para agregar tokens directamente desde el mercado</string>
+  <string name="markets_tooltip_title">Agregar tokens</string>
   <string name="onboarding_access_code_feature_1_description">Deba configurar un único código de acceso para proteger todas sus tarjetas</string>
   <string name="onboarding_access_code_feature_1_title">Proteger</string>
   <string name="onboarding_access_code_feature_2_description">Puede configurar un código de acceso individual en cada tarjeta más tarde</string>
@@ -637,8 +636,6 @@
   <string name="settings_forget_wallet">Olvidar la billetera</string>
   <string name="settings_forget_wallet_footer">Esto eliminará la wallet de la aplicación. La wallet en sí puede\nañadirse de nuevo.</string>
   <string name="settings_wallet_name_title">Nombre</string>
-  <string name="staking_active">Activo</string>
-  <string name="staking_active_footer">Para eliminar el staking de sus activos, presione el bloque de arriba</string>
   <string name="staking_amount_requirement_error">El monto del staking debe ser al menos %s</string>
   <string name="staking_claim_unstaked">Unstaking de la reclamación</string>
   <string name="staking_details_annual_percentage_rate">Porcentaje de rendimiento anual</string>
@@ -697,7 +694,6 @@
   <string name="staking_unbonding">Desunión</string>
   <string name="staking_unlocked_locked">Desbloquear</string>
   <string name="staking_unstaked">Sin staking</string>
-  <string name="staking_unstaked_footer">Marque activos sin staking para reclamarlos</string>
   <string name="staking_unstaking">Unstaking</string>
   <string name="staking_validator">Validador</string>
   <string name="staking_validators">Validadores</string>
@@ -727,7 +723,6 @@
   <string name="swapping_high_price_impact_description">Hacer swap de esta cantidad de tokens seleccionados causará un impacto significativo en el precio y reducirá su resultado.</string>
   <string name="swapping_insufficient_funds">Fondos insuficientes</string>
   <string name="swapping_permission_header">Dar autorización</string>
-  <string name="swapping_success_view_title">En progreso</string>
   <string name="swapping_swap_action">Intercambie</string>
   <string name="swapping_to_title">Usted recibe</string>
   <string name="swapping_token_list_title">Elige token</string>
@@ -808,7 +803,7 @@
   <string name="wallet_connect_error_with_framework_message">Hemos encontrado un error desconocido. Mensaje de error: %s. Si el problema persiste, no duda en contactar con nuestro soporte</string>
   <string name="wallet_connect_error_wrong_card_selected">Tarjeta incorrecta seleccionada en Tangem App</string>
   <string name="wallet_connect_failed_to_build_tx">Error al crear la transacción a partir de los datos de la dApp. Código: %s</string>
-  <string name="wallet_connect_generic_error_with_code">Hemos encontrado un error desconocido. Mensaje de error: %s. Si el problema persiste, contacte con nuestro soporte</string>
+  <string name="wallet_connect_generic_error_with_code">Hemos encontrado un error desconocido. Mensaje de error: %d. Si el problema persiste, contacte con nuestro soporte</string>
   <string name="wallet_connect_no_sessions_message">No hay sesiones abiertas de WalletConnect</string>
   <string name="wallet_connect_no_sessions_title">¡Qué lástima! No hay sesiones.</string>
   <string name="wallet_connect_pairing_error">Error al emparejar la sesión de WalletConnect: %1$s</string>
