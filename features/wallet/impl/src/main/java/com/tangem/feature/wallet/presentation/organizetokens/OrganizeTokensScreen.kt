@@ -39,7 +39,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.common.component.DraggableNetworkGroupItem
+import com.tangem.feature.wallet.presentation.common.component.DraggableNetworkTitleItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
@@ -173,14 +173,16 @@ private fun LazyItemScope.DraggableItem(
     ) { isItemDragging ->
         isDragging = isItemDragging
 
+        val modifierWithBackground = itemModifier.background(color = TangemTheme.colors.background.primary)
+
         when (item) {
-            is DraggableItem.GroupHeader -> DraggableNetworkGroupItem(
-                modifier = itemModifier,
+            is DraggableItem.GroupHeader -> DraggableNetworkTitleItem(
+                modifier = modifierWithBackground,
                 networkName = item.networkName,
                 reorderableTokenListState = reorderableState,
             )
             is DraggableItem.Token -> TokenItem(
-                modifier = itemModifier.background(color = TangemTheme.colors.background.primary),
+                modifier = modifierWithBackground,
                 state = item.tokenItemState,
                 reorderableTokenListState = reorderableState,
                 isBalanceHidden = isBalanceHidden,
