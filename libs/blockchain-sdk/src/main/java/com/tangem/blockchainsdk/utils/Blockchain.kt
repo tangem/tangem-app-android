@@ -125,6 +125,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "cyber/test" -> Blockchain.CyberTestnet
         "sei-network" -> Blockchain.Sei
         "sei-network/test" -> Blockchain.SeiTestnet
+        "internet-computer" -> Blockchain.InternetComputer
         else -> null
     }
 }
@@ -251,6 +252,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.CyberTestnet -> "cyber/test"
         Blockchain.Sei -> "sei-network"
         Blockchain.SeiTestnet -> "sei-network/test"
+        Blockchain.InternetComputer -> "internet-computer"
     }
 }
 
@@ -334,6 +336,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Blast, Blockchain.BlastTestnet -> "blast-ethereum"
         Blockchain.Cyber, Blockchain.CyberTestnet -> "cyber-ethereum"
         Blockchain.Sei, Blockchain.SeiTestnet -> "sei-network"
+        Blockchain.InternetComputer -> "internet-computer"
     }
 }
 
@@ -364,4 +367,6 @@ private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
+    Blockchain.Sei,
+    Blockchain.InternetComputer,
 )
