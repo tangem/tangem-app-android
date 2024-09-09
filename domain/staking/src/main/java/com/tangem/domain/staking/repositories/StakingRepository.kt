@@ -6,7 +6,6 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
@@ -74,12 +73,6 @@ interface StakingRepository {
         fee: Fee,
         transactionId: String,
     ): Pair<StakingTransaction, TransactionData.Compiled>
-
-    suspend fun submitHash(transactionId: String, transactionHash: String)
-
-    suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata)
-
-    suspend fun sendUnsubmittedHashes()
 
     /** Returns staking approval */
     fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval
