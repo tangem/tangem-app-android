@@ -116,6 +116,7 @@
   <string name="common_go_to_provider">Перейти до провайдера</string>
   <string name="common_go_to_token">Перейти до токену</string>
   <string name="common_import">Імпортувати</string>
+  <string name="common_in_progress">процесі</string>
   <string name="common_later">Пізніше</string>
   <string name="common_locked">Заблокований</string>
   <string name="common_main_network">Основна мережа</string>
@@ -397,7 +398,7 @@
   <string name="markets_token_details_low">Низький</string>
   <string name="markets_token_details_market_capitalization">Ринкова капіталізація</string>
   <string name="markets_token_details_market_capitalization_description">Загальна ринкова вартість криптовалюти, що розраховується шляхом множення поточної ціни монети на загальну кількість монет в обігу</string>
-  <string name="markets_token_details_market_rating">Рейтинг ринку</string>
+  <string name="markets_token_details_market_rating">Рейтинг</string>
   <string name="markets_token_details_market_rating_description">Позиція в крипторейтингу між усіма монетами на основі ринкової капіталізації</string>
   <string name="markets_token_details_max_supply">Максимальна пропозиція</string>
   <string name="markets_token_details_metrics">Метрики</string>
@@ -722,7 +723,6 @@
   <string name="swapping_high_price_impact_description">Обмін цієї кількості обраних токенів призведе до значного впливу на ціну і зменшить вашу кінцеву суму.</string>
   <string name="swapping_insufficient_funds">Недостатньо коштів</string>
   <string name="swapping_permission_header">Надати дозвіл</string>
-  <string name="swapping_success_view_title">В процесі</string>
   <string name="swapping_swap_action">Обміняти</string>
   <string name="swapping_to_title">Ви отримаєте</string>
   <string name="swapping_token_list_title">Оберіть токен</string>
