@@ -15,6 +15,7 @@ import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -29,7 +30,9 @@ import com.tangem.domain.staking.*
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionType
@@ -45,6 +48,9 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.staking.impl.analytics.StakeScreenSource
+import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvents
+import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
@@ -106,6 +112,7 @@ internal class StakingViewModel @Inject constructor(
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val isAnyTokenStakedUseCase: IsAnyTokenStakedUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
@@ -135,12 +142,18 @@ internal class StakingViewModel @Inject constructor(
     private var userWallet: UserWallet by Delegates.notNull()
     private var appCurrency: AppCurrency by Delegates.notNull()
 
+    private var isInitialInfoAnalyticSent: Boolean = false
+
     private val stakingEventFactory: StakingEventFactory
         get() = StakingEventFactory(
             stateController = stateController,
             popBackStack = stakingStateRouter::onBackClick,
             onFailedTxEmailClick = ::onFailedTxEmailClick,
         )
+
+    private val stakingAnalyticSender = StakingAnalyticSender(
+        analyticsEventHandler = analyticsEventHandler,
+    )
 
     private var stakingApproval: StakingApproval = StakingApproval.Empty
     private var isAmountSubtractAvailable: Boolean = false
@@ -270,6 +283,7 @@ internal class StakingViewModel @Inject constructor(
                     ),
                 ).getOrElse {
                     Timber.e(it.toString())
+                    analyticsEventHandler.send(StakingAnalyticsEvents.StakingError(value.cryptoCurrencyName))
                     stakingEventFactory.createStakingErrorAlert(it)
                     stateController.update(SetConfirmationStateResetAssentTransformer)
                     return@launch
@@ -284,6 +298,7 @@ internal class StakingViewModel @Inject constructor(
                             transactionId = transaction.id,
                         ).getOrElse {
                             Timber.e(it.toString())
+                            analyticsEventHandler.send(StakingAnalyticsEvents.StakingError(value.cryptoCurrencyName))
                             stakingEventFactory.createStakingErrorAlert(it)
                             stateController.update(SetConfirmationStateResetAssentTransformer)
                             return@launch
@@ -301,6 +316,7 @@ internal class StakingViewModel @Inject constructor(
                     fullTransactionsData = fullTransactionsData,
                     fee = fee,
                     pendingAction = confirmationState.pendingAction,
+                    validator = validatorState.chosenValidator.name,
                 )
             }
         }
@@ -326,6 +342,7 @@ internal class StakingViewModel @Inject constructor(
                 type = pendingAction?.type,
             ),
         ).getOrElse {
+            analyticsEventHandler.send(StakingAnalyticsEvents.StakingError(value.cryptoCurrencyName))
             stateController.update(AddStakingErrorTransformer())
             updateNotifications(GetFeeError.UnknownError)
             return
@@ -365,6 +382,7 @@ internal class StakingViewModel @Inject constructor(
                 updateNotifications()
             },
             ifLeft = {
+                analyticsEventHandler.send(StakingAnalyticsEvents.TransactionError(value.cryptoCurrencyName))
                 stateController.update(AddStakingErrorTransformer())
                 updateNotifications(it)
             },
@@ -405,6 +423,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onInitialInfoBannerClick() {
+        analyticsEventHandler.send(StakingAnalyticsEvents.WhatIsStaking(cryptoCurrencyStatus.currency.symbol))
         innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
     }
 
@@ -425,26 +444,47 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onMaxValueClick() {
+        analyticsEventHandler.send(StakingAnalyticsEvents.ButtonMax(cryptoCurrencyStatus.currency.symbol))
         stateController.update(AmountMaxValueStateTransformer(cryptoCurrencyStatus, yield))
     }
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {
+        analyticsEventHandler.send(
+            StakingAnalyticsEvents.AmountSelectCurrency(cryptoCurrencyStatus.currency.symbol, isFiat),
+        )
         stateController.update(AmountCurrencyChangeStateTransformer(cryptoCurrencyStatus, isFiat))
     }
 
-    override fun openValidators() = stakingStateRouter.showValidators()
+    override fun openValidators() {
+        analyticsEventHandler.send(
+            StakingAnalyticsEvents.ButtonValidator(
+                source = StakeScreenSource.Confirmation,
+                token = cryptoCurrencyStatus.currency.symbol,
+            ),
+        )
+        stakingStateRouter.showValidators()
+    }
 
     override fun onValidatorSelect(validator: Yield.Validator) {
         stateController.update(ValidatorSelectChangeTransformer(validator))
     }
 
     override fun openRewardsValidators() {
+        analyticsEventHandler.send(
+            StakingAnalyticsEvents.ButtonRewards(value.cryptoCurrencyName),
+        )
         val rewardsValidators =
             stateController.value.rewardsValidatorsState as? StakingStates.RewardsValidatorsState.Data
         val rewards = rewardsValidators?.rewards
         if (rewards != null && rewards.isSingleItem()) {
             onActiveStake(rewards.first())
         } else {
+            analyticsEventHandler.send(
+                StakingAnalyticsEvents.ButtonValidator(
+                    source = StakeScreenSource.Info,
+                    token = cryptoCurrencyStatus.currency.symbol,
+                ),
+            )
             onNextClick(actionTypeToOverwrite = StakingActionCommonType.PENDING_REWARDS)
         }
     }
@@ -477,6 +517,15 @@ internal class StakingViewModel @Inject constructor(
             stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, activeStake.cryptoValue, yield))
             onNextClick(null, activeStake.pendingActions.firstOrNull())
         }
+    }
+
+    override fun onActiveStakeAnalytic() {
+        analyticsEventHandler.send(
+            StakingAnalyticsEvents.ButtonValidator(
+                source = StakeScreenSource.Info,
+                token = cryptoCurrencyStatus.currency.symbol,
+            ),
+        )
     }
 
     override fun showApprovalBottomSheet() {
@@ -519,6 +568,7 @@ internal class StakingViewModel @Inject constructor(
             ).fold(
                 ifLeft = { error ->
                     Timber.e(error.toString())
+                    analyticsEventHandler.send(StakingAnalyticsEvents.TransactionError(value.cryptoCurrencyName))
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
                             appCurrencyProvider = Provider { appCurrency },
@@ -540,6 +590,7 @@ internal class StakingViewModel @Inject constructor(
             ).fold(
                 ifLeft = { error ->
                     Timber.e(error.toString())
+                    analyticsEventHandler.send(StakingAnalyticsEvents.TransactionError(value.cryptoCurrencyName))
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
                             appCurrencyProvider = Provider { appCurrency },
@@ -551,6 +602,7 @@ internal class StakingViewModel @Inject constructor(
                     stateController.update(SetConfirmationStateResetAssentTransformer)
                 },
                 ifRight = {
+                    stakingAnalyticSender.sendTransactionApprovalAnalytics(tokenCryptoCurrency)
                     stateController.update(SetApprovalInProgressTransformer)
                     stateController.update(DismissBottomSheetStateTransformer())
                     awaitForAllowance(confirmationState.pendingAction)
@@ -668,10 +720,10 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onExploreClick() {
+        analyticsEventHandler.send(StakingAnalyticsEvents.ButtonExplore)
         val confirmationDataState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
         val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
         val txUrl = transactionDoneState?.txUrl
-
         if (txUrl != null) {
             innerRouter.openUrl(txUrl)
         }
@@ -682,12 +734,11 @@ internal class StakingViewModel @Inject constructor(
         val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
         val txUrl = transactionDoneState?.txUrl
 
+        analyticsEventHandler.send(StakingAnalyticsEvents.ButtonShare)
         if (txUrl != null) {
             vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
             stakingEventFactory.createShareDialog(txUrl = txUrl)
         }
-
-        // TODO staking [REDACTED_TASK_KEY]
     }
 
     override fun onFailedTxEmailClick(errorMessage: String) {
@@ -758,6 +809,17 @@ internal class StakingViewModel @Inject constructor(
                 .onEach { maybeStatus ->
                     maybeStatus.fold(
                         ifRight = { status ->
+                            if (!isInitialInfoAnalyticSent) {
+                                isInitialInfoAnalyticSent = true
+                                val balances = status.value.yieldBalance as? YieldBalance.Data
+                                analyticsEventHandler.send(
+                                    StakingAnalyticsEvents.StakingInfoScreenOpened(
+                                        validatorsCount = balances?.getValidatorsCount() ?: 0,
+                                        token = status.currency.symbol,
+                                    ),
+                                )
+                            }
+
                             feeCryptoCurrencyStatus =
                                 getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
                             cryptoCurrencyStatus = status
@@ -816,14 +878,33 @@ internal class StakingViewModel @Inject constructor(
         fullTransactionsData: List<FullTransactionData>,
         fee: Fee,
         pendingAction: PendingAction?,
+        validator: String,
     ) {
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        val action = when (value.actionType) {
+            StakingActionCommonType.ENTER -> StakingActionType.STAKE
+            StakingActionCommonType.EXIT -> StakingActionType.UNSTAKE
+            StakingActionCommonType.PENDING_REWARDS,
+            StakingActionCommonType.PENDING_OTHER,
+            -> pendingAction?.type
+        }
+        action?.let {
+            analyticsEventHandler.send(
+                StakingAnalyticsEvents.ButtonAction(
+                    action = it.name,
+                    token = value.cryptoCurrencyName,
+                    validator = validator,
+                ),
+            )
+        }
         sendMultipleTransactionUseCase(
             txsData = fullTransactionsData.map { it.tangemTransaction },
             userWallet = userWallet,
-            network = cryptoCurrencyStatus.currency.network,
+            network = cryptoCurrency.network,
         ).fold(
             ifLeft = { error ->
                 Timber.e(error.toString())
+                analyticsEventHandler.send(StakingAnalyticsEvents.StakingError(value.cryptoCurrencyName))
                 stateController.update(
                     SetConfirmationStateAssentTransformer(
                         appCurrencyProvider = Provider { appCurrency },
@@ -836,6 +917,7 @@ internal class StakingViewModel @Inject constructor(
                 stateController.update(SetConfirmationStateResetAssentTransformer)
             },
             ifRight = { transactionHashes ->
+                stakingAnalyticSender.sendTransactionStakingAnalytics(cryptoCurrency, validator)
                 transactionsInProgress.clear()
                 submitHash(
                     transactionIds = fullTransactionsData.map { it.stakeKitTransaction.id },
@@ -844,9 +926,8 @@ internal class StakingViewModel @Inject constructor(
                 scheduleUpdates()
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
-                    networkId = cryptoCurrencyStatus.currency.network.id,
+                    networkId = cryptoCurrency.network.id,
                 ).getOrElse { "" }
-
                 stateController.update(
                     SetConfirmationStateCompletedTransformer(
                         appCurrencyProvider = Provider { appCurrency },
@@ -868,6 +949,7 @@ internal class StakingViewModel @Inject constructor(
                     transactionHash = transactionHash,
                 )
                     .onLeft {
+                        analyticsEventHandler.send(StakingAnalyticsEvents.StakingError(value.cryptoCurrencyName))
                         saveUnsubmittedHashUseCase.invoke(
                             transactionId = transactionId,
                             transactionHash = transactionHash,
