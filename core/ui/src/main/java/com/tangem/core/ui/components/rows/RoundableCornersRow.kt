@@ -41,7 +41,7 @@ fun RoundableCornersRow(
 ) {
     Surface(
         shape = cornersToRound.getShape(),
-        color = TangemTheme.colors.background.primary,
+        color = TangemTheme.colors.background.action,
     ) {
         Row(
             modifier = Modifier
