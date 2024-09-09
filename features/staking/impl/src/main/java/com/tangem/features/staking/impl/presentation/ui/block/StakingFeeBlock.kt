@@ -55,10 +55,9 @@ internal fun StakingFeeBlock(feeState: FeeState, isTransactionSent: Boolean) {
             when (feeState) {
                 is FeeState.Content -> {
                     val feeAmount = feeState.fee?.amount
-                    val (title, icon) = R.string.common_fee_selector_option_market to R.drawable.ic_bird_24
                     SelectorRowItem(
-                        titleRes = title,
-                        iconRes = icon,
+                        titleRes = R.string.common_fee_selector_option_market,
+                        iconRes = R.drawable.ic_bird_24,
                         preDot = stringReference(
                             BigDecimalFormatter.formatCryptoFeeAmount(
                                 cryptoAmount = feeAmount?.value,
@@ -80,9 +79,19 @@ internal fun StakingFeeBlock(feeState: FeeState, isTransactionSent: Boolean) {
                     )
                 }
                 is FeeState.Loading -> {
+                    SelectorRowItem(
+                        titleRes = R.string.common_fee_selector_option_market,
+                        iconRes = R.drawable.ic_bird_24,
+                        paddingValues = PaddingValues(),
+                    )
                     FeeLoading(feeState)
                 }
                 is FeeState.Error -> {
+                    SelectorRowItem(
+                        titleRes = R.string.common_fee_selector_option_market,
+                        iconRes = R.drawable.ic_bird_24,
+                        paddingValues = PaddingValues(),
+                    )
                     FeeError(feeState)
                 }
             }
