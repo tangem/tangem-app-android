@@ -11,7 +11,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.AnnotatedString.Builder
 import androidx.compose.ui.text.buildAnnotatedString
-import com.tangem.utils.StringsSigns.STARS
 import org.intellij.markdown.MarkdownElementTypes
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -68,6 +67,9 @@ sealed interface TextReference {
 
         /** Empty string as [TextReference] */
         val EMPTY: TextReference by lazy(mode = LazyThreadSafetyMode.NONE) { Str(value = "") }
+
+        /** Stars string as [TextReference] */
+        val STARS: TextReference by lazy(mode = LazyThreadSafetyMode.NONE) { Str(value = THREE_STARS) }
     }
 }
 
@@ -263,5 +265,5 @@ private fun formatAnnotated(rawString: String): AnnotatedString {
  * @return The original reference if hide is false, or reference with STARS if hide is true.
  */
 fun TextReference.orMaskWithStars(maskWithStars: Boolean): TextReference {
-    return if (maskWithStars) stringReference(STARS) else this
+    return if (maskWithStars) stringReference(THREE_STARS) else this
 }
