@@ -10,7 +10,6 @@ import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.StringsSigns.DOT
-import com.tangem.utils.StringsSigns.STARS
 import com.tangem.utils.converter.Converter
 
 /**
@@ -68,7 +67,7 @@ class UserWalletItemUMConverter(
         )
 
         return when {
-            isBalanceHidden -> combinedReference(cardCountRef, dividerRef, stringReference(STARS))
+            isBalanceHidden -> combinedReference(cardCountRef, dividerRef, TextReference.STARS)
             isLocked -> combinedReference(cardCountRef, dividerRef, resourceReference(R.string.common_locked))
             isLoading -> cardCountRef
             else -> getBalanceInfo(balance, appCurrency, cardCountRef, dividerRef)
