@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -112,11 +113,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideSubmitHashUseCase(
-        stakingRepository: StakingRepository,
+        stakingTransactionHashRepository: StakingTransactionHashRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): SubmitHashUseCase {
         return SubmitHashUseCase(
-            stakingRepository = stakingRepository,
+            stakingTransactionHashRepository = stakingTransactionHashRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -124,11 +125,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideSaveUnsubmittedHashUseCase(
-        stakingRepository: StakingRepository,
+        stakingTransactionHashRepository: StakingTransactionHashRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): SaveUnsubmittedHashUseCase {
         return SaveUnsubmittedHashUseCase(
-            stakingRepository = stakingRepository,
+            stakingTransactionHashRepository = stakingTransactionHashRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -136,11 +137,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideSendUnsubmittedHashesUseCase(
-        stakingRepository: StakingRepository,
+        stakingTransactionHashRepository: StakingTransactionHashRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): SendUnsubmittedHashesUseCase {
         return SendUnsubmittedHashesUseCase(
-            stakingRepository = stakingRepository,
+            stakingTransactionHashRepository = stakingTransactionHashRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
