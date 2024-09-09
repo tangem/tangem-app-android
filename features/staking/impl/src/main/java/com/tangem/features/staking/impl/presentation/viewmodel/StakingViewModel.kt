@@ -326,7 +326,8 @@ internal class StakingViewModel @Inject constructor(
                 type = pendingAction?.type,
             ),
         ).getOrElse {
-            stateController.update(AddStakingErrorTransformer(it))
+            stateController.update(AddStakingErrorTransformer())
+            updateNotifications(GetFeeError.UnknownError)
             return
         }
         stateController.update(

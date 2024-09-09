@@ -2,7 +2,6 @@ package com.tangem.utils
 
 object StringsSigns {
 
-    const val STARS = "\u2217\u2217\u2217"
     const val DOT = "•"
     const val PLUS = "+"
     const val MINUS = "-"

@@ -33,8 +33,8 @@ import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.state.previewdata.RecipientStatePreviewData
 import com.tangem.features.send.impl.presentation.state.previewdata.SendClickIntentsStub
 import com.tangem.core.ui.components.containers.FooterContainer
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
-import com.tangem.utils.StringsSigns.STARS
 import kotlinx.collections.immutable.ImmutableList
 
 private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
@@ -205,7 +205,7 @@ private fun LazyListScope.listItem(
         AnimateRecentAppearance(item.isVisible) {
             ListItemWithIcon(
                 title = title,
-                subtitle = if (isBalanceHidden) STARS else item.subtitle.resolveReference(),
+                subtitle = item.subtitle.orMaskWithStars(isBalanceHidden).resolveReference(),
                 info = item.timestamp?.resolveReference(),
                 subtitleEndOffset = item.subtitleEndOffset,
                 subtitleIconRes = item.subtitleIconRes,
