@@ -879,7 +879,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return when {
             blockchain.isEvm() -> {
                 val feeAmountWithDecimals = feeAmountValue.movePointRight(fee.decimals)
-                Fee.Ethereum(
+                Fee.Ethereum.Legacy(
                     amount = feeAmount,
                     gasLimit = fee.gasLimit.toBigInteger(),
                     gasPrice = (feeAmountWithDecimals / fee.gasLimit.toBigDecimal()).toBigInteger(),
@@ -1308,7 +1308,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         networkId = networkId,
                         transaction = transaction,
                         fromToken = fromToken.currency,
-                        cardId = userWallet?.scanResponse?.card?.cardId,
+                        cardId = userWallet.scanResponse.card.cardId,
                     )
                 ) {
                     is ProxyFees.MultipleFees -> feeData.proxyFeesToFeeState(fromToken.currency, otherNativeFee)
@@ -1503,8 +1503,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             swapAmount = swapAmount,
             spenderAddress = requireNotNull(spenderAddress) { "Spender address is null" },
         )
-        val cardId = userWallet?.scanResponse?.card?.cardId
-        val feeData = if (cardId != null && isDemoCardUseCase(cardId)) {
+        val cardId = userWallet.scanResponse.card.cardId
+        val feeData = if (isDemoCardUseCase(cardId)) {
             getDemoFees(fromTokenStatus.currency)
         } else {
             try {
@@ -1805,10 +1805,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val increasedAmount = this.amount.copy(
             value = increasedGasLimit.toBigDecimal().multiply(increasedGasPrice).movePointLeft(this.amount.decimals),
         )
-        return this.copy(
-            amount = increasedAmount,
-            gasLimit = increasedGasLimit,
-        )
+        return when (this) {
+            is Fee.Ethereum.EIP1559 -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
+            is Fee.Ethereum.Legacy -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
+        }
     }
 
     private fun hasOutgoingTransaction(cryptoCurrencyStatuses: CryptoCurrencyStatus): Boolean {
