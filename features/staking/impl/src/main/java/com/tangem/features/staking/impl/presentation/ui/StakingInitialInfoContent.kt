@@ -173,8 +173,9 @@ private fun LazyListScope.activeStakingBlock(
         ) { balance ->
             ActiveStakingBlock(
                 balance = balance,
-                onClick = clickIntents::onActiveStake,
                 isBalanceHidden = isBalanceHidden,
+                onClick = clickIntents::onActiveStake,
+                onAnalytic = clickIntents::onActiveStakeAnalytic,
                 modifier = Modifier
                     .animateItemPlacement()
                     .then(
@@ -268,8 +269,9 @@ private fun StakingRewardBlock(
 @Composable
 private fun ActiveStakingBlock(
     balance: BalanceState,
-    onClick: (BalanceState) -> Unit,
     isBalanceHidden: Boolean,
+    onClick: (BalanceState) -> Unit,
+    onAnalytic: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val (icon, iconTint) = balance.type.getIcon()
@@ -287,7 +289,10 @@ private fun ActiveStakingBlock(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(),
                 enabled = balance.isClickable,
-                onClick = { onClick(balance) },
+                onClick = {
+                    onAnalytic()
+                    onClick(balance)
+                },
             ),
     )
 }
