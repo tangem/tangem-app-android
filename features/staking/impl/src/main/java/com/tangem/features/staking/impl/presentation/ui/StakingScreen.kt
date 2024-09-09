@@ -121,9 +121,7 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
         snapshotFlow { isTransitionAnimationRunning }
             .withIndex()
             .map { (index, running) ->
-                if (running && index != 0) {
-                    delay(timeMillis = 200)
-                }
+                if (running && index != 0) delay(timeMillis = 200)
                 running
             }
             .first { !it }
@@ -169,6 +167,7 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                     amountState = uiState.amountState,
                     isBalanceHidden = uiState.isBalanceHidden,
                     clickIntents = uiState.clickIntents,
+                    modifier = Modifier.background(TangemTheme.colors.background.secondary),
                 )
                 StakingStep.Confirmation -> StakingConfirmationContent(
                     amountState = uiState.amountState,
