@@ -111,7 +111,7 @@ class DetailsScreenTest : BaseTestCase() {
         }
 
     @Test
-    fun noteDetailsTest() =
+    fun noteDetails() =
         setupHooks().run {
             scenario(OpenMainScreenScenario(composeTestRule, ProductType.Note))
             ComposeScreen.onComposeScreen<TestTopBar>(composeTestRule) {
