@@ -28,6 +28,7 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -38,7 +39,6 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
-import com.tangem.utils.StringsSigns.STARS
 
 @Suppress("LongMethod")
 @Composable
@@ -176,11 +176,7 @@ private fun TransactionCardData(
         is SwapCardState.SwapCardData -> {
             TransactionCard(
                 type = swapCardState.type,
-                balance = if (swapCardState.isBalanceHidden) {
-                    STARS
-                } else {
-                    swapCardState.balance
-                },
+                balance = swapCardState.balance.orMaskWithStars(swapCardState.isBalanceHidden),
                 textFieldValue = swapCardState.amountTextFieldValue,
                 amountEquivalent = swapCardState.amountEquivalent,
                 tokenIconUrl = swapCardState.tokenIconUrl ?: "",
