@@ -372,7 +372,23 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onPrevClick() {
-        stakingStateRouter.onPrevClick()
+        if (value.currentStep == StakingStep.Confirmation) {
+            when ((value.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState) {
+                InnerConfirmationStakingState.ASSENT -> {
+                    stakingStateRouter.onPrevClick()
+                }
+                null,
+                InnerConfirmationStakingState.IN_PROGRESS,
+                -> {
+                    // do nothing while transaction is in progress
+                }
+                InnerConfirmationStakingState.COMPLETED -> {
+                    onNextClick()
+                }
+            }
+        } else {
+            stakingStateRouter.onPrevClick()
+        }
     }
 
     override fun onRefreshSwipe(isRefreshing: Boolean) {
