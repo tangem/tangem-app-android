@@ -1,9 +1,10 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
-import com.tangem.screens.DisclaimerScreen
-import com.tangem.screens.StoriesScreen
-import com.tangem.screens.WalletScreen
+import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.screens.DisclaimerTestScreen
+import com.tangem.screens.MainTestScreen
+import com.tangem.screens.StoriesTestScreen
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -15,31 +16,22 @@ class ScanErrorTest : BaseTestCase() {
     @Test
     fun goToMain() =
         setupHooks().run {
-            ComposeScreen.onComposeScreen<StoriesScreen>(composeTestRule) {
+            ComposeScreen.onComposeScreen<DisclaimerTestScreen>(composeTestRule) {
+                step("Click on \"Accept\" button") {
+                    acceptButton.clickWithAssertion()
+                }
+            }
+            ComposeScreen.onComposeScreen<StoriesTestScreen>(composeTestRule) {
                 step("Click on \"Scan\" button emulating scan error") {
                     MockProvider.setEmulateError()
-                    scanButton {
-                        assertIsDisplayed()
-                        performClick()
-                    }
+                    scanButton.clickWithAssertion()
                 }
                 step("Click on \"Scan\" button again without emulating error") {
                     MockProvider.resetEmulateError()
-                    scanButton {
-                        assertIsDisplayed()
-                        performClick()
-                    }
+                    scanButton.clickWithAssertion()
                 }
             }
-            DisclaimerScreen {
-                step("Click on \"Accept\" button") {
-                    acceptButton {
-                        isVisible()
-                        click()
-                    }
-                }
-            }
-            ComposeScreen.onComposeScreen<WalletScreen>(composeTestRule) {
+            ComposeScreen.onComposeScreen<MainTestScreen>(composeTestRule) {
                 step("Make sure wallet screen is visible") {
                     assertIsDisplayed()
                 }
