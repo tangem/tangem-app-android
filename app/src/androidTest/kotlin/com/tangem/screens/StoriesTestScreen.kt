@@ -8,8 +8,8 @@ import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.views.KView
 import io.github.kakaocup.kakao.text.KButton
 
-class StoriesScreen(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<StoriesScreen>(
+class StoriesTestScreen(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<StoriesTestScreen>(
         semanticsProvider = semanticsProvider,
         viewBuilderAction = { hasTestTag(TestTags.STORIES_SCREEN) }
     ) {
