@@ -84,6 +84,7 @@
   <string name="common_buy_currency">Перейти на %1$s</string>
   <string name="common_camera_denied_alert_message">Вы не предоставили доступ к камере, пожалуйста, измените настройки конфиденциальности.</string>
   <string name="common_cancel">Отмена</string>
+  <string name="common_claim">Получить</string>
   <string name="common_claim_rewards">Вывести награду</string>
   <string name="common_close">Закрыть</string>
   <string name="common_continue">Продолжить</string>
@@ -117,7 +118,9 @@
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
   <string name="common_import">Импортировать</string>
+  <string name="common_in_progress">В процессе</string>
   <string name="common_later">Позже</string>
+  <string name="common_left">Осталось %1$s</string>
   <string name="common_locked">Заблокирован</string>
   <string name="common_main_network">Основная сеть</string>
   <string name="common_network_fee_title">Сетевая комиссия</string>
@@ -363,7 +366,7 @@
   <string name="markets_selector_interval_6m_title">6м</string>
   <string name="markets_selector_interval_7d_title">7д</string>
   <string name="markets_selector_interval_all_title">Все</string>
-  <string name="markets_sort_by_experienced_buyers_title">Опытные покупатели</string>
+  <string name="markets_sort_by_experienced_buyers_title">Опытные трейдеры</string>
   <string name="markets_sort_by_rating_title">Рейтинг</string>
   <string name="markets_sort_by_title">Сортировать по</string>
   <string name="markets_sort_by_top_gainers_title">Лидеры роста</string>
@@ -377,12 +380,12 @@
     <item quantity="other">На основе %d оценок</item>
   </plurals>
   <string name="markets_token_details_blockchain_site">Веб-сайт</string>
-  <string name="markets_token_details_buy_pressure">Покупательское предпочтение</string>
+  <string name="markets_token_details_buy_pressure">Покуп. предпочтение</string>
   <string name="markets_token_details_buy_pressure_description">Разница между объемом покупателей и  продавцов</string>
-  <string name="markets_token_details_circulating_supply">Циркулирующее предложение</string>
+  <string name="markets_token_details_circulating_supply">Циркулир. предл.</string>
   <string name="markets_token_details_circulating_supply_description">Общее количество монет, доступных для торговли и находящихся в обращении на рынке</string>
   <string name="markets_token_details_experienced_buyers">Опытные покупкатели</string>
-  <string name="markets_token_details_fully_diluted_valuation">Полностью разбавленная капитализация</string>
+  <string name="markets_token_details_fully_diluted_valuation">Полн. разб. кап.</string>
   <string name="markets_token_details_fully_diluted_valuation_description">Общая теоретическая стоимость криптовалюты, если все монеты, которые могут существовать, находятся в обращении, включая те, которые в настоящее время не обращаются</string>
   <string name="markets_token_details_genesis_date">Дата создания</string>
   <string name="markets_token_details_high">Высокий</string>
@@ -394,9 +397,9 @@
   <string name="markets_token_details_liquidity_description">Изменение объема ликвидности, доступной для токена в течение указанного периода времени.</string>
   <string name="markets_token_details_liquidity_index">Индекс ликвидности</string>
   <string name="markets_token_details_low">Низкий</string>
-  <string name="markets_token_details_market_capitalization">Рыночная капитализация</string>
+  <string name="markets_token_details_market_capitalization">Рын. кап.</string>
   <string name="markets_token_details_market_capitalization_description">Общая рыночная стоимость криптовалюты, рассчитываемая путем умножения текущей цены монеты на общее количество монет в обращении.</string>
-  <string name="markets_token_details_market_rating">Рыночный рейтинг</string>
+  <string name="markets_token_details_market_rating">Рейтинг</string>
   <string name="markets_token_details_max_supply">Максимальный объем</string>
   <string name="markets_token_details_metrics">Метрики</string>
   <string name="markets_token_details_official_links">Официальные ссылки</string>
@@ -408,6 +411,9 @@
   <string name="markets_token_details_total_supply_description">Максимальное количество монет или токенов, которое может когда-либо существовать для выбранной криптовалюты.</string>
   <string name="markets_token_details_trading_volume">Объем торгов (24ч)</string>
   <string name="markets_token_details_trading_volume_24h_description">Общая сумма криптовалюты, которая была продана за последние 24 часа, показывающая уровень активности и ликвидности на рынке.</string>
+  <string name="markets_tooltip_message">Потяните вверх или коснитесь поисковой строки, чтобы добавить токены напрямую из маркета</string>
+  <string name="markets_tooltip_title">Добавить токены</string>
+  <string name="nfc_error_unavailable">Функция NFC недоступна на вашем устройстве</string>
   <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
   <string name="onboarding_access_code_feature_1_title">Защита</string>
   <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты</string>
@@ -652,9 +658,9 @@
   <string name="staking_details_metrics_block_header">Метрики</string>
   <string name="staking_details_minimum_requirement">Минимальное количество</string>
   <string name="staking_details_no_rewards_to_claim">Нет вознаграждений к получению</string>
-  <string name="staking_details_reward_claiming">Способ возраграждения</string>
+  <string name="staking_details_reward_claiming">Способ вознаграждения</string>
   <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Он может быть автоматическим, при котором вознаграждение само зачисляется вам на адрес или в ручную, когда вознаграждение нужно вывести, создав транзакцию на её получение.</string>
-  <string name="staking_details_reward_schedule">Период возрагражения</string>
+  <string name="staking_details_reward_schedule">Период вознагражения</string>
   <string name="staking_details_reward_schedule_info">Это период, определяющий, когда участники стейкинга получат свои вознаграждения.</string>
   <string name="staking_details_rewards_to_claim">Вознаграждение для получения: %s</string>
   <string name="staking_details_title">Стейкинг %s</string>
@@ -662,15 +668,18 @@
   <string name="staking_details_unbonding_period_info">Период, который необходимо подождать после запроса на вывод средств из стейкинга, прежде чем токены станут доступны.</string>
   <string name="staking_details_warmup_period">Период прогрева</string>
   <string name="staking_details_warmup_period_info">Время, необходимое для начала процесса стейкинга и активации процесса начисления наград</string>
+  <string name="staking_legal">Пользуясь стейкинг сервисом, вы соглашаетесь с %1$s и %2$s</string>
   <string name="staking_locked">Заблокировано</string>
   <string name="staking_migrate">Переместить</string>
   <string name="staking_native">Нативный стейкинг</string>
+  <string name="staking_notification_claim_rewards_text">Полученная награда будет отправлена на ваш кошелек и будет сразу доступна для использования</string>
   <string name="staking_notification_earn_rewards_text_period_day">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый день.</string>
   <string name="staking_notification_earn_rewards_text_period_hour">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый час.</string>
   <string name="staking_notification_earn_rewards_text_period_month">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый месяц.</string>
   <string name="staking_notification_earn_rewards_text_period_week">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждую неделю.</string>
   <string name="staking_notification_earn_rewards_title">Получите награду за стейкинг</string>
-  <string name="staking_notification_unstake_text">Награда перестанет начисляться сразу после того, как вы начнете процесс завершения стейкинга. Процесс завершения длится %s.</string>
+  <string name="staking_notification_unstake_text">Ваши средства будут доступны после %s периода отзыва.</string>
+  <string name="staking_notification_withdraw_text">Вы можете вывести свои средства из стейкинга, они будут доступны для использования незамедлительно.</string>
   <string name="staking_restake">Сменить валидатора</string>
   <string name="staking_restake_rewards">Застейкать вознаграждения</string>
   <string name="staking_revoke">Отозвать</string>
@@ -688,6 +697,8 @@
   <string name="staking_rewards">Вознаграждения</string>
   <string name="staking_stake_locked">Стейкинг закрыт</string>
   <string name="staking_stake_more">Застейкать еще</string>
+  <string name="staking_tap_to_unlock">Нажмите для разблокировки</string>
+  <string name="staking_tap_to_withdraw">Нажмите для вывода</string>
   <string name="staking_title_stake">Застейкать %s</string>
   <string name="staking_title_unstake">Вывести %s</string>
   <string name="staking_unbonding">Отзыв</string>
@@ -723,7 +734,6 @@
   <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
   <string name="swapping_insufficient_funds">Недостаточно средств</string>
   <string name="swapping_permission_header">Дать разрешение</string>
-  <string name="swapping_success_view_title">В процессе</string>
   <string name="swapping_swap_action">Обменять</string>
   <string name="swapping_to_title">Вы получите</string>
   <string name="swapping_token_list_title">Выберите токен</string>
@@ -805,7 +815,7 @@
   <string name="wallet_connect_error_with_framework_message">Произошла непредвиденная ошибка. Сообщение ошибки: %s Попробуйте, пожалуйста, позже. Если проблема будет продолжать возникать - обратитесь в службу поддержки.</string>
   <string name="wallet_connect_error_wrong_card_selected">Неверная карта выбрана в приложении Tangem</string>
   <string name="wallet_connect_failed_to_build_tx">Не удалось создать транзакцию из данных Dapp. Код: %s</string>
-  <string name="wallet_connect_generic_error_with_code">Произошла непредвиденная ошибка. Код ошибки: %d Попробуйте, пожалуйста, позже. Если проблема будет продолжать возникать - обратитесь в службу поддержки.</string>
+  <string name="wallet_connect_generic_error_with_code">Произошла непредвиденная ошибка. Код ошибки: %d. Попробуйте, пожалуйста, позже. Если проблема будет продолжать возникать - обратитесь в службу поддержки.</string>
   <string name="wallet_connect_no_sessions_message">Нет открытых сессий WalletConnect</string>
   <string name="wallet_connect_no_sessions_title">Упс. Нет сессий.</string>
   <string name="wallet_connect_pairing_error">Не удалось создать пару WalletConnect: %1$s</string>
