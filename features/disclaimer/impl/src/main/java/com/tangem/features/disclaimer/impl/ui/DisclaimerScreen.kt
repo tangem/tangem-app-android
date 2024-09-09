@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -34,6 +35,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TestTags.DISCLAIMER_SCREEN_ACCEPT_BUTTON
+import com.tangem.core.ui.test.TestTags.DISCLAIMER_SCREEN_CONTAINER
 import com.tangem.features.disclaimer.impl.R
 import com.tangem.features.disclaimer.impl.entity.DisclaimerUM
 import com.tangem.features.disclaimer.impl.entity.DummyDisclaimer
@@ -57,7 +60,8 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
     Box(
         modifier = Modifier
             .background(backgroundColor)
-            .statusBarsPadding(),
+            .statusBarsPadding()
+            .testTag(DISCLAIMER_SCREEN_CONTAINER),
     ) {
         Column(
             modifier = Modifier
@@ -158,6 +162,7 @@ private fun BoxScope.DisclaimerButton(onAccept: (Boolean) -> Unit) {
             disabledContentColor = TangemColorPalette.Dark6,
         ),
         modifier = Modifier
+            .testTag(DISCLAIMER_SCREEN_ACCEPT_BUTTON)
             .align(Alignment.BottomCenter)
             .navigationBarsPadding()
             .padding(
