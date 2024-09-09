@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,6 +24,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TestTags
 import com.tangem.feature.walletsettings.component.preview.PreviewWalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
@@ -55,7 +57,7 @@ internal fun WalletSettingsScreen(
         },
         content = { paddingValues ->
             Content(
-                modifier = Modifier.padding(paddingValues),
+                modifier = Modifier.padding(paddingValues).testTag(TestTags.WALLET_SETTINGS_SCREEN),
                 state = state,
             )
 
@@ -89,6 +91,7 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
             val itemModifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing16)
                 .fillMaxWidth()
+                .testTag(TestTags.WALLET_SETTINGS_SCREEN_ITEM)
 
             when (item) {
                 is WalletSettingsItemUM.WithItems -> ItemsBlock(
