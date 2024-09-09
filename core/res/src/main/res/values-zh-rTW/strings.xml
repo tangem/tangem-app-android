@@ -58,6 +58,7 @@
   <string name="common_enabled">啟用</string>
   <string name="common_error">錯誤</string>
   <string name="common_import">導入</string>
+  <string name="common_in_progress">進行中</string>
   <string name="common_network_fee_title">網路費</string>
   <string name="common_no">否</string>
   <string name="common_ok">OK</string>
@@ -271,7 +272,6 @@
   <string name="swapping_high_price_impact_description">在此代幣交換的數量將對價格產生重大影響，並降低您收到的數量</string>
   <string name="swapping_insufficient_funds">餘額不足</string>
   <string name="swapping_permission_header">賦予權限</string>
-  <string name="swapping_success_view_title">進行中</string>
   <string name="swapping_swap_action">交易</string>
   <string name="swapping_token_list_title">選擇代幣</string>
   <string name="swapping_token_not_available">無法使用</string>
