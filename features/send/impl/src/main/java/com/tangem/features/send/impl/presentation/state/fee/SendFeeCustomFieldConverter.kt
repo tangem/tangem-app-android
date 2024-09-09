@@ -50,7 +50,7 @@ internal class SendFeeCustomFieldConverter(
 
     override fun convert(value: Fee): ImmutableList<SendTextField.CustomFee> {
         return when (value) {
-            is Fee.Ethereum -> ethereumCustomFeeConverter.convert(value)
+            is Fee.Ethereum.Legacy -> ethereumCustomFeeConverter.convert(value)
             is Fee.Bitcoin -> bitcoinCustomFeeConverter.convert(value)
             is Fee.Kaspa -> kaspaCustomFeeConverter.convert(value)
             else -> persistentListOf()
