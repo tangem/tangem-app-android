@@ -115,6 +115,7 @@
   <string name="common_go_to_provider">Aller au fournisseur</string>
   <string name="common_go_to_token">Aller au jeton</string>
   <string name="common_import">Importez</string>
+  <string name="common_in_progress">En cours</string>
   <string name="common_later">Plus tard</string>
   <string name="common_locked">Verrouillé</string>
   <string name="common_main_network">Réseau principal</string>
@@ -409,6 +410,8 @@
   <string name="markets_token_details_total_supply_description">Le nombre maximal de pièces ou de jetons pouvant exister pour une crypto-monnaie particulière</string>
   <string name="markets_token_details_trading_volume">Volume des échanges (24h)</string>
   <string name="markets_token_details_trading_volume_24h_description">Le montant total d\'une crypto-monnaie qui a été échangé au cours des dernières 24 heures, indiquant le niveau d\'activité et de liquidité du marché</string>
+  <string name="markets_tooltip_message">Tirez vers le haut ou appuyez sur la barre de recherche pour ajouter des jetons directement depuis le marché</string>
+  <string name="markets_tooltip_title">Ajouter des jetons</string>
   <string name="onboarding_access_code_feature_1_description">Vous devez définir un seul code d\'accès pour protéger toutes vos cartes</string>
   <string name="onboarding_access_code_feature_1_title">Protéger</string>
   <string name="onboarding_access_code_feature_2_description">Vous pourrez définir un code d\'accès individuel sur chaque carte plus tard</string>
@@ -452,7 +455,7 @@
   <string name="onboarding_navbar_title_creating_backup">Sauvegarde en cours</string>
   <string name="onboarding_seed_button_read_more">En savoir plus sur les seed phrases</string>
   <plurals name="onboarding_seed_generate_message_words_count">
-    <item quantity="one">Vide</item>
+    <item quantity="one"></item>
     <item quantity="other">Écrivez ces %d mots dans l\'ordre indiqué ci-dessous et conservez-les dans un endroit sûr et secret.</item>
   </plurals>
   <string name="onboarding_seed_generate_title">Votre seed phrase</string>
@@ -720,7 +723,6 @@
   <string name="swapping_high_price_impact_description">Échanger ce montant de jetons sélectionnés aura un impact significatif sur les prix et réduira votre résultat.</string>
   <string name="swapping_insufficient_funds">Fonds insuffisants</string>
   <string name="swapping_permission_header">Donner l\'autorisation</string>
-  <string name="swapping_success_view_title">En cours</string>
   <string name="swapping_swap_action">Échangez</string>
   <string name="swapping_to_title">Vous recevez</string>
   <string name="swapping_token_list_title">Choisir le jeton</string>
