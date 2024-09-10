@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
+import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
@@ -15,7 +16,12 @@ internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onBackClick() {}
 
-    override fun onNextClick(actionTypeToOverwrite: StakingActionCommonType?, pendingAction: PendingAction?) {}
+    override fun onNextClick(
+        actionTypeToOverwrite: StakingActionCommonType?,
+        pendingAction: PendingAction?,
+        pendingActions: ImmutableList<PendingAction>?,
+    ) {
+    }
 
     override fun onActionClick() {}
 
@@ -55,7 +61,8 @@ internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onActiveStake(activeStake: BalanceState) {}
 
-    override fun getFee(pendingAction: PendingAction?) {}
+    override fun getFee(pendingAction: PendingAction?, pendingActions: ImmutableList<PendingAction>?) {
+    }
 
     override fun onAmountReduceByClick(
         reduceAmountBy: BigDecimal,
