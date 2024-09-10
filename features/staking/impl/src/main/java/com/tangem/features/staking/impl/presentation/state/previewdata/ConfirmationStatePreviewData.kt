@@ -92,5 +92,6 @@ internal object ConfirmationStatePreviewData {
         pendingAction = null,
         isApprovalNeeded = false,
         reduceAmountBy = null,
+        pendingActions = null,
     )
 }
