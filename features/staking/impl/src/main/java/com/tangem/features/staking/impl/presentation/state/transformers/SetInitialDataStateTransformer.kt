@@ -224,6 +224,7 @@ internal class SetInitialDataStateTransformer(
             footerText = TextReference.EMPTY,
             transactionDoneState = TransactionDoneState.Empty,
             pendingAction = null,
+            pendingActions = null,
             isApprovalNeeded = isApprovalNeeded,
             reduceAmountBy = null,
         )
