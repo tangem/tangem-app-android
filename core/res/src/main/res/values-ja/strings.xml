@@ -114,7 +114,9 @@
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
   <string name="common_import">インポート</string>
+  <string name="common_in_progress">進行中</string>
   <string name="common_later">後で</string>
+  <string name="common_left">残り%1$s</string>
   <string name="common_locked">ロックされています</string>
   <string name="common_main_network">メインネットワーク</string>
   <string name="common_network_fee_title">ネットワーク手数料</string>
@@ -406,6 +408,9 @@
   <string name="markets_token_details_total_supply_description">特定の暗号資産に存在しうるコインまたはトークンの最大数</string>
   <string name="markets_token_details_trading_volume">取引量（24時間）</string>
   <string name="markets_token_details_trading_volume_24h_description">過去24時間以内に取引された暗号資産の合計額。市場の活発さと流動性を示します。</string>
+  <string name="markets_tooltip_message">これをドラッグするか、検索窓をタップして、マーケットから直接トークンを追加します</string>
+  <string name="markets_tooltip_title">トークンを追加</string>
+  <string name="nfc_error_unavailable">お使いのデバイスではNFCが使用できません</string>
   <string name="onboarding_access_code_feature_1_description">すべてのカードを保護するには、単一のアクセスコードを設定する必要があります</string>
   <string name="onboarding_access_code_feature_1_title">保護する</string>
   <string name="onboarding_access_code_feature_2_description">後で各カードに個別のアクセスコードを設定できます</string>
@@ -684,6 +689,8 @@
   <string name="staking_stake_locked">ステーキングはロックされています</string>
   <string name="staking_stake_more">もっとステーキングする</string>
   <string name="staking_summary_description_text">%1$sをステーキングし、年間 ~ %2$sを受け取ります</string>
+  <string name="staking_tap_to_unlock">タップしてロック解除</string>
+  <string name="staking_tap_to_withdraw">タップして引き出す</string>
   <string name="staking_title_stake">%sをステーキングする</string>
   <string name="staking_title_unstake">%sのステーキング解除</string>
   <string name="staking_unbonding">ステーキング解約中</string>
@@ -696,6 +703,7 @@
   <string name="staking_vote">投票する</string>
   <string name="staking_vote_locked">投票はロックされています</string>
   <string name="staking_withdraw">引き出す</string>
+  <string name="staking_your_stakes">あなたのステーキング</string>
   <string name="story_awe_description">カード内に秘密鍵を保管しながら暗号資産を安全に保管します</string>
   <string name="story_awe_title">革新的なハードウェアウォレット</string>
   <string name="story_backup_description">1つのウォレットに最大3枚のカード</string>
@@ -719,7 +727,6 @@
   <string name="swapping_high_price_impact_description">選択したトークンをこの量を交換すると、価格に大きな影響が生じ、結果が減少します。</string>
   <string name="swapping_insufficient_funds">残高不足</string>
   <string name="swapping_permission_header">許可を与える</string>
-  <string name="swapping_success_view_title">進行中</string>
   <string name="swapping_swap_action">スワップ</string>
   <string name="swapping_to_title">受け取る</string>
   <string name="swapping_token_list_title">トークンを選択</string>
