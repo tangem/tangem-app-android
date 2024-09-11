@@ -38,6 +38,7 @@ internal fun TextInputFieldUM.updateValue(
 
 internal fun CustomTokenFormUM.updateWithProgress(
     showProgress: Boolean,
+    isWasFilled: Boolean = this.tokenForm?.wasFilled ?: false,
     canAddToken: Boolean = this.canAddToken,
     clearNotifications: Boolean = false,
     clearFieldErrors: Boolean = false,
@@ -64,6 +65,7 @@ internal fun CustomTokenFormUM.updateWithProgress(
                 isEnabled = !showProgress && !disableSecondaryFields,
                 clearError = clearFieldErrors,
             ),
+            wasFilled = isWasFilled,
         )
     }
 }
