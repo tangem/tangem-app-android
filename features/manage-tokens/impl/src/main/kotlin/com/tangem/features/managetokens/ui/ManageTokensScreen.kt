@@ -3,8 +3,11 @@ package com.tangem.features.managetokens.ui
 import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -24,10 +27,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -364,6 +369,7 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, isEditable: Boolean, m
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NetworksList(
     networks: NetworksUM,
@@ -391,8 +397,26 @@ private fun NetworksList(
                 ArrowRow(
                     isLastItem = index == currentItems.lastIndex,
                     content = {
+                        val clipboardManager = LocalClipboardManager.current
                         BlockchainRow(
-                            modifier = Modifier.padding(end = TangemTheme.dimens.spacing8),
+                            modifier = Modifier
+                                .padding(end = TangemTheme.dimens.spacing8)
+                                .combinedClickable(
+                                    onLongClick = {
+                                        val config = network.longTapConfig
+                                        if (network.longTapConfig != null) {
+                                            clipboardManager.setText(
+                                                annotatedString = AnnotatedString(
+                                                    text = network.longTapConfig.contractAddress,
+                                                ),
+                                            )
+                                            network.longTapConfig.onLongTap()
+                                        }
+                                    },
+                                    onClick = {},
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() },
+                                ),
                             model = with(network) {
                                 BlockchainRowUM(
                                     id = id,

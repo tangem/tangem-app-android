@@ -1,9 +1,11 @@
 package com.tangem.features.managetokens.utils.list
 
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -130,6 +132,7 @@ internal class ManageTokensUiManager(
                 onSelectCurrencyNetwork = { networkId, isSelected ->
                     selectNetwork(currencyBatch.key, currency, networkId, isSelected)
                 },
+                onLongTap = { showSnackbarMessage(resourceReference(R.string.contract_address_copied_message)) },
             )
 
             batches.updateUiBatchesItem(
@@ -137,6 +140,11 @@ internal class ManageTokensUiManager(
                 indexToItem = currencyIndex to updatedUiItem,
             )
         }
+    }
+
+    private fun showSnackbarMessage(messageText: TextReference) {
+        val message = SnackbarMessage(message = messageText)
+        messageSender.send(message)
     }
 
     private fun selectNetwork(
