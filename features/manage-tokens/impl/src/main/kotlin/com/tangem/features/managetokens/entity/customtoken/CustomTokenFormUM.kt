@@ -20,6 +20,7 @@ internal data class CustomTokenFormUM(
         val name: TextInputFieldUM,
         val symbol: TextInputFieldUM,
         val decimals: TextInputFieldUM,
+        val wasFilled: Boolean = false,
     )
 
     data class NotificationUM(
