@@ -9,7 +9,7 @@ sealed class AddCustomTokenForm {
         val decimals: String,
     ) : AddCustomTokenForm()
 
-    sealed class Validated {
+    sealed class Validated : AddCustomTokenForm() {
 
         data class ContractAddress(
             val contractAddress: String,
