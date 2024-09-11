@@ -6,6 +6,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
+import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM.Tokens.AddButtonState
 import com.tangem.features.markets.portfolio.impl.ui.state.PortfolioTokenUM
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
@@ -29,12 +30,13 @@ internal class MyPortfolioUMFactory(
     fun create(portfolioData: PortfolioData, portfolioUIData: PortfolioUIData): MyPortfolioUM {
         val addToPortfolioData = portfolioUIData.addToPortfolioData
 
-        if (addToPortfolioData.availableNetworks == null) return MyPortfolioUM.Loading
+        if (addToPortfolioData.availableNetworks?.isEmpty() == true) return MyPortfolioUM.Unavailable
 
-        if (addToPortfolioData.availableNetworks.isEmpty()) return MyPortfolioUM.Unavailable
-
-        val walletsWithCurrencies = portfolioData.walletsWithCurrencies
-            .filterAvailableNetworks(networks = addToPortfolioData.availableNetworks)
+        val walletsWithCurrencies = if (addToPortfolioData.availableNetworks == null) {
+            portfolioData.walletsWithCurrencies
+        } else {
+            portfolioData.walletsWithCurrencies.filterAvailableNetworks(networks = addToPortfolioData.availableNetworks)
+        }
 
         val isPortfolioEmpty = walletsWithCurrencies.flatMap { it.value }.isEmpty()
         if (isPortfolioEmpty) {
@@ -56,7 +58,7 @@ internal class MyPortfolioUMFactory(
         return TokensPortfolioUMConverter(
             appCurrency = portfolioData.appCurrency,
             isBalanceHidden = portfolioData.isBalanceHidden,
-            isAllAvailableNetworksAdded = walletsWithCurrencies.isAllAvailableNetworksAdded(
+            addButtonState = walletsWithCurrencies.getAddButtonState(
                 availableNetworks = addToPortfolioData.availableNetworks,
             ),
             bsConfig = createAddToPortfolioBSConfig(portfolioData = portfolioData, portfolioUIData = portfolioUIData),
@@ -94,17 +96,21 @@ internal class MyPortfolioUMFactory(
         )
     }
 
-    private fun Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>.isAllAvailableNetworksAdded(
-        availableNetworks: Set<TokenMarketInfo.Network>,
-    ): Boolean {
+    private fun Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>.getAddButtonState(
+        availableNetworks: Set<TokenMarketInfo.Network>?,
+    ): AddButtonState {
+        if (availableNetworks == null) return AddButtonState.Loading
+
         val networkIds = availableNetworks.map { it.networkId }
 
-        return this
+        val isAllAvailableNetworksAdded = this
             // User can add currencies only in multi-currency wallets
             .filterKeys(UserWallet::isMultiCurrency)
             .mapValues { entry -> entry.value.map { it.status.currency.network.backendId } }
             // Each wallets contains all available networks?
             .all { it.value.containsAll(networkIds) }
+
+        return if (isAllAvailableNetworksAdded) AddButtonState.Unavailable else AddButtonState.Available
     }
 
     /** Filter map values by available networks [networks] */
