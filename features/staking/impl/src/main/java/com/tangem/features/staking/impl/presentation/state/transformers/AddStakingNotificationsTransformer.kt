@@ -32,6 +32,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.checkFeeCoverage
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.isCosmos
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
@@ -216,6 +217,11 @@ internal class AddStakingNotificationsTransformer(
         add(
             StakingNotification.Info.Unstake(
                 cooldownPeriodDays = yield.metadata.cooldownPeriod.days,
+                subtitleRes = if (isCosmos(cryptoCurrencyStatusProvider().currency.network.id.value)) {
+                    R.string.staking_notification_unstake_cosmos_text
+                } else {
+                    R.string.staking_notification_unstake_text
+                },
             ),
         )
     }
