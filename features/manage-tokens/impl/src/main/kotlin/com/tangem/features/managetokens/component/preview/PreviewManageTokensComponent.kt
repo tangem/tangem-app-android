@@ -158,6 +158,7 @@ internal class PreviewManageTokensComponent(
             isMainNetwork = networkIndex == 0,
             isSelected = false,
             onSelectedStateChange = { toggleNetwork(currencyIndex, networkIndex, isSelected = it) },
+            onLongClick = {},
         )
     }.toImmutableList()
 
