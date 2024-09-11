@@ -9,7 +9,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.impl.R
-import com.tangem.features.managetokens.ManageTokensToggles
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -18,7 +17,6 @@ import javax.inject.Inject
 @ComponentScoped
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
-    private val manageTokensToggles: ManageTokensToggles,
 ) {
 
     @Suppress("LongParameterList")
@@ -60,7 +58,7 @@ internal class ItemsBuilder @Inject constructor(
         id = "card",
         description = resourceReference(R.string.settings_card_settings_footer),
         blocks = buildList {
-            if (isManageTokensAvailable && manageTokensToggles.isFeatureEnabled) {
+            if (isManageTokensAvailable) {
                 BlockUM(
                     text = resourceReference(R.string.add_tokens_title),
                     iconRes = R.drawable.ic_tether_24,
