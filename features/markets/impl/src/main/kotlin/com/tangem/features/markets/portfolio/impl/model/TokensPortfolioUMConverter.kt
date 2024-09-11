@@ -1,6 +1,8 @@
 package com.tangem.features.markets.portfolio.impl.model
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
@@ -29,6 +31,7 @@ internal class TokensPortfolioUMConverter(
     private val quickActionsIntents: TokenActionsHandler,
     private val currentState: Provider<MyPortfolioUM>,
     private val updateTokens: ((ImmutableList<PortfolioTokenUM>) -> ImmutableList<PortfolioTokenUM>) -> Unit,
+    private val vibratorHapticManager: VibratorHapticManager,
 ) : Converter<Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>, MyPortfolioUM.Tokens> {
 
     override fun convert(value: Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>): MyPortfolioUM.Tokens {
@@ -95,6 +98,7 @@ internal class TokensPortfolioUMConverter(
     }
 
     private fun toggleQuickActions(cryptoData: PortfolioData.CryptoCurrencyData) {
+        vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
         updateTokens { tokenList ->
             tokenList.map {
                 it.copy(

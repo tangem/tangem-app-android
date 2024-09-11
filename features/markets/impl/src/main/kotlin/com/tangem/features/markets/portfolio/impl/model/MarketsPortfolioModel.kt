@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.HasMissedDerivationsUseCase
@@ -30,6 +31,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     paramsContainer: ParamsContainer,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     tokenActionsIntentsFactory: TokenActionsHandler.Factory,
+    vibratorHapticManager: VibratorHapticManager,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val portfolioDataLoader: PortfolioDataLoader,
@@ -83,6 +85,7 @@ internal class MarketsPortfolioModel @Inject constructor(
                 state.copy(tokens = updateBlock(state.tokens))
             }
         },
+        vibratorHapticManager = vibratorHapticManager,
     )
 
     init {
