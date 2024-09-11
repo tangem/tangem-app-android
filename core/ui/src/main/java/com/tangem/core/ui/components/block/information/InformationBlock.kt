@@ -16,6 +16,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.rows.NetworkTitle
 import com.tangem.core.ui.components.text.TooltipText
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -27,7 +28,6 @@ import kotlinx.collections.immutable.persistentListOf
 @Immutable
 class InformationBlockContentScope(val scope: BoxScope) : BoxScope by scope
 
-// TODO: https://tangem.atlassian.net/browse/AND-8044
 @Composable
 fun InformationBlock(
     title: @Composable BoxScope.() -> Unit,
@@ -43,49 +43,7 @@ fun InformationBlock(
             .background(color = TangemTheme.colors.background.action),
         horizontalAlignment = Alignment.Start,
     ) {
-        val minHeight = if (action == null) TangemTheme.dimens.size36 else TangemTheme.dimens.size40
-        val padding = if (action == null) {
-            PaddingValues(
-                start = TangemTheme.dimens.spacing12,
-                top = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing4,
-            )
-        } else {
-            PaddingValues(
-                start = TangemTheme.dimens.spacing12,
-                top = TangemTheme.dimens.spacing11,
-                end = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing5,
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = minHeight)
-                .padding(paddingValues = padding),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(weight = 1f)
-                    .heightIn(min = TangemTheme.dimens.size20),
-                contentAlignment = Alignment.CenterStart,
-                content = title,
-            )
-            if (action != null) {
-                Spacer(modifier = Modifier.size(TangemTheme.dimens.spacing8))
-                Box(
-                    modifier = Modifier
-                        .weight(weight = 1f)
-                        .heightIn(min = TangemTheme.dimens.size24),
-                    contentAlignment = Alignment.CenterEnd,
-                    content = action,
-                )
-            }
-        }
+        NetworkTitle(title = title, action = action)
 
         if (content != null) {
             Box(
