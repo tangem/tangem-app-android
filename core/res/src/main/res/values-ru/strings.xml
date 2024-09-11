@@ -351,6 +351,7 @@
   <string name="markets_common_title">Рынок</string>
   <string name="markets_generate_addresses_notification">Чтобы создать адреса для выбранных сетей, отсканируйте вашу карту Tangem кошелька</string>
   <string name="markets_insights_info_description_message">Данные раздела получены из следующих сетей: %s</string>
+  <string name="markets_loading_error_title">Невозможно загрузить данные</string>
   <string name="markets_loading_no_data_title">Нет данных</string>
   <string name="markets_quick_actions">Быстрые действия</string>
   <string name="markets_search_result_title">Результат</string>
@@ -380,11 +381,12 @@
     <item quantity="other">На основе %d оценок</item>
   </plurals>
   <string name="markets_token_details_blockchain_site">Веб-сайт</string>
-  <string name="markets_token_details_buy_pressure">Покуп. предпочтение</string>
-  <string name="markets_token_details_buy_pressure_description">Разница между объемом покупателей и  продавцов</string>
+  <string name="markets_token_details_buy_pressure">Покуп. предпоч.</string>
+  <string name="markets_token_details_buy_pressure_description">Разница между объемом покупателей и продавцов</string>
   <string name="markets_token_details_circulating_supply">Циркулир. предл.</string>
   <string name="markets_token_details_circulating_supply_description">Общее количество монет, доступных для торговли и находящихся в обращении на рынке</string>
-  <string name="markets_token_details_experienced_buyers">Опытные покупкатели</string>
+  <string name="markets_token_details_experienced_buyers">Опытные трейдеры</string>
+  <string name="markets_token_details_experienced_buyers_description">Покупатели, у которых было как минимум 100 исходящих транзакций.</string>
   <string name="markets_token_details_fully_diluted_valuation">Полн. разб. кап.</string>
   <string name="markets_token_details_fully_diluted_valuation_description">Общая теоретическая стоимость криптовалюты, если все монеты, которые могут существовать, находятся в обращении, включая те, которые в настоящее время не обращаются</string>
   <string name="markets_token_details_genesis_date">Дата создания</string>
@@ -400,6 +402,7 @@
   <string name="markets_token_details_market_capitalization">Рын. кап.</string>
   <string name="markets_token_details_market_capitalization_description">Общая рыночная стоимость криптовалюты, рассчитываемая путем умножения текущей цены монеты на общее количество монет в обращении.</string>
   <string name="markets_token_details_market_rating">Рейтинг</string>
+  <string name="markets_token_details_market_rating_description">Позиция в рейтинге криптовалют среди всех монет на основе рыночной капитализации.</string>
   <string name="markets_token_details_max_supply">Максимальный объем</string>
   <string name="markets_token_details_metrics">Метрики</string>
   <string name="markets_token_details_official_links">Официальные ссылки</string>
@@ -672,7 +675,7 @@
   <string name="staking_locked">Заблокировано</string>
   <string name="staking_migrate">Переместить</string>
   <string name="staking_native">Нативный стейкинг</string>
-  <string name="staking_notification_claim_rewards_text">Полученная награда будет отправлена на ваш кошелек и будет сразу доступна для использования</string>
+  <string name="staking_notification_claim_rewards_text">Полученная награда отправится на ваш кошелек и сразу станет доступна для использования</string>
   <string name="staking_notification_earn_rewards_text_period_day">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый день.</string>
   <string name="staking_notification_earn_rewards_text_period_hour">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый час.</string>
   <string name="staking_notification_earn_rewards_text_period_month">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый месяц.</string>
