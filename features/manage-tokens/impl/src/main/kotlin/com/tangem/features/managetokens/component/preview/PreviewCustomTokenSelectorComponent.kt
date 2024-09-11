@@ -68,6 +68,7 @@ internal class PreviewCustomTokenSelectorComponent(
                     isMainNetwork = false,
                     isSelected = n.id == params.selectedNetwork?.id,
                     onSelectedStateChange = { params.onNetworkSelected(n) },
+                    onLongClick = {},
                 )
             }
         }
