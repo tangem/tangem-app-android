@@ -12,6 +12,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.portfolio.impl.ui.preview.PreviewMyPortfolioUMProvider
@@ -22,8 +24,23 @@ import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState 
 @Composable
 internal fun PortfolioItem(state: PortfolioTokenUM, lastInList: Boolean, modifier: Modifier = Modifier) {
     Column(modifier) {
+        val hapticManager = LocalHapticManager.current
+        val tokenItemState = remember(state.tokenItemState) {
+            when (state.tokenItemState) {
+                is TokenItemState.Content -> state.tokenItemState.copy(
+                    onItemClick = {
+                        val onClick = state.tokenItemState.onItemClick
+                        if (onClick != null) {
+                            hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                            onClick.invoke()
+                        }
+                    },
+                )
+                else -> state.tokenItemState
+            }
+        }
         TokenItem(
-            state = state.tokenItemState,
+            state = tokenItemState,
             isBalanceHidden = state.isBalanceHidden,
             modifier = Modifier.background(color = TangemTheme.colors.background.action),
             itemPaddingValues = PaddingValues(
