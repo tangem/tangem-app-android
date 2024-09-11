@@ -672,10 +672,14 @@
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_notification_claim_rewards_text">Earned rewards will be sent to your wallet and available for use immediately</string>
+  <string name="staking_notification_earn_rewards_text_daily">Stake securely and start earning daily rewards</string>
+  <string name="staking_notification_earn_rewards_text_hourly">Stake securely and start earning hourly rewards</string>
+  <string name="staking_notification_earn_rewards_text_monthly">Stake securely and start earning monthly rewards</string>
   <string name="staking_notification_earn_rewards_text_period_day">Staking allows you to earn %1$s. Your staking rewards arrive every day.</string>
   <string name="staking_notification_earn_rewards_text_period_hour">Staking allows you to earn %1$s. Your staking rewards arrive every hour.</string>
   <string name="staking_notification_earn_rewards_text_period_month">Staking allows you to earn %1$s. Your staking rewards arrive every month.</string>
   <string name="staking_notification_earn_rewards_text_period_week">Staking allows you to earn %1$s. Your staking rewards arrive every week.</string>
+  <string name="staking_notification_earn_rewards_text_weekly">Stake securely and start earning weekly rewards</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_notification_new_validator_funds_transfer">Staking in the %1$s network with a new validator will automatically transfer all previously staked funds to this validator</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
@@ -709,7 +713,7 @@
   <string name="staking_title_unstake">Unstake %s</string>
   <string name="staking_transaction_in_progress_text">The transaction is being processed! Validation is currently underway in the blockchain. This may take a few minutes.</string>
   <string name="staking_unbonding">Unbonding</string>
-  <string name="staking_unlocked_locked">Unlock locked</string>
+  <string name="staking_unlocked_locked">Unlock</string>
   <string name="staking_unstaked">Unstaked</string>
   <string name="staking_unstaking">Unstaking</string>
   <string name="staking_unstaking_item_name">Unstaking assets %s</string>
