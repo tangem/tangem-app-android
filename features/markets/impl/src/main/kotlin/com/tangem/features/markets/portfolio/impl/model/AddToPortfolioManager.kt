@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
 import javax.inject.Inject
-import javax.inject.Singleton
 
 internal typealias WalletsWithNetworks = Map<UserWalletId, Set<TokenMarketInfo.Network>>
 
@@ -17,7 +16,6 @@ internal typealias WalletsWithNetworks = Map<UserWalletId, Set<TokenMarketInfo.N
  *
 [REDACTED_AUTHOR]
  */
-@Singleton
 internal class AddToPortfolioManager @Inject constructor() {
 
     private val availableNetworks = MutableStateFlow<Set<TokenMarketInfo.Network>?>(value = null)
