@@ -56,19 +56,24 @@ private fun BottomSheetContent(config: WalletBottomSheetConfig) {
             },
         )
 
-        Text(
-            text = config.title.resolveReference(),
-            color = TangemTheme.colors.text.primary1,
-            textAlign = TextAlign.Center,
-            style = TangemTheme.typography.h2,
-        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing16),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = config.title.resolveReference(),
+                color = TangemTheme.colors.text.primary1,
+                textAlign = TextAlign.Center,
+                style = TangemTheme.typography.h2,
+            )
 
-        Text(
-            text = config.subtitle.resolveReference(),
-            color = TangemTheme.colors.text.secondary,
-            textAlign = TextAlign.Center,
-            style = TangemTheme.typography.body2,
-        )
+            Text(
+                text = config.subtitle.resolveReference(),
+                color = TangemTheme.colors.text.secondary,
+                textAlign = TextAlign.Center,
+                style = TangemTheme.typography.body2,
+            )
+        }
 
         Column(verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing10)) {
             val buttonModifier = Modifier.fillMaxWidth()
