@@ -31,8 +31,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -142,6 +144,8 @@ private fun WalletContent(
     var selectedWalletIndex by remember(state.selectedWalletIndex) { mutableIntStateOf(state.selectedWalletIndex) }
     val selectedWallet = state.wallets.getOrElse(selectedWalletIndex) { state.wallets[state.selectedWalletIndex] }
 
+    val listState = rememberLazyListState()
+
     val scaffoldContent: @Composable () -> Unit = {
         val movableItemModifier = Modifier.changeWalletAnimator(walletsListState)
 
@@ -162,11 +166,10 @@ private fun WalletContent(
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag(TestTags.MAIN_SCREEN),
+            modifier = Modifier.testTag(TestTags.MAIN_SCREEN),
+            state = listState,
             contentPadding = PaddingValues(
-                bottom = TangemTheme.dimens.spacing92 + bottomBarHeight,
+                bottom = 184.dp + bottomBarHeight,
             ),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -239,6 +242,7 @@ private fun WalletContent(
 
         BaseScaffoldWithMarkets(
             state = state,
+            listState = listState,
             selectedWallet = selectedWallet,
             snackbarHostState = snackbarHostState,
             bottomSheetHeaderHeightProvider = { headerSize },
@@ -329,11 +333,12 @@ private fun BaseScaffold(
     )
 }
 
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private inline fun BaseScaffoldWithMarkets(
     state: WalletScreenState,
+    listState: LazyListState,
     selectedWallet: WalletState,
     snackbarHostState: SnackbarHostState,
     bottomSheetHeaderHeightProvider: () -> Dp,
@@ -375,6 +380,16 @@ private inline fun BaseScaffoldWithMarkets(
 
     val coroutineScope = rememberCoroutineScope()
     val backgroundPrimary = TangemTheme.colors.background.primary
+
+    val showMarketsHint by remember {
+        derivedStateOf {
+            // Show hint only when there are items in the list
+            // and when there a no items to scroll
+            listState.layoutInfo.totalItemsCount > 0 &&
+                !listState.canScrollBackward && !listState.canScrollForward ||
+                listState.canScrollBackward && !listState.canScrollForward
+        }
+    }
 
     CompositionLocalProvider(
         LocalMainBottomSheetColor provides remember { mutableStateOf(backgroundPrimary) },
@@ -432,8 +447,18 @@ private inline fun BaseScaffoldWithMarkets(
                 )
 
                 Box {
+                    MarketsHint(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = peekHeight + 12.dp)
+                            .fillMaxWidth(fraction = .4f),
+                        isVisible = showMarketsHint,
+                    )
+
                     Column {
-                        WalletTopBar(config = state.topBarConfig)
+                        WalletTopBar(
+                            config = state.topBarConfig,
+                        )
                         Box(
                             modifier = Modifier.pullRefresh(pullRefreshState),
                         ) {
@@ -519,6 +544,34 @@ private fun MarketsTooltip(
         exit = fadeOut(),
     ) {
         MarketsTooltipContent()
+    }
+}
+
+@Composable
+internal fun MarketsHint(isVisible: Boolean, modifier: Modifier = Modifier) {
+    AnimatedVisibility(
+        modifier = modifier,
+        visible = isVisible,
+        enter = fadeIn(animationSpec = tween(durationMillis = 500)),
+        exit = fadeOut(),
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(space = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = "To add tokens pull this up  or tap the search bar",
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+                textAlign = TextAlign.Center,
+            )
+            Icon(
+                modifier = Modifier.size(size = 24.dp),
+                painter = painterResource(id = R.drawable.ic_chevron_24),
+                tint = TangemTheme.colors.icon.informative,
+                contentDescription = null,
+            )
+        }
     }
 }
 
