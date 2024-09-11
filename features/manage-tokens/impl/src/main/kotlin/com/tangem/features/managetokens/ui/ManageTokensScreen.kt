@@ -3,8 +3,11 @@ package com.tangem.features.managetokens.ui
 import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -364,6 +367,7 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, isEditable: Boolean, m
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NetworksList(
     networks: NetworksUM,
@@ -392,7 +396,14 @@ private fun NetworksList(
                     isLastItem = index == currentItems.lastIndex,
                     content = {
                         BlockchainRow(
-                            modifier = Modifier.padding(end = TangemTheme.dimens.spacing8),
+                            modifier = Modifier
+                                .padding(end = TangemTheme.dimens.spacing8)
+                                .combinedClickable(
+                                    onLongClick = network.onLongClick,
+                                    onClick = {},
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() },
+                                ),
                             model = with(network) {
                                 BlockchainRowUM(
                                     id = id,
