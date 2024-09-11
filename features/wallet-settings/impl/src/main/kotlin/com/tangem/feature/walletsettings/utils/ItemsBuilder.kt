@@ -27,12 +27,19 @@ internal class ItemsBuilder @Inject constructor(
         userWalletName: String,
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
+        isManageTokensAvailable: Boolean,
         forgetWallet: () -> Unit,
         renameWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf(
         buildNameItem(userWalletName, renameWallet),
-        buildCardItem(userWalletId, isLinkMoreCardsAvailable, isReferralAvailable, onLinkMoreCardsClick),
+        buildCardItem(
+            userWalletId = userWalletId,
+            isLinkMoreCardsAvailable = isLinkMoreCardsAvailable,
+            isReferralAvailable = isReferralAvailable,
+            isManageTokensAvailable = isManageTokensAvailable,
+            onLinkMoreCardsClick = onLinkMoreCardsClick,
+        ),
         buildForgetItem(forgetWallet),
     )
 
@@ -47,12 +54,13 @@ internal class ItemsBuilder @Inject constructor(
         userWalletId: UserWalletId,
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
+        isManageTokensAvailable: Boolean,
         onLinkMoreCardsClick: () -> Unit,
     ) = WalletSettingsItemUM.WithItems(
         id = "card",
         description = resourceReference(R.string.settings_card_settings_footer),
         blocks = buildList {
-            if (manageTokensToggles.isFeatureEnabled) {
+            if (isManageTokensAvailable && manageTokensToggles.isFeatureEnabled) {
                 BlockUM(
                     text = resourceReference(R.string.add_tokens_title),
                     iconRes = R.drawable.ic_tether_24,

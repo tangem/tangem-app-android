@@ -27,6 +27,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             renameWallet = {},
             forgetWallet = {},
             onLinkMoreCardsClick = {},
+            isManageTokensAvailable = true,
         ),
     )
 
