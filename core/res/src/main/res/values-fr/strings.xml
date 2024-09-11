@@ -396,7 +396,7 @@
   <string name="markets_token_details_liquidity_index">Indice de liquidité</string>
   <string name="markets_token_details_low">Faible</string>
   <string name="markets_token_details_market_capitalization">Capitalisation boursière</string>
-  <string name="markets_token_details_market_capitalization_description">La valeur marchande totale d\'une crypto-monnaie, calculée en multipliant le prix actuel de la pièce par le nombre total de pièces en circulation</string>
+  <string name="markets_token_details_market_capitalization_description">La valeur totale d\'une crypto-monnaie calculée en multipliant son prix actuel par le nbre de pièces en circulation</string>
   <string name="markets_token_details_market_rating">Évaluation du marché</string>
   <string name="markets_token_details_market_rating_description">Position dans le classement des crypto-monnaies entre toutes les pièces en fonction de la capitalisation boursière</string>
   <string name="markets_token_details_max_supply">Approvisionnement maximal</string>
@@ -663,13 +663,14 @@
   <string name="staking_locked">Bloqué</string>
   <string name="staking_migrate">Migrer</string>
   <string name="staking_native">Native staking</string>
+  <string name="staking_notification_claim_rewards_text">Récomp. gagnées vous seront envoyées et dispo pour utilisation immédiate</string>
   <string name="staking_notification_earn_rewards_text_period_day">Le staking vous permet de gagner %1$s. Vos récompenses de staking arrivent tous les jours.</string>
   <string name="staking_notification_earn_rewards_text_period_hour">Le staking vous permet de gagner %1$s. Vos récompenses de staking arrivent toutes les heures.</string>
   <string name="staking_notification_earn_rewards_text_period_month">Le staking vous permet de gagner %1$s. Vos récompenses de staking arrivent tous les mois.</string>
   <string name="staking_notification_earn_rewards_text_period_week">Le staking vous permet de gagner %1$s. Vos récompenses de staking arrivent toutes les semaines.</string>
   <string name="staking_notification_earn_rewards_title">Gagnez des récompenses de staking</string>
-  <string name="staking_notification_unstake_text">Les récompenses cessent de s\'accumuler immédiatement après que vous ayez commencé le unstaking. Le processus de unstaking prend %s.</string>
-  <string name="staking_notification_withdraw_text">Vos fonds ont été destakés. Vous pouvez désormais les retirer avec vos récompenses gagnées.</string>
+  <string name="staking_notification_unstake_text">Vos fonds seront disponibles pour utilisation après la période de désengagement %s.</string>
+  <string name="staking_notification_withdraw_text">Vous pouvez désormais retirer vos fonds, ils seront disponibles à l\'utilisation immédiatement</string>
   <string name="staking_ready_to_withdraw">Prêt à retirer</string>
   <string name="staking_rebond">Réassocier</string>
   <string name="staking_restake">Restakez</string>
