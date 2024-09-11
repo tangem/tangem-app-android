@@ -1,6 +1,7 @@
 package com.tangem.features.markets.portfolio.impl.model
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
@@ -24,6 +25,7 @@ internal class MyPortfolioUMFactory(
     private val tokenActionsHandler: TokenActionsHandler,
     private val currentState: Provider<MyPortfolioUM>,
     private val updateTokens: ((ImmutableList<PortfolioTokenUM>) -> ImmutableList<PortfolioTokenUM>) -> Unit,
+    private val vibratorHapticManager: VibratorHapticManager,
 ) {
 
     fun create(portfolioData: PortfolioData, portfolioUIData: PortfolioUIData): MyPortfolioUM {
@@ -64,6 +66,7 @@ internal class MyPortfolioUMFactory(
             quickActionsIntents = tokenActionsHandler,
             currentState = currentState,
             updateTokens = updateTokens,
+            vibratorHapticManager = vibratorHapticManager,
         )
             .convert(walletsWithCurrencies)
     }
