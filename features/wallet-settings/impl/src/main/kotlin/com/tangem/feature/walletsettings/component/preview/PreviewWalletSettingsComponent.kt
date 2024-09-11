@@ -8,18 +8,12 @@ import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.ui.WalletSettingsScreen
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
-import com.tangem.features.managetokens.ManageTokensToggles
 
 internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
 
     private val previewState = WalletSettingsUM(
         popBack = {},
-        items = ItemsBuilder(
-            router = DummyRouter(),
-            manageTokensToggles = object : ManageTokensToggles {
-                override val isFeatureEnabled: Boolean = true
-            },
-        ).buildItems(
+        items = ItemsBuilder(router = DummyRouter()).buildItems(
             userWalletId = UserWalletId("011"),
             userWalletName = "My Wallet",
             isReferralAvailable = true,
@@ -27,6 +21,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             renameWallet = {},
             forgetWallet = {},
             onLinkMoreCardsClick = {},
+            isManageTokensAvailable = true,
         ),
     )
 
