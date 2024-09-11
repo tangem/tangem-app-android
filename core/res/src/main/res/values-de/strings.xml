@@ -400,7 +400,7 @@
   <string name="markets_token_details_liquidity_index_description">Leer</string>
   <string name="markets_token_details_low">Niedrig</string>
   <string name="markets_token_details_market_capitalization">Marktkapitalisierung</string>
-  <string name="markets_token_details_market_capitalization_description">Der Gesamtmarktwert einer Kryptowährung, berechnet durch Multiplikation des aktuellen Preises der Münze mit der Gesamtzahl der im Umlauf befindlichen Münzen</string>
+  <string name="markets_token_details_market_capitalization_description">Das MCap eines Assets, errechnet sich durch Multiplikation des aktuellen Preises mit der Gesamtzahl der im Umlauf befindlichen Coins</string>
   <string name="markets_token_details_market_rating">Marktbewertung</string>
   <string name="markets_token_details_market_rating_description">Position im Krypto-Rating zwischen allen Coins basierend auf der Marktkapitalisierung</string>
   <string name="markets_token_details_max_supply">Maximale Versorgung</string>
@@ -636,6 +636,10 @@
   <string name="send_summary_title">Versende %s</string>
   <string name="send_summary_transaction_description">Du sendest **%1$s** inklusive der Netzwerkgebühr %2$s</string>
   <string name="send_summary_transaction_description_no_fiat_fee">Du sendest **%1$s** und %2$s</string>
+  <string name="send_summary_transaction_description_prefix">Du sendest **%1$s**</string>
+  <string name="send_summary_transaction_description_suffix_fee_covered">Die Netzwerkgebühr wird durch die Nutzung von %1$s %2$s gedeckt.</string>
+  <string name="send_summary_transaction_description_suffix_fee_reduced">Die Netzwerkgebühr wird durch das Ausgeben von %1$s %2$s reduziert.</string>
+  <string name="send_summary_transaction_description_suffix_including">inklusive einer Netzgebühr von %1$s</string>
   <string name="send_transaction_success">Die Transaktion wurde erfolgreich signiert und an den Blockchain-Knoten gesendet. Die Walletbilanz wird aktualisiert</string>
   <string name="send_tron_account_activation_error">%1$s ist ein Vermögenswert im Tron-Netzwerk. Um die Gebühr zu berechnen und eine Transaktion durchzuführen, musst du etwas Tron (TRX) auf deinem Konto einzahlen.</string>
   <string name="sent_transaction_sent_title">Transaktion gesendet</string>
@@ -677,9 +681,11 @@
   <string name="staking_notification_earn_rewards_text_period_month">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jeden Monat.</string>
   <string name="staking_notification_earn_rewards_text_period_week">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jede Woche.</string>
   <string name="staking_notification_earn_rewards_title">Verdiene Staking-Belohnungen</string>
+  <string name="staking_notification_new_validator_funds_transfer">Beim Staking im %1$s -Netzwerk mit einem neuen Validator werden alle zuvor eingesetzten Kryptos automatisch an diesen Validator übertragen</string>
   <string name="staking_notification_restake_rewards_text">Reinvestiert Deine verdienten Prämien in Deinen Einsatzbetrag und erhöht so den potenziellen Gewinn.</string>
-  <string name="staking_notification_unstake_text">Die Belohnungen werden sofort nach dem start des unstaken gestoppt. Der unstakingprozess dauert %s.</string>
-  <string name="staking_notification_withdraw_text">Dein Guthaben wurde freigegeben. Du kannst es jetzt zusammen mit deinen verdienten Prämien auszahlen.</string>
+  <string name="staking_notification_unstake_cosmos_text">Nach Ablauf der 21-tägigen Bindungsfrist kannst Du über Dein Guthaben verfügen. Die Prämie wird zusammen mit dem ungestaketen Guthaben abgehoben.</string>
+  <string name="staking_notification_unstake_text">Deine Assets steht Dir nach Ablauf der Frist für die Aufhebung der Bindung %s zur Verfügung.</string>
+  <string name="staking_notification_withdraw_text">Du kannst Dein Guthaben jetzt abheben. Es steht Dir sofort zur Verfügung.</string>
   <string name="staking_preparing">Vorbereitung</string>
   <string name="staking_ready_to_withdraw">Bereit zum Abheben</string>
   <string name="staking_rebond">Erneut binden</string>
@@ -700,11 +706,12 @@
   <string name="staking_rewards">Belohnungen</string>
   <string name="staking_stake_locked">Stake gesperrt</string>
   <string name="staking_stake_more">Mehr staken</string>
-  <string name="staking_summary_description_text">Du setzt %1$s ein und erhältst jährlich ~ %2$s</string>
+  <string name="staking_summary_description_text">Du setzt %1$s ein und erhältst jährlich %2$s</string>
   <string name="staking_tap_to_unlock">Zum Entsperren antippen</string>
   <string name="staking_tap_to_withdraw">Zum abheben antippen</string>
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">Staking beenden%s</string>
+  <string name="staking_transaction_in_progress_text">Die Transaktion wird bearbeitet! Derzeit findet eine Validierung in der Blockchain statt. Dies kann einige Minuten dauern.</string>
   <string name="staking_unbonding">Lösen der Bindungen</string>
   <string name="staking_unlocked_locked">Gelocktes unlocken</string>
   <string name="staking_unstaked">Unstaken</string>
