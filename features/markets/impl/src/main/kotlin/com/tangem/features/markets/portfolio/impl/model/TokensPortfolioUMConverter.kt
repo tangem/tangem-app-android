@@ -23,7 +23,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal class TokensPortfolioUMConverter(
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
-    private val isAllAvailableNetworksAdded: Boolean,
+    private val addButtonState: AddButtonState,
     private val bsConfig: TangemBottomSheetConfig,
     private val onAddClick: () -> Unit,
     private val quickActionsIntents: TokenActionsHandler,
@@ -47,7 +47,7 @@ internal class TokensPortfolioUMConverter(
                 }
                 .setQuickActionsVisibility(currentState = currentTokensState)
                 .toImmutableList(),
-            buttonState = if (isAllAvailableNetworksAdded) AddButtonState.Unavailable else AddButtonState.Available,
+            buttonState = addButtonState,
             addToPortfolioBSConfig = bsConfig,
             onAddClick = onAddClick,
             tokenReceiveBSConfig = (currentState() as? MyPortfolioUM.Tokens)
