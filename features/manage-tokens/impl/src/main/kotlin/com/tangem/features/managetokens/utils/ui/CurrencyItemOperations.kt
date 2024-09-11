@@ -11,7 +11,7 @@ internal fun CurrencyItemUM.toggleExpanded(
     currency: ManagedCryptoCurrency,
     isEditable: Boolean,
     onSelectCurrencyNetwork: (SourceNetwork, Boolean) -> Unit,
-    onLongTap: () -> Unit,
+    onLongTap: (SourceNetwork) -> Unit,
 ): CurrencyItemUM {
     if (currency !is ManagedCryptoCurrency.Token) return this
 

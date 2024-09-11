@@ -27,12 +27,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -397,22 +395,11 @@ private fun NetworksList(
                 ArrowRow(
                     isLastItem = index == currentItems.lastIndex,
                     content = {
-                        val clipboardManager = LocalClipboardManager.current
                         BlockchainRow(
                             modifier = Modifier
                                 .padding(end = TangemTheme.dimens.spacing8)
                                 .combinedClickable(
-                                    onLongClick = {
-                                        val config = network.longTapConfig
-                                        if (network.longTapConfig != null) {
-                                            clipboardManager.setText(
-                                                annotatedString = AnnotatedString(
-                                                    text = network.longTapConfig.contractAddress,
-                                                ),
-                                            )
-                                            network.longTapConfig.onLongTap()
-                                        }
-                                    },
+                                    onLongClick = network.onLongClick,
                                     onClick = {},
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() },

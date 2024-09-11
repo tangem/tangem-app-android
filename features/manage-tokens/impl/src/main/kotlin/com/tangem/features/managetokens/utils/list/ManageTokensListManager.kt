@@ -3,6 +3,7 @@ package com.tangem.features.managetokens.utils.list
 import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
@@ -32,6 +33,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ComponentScoped
 internal class ManageTokensListManager @Inject constructor(
     private val getManagedTokensUseCase: GetManagedTokensUseCase,
@@ -40,6 +42,7 @@ internal class ManageTokensListManager @Inject constructor(
     private val checkCurrencyUnsupportedUseCase: CheckCurrencyUnsupportedUseCase,
     private val messageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
+    clipboardManager: ClipboardManager,
 ) : ManageTokensUiActions {
 
     private lateinit var scope: CoroutineScope
@@ -59,6 +62,7 @@ internal class ManageTokensListManager @Inject constructor(
         dispatchers = dispatchers,
         actions = this,
         scopeProvider = Provider { scope },
+        clipboardManager = clipboardManager,
     )
 
     val currenciesToAdd: StateFlow<ChangedCurrencies> = changedCurrenciesManager.currenciesToAdd.asStateFlow()

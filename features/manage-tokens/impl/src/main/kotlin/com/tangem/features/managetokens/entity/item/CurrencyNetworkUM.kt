@@ -8,7 +8,7 @@ internal data class CurrencyNetworkUM(
     val type: String,
     val iconResId: Int,
     val isMainNetwork: Boolean,
-    val longTapConfig: LongTapConfig?,
+    val onLongClick: () -> Unit,
     override val isSelected: Boolean,
     override val onSelectedStateChange: (Boolean) -> Unit,
 ) : SelectableItemUM {
