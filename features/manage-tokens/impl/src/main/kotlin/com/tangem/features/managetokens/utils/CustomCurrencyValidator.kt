@@ -12,8 +12,11 @@ import com.tangem.domain.managetokens.model.exceptoin.FindTokenException
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveInAndJoin
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -25,12 +28,20 @@ internal class CustomCurrencyValidator @Inject constructor(
     private val checkIsCurrencyNotAddedUseCase: CheckIsCurrencyNotAddedUseCase,
 ) {
 
-    private val state: MutableStateFlow<State> = MutableStateFlow(State.NotStarted)
+    private val validateFormJobHolder = JobHolder()
+    private val state: MutableStateFlow<State> = MutableStateFlow(
+        value = State(
+            prevValidatedForm = null,
+            prevFoundOrCreatedCurrency = null,
+            status = Status.NotStarted,
+        ),
+    )
 
-    suspend fun consumeUpdates(block: suspend (State) -> Unit) {
-        state.collectLatest { s ->
-            block(s)
-        }
+    suspend fun consumeUpdates(block: suspend (Status) -> Unit) {
+        state
+            .map { it.status }
+            .distinctUntilChanged()
+            .collectLatest { block(it) }
     }
 
     suspend fun validateForm(
@@ -38,25 +49,37 @@ internal class CustomCurrencyValidator @Inject constructor(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
         formValues: AddCustomTokenForm.Raw,
-    ) {
+    ) = coroutineScope {
+        updateStatus(Status.Validating)
+
         val result = validateTokenFormUseCase(
             networkId = networkId,
             formValues = formValues,
         )
 
         val validatedForm = result.getOrElse { e ->
-            state.value = State.FormValidationException(e)
-            return
+            updateStatus(Status.FormValidationException(e))
+            return@coroutineScope
         }
 
-        when (validatedForm) {
-            is AddCustomTokenForm.Validated.All -> {
-                findOrCreateCurrency(userWalletId, networkId, derivationPath, validatedForm)
-            }
-            is AddCustomTokenForm.Validated.ContractAddress -> {
-                findToken(userWalletId, networkId, derivationPath, validatedForm)
+        if (state.value.prevValidatedForm == validatedForm) {
+            return@coroutineScope
+        } else {
+            state.update { state ->
+                state.copy(prevValidatedForm = validatedForm)
             }
         }
+
+        launch {
+            when (validatedForm) {
+                is AddCustomTokenForm.Validated.All -> {
+                    findOrCreateCurrency(userWalletId, networkId, derivationPath, validatedForm)
+                }
+                is AddCustomTokenForm.Validated.ContractAddress -> {
+                    findToken(userWalletId, networkId, derivationPath, validatedForm)
+                }
+            }
+        }.saveInAndJoin(validateFormJobHolder)
     }
 
     suspend fun createCoin(userWalletId: UserWalletId, networkId: Network.ID, derivationPath: Network.DerivationPath) {
@@ -69,7 +92,16 @@ internal class CustomCurrencyValidator @Inject constructor(
         derivationPath: Network.DerivationPath,
         validatedForm: AddCustomTokenForm.Validated.All,
     ) {
-        state.value = State.SearchingToken
+        val currentState = state.value
+        if (currentState.prevFoundOrCreatedCurrency is CryptoCurrency.Token &&
+            currentState.prevFoundOrCreatedCurrency.contractAddress == validatedForm.contractAddress
+        ) {
+            // No need to search for token again if contract address is not changed
+            createCurrency(userWalletId, networkId, derivationPath, validatedForm)
+            return
+        }
+
+        updateStatus(Status.SearchingToken)
 
         val foundToken = findTokenUseCase(
             userWalletId = userWalletId,
@@ -80,7 +112,7 @@ internal class CustomCurrencyValidator @Inject constructor(
             when (e) {
                 is FindTokenException.DataError -> {
                     Timber.e(e.cause, "Unable to find custom currency")
-                    state.value = State.UnexpectedException(e.cause)
+                    updateStatus(Status.UnexpectedException(e.cause))
                     return
                 }
                 is FindTokenException.NotFound -> {
@@ -102,7 +134,7 @@ internal class CustomCurrencyValidator @Inject constructor(
         derivationPath: Network.DerivationPath,
         validatedForm: AddCustomTokenForm.Validated.ContractAddress,
     ) {
-        state.value = State.SearchingToken
+        updateStatus(Status.SearchingToken)
 
         val token = findTokenUseCase(
             userWalletId = userWalletId,
@@ -110,15 +142,16 @@ internal class CustomCurrencyValidator @Inject constructor(
             networkId = networkId,
             derivationPath = derivationPath,
         ).getOrElse { e ->
-            state.value = when (e) {
+            val newStatus = when (e) {
                 is FindTokenException.DataError -> {
                     Timber.e(e.cause, "Unable to find custom currency")
-                    State.UnexpectedException(e.cause)
+                    Status.UnexpectedException(e.cause)
                 }
                 is FindTokenException.NotFound -> {
-                    State.TokenNotFound
+                    Status.TokenNotFound
                 }
             }
+            updateStatus(newStatus)
 
             return
         }
@@ -138,7 +171,7 @@ internal class CustomCurrencyValidator @Inject constructor(
             formValues = validatedForm,
         ).getOrElse { e ->
             Timber.e(e, "Unable to create custom currency")
-            state.value = State.UnexpectedException(e)
+            updateStatus(Status.UnexpectedException(e))
             return
         }
 
@@ -151,6 +184,9 @@ internal class CustomCurrencyValidator @Inject constructor(
         fillForm: Boolean,
         isCustom: Boolean,
     ) {
+        val currentStatus = state.value.status
+        if (currentStatus is Status.Validated && currentStatus.currency == currency) return
+
         val isNotAdded = checkIsCurrencyNotAddedUseCase(
             userWalletId = userWalletId,
             networkId = currency.network.id,
@@ -161,54 +197,59 @@ internal class CustomCurrencyValidator @Inject constructor(
             },
         ).getOrElse { e ->
             Timber.e(e, "Unable to check if currency is already added")
-            state.value = State.UnexpectedException(e)
+            updateStatus(Status.UnexpectedException(e))
 
             return
         }
 
-        state.value = State.Validated(
-            currency = currency,
-            fillForm = fillForm,
-            isAlreadyAdded = !isNotAdded,
-            isCustom = isCustom,
-        )
+        state.update { state ->
+            state.copy(
+                status = Status.Validated(
+                    currency = currency,
+                    fillForm = fillForm,
+                    isAlreadyAdded = !isNotAdded,
+                    isCustom = isCustom,
+                ),
+                prevFoundOrCreatedCurrency = currency,
+            )
+        }
     }
 
-    sealed class State {
-
-        abstract val isFinished: Boolean
-
-        data object NotStarted : State() {
-            override val isFinished: Boolean = false
+    private fun updateStatus(status: Status) {
+        state.update { state ->
+            state.copy(status = status)
         }
+    }
 
-        data object SearchingToken : State() {
-            override val isFinished: Boolean = false
-        }
+    data class State(
+        val prevValidatedForm: AddCustomTokenForm.Validated?,
+        val prevFoundOrCreatedCurrency: CryptoCurrency?,
+        val status: Status,
+    )
+
+    sealed class Status {
+
+        data object NotStarted : Status()
+
+        data object SearchingToken : Status()
+
+        data object Validating : Status()
 
         data class Validated(
             val currency: CryptoCurrency,
             val fillForm: Boolean,
             val isAlreadyAdded: Boolean,
             val isCustom: Boolean,
-        ) : State() {
-            override val isFinished: Boolean = true
-        }
+        ) : Status()
 
         data class FormValidationException(
             val exceptions: List<CustomTokenFormValidationException>,
-        ) : State() {
-            override val isFinished: Boolean = true
-        }
+        ) : Status()
 
-        data object TokenNotFound : State() {
-            override val isFinished: Boolean = true
-        }
+        data object TokenNotFound : Status()
 
         data class UnexpectedException(
             val cause: Throwable,
-        ) : State() {
-            override val isFinished: Boolean = true
-        }
+        ) : Status()
     }
 }
