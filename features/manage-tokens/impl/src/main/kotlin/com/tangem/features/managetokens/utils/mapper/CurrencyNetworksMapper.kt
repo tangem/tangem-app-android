@@ -12,6 +12,7 @@ internal fun ManagedCryptoCurrency.Token.toUiNetworksModel(
     isExpanded: Boolean,
     isItemsEditable: Boolean,
     onSelectedStateChange: (SourceNetwork, Boolean) -> Unit,
+    onLongTap: (SourceNetwork) -> Unit,
 ): NetworksUM {
     return if (isExpanded) {
         NetworksUM.Expanded(
@@ -20,6 +21,7 @@ internal fun ManagedCryptoCurrency.Token.toUiNetworksModel(
                     isSelected = it.network in addedIn,
                     isEditable = isItemsEditable,
                     onSelectedStateChange = onSelectedStateChange,
+                    onLongTap = onLongTap,
                 )
             }.toImmutableList(),
         )
@@ -38,6 +40,7 @@ internal fun Network.toCurrencyNetworkModel(
         iconResId = id.getIconRes(isColored = true),
         isSelected = isSelected,
         type = standardType.name,
+        onLongClick = {},
         isMainNetwork = false,
         onSelectedStateChange = onSelectedStateChange,
     )
@@ -47,6 +50,7 @@ private fun SourceNetwork.toCurrencyNetworkModel(
     isSelected: Boolean,
     isEditable: Boolean,
     onSelectedStateChange: (SourceNetwork, Boolean) -> Unit,
+    onLongTap: (SourceNetwork) -> Unit,
 ): CurrencyNetworkUM {
     return CurrencyNetworkUM(
         network = network,
@@ -54,6 +58,7 @@ private fun SourceNetwork.toCurrencyNetworkModel(
         iconResId = id.getIconRes(isColored = isSelected || !isEditable),
         isSelected = isSelected || !isEditable,
         type = typeName,
+        onLongClick = { onLongTap(this) },
         isMainNetwork = this is SourceNetwork.Main,
         onSelectedStateChange = { selected ->
             onSelectedStateChange(this, selected)
