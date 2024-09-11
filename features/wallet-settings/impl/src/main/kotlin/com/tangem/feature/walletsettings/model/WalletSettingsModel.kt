@@ -86,7 +86,7 @@ internal class WalletSettingsModel @Inject constructor(
         userWalletName = userWallet.name,
         isReferralAvailable = userWallet.cardTypesResolver.isTangemWallet(),
         isLinkMoreCardsAvailable = userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
-        isManageTokensAvailable = userWallet.isWalletWithTokens(),
+        isManageTokensAvailable = userWallet.isMultiCurrency,
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
         forgetWallet = {
             messageSender.send(
@@ -156,7 +156,4 @@ internal class WalletSettingsModel @Inject constructor(
 
         router.push(AppRoute.OnboardingWallet())
     }
-
-    private fun UserWallet.isWalletWithTokens() =
-        isMultiCurrency || scanResponse.cardTypesResolver.isSingleWalletWithToken()
 }
