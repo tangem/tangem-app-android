@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory
 
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TransactionState.Content.Direction
 import com.tangem.core.ui.extensions.TextReference
@@ -47,6 +48,12 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
     } else {
         when (type) {
             is TxHistoryItem.TransactionType.Approve -> R.drawable.ic_doc_24
+            is TxHistoryItem.TransactionType.Stake,
+            is TxHistoryItem.TransactionType.Vote,
+            -> R.drawable.ic_transaction_history_staking
+            is TxHistoryItem.TransactionType.Withdraw,
+            is TxHistoryItem.TransactionType.Unstake,
+            -> R.drawable.ic_transaction_history_unstaking
             is TxHistoryItem.TransactionType.Operation,
             is TxHistoryItem.TransactionType.Swap,
             is TxHistoryItem.TransactionType.Transfer,
@@ -61,6 +68,10 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
         is TxHistoryItem.TransactionType.Swap -> resourceReference(R.string.common_swap)
         is TxHistoryItem.TransactionType.Transfer -> resourceReference(R.string.common_transfer)
         is TxHistoryItem.TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
+        is TxHistoryItem.TransactionType.Stake -> resourceReference(R.string.common_staking)
+        is TxHistoryItem.TransactionType.Unstake -> resourceReference(R.string.staking_unstaking)
+        is TxHistoryItem.TransactionType.Vote -> stringReference("Vote")
+        is TxHistoryItem.TransactionType.Withdraw -> stringReference("Withdraw")
     }
 
     private fun TxHistoryItem.extractSubtitle(): TextReference =
@@ -85,6 +96,9 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
                 },
                 formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
             )
+            is TxHistoryItem.InteractionAddressType.Staking -> resourceReference(
+                id = R.string.common_staking,
+            )
         }
 
     private fun TxHistoryItem.extractDirection() = if (isOutgoing) Direction.OUTGOING else Direction.INCOMING
@@ -96,8 +110,12 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
     }
 
     private fun TxHistoryItem.getAmount(): String {
-        val prefix = when (status) {
-            TxHistoryItem.TransactionStatus.Failed -> ""
+        if (type == TxHistoryItem.TransactionType.Vote || type == TxHistoryItem.TransactionType.Withdraw) {
+            return ""
+        }
+        val prefix = when {
+            status == TxHistoryItem.TransactionStatus.Failed -> ""
+            this.amount.isZero() -> ""
             else -> if (isOutgoing) MINUS else PLUS
         }
         return prefix + amount.toFormattedCurrencyString(currency = symbol, decimals = decimals)
