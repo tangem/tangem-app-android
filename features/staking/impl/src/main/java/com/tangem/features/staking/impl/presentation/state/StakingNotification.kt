@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state
 
+import androidx.annotation.StringRes
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.*
@@ -69,10 +70,11 @@ internal object StakingNotification {
 
         data class Unstake(
             val cooldownPeriodDays: Int,
+            @StringRes val subtitleRes: Int,
         ) : StakingNotification.Info(
             title = resourceReference(R.string.common_unstake),
             subtitle = resourceReference(
-                R.string.staking_notification_unstake_text,
+                subtitleRes,
                 wrappedList(
                     pluralReference(
                         id = R.plurals.common_days,
