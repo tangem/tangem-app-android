@@ -47,11 +47,11 @@ internal class TxHistoryItemStateConverter(
     } else {
         when (type) {
             is TxHistoryItem.TransactionType.Approve -> R.drawable.ic_doc_24
-            is TxHistoryItem.TransactionType.Stake,
-            is TxHistoryItem.TransactionType.Vote,
+            is TxHistoryItem.TransactionType.TronStakingTransactionType.Stake,
+            is TxHistoryItem.TransactionType.TronStakingTransactionType.Vote,
             -> R.drawable.ic_transaction_history_staking
-            is TxHistoryItem.TransactionType.Withdraw,
-            is TxHistoryItem.TransactionType.Unstake,
+            is TxHistoryItem.TransactionType.TronStakingTransactionType.Withdraw,
+            is TxHistoryItem.TransactionType.TronStakingTransactionType.Unstake,
             -> R.drawable.ic_transaction_history_unstaking
             is TxHistoryItem.TransactionType.Operation,
             is TxHistoryItem.TransactionType.Swap,
@@ -66,10 +66,12 @@ internal class TxHistoryItemStateConverter(
         is TxHistoryItem.TransactionType.Operation -> stringReference(type.name)
         is TxHistoryItem.TransactionType.Swap -> resourceReference(R.string.common_swap)
         is TxHistoryItem.TransactionType.Transfer -> resourceReference(R.string.common_transfer)
-        is TxHistoryItem.TransactionType.Stake -> resourceReference(R.string.common_staking)
-        is TxHistoryItem.TransactionType.Unstake -> resourceReference(R.string.staking_unstaking)
-        is TxHistoryItem.TransactionType.Vote -> stringReference("Vote")
-        is TxHistoryItem.TransactionType.Withdraw -> stringReference("Withdraw")
+        is TxHistoryItem.TransactionType.TronStakingTransactionType.Stake -> resourceReference(R.string.common_staking)
+        is TxHistoryItem.TransactionType.TronStakingTransactionType.Unstake -> resourceReference(
+            R.string.staking_unstaking,
+        )
+        is TxHistoryItem.TransactionType.TronStakingTransactionType.Vote -> stringReference("Vote")
+        is TxHistoryItem.TransactionType.TronStakingTransactionType.Withdraw -> stringReference("Withdraw")
         is TxHistoryItem.TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
     }
 
@@ -110,7 +112,9 @@ internal class TxHistoryItemStateConverter(
     }
 
     private fun TxHistoryItem.getAmount(): String {
-        if (type == TxHistoryItem.TransactionType.Vote || type == TxHistoryItem.TransactionType.Withdraw) {
+        if (type == TxHistoryItem.TransactionType.TronStakingTransactionType.Vote ||
+            type == TxHistoryItem.TransactionType.TronStakingTransactionType.Withdraw
+        ) {
             return ""
         }
         val prefix = when {

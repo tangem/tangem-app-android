@@ -21,16 +21,16 @@ internal class SdkTransactionTypeConverter(
                 TxHistoryItem.TransactionType.Transfer
             }
             is TransactionType.TronStakingTransactionType.FreezeBalanceV2Contract -> {
-                TxHistoryItem.TransactionType.Stake
+                TxHistoryItem.TransactionType.TronStakingTransactionType.Stake
             }
             is TransactionType.TronStakingTransactionType.UnfreezeBalanceV2Contract -> {
-                TxHistoryItem.TransactionType.Unstake
+                TxHistoryItem.TransactionType.TronStakingTransactionType.Unstake
             }
             is TransactionType.TronStakingTransactionType.VoteWitnessContract -> {
-                TxHistoryItem.TransactionType.Vote
+                TxHistoryItem.TransactionType.TronStakingTransactionType.Vote
             }
             is TransactionType.TronStakingTransactionType.WithdrawBalanceContract -> {
-                TxHistoryItem.TransactionType.Withdraw
+                TxHistoryItem.TransactionType.TronStakingTransactionType.Withdraw
             }
         }
     }
