@@ -297,6 +297,7 @@
   <string name="give_permission_unlimited">Unlimited</string>
   <string name="home_button_order">Order card</string>
   <string name="home_button_scan">Scan card</string>
+  <string name="information_generated_with_ai">This information was generated with AI</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_create_wallet_body">To create the wallet tap the card as shown above and do not remove until the end of the operation</string>
