@@ -63,11 +63,16 @@ private fun Content(config: NotificationConfig) {
                 .weight(1f)
                 .padding(TangemTheme.dimens.spacing12),
         ) {
-            Text(
-                text = config.title.resolveReference(),
-                style = TangemTheme.typography.button,
-                color = OxkPromoColor,
-            )
+            val titleText = config.title?.resolveReference()
+
+            if (titleText != null) {
+                Text(
+                    text = titleText,
+                    style = TangemTheme.typography.button,
+                    color = OxkPromoColor,
+                )
+            }
+
             Text(
                 text = config.subtitle.resolveReference(),
                 style = TangemTheme.typography.caption2,
