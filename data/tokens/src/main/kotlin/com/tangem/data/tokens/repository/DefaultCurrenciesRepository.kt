@@ -2,6 +2,7 @@ package com.tangem.data.tokens.repository
 
 import arrow.core.raise.catch
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
@@ -488,7 +489,9 @@ internal class DefaultCurrenciesRepository(
                 .map { userWallet ->
                     if (userWallet.isMultiCurrency) {
                         getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
-                            val filterResponse = storedTokens.tokens.filter { it.id == currencyRawId }
+                            val filterResponse = storedTokens.tokens.filter {
+                                getL2CompatibilityTokenComparison(it, currencyRawId)
+                            }
 
                             responseCurrenciesFactory.createCurrencies(
                                 response = storedTokens.copy(tokens = filterResponse),
