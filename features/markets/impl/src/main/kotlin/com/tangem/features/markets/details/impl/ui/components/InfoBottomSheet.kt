@@ -1,9 +1,6 @@
 package com.tangem.features.markets.details.impl.ui.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -13,9 +10,13 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetTitle
+import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
+import com.tangem.features.markets.impl.R
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable
@@ -26,14 +27,12 @@ internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
         config = config,
         skipPartiallyExpanded = false,
         addBottomInsets = false,
-        title = {
-            TangemBottomSheetTitle(title = it.title)
-        },
+        title = { TangemBottomSheetTitle(title = it.title) },
         content = {
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TangemTheme.dimens.spacing28),
+                    .padding(horizontal = TangemTheme.dimens.spacing16),
             ) {
                 MarkdownText(
                     markdown = it.body.resolveReference(),
@@ -44,8 +43,29 @@ internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
                         color = TangemTheme.colors.text.secondary,
                     ),
                 )
+
+                AdditionalInfoNotification(
+                    modifier = Modifier
+                        .padding(top = TangemTheme.dimens.spacing12, bottom = TangemTheme.dimens.spacing16)
+                        .fillMaxWidth(),
+                )
+
                 SpacerH(bottomBarHeight)
             }
         },
+    )
+}
+
+@Composable
+private fun AdditionalInfoNotification(modifier: Modifier = Modifier) {
+    Notification(
+        config = NotificationConfig(
+            subtitle = TextReference.Res(id = R.string.information_generated_with_ai),
+            iconResId = R.drawable.ic_magic_28,
+        ),
+        modifier = modifier,
+        subtitleColor = TangemTheme.colors.text.primary1,
+        containerColor = TangemTheme.colors.button.disabled,
+        iconTint = TangemTheme.colors.icon.accent,
     )
 }
