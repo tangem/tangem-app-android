@@ -683,6 +683,7 @@
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_notification_new_validator_funds_transfer">Staking in the %1$s network with a new validator will automatically transfer all previously staked funds to this validator</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
+  <string name="staking_notification_unlock_text">Unlock your money to withdraw it from staking process. Unlocking takes %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Your funds will be available for use after the 21-day unbonding period. Reward will be withdrawn along with your unstaking funds.</string>
   <string name="staking_notification_unstake_text">Your funds will be available for use after the %s unbonding period.</string>
   <string name="staking_notification_withdraw_text">You can now withdraw your funds, it will be available to use immediately</string>
