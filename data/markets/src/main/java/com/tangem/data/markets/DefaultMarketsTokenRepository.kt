@@ -2,6 +2,7 @@ package com.tangem.data.markets
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
+import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getNetwork
@@ -109,9 +110,10 @@ internal class DefaultMarketsTokenRepository(
         interval: PriceChangeInterval,
         tokenId: String,
     ): TokenChart {
+        val mappedTokenId = getTokenIdIfL2Network(tokenId)
         val response = marketsApi.getCoinChart(
             currency = fiatCurrencyCode,
-            coinId = tokenId,
+            coinId = mappedTokenId,
             interval = interval.toRequestParam(),
         )
 
@@ -123,13 +125,14 @@ internal class DefaultMarketsTokenRepository(
         interval: PriceChangeInterval,
         tokenId: String,
     ): TokenChart {
+        val mappedTokenId = getTokenIdIfL2Network(tokenId)
         val response = marketsApi.getCoinsListCharts(
-            coinIds = tokenId,
+            coinIds = mappedTokenId,
             currency = fiatCurrencyCode,
             interval = interval.toRequestParam(),
         )
 
-        val chart = response.getOrThrow()[tokenId] ?: error("No chart preview data for token $tokenId")
+        val chart = response.getOrThrow()[mappedTokenId] ?: error("No chart preview data for token $mappedTokenId")
 
         return TokenChartConverter.convert(interval, chart)
     }
