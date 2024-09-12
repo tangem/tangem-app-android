@@ -73,12 +73,15 @@ internal class CurrenciesStatusesLceOperations(
                 getQuotes(currenciesIds),
                 getNetworksStatuses(userWalletId, networks),
                 getYieldBalances(userWalletId, nonEmptyCurrencies),
-            ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances ->
+                getAddresses(userWalletId),
+
+                ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances, maybeAddresses ->
                 val statuses = createCurrenciesStatuses(
                     currencies = nonEmptyCurrencies,
                     maybeQuotes = maybeQuotes,
                     maybeNetworkStatuses = maybeNetworksStatuses,
                     maybeYieldBalances = maybeYieldBalances,
+                    maybeAddresses = maybeAddresses,
                 )
                 emit(statuses)
             }.collect()
@@ -96,6 +99,7 @@ internal class CurrenciesStatusesLceOperations(
             createCurrenciesStatuses(
                 currencies = nonEmptyCurrencies,
                 maybeNetworkStatuses = null,
+                maybeAddresses = null,
                 maybeQuotes = null,
                 maybeYieldBalances = null,
             )
@@ -123,6 +127,7 @@ internal class CurrenciesStatusesLceOperations(
     private fun createCurrenciesStatuses(
         currencies: NonEmptyList<CryptoCurrency>,
         maybeQuotes: Either<TokenListError, Set<Quote>>?,
+        maybeAddresses: Either<TokenListError, List<CryptoCurrencyAddress>>?,
         maybeNetworkStatuses: Lce<TokenListError, Set<NetworkStatus>>?,
         maybeYieldBalances: Lce<TokenListError, YieldBalanceList>?,
     ): Lce<TokenListError, List<CryptoCurrencyStatus>> = lce {
@@ -140,15 +145,20 @@ internal class CurrenciesStatusesLceOperations(
         }
 
         val yieldBalances = maybeYieldBalances?.getOrNull()
+        val addresses = maybeAddresses?.getOrNull()
 
         currencies.map { currency ->
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
+            val address = addresses?.find { it.cryptoCurrency == currency }
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
             val isStakingSupported = stakingRepository.isStakingSupported(
                 stakingRepository.getIntegrationKey(currency.id),
             )
             val yieldBalance = if (isStakingSupported) {
-                (yieldBalances as? YieldBalanceList.Data)?.getBalance(currency.id.rawCurrencyId)
+                (yieldBalances as? YieldBalanceList.Data)?.getBalance(
+                    address = address?.address,
+                    rawCurrencyId = currency.id.rawCurrencyId,
+                )
             } else {
                 null
             }
@@ -207,6 +217,14 @@ internal class CurrenciesStatusesLceOperations(
         ).map { maybeBalances ->
             maybeBalances.mapError { TokenListError.DataError(it) }
         }
+    }
+
+    private fun getAddresses(userWalletId: UserWalletId): Flow<Either<TokenListError, List<CryptoCurrencyAddress>>> {
+        return networksRepository.getNetworkAddressesFlow(
+            userWalletId = userWalletId,
+        ).map<List<CryptoCurrencyAddress>, Either<TokenListError, List<CryptoCurrencyAddress>>> { it.right() }
+            .catch { emit(TokenListError.DataError(it).left()) }
+            .onEmpty { emit(TokenListError.EmptyTokens.left()) }
     }
 
     private fun getIds(currencies: List<CryptoCurrency>): Pair<NonEmptySet<Network>, NonEmptySet<CryptoCurrency.ID>> {

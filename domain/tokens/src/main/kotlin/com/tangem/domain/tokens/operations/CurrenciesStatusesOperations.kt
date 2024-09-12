@@ -35,8 +35,15 @@ internal class CurrenciesStatusesOperations(
                     val networkStatuses =
                         networksRepository.getNetworkStatusesSync(userWalletId, networks, false).right()
                     val yieldBalances = getYieldBalancesSync(nonEmptyCurrencies)
+                    val addresses = getAddressesSync()
 
-                    return createCurrenciesStatuses(nonEmptyCurrencies, quotes, networkStatuses, yieldBalances)
+                    return createCurrenciesStatuses(
+                        nonEmptyCurrencies,
+                        quotes,
+                        networkStatuses,
+                        yieldBalances,
+                        addresses
+                    )
                 },
                 catch = { raise(Error.DataError(it)) },
             )
@@ -137,6 +144,7 @@ internal class CurrenciesStatusesOperations(
                 maybeNetworkStatuses = null,
                 maybeQuotes = null,
                 maybeYieldBalances = null,
+                maybeAddresses = null,
             )
 
             emit(maybeLoadingCurrenciesStatuses)
@@ -147,8 +155,15 @@ internal class CurrenciesStatusesOperations(
                 getQuotes(currenciesIds),
                 getNetworksStatuses(networks),
                 getYieldBalances(nonEmptyCurrencies),
-            ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances ->
-                createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes, maybeNetworksStatuses, maybeYieldBalances)
+                getAddresses(),
+            ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances, maybeAddresses ->
+                createCurrenciesStatuses(
+                    nonEmptyCurrencies,
+                    maybeQuotes,
+                    maybeNetworksStatuses,
+                    maybeYieldBalances,
+                    maybeAddresses,
+                )
             }
 
             emitAll(currenciesFlow)
@@ -238,6 +253,7 @@ internal class CurrenciesStatusesOperations(
         maybeQuotes: Either<Error, Set<Quote>>?,
         maybeNetworkStatuses: Either<Error, Set<NetworkStatus>>?,
         maybeYieldBalances: Either<Error, YieldBalanceList>?,
+        maybeAddresses: Either<Error, List<CryptoCurrencyAddress>>?,
     ): Either<Error, List<CryptoCurrencyStatus>> = either {
         var quotesRetrievingFailed = false
 
@@ -256,15 +272,21 @@ internal class CurrenciesStatusesOperations(
         )
 
         val yieldBalances = maybeYieldBalances?.getOrNull()
+        val addresses = maybeAddresses?.getOrNull()
 
         currencies.map { currency ->
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
+            val address = addresses?.find { it.cryptoCurrency == currency }
+
             val isStakingSupported = stakingRepository.isStakingSupported(
                 stakingRepository.getIntegrationKey(currency.id),
             )
             val yieldBalance = if (isStakingSupported) {
-                (yieldBalances as? YieldBalanceList.Data)?.getBalance(currency.id.rawCurrencyId)
+                (yieldBalances as? YieldBalanceList.Data)?.getBalance(
+                    address = address?.address,
+                    rawCurrencyId = currency.id.rawCurrencyId,
+                )
             } else {
                 null
             }
@@ -397,6 +419,22 @@ internal class CurrenciesStatusesOperations(
             .onEmpty { emit(Error.EmptyYieldBalances.left()) }
     }
 
+    private fun getAddresses(): Flow<Either<Error, List<CryptoCurrencyAddress>>> {
+        return networksRepository.getNetworkAddressesFlow(
+            userWalletId = userWalletId,
+        ).map<List<CryptoCurrencyAddress>, Either<Error, List<CryptoCurrencyAddress>>> { it.right() }
+            .catch { emit(Error.DataError(it).left()) }
+            .onEmpty { emit(Error.EmptyAddresses.left()) }
+    }
+
+    private suspend fun getAddressesSync(): Either<Error, List<CryptoCurrencyAddress>> {
+        return Either.catch {
+            networksRepository.getNetworkAddresses(
+                userWalletId = userWalletId,
+            )
+        }.mapLeft { Error.DataError(it) }
+    }
+
     private suspend fun getYieldBalancesSync(
         cryptoCurrencies: List<CryptoCurrency>,
     ): Either<Error.EmptyYieldBalances, YieldBalanceList> {
@@ -460,6 +498,8 @@ internal class CurrenciesStatusesOperations(
         data object EmptyQuotes : Error()
 
         data object EmptyNetworksStatuses : Error()
+
+        data object EmptyAddresses : Error()
 
         data object UnableToCreateCurrencyStatus : Error()
 
