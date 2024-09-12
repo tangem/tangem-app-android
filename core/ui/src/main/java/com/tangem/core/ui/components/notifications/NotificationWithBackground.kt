@@ -7,9 +7,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -33,8 +33,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemColorPalette.Dark6
 import com.tangem.core.ui.res.TangemColorPalette.Light4
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * Custom notification with image background
@@ -85,17 +85,22 @@ fun NotificationWithBackground(config: NotificationConfig, modifier: Modifier = 
                     linkTo(titleRef.top, subtitleRef.bottom, bias = 0.1f)
                 },
         )
-        Text(
-            text = config.title.resolveReference(),
-            style = TangemTheme.typography.button,
-            color = TangemTheme.colors.text.constantWhite,
-            modifier = Modifier.constrainAs(titleRef) {
-                top.linkTo(parent.top, spacing12)
-                start.linkTo(iconRef.end, spacing12)
-                end.linkTo(closeIconRef.start, spacing2)
-                width = Dimension.fillToConstraints
-            },
-        )
+
+        val titleText = config.title?.resolveReference()
+        if (titleText != null) {
+            Text(
+                text = titleText,
+                style = TangemTheme.typography.button,
+                color = TangemTheme.colors.text.constantWhite,
+                modifier = Modifier.constrainAs(titleRef) {
+                    top.linkTo(parent.top, spacing12)
+                    start.linkTo(iconRef.end, spacing12)
+                    end.linkTo(closeIconRef.start, spacing2)
+                    width = Dimension.fillToConstraints
+                },
+            )
+        }
+
         Text(
             text = config.subtitle.resolveReference(),
             style = TangemTheme.typography.caption2,

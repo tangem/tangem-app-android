@@ -6,9 +6,9 @@ import com.tangem.core.ui.extensions.TextReference
 /**
  * Notification component state
  *
- * @property title           title
  * @property subtitle        subtitle
  * @property iconResId       icon resource id
+ * @property title           title
  * @property backgroundResId background resource id
  * @property buttonsState    buttons state
  * @property onClick         lambda be invoked when notification is clicked
@@ -17,9 +17,9 @@ import com.tangem.core.ui.extensions.TextReference
 [REDACTED_AUTHOR]
  */
 data class NotificationConfig(
-    val title: TextReference,
     val subtitle: TextReference,
     @DrawableRes val iconResId: Int,
+    val title: TextReference? = null,
     @DrawableRes val backgroundResId: Int? = null,
     val buttonsState: ButtonsState? = null,
     val onClick: (() -> Unit)? = null,
