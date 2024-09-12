@@ -15,7 +15,9 @@ import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -30,6 +32,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.checkFeeCoverage
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
@@ -211,14 +214,17 @@ internal class AddStakingNotificationsTransformer(
                 )
             }
             StakingActionCommonType.ENTER -> {
-                add(
-                    StakingNotification.Info.EarnRewards(
-                        subtitleText = resourceReference(
-                            id = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
-                            formatArgs = wrappedList(yield.token.name),
-                        ),
-                    ),
-                )
+                val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+                val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
+                val hasStakedBalance = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.balance
+                    ?.items?.any {
+                        it.type == BalanceType.PREPARING ||
+                            it.type == BalanceType.STAKED ||
+                            it.type == BalanceType.LOCKED
+                    } == true
+                if (hasStakedBalance && isTron) {
+                    add(StakingNotification.Info.TronRevote)
+                }
             }
             else -> {
                 val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
