@@ -1,6 +1,7 @@
 package com.tangem.data.markets
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getNetwork
@@ -144,7 +145,8 @@ internal class DefaultMarketsTokenRepository(
             language = languageCode,
         )
 
-        return TokenMarketInfoConverter.convert(response.getOrThrow())
+        val resultResponse = response.getOrThrow().applyL2Compatibility(tokenId)
+        return TokenMarketInfoConverter.convert(resultResponse)
     }
 
     override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String): TokenQuotes {
