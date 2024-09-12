@@ -1,6 +1,7 @@
 package com.tangem.data.managetokens
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.compatibility.l2BlockchainsCoinIds
 import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.currency.getBlockchain
@@ -86,6 +87,10 @@ internal class DefaultManageTokensRepository(
             } else {
                 retryOnError(call = call)
             }
+            // filter l2 coins
+            val updatedCoinsResponse = coinsResponse.copy(
+                coins = coinsResponse.coins.filterNot { l2BlockchainsCoinIds.contains(it.id) },
+            )
 
             val tokensResponse = request.params.userWalletId?.let { getSavedUserTokensResponseSync(it) }
             val items = if (isFirstBatchFetching &&
@@ -94,13 +99,13 @@ internal class DefaultManageTokensRepository(
                 request.params.searchText.isNullOrBlank()
             ) {
                 managedCryptoCurrencyFactory.createWithCustomTokens(
-                    coinsResponse = coinsResponse,
+                    coinsResponse = updatedCoinsResponse,
                     tokensResponse = tokensResponse,
                     derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
                 )
             } else {
                 managedCryptoCurrencyFactory.create(
-                    coinsResponse = coinsResponse,
+                    coinsResponse = updatedCoinsResponse,
                     tokensResponse = tokensResponse,
                     derivationStyleProvider = userWallet?.scanResponse?.derivationStyleProvider,
                 )
