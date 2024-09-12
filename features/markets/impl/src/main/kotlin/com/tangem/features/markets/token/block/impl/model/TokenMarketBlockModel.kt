@@ -14,7 +14,10 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.markets.*
+import com.tangem.domain.markets.GetCurrencyQuotesUseCase
+import com.tangem.domain.markets.GetTokenPriceChartUseCase
+import com.tangem.domain.markets.PriceChangeInterval
+import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.markets.token.block.impl.ui.state.TokenMarketBlockUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
