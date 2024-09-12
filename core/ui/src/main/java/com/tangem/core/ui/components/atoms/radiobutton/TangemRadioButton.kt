@@ -8,8 +8,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -39,7 +39,7 @@ fun TangemRadioButton(
         modifier = modifier.clickable(
             enabled = isEnabled,
             interactionSource = remember { MutableInteractionSource() },
-            indication = rememberRipple(bounded = false, radius = TangemTheme.dimens.size16),
+            indication = ripple(bounded = false, radius = TangemTheme.dimens.size16),
             onClick = onClick,
         ),
     ) {
