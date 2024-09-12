@@ -334,7 +334,6 @@ internal fun rememberSheetState(
 /** The default animation spec used by [TangemSheetState]. */
 private val BottomSheetAnimationSpec: AnimationSpec<Float> =
     spring(
-        // durationMillis = 500,
         dampingRatio = Spring.DampingRatioNoBouncy,
         stiffness = Spring.StiffnessMedium,
     )
