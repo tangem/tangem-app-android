@@ -9,7 +9,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.impl.R
-import com.tangem.features.managetokens.ManageTokensToggles
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -18,7 +17,6 @@ import javax.inject.Inject
 @ComponentScoped
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
-    private val manageTokensToggles: ManageTokensToggles,
 ) {
 
     @Suppress("LongParameterList")
@@ -27,12 +25,19 @@ internal class ItemsBuilder @Inject constructor(
         userWalletName: String,
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
+        isManageTokensAvailable: Boolean,
         forgetWallet: () -> Unit,
         renameWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf(
         buildNameItem(userWalletName, renameWallet),
-        buildCardItem(userWalletId, isLinkMoreCardsAvailable, isReferralAvailable, onLinkMoreCardsClick),
+        buildCardItem(
+            userWalletId = userWalletId,
+            isLinkMoreCardsAvailable = isLinkMoreCardsAvailable,
+            isReferralAvailable = isReferralAvailable,
+            isManageTokensAvailable = isManageTokensAvailable,
+            onLinkMoreCardsClick = onLinkMoreCardsClick,
+        ),
         buildForgetItem(forgetWallet),
     )
 
@@ -47,12 +52,13 @@ internal class ItemsBuilder @Inject constructor(
         userWalletId: UserWalletId,
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
+        isManageTokensAvailable: Boolean,
         onLinkMoreCardsClick: () -> Unit,
     ) = WalletSettingsItemUM.WithItems(
         id = "card",
         description = resourceReference(R.string.settings_card_settings_footer),
         blocks = buildList {
-            if (manageTokensToggles.isFeatureEnabled) {
+            if (isManageTokensAvailable) {
                 BlockUM(
                     text = resourceReference(R.string.add_tokens_title),
                     iconRes = R.drawable.ic_tether_24,

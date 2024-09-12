@@ -45,6 +45,10 @@ internal class DefaultBlockchainSDKFactory(
     private val mainScope = CoroutineScope(dispatchers.main)
 
     private val walletManagerFactory: Flow<WalletManagerFactory?> = createWalletManagerFactory()
+    // TODO: https://tangem.atlassian.net/browse/AND-8252
+    // private val walletManagerFactory: Flow<WalletManagerFactory?> by lazy(LazyThreadSafetyMode.NONE) {
+    // createWalletManagerFactory()
+    // }
 
     override suspend fun init() {
         coroutineScope {
