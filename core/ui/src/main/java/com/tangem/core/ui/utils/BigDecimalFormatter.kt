@@ -18,7 +18,6 @@ object BigDecimalFormatter {
 
     const val EMPTY_BALANCE_SIGN = DASH_SIGN
     private const val CAN_BE_LOWER_SIGN = LOWER_SIGN
-    private const val APPROXIMATE_SIGN = TILDE_SIGN
     private val FORMAT_THRESHOLD = BigDecimal("0.01")
 
     private const val TEMP_CURRENCY_CODE = "USD"
@@ -195,7 +194,7 @@ object BigDecimalFormatter {
 
             if (withApproximateSign) {
                 buildString {
-                    append(APPROXIMATE_SIGN)
+                    append(TILDE_SIGN)
                     append(formattedAmount)
                 }
             } else {
