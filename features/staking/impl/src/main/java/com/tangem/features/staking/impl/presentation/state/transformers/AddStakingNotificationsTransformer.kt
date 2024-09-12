@@ -11,6 +11,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachable
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -222,24 +223,40 @@ internal class AddStakingNotificationsTransformer(
             else -> {
                 val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
                 val pendingActionType = confirmationState?.pendingAction?.type
-                val (titleId, textId) = when (pendingActionType) {
+                val (titleReference, textReference) = when (pendingActionType) {
                     StakingActionType.CLAIM_REWARDS -> {
-                        R.string.common_claim to R.string.staking_notification_claim_rewards_text
+                        resourceReference(R.string.common_claim) to
+                            resourceReference(R.string.staking_notification_claim_rewards_text)
                     }
                     StakingActionType.RESTAKE_REWARDS -> {
-                        R.string.staking_restake to R.string.staking_notification_restake_rewards_text
+                        resourceReference(R.string.staking_restake) to
+                            resourceReference(R.string.staking_notification_restake_rewards_text)
                     }
                     StakingActionType.WITHDRAW -> {
-                        R.string.staking_withdraw to R.string.staking_notification_withdraw_text
+                        resourceReference(R.string.staking_withdraw) to
+                            resourceReference(R.string.staking_notification_withdraw_text)
+                    }
+                    StakingActionType.UNLOCK_LOCKED -> {
+                        val cooldownPeriodDays = yield.metadata.cooldownPeriod.days
+                        resourceReference(R.string.staking_unlocked_locked) to resourceReference(
+                            R.string.staking_notification_unlock_text,
+                            wrappedList(
+                                pluralReference(
+                                    id = R.plurals.common_days,
+                                    count = cooldownPeriodDays,
+                                    formatArgs = wrappedList(cooldownPeriodDays),
+                                ),
+                            ),
+                        )
                     }
                     else -> null to null
                 }
 
-                if (titleId != null && textId != null) {
+                if (titleReference != null && textReference != null) {
                     add(
                         StakingNotification.Info.PendingAction(
-                            title = resourceReference(titleId),
-                            text = resourceReference(textId),
+                            title = titleReference,
+                            text = textReference,
                         ),
                     )
                 }
