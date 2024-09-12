@@ -69,4 +69,5 @@ dependencies {
 
     /* Libs */
     implementation(projects.libs.crypto)
+    implementation(projects.libs.blockchainSdk)
 }
