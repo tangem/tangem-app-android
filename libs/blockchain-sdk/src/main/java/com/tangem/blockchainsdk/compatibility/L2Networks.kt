@@ -7,7 +7,7 @@ import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 
-val l2NetworksList = listOf(
+internal val l2BlockchainsList = listOf(
     Blockchain.Optimism,
     Blockchain.Arbitrum,
     Blockchain.ZkSyncEra,
@@ -19,9 +19,13 @@ val l2NetworksList = listOf(
     Blockchain.Cyber,
 )
 
+val l2BlockchainsCoinIds = l2BlockchainsList.map { it.toCoinId() }
+
+val ETHEREUM_COIN_ID = Blockchain.Ethereum.toCoinId()
+
 fun getL2CompatibilityTokenComparison(token: UserTokensResponse.Token, currencyId: String): Boolean {
     return if (currencyId == ETHEREUM_COIN_ID) {
-        l2NetworksList.map { it.toCoinId() }.contains(token.id) || currencyId == token.id
+        l2BlockchainsCoinIds.contains(token.id) || currencyId == token.id
     } else {
         token.id == currencyId
     }
@@ -29,7 +33,7 @@ fun getL2CompatibilityTokenComparison(token: UserTokensResponse.Token, currencyI
 
 fun List<CoinsResponse.Coin.Network>.applyL2Compatibility(coinId: String): List<CoinsResponse.Coin.Network> {
     return if (coinId == ETHEREUM_COIN_ID) {
-        val l2Networks = l2NetworksList.map {
+        val l2Networks = l2BlockchainsList.map {
             CoinsResponse.Coin.Network(
                 networkId = it.toNetworkId(),
             )
@@ -43,7 +47,7 @@ fun List<CoinsResponse.Coin.Network>.applyL2Compatibility(coinId: String): List<
 fun TokenMarketInfoResponse.applyL2Compatibility(coinId: String): TokenMarketInfoResponse {
     val networks = this.networks ?: return this
     return if (coinId == ETHEREUM_COIN_ID) {
-        val l2Networks = l2NetworksList.map {
+        val l2Networks = l2BlockchainsList.map {
             TokenMarketInfoResponse.Network(
                 networkId = it.toNetworkId(),
                 contractAddress = null,
@@ -56,4 +60,10 @@ fun TokenMarketInfoResponse.applyL2Compatibility(coinId: String): TokenMarketInf
     }
 }
 
-const val ETHEREUM_COIN_ID = "ethereum"
+fun getTokenIdIfL2Network(tokenId: String): String {
+    return if (l2BlockchainsCoinIds.contains(tokenId)) {
+        ETHEREUM_COIN_ID
+    } else {
+        tokenId
+    }
+}
