@@ -2,6 +2,7 @@ package com.tangem.data.common.currency
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -91,22 +92,10 @@ class ResponseCryptoCurrenciesFactory {
             // get name and symbol from enum Blockchain until backend renamed
             // [REDACTED_JIRA]
             Blockchain.Dischain,
-            Blockchain.Arbitrum,
-            Blockchain.ArbitrumTestnet,
-            Blockchain.Aurora,
-            Blockchain.AuroraTestnet,
-            Blockchain.Manta,
-            Blockchain.MantaTestnet,
-            Blockchain.ZkSyncEra,
-            Blockchain.ZkSyncEraTestnet,
-            Blockchain.PolygonZkEVM,
-            Blockchain.PolygonZkEVMTestnet,
-            Blockchain.Base,
-            Blockchain.BaseTestnet,
             Blockchain.Telos,
             Blockchain.Cronos,
             Blockchain.TON,
-            Blockchain.Cyber,
+            in l2BlockchainsList,
             -> this.fullName
             else -> responseToken.name
         }
