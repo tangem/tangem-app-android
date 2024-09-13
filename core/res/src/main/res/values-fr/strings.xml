@@ -363,7 +363,7 @@
   <string name="markets_selector_interval_24h_title">24 heures</string>
   <string name="markets_selector_interval_3m_title">3 mois</string>
   <string name="markets_selector_interval_6m_title">6 mois</string>
-  <string name="markets_selector_interval_7d_title">7 jours</string>
+  <string name="markets_selector_interval_7d_title">7j</string>
   <string name="markets_selector_interval_all_title">Tout</string>
   <string name="markets_sort_by_experienced_buyers_title">Acheteurs expérimentés</string>
   <string name="markets_sort_by_rating_title">Évaluation</string>
