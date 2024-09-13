@@ -58,7 +58,9 @@ internal fun StoriesScreen(
     }
 
     StoriesScreenContent(
-        modifier = Modifier.fillMaxSize().testTag(TestTags.STORIES_SCREEN),
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag(TestTags.STORIES_SCREEN),
         config = StoriesScreenContentConfig(
             storiesSize = state.stories.lastIndex,
             currentStoryIndex = currentStoryIndex,
@@ -157,7 +159,7 @@ private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: M
                     duration = currentStoryDuration,
                 )
                 Stories.RevolutionaryWallet -> StoriesRevolutionaryWallet()
-                is Stories.UltraSecureBackup -> StoriesUltraSecureBackup(
+                Stories.UltraSecureBackup -> StoriesUltraSecureBackup(
                     isPaused = isPaused,
                     stepDuration = currentStoryDuration,
                 )
