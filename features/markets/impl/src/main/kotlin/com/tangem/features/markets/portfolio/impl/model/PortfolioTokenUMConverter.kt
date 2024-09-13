@@ -34,9 +34,6 @@ internal class PortfolioTokenUMConverter(
                 TokenItemState.SubtitleState.TextContent(value = value.status.currency.name)
             },
             onItemClick = onTokenItemClick,
-            onItemLongClick = {
-                tokenActionsHandler.onTokenLongClick(cryptoCurrencyData = value)
-            },
         )
 
         return PortfolioTokenUM(
