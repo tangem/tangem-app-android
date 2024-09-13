@@ -1,10 +1,12 @@
 package com.tangem.features.details.model
 
 import arrow.core.getOrElse
+import com.tangem.core.analytics.AppInstanceIdProvider
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
@@ -35,6 +37,8 @@ internal class DetailsModel @Inject constructor(
     private val appVersionProvider: AppVersionProvider,
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
     private val router: Router,
+    private val urlOpener: UrlOpener,
+    private val appInstanceIdProvider: AppInstanceIdProvider,
     paramsContainer: ParamsContainer,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val appStateHolder: ReduxStateHolder,
@@ -74,6 +78,7 @@ internal class DetailsModel @Inject constructor(
         items.value = itemsBuilder.buildAll(
             isWalletConnectAvailable = isWalletConnectAvailable,
             onSupportClick = ::sendFeedback,
+            onBuyClick = ::onBuyClick,
         )
     }
 
@@ -86,6 +91,12 @@ internal class DetailsModel @Inject constructor(
         }
     }
 
+    private fun onBuyClick() {
+        modelScope.launch {
+            urlOpener.openUrl(buildBuyLink())
+        }
+    }
+
     private fun updateState(items: ImmutableList<DetailsItemUM>) {
         state.update { prevState ->
             prevState.copy(items = items)
@@ -93,4 +104,14 @@ internal class DetailsModel @Inject constructor(
     }
 
     private fun getAppVersion(): String = "${appVersionProvider.versionName} (${appVersionProvider.versionCode})"
+
+    private suspend fun buildBuyLink(): String {
+        return appInstanceIdProvider.getAppInstanceId()?.let {
+            "$BUY_TANGEM_URL&app_instance_id=$it"
+        } ?: BUY_TANGEM_URL
+    }
+
+    private companion object {
+        const val BUY_TANGEM_URL = "https://buy.tangem.com/?utm_source=tangem&utm_medium=app"
+    }
 }
