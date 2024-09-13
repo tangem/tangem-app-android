@@ -31,7 +31,7 @@ internal class BlockchainRowUMConverter(
         return BlockchainRowUM(
             id = network.networkId,
             name = blockchainInfo.name,
-            type = if (isMainNetwork) "MAIN" else blockchainInfo.protocolName,
+            type = getNetworkType(network, blockchainInfo),
             iconResId = if (isEnabled) {
                 if (isSelected) {
                     getActiveIconRes(blockchainInfo.blockchainId)
@@ -45,5 +45,22 @@ internal class BlockchainRowUMConverter(
             isSelected = isSelected,
             isEnabled = isEnabled,
         )
+    }
+
+    private fun getNetworkType(
+        network: TokenMarketInfo.Network,
+        blockchainInfo: BlockchainUtils.BlockchainInfo,
+    ): String {
+        val isMainNetwork = network.contractAddress == null
+        return when {
+            BlockchainUtils.isL2Network(networkId = network.networkId) -> MAIN_NETWORK_L2_TYPE_NAME
+            isMainNetwork -> MAIN_NETWORK_TYPE_NAME
+            else -> blockchainInfo.protocolName
+        }
+    }
+
+    private companion object {
+        const val MAIN_NETWORK_TYPE_NAME = "MAIN"
+        const val MAIN_NETWORK_L2_TYPE_NAME = "MAIN L2"
     }
 }
