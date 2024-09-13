@@ -83,6 +83,7 @@ internal fun StakingFeeBlock(feeState: FeeState, isTransactionSent: Boolean) {
                         titleRes = R.string.common_fee_selector_option_market,
                         iconRes = R.drawable.ic_bird_24,
                         paddingValues = PaddingValues(),
+                        showDivider = false,
                     )
                     FeeLoading(feeState)
                 }
