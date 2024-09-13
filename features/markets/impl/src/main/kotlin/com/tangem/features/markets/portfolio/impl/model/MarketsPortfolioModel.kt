@@ -71,9 +71,6 @@ internal class MarketsPortfolioModel @Inject constructor(
         currentState = Provider { _state.value },
         tokenActionsHandler = tokenActionsIntentsFactory.create(
             currentAppCurrency = Provider { currentAppCurrency.value },
-            updateTokenActionsBSConfig = { updateBlock ->
-                updateTokensState { it.copy(tokenActionsBSConfig = updateBlock(it.tokenActionsBSConfig)) }
-            },
             updateTokenReceiveBSConfig = { updateBlock ->
                 updateTokensState { it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig)) }
             },
