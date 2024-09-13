@@ -41,19 +41,20 @@ internal object SetTitleTransformer : Transformer<StakingUiState> {
                         val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
                         val title = confirmationState?.pendingAction?.type?.getPendingActionTitle()
 
-                        title?.takeIf { it.isNullOrEmpty() }
+                        title.takeIf { !it.isNullOrEmpty() }
                             ?: resourceReference(
-                                R.string.staking_title_stake,
-                                wrappedList(prevState.cryptoCurrencyName),
+                                id = R.string.staking_title_stake,
+                                formatArgs = wrappedList(prevState.cryptoCurrencyName),
                             )
                     }
                 }
             }
         }
 
-        val subtitle = when (currentStep) {
-            StakingStep.Confirmation -> stringReference(prevState.walletName)
-            else -> null
+        val subtitle = if (currentStep == StakingStep.Confirmation && actionType == StakingActionCommonType.ENTER) {
+            stringReference(prevState.walletName)
+        } else {
+            null
         }
 
         return prevState.copy(

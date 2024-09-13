@@ -78,7 +78,7 @@ internal fun RowText(
             )
 
             Text(
-                modifier = Modifier.weight(weight = 4f, fill = false),
+                modifier = Modifier.weight(weight = 5f, fill = false),
                 text = secondText,
                 style = TangemTheme.typography.body2,
                 color = if (isEnabled) {

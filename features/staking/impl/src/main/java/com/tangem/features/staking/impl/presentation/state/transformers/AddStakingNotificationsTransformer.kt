@@ -15,7 +15,9 @@ import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -30,6 +32,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.checkFeeCoverage
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
@@ -203,86 +206,73 @@ internal class AddStakingNotificationsTransformer(
 
     private fun MutableList<NotificationUM>.addInfoNotifications(prevState: StakingUiState) {
         when (prevState.actionType) {
-            StakingActionCommonType.EXIT -> {
-                add(
-                    StakingNotification.Info.Unstake(
-                        cooldownPeriodDays = yield.metadata.cooldownPeriod.days,
-                    ),
-                )
-            }
-            StakingActionCommonType.ENTER -> {
-                add(
-                    StakingNotification.Info.EarnRewards(
-                        subtitleText = resourceReference(
-                            id = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
-                            formatArgs = wrappedList(yield.token.name),
-                        ),
-                    ),
-                )
-            }
-            else -> {
-                val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
-                val pendingActionType = confirmationState?.pendingAction?.type
-                val (titleReference, textReference) = when (pendingActionType) {
-                    StakingActionType.CLAIM_REWARDS -> {
-                        resourceReference(R.string.common_claim) to
-                            resourceReference(R.string.staking_notification_claim_rewards_text)
-                    }
-                    StakingActionType.RESTAKE_REWARDS -> {
-                        resourceReference(R.string.staking_restake) to
-                            resourceReference(R.string.staking_notification_restake_rewards_text)
-                    }
-                    StakingActionType.WITHDRAW -> {
-                        resourceReference(R.string.staking_withdraw) to
-                            resourceReference(R.string.staking_notification_withdraw_text)
-                    }
-                    StakingActionType.UNLOCK_LOCKED -> {
-                        val cooldownPeriodDays = yield.metadata.cooldownPeriod.days
-                        resourceReference(R.string.staking_unlocked_locked) to resourceReference(
-                            R.string.staking_notification_unlock_text,
-                            wrappedList(
-                                pluralReference(
-                                    id = R.plurals.common_days,
-                                    count = cooldownPeriodDays,
-                                    formatArgs = wrappedList(cooldownPeriodDays),
-                                ),
-                            ),
-                        )
-                    }
-                    else -> null to null
-                }
-
-                if (titleReference != null && textReference != null) {
-                    add(
-                        StakingNotification.Info.PendingAction(
-                            title = titleReference,
-                            text = textReference,
-                        ),
-                    )
-                }
-            }
+            StakingActionCommonType.EXIT -> addExitInfoNotifications()
+            StakingActionCommonType.ENTER -> addEnterInfoNotifications()
+            else -> addPendingInfoNotifications(prevState)
         }
     }
 
-    private fun getEarnRewardsPeriod(rewardSchedule: Yield.Metadata.RewardSchedule): Int {
-        return when (rewardSchedule) {
-            Yield.Metadata.RewardSchedule.BLOCK,
-            Yield.Metadata.RewardSchedule.DAY,
-            Yield.Metadata.RewardSchedule.ERA,
-            Yield.Metadata.RewardSchedule.EPOCH,
-            -> R.string.staking_notification_earn_rewards_text_period_day
+    private fun MutableList<NotificationUM>.addExitInfoNotifications() {
+        add(
+            StakingNotification.Info.Unstake(
+                cooldownPeriodDays = yield.metadata.cooldownPeriod.days,
+            ),
+        )
+    }
 
-            Yield.Metadata.RewardSchedule.HOUR,
-            -> R.string.staking_notification_earn_rewards_text_period_hour
+    private fun MutableList<NotificationUM>.addEnterInfoNotifications() {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
+        val hasStakedBalance = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.balance
+            ?.items?.any {
+                it.type == BalanceType.PREPARING ||
+                    it.type == BalanceType.STAKED ||
+                    it.type == BalanceType.LOCKED
+            } == true
+        if (hasStakedBalance && isTron) {
+            add(StakingNotification.Info.TronRevote)
+        }
+    }
 
-            Yield.Metadata.RewardSchedule.WEEK,
-            -> R.string.staking_notification_earn_rewards_text_period_week
+    private fun MutableList<NotificationUM>.addPendingInfoNotifications(prevState: StakingUiState) {
+        val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
+        val pendingActionType = confirmationState?.pendingAction?.type
+        val (titleReference, textReference) = when (pendingActionType) {
+            StakingActionType.CLAIM_REWARDS -> {
+                resourceReference(R.string.common_claim) to
+                    resourceReference(R.string.staking_notification_claim_rewards_text)
+            }
+            StakingActionType.RESTAKE_REWARDS -> {
+                resourceReference(R.string.staking_restake) to
+                    resourceReference(R.string.staking_notification_restake_rewards_text)
+            }
+            StakingActionType.WITHDRAW -> {
+                resourceReference(R.string.staking_withdraw) to
+                    resourceReference(R.string.staking_notification_withdraw_text)
+            }
+            StakingActionType.UNLOCK_LOCKED -> {
+                val cooldownPeriodDays = yield.metadata.cooldownPeriod.days
+                resourceReference(R.string.staking_unlocked_locked) to resourceReference(
+                    R.string.staking_notification_unlock_text,
+                    wrappedList(
+                        pluralReference(
+                            id = R.plurals.common_days,
+                            count = cooldownPeriodDays,
+                            formatArgs = wrappedList(cooldownPeriodDays),
+                        ),
+                    ),
+                )
+            }
+            else -> null to null
+        }
 
-            Yield.Metadata.RewardSchedule.MONTH,
-            -> R.string.staking_notification_earn_rewards_text_period_month
-
-            else
-            -> R.string.staking_notification_earn_rewards_text_period_day
+        if (titleReference != null && textReference != null) {
+            add(
+                StakingNotification.Info.PendingAction(
+                    title = titleReference,
+                    text = textReference,
+                ),
+            )
         }
     }
 }

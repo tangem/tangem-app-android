@@ -30,7 +30,9 @@ internal class MyPortfolioUMFactory(
     fun create(portfolioData: PortfolioData, portfolioUIData: PortfolioUIData): MyPortfolioUM {
         val addToPortfolioData = portfolioUIData.addToPortfolioData
 
-        if (addToPortfolioData.availableNetworks?.isEmpty() == true) return MyPortfolioUM.Unavailable
+        val hasAvailableNetworks = addToPortfolioData.availableNetworks?.isEmpty() == true
+        val isOnlySingleWalletsAdded = portfolioData.walletsWithCurrencies.keys.all { !it.isMultiCurrency }
+        if (hasAvailableNetworks || isOnlySingleWalletsAdded) return MyPortfolioUM.Unavailable
 
         val walletsWithCurrencies = if (addToPortfolioData.availableNetworks == null) {
             portfolioData.walletsWithCurrencies
