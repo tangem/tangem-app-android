@@ -3,6 +3,7 @@ package com.tangem.data.managetokens.utils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
 import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
+import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.blockchainsdk.utils.toCoinId
@@ -121,6 +122,7 @@ internal class ManagedCryptoCurrencyFactory {
             SourceNetwork.Main(
                 network = network,
                 decimals = blockchain.decimals(),
+                isL2Network = l2BlockchainsList.contains(blockchain),
             )
         } else {
             SourceNetwork.Default(
