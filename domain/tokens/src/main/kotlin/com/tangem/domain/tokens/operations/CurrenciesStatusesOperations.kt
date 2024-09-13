@@ -114,7 +114,8 @@ internal class CurrenciesStatusesOperations(
         return createCurrencyStatus(currency, quotes, networkStatus, yieldBalances)
     }
 
-    fun getCardCurrenciesStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
+    /** Get flow of currency statuses for NODL card */
+    fun getNodlCurrencyStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
         return flow {
             val nonEmptyCurrencies = recover(
                 block = { getCurrenciesFromCard(userWalletId) },
@@ -145,9 +146,13 @@ internal class CurrenciesStatusesOperations(
             val currenciesFlow = combine(
                 getQuotes(currenciesIds),
                 getNetworksStatuses(networks),
-                getYieldBalances(nonEmptyCurrencies),
-            ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances ->
-                createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes, maybeNetworksStatuses, maybeYieldBalances)
+            ) { maybeQuotes, maybeNetworksStatuses ->
+                createCurrenciesStatuses(
+                    currencies = nonEmptyCurrencies,
+                    maybeQuotes = maybeQuotes,
+                    maybeNetworkStatuses = maybeNetworksStatuses,
+                    maybeYieldBalances = null,
+                )
             }
 
             emitAll(currenciesFlow)
@@ -385,15 +390,6 @@ internal class CurrenciesStatusesOperations(
             .map<Set<NetworkStatus>, Either<Error, Set<NetworkStatus>>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(Error.EmptyNetworksStatuses.left()) }
-    }
-
-    private fun getYieldBalances(cryptoCurrencies: List<CryptoCurrency>): Flow<Either<Error, YieldBalanceList>> {
-        return stakingRepository.getMultiYieldBalanceFlow(
-            userWalletId = userWalletId,
-            cryptoCurrencies = cryptoCurrencies,
-        ).map<YieldBalanceList, Either<Error, YieldBalanceList>> { it.right() }
-            .catch { emit(Error.DataError(it).left()) }
-            .onEmpty { emit(Error.EmptyYieldBalances.left()) }
     }
 
     private suspend fun getYieldBalancesSync(
