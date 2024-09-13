@@ -2,7 +2,6 @@ package com.tangem.features.details.component.preview
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.tangem.core.analytics.DummyAppInstanceIdProvider
 import com.tangem.core.decompose.navigation.DummyRouter
 import com.tangem.core.navigation.url.DummyUrlOpener
 import com.tangem.features.details.component.DetailsComponent
@@ -18,9 +17,7 @@ internal class PreviewDetailsComponent : DetailsComponent {
     private val previewBlocks = runBlocking {
         ItemsBuilder(
             router = DummyRouter(),
-            urlOpener = DummyUrlOpener(),
-            appInstanceIdProvider = DummyAppInstanceIdProvider(),
-        ).buildAll(isWalletConnectAvailable = true, onSupportClick = {})
+        ).buildAll(isWalletConnectAvailable = true, onSupportClick = {}, onBuyClick = {})
     }
 
     private val previewFooter = DetailsFooterUM(
