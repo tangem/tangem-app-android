@@ -75,8 +75,8 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
-    ): GetCardTokensListUseCase {
-        return GetCardTokensListUseCase(currenciesRepository, quotesRepository, networksRepository, stakingRepository)
+    ): GetNodlTokenListUseCase {
+        return GetNodlTokenListUseCase(currenciesRepository, quotesRepository, networksRepository, stakingRepository)
     }
 
     @Provides
