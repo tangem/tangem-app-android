@@ -1,5 +1,6 @@
 package com.tangem.features.markets.portfolio.impl.model
 
+import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.markets.portfolio.impl.ui.state.SelectNetworkUM
@@ -18,7 +19,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal class SelectNetworkUMConverter(
     private val networksWithToggle: Map<TokenMarketInfo.Network, Boolean>,
     private val alreadyAddedNetworks: Set<String>,
-    private val onNetworkSwitchClick: (String, Boolean) -> Unit,
+    private val onNetworkSwitchClick: (BlockchainRowUM, Boolean) -> Unit,
 ) : Converter<TokenMarketParams, SelectNetworkUM> {
 
     override fun convert(value: TokenMarketParams): SelectNetworkUM {
@@ -30,7 +31,7 @@ internal class SelectNetworkUMConverter(
             networks = BlockchainRowUMConverter(alreadyAddedNetworks)
                 .convertList(networksWithToggle.toList())
                 .toImmutableList(),
-            onNetworkSwitchClick = { um, isChecked -> onNetworkSwitchClick(um.id, isChecked) },
+            onNetworkSwitchClick = { um, isChecked -> onNetworkSwitchClick(um, isChecked) },
         )
     }
 }
