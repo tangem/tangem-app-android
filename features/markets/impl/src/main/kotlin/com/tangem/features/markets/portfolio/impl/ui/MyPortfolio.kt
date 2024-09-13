@@ -25,8 +25,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.ui.preview.PreviewMyPortfolioUMProvider
-import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM.Tokens.AddButtonState
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
+import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM.Tokens.AddButtonState
 
 @Composable
 internal fun MyPortfolio(state: MyPortfolioUM, modifier: Modifier = Modifier) {
@@ -108,7 +108,6 @@ private fun TokenList(state: MyPortfolioUM.Tokens, modifier: Modifier = Modifier
     }
 
     TokenReceiveBottomSheet(config = state.tokenReceiveBSConfig)
-    TokenActionsBottomSheet(config = state.tokenActionsBSConfig)
 }
 
 @Composable
