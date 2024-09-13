@@ -75,7 +75,7 @@ internal class CurrenciesStatusesLceOperations(
                 getYieldBalances(userWalletId, nonEmptyCurrencies),
                 getAddresses(userWalletId),
 
-                ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances, maybeAddresses ->
+            ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances, maybeAddresses ->
                 val statuses = createCurrenciesStatuses(
                     currencies = nonEmptyCurrencies,
                     maybeQuotes = maybeQuotes,

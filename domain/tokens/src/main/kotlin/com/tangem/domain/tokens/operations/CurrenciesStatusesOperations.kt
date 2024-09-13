@@ -42,7 +42,7 @@ internal class CurrenciesStatusesOperations(
                         quotes,
                         networkStatuses,
                         yieldBalances,
-                        addresses
+                        addresses,
                     )
                 },
                 catch = { raise(Error.DataError(it)) },

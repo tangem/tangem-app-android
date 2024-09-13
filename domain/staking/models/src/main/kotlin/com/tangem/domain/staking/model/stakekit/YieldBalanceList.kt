@@ -6,10 +6,7 @@ sealed class YieldBalanceList {
         val balances: List<YieldBalance>,
     ) : YieldBalanceList() {
 
-        fun getBalance(
-            address: String?,
-            rawCurrencyId: String?,
-        ): YieldBalance {
+        fun getBalance(address: String?, rawCurrencyId: String?): YieldBalance {
             return balances.firstOrNull { yieldBalance ->
                 val data = yieldBalance as? YieldBalance.Data
                 data?.balance?.items?.any {

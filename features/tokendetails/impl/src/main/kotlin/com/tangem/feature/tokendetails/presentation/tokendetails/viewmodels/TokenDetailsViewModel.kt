@@ -292,6 +292,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             )
                 .distinctUntilChanged()
                 .onEach { maybeCurrencyStatus ->
+                    Timber.e(maybeCurrencyStatus.toString())
                     internalUiState.value = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
                     maybeCurrencyStatus.onRight { status ->
                         cryptoCurrencyStatus = status
