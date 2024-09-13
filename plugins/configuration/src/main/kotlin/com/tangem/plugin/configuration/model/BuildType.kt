@@ -69,7 +69,7 @@ internal enum class BuildType(
         appIdSuffix = "internal",
         versionSuffix = "internal",
         configFields = listOf(
-            BuildConfigField.Environment(value = "dev"),
+            BuildConfigField.Environment(value = "prod"),
             BuildConfigField.TestActionEnabled(isEnabled = true),
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
