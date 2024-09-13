@@ -115,7 +115,8 @@ internal class CurrenciesStatusesOperations(
         return createCurrencyStatus(currency, quotes, networkStatus, yieldBalances)
     }
 
-    fun getCardCurrenciesStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
+    /** Get flow of currency statuses for NODL card */
+    fun getNodlCurrencyStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
         return flow {
             val nonEmptyCurrencies = recover(
                 block = { getCurrenciesFromCard(userWalletId) },
