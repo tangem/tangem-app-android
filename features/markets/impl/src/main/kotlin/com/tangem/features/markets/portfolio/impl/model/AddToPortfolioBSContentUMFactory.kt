@@ -3,6 +3,7 @@ package com.tangem.features.markets.portfolio.impl.model
 import com.tangem.common.ui.userwallet.converter.UserWalletItemUMConverter
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.wallets.models.UserWallet
@@ -28,7 +29,7 @@ internal class AddToPortfolioBSContentUMFactory(
     private val token: TokenMarketParams,
     private val onAddToPortfolioVisibilityChange: (Boolean) -> Unit,
     private val onWalletSelectorVisibilityChange: (Boolean) -> Unit,
-    private val onNetworkSwitchClick: (String, Boolean) -> Unit,
+    private val onNetworkSwitchClick: (BlockchainRowUM, Boolean) -> Unit,
     private val onWalletSelect: (UserWalletId) -> Unit,
     private val onContinueClick: (selectedWalletId: UserWalletId, addedNetworks: Set<TokenMarketInfo.Network>) -> Unit,
 ) {
