@@ -163,9 +163,14 @@ private fun WalletContent(
             .padding(horizontal = horizontalPadding)
 
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+
+        val marketHintAproxHeight = with(LocalDensity.current) {
+            TangemTheme.typography.caption2.lineHeight.toDp() * 2
+        } + 40.dp
+
         val contentPadding = paddingValues?.let {
             PaddingValues(
-                bottom = it.calculateBottomPadding() + 56.dp,
+                bottom = it.calculateBottomPadding() + marketHintAproxHeight + 52.dp,
             )
         } ?: PaddingValues(bottom = TangemTheme.dimens.spacing92 + bottomBarHeight)
 
@@ -268,6 +273,7 @@ private fun WalletContent(
         )
     }
 }
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun BaseScaffold(
@@ -541,7 +547,7 @@ internal fun MarketsHint(isVisible: Boolean, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "To add tokens pull this up  or tap the search bar",
+                text = stringResource(R.string.markets_hint),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
                 textAlign = TextAlign.Center,
@@ -642,13 +648,13 @@ private fun BottomSheetStateEffects(
         when (bottomSheetState.targetValue) {
             TangemSheetValue.Hidden,
             TangemSheetValue.Expanded,
-                -> systemUiController.setNavigationBarColor(
+            -> systemUiController.setNavigationBarColor(
                 color = Color.Transparent,
                 darkIcons = navigationBarColor.luminance() > 0.5f,
                 navigationBarContrastEnforced = true,
             )
             TangemSheetValue.PartiallyExpanded,
-                -> systemUiController.setNavigationBarColor(navigationBarColor)
+            -> systemUiController.setNavigationBarColor(navigationBarColor)
         }
     }
 

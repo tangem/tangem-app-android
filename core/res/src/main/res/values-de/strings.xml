@@ -351,7 +351,6 @@
   <string name="markets_common_my_portfolio">Mein Portfolio</string>
   <string name="markets_common_title">Markt</string>
   <string name="markets_generate_addresses_notification">Um Adressen für ausgewählte Netzwerke zu generieren, musst du eine Tangem-Karte scannen</string>
-  <string name="markets_hint">Um Token hinzuzufügen, rufe dies auf oder tippe auf die Suchleiste</string>
   <string name="markets_insights_info_description_message">Die Daten dieses Abschnitts stammen aus den folgenden Netzwerken: %s</string>
   <string name="markets_loading_error_title">Die Daten konnten nicht geladen werden...</string>
   <string name="markets_loading_no_data_title">Keine Daten</string>
@@ -400,8 +399,8 @@
   <string name="markets_token_details_liquidity_index">Liquiditätsindex</string>
   <string name="markets_token_details_liquidity_index_description">Leer</string>
   <string name="markets_token_details_low">Niedrig</string>
-  <string name="markets_token_details_market_capitalization">MarketCap</string>
-  <string name="markets_token_details_market_capitalization_description">Der Gesamtmarktwert einer Kryptowährung, berechnet durch Multiplikation des aktuellen Preises des Coins mit der Gesamtzahl der im Umlauf befindlichen Coins.</string>
+  <string name="markets_token_details_market_capitalization">Marktkapitalisierung</string>
+  <string name="markets_token_details_market_capitalization_description">Das MCap errechnet sich durch Multiplikation des aktuellen Preises mit der Gesamtzahl der im Umlauf befindlichen Coins</string>
   <string name="markets_token_details_market_rating">Marktbewertung</string>
   <string name="markets_token_details_market_rating_description">Position im Krypto-Rating zwischen allen Coins basierend auf der Marktkapitalisierung</string>
   <string name="markets_token_details_max_supply">Maximale Versorgung</string>
@@ -648,7 +647,6 @@
   <string name="settings_forget_wallet_footer">Hiermit wird die Wallet aus der Anwendung entfernt. Die Wallet selbst kann wieder hinzugefügt werden.</string>
   <string name="settings_wallet_name_title">Name</string>
   <string name="staking_amount_requirement_error">Die Anzahl der zu stakenden Krypros muss mindesten %s betragen</string>
-  <string name="staking_amount_tron_integer_error">Der Stakingbetrag wird aufgrund der Netzwerkregeln auf %1$s TRX aufgerundet.</string>
   <string name="staking_claim_unstaked">Nicht gestakte beanspruche</string>
   <string name="staking_details_annual_percentage_rate">Jährliche prozentuale Rendite</string>
   <string name="staking_details_annual_percentage_rate_info">Die jährliche prozentuale Rendite, die du durch die Teilnahme am Staking erzielen kannst.</string>
