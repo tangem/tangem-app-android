@@ -24,7 +24,7 @@ internal class PricePerformanceConverter(
     }
 
     private fun TokenMarketInfo.Range?.convert(currentPrice: BigDecimal): PricePerformanceUM.Value {
-        if (this == null) {
+        if (this == null || this.low == null || this.high == null) {
             return PricePerformanceUM.Value(
                 low = StringsSigns.DASH_SIGN,
                 high = StringsSigns.DASH_SIGN,
