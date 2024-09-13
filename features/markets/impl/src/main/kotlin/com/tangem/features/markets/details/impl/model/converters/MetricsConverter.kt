@@ -112,10 +112,10 @@ internal class MetricsConverter(
     }
 
     private fun BigDecimal?.formatAmount(crypto: Boolean = false): String {
+        if (this == null) return StringsSigns.DASH_SIGN
+
         return if (crypto) {
-            BigDecimalFormatter.formatCompactAmount(
-                amount = this ?: BigDecimal.ZERO,
-            )
+            BigDecimalFormatter.formatCompactAmount(amount = this)
         } else {
             val currency = appCurrency()
             BigDecimalFormatter.formatCompactFiatAmount(
