@@ -12,7 +12,6 @@ internal sealed class MyPortfolioUM {
         val buttonState: AddButtonState,
         val addToPortfolioBSConfig: TangemBottomSheetConfig,
         val tokenReceiveBSConfig: TangemBottomSheetConfig,
-        val tokenActionsBSConfig: TangemBottomSheetConfig,
         val onAddClick: () -> Unit,
     ) : MyPortfolioUM() {
 
