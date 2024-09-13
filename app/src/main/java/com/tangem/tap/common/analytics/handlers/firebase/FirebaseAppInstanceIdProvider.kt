@@ -19,6 +19,11 @@ internal class FirebaseAppInstanceIdProvider : AppInstanceIdProvider {
     }
 
     override fun getAppInstanceIdSync(): String? {
-        return Firebase.analytics.appInstanceId.result
+        return try {
+            Firebase.analytics.appInstanceId.result
+        } catch (e: IllegalStateException) {
+            Timber.e(e, "getAppInstanceIdSync")
+            null
+        }
     }
 }
