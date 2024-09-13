@@ -64,6 +64,7 @@ internal class SetConfirmationStateLoadingTransformer(
             fiatAmount = potentialReward,
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
+            withApproximateSign = true,
         )
         return if (isEnterAction && amountDecimal != null && potentialReward != null) {
             resourceReference(
