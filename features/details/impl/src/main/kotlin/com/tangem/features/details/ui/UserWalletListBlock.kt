@@ -54,11 +54,7 @@ private fun AddWalletButton(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    start = TangemTheme.dimens.spacing12,
-                    bottom = TangemTheme.dimens.spacing12,
-                    end = TangemTheme.dimens.spacing12,
-                ),
+                .padding(all = TangemTheme.dimens.spacing12),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
