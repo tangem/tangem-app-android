@@ -83,6 +83,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.Polkadot || blockchain == Blockchain.PolkadotTestnet
     }
 
+    fun isCosmos(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Cosmos || blockchain == Blockchain.CosmosTestnet
+    }
+
     data class BlockchainInfo(
         val blockchainId: String,
         val name: String,
