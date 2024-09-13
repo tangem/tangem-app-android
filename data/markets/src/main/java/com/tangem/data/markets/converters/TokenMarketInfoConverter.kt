@@ -4,6 +4,7 @@ import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenQuotes
 import com.tangem.utils.converter.Converter
+import java.math.BigDecimal
 
 internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, TokenMarketInfo> {
 
@@ -28,14 +29,20 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
     private fun TokenMarketInfoResponse.getQuotes(): TokenQuotes {
         return TokenQuotes(
             currentPrice = currentPrice,
-            h24ChangePercent = priceChangePercentage?.day?.movePointLeft(2),
-            weekChangePercent = priceChangePercentage?.week?.movePointLeft(2),
-            monthChangePercent = priceChangePercentage?.month?.movePointLeft(2),
-            m3ChangePercent = priceChangePercentage?.threeMonths?.movePointLeft(2),
-            m6ChangePercent = priceChangePercentage?.sixMonths?.movePointLeft(2),
-            yearChangePercent = priceChangePercentage?.year?.movePointLeft(2),
-            allTimeChangePercent = priceChangePercentage?.allTime?.movePointLeft(2),
+            h24ChangePercent = priceChangePercentage?.getPercentageByInterval { day },
+            weekChangePercent = priceChangePercentage?.getPercentageByInterval { week },
+            monthChangePercent = priceChangePercentage?.getPercentageByInterval { month },
+            m3ChangePercent = priceChangePercentage?.getPercentageByInterval { threeMonths },
+            m6ChangePercent = priceChangePercentage?.getPercentageByInterval { sixMonths },
+            yearChangePercent = priceChangePercentage?.getPercentageByInterval { year },
+            allTimeChangePercent = priceChangePercentage?.getPercentageByInterval { allTime },
         )
+    }
+
+    private fun TokenMarketInfoResponse.PriceChangePercentage.getPercentageByInterval(
+        intervalProvider: TokenMarketInfoResponse.PriceChangePercentage.() -> BigDecimal?,
+    ): BigDecimal? {
+        return (intervalProvider() ?: allTime)?.movePointLeft(2)
     }
 
     @JvmName("convertNetwork")
