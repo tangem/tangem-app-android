@@ -90,5 +90,10 @@ internal object StakingNotification {
             title = title,
             subtitle = text,
         )
+
+        data object TronRevote : StakingNotification.Info(
+            title = resourceReference(R.string.staking_revote),
+            subtitle = resourceReference(R.string.staking_notifications_revote_tron_text),
+        )
     }
 }
