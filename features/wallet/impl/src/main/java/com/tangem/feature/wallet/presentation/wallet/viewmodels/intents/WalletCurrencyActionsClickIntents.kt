@@ -402,7 +402,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 AppRoute.MarketsTokenDetails(
                     token = tokenMarketParams,
                     appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
-                    showPortfolio = true,
+                    showPortfolio = false,
                 ),
             )
         }
