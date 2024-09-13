@@ -53,9 +53,6 @@ internal class TokensPortfolioUMConverter(
             tokenReceiveBSConfig = (currentState() as? MyPortfolioUM.Tokens)
                 ?.tokenReceiveBSConfig
                 ?: TangemBottomSheetConfig.Empty,
-            tokenActionsBSConfig = (currentState() as? MyPortfolioUM.Tokens)
-                ?.tokenActionsBSConfig
-                ?: TangemBottomSheetConfig.Empty,
         )
     }
 
