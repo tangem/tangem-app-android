@@ -59,8 +59,8 @@ internal fun StakingConfirmationContent(
         }
         AmountBlock(
             amountState = amountState,
-            isClickDisabled = !isEnterAction,
-            isEditingDisabled = !isEnterAction || isTransactionSent,
+            isClickDisabled = !isEnterAction || isTransactionSent,
+            isEditingDisabled = !isEnterAction && state.innerState != InnerConfirmationStakingState.COMPLETED,
             onClick = clickIntents::onPrevClick,
         )
         if (isEnterAction) {
