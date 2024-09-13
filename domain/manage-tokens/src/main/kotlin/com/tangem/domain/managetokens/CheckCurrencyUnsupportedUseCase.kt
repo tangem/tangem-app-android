@@ -18,4 +18,18 @@ class CheckCurrencyUnsupportedUseCase(
             repository.checkCurrencyUnsupportedState(userWalletId, sourceNetwork)
         }
     }
+
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        networkId: String,
+        isMainNetwork: Boolean,
+    ): Either<Throwable, CurrencyUnsupportedState?> {
+        return Either.catch {
+            repository.checkCurrencyUnsupportedState(
+                userWalletId = userWalletId,
+                rawNetworkId = networkId,
+                isMainNetwork = isMainNetwork,
+            )
+        }
+    }
 }
