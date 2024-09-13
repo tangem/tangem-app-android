@@ -15,6 +15,15 @@ internal class SdkTransactionTypeConverter(
                 getTransactionType(methodName = smartContractMethods[value.id]?.name)
             is TransactionHistoryItem.TransactionType.ContractMethodName -> getTransactionType(methodName = value.name)
             is TransactionHistoryItem.TransactionType.Transfer -> TxHistoryItem.TransactionType.Transfer
+            TransactionHistoryItem.TransactionType.TronStakingTransactionType.FreezeBalanceV2Contract ->
+                TxHistoryItem.TransactionType.Transfer // TODO map correct [REDACTED_JIRA]
+            TransactionHistoryItem.TransactionType.TronStakingTransactionType.UnfreezeBalanceV2Contract ->
+                TxHistoryItem.TransactionType.Transfer // TODO map correct [REDACTED_JIRA]
+            TransactionHistoryItem.TransactionType.TronStakingTransactionType.VoteWitnessContract ->
+                TxHistoryItem
+                    .TransactionType.Transfer // TODO map correct [REDACTED_JIRA]
+            TransactionHistoryItem.TransactionType.TronStakingTransactionType.WithdrawBalanceContract ->
+                TxHistoryItem.TransactionType.Transfer // TODO map correct [REDACTED_JIRA]
         }
     }
 
