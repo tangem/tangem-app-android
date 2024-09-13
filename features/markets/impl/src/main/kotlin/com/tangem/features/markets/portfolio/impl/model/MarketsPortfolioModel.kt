@@ -1,18 +1,32 @@
 package com.tangem.features.markets.portfolio.impl.model
 
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.res.stringResource
 import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.components.BasicDialog
+import com.tangem.core.ui.components.DialogButtonUM
+import com.tangem.core.ui.components.rows.model.BlockchainRowUM
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.HasMissedDerivationsUseCase
+import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
+import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.markets.SaveMarketTokensUseCase
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
@@ -31,6 +45,8 @@ internal class MarketsPortfolioModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     tokenActionsIntentsFactory: TokenActionsHandler.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val messageSender: UiMessageSender,
+    private val checkCurrencyUnsupportedUseCase: CheckCurrencyUnsupportedUseCase,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val portfolioDataLoader: PortfolioDataLoader,
     private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
@@ -150,7 +166,7 @@ internal class MarketsPortfolioModel @Inject constructor(
         }
     }
 
-    private fun onNetworkSwitchClick(networkId: String, isChecked: Boolean) {
+    private fun onNetworkSwitchClick(blockchainRowUM: BlockchainRowUM, isChecked: Boolean) {
         val selectedWalletId = selectedMultiWalletIdFlow.value
 
         if (selectedWalletId == null) {
@@ -159,10 +175,81 @@ internal class MarketsPortfolioModel @Inject constructor(
         }
 
         if (isChecked) {
-            addToPortfolioManager.addNetwork(userWalletId = selectedWalletId, networkId = networkId)
+            modelScope.launch {
+                val unsupportedState = checkCurrencyUnsupportedState(
+                    userWalletId = selectedWalletId,
+                    rawNetworkId = blockchainRowUM.id,
+                    isMainNetwork = blockchainRowUM.isMainNetwork,
+                )
+                if (unsupportedState != null) {
+                    showUnsupportedWarning(unsupportedState)
+                } else {
+                    addToPortfolioManager.addNetwork(userWalletId = selectedWalletId, networkId = blockchainRowUM.id)
+                }
+            }
         } else {
-            addToPortfolioManager.removeNetwork(userWalletId = selectedWalletId, networkId = networkId)
+            addToPortfolioManager.removeNetwork(userWalletId = selectedWalletId, networkId = blockchainRowUM.id)
         }
+    }
+
+    private suspend fun checkCurrencyUnsupportedState(
+        userWalletId: UserWalletId,
+        rawNetworkId: String,
+        isMainNetwork: Boolean,
+    ): CurrencyUnsupportedState? {
+        return checkCurrencyUnsupportedUseCase(
+            userWalletId = userWalletId,
+            networkId = rawNetworkId,
+            isMainNetwork = isMainNetwork,
+        ).getOrElse {
+            Timber.e(
+                it,
+                """
+                    Failed to check currency unsupported state
+                    |- User wallet ID: $userWalletId
+                    |- Network ID: $rawNetworkId
+                    |- Is main network: $isMainNetwork
+                """.trimIndent(),
+            )
+
+            val message = SnackbarMessage(
+                message = it.localizedMessage
+                    ?.let(::stringReference)
+                    ?: resourceReference(R.string.common_error),
+            )
+            messageSender.send(message)
+
+            null
+        }
+    }
+
+    private fun showUnsupportedWarning(unsupportedState: CurrencyUnsupportedState) {
+        val message = ContentMessage { onDismiss ->
+            BasicDialog(
+                title = resourceReference(R.string.common_warning).resolveReference(),
+                message = when (unsupportedState) {
+                    is CurrencyUnsupportedState.Token.NetworkTokensUnsupported -> resourceReference(
+                        id = R.string.alert_manage_tokens_unsupported_message,
+                        formatArgs = wrappedList(unsupportedState.networkName),
+                    )
+                    is CurrencyUnsupportedState.Token.UnsupportedCurve -> resourceReference(
+                        id = R.string.alert_manage_tokens_unsupported_curve_message,
+                        formatArgs = wrappedList(unsupportedState.networkName),
+                    )
+                    is CurrencyUnsupportedState.UnsupportedNetwork -> resourceReference(
+                        id = R.string.alert_manage_tokens_unsupported_curve_message,
+                        formatArgs = wrappedList(unsupportedState.networkName),
+                    )
+                }.resolveReference(),
+                confirmButton = DialogButtonUM(
+                    title = stringResource(R.string.common_ok),
+                    onClick = onDismiss,
+                ),
+                onDismissDialog = onDismiss,
+            )
+        }
+
+        messageSender.send(message)
     }
 
     private fun onWalletSelect(userWalletId: UserWalletId) {
