@@ -10,6 +10,8 @@ import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.UiDependencies
+import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.features.markets.entry.BottomSheetState
@@ -26,6 +28,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultMarketsEntryComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     private val marketsEntryChildFactory: MarketsEntryChildFactory,
+    private val uiDependencies: UiDependencies,
 ) : MarketsEntryComponent, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<Child>()
@@ -60,6 +63,10 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
             onHeaderSizeChange = onHeaderSizeChange,
             stackState = stack.subscribeAsState(),
             modifier = modifier,
+        )
+        EventMessageEffect(
+            messageHandler = uiDependencies.eventMessageHandler,
+            snackbarHostState = uiDependencies.globalSnackbarHostState,
         )
     }
 
