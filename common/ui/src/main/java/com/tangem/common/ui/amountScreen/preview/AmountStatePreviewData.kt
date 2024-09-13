@@ -53,6 +53,7 @@ object AmountStatePreviewData {
             fiatValue = "123.123",
             isFiatUnavailable = false,
             isError = false,
+            isWarning = false,
             error = TextReference.EMPTY,
             isValuePasted = false,
             onValuePastedTriggerDismiss = {},
