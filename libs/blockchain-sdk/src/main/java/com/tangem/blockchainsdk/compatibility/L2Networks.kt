@@ -7,7 +7,7 @@ import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 
-internal val l2BlockchainsList = listOf(
+val l2BlockchainsList = listOf(
     Blockchain.Optimism,
     Blockchain.Arbitrum,
     Blockchain.ZkSyncEra,
