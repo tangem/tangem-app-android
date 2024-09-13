@@ -20,7 +20,6 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
                 buttonState = MyPortfolioUM.Tokens.AddButtonState.Available,
                 addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
                 tokenReceiveBSConfig = TangemBottomSheetConfig.Empty,
-                tokenActionsBSConfig = TangemBottomSheetConfig.Empty,
                 onAddClick = {},
             ),
             MyPortfolioUM.Tokens(
@@ -28,7 +27,6 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
                 buttonState = MyPortfolioUM.Tokens.AddButtonState.Unavailable,
                 addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
                 tokenReceiveBSConfig = TangemBottomSheetConfig.Empty,
-                tokenActionsBSConfig = TangemBottomSheetConfig.Empty,
                 onAddClick = {},
             ),
             MyPortfolioUM.Tokens(
@@ -36,7 +34,6 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
                 buttonState = MyPortfolioUM.Tokens.AddButtonState.Loading,
                 addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
                 tokenReceiveBSConfig = TangemBottomSheetConfig.Empty,
-                tokenActionsBSConfig = TangemBottomSheetConfig.Empty,
                 onAddClick = {},
             ),
             MyPortfolioUM.AddFirstToken(
