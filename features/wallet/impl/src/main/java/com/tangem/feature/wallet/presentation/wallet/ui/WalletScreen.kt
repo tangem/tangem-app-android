@@ -642,13 +642,24 @@ private fun BottomSheetStateEffects(
         when (bottomSheetState.targetValue) {
             TangemSheetValue.Hidden,
             TangemSheetValue.Expanded,
-            -> systemUiController.setNavigationBarColor(
+                -> systemUiController.setNavigationBarColor(
                 color = Color.Transparent,
                 darkIcons = navigationBarColor.luminance() > 0.5f,
                 navigationBarContrastEnforced = true,
             )
             TangemSheetValue.PartiallyExpanded,
-            -> systemUiController.setNavigationBarColor(navigationBarColor)
+                -> systemUiController.setNavigationBarColor(navigationBarColor)
+        }
+    }
+
+    // make navigation bar transparent when leaving the screen
+    DisposableEffect(Unit) {
+        onDispose {
+            systemUiController.setNavigationBarColor(
+                color = Color.Transparent,
+                darkIcons = navigationBarColor.luminance() > 0.5f,
+                navigationBarContrastEnforced = false,
+            )
         }
     }
 
