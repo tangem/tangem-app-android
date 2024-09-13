@@ -22,4 +22,10 @@ interface ManageTokensRepository {
         userWalletId: UserWalletId,
         sourceNetwork: ManagedCryptoCurrency.SourceNetwork,
     ): CurrencyUnsupportedState?
+
+    suspend fun checkCurrencyUnsupportedState(
+        userWalletId: UserWalletId,
+        rawNetworkId: String,
+        isMainNetwork: Boolean,
+    ): CurrencyUnsupportedState?
 }
