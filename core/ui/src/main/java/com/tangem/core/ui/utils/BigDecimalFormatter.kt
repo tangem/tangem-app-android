@@ -4,6 +4,7 @@ import android.icu.text.CompactDecimalFormat
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.LOWER_SIGN
+import com.tangem.utils.StringsSigns.TILDE_SIGN
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -167,6 +168,7 @@ object BigDecimalFormatter {
         fiatCurrencySymbol: String,
         decimals: Int = FIAT_MARKET_DEFAULT_DIGITS,
         locale: Locale = Locale.getDefault(),
+        withApproximateSign: Boolean = false,
     ): String {
         if (fiatAmount == null) return EMPTY_BALANCE_SIGN
 
@@ -187,8 +189,17 @@ object BigDecimalFormatter {
                 )
             }
         } else {
-            formatter.format(fiatAmount)
+            val formattedAmount = formatter.format(fiatAmount)
                 .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+
+            if (withApproximateSign) {
+                buildString {
+                    append(TILDE_SIGN)
+                    append(formattedAmount)
+                }
+            } else {
+                formattedAmount
+            }
         }
     }
 
