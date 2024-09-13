@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.card)
+    implementation(projects.domain.manageTokens)
     implementation(projects.domain.markets)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens)
@@ -69,4 +70,5 @@ dependencies {
 
     /* Libs */
     implementation(projects.libs.crypto)
+    implementation(projects.libs.blockchainSdk)
 }

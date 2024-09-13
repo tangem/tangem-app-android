@@ -62,7 +62,11 @@ sealed class ManagedCryptoCurrency {
 
         val typeName: String
             get() = when (this) {
-                is Main -> MAIN_NETWORK_TYPE_NAME
+                is Main -> if (isL2Network) {
+                    MAIN_NETWORK_L2_TYPE_NAME
+                } else {
+                    MAIN_NETWORK_TYPE_NAME
+                }
                 is Default -> when (network.standardType) {
                     is Network.StandardType.BEP2,
                     is Network.StandardType.BEP20,
@@ -76,6 +80,7 @@ sealed class ManagedCryptoCurrency {
         data class Main(
             override val network: Network,
             override val decimals: Int,
+            val isL2Network: Boolean,
         ) : SourceNetwork()
 
         data class Default(
@@ -86,6 +91,7 @@ sealed class ManagedCryptoCurrency {
 
         private companion object {
             const val MAIN_NETWORK_TYPE_NAME = "MAIN"
+            const val MAIN_NETWORK_L2_TYPE_NAME = "MAIN L2"
         }
     }
 }

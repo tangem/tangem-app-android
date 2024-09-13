@@ -2,6 +2,7 @@ package com.tangem.lib.crypto
 
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.lib.crypto.converter.XrpTaggedAddressConverter
@@ -82,6 +83,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.Polkadot || blockchain == Blockchain.PolkadotTestnet
     }
 
+    fun isCosmos(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Cosmos || blockchain == Blockchain.CosmosTestnet
+    }
+
     data class BlockchainInfo(
         val blockchainId: String,
         val name: String,
@@ -96,6 +102,11 @@ object BlockchainUtils {
             name = getNetworkNameWithoutTestnet(blockchain),
             protocolName = getNetworkStandardName(blockchain),
         )
+    }
+
+    fun isL2Network(networkId: String): Boolean {
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: return false
+        return l2BlockchainsList.contains(blockchain)
     }
 
     private fun getNetworkStandardName(blockchain: Blockchain): String {

@@ -158,11 +158,11 @@ internal class CurrenciesStatusesOperations(
                 getAddresses(),
             ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances, maybeAddresses ->
                 createCurrenciesStatuses(
-                    nonEmptyCurrencies,
-                    maybeQuotes,
-                    maybeNetworksStatuses,
-                    maybeYieldBalances,
-                    maybeAddresses,
+                    currencies = nonEmptyCurrencies,
+                    maybeQuotes= maybeQuotes,
+                    maybeNetworkStatuses = maybeNetworksStatuses,
+                    maybeYieldBalances = maybeYieldBalances,
+                    maybeAddresses = maybeAddresses,
                 )
             }
 

@@ -297,6 +297,7 @@
   <string name="give_permission_unlimited">Unlimited</string>
   <string name="home_button_order">Order card</string>
   <string name="home_button_scan">Scan card</string>
+  <string name="information_generated_with_ai">This information was generated with AI</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_create_wallet_body">To create the wallet tap the card as shown above and do not remove until the end of the operation</string>
@@ -687,6 +688,7 @@
   <string name="staking_notification_unstake_cosmos_text">Your funds will be available for use after the 21-day unbonding period. Reward will be withdrawn along with your unstaking funds.</string>
   <string name="staking_notification_unstake_text">Your funds will be available for use after the %s unbonding period.</string>
   <string name="staking_notification_withdraw_text">You can now withdraw your funds, it will be available to use immediately</string>
+  <string name="staking_notifications_revote_tron_text">Staking in the Tron network with a new validator will automatically transfer all previously staked funds to this validator</string>
   <string name="staking_preparing">Preparing</string>
   <string name="staking_ready_to_withdraw">Ready to withdraw</string>
   <string name="staking_rebond">Rebond</string>

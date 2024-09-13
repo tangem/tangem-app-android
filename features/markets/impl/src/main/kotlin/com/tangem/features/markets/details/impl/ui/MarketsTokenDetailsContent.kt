@@ -4,11 +4,11 @@ import android.content.res.Configuration
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -151,9 +151,7 @@ private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) 
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Column(
-            Modifier.weight(1f),
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             TokenPriceText(
                 price = state.priceText,
                 triggerPriceChange = state.triggerPriceChange,
@@ -208,10 +206,11 @@ private fun TokenPriceText(
         color.animateTo(generalColor, tween(durationMillis = 500))
     }
 
-    Text(
-        modifier = modifier,
+    ResizableText(
         text = price,
+        modifier = modifier,
         color = color.value,
+        maxLines = 1,
         style = TangemTheme.typography.head,
     )
 }

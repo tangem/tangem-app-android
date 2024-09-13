@@ -92,15 +92,15 @@ internal class CustomTokenFormModel @Inject constructor(
     @OptIn(FlowPreview::class)
     private fun observeTokenFormUpdates() {
         state
-            .sample(periodMillis = 1_000)
-            .transform {
-                val values = it.tokenForm?.mapToDomainModel()
+            .transform { state ->
+                val form = state.tokenForm
 
-                if (values != null) {
-                    emit(values)
+                if (form != null && !form.wasFilled) {
+                    emit(form.mapToDomainModel())
                 }
             }
             .distinctUntilChanged()
+            .sample(periodMillis = 1_000)
             .onEach { formValues ->
                 customCurrencyValidator.validateForm(
                     userWalletId = params.userWalletId,
@@ -117,14 +117,16 @@ internal class CustomTokenFormModel @Inject constructor(
             createdCurrency = null
 
             when (validatorState) {
-                is CustomCurrencyValidator.State.NotStarted -> Unit
-                is CustomCurrencyValidator.State.SearchingToken -> updateStateWithSearching()
-                is CustomCurrencyValidator.State.UnexpectedException -> showErrorDialog()
-                is CustomCurrencyValidator.State.FormValidationException -> updateStateWithExceptions(
+                is CustomCurrencyValidator.Status.NotStarted,
+                is CustomCurrencyValidator.Status.Validating,
+                -> Unit
+                is CustomCurrencyValidator.Status.SearchingToken -> updateStateWithProgress()
+                is CustomCurrencyValidator.Status.UnexpectedException -> showErrorDialog()
+                is CustomCurrencyValidator.Status.FormValidationException -> updateStateWithExceptions(
                     exceptions = validatorState.exceptions,
                 )
-                is CustomCurrencyValidator.State.TokenNotFound -> updateStateWithNotFoundNotification()
-                is CustomCurrencyValidator.State.Validated -> {
+                is CustomCurrencyValidator.Status.TokenNotFound -> updateStateWithNotFoundNotification()
+                is CustomCurrencyValidator.Status.Validated -> {
                     createdCurrency = validatorState.currency
 
                     updateStateWithCurrency(
@@ -149,6 +151,7 @@ internal class CustomTokenFormModel @Inject constructor(
                 .updateWithProgress(
                     showProgress = false,
                     canAddToken = !isAlreadyAdded,
+                    isWasFilled = fillForm,
                     clearNotifications = true,
                     clearFieldErrors = true,
                     disableSecondaryFields = !isCustom,
@@ -183,7 +186,7 @@ internal class CustomTokenFormModel @Inject constructor(
         }
     }
 
-    private fun updateStateWithSearching() {
+    private fun updateStateWithProgress() {
         state.update { state ->
             state.updateWithProgress(
                 showProgress = true,
@@ -274,7 +277,10 @@ internal class CustomTokenFormModel @Inject constructor(
     private fun updateContractAddress(value: String) {
         state.update { state ->
             state.updateTokenForm {
-                copy(contractAddress = contractAddress.updateValue(value))
+                copy(
+                    contractAddress = contractAddress.updateValue(value),
+                    wasFilled = false,
+                )
             }
         }
     }
@@ -282,7 +288,10 @@ internal class CustomTokenFormModel @Inject constructor(
     private fun updateTokenName(value: String) {
         state.update { state ->
             state.updateTokenForm {
-                copy(name = name.updateValue(value))
+                copy(
+                    name = name.updateValue(value),
+                    wasFilled = false,
+                )
             }
         }
     }
@@ -290,7 +299,10 @@ internal class CustomTokenFormModel @Inject constructor(
     private fun updateTokenSymbol(value: String) {
         state.update { state ->
             state.updateTokenForm {
-                copy(symbol = symbol.updateValue(value))
+                copy(
+                    symbol = symbol.updateValue(value),
+                    wasFilled = false,
+                )
             }
         }
     }
@@ -298,7 +310,10 @@ internal class CustomTokenFormModel @Inject constructor(
     private fun updateDecimals(value: String) {
         state.update { state ->
             state.updateTokenForm {
-                copy(decimals = decimals.updateValue(value))
+                copy(
+                    decimals = decimals.updateValue(value),
+                    wasFilled = false,
+                )
             }
         }
     }
