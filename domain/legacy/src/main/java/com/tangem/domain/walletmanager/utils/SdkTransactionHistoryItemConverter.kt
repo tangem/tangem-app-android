@@ -57,6 +57,14 @@ internal class SdkTransactionHistoryItemConverter(
             is SdkTransactionHistoryItem.TransactionType.ContractMethod,
             is SdkTransactionHistoryItem.TransactionType.ContractMethodName,
             -> mapToInteractionAddressType(destinationType)
+            TransactionHistoryItem.TransactionType.TronStakingTransactionType.FreezeBalanceV2Contract ->
+                mapToInteractionAddressType(destinationType) // todo map correct [REDACTED_JIRA]
+            TransactionHistoryItem.TransactionType.TronStakingTransactionType.UnfreezeBalanceV2Contract ->
+                mapToInteractionAddressType(destinationType) // todo map correct [REDACTED_JIRA]
+            TransactionHistoryItem.TransactionType.TronStakingTransactionType.VoteWitnessContract ->
+                mapToInteractionAddressType(destinationType) // todo map correct [REDACTED_JIRA]
+            TransactionHistoryItem.TransactionType.TronStakingTransactionType.WithdrawBalanceContract ->
+                mapToInteractionAddressType(destinationType) // todo map correct [REDACTED_JIRA]
         }
     }
 
