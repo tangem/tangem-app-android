@@ -10,6 +10,7 @@ internal fun CurrenciesStatusesOperations.Error.mapToCurrencyError(): CurrencySt
         is CurrenciesStatusesOperations.Error.EmptyNetworksStatuses,
         is CurrenciesStatusesOperations.Error.EmptyQuotes,
         is CurrenciesStatusesOperations.Error.EmptyCurrencies,
+        is CurrenciesStatusesOperations.Error.EmptyAddresses,
         is CurrenciesStatusesOperations.Error.UnableToCreateCurrencyStatus,
         -> CurrencyStatusError.UnableToCreateCurrency
     }
