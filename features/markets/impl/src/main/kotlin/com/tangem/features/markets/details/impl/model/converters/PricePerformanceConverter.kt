@@ -3,6 +3,7 @@ package com.tangem.features.markets.details.impl.model.converters
 import androidx.compose.runtime.Stable
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.details.impl.ui.state.PricePerformanceUM
 import com.tangem.utils.Provider
@@ -13,6 +14,7 @@ import java.math.RoundingMode
 @Stable
 internal class PricePerformanceConverter(
     private val appCurrency: Provider<AppCurrency>,
+    private val onIntervalChanged: (PriceChangeInterval) -> Unit,
 ) {
 
     fun convert(value: TokenMarketInfo.PricePerformance, currentPrice: BigDecimal): PricePerformanceUM {
@@ -20,6 +22,7 @@ internal class PricePerformanceConverter(
             h24 = value.day.convert(currentPrice),
             month = value.month.convert(currentPrice),
             all = value.allTime.convert(currentPrice),
+            onIntervalChanged = onIntervalChanged,
         )
     }
 

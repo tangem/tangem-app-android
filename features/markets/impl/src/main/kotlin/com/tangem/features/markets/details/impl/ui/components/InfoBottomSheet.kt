@@ -44,11 +44,13 @@ internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
                     ),
                 )
 
-                AdditionalInfoNotification(
-                    modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing12, bottom = TangemTheme.dimens.spacing16)
-                        .fillMaxWidth(),
-                )
+                if (it.showGeneratedAINotification) {
+                    AdditionalInfoNotification(
+                        modifier = Modifier
+                            .padding(top = TangemTheme.dimens.spacing12, bottom = TangemTheme.dimens.spacing16)
+                            .fillMaxWidth(),
+                    )
+                }
 
                 SpacerH(bottomBarHeight)
             }
