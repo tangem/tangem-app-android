@@ -9,13 +9,17 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.ContentMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.TokenActionsState
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
+import com.tangem.features.markets.portfolio.impl.ui.WarningDialog
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
 import com.tangem.utils.Provider
 import dagger.assisted.Assisted
@@ -34,9 +38,18 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private val currentAppCurrency: Provider<AppCurrency>,
     @Assisted("updateTokenReceiveBSConfig")
     private val updateTokenReceiveBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val messageSender: UiMessageSender,
 ) {
 
+    private val disabledActionsInDemoMode = setOf(
+        TokenActionsBSContentUM.Action.Buy,
+        TokenActionsBSContentUM.Action.Sell,
+    )
+
     fun handle(action: TokenActionsBSContentUM.Action, cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        if (handleDemoMode(action, cryptoCurrencyData.userWallet)) return
+
         when (action) {
             TokenActionsBSContentUM.Action.Buy -> onBuyClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Exchange -> onExchangeClick(cryptoCurrencyData)
@@ -46,6 +59,28 @@ internal class TokenActionsHandler @AssistedInject constructor(
             TokenActionsBSContentUM.Action.Send -> onSendClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Stake -> onStakeClick(cryptoCurrencyData)
         }
+    }
+
+    private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet): Boolean {
+        val demoCard = isDemoCardUseCase.invoke(userWallet.cardId)
+        val needShowDemoWarning = demoCard && disabledActionsInDemoMode.contains(action)
+
+        if (needShowDemoWarning) {
+            showDemoModeWarning()
+        }
+
+        return needShowDemoWarning
+    }
+
+    private fun showDemoModeWarning() {
+        val message = ContentMessage { onDismiss ->
+            WarningDialog(
+                message = resourceReference(R.string.alert_demo_feature_disabled),
+                onDismiss = onDismiss,
+            )
+        }
+
+        messageSender.send(message)
     }
 
     private fun onReceiveClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
