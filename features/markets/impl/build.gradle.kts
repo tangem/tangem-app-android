@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.card)
+    implementation(projects.domain.demo)
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.markets)
     implementation(projects.domain.staking.models)
