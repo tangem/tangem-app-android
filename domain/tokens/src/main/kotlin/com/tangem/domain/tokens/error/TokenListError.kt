@@ -4,7 +4,7 @@ import com.tangem.domain.tokens.model.TokenList
 
 sealed class TokenListError {
 
-    object EmptyTokens : TokenListError()
+    data object EmptyTokens : TokenListError()
 
     data class UnableToSortTokenList(val unsortedTokenList: TokenList.Ungrouped) : TokenListError()
 

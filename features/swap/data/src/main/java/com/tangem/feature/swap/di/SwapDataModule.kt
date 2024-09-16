@@ -3,7 +3,6 @@ package com.tangem.feature.swap.di
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
-import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -28,7 +27,6 @@ internal class SwapDataModule {
     @Provides
     @Singleton
     internal fun provideSwapRepository(
-        tangemTechApi: TangemTechApi,
         tangemExpressApi: TangemExpressApi,
         coroutineDispatcher: CoroutineDispatcherProvider,
         dataSignature: DataSignatureVerifier,
@@ -38,7 +36,6 @@ internal class SwapDataModule {
         @NetworkMoshi moshi: Moshi,
     ): SwapRepository {
         return DefaultSwapRepository(
-            tangemTechApi = tangemTechApi,
             tangemExpressApi = tangemExpressApi,
             coroutineDispatcher = coroutineDispatcher,
             walletManagersFacade = walletManagerFacade,

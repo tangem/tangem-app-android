@@ -1,5 +1,10 @@
 package com.tangem.core.ui.components.buttons.common
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -36,6 +41,7 @@ fun TangemButton(
     textStyle: TextStyle = TangemTheme.typography.button,
     shape: Shape = size.toShape(),
     iconPadding: Dp = size.toIconPadding(),
+    animateContentChange: Boolean = false,
 ) {
     val multipleClickPreventer = remember { MultipleClickPreventer.get() }
 
@@ -56,6 +62,7 @@ fun TangemButton(
             buttonIcon = icon,
             iconPadding = iconPadding,
             showProgress = showProgress,
+            animateContentChange = animateContentChange,
             progressIndicator = {
                 CircularProgressIndicator(
                     modifier = Modifier.buttonContentSize(maxContentSize),
@@ -108,24 +115,54 @@ private inline fun RowScope.ButtonContentContainer(
     buttonIcon: TangemButtonIconPosition,
     iconPadding: Dp,
     showProgress: Boolean,
+    animateContentChange: Boolean,
     progressIndicator: @Composable RowScope.() -> Unit,
-    text: @Composable RowScope.() -> Unit,
-    icon: @Composable RowScope.(Int) -> Unit,
+    crossinline text: @Composable RowScope.() -> Unit,
+    crossinline icon: @Composable RowScope.(Int) -> Unit,
     additionalText: @Composable () -> Unit,
 ) {
     if (showProgress) {
         progressIndicator()
     } else {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(horizontalArrangement = Arrangement.Center) {
-                if (buttonIcon is TangemButtonIconPosition.Start) {
-                    icon(buttonIcon.iconResId)
-                    Spacer(modifier = Modifier.requiredWidth(iconPadding))
+            if (animateContentChange) {
+                AnimatedContent(
+                    targetState = buttonIcon,
+                    transitionSpec = {
+                        fadeIn(tween(durationMillis = 220)) togetherWith
+                            fadeOut(tween(durationMillis = 220))
+                    },
+                    label = "button text with icon",
+                ) { iconState ->
+                    Row(horizontalArrangement = Arrangement.Center) {
+                        when (iconState) {
+                            is TangemButtonIconPosition.Start -> {
+                                icon(iconState.iconResId)
+                                Spacer(modifier = Modifier.requiredWidth(iconPadding))
+                                text()
+                            }
+                            is TangemButtonIconPosition.End -> {
+                                text()
+                                Spacer(modifier = Modifier.requiredWidth(iconPadding))
+                                icon(iconState.iconResId)
+                            }
+                            is TangemButtonIconPosition.None -> {
+                                text()
+                            }
+                        }
+                    }
                 }
-                text()
-                if (buttonIcon is TangemButtonIconPosition.End) {
-                    Spacer(modifier = Modifier.requiredWidth(iconPadding))
-                    icon(buttonIcon.iconResId)
+            } else {
+                Row(horizontalArrangement = Arrangement.Center) {
+                    if (buttonIcon is TangemButtonIconPosition.Start) {
+                        icon(buttonIcon.iconResId)
+                        Spacer(modifier = Modifier.requiredWidth(iconPadding))
+                    }
+                    text()
+                    if (buttonIcon is TangemButtonIconPosition.End) {
+                        Spacer(modifier = Modifier.requiredWidth(iconPadding))
+                        icon(buttonIcon.iconResId)
+                    }
                 }
             }
             additionalText()

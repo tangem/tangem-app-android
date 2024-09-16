@@ -33,6 +33,7 @@ data class SmallButtonConfig(
     val text: TextReference,
     val onClick: () -> Unit,
     val icon: TangemButtonIconPosition = TangemButtonIconPosition.None,
+    val enabled: Boolean = true,
 )
 
 /**
@@ -57,6 +58,7 @@ fun SecondarySmallButton(config: SmallButtonConfig, modifier: Modifier = Modifie
     SmallButton(config = config, isPrimary = false, modifier = modifier)
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(size = TangemTheme.dimens.radius16)
@@ -77,7 +79,7 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
                 color = backgroundColor,
                 shape = shape,
             )
-            .clickable(enabled = true, onClick = config.onClick)
+            .clickable(enabled = config.enabled, onClick = config.onClick)
             .padding(
                 paddingValues = when (config.icon) {
                     is TangemButtonIconPosition.None -> PaddingValues(
@@ -100,7 +102,11 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
             iconPosition = config.icon,
             text = {
                 val textColor by animateColorAsState(
-                    targetValue = if (isPrimary) TangemTheme.colors.text.primary2 else TangemTheme.colors.text.primary1,
+                    targetValue = when {
+                        !config.enabled -> TangemTheme.colors.text.disabled
+                        isPrimary -> TangemTheme.colors.text.primary2
+                        else -> TangemTheme.colors.text.primary1
+                    },
                     label = "Update text color",
                 )
 
@@ -116,7 +122,11 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
                 Icon(
                     modifier = Modifier.size(TangemTheme.dimens.size16),
                     painter = painterResource(id = iconResId),
-                    tint = TangemTheme.colors.icon.secondary,
+                    tint = if (config.enabled) {
+                        TangemTheme.colors.icon.secondary
+                    } else {
+                        TangemTheme.colors.icon.inactive
+                    },
                     contentDescription = null,
                 )
             },
@@ -172,6 +182,13 @@ private fun ButtonsSample() {
             config = config.copy(
                 text = TextReference.Str(value = "Add token"),
                 icon = TangemButtonIconPosition.Start(iconResId = R.drawable.ic_plus_24),
+            ),
+        )
+        SecondarySmallButton(
+            config = config.copy(
+                text = TextReference.Str(value = "Add token"),
+                icon = TangemButtonIconPosition.Start(iconResId = R.drawable.ic_plus_24),
+                enabled = false,
             ),
         )
     }

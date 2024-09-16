@@ -59,6 +59,14 @@ internal object SettingsDomainModule {
 
     @Provides
     @Singleton
+    fun provideShouldShowMarketsTooltipUseCase(
+        settingsRepository: SettingsRepository,
+    ): ShouldShowMarketsTooltipUseCase {
+        return ShouldShowMarketsTooltipUseCase(settingsRepository = settingsRepository)
+    }
+
+    @Provides
+    @Singleton
     fun providesCanUseBiometryUseCase(tangemSdkManager: TangemSdkManager): CanUseBiometryUseCase {
         return CanUseBiometryUseCase(
             legacySettingsRepository = DefaultLegacySettingsRepository(tangemSdkManager = tangemSdkManager),

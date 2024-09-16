@@ -9,7 +9,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
-import com.tangem.features.markets.component.BottomSheetState
+import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.tokenlist.api.MarketsTokenListComponent
 import com.tangem.features.markets.tokenlist.impl.model.MarketsListModel
 import com.tangem.features.markets.tokenlist.impl.ui.MarketsList
