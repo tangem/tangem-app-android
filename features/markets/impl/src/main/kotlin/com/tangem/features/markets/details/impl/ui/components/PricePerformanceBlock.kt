@@ -54,7 +54,10 @@ internal fun PricePerformanceBlock(state: PricePerformanceUM, modifier: Modifier
                     PriceChangeInterval.ALL_TIME,
                 ),
                 initialSelectedItem = PriceChangeInterval.H24,
-                onClick = { currentInterval = it },
+                onClick = {
+                    currentInterval = it
+                    state.onIntervalChanged(it)
+                },
             ) {
                 Box(
                     Modifier
@@ -227,6 +230,7 @@ private fun ContentPreview() {
                     high = "\$580,5M",
                     indicatorFraction = 0.2f,
                 ),
+                onIntervalChanged = {},
             ),
         )
     }
