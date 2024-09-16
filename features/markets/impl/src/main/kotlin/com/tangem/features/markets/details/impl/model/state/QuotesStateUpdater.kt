@@ -4,6 +4,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenQuotes
 import com.tangem.features.markets.details.impl.model.converters.PricePerformanceConverter
@@ -22,8 +23,12 @@ internal class QuotesStateUpdater(
     private val currentQuotes: MutableStateFlow<TokenQuotes>,
     private val lastUpdatedTimestamp: MutableStateFlow<Long>,
     private val currentTokenInfo: MutableStateFlow<TokenMarketInfo?>,
+    private val onPricePerformanceIntervalChanged: (PriceChangeInterval) -> Unit,
 ) {
-    private val pricePerformanceConverter = PricePerformanceConverter(currentAppCurrency)
+    private val pricePerformanceConverter = PricePerformanceConverter(
+        currentAppCurrency,
+        onIntervalChanged = onPricePerformanceIntervalChanged,
+    )
 
     suspend fun updateQuotes(newQuotes: TokenQuotes) {
         val triggerPriceChangeType = getFormattedPriceChange(
