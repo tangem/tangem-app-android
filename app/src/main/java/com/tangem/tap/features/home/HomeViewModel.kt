@@ -2,6 +2,8 @@ package com.tangem.tap.features.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -45,6 +47,8 @@ internal class HomeViewModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
+    private val tangemErrorHandler = TangemTangemErrorsHandler(store)
+
     fun onScanClick() {
         analyticsEventHandler.send(IntroductionProcess.ButtonScanCard())
         scanCard()
@@ -54,14 +58,16 @@ internal class HomeViewModel @Inject constructor(
         analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards())
         analyticsEventHandler.send(Shop.ScreenOpened())
 
-        urlOpener.openUrl(NEW_BUY_WALLET_URL)
+        Firebase.analytics.appInstanceId
+            .addOnSuccessListener { urlOpener.openUrl(url = "$NEW_BUY_WALLET_URL&app_instance_id=$it") }
+            .addOnFailureListener { urlOpener.openUrl(url = NEW_BUY_WALLET_URL) }
     }
 
     fun onSearchClick() {
         analyticsEventHandler.send(IntroductionProcess.ButtonTokensList())
 
         store.dispatch(TokensAction.SetArgs.ReadAccess)
-        store.dispatchNavigationAction { push(AppRoute.ManageTokens(readOnlyContent = true)) }
+        store.dispatchNavigationAction { push(AppRoute.ManageTokens()) }
     }
 
     private fun scanCard() {
@@ -79,7 +85,7 @@ internal class HomeViewModel @Inject constructor(
                     }
                 },
                 onFailure = {
-                    Timber.e(it, "Unable to scan card")
+                    tangemErrorHandler.onErrorReceived(error = it)
                     delay(HIDE_PROGRESS_DELAY)
                     store.dispatch(HomeAction.ScanInProgress(scanInProgress = false))
                 },
