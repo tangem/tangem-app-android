@@ -216,24 +216,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
 
         initialLoad()
-        initAnalytics()
     }
-
-    // === Analytics ===
-    private fun initAnalytics() {
-        state
-            .map { it.selectedInterval }
-            .drop(1)
-            .onEach {
-                analyticsEventHandler.send(
-                    analyticsEventBuilder.intervalChanged(
-                        intervalType = MarketDetailsAnalyticsEvent.IntervalType.Chart,
-                        interval = it,
-                    ),
-                )
-            }.launchIn(modelScope)
-    }
-    // ==================
 
     private fun initialLoad() {
         loadInfo()
@@ -272,6 +255,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 appCurrency = currentAppCurrency.value,
                 interval = interval,
                 tokenId = params.token.id,
+                tokenSymbol = params.token.symbol,
                 preview = false,
             )
 
@@ -341,6 +325,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             val tokenMarketInfo = getTokenMarketInfoUseCase(
                 appCurrency = currentAppCurrency.value,
                 tokenId = params.token.id,
+                tokenSymbol = params.token.symbol,
             )
 
             tokenMarketInfo.fold(
@@ -418,6 +403,15 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private fun onSelectedIntervalChange(interval: PriceChangeInterval) {
         if (state.value.selectedInterval == interval) return
+
+        // === Analytics ===
+        analyticsEventHandler.send(
+            analyticsEventBuilder.intervalChanged(
+                intervalType = MarketDetailsAnalyticsEvent.IntervalType.Chart,
+                interval = interval,
+            ),
+        )
+        // ==================
 
         val quotes = currentQuotes.value
         val priceChangePercent = quotes.getFormattedPercentByInterval(interval)

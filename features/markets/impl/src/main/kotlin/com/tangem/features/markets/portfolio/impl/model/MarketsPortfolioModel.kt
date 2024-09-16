@@ -61,6 +61,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val params = paramsContainer.require<MarketsPortfolioComponent.Params>()
     private val analyticsEventBuilder = PortfolioAnalyticsEvent.EventBuilder(
         token = params.token,
+        source = params.analyticsParams?.source,
     )
 
     /** Multi-wallet [UserWalletId] that user uses to add new tokens in AddToPortfolio bottom sheet */
@@ -104,8 +105,9 @@ internal class MarketsPortfolioModel @Inject constructor(
                 // === Analytics ===
                 analyticsEventHandler.send(
                     analyticsEventBuilder.addToPortfolioContinue(
-                        networksCount = addedNetworks.size,
-                        blockchainName = "", // TODO
+                        blockchainNames = addedNetworks.mapNotNull {
+                            BlockchainUtils.getNetworkInfo(it.networkId)?.name
+                        },
                     ),
                 )
             },

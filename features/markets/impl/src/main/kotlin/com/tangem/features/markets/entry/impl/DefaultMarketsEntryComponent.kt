@@ -80,7 +80,7 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
                     showPortfolio = true,
                     analyticsParams = MarketsTokenDetailsComponent.AnalyticsParams(
                         blockchain = null,
-                        source = "Market", // TODO check
+                        source = "Market",
                     ),
                 ),
             ),

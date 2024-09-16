@@ -13,7 +13,7 @@ internal class MarketDetailsAnalyticsEvent(
         val token: TokenMarketParams,
     ) {
         fun screenOpened(blockchain: String?, source: String) = MarketDetailsAnalyticsEvent(
-            event = "Chart Opened",
+            event = "Token Chart Screen Opened",
             params = buildMap {
                 put("Token", token.symbol)
                 blockchain?.let { put("blockchain", it) }

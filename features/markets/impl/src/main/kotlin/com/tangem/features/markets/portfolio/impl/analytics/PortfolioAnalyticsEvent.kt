@@ -11,6 +11,7 @@ internal class PortfolioAnalyticsEvent(
 
     data class EventBuilder(
         val token: TokenMarketParams,
+        val source: String?,
     ) {
 
         fun addToPortfolioClicked() = PortfolioAnalyticsEvent(
@@ -22,12 +23,12 @@ internal class PortfolioAnalyticsEvent(
 
         fun addToPortfolioWalletChanged() = PortfolioAnalyticsEvent(event = "Wallet Selected")
 
-        fun addToPortfolioContinue(networksCount: Int, blockchainName: String) = PortfolioAnalyticsEvent(
+        fun addToPortfolioContinue(blockchainNames: List<String>) = PortfolioAnalyticsEvent(
             event = "Token Network Selected",
             params = mapOf(
-                "Count" to networksCount.toString(),
+                "Count" to blockchainNames.size.toString(),
                 "Token" to token.symbol,
-                "blockchain" to blockchainName,
+                "blockchain" to blockchainNames.joinToString(separator = ", "),
             ),
         )
 
@@ -39,20 +40,11 @@ internal class PortfolioAnalyticsEvent(
                     TokenActionsBSContentUM.Action.Exchange -> "Button - Swap"
                     else -> "error"
                 },
-                params = mapOf(
-                    "Token" to token.symbol,
-                    // TODO "Source" to source,
-                    "blockchain" to blockchainName,
-                ),
+                params = buildMap {
+                    put("Token", token.symbol)
+                    source?.let { put("Source", source) }
+                    put("blockchain", blockchainName)
+                },
             )
-
-        // fun longTapActionClick(
-        //
-        // ) = PortfolioAnalyticsEvent(
-        //     event = "Action Buttons",
-        //     params = mapOf(
-        //         "Token" to token.symbol
-        //     )
-        // )
     }
 }
