@@ -3,7 +3,6 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
-import com.tangem.common.ui.notifications.NotificationsFactory.addExceedBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
@@ -11,6 +10,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachable
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
+import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -20,6 +20,7 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -139,18 +140,20 @@ internal class AddStakingNotificationsTransformer(
                 onReload = onReload,
             )
         }
-        addExceedBalanceNotification(
+        addStakeExceedBalanceNotification(
             feeAmount = feeValue,
             sendingAmount = sendingAmount,
+            actionType = prevState.actionType,
             isSubtractionAvailable = isSubtractAvailable,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
+            onClick = prevState.clickIntents::openTokenDetails,
         )
         addExceedsBalanceNotification(
             cryptoCurrencyWarning = currencyWarning,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(network.backendId),
             onClick = prevState.clickIntents::openTokenDetails,
-            onAnalyticsEvent = { /* todo staking AND-7208 */ },
+            onAnalyticsEvent = { /* no-op */ },
         )
         if (!BlockchainUtils.isCardano(network.id.value)) {
             addDustWarningNotification(
@@ -208,6 +211,39 @@ internal class AddStakingNotificationsTransformer(
             cryptoCurrency = cryptoCurrency,
             onReduceClick = prevState.clickIntents::onAmountReduceToClick,
         )
+    }
+
+    private fun MutableList<NotificationUM>.addStakeExceedBalanceNotification(
+        feeAmount: BigDecimal,
+        sendingAmount: BigDecimal,
+        actionType: StakingActionCommonType,
+        isSubtractionAvailable: Boolean,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        onClick: (CryptoCurrency) -> Unit,
+    ) {
+        val minimumRequirement = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum
+        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        if (!isSubtractionAvailable) return
+
+        val showNotification = sendingAmount + feeAmount > balance - minimumRequirement.orZero()
+        if (showNotification) {
+            val notification = if (actionType == StakingActionCommonType.ENTER) {
+                NotificationUM.Error.TotalExceedsBalance
+            } else {
+                with(cryptoCurrencyStatus.currency) {
+                    NotificationUM.Error.ExceedsBalance(
+                        networkIconId = networkIconResId,
+                        networkName = name,
+                        currencyName = name,
+                        feeName = name,
+                        feeSymbol = symbol,
+                        mergeFeeNetworkName = BlockchainUtils.isArbitrum(network.backendId),
+                        onClick = { onClick(this) },
+                    )
+                }
+            }
+            add(notification)
+        }
     }
 
     private fun MutableList<NotificationUM>.addInfoNotifications(prevState: StakingUiState) {
