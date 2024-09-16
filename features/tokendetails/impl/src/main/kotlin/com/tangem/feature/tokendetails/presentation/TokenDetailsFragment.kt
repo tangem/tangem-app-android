@@ -85,15 +85,9 @@ internal class TokenDetailsFragment : ComposeFragment() {
     }
 
     private fun CryptoCurrency.toParam(): TokenMarketBlockComponent.Params? {
-        val tokenId = id.rawCurrencyId ?: return null // token price is not available
+        id.rawCurrencyId ?: return null // token price is not available
 
-        return TokenMarketBlockComponent.Params(
-            cryptoCurrencyID = id,
-            tokenId = tokenId,
-            tokenName = name,
-            tokenSymbol = symbol,
-            tokenImageUrl = iconUrl,
-        )
+        return TokenMarketBlockComponent.Params(cryptoCurrency = this)
     }
 
     @Composable
