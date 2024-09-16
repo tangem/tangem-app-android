@@ -69,10 +69,8 @@ internal fun getChangePercentBetween(currentPrice: BigDecimal, previousPrice: Bi
 }
 
 internal fun getFormattedPriceChange(currentPrice: BigDecimal, updatedPrice: BigDecimal): PriceChangeType {
-    val updatedPriceDecimals = BigDecimalFormatter.getProperFiatPriceDecimals(updatedPrice)
-
-    val current = currentPrice.setScale(updatedPriceDecimals, RoundingMode.HALF_UP)
-    val updated = updatedPrice.setScale(updatedPriceDecimals, RoundingMode.HALF_UP)
+    val current = BigDecimalFormatter.getFiatPriceUncappedWithScale(value = currentPrice).first
+    val updated = BigDecimalFormatter.getFiatPriceUncappedWithScale(value = updatedPrice).first
 
     return when {
         updated > current -> PriceChangeType.UP
