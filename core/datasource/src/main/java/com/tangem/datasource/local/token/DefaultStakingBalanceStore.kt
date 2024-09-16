@@ -29,22 +29,31 @@ internal class DefaultStakingBalanceStore(
         }
     }
 
-    override fun get(userWalletId: UserWalletId, integrationId: String): Flow<YieldBalanceWrapperDTO> {
+    override fun get(userWalletId: UserWalletId, address: String, integrationId: String): Flow<YieldBalanceWrapperDTO> {
         return dataStore.get(userWalletId.stringValue)
             .mapNotNull { balances ->
-                balances.firstOrNull { it.integrationId == integrationId }
+                balances.firstOrNull { it.integrationId == integrationId && it.addresses.address == address }
             }
     }
 
-    override suspend fun getSyncOrNull(userWalletId: UserWalletId, integrationId: String): YieldBalanceWrapperDTO? {
+    override suspend fun getSyncOrNull(
+        userWalletId: UserWalletId,
+        address: String,
+        integrationId: String,
+    ): YieldBalanceWrapperDTO? {
         return dataStore.getSyncOrNull(userWalletId.stringValue)
-            ?.firstOrNull { it.integrationId == integrationId }
+            ?.firstOrNull { it.integrationId == integrationId && it.addresses.address == address }
     }
 
-    override suspend fun store(userWalletId: UserWalletId, integrationId: String, item: YieldBalanceWrapperDTO) {
+    override suspend fun store(
+        userWalletId: UserWalletId,
+        integrationId: String,
+        address: String,
+        item: YieldBalanceWrapperDTO,
+    ) {
         mutex.withLock {
             val balances = dataStore.getSyncOrNull(userWalletId.stringValue)
-                ?.addOrReplace(item) { it.integrationId == integrationId }
+                ?.addOrReplace(item) { it.integrationId == integrationId && it.addresses.address == address }
                 ?: setOf(item)
 
             dataStore.store(userWalletId.stringValue, balances)

@@ -37,7 +37,6 @@ import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
-import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
@@ -310,6 +309,7 @@ internal class DefaultStakingRepository(
                 stakingBalanceStore.store(
                     userWalletId,
                     requestBody.integrationId,
+                    address,
                     YieldBalanceWrapperDTO(
                         balances = result,
                         integrationId = requestBody.integrationId,
@@ -328,9 +328,10 @@ internal class DefaultStakingRepository(
             send(YieldBalance.Empty)
         } else {
             launch(dispatchers.io) {
+                val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network).orEmpty()
                 val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)]
                     ?: error("Could not get integrationId")
-                stakingBalanceStore.get(userWalletId, integrationId)
+                stakingBalanceStore.get(userWalletId, address, integrationId)
                     .collectLatest {
                         send(yieldBalanceConverter.convert(it))
                     }
@@ -354,9 +355,12 @@ internal class DefaultStakingRepository(
         } else {
             fetchSingleYieldBalance(userWalletId, cryptoCurrency)
 
+            val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network).orEmpty()
+
             val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)]
                 ?: error("Could not get integrationId")
-            val result = stakingBalanceStore.getSyncOrNull(userWalletId, integrationId)
+
+            val result = stakingBalanceStore.getSyncOrNull(userWalletId, address, integrationId)
                 ?: return@withContext YieldBalance.Error
 
             yieldBalanceConverter.convert(result)
@@ -379,17 +383,19 @@ internal class DefaultStakingRepository(
                 block = {
                     val availableCurrencies = cryptoCurrencies
                         .mapNotNull { currency ->
-                            val address = walletManagersFacade.getDefaultAddress(userWalletId, currency.network)
+                            val addresses = walletManagersFacade.getAddresses(userWalletId, currency.network)
                             val integrationId = integrationIdMap[getIntegrationKey(currency.id)]
 
-                            if (integrationId != null && address != null) {
-                                address to integrationId
+                            if (integrationId != null) {
+                                addresses to integrationId
                             } else {
                                 null
                             }
                         }
-                        .distinctBy { it.second }
-                        .map { getBalanceRequestData(it.first, it.second) }
+                        .flatMap { (addresses, integrationId) ->
+                            addresses.map { address -> address to integrationId }
+                        }
+                        .map { getBalanceRequestData(it.first.value, it.second) }
                         .ifEmpty { return@invokeOnExpire }
                     val result = stakeKitApi.getMultipleYieldBalances(availableCurrencies).getOrThrow()
 
