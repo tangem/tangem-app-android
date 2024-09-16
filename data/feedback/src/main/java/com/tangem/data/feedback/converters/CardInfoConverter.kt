@@ -1,6 +1,7 @@
 package com.tangem.data.feedback.converters
 
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.common.util.getBackupCardsCount
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -20,10 +21,7 @@ internal object CardInfoConverter : Converter<ScanResponse, CardInfo> {
             CardInfo(
                 userWalletId = createUserWalletId(scanResponse = value),
                 cardId = card.cardId,
-                cardsCount = when (val status = value.card.backupStatus) {
-                    is CardDTO.BackupStatus.Active -> status.cardCount.toString()
-                    else -> "0"
-                },
+                cardsCount = value.getBackupCardsCount()?.toString() ?: "0",
                 firmwareVersion = card.firmwareVersion.stringValue,
                 cardBlockchain = walletData?.blockchain,
                 signedHashesList = card.wallets.map {

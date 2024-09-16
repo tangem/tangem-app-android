@@ -11,4 +11,9 @@ data class TangemBottomSheetConfig(
     val isShow: Boolean,
     val onDismissRequest: () -> Unit,
     val content: TangemBottomSheetConfigContent,
-)
+) {
+
+    companion object {
+        val Empty = TangemBottomSheetConfig(false, {}, TangemBottomSheetConfigContent.Empty)
+    }
+}
