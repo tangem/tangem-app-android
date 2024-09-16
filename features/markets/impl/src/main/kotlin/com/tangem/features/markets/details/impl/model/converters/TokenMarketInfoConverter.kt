@@ -2,6 +2,7 @@ package com.tangem.features.markets.details.impl.model.converters
 
 import androidx.compose.runtime.Stable
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.LinksUM
@@ -14,20 +15,37 @@ internal class TokenMarketInfoConverter(
     appCurrency: Provider<AppCurrency>,
     onInfoClick: (InfoBottomSheetContent) -> Unit,
     onLinkClick: (LinksUM.Link) -> Unit,
+    onPricePerformanceIntervalChanged: (PriceChangeInterval) -> Unit,
+    onInsightsIntervalChanged: (PriceChangeInterval) -> Unit,
 ) : Converter<TokenMarketInfo, MarketsTokenDetailsUM.InformationBlocks> {
 
-    private val insightsConverter = InsightsConverter(appCurrency = appCurrency, onInfoClick = onInfoClick)
+    private val insightsConverter = InsightsConverter(
+        appCurrency = appCurrency,
+        onInfoClick = onInfoClick,
+        onIntervalChanged = onInsightsIntervalChanged,
+    )
+
+    @Suppress("UnusedPrivateMember")
+    // TODO second markets iteration
     private val securityScoreConverter = SecurityScoreConverter(onInfoClick = onInfoClick)
     private val metricsConverter = MetricsConverter(appCurrency = appCurrency, onInfoClick = onInfoClick)
-    private val pricePerformanceConverter = PricePerformanceConverter(appCurrency = appCurrency)
+    private val pricePerformanceConverter = PricePerformanceConverter(
+        appCurrency = appCurrency,
+        onIntervalChanged = onPricePerformanceIntervalChanged,
+    )
     private val linksConverter = LinksConverter(onLinkClick = onLinkClick)
 
     override fun convert(value: TokenMarketInfo): MarketsTokenDetailsUM.InformationBlocks {
         return MarketsTokenDetailsUM.InformationBlocks(
             insights = value.insights?.let { insightsConverter.convert(it) },
-            securityScore = securityScoreConverter.convert(Unit),
+            securityScore = null,
             metrics = value.metrics?.let { metricsConverter.convert(it) },
-            pricePerformance = value.pricePerformance?.let { pricePerformanceConverter.convert(it) },
+            pricePerformance = value.pricePerformance?.let {
+                pricePerformanceConverter.convert(
+                    value = it,
+                    currentPrice = value.quotes.currentPrice,
+                )
+            },
             links = value.links?.let { linksConverter.convert(it) },
         )
     }
