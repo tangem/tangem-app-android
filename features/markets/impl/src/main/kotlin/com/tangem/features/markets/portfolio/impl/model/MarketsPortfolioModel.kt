@@ -1,16 +1,12 @@
 package com.tangem.features.markets.portfolio.impl.model
 
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.res.stringResource
 import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -29,6 +25,7 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
+import com.tangem.features.markets.portfolio.impl.ui.WarningDialog
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -225,8 +222,7 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private fun showUnsupportedWarning(unsupportedState: CurrencyUnsupportedState) {
         val message = ContentMessage { onDismiss ->
-            BasicDialog(
-                title = resourceReference(R.string.common_warning).resolveReference(),
+            WarningDialog(
                 message = when (unsupportedState) {
                     is CurrencyUnsupportedState.Token.NetworkTokensUnsupported -> resourceReference(
                         id = R.string.alert_manage_tokens_unsupported_message,
@@ -240,12 +236,8 @@ internal class MarketsPortfolioModel @Inject constructor(
                         id = R.string.alert_manage_tokens_unsupported_curve_message,
                         formatArgs = wrappedList(unsupportedState.networkName),
                     )
-                }.resolveReference(),
-                confirmButton = DialogButtonUM(
-                    title = stringResource(R.string.common_ok),
-                    onClick = onDismiss,
-                ),
-                onDismissDialog = onDismiss,
+                },
+                onDismiss = onDismiss,
             )
         }
 
