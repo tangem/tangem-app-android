@@ -364,7 +364,7 @@
   <string name="markets_selector_interval_3m_title">3m</string>
   <string name="markets_selector_interval_6m_title">6m</string>
   <string name="markets_selector_interval_7d_title">7d</string>
-  <string name="markets_selector_interval_all_title">すべて</string>
+  <string name="markets_selector_interval_all_title">全部</string>
   <string name="markets_sort_by_experienced_buyers_title">経験豊富な買い手</string>
   <string name="markets_sort_by_rating_title">格付け</string>
   <string name="markets_sort_by_title">並べ替え</string>
