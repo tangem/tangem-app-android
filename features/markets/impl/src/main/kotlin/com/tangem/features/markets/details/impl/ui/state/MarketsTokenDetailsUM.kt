@@ -2,7 +2,6 @@ package com.tangem.features.markets.details.impl.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
-import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.StateEvent
@@ -13,9 +12,9 @@ import java.math.BigDecimal
 internal data class MarketsTokenDetailsUM(
     val tokenName: String,
     val priceText: String,
-    val iconUrl: String,
+    val iconUrl: String?,
     val dateTimeText: TextReference,
-    val priceChangePercentText: String,
+    val priceChangePercentText: String?,
     val priceChangeType: PriceChangeType,
     val selectedInterval: PriceChangeInterval,
     val markerSet: Boolean,
@@ -29,7 +28,6 @@ internal data class MarketsTokenDetailsUM(
     data class ChartState(
         val status: Status,
         val dataProducer: MarketChartDataProducer,
-        val chartLook: MarketChartLook,
         val onLoadRetryClick: () -> Unit,
         val onMarkerPointSelected: (time: BigDecimal?, price: BigDecimal?) -> Unit,
     ) {
