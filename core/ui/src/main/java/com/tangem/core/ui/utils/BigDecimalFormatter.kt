@@ -27,13 +27,7 @@ object BigDecimalFormatter {
 
     private const val FIAT_MARKET_DEFAULT_DIGITS = 2
     private const val FIAT_MARKET_EXTENDED_DIGITS = 6
-
-    private val bigDecimal01 = BigDecimal("0.1")
-    private val bigDecimal001 = BigDecimal("0.01")
-    private val bigDecimal0001 = BigDecimal("0.001")
-    private val bigDecimal00001 = BigDecimal("0.0001")
-    private val bigDecimal000001 = BigDecimal("0.00001")
-    private val bigDecimal0000001 = BigDecimal("0.000001")
+    private const val FRACTIONAL_PART_LENGTH_AFTER_LEADING_ZEROES = 4
 
     fun formatCryptoAmount(
         cryptoAmount: BigDecimal?,
@@ -237,17 +231,32 @@ object BigDecimalFormatter {
         if (fiatAmount == null) return EMPTY_BALANCE_SIGN
         val formatterCurrency = getCurrency(fiatCurrencyCode)
 
-        val decimals = getProperFiatPriceDecimals(fiatAmount)
+        val (formattedAmount, finalScale) = getFiatPriceUncappedWithScale(value = fiatAmount)
 
         val formatter = NumberFormat.getCurrencyInstance(locale).apply {
             currency = formatterCurrency
-            maximumFractionDigits = decimals
+            maximumFractionDigits = finalScale
             minimumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
             roundingMode = RoundingMode.HALF_UP
         }
 
-        return formatter.format(fiatAmount)
+        return formatter.format(formattedAmount)
             .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+    }
+
+    fun getFiatPriceUncappedWithScale(value: BigDecimal): Pair<BigDecimal, Int> {
+        return if (value < BigDecimal.ONE) {
+            val leadingZeroes = value.scale() - value.precision()
+            val scale = leadingZeroes + FRACTIONAL_PART_LENGTH_AFTER_LEADING_ZEROES
+
+            val amount = value
+                .setScale(scale, RoundingMode.HALF_UP)
+                .stripTrailingZeros()
+
+            amount to amount.scale()
+        } else {
+            value to FIAT_MARKET_DEFAULT_DIGITS
+        }
     }
 
     fun formatFiatEditableAmount(
@@ -418,18 +427,4 @@ object BigDecimalFormatter {
     private fun BigDecimal.checkFiatThreshold() = this > BigDecimal.ZERO && this < FIAT_FORMAT_THRESHOLD
 
     private fun BigDecimal.checkCryptoThreshold() = this > BigDecimal.ZERO && this < CRYPTO_FEE_FORMAT_THRESHOLD
-
-    @Suppress("MagicNumber")
-    fun getProperFiatPriceDecimals(price: BigDecimal): Int {
-        return when {
-            price >= BigDecimal.ONE -> 2
-            price >= bigDecimal01 -> 3
-            price >= bigDecimal001 -> 4
-            price >= bigDecimal0001 -> 6
-            price >= bigDecimal00001 -> 8
-            price >= bigDecimal000001 -> 10
-            price >= bigDecimal0000001 -> 12
-            else -> price.stripTrailingZeros().scale()
-        }
-    }
 }
