@@ -12,7 +12,7 @@ data class OnboardingWalletState(
     val step: OnboardingWalletStep = OnboardingWalletStep.None,
     val wallet2State: OnboardingWallet2State? = null,
     val backupState: BackupState = BackupState(),
-    val cardArtworkUri: Uri? = null,
+    val walletImages: WalletImages = WalletImages(),
     val showConfetti: Boolean = false,
     val isRingOnboarding: Boolean = false,
 ) : StateType {
@@ -48,6 +48,12 @@ data class OnboardingWalletState(
 
     private fun getWallet2Progress(): Int = wallet2State?.maxProgress ?: 0
 }
+
+data class WalletImages(
+    val primaryCardImage: Uri? = null,
+    val secondCardImage: Uri? = null,
+    val thirdCardImage: Uri? = null,
+)
 
 data class OnboardingWallet2State(
     val maxProgress: Int,
