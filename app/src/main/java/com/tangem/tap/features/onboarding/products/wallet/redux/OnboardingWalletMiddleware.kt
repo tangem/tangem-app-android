@@ -3,6 +3,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 import android.net.Uri
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.ifNotNull
@@ -11,6 +12,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
@@ -106,7 +108,7 @@ private fun handleWalletAction(action: Action) {
                         val cardPublicKey = backupService.primaryPublicKey
                         if (primaryCardId != null && cardPublicKey != null) {
                             // uses when no scanResponse and backup state restored
-                            loadArtworkForUnfinishedBackup(
+                            loadArtworkForCard(
                                 cardId = primaryCardId,
                                 cardPublicKey = cardPublicKey,
                                 defaultArtwork = action.cardArtworkUriForUnfinishedBackup,
@@ -119,7 +121,7 @@ private fun handleWalletAction(action: Action) {
                         .takeIf { it != Artwork.DEFAULT_IMG_URL }
                         ?.let { Uri.parse(it) }
                 }
-                store.dispatchOnMain(OnboardingWalletAction.SetArtworkUrl(cardArtwork))
+                store.dispatchOnMain(OnboardingWalletAction.SetPrimaryCardArtworkUrl(cardArtwork))
             }
         }
         is OnboardingWalletAction.CreateWallet -> {
@@ -232,11 +234,7 @@ private suspend fun readCard(onSuccess: (ScanResponse) -> Unit) {
     )
 }
 
-private suspend fun loadArtworkForUnfinishedBackup(
-    cardId: String,
-    cardPublicKey: ByteArray,
-    defaultArtwork: Uri?,
-): Uri {
+private suspend fun loadArtworkForCard(cardId: String, cardPublicKey: ByteArray, defaultArtwork: Uri?): Uri {
     return when (val cardInfo = OnlineCardVerifier().getCardInfo(cardId, cardPublicKey)) {
         is Result.Success -> {
             val artworkId = cardInfo.data.artwork?.id
@@ -443,6 +441,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 store.dispatchOnMain(BackupAction.AddBackupCard.ChangeButtonLoading(false))
                 when (result) {
                     is CompletionResult.Success -> {
+                        updateArtworks(backupService.addedBackupCardsCount, result.data)
                         store.dispatchOnMain(BackupAction.AddBackupCard.Success)
                     }
                     is CompletionResult.Failure -> {
@@ -627,6 +626,22 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         }
 
         else -> Unit
+    }
+}
+
+fun updateArtworks(addedBackupCardsCount: Int, card: Card) {
+    mainScope.launch {
+        withIOContext {
+            val imageUri = loadArtworkForCard(card.cardId, card.cardPublicKey, Uri.EMPTY)
+            when (addedBackupCardsCount) {
+                1 -> {
+                    store.dispatchOnMain(OnboardingWalletAction.SetSecondCardArtworkUrl(imageUri))
+                }
+                2 -> {
+                    store.dispatchOnMain(OnboardingWalletAction.SetThirdCardArtworkUrl(imageUri))
+                }
+            }
+        }
     }
 }
 
