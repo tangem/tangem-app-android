@@ -41,7 +41,8 @@ sealed class ListUM {
 
     data class Content(
         val items: ImmutableList<MarketsListItemUM>,
-        val showUnder100kTokens: Boolean,
+        val showUnder100kTokensNotification: Boolean,
+        val showUnder100kTokensNotificationWasHidden: Boolean,
         val loadMore: () -> Unit,
         val visibleIdsChanged: (List<String>) -> Unit,
         val onShowTokensUnder100kClicked: () -> Unit,
