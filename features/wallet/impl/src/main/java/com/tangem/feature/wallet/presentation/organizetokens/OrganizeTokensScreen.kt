@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.AppBarDefaults
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,19 +31,19 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
+import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.reordarable.ReorderableItem
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.common.component.DraggableNetworkGroupItem
-import com.tangem.feature.wallet.presentation.common.component.TokenItem
+import com.tangem.feature.wallet.presentation.common.component.DraggableNetworkTitleItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
-import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
@@ -174,14 +173,16 @@ private fun LazyItemScope.DraggableItem(
     ) { isItemDragging ->
         isDragging = isItemDragging
 
+        val modifierWithBackground = itemModifier.background(color = TangemTheme.colors.background.primary)
+
         when (item) {
-            is DraggableItem.GroupHeader -> DraggableNetworkGroupItem(
-                modifier = itemModifier,
+            is DraggableItem.GroupHeader -> DraggableNetworkTitleItem(
+                modifier = modifierWithBackground,
                 networkName = item.networkName,
                 reorderableTokenListState = reorderableState,
             )
             is DraggableItem.Token -> TokenItem(
-                modifier = itemModifier,
+                modifier = modifierWithBackground,
                 state = item.tokenItemState,
                 reorderableTokenListState = reorderableState,
                 isBalanceHidden = isBalanceHidden,
@@ -212,7 +213,7 @@ private fun TopBar(
         }
     }
     val elevation by animateDpAsState(
-        targetValue = if (isElevationEnabled) AppBarDefaults.TopAppBarElevation else TangemTheme.dimens.elevation0,
+        targetValue = if (isElevationEnabled) TangemTheme.dimens.elevation4 else TangemTheme.dimens.elevation0,
         label = "top_bar_shadow_elevation",
     )
 

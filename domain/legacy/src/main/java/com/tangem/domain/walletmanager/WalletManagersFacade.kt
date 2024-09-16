@@ -17,6 +17,7 @@ import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
+import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -53,6 +54,8 @@ interface WalletManagersFacade {
     suspend fun remove(userWalletId: UserWalletId, networks: Set<Network>)
 
     suspend fun removeTokens(userWalletId: UserWalletId, tokens: Set<CryptoCurrency.Token>)
+
+    suspend fun removeTokensByTokenInfo(userWalletId: UserWalletId, tokenInfos: Set<TokenInfo>)
 
     /**
      * Returns [UpdateWalletManagerResult] with last pending transactions
@@ -117,20 +120,18 @@ interface WalletManagersFacade {
     suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager>
 
     /**
-     * Returns ordered list of addresses for selected wallet for given currency
+     * Returns default network address for selected wallet in given network
      *
      * @param userWalletId selected wallet id
      * @param network network of currency
      */
-    @Deprecated("Use NetworkAddress from CryptoCurrencyStatus")
-    suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address>
+    suspend fun getDefaultAddress(userWalletId: UserWalletId, network: Network): String?
 
     /** Returns list of all addresses for all currencies in selected wallet
      *
      * @param userWalletId selected wallet id
      * @param network required to create wallet manager
      */
-    @Deprecated("Use NetworkAddress from CryptoCurrencyStatus")
     suspend fun getAddresses(userWalletId: UserWalletId, network: Network): Set<Address>
 
     /**
