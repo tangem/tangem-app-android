@@ -2,5 +2,5 @@ package com.tangem.blockchainsdk.featuretoggles
 
 internal interface BlockchainSDKFeatureToggles {
 
-    val isCardanoTokensSupportEnabled: Boolean
+    val isEthereumEIP1559Enabled: Boolean
 }
