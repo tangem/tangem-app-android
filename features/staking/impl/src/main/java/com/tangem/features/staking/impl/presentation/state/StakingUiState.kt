@@ -92,6 +92,7 @@ internal sealed class StakingStates {
             val feeState: FeeState,
             val validatorState: ValidatorState,
             val pendingAction: PendingAction?,
+            val pendingActions: ImmutableList<PendingAction>?,
             val notifications: ImmutableList<NotificationUM>,
             val footerText: TextReference,
             val transactionDoneState: TransactionDoneState,
