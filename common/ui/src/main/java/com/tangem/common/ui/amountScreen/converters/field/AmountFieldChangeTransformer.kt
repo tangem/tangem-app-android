@@ -9,6 +9,7 @@ import com.tangem.common.ui.amountScreen.utils.checkExceedBalance
 import com.tangem.common.ui.amountScreen.utils.getCryptoValue
 import com.tangem.common.ui.amountScreen.utils.getFiatValue
 import com.tangem.common.ui.amountScreen.utils.getKeyboardAction
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -62,7 +63,8 @@ class AmountFieldChangeTransformer(
                 value = cryptoValue,
                 fiatValue = fiatValue,
                 isError = isExceedBalance,
-                error = resourceReference(R.string.send_validation_amount_exceeds_balance),
+                error = resourceReference(R.string.send_validation_amount_exceeds_balance).takeIf { isExceedBalance }
+                    ?: TextReference.EMPTY,
                 cryptoAmount = amountTextField.cryptoAmount.copy(value = decimalCryptoValue),
                 fiatAmount = amountTextField.fiatAmount.copy(value = decimalFiatValue),
                 keyboardOptions = KeyboardOptions(

@@ -5,9 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -95,7 +95,7 @@ private fun Content(config: NotificationConfig) {
                     .size(TangemTheme.dimens.size20)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(radius = TangemTheme.dimens.radius10),
+                        indication = ripple(radius = TangemTheme.dimens.radius10),
                         onClick = it,
                     ),
             )
