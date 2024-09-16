@@ -14,9 +14,17 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.pagination)
-    implementation(projects.domain.tokens.models)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
+
+    implementation(projects.domain.legacy)
     implementation(projects.domain.markets)
+    implementation(projects.domain.models)
+    implementation(projects.domain.tokens.models)
+
     implementation(projects.data.common)
+
+    implementation(projects.libs.blockchainSdk)
 
     // region DI
     implementation(deps.hilt.android)
@@ -28,7 +36,6 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.timber)
-
-    implementation(projects.libs.blockchainSdk)
+    implementation(deps.tangem.blockchain)
     // endregion
 }
