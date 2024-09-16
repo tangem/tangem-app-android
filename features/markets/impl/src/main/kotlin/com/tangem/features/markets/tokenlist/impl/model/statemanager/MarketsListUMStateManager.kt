@@ -14,7 +14,6 @@ import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 
@@ -111,54 +110,55 @@ internal class MarketsListUMStateManager(
 
     private fun MarketsListUM.updateItems(newItems: ImmutableList<MarketsListItemUM>): MarketsListUM {
         val currentState = this
-        val isNextPageInSearch = isInSearchState && (this.list as? ListUM.Content)?.showUnder100kTokens == true
-        var searchUiItemsCached: ImmutableList<MarketsListItemUM> = persistentListOf()
 
-        val items = when {
-            isInSearchState && isNextPageInSearch.not() -> {
-                searchUiItemsCached = newItems
-                val filtered = newItems.filter { item -> item.isUnder100kMarketCap.not() }.toImmutableList()
+        if (isInSearchMode.not() || currentState.showUnder100kButtonAlreadyPressed()) {
+            val itemsWithFilteredPriceChange = newItems.filterPriceChangeByVisibility()
 
-                if (filtered.size == newItems.size) {
-                    return currentState.copy(list = generalContentState(newItems))
-                } else {
-                    filtered
-                }
-            }
-            else -> {
-                searchUiItemsCached = persistentListOf()
-                newItems
-            }
+            return currentState.copy(
+                list = generalContentState(itemsWithFilteredPriceChange)
+                    .copy(
+                        showUnder100kTokensNotificationWasHidden = currentState.showUnder100kButtonAlreadyPressed(),
+                    ),
+            )
         }
 
-        val itemsWithFilteredPriceChange = items.filterPriceChangeByVisibility()
+        // Search state cases
 
-        return currentState.copy(
-            list = ListUM.Content(
-                items = itemsWithFilteredPriceChange,
-                loadMore = onLoadMoreUiItems,
-                visibleIdsChanged = visibleItemsChanged,
-                showUnder100kTokens = isInSearchState.not() || isNextPageInSearch,
-                onShowTokensUnder100kClicked = {
-                    if (searchUiItemsCached.isNotEmpty()) {
+        val filtered = newItems.filter { item -> item.isUnder100kMarketCap.not() }
+            .toImmutableList()
+            .filterPriceChangeByVisibility()
+
+        if (filtered.size != newItems.size) {
+            val searchUiItemsCached = newItems.filterPriceChangeByVisibility()
+
+            return currentState.copy(
+                list = generalContentState(filtered).copy(
+                    showUnder100kTokensNotificationWasHidden = false,
+                    showUnder100kTokensNotification = true,
+                    onShowTokensUnder100kClicked = {
                         state.update { s ->
-                            if (s.list is ListUM.Content) {
+                            (s.list as? ListUM.Content)?.let {
                                 s.copy(
                                     list = s.list.copy(
                                         items = searchUiItemsCached,
-                                        showUnder100kTokens = true,
+                                        showUnder100kTokensNotification = false,
+                                        showUnder100kTokensNotificationWasHidden = true,
                                     ),
                                 )
-                            } else {
-                                s
-                            }
+                            } ?: s
                         }
-                    }
-                },
-                triggerScrollReset = consumedEvent(),
-                onItemClick = onTokenClick,
-            ),
-        )
+                    },
+                ),
+            )
+        } else {
+            return currentState.copy(
+                list = generalContentState(newItems.filterPriceChangeByVisibility()),
+            )
+        }
+    }
+
+    private fun MarketsListUM.showUnder100kButtonAlreadyPressed(): Boolean {
+        return this.list is ListUM.Content && this.isInSearchMode && this.list.showUnder100kTokensNotificationWasHidden
     }
 
     // Show price change animation for visible items only
@@ -182,10 +182,11 @@ internal class MarketsListUMStateManager(
             items = newItems,
             loadMore = onLoadMoreUiItems,
             visibleIdsChanged = visibleItemsChanged,
-            showUnder100kTokens = true,
+            showUnder100kTokensNotification = false,
             onShowTokensUnder100kClicked = {},
             triggerScrollReset = consumedEvent(),
             onItemClick = onTokenClick,
+            showUnder100kTokensNotificationWasHidden = false,
         )
     }
 
