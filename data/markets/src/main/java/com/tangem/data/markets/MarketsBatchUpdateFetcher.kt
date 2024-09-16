@@ -4,6 +4,7 @@ import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.converters.TokenMarketChartsConverter
 import com.tangem.data.markets.converters.TokenQuotesShortConverter
 import com.tangem.data.markets.converters.toRequestParam
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketChartListResponse
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 internal class MarketsBatchUpdateFetcher(
     private val marketsApi: TangemTechMarketsApi,
     private val tangemTechApi: TangemTechApi,
+    private val onApiError: () -> Unit,
 ) : BatchUpdateFetcher<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
 
     override suspend fun BatchUpdateFetcher.UpdateContext<Int, List<TokenMarket>>.fetchUpdateAsync(
@@ -35,11 +37,13 @@ internal class MarketsBatchUpdateFetcher(
                 val updateTasks = idsToUpdate.map { batchIds ->
                     async {
                         retryOnError {
-                            marketsApi.getCoinsListCharts(
-                                coinIds = batchIds.second.joinToString(separator = ","),
-                                interval = updateRequest.interval.toRequestParam(),
-                                currency = updateRequest.currency,
-                            ).getOrThrow()
+                            catchApiError(onApiError) {
+                                marketsApi.getCoinsListCharts(
+                                    coinIds = batchIds.second.joinToString(separator = ","),
+                                    interval = updateRequest.interval.toRequestParam(),
+                                    currency = updateRequest.currency,
+                                ).getOrThrow()
+                            }
                         }
                     }
                 }
@@ -62,11 +66,13 @@ internal class MarketsBatchUpdateFetcher(
             }
             is TokenMarketUpdateRequest.UpdateQuotes -> {
                 val quotesRes = retryOnError {
-                    tangemTechApi.getQuotes(
-                        currencyId = updateRequest.currencyId,
-                        coinIds = idsToUpdate.map { it.second }.flatten().joinToString(separator = ","),
-                        fields = quoteFields.joinToString(separator = ","),
-                    ).getOrThrow()
+                    catchApiError(onApiError) {
+                        tangemTechApi.getQuotes(
+                            currencyId = updateRequest.currencyId,
+                            coinIds = idsToUpdate.map { it.second }.flatten().joinToString(separator = ","),
+                            fields = quoteFields.joinToString(separator = ","),
+                        ).getOrThrow()
+                    }
                 }
 
                 update {
@@ -104,6 +110,15 @@ internal class MarketsBatchUpdateFetcher(
                 )
             },
         )
+    }
+
+    private inline fun <T> catchApiError(onError: () -> Unit, block: () -> T): T {
+        return try {
+            block()
+        } catch (e: ApiResponseError) {
+            onError()
+            throw e
+        }
     }
 
     companion object {

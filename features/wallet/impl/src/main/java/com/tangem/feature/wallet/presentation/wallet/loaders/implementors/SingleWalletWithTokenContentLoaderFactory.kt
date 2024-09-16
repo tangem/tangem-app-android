@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.tokens.GetCardTokensListUseCase
+import com.tangem.domain.tokens.GetNodlTokenListUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -19,7 +19,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
-    private val getCardTokensListUseCase: GetCardTokensListUseCase,
+    private val getNodlTokenListUseCase: GetNodlTokenListUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
@@ -33,7 +33,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
             tokenListAnalyticsSender = tokenListAnalyticsSender,
             walletWithFundsChecker = walletWithFundsChecker,
             getMultiWalletWarningsFactory = getMultiWalletWarningsFactory,
-            getCardTokensListUseCase = getCardTokensListUseCase,
+            getNodlTokenListUseCase = getNodlTokenListUseCase,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
             runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
