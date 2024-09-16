@@ -42,13 +42,7 @@ internal class StakingAnalyticSender(
             StakingAnalyticsEvents.ConfirmationScreenOpened(
                 token = value.cryptoCurrencySymbol,
                 validator = validatorName,
-                action = when (value.actionType) {
-                    StakingActionCommonType.ENTER -> StakingActionType.STAKE
-                    StakingActionCommonType.EXIT -> StakingActionType.UNSTAKE
-                    StakingActionCommonType.PENDING_REWARDS,
-                    StakingActionCommonType.PENDING_OTHER,
-                    -> confirmationState.pendingAction?.type ?: StakingActionType.UNKNOWN
-                },
+                action = getStakingActionType(value),
             ),
         )
     }
@@ -83,12 +77,24 @@ internal class StakingAnalyticSender(
         )
     }
 
-    fun sendTransactionStakingAnalytics(cryptoCurrency: CryptoCurrency, validator: String) {
+    fun sendTransactionStakingAnalytics(value: StakingUiState) {
+        val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
+        val validatorState = confirmationState?.validatorState as? ValidatorState.Content
+        val validatorName = validatorState?.chosenValidator?.name ?: return
+
+        analyticsEventHandler.send(
+            StakingAnalyticsEvents.ButtonAction(
+                action = getStakingActionType(value).name,
+                token = value.cryptoCurrencyName,
+                validator = validatorName,
+            ),
+        )
+
         analyticsEventHandler.send(
             Basic.TransactionSent(
                 sentFrom = AnalyticsParam.TxSentFrom.Staking(
-                    blockchain = cryptoCurrency.network.name,
-                    token = cryptoCurrency.symbol,
+                    blockchain = value.cryptoCurrencyName,
+                    token = value.cryptoCurrencySymbol,
                     feeType = AnalyticsParam.FeeType.Normal,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
@@ -96,9 +102,21 @@ internal class StakingAnalyticSender(
         )
         analyticsEventHandler.send(
             StakingAnalyticsEvents.StakeInProgressScreenOpened(
-                validator = validator,
-                token = cryptoCurrency.symbol,
+                validator = validatorName,
+                token = value.cryptoCurrencySymbol,
             ),
         )
+    }
+
+    private fun getStakingActionType(value: StakingUiState): StakingActionType {
+        val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
+
+        return when (value.actionType) {
+            StakingActionCommonType.ENTER -> StakingActionType.STAKE
+            StakingActionCommonType.EXIT -> StakingActionType.UNSTAKE
+            StakingActionCommonType.PENDING_REWARDS,
+            StakingActionCommonType.PENDING_OTHER,
+            -> confirmationState?.pendingAction?.type ?: StakingActionType.UNKNOWN
+        }
     }
 }
