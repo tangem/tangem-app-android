@@ -46,14 +46,36 @@ abstract class Model : InstanceKeeper.Instance {
         progressFlow: MutableSharedFlow<Boolean>,
         dispatcher: CoroutineDispatcher = dispatchers.mainImmediate,
         crossinline block: suspend () -> Unit,
+    ): Job = resource(
+        acquire = { progressFlow.emit(true) },
+        release = { progressFlow.emit(false) },
+        dispatcher = dispatcher,
+        block = block,
+    )
+
+    /**
+     * Launches [block] in the model's scope and acquires a resource before executing the block and releases it after.
+     *
+     * @param acquire The block of code to acquire the resource.
+     * @param release The block of code to release the resource.
+     * @param dispatcher The [CoroutineDispatcher] to launch the coroutine. Default is [Dispatchers.Main.immediate].
+     * @param block The block of code to execute.
+     *
+     * @return The [Job] of the launched coroutine.
+     * */
+    protected inline fun resource(
+        crossinline acquire: suspend () -> Unit,
+        crossinline release: suspend () -> Unit,
+        dispatcher: CoroutineDispatcher = dispatchers.mainImmediate,
+        crossinline block: suspend () -> Unit,
     ): Job = modelScope.launch(dispatcher) {
-        progressFlow.emit(value = true)
+        acquire()
 
         try {
             block()
         } finally {
             withContext(NonCancellable) {
-                progressFlow.emit(value = false)
+                release()
             }
         }
     }

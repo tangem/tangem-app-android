@@ -1,6 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state
 
-enum class InnerConfirmationStakingState {
+internal enum class InnerConfirmationStakingState {
     ASSENT,
     IN_PROGRESS,
     COMPLETED,

@@ -5,7 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
-import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.VALIDATION
 import com.tangem.core.analytics.models.AnalyticsParam.OnOffState
@@ -105,7 +105,7 @@ internal sealed class SendAnalyticEvents(
     ) : SendAnalyticEvents(
         event = "Transaction Sent Screen Opened",
         params = mapOf(
-            TOKEN to token,
+            TOKEN_PARAM to token,
             FEE_TYPE to feeType.value,
         ),
     )
@@ -119,13 +119,13 @@ internal sealed class SendAnalyticEvents(
     /** If not enough fee notification is present */
     data class NoticeNotEnoughFee(val token: String, val blockchain: String) : SendAnalyticEvents(
         event = "Notice - Not Enough Fee",
-        params = mapOf(TOKEN to token, BLOCKCHAIN to blockchain),
+        params = mapOf(TOKEN_PARAM to token, BLOCKCHAIN to blockchain),
     )
 
     /** If transaction delays notification is present */
     data class NoticeTransactionDelays(val token: String) : SendAnalyticEvents(
         event = "Notice - Transaction Delays Are Possible",
-        params = mapOf(TOKEN to token),
+        params = mapOf(TOKEN_PARAM to token),
     )
 
     data object NoticeFeeCoverage : SendAnalyticEvents(
@@ -135,7 +135,7 @@ internal sealed class SendAnalyticEvents(
     /** If error occurs during send transactions */
     data class TransactionError(val token: String) : SendAnalyticEvents(
         event = "Error - Transaction Rejected",
-        params = mapOf(TOKEN to token),
+        params = mapOf(TOKEN_PARAM to token),
     )
     // endregion
 }
