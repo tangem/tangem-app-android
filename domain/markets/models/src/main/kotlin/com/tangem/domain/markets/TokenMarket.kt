@@ -8,6 +8,7 @@ data class TokenMarket(
     val symbol: String,
     val marketRating: Int?,
     val marketCap: BigDecimal?,
+    val isUnderMarketCapLimit: Boolean,
     val tokenQuotesShort: TokenQuotesShort,
     val tokenCharts: Charts,
     private val imageHost: String,

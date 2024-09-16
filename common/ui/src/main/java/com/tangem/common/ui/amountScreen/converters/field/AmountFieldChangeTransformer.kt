@@ -1,6 +1,7 @@
 package com.tangem.common.ui.amountScreen.converters.field
 
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -8,6 +9,7 @@ import com.tangem.common.ui.amountScreen.utils.checkExceedBalance
 import com.tangem.common.ui.amountScreen.utils.getCryptoValue
 import com.tangem.common.ui.amountScreen.utils.getFiatValue
 import com.tangem.common.ui.amountScreen.utils.getKeyboardAction
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -61,7 +63,8 @@ class AmountFieldChangeTransformer(
                 value = cryptoValue,
                 fiatValue = fiatValue,
                 isError = isExceedBalance,
-                error = resourceReference(R.string.send_validation_amount_exceeds_balance),
+                error = resourceReference(R.string.send_validation_amount_exceeds_balance).takeIf { isExceedBalance }
+                    ?: TextReference.EMPTY,
                 cryptoAmount = amountTextField.cryptoAmount.copy(value = decimalCryptoValue),
                 fiatAmount = amountTextField.fiatAmount.copy(value = decimalFiatValue),
                 keyboardOptions = KeyboardOptions(
@@ -81,6 +84,10 @@ class AmountFieldChangeTransformer(
                 cryptoAmount = amountTextField.cryptoAmount.copy(value = BigDecimal.ZERO),
                 fiatAmount = amountTextField.fiatAmount.copy(value = BigDecimal.ZERO),
                 isError = false,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.None,
+                    keyboardType = KeyboardType.Number,
+                ),
             ),
         )
     }

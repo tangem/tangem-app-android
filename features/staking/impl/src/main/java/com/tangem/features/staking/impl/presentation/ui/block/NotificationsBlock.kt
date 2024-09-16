@@ -5,6 +5,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.CardWithIcon
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resolveReference
@@ -13,7 +14,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-internal fun NotificationsBlock(notifications: ImmutableList<StakingNotification>) {
+internal fun NotificationsBlock(notifications: ImmutableList<NotificationUM>) {
     notifications.forEach { notification ->
         key(notification) {
             if (notification is StakingNotification.Warning.TransactionInProgress) {
@@ -32,8 +33,19 @@ internal fun NotificationsBlock(notifications: ImmutableList<StakingNotification
                 Notification(
                     config = notification.config,
                     iconTint = when (notification) {
-                        is StakingNotification.Error -> TangemTheme.colors.icon.warning
-                        is StakingNotification.Warning -> TangemTheme.colors.icon.accent
+                        is StakingNotification.Info,
+                        is NotificationUM.Info,
+                        -> TangemTheme.colors.icon.accent
+
+                        is StakingNotification.Warning,
+                        is NotificationUM.Error.TokenExceedsBalance,
+                        is NotificationUM.Error.ExceedsBalance,
+                        is NotificationUM.Warning,
+                        -> null
+
+                        is StakingNotification.Error,
+                        is NotificationUM.Error,
+                        -> TangemTheme.colors.icon.warning
                     },
                 )
             }

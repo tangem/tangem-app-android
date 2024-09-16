@@ -44,7 +44,9 @@ internal fun StakingValidatorListContent(
 
     LazyColumn(
         contentPadding = PaddingValues(bottom = bottomBarHeight),
-        modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+        modifier = modifier
+            .background(TangemTheme.colors.background.secondary)
+            .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         if (state is ValidatorState.Content) {
             val validators = state.availableValidators
@@ -58,7 +60,7 @@ internal fun StakingValidatorListContent(
                 InputRowImageSelector(
                     subtitle = stringReference(item.name),
                     caption = combinedReference(
-                        resourceReference(R.string.staking_details_apr),
+                        resourceReference(R.string.staking_details_annual_percentage_rate),
                         annotatedReference {
                             appendSpace()
                             appendColored(

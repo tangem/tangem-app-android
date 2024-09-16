@@ -88,7 +88,7 @@ class WalletConnectSdkHelper {
             } else {
                 feeAmount
             }
-            Fee.Ethereum(patchedAmount, gasLimit.toBigInteger(), gasPrice.toBigInteger())
+            Fee.Ethereum.Legacy(patchedAmount, gasLimit.toBigInteger(), gasPrice.toBigInteger())
         } else {
             Fee.Common(feeAmount)
         }

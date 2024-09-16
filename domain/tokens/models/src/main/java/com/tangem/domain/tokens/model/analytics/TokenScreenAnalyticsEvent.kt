@@ -77,4 +77,9 @@ sealed class TokenScreenAnalyticsEvent(
         event = "Button - Token Trustline",
         params = mapOf("Token" to tokenSymbol, "Blockchain" to blockchain),
     )
+
+    data class StakingClicked(val token: String) : TokenScreenAnalyticsEvent(
+        event = "Staking Clicked",
+        params = mapOf("Token" to token),
+    )
 }

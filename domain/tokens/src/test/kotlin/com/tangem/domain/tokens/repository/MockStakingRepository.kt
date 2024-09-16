@@ -8,7 +8,6 @@ import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
 import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
@@ -16,7 +15,6 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.*
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +23,9 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 
 class MockStakingRepository : StakingRepository {
+
+    override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = ""
+
     override fun isStakingSupported(currencyId: String): Boolean = true
 
     override suspend fun fetchEnabledYields(refresh: Boolean) {
@@ -33,9 +34,9 @@ class MockStakingRepository : StakingRepository {
 
     override suspend fun getEntryInfo(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingEntryInfo =
         StakingEntryInfo(
-            interestRate = 1.toBigDecimal(),
-            periodInDays = 2,
+            apr = 1.toBigDecimal(),
             tokenSymbol = "SOL",
+            rewardSchedule = Yield.Metadata.RewardSchedule.DAY,
         )
 
     override suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield = Yield(
@@ -111,14 +112,14 @@ class MockStakingRepository : StakingRepository {
         isAvailable = false,
     )
 
-    override suspend fun getStakingAvailabilityForActions(
-        cryptoCurrencyId: CryptoCurrency.ID,
-        symbol: String,
+    override suspend fun getStakingAvailability(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
     ): StakingAvailability = StakingAvailability.Unavailable
 
     override suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
-        address: CryptoCurrencyAddress,
+        cryptoCurrency: CryptoCurrency,
         refresh: Boolean,
     ) {
         /* no-op */
@@ -126,19 +127,19 @@ class MockStakingRepository : StakingRepository {
 
     override fun getSingleYieldBalanceFlow(
         userWalletId: UserWalletId,
-        address: CryptoCurrencyAddress,
+        cryptoCurrency: CryptoCurrency,
     ): Flow<YieldBalance> = channelFlow {
         send(YieldBalance.Error)
     }
 
     override suspend fun getSingleYieldBalanceSync(
         userWalletId: UserWalletId,
-        address: CryptoCurrencyAddress,
+        cryptoCurrency: CryptoCurrency,
     ): YieldBalance = YieldBalance.Error
 
     override suspend fun fetchMultiYieldBalance(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
         refresh: Boolean,
     ) {
         /* no-op */
@@ -146,7 +147,7 @@ class MockStakingRepository : StakingRepository {
 
     override fun getMultiYieldBalanceFlow(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> = channelFlow {
         send(
             YieldBalanceList.Data(
@@ -157,7 +158,7 @@ class MockStakingRepository : StakingRepository {
 
     override fun getMultiYieldBalanceLce(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): LceFlow<Throwable, YieldBalanceList> = lceFlow {
         send(
             YieldBalanceList.Data(
@@ -168,7 +169,7 @@ class MockStakingRepository : StakingRepository {
 
     override suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,
-        addresses: List<CryptoCurrencyAddress>,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): YieldBalanceList = YieldBalanceList.Data(
         balances = listOf(YieldBalance.Error),
     )
@@ -237,19 +238,7 @@ class MockStakingRepository : StakingRepository {
         status = TransactionStatus.Unconfirmed,
     )
 
-    override suspend fun submitHash(transactionId: String, transactionHash: String) {
-        /* no-op */
-    }
-
-    override suspend fun storeUnsubmittedHash(unsubmittedTransactionMetadata: UnsubmittedTransactionMetadata) {
-        /* no-op */
-    }
-
-    override suspend fun sendUnsubmittedHashes() {
-        /* no-op */
-    }
-
-    override fun isStakeMoreAvailable(networkId: Network.ID): Boolean = true
-
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval = StakingApproval.Empty
+
+    override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean = false
 }

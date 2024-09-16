@@ -24,6 +24,7 @@ import com.tangem.core.ui.components.appbar.ExpandableSearchView
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -32,7 +33,6 @@ import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenToSelectState
 import com.tangem.feature.swap.presentation.R
-import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -251,13 +251,10 @@ private fun TokenItem(
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
             ) {
                 Text(
-                    text = if (token.addedTokenBalanceData.isBalanceHidden &&
-                        !token.addedTokenBalanceData.amountEquivalent.isNullOrEmpty()
-                    ) {
-                        StringsSigns.STARS
-                    } else {
-                        token.addedTokenBalanceData.amountEquivalent.orEmpty()
-                    },
+                    text = token.addedTokenBalanceData.amountEquivalent.orEmpty().orMaskWithStars(
+                        maskWithStars = token.addedTokenBalanceData.isBalanceHidden &&
+                            !token.addedTokenBalanceData.amountEquivalent.isNullOrEmpty(),
+                    ),
                     style = TangemTheme.typography.subtitle1,
                     color = if (token.available) {
                         TangemTheme.colors.text.primary1
@@ -267,13 +264,10 @@ private fun TokenItem(
                 )
                 SpacerW2()
                 Text(
-                    text = if (token.addedTokenBalanceData.isBalanceHidden &&
-                        !token.addedTokenBalanceData.amount.isNullOrEmpty()
-                    ) {
-                        StringsSigns.STARS
-                    } else {
-                        token.addedTokenBalanceData.amount.orEmpty()
-                    },
+                    text = token.addedTokenBalanceData.amount.orEmpty().orMaskWithStars(
+                        maskWithStars = token.addedTokenBalanceData.isBalanceHidden &&
+                            !token.addedTokenBalanceData.amount.isNullOrEmpty(),
+                    ),
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                 )

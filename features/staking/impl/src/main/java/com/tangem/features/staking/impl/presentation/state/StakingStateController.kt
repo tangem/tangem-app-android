@@ -2,9 +2,12 @@ package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.state.transformers.SetButtonsStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.SetTitleTransformer
@@ -17,7 +20,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class StakingStateController @Inject constructor() {
+internal class StakingStateController @Inject constructor(
+    urlOpener: UrlOpener,
+) {
 
     val value: StakingUiState get() = uiState.value
 
@@ -25,7 +30,7 @@ internal class StakingStateController @Inject constructor() {
 
     val uiState: StateFlow<StakingUiState> get() = mutableUiState.asStateFlow()
 
-    private val buttonsTransformer = SetButtonsStateTransformer()
+    private val buttonsTransformer = SetButtonsStateTransformer(urlOpener)
     private val titleTransformer = SetTitleTransformer
 
     fun update(function: (StakingUiState) -> StakingUiState) {
@@ -46,11 +51,24 @@ internal class StakingStateController @Inject constructor() {
         mutableUiState.update(function = titleTransformer::transform)
     }
 
+    fun updateEvent(event: StakingEvent?) {
+        mutableUiState.update {
+            it.copy(event = event?.let { triggeredEvent(event, ::dismissAlert) } ?: consumedEvent())
+        }
+    }
+
+    private fun dismissAlert() {
+        mutableUiState.update { it.copy(event = consumedEvent()) }
+    }
+
     private fun getInitialState(): StakingUiState {
         return StakingUiState(
             title = TextReference.EMPTY,
+            subtitle = null,
             clickIntents = StakingClickIntentsStub,
+            walletName = "",
             cryptoCurrencyName = "",
+            cryptoCurrencySymbol = "",
             currentStep = StakingStep.InitialInfo,
             initialInfoState = StakingStates.InitialInfoState.Empty(),
             amountState = AmountState.Empty(),

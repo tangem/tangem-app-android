@@ -23,7 +23,7 @@ internal object MarketsDateTimeFormatters {
 
     private val dateFormatter = DateTimeFormatters.dateDDMMYYYY
 
-    internal fun getChartXFormatterByInterval(interval: PriceChangeInterval): (BigDecimal) -> String {
+    fun getChartXFormatterByInterval(interval: PriceChangeInterval): (BigDecimal) -> String {
         return when (interval) {
             PriceChangeInterval.H24 -> { value: BigDecimal ->
                 value.toLong().formatAsDateTime(DateTimeFormatters.timeFormatter)
@@ -44,7 +44,7 @@ internal object MarketsDateTimeFormatters {
         }
     }
 
-    internal fun formatDateByInterval(interval: PriceChangeInterval, startTimestamp: Long): TextReference {
+    fun formatDateByInterval(interval: PriceChangeInterval, startTimestamp: Long): TextReference {
         return when (interval) {
             PriceChangeInterval.H24 -> resourceReference(R.string.common_today)
             PriceChangeInterval.WEEK,
@@ -78,10 +78,7 @@ internal object MarketsDateTimeFormatters {
         }
     }
 
-    internal fun formatDateByIntervalWithMarker(
-        interval: PriceChangeInterval,
-        markerTimestamp: BigDecimal,
-    ): TextReference {
+    fun formatDateByIntervalWithMarker(interval: PriceChangeInterval, markerTimestamp: BigDecimal): TextReference {
         return when (interval) {
             PriceChangeInterval.H24,
             PriceChangeInterval.WEEK,
@@ -126,5 +123,15 @@ internal object MarketsDateTimeFormatters {
             PriceChangeInterval.YEAR -> DateTime(currentTimestamp, DateTimeZone.UTC).minusYears(1).millis
             PriceChangeInterval.ALL_TIME -> 0
         }
+    }
+
+    fun getDefaultDateTimeString(interval: PriceChangeInterval, currentTimestamp: Long): TextReference {
+        return formatDateByInterval(
+            interval = interval,
+            startTimestamp = MarketsDateTimeFormatters.getStartTimestampByInterval(
+                interval = interval,
+                currentTimestamp = currentTimestamp,
+            ),
+        )
     }
 }
