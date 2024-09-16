@@ -117,6 +117,7 @@
   <string name="common_import">Importez</string>
   <string name="common_in_progress">En cours</string>
   <string name="common_later">Plus tard</string>
+  <string name="common_left">Il reste %1$s</string>
   <string name="common_locked">Verrouillé</string>
   <string name="common_main_network">Réseau principal</string>
   <string name="common_network_fee_title">Commissions du réseau</string>
@@ -295,6 +296,7 @@
   <string name="give_permission_unlimited">Illimité</string>
   <string name="home_button_order">Commandez</string>
   <string name="home_button_scan">Scannez</string>
+  <string name="information_generated_with_ai">Ces informations ont été générées avec l\'IA</string>
   <string name="initial_message_change_access_code_body">Touchez, pour modifier le code d\'accès</string>
   <string name="initial_message_change_passcode_body">Touchez, pour modifier le mot de passe</string>
   <string name="initial_message_create_wallet_body">Pour créer le portefeuille, appuyez sur la carte comme indiqué ci-dessus et ne la retirez pas jusqu\'à la fin de l\'opération</string>
@@ -348,6 +350,7 @@
   <string name="markets_common_my_portfolio">Mon portfolio</string>
   <string name="markets_common_title">Marché</string>
   <string name="markets_generate_addresses_notification">Pour générer des adresses pour les réseaux sélectionnés, vous devez scanner votre carte Tangem</string>
+  <string name="markets_hint">Pour ajouter des jetons, faites-le apparaître ou appuyez sur la barre de recherche</string>
   <string name="markets_insights_info_description_message">Les données de cette section proviennent des réseaux suivants : %s</string>
   <string name="markets_loading_error_title">Impossible de charger les données…</string>
   <string name="markets_loading_no_data_title">Aucune donnée</string>
@@ -358,11 +361,11 @@
   <string name="markets_search_token_no_result_title">Aucun résultat</string>
   <string name="markets_select_network">Sélectionnez un réseau</string>
   <string name="markets_select_wallet">Sélectionnez un portefeuille</string>
-  <string name="markets_selector_interval_1m_title">1 mois</string>
+  <string name="markets_selector_interval_1m_title">1 mo</string>
   <string name="markets_selector_interval_1y_title">1 an</string>
-  <string name="markets_selector_interval_24h_title">24 heures</string>
-  <string name="markets_selector_interval_3m_title">3 mois</string>
-  <string name="markets_selector_interval_6m_title">6 mois</string>
+  <string name="markets_selector_interval_24h_title">24h</string>
+  <string name="markets_selector_interval_3m_title">3mos</string>
+  <string name="markets_selector_interval_6m_title">6mos</string>
   <string name="markets_selector_interval_7d_title">7j</string>
   <string name="markets_selector_interval_all_title">Tout</string>
   <string name="markets_sort_by_experienced_buyers_title">Acheteurs expérimentés</string>
@@ -395,8 +398,8 @@
   <string name="markets_token_details_liquidity_description">Le changement dans la quantité de liquidité disponible pour le jeton pendant la période spécifiée</string>
   <string name="markets_token_details_liquidity_index">Indice de liquidité</string>
   <string name="markets_token_details_low">Faible</string>
-  <string name="markets_token_details_market_capitalization">Capitalisation boursière</string>
-  <string name="markets_token_details_market_capitalization_description">La valeur totale d\'une crypto-monnaie calculée en multipliant son prix actuel par le nbre de pièces en circulation</string>
+  <string name="markets_token_details_market_capitalization">Cap. boursière</string>
+  <string name="markets_token_details_market_capitalization_description">La valeur d\'une crypto-monnaie est calculée en multipliant son prix par le nombre de pièces en circulation</string>
   <string name="markets_token_details_market_rating">Évaluation du marché</string>
   <string name="markets_token_details_market_rating_description">Position dans le classement des crypto-monnaies entre toutes les pièces en fonction de la capitalisation boursière</string>
   <string name="markets_token_details_max_supply">Approvisionnement maximal</string>
@@ -412,6 +415,7 @@
   <string name="markets_token_details_trading_volume_24h_description">Le montant total d\'une crypto-monnaie qui a été échangé au cours des dernières 24 heures, indiquant le niveau d\'activité et de liquidité du marché</string>
   <string name="markets_tooltip_message">Tirez vers le haut ou appuyez sur la barre de recherche pour ajouter des jetons directement depuis le marché</string>
   <string name="markets_tooltip_title">Ajouter des jetons</string>
+  <string name="nfc_error_unavailable">NFC n\'est pas disponible sur votre appareil</string>
   <string name="onboarding_access_code_feature_1_description">Vous devez définir un seul code d\'accès pour protéger toutes vos cartes</string>
   <string name="onboarding_access_code_feature_1_title">Protéger</string>
   <string name="onboarding_access_code_feature_2_description">Vous pourrez définir un code d\'accès individuel sur chaque carte plus tard</string>
@@ -637,6 +641,7 @@
   <string name="settings_forget_wallet_footer">Cela supprimera le portefeuille de l\'application. Le portefeuille lui-même peut être ajouté à nouveau.</string>
   <string name="settings_wallet_name_title">Nom</string>
   <string name="staking_amount_requirement_error">Le montant à staker doit être au moins %s</string>
+  <string name="staking_amount_tron_integer_error">Le montant du staking sera arrondi à %1$s TRX en raison des règles du réseau.</string>
   <string name="staking_claim_unstaked">Réclamation déstakée</string>
   <string name="staking_details_annual_percentage_rate">Pourcentage de rendement annuel</string>
   <string name="staking_details_annual_percentage_rate_info">Le pourcentage de rendement annuel que vous pouvez gagner en participant au staking.</string>
@@ -660,6 +665,7 @@
   <string name="staking_details_unbonding_period_info">La période que vous devez attendre après avoir demandé le retrait des fonds du staking avant que les jetons ne soient disponibles.</string>
   <string name="staking_details_warmup_period">Période d\'échauffement</string>
   <string name="staking_details_warmup_period_info">Le temps imparti pour activer la participation au staking.</string>
+  <string name="staking_legal">En utilisant la fonctionnalité de staking, vous acceptez les  %1$s et %2$s du fournisseur</string>
   <string name="staking_locked">Bloqué</string>
   <string name="staking_migrate">Migrer</string>
   <string name="staking_native">Native staking</string>
@@ -671,6 +677,7 @@
   <string name="staking_notification_earn_rewards_title">Gagnez des récompenses de staking</string>
   <string name="staking_notification_unstake_text">Vos fonds seront disponibles pour utilisation après la période de désengagement %s.</string>
   <string name="staking_notification_withdraw_text">Vous pouvez désormais retirer vos fonds, ils seront disponibles à l\'utilisation immédiatement</string>
+  <string name="staking_notifications_revote_tron_text">Le staking dans le réseau Tron avec un nouveau validateur transférera automatiquement tous les fonds précédemment stakés vers ce validateur</string>
   <string name="staking_ready_to_withdraw">Prêt à retirer</string>
   <string name="staking_rebond">Réassocier</string>
   <string name="staking_restake">Restakez</string>
@@ -690,8 +697,11 @@
   <string name="staking_rewards">Récompenses</string>
   <string name="staking_stake_locked">Stake verrouillé</string>
   <string name="staking_stake_more">Staker plus</string>
+  <string name="staking_tap_to_unlock">Appuyez pour déverrouiller</string>
+  <string name="staking_tap_to_withdraw">Appuyez pour retirer</string>
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">déstaker %s</string>
+  <string name="staking_transaction_in_progress_text">La transaction est en cours de traitement ! La validation est actuellement en cours dans la blockchain. Cela peut prendre quelques minutes.</string>
   <string name="staking_unbonding">Dissociation</string>
   <string name="staking_unlocked_locked">Débloquer</string>
   <string name="staking_unstaked">Non-staké</string>
@@ -701,6 +711,7 @@
   <string name="staking_vote">Voter</string>
   <string name="staking_vote_locked">Vote bloqué</string>
   <string name="staking_withdraw">Retirer</string>
+  <string name="staking_your_stakes">Vos stakes</string>
   <string name="story_awe_description">Stockez vos actifs crypto en toute sécurité tout en conservant les clés privées contenues dans votre carte</string>
   <string name="story_awe_title">Portefeuille matériel révolutionnaire</string>
   <string name="story_backup_description">Jusqu\'à 3 cartes physiques pour un portefeuille</string>
