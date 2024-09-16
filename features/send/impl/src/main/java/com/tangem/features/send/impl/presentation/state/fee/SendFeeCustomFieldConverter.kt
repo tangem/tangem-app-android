@@ -42,7 +42,6 @@ internal class SendFeeCustomFieldConverter(
     private val kaspaCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         KaspaCustomFeeConverter(
             clickIntents = clickIntents,
-            stateRouterProvider = stateRouterProvider,
             appCurrencyProvider = appCurrencyProvider,
             feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
         )
@@ -74,7 +73,6 @@ internal class SendFeeCustomFieldConverter(
                 customValues = feeSelectorState.customValues,
                 index = index,
                 value = value,
-                utxoCount = fee.utxoCount,
             )
             else -> feeSelectorState.customValues
         },
