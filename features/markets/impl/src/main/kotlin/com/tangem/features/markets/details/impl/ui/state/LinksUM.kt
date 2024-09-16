@@ -1,7 +1,6 @@
 package com.tangem.features.markets.details.impl.ui.state
 
 import androidx.annotation.DrawableRes
-import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class LinksUM(
@@ -13,7 +12,7 @@ internal data class LinksUM(
 ) {
     data class Link(
         @DrawableRes val iconRes: Int,
-        val title: TextReference,
+        val title: String,
         val url: String,
     )
 }
