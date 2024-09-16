@@ -21,8 +21,20 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
             step = OnboardingWalletStep.CreateWallet,
         )
         is OnboardingWalletAction.ResumeBackup -> state.copy(step = OnboardingWalletStep.Backup)
-        is OnboardingWalletAction.SetArtworkUrl -> {
-            state.copy(cardArtworkUri = action.artworkUri)
+        is OnboardingWalletAction.SetPrimaryCardArtworkUrl -> {
+            state.copy(
+                walletImages = state.walletImages.copy(primaryCardImage = action.artworkUri),
+            )
+        }
+        is OnboardingWalletAction.SetSecondCardArtworkUrl -> {
+            state.copy(
+                walletImages = state.walletImages.copy(secondCardImage = action.artworkUri),
+            )
+        }
+        is OnboardingWalletAction.SetThirdCardArtworkUrl -> {
+            state.copy(
+                walletImages = state.walletImages.copy(thirdCardImage = action.artworkUri),
+            )
         }
         is OnboardingWalletAction.Done -> state.copy(step = OnboardingWalletStep.Done)
         else -> state

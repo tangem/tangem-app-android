@@ -17,6 +17,8 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerW8
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
@@ -31,11 +33,12 @@ import com.tangem.features.tokendetails.impl.R
 /**
  * Token staking block
  *
- * @param state    component state
- * @param modifier modifier
+ * @param state            component state
+ * @param isBalanceHidden  whether to hide balance
+ * @param modifier         modifier
  */
 @Composable
-internal fun TokenStakingBlock(state: StakingBlockUM, modifier: Modifier = Modifier) {
+internal fun TokenStakingBlock(state: StakingBlockUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = state,
         contentAlignment = Alignment.CenterStart,
@@ -49,6 +52,7 @@ internal fun TokenStakingBlock(state: StakingBlockUM, modifier: Modifier = Modif
             )
             is StakingBlockUM.Staked -> StakingBalanceBlock(
                 state = it,
+                isBalanceHidden = isBalanceHidden,
                 modifier = modifier,
             )
             is StakingBlockUM.StakeAvailable -> StakingAvailableContent(
@@ -86,10 +90,7 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
             SpacerW8()
             Column {
                 Text(
-                    text = stringResource(
-                        R.string.token_details_staking_block_title,
-                        state.interestRate,
-                    ),
+                    text = state.titleText.resolveReference(),
                     color = TangemTheme.colors.text.primary1,
                     style = TangemTheme.typography.subtitle2,
                 )
@@ -97,11 +98,7 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
                 Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
 
                 Text(
-                    text = stringResource(
-                        R.string.token_details_staking_block_subtitle,
-                        state.tokenSymbol,
-                        state.periodInDays,
-                    ),
+                    text = state.subtitleText.resolveReference(),
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.body2,
                 )
@@ -161,8 +158,9 @@ private fun StakingLoading(iconState: IconState, modifier: Modifier = Modifier) 
         }
         SecondaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = "Loading", // TODO staking
-            onClick = { /* [REDACTED_TODO_COMMENT] */ },
+            showProgress = true,
+            text = TextReference.EMPTY.resolveReference(),
+            onClick = { /* no-op */ },
         )
     }
 }
@@ -176,7 +174,10 @@ private fun Preview_TokenStakingBlock(
     state: StakingBlockUM,
 ) {
     TangemThemePreview {
-        TokenStakingBlock(state = state)
+        TokenStakingBlock(
+            state = state,
+            isBalanceHidden = false,
+        )
     }
 }
 

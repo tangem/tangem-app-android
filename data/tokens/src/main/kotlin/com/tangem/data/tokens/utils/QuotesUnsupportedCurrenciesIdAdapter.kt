@@ -1,6 +1,7 @@
 package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.compatibility.l2BlockchainsCoinIds
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 
@@ -51,16 +52,6 @@ internal class QuotesUnsupportedCurrenciesIdAdapter {
          * Map that contains unsupported currencies and their replacement for request
          */
         private val ethCoinId = Blockchain.Ethereum.toCoinId()
-        private val UNSUPPORTED_IDS_WITH_REPLACEMENTS = mapOf(
-            Blockchain.Optimism.toCoinId() to ethCoinId,
-            Blockchain.Arbitrum.toCoinId() to ethCoinId,
-            Blockchain.ZkSyncEra.toCoinId() to ethCoinId,
-            Blockchain.Manta.toCoinId() to ethCoinId,
-            Blockchain.PolygonZkEVM.toCoinId() to ethCoinId,
-            Blockchain.Aurora.toCoinId() to ethCoinId,
-            Blockchain.Base.toCoinId() to ethCoinId,
-            Blockchain.Blast.toCoinId() to ethCoinId,
-            Blockchain.Cyber.toCoinId() to ethCoinId,
-        )
+        private val UNSUPPORTED_IDS_WITH_REPLACEMENTS = l2BlockchainsCoinIds.associateWith { ethCoinId }
     }
 }
