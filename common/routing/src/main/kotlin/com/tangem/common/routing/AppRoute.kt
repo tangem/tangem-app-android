@@ -272,5 +272,13 @@ sealed class AppRoute(val path: String) : Route {
         val token: TokenMarketParams,
         val appCurrency: AppCurrency,
         val showPortfolio: Boolean,
-    ) : AppRoute(path = "/markets_token_details/${token.id}/$showPortfolio")
+        val analyticsParams: AnalyticsParams? = null,
+    ) : AppRoute(path = "/markets_token_details/${token.id}/$showPortfolio") {
+
+        @Serializable
+        data class AnalyticsParams(
+            val blockchain: String?,
+            val source: String,
+        )
+    }
 }
