@@ -177,6 +177,7 @@
   <string name="custom_token_contract_address_input_title">Адрес контракта</string>
   <string name="custom_token_creation_error_invalid_contract_address">Адрес контракта некорректен</string>
   <string name="custom_token_creation_error_network_not_selected">Пожалуйста, выберите сеть</string>
+  <string name="custom_token_creation_error_token_already_exist_title">Токен уже существует</string>
   <string name="custom_token_creation_error_wrong_decimals">Десятичное число должно быть действительным целым числом, до %d</string>
   <string name="custom_token_custom_derivation">Своя деривация</string>
   <string name="custom_token_custom_derivation_placeholder">Например m/00\'/0000\'/0\'/0/0</string>
@@ -642,6 +643,8 @@
   <string name="send_summary_title">Отправка %s</string>
   <string name="send_summary_transaction_description">Вы отправляете **%1$s**, включая комиссию сети %2$s</string>
   <string name="send_summary_transaction_description_no_fiat_fee">Вы отправляете **%1$s** и %2$s</string>
+  <string name="send_summary_transaction_description_prefix">Вы отправляете **%1$s**</string>
+  <string name="send_summary_transaction_description_suffix_including">включая комиссию сети в размере %1$s</string>
   <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
   <string name="send_tron_account_activation_error">%1$s — это монета в сети Tron. Чтобы рассчитать комиссию и совершить транзакцию, вам необходимо внести немного Tron (TRX) на свой адрес.</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
@@ -682,6 +685,7 @@
   <string name="staking_notification_earn_rewards_text_period_month">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждый месяц.</string>
   <string name="staking_notification_earn_rewards_text_period_week">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждую неделю.</string>
   <string name="staking_notification_earn_rewards_title">Получите награду за стейкинг</string>
+  <string name="staking_notification_unlock_text">Разблокируйте свои средства, чтобы вывести их из стейкинга. Разблокировка займёт %s.</string>
   <string name="staking_notification_unstake_text">Ваши средства будут доступны после %s периода отзыва.</string>
   <string name="staking_notification_withdraw_text">Вы можете вывести свои средства из стейкинга, они будут доступны для использования незамедлительно.</string>
   <string name="staking_restake">Сменить валидатора</string>
