@@ -272,7 +272,11 @@ private fun isButtonEnabled(currentState: SendUiCurrentScreen, uiState: SendUiSt
     } ?: false
 }
 
-private fun getTokenFeeSendingText(feeState: SendStates.FeeState, fee: Fee.Tron, sendingValue: String): TextReference {
+private fun getTokenFeeSendingText(
+    feeState: SendStates.FeeState,
+    fee: Fee.Tron,
+    sendingValue: String
+): TextReference {
     val suffix = when {
         fee.feeEnergy == 0L -> {
             resourceReference(
@@ -298,5 +302,7 @@ private fun getTokenFeeSendingText(feeState: SendStates.FeeState, fee: Fee.Tron,
         wrappedList(sendingValue),
     )
 
-    return combinedReference(prefix, stringReference(", "), suffix)
+    return combinedReference(prefix, COMMA_SEPARATOR, suffix)
 }
+
+private val COMMA_SEPARATOR = stringReference(", ")
