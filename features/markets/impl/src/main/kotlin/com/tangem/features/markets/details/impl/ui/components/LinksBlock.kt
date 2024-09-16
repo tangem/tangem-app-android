@@ -10,12 +10,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
-import com.tangem.core.ui.components.SmallButtonShimmer
+import com.tangem.core.ui.components.ChipShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
-import com.tangem.core.ui.components.buttons.SecondarySmallButton
-import com.tangem.core.ui.components.buttons.SmallButtonConfig
-import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.buttons.chip.Chip
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -60,6 +58,7 @@ internal fun LinksBlock(state: LinksUM, modifier: Modifier = Modifier) {
                     title = stringResource(id = R.string.markets_token_details_blockchain_site),
                     links = state.blockchainSite,
                     onLinkClick = state.onLinkClick,
+                    lastBlock = true,
                 )
             }
         },
@@ -97,12 +96,10 @@ private fun SubBlock(
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
             ) {
                 links.fastForEach {
-                    SecondarySmallButton(
-                        config = SmallButtonConfig(
-                            text = it.title,
-                            onClick = { onLinkClick(it) },
-                            icon = TangemButtonIconPosition.Start(iconResId = it.iconRes),
-                        ),
+                    Chip(
+                        text = stringReference(it.title),
+                        iconResId = it.iconRes,
+                        onClick = { onLinkClick(it) },
                     )
                 }
             }
@@ -148,9 +145,8 @@ private fun SubBlockPlaceholder(modifier: Modifier = Modifier, lastBlock: Boolea
                 horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
             ) {
                 repeat(times = 3) {
-                    SmallButtonShimmer(
+                    ChipShimmer(
                         modifier = Modifier.weight(1f),
-                        withIcon = true,
                     )
                 }
             }
@@ -167,36 +163,36 @@ private fun ContentPreview() {
             state = LinksUM(
                 officialLinks = persistentListOf(
                     LinksUM.Link(
-                        title = stringReference("Website"),
+                        title = "Website",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                     LinksUM.Link(
-                        title = stringReference("Website"),
+                        title = "Website",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                     LinksUM.Link(
-                        title = stringReference("Website"),
+                        title = "Website",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                 ),
                 social = persistentListOf(
                     LinksUM.Link(
-                        title = stringReference("Twitter"),
+                        title = "Twitter",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                     LinksUM.Link(
-                        title = stringReference("Facebook"),
+                        title = "Facebook",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                 ),
                 repository = persistentListOf(
                     LinksUM.Link(
-                        title = stringReference("Github"),
+                        title = "Github",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
