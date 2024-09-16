@@ -23,6 +23,7 @@ internal object TokenMarketListConverter : Converter<TokenMarketListResponse, Li
                 symbol = token.symbol,
                 marketRating = token.marketRating,
                 marketCap = token.marketCap,
+                isUnderMarketCapLimit = token.isUnderMarketCapLimit ?: false,
                 imageHost = imageHost,
                 tokenQuotesShort = TokenQuotesShort(
                     currentPrice = token.currentPrice,
@@ -30,7 +31,7 @@ internal object TokenMarketListConverter : Converter<TokenMarketListResponse, Li
                     weekChangePercent = token.priceChangePercentage.week1.movePointLeft(2),
                     monthChangePercent = token.priceChangePercentage.day30.movePointLeft(2),
                 ),
-                tokenCharts = TokenMarket.Charts(null, null, null),
+                tokenCharts = TokenMarket.Charts(h24 = null, week = null, month = null),
             )
         }
     }
