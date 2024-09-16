@@ -36,7 +36,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.disableNestedScroll
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.features.markets.details.impl.ui.components.InfoBottomSheet
 import com.tangem.features.markets.details.impl.ui.components.MarketTokenDetailsChart
@@ -105,7 +104,6 @@ private fun Content(
         SpacerH4()
 
         LazyColumn(
-            modifier = Modifier.disableNestedScroll(),
             contentPadding = PaddingValues(bottom = bottomBarHeight),
         ) {
             item("header") {

@@ -87,7 +87,7 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
                 .padding(
                     start = TangemTheme.dimens.spacing16,
                     end = TangemTheme.dimens.spacing16,
-                    bottom = TangemTheme.dimens.spacing12,
+                    bottom = 8.dp,
                 )
                 .onGloballyPositioned {
                     if (it.size.height > 0) {
@@ -95,7 +95,8 @@ private fun Content(state: MarketsListUM, onHeaderSizeChange: (Dp) -> Unit, modi
                             onHeaderSizeChange(it.size.height.toDp())
                         }
                     }
-                },
+                }
+                .padding(bottom = 4.dp),
             state = state.searchBar,
         )
         Column(Modifier.padding(horizontal = TangemTheme.dimens.size16)) {
