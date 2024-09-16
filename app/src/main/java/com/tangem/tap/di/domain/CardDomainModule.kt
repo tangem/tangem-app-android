@@ -92,4 +92,12 @@ internal object CardDomainModule {
     fun provideNetworkHasDerivationUseCase(): NetworkHasDerivationUseCase {
         return NetworkHasDerivationUseCase()
     }
+
+    @Provides
+    @Singleton
+    fun provideIsRequiredDerivePublicKeysUseCase(
+        derivationsRepository: DerivationsRepository,
+    ): HasMissedDerivationsUseCase {
+        return HasMissedDerivationsUseCase(derivationsRepository)
+    }
 }
