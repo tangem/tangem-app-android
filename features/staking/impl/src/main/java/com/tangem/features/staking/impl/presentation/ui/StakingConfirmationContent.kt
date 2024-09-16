@@ -3,23 +3,24 @@ package com.tangem.features.staking.impl.presentation.ui
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.common.ui.amountScreen.ui.AmountBlock
-import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
@@ -37,7 +38,8 @@ internal fun StakingConfirmationContent(
     type: StakingActionCommonType,
 ) {
     if (state !is StakingStates.ConfirmationState.Data) return
-
+    val isEnterAction = type == StakingActionCommonType.ENTER
+    val isTransactionSent = state.innerState == InnerConfirmationStakingState.COMPLETED
     Column(
         modifier = Modifier
             .background(TangemTheme.colors.background.secondary)
@@ -45,41 +47,28 @@ internal fun StakingConfirmationContent(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
+        val doneState = state.transactionDoneState
         AnimatedVisibility(
-            visible = state.transactionDoneState is TransactionDoneState.Content,
+            visible = doneState is TransactionDoneState.Content,
             modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
         ) {
-            val transactionDoneStateContent = state.transactionDoneState as TransactionDoneState.Content
             TransactionDoneTitle(
-                titleRes = R.string.sent_transaction_sent_title,
-                date = transactionDoneStateContent.timestamp,
+                title = resourceReference(R.string.common_in_progress),
+                subtitle = resourceReference(R.string.staking_transaction_in_progress_text),
             )
         }
         AmountBlock(
             amountState = amountState,
-            isClickDisabled = true,
-            isEditingDisabled = true,
-            onClick = {},
+            isClickDisabled = !isEnterAction || isTransactionSent,
+            isEditingDisabled = !isEnterAction && state.innerState != InnerConfirmationStakingState.COMPLETED,
+            onClick = clickIntents::onPrevClick,
         )
-        if (type == StakingActionCommonType.ENTER) {
+        if (isEnterAction) {
             ValidatorBlock(validatorState = state.validatorState, onClick = clickIntents::openValidators)
         }
-        StakingFeeBlock(feeState = state.feeState)
+        StakingFeeBlock(feeState = state.feeState, isTransactionSent = isTransactionSent)
         NotificationsBlock(notifications = state.notifications)
-        SpacerHMax()
-        FooterText(text = state.footerText)
     }
-}
-
-@Composable
-private fun FooterText(text: String) {
-    Text(
-        modifier = Modifier.fillMaxWidth(),
-        text = text,
-        color = TangemTheme.colors.text.tertiary,
-        style = TangemTheme.typography.caption2,
-        textAlign = TextAlign.Center,
-    )
 }
 
 @Preview(widthDp = 360, showBackground = true)
