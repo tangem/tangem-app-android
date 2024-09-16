@@ -1,7 +1,10 @@
 package com.tangem.features.staking.impl.presentation.state.utils
 
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import java.math.BigDecimal
+import java.math.MathContext
+import java.math.RoundingMode
 
 /**
  * Check and calculates subtracted amount
@@ -14,15 +17,21 @@ internal fun checkAndCalculateSubtractedAmount(
     reduceAmountBy: BigDecimal,
 ): BigDecimal {
     val balance = cryptoCurrencyStatus.value.amount ?: return amountValue
+    val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
+    val feeValueRounded = if (isTron) {
+        feeValue.round(MathContext(0, RoundingMode.UP))
+    } else {
+        feeValue
+    }
     val isFeeCoverage = checkFeeCoverage(
         isSubtractAvailable = isAmountSubtractAvailable,
         balance = balance,
         amountValue = amountValue,
-        feeValue = feeValue,
+        feeValue = feeValueRounded,
         reduceAmountBy = reduceAmountBy,
     )
     return if (isFeeCoverage) {
-        balance.minus(reduceAmountBy).minus(feeValue)
+        balance.minus(reduceAmountBy).minus(feeValueRounded)
     } else {
         amountValue
     }
