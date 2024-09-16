@@ -15,8 +15,8 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -196,7 +196,7 @@ private fun BannerBlock(onClick: () -> Unit) {
             .clip(RoundedCornerShape(size = TangemTheme.dimens.radius14))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
+                indication = ripple(),
                 onClick = onClick,
             ),
     ) {
@@ -258,7 +258,7 @@ private fun StakingRewardBlock(
             .background(TangemTheme.colors.background.action)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
+                indication = ripple(),
                 enabled = rewardBlockType == RewardBlockType.Rewards,
                 onClick = onRewardsClick,
             ),
@@ -286,7 +286,7 @@ private fun ActiveStakingBlock(
             .background(TangemTheme.colors.background.action)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
+                indication = ripple(),
                 enabled = balance.isClickable,
                 onClick = {
                     onAnalytic()
