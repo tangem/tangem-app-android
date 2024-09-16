@@ -104,13 +104,13 @@ data class TokenMarketInfoResponse(
 
     data class Links(
         @Json(name = "official_links")
-        val officialLinks: List<Link>?,
+        val officialLinks: List<Link>? = null,
         @Json(name = "social")
-        val social: List<Link>?,
+        val social: List<Link>? = null,
         @Json(name = "repository")
-        val repository: List<Link>?,
+        val repository: List<Link>? = null,
         @Json(name = "blockchain_site")
-        val blockchainSite: List<Link>?,
+        val blockchainSite: List<Link>? = null,
     )
 
     data class Link(
