@@ -403,6 +403,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                     token = tokenMarketParams,
                     appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
                     showPortfolio = false,
+                    analyticsParams = AppRoute.MarketsTokenDetails.AnalyticsParams(
+                        blockchain = cryptoCurrencyStatus.currency.network.name,
+                        source = "Main",
+                    ),
                 ),
             )
         }
