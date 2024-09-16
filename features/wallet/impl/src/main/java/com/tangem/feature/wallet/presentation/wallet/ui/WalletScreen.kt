@@ -462,7 +462,9 @@ private inline fun BaseScaffoldWithMarkets(
                         color = BottomSheetDefaults.ScrimColor,
                         visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
                             state.showMarketsOnboarding,
-                        onDismissRequest = { coroutineScope.launch { bottomSheetState.partialExpand() } },
+                        onDismissRequest = {
+                            coroutineScope.launch { bottomSheetState.partialExpand() }
+                        },
                     )
 
                     MarketsTooltip(
@@ -486,7 +488,6 @@ private inline fun BaseScaffoldWithMarkets(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MarketsTooltip(
     availableHeight: Dp,
@@ -643,6 +644,21 @@ private fun BottomSheetStateEffects(
 ) {
     val systemUiController = rememberSystemUiController()
     val navigationBarColor = TangemTheme.colors.background.primary
+
+    LaunchedEffect(Unit) {
+        delay(timeMillis = 100)
+        when (bottomSheetState.currentValue) {
+            TangemSheetValue.Hidden,
+            TangemSheetValue.Expanded,
+            -> systemUiController.setNavigationBarColor(
+                color = Color.Transparent,
+                darkIcons = navigationBarColor.luminance() > 0.5f,
+                navigationBarContrastEnforced = true,
+            )
+            TangemSheetValue.PartiallyExpanded,
+            -> systemUiController.setNavigationBarColor(navigationBarColor)
+        }
+    }
 
     LaunchedEffect(key1 = bottomSheetState.targetValue, navigationBarColor) {
         when (bottomSheetState.targetValue) {
