@@ -19,6 +19,7 @@ import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
+import com.tangem.core.ui.components.progressbar.LinearProgressIndicator
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemAnimations
 import com.tangem.core.ui.res.TangemTheme
@@ -119,7 +120,7 @@ private fun Content(state: PricePerformanceUM.Value, modifier: Modifier = Modifi
                 .fillMaxWidth(),
             progress = { animatedIndicatorFraction },
             color = TangemTheme.colors.text.accent,
-            trackColor = TangemTheme.colors.background.tertiary,
+            backgroundColor = TangemTheme.colors.background.tertiary,
             strokeCap = StrokeCap.Round,
         )
         Row(
