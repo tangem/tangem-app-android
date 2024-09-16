@@ -348,6 +348,7 @@
   <string name="markets_common_my_portfolio">私のポートフォリオ</string>
   <string name="markets_common_title">マーケット</string>
   <string name="markets_generate_addresses_notification">選択したネットワークのアドレスを生成するには、Tangemカードをスキャンする必要があります。</string>
+  <string name="markets_hint">トークンを追加するには、これをスワイプするか、検索バーをタップしてください。</string>
   <string name="markets_insights_info_description_message">このセクションのデータは、次のネットワークから取得されています: %s</string>
   <string name="markets_loading_error_title">データを読み込めません…</string>
   <string name="markets_loading_no_data_title">データなし</string>
@@ -627,7 +628,7 @@
   <string name="send_summary_transaction_description_no_fiat_fee">**%1$s** と %2$s を送金しています。</string>
   <string name="send_summary_transaction_description_prefix">** %1$s ** を送信しています</string>
   <string name="send_summary_transaction_description_suffix_fee_covered">ネットワーク手数料は%1$sエネルギーを使用してカバーされます</string>
-  <string name="send_summary_transaction_description_suffix_fee_reduced">%1$sを使用するとネットワーク手数料が減額されます</string>
+  <string name="send_summary_transaction_description_suffix_fee_reduced">%1$sエネルギーを使用するとネットワーク手数料が減額されます</string>
   <string name="send_summary_transaction_description_suffix_including">ネットワーク手数料%1$sを含む</string>
   <string name="send_transaction_success">取引は正常に署名され、ブロックチェーンノードに送信されました。ウォレットの残高はしばらくして更新されます。</string>
   <string name="send_tron_account_activation_error">%1$sはTronネットワークのアセットです。手数料を計算して取引を行うには、アカウントにTron（TRX）を入金する必要があります。</string>
@@ -680,7 +681,7 @@
   <string name="staking_notification_unlock_text">資金をステーキングから引き出すには、ロックを解除してください。ロック解除には%sかかります。</string>
   <string name="staking_notification_unstake_cosmos_text">資金は、21日間のロック解除期間後に使用可能になります。報酬は、ロック解除後の資金とともに引き出されます。</string>
   <string name="staking_notification_unstake_text">%sのステーキング解除期間後、資金はすぐ利用可能となります。</string>
-  <string name="staking_notification_withdraw_text">資金を引き出すことができ、すぐに使用できます</string>
+  <string name="staking_notification_withdraw_text">資金を引き出して、すぐに使用できます</string>
   <string name="staking_notifications_revote_tron_text">Tronネットワークに新しいバリデーターでステーキングすると、以前にステーキングされた資金はすべてこのバリデーターに自動的に転送されます。</string>
   <string name="staking_preparing">準備中</string>
   <string name="staking_ready_to_withdraw">引き出し準備完了</string>
@@ -709,7 +710,7 @@
   <string name="staking_title_unstake">%sのステーキング解除</string>
   <string name="staking_transaction_in_progress_text">取引を処理中です。現在、ブロックチェーンで検証が行われています。これには数分かかる場合があります。</string>
   <string name="staking_unbonding">ステーキング解約中</string>
-  <string name="staking_unlocked_locked">ステーキング解除はロックされています</string>
+  <string name="staking_unlocked_locked">ロック解除</string>
   <string name="staking_unstaked">ステーキングされていない</string>
   <string name="staking_unstaking">ステーキング解除</string>
   <string name="staking_unstaking_item_name">ステーキング解除中の資産%s</string>
