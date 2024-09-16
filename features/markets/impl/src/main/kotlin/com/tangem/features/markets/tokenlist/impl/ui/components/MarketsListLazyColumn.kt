@@ -17,7 +17,6 @@ import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.disableNestedScroll
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
 import kotlinx.coroutines.launch
@@ -52,7 +51,7 @@ internal fun MarketsListLazyColumn(
 
     if (state is ListUM.Loading) {
         LazyColumn(
-            modifier = Modifier.disableNestedScroll(),
+            modifier = modifier,
             state = rememberLazyListState(),
             contentPadding = PaddingValues(bottom = bottomBarHeight),
             userScrollEnabled = false,
@@ -63,7 +62,7 @@ internal fun MarketsListLazyColumn(
         }
     } else {
         LazyColumn(
-            modifier = modifier.disableNestedScroll(),
+            modifier = modifier,
             state = lazyListState,
             contentPadding = PaddingValues(bottom = bottomBarHeight),
             userScrollEnabled = true,
