@@ -9,11 +9,16 @@ class GetTokenMarketInfoUseCase(
     private val marketsTokenRepository: MarketsTokenRepository,
 ) {
 
-    suspend operator fun invoke(appCurrency: AppCurrency, tokenId: String): Either<Unit, TokenMarketInfo> {
+    suspend operator fun invoke(
+        appCurrency: AppCurrency,
+        tokenId: String,
+        tokenSymbol: String,
+    ): Either<Unit, TokenMarketInfo> {
         return Either.catch {
             marketsTokenRepository.getTokenInfo(
                 fiatCurrencyCode = appCurrency.code,
                 tokenId = tokenId,
+                tokenSymbol = tokenSymbol,
                 languageCode = SupportedLanguages.getCurrentSupportedLanguageCode(),
             )
         }.mapLeft {}
