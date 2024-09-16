@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.ui.SendDoneButtons
 import com.tangem.common.ui.amountScreen.utils.getFiatString
@@ -187,14 +188,42 @@ private fun SendingText(
                 fiatCurrencyCode = feeState.appCurrency.code,
             )
             val textResource = remember(uiState) {
-                resourceReference(
-                    id = if (feeState.isFeeConvertibleToFiat) {
-                        R.string.send_summary_transaction_description
-                    } else {
-                        R.string.send_summary_transaction_description_no_fiat_fee
-                    },
-                    formatArgs = wrappedList(sendingValue, feeState.getFiatValue()),
-                )
+                val fee = feeState.fee
+                if (feeState.isTronToken && fee is Fee.Tron) {
+                    val suffix = when {
+                        fee.feeEnergy == 0L -> {
+                            resourceReference(
+                                R.string.send_summary_transaction_description_suffix_including,
+                                wrappedList(feeState.getFiatValue())
+                            )
+                        }
+                        fee.feeEnergy <= fee.remainingEnergy -> {
+                            resourceReference(
+                                R.string.send_summary_transaction_description_suffix_fee_covered,
+                                wrappedList(fee.feeEnergy)
+                            )
+                        }
+                        else -> {
+                            resourceReference(
+                                R.string.send_summary_transaction_description_suffix_fee_reduced,
+                                wrappedList(fee.remainingEnergy)
+                            )
+                        }
+                    }
+                    val prefix = resourceReference(R.string.send_summary_transaction_description_prefix, wrappedList(sendingValue))
+
+                    combinedReference(prefix, stringReference(", "), suffix)
+                } else {
+                    resourceReference(
+                        id = if (feeState.isFeeConvertibleToFiat) {
+                            R.string.send_summary_transaction_description
+                        } else {
+                            R.string.send_summary_transaction_description_no_fiat_fee
+                        },
+                        formatArgs = wrappedList(sendingValue, feeState.getFiatValue()),
+                    )
+                }
+
             }
             Text(
                 text = textResource.resolveAnnotatedReference(),
