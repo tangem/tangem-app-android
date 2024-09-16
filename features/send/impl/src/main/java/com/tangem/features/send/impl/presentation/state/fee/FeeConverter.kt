@@ -41,7 +41,6 @@ internal class FeeConverter(
     private val kaspaCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         KaspaCustomFeeConverter(
             clickIntents = clickIntents,
-            stateRouterProvider = stateRouterProvider,
             appCurrencyProvider = appCurrencyProvider,
             feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
         )
