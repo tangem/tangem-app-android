@@ -4,6 +4,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingInfoBottomSheetConfig
 import com.tangem.utils.transformer.Transformer
 
@@ -42,12 +43,4 @@ internal class ShowInfoBottomSheetStateTransformer(
             ),
         )
     }
-}
-
-enum class InfoType {
-    ANNUAL_PERCENTAGE_RATE,
-    UNBONDING_PERIOD,
-    REWARD_CLAIMING,
-    WARMUP_PERIOD,
-    REWARD_SCHEDULE,
 }
