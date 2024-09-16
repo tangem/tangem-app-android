@@ -177,7 +177,7 @@ internal class DefaultMarketsTokenRepository(
 
         val result = catchApiErrorAndSendEvent(
             errorEvent = MarketsDataAnalyticsEvent.Details.Error(
-                request = MarketsDataAnalyticsEvent.Details.Error.Request.Chart,
+                request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
                 tokenSymbol = tokenSymbol,
             ),
         ) {

@@ -15,12 +15,12 @@ sealed interface MarketsDataAnalyticsEvent {
     sealed class Details(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : AnalyticsEvent(category = "Markets", event = event, params = params), MarketsDataAnalyticsEvent {
+    ) : AnalyticsEvent(category = "Markets / Chart", event = event, params = params), MarketsDataAnalyticsEvent {
 
         data class Error(
             val request: Request,
             val tokenSymbol: String,
-        ) : List(
+        ) : Details(
             event = "Data Error",
             params = mapOf(
                 "Source" to request.source,

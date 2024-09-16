@@ -118,17 +118,13 @@ internal class MarketsPortfolioModel @Inject constructor(
             updateTokenReceiveBSConfig = { updateBlock ->
                 updateTokensState { it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig)) }
             },
-            onHandleAction = { handledAction ->
-                if (handledAction.isQuickAction) {
-                    analyticsEventHandler.send(
-                        analyticsEventBuilder.quickActionClick(
-                            actionUM = handledAction.action,
-                            blockchainName = BlockchainUtils.getNetworkInfo(
-                                handledAction.cryptoCurrencyData.status.currency.network.backendId,
-                            )?.name ?: "",
-                        ),
-                    )
-                }
+            onHandleQuickAction = { handledAction ->
+                analyticsEventHandler.send(
+                    analyticsEventBuilder.quickActionClick(
+                        actionUM = handledAction.action,
+                        blockchainName = handledAction.cryptoCurrencyData.status.currency.network.name,
+                    ),
+                )
             },
         ),
         updateTokens = { updateBlock ->

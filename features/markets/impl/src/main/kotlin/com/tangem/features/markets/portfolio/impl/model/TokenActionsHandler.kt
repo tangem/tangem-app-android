@@ -36,7 +36,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     @Assisted private val currentAppCurrency: Provider<AppCurrency>,
     @Assisted private val updateTokenReceiveBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
-    @Assisted private val onHandleAction: (HandledAction) -> Unit,
+    @Assisted private val onHandleQuickAction: (HandledQuickAction) -> Unit,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
 ) {
@@ -47,10 +47,9 @@ internal class TokenActionsHandler @AssistedInject constructor(
     )
 
     fun handle(action: TokenActionsBSContentUM.Action, cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
-        onHandleAction(
-            HandledAction(
+        onHandleQuickAction(
+            HandledQuickAction(
                 action = action,
-                isQuickAction = isQuickAction,
                 cryptoCurrencyData = cryptoCurrencyData,
             ),
         )
@@ -184,13 +183,12 @@ internal class TokenActionsHandler @AssistedInject constructor(
         fun create(
             currentAppCurrency: Provider<AppCurrency>,
             updateTokenReceiveBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
-            onHandleAction: (HandledAction) -> Unit,
+            onHandleQuickAction: (HandledQuickAction) -> Unit,
         ): TokenActionsHandler
     }
 
-    data class HandledAction(
+    data class HandledQuickAction(
         val action: TokenActionsBSContentUM.Action,
-        val isQuickAction: Boolean,
         val cryptoCurrencyData: PortfolioData.CryptoCurrencyData,
     )
 }
