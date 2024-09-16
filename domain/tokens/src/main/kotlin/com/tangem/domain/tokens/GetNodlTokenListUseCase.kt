@@ -56,7 +56,7 @@ class GetNodlTokenListUseCase(
             stakingRepository = stakingRepository,
         )
 
-        return operations.getNodlCurrencyStatusesFlow()
+        return operations.getCardCurrenciesStatusesFlow()
             .map { maybeCurrenciesStatuses ->
                 maybeCurrenciesStatuses.mapLeft(CurrenciesStatusesOperations.Error::mapToTokenListError)
             }
