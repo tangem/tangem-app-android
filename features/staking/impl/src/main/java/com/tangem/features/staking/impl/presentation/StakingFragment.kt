@@ -54,6 +54,7 @@ internal class StakingFragment : ComposeFragment() {
             StakingStateRouter(
                 appRouter = appRouter,
                 stateController = stateController,
+                analyticsEventsHandler = analyticsEventsHandler,
             ),
         )
     }

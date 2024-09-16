@@ -32,3 +32,9 @@ fun String.toQrCode(sizePx: Int = 256, paddingPx: Int = 0): Bitmap {
 }
 
 fun String.capitalize(): String = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+
+fun String.orMaskWithStars(maskWithStars: Boolean): String {
+    return if (maskWithStars) THREE_STARS else this
+}
+
+internal const val THREE_STARS = "\u2217\u2217\u2217"

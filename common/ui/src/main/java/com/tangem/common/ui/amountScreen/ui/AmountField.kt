@@ -4,7 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -112,6 +115,7 @@ private fun AmountSecondary(amountField: AmountFieldModel, appCurrencyCode: Stri
         )
         AmountFieldError(
             isError = amountField.isError,
+            isWarning = amountField.isWarning,
             error = amountField.error,
             modifier = Modifier
                 .align(BottomCenter)
@@ -124,17 +128,24 @@ private fun AmountSecondary(amountField: AmountFieldModel, appCurrencyCode: Stri
 }
 
 @Composable
-private fun AmountFieldError(isError: Boolean, error: TextReference, modifier: Modifier = Modifier) {
+private fun AmountFieldError(
+    isError: Boolean,
+    isWarning: Boolean,
+    error: TextReference,
+    modifier: Modifier = Modifier,
+) {
     AnimatedVisibility(
-        visible = isError,
+        visible = isError || isWarning,
         enter = fadeIn(),
         exit = fadeOut(),
         modifier = modifier,
     ) {
+        val errorText = remember(this) { error }
+        val color = if (isError) TangemTheme.colors.text.warning else TangemTheme.colors.text.attention
         Text(
-            text = error.resolveReference(),
+            text = errorText.resolveReference(),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.warning,
+            color = color,
             textAlign = TextAlign.Center,
         )
     }
