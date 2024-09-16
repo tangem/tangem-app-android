@@ -38,6 +38,7 @@ internal fun NotificationsBlock(notifications: ImmutableList<NotificationUM>) {
                         -> TangemTheme.colors.icon.accent
 
                         is StakingNotification.Warning,
+                        is NotificationUM.Error.TokenExceedsBalance,
                         is NotificationUM.Error.ExceedsBalance,
                         is NotificationUM.Warning,
                         -> null
