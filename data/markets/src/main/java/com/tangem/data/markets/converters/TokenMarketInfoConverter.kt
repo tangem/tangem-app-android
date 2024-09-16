@@ -1,5 +1,8 @@
 package com.tangem.data.markets.converters
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenQuotes
@@ -47,13 +50,27 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
 
     @JvmName("convertNetwork")
     private fun List<TokenMarketInfoResponse.Network>.convert(): List<TokenMarketInfo.Network> {
-        return map {
-            TokenMarketInfo.Network(
-                networkId = it.networkId,
-                exchangeable = it.exchangeable,
-                contractAddress = it.contractAddress,
-                decimalCount = it.decimalCount,
-            )
+        return mapNotNull { network ->
+            val blockchain = Blockchain.fromNetworkId(network.networkId)
+            when {
+                network.contractAddress.isNullOrEmpty() -> {
+                    TokenMarketInfo.Network(
+                        networkId = network.networkId,
+                        exchangeable = network.exchangeable,
+                        contractAddress = network.contractAddress,
+                        decimalCount = network.decimalCount,
+                    )
+                }
+                blockchain != null && blockchain.isSupportedInApp() && blockchain.canHandleTokens() -> {
+                    TokenMarketInfo.Network(
+                        networkId = network.networkId,
+                        exchangeable = network.exchangeable,
+                        contractAddress = network.contractAddress,
+                        decimalCount = network.decimalCount,
+                    )
+                }
+                else -> null
+            }
         }
     }
 
