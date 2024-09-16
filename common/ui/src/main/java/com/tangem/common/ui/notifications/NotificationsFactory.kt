@@ -14,6 +14,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
 @Suppress("LargeClass")
@@ -44,12 +45,12 @@ object NotificationsFactory {
         sendingAmount: BigDecimal,
         isSubtractionAvailable: Boolean,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        minimumRequirement: BigDecimal? = null,
     ) {
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-
         if (!isSubtractionAvailable) return
 
-        val showNotification = sendingAmount + feeAmount > balance
+        val showNotification = sendingAmount + feeAmount > balance - minimumRequirement.orZero()
         if (showNotification) {
             add(NotificationUM.Error.TotalExceedsBalance)
         }
@@ -202,7 +203,7 @@ object NotificationsFactory {
         when (cryptoCurrencyWarning) {
             is CryptoCurrencyWarning.BalanceNotEnoughForFee -> {
                 add(
-                    NotificationUM.Error.ExceedsBalance(
+                    NotificationUM.Error.TokenExceedsBalance(
                         networkIconId = cryptoCurrencyWarning.coinCurrency.networkIconResId,
                         networkName = cryptoCurrencyWarning.coinCurrency.name,
                         currencyName = cryptoCurrencyStatus.currency.name,
@@ -219,7 +220,7 @@ object NotificationsFactory {
             is CryptoCurrencyWarning.CustomTokenNotEnoughForFee -> {
                 val currency = cryptoCurrencyWarning.feeCurrency
                 add(
-                    NotificationUM.Error.ExceedsBalance(
+                    NotificationUM.Error.TokenExceedsBalance(
                         networkIconId = currency?.networkIconResId ?: R.drawable.ic_alert_24,
                         currencyName = cryptoCurrencyWarning.currency.name,
                         feeName = cryptoCurrencyWarning.feeCurrencyName,
