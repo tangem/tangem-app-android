@@ -1,8 +1,8 @@
 package com.tangem.features.markets.tokenlist.impl.model.converters
 
-import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartRawData
+import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.sorted
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -34,7 +34,7 @@ internal class MarketsTokenItemConverter(
             trendPercentText = value.getTrendPercent(),
             trendType = value.getTrendType(),
             chardData = value.getChartData(),
-            isUnder100kMarketCap = value.isUnder100kMarketCap(),
+            isUnder100kMarketCap = value.isUnderMarketCapLimit,
         )
     }
 
@@ -148,13 +148,5 @@ internal class MarketsTokenItemConverter(
             percent = percent,
             useAbsoluteValue = true,
         )
-    }
-
-    private fun TokenMarket.isUnder100kMarketCap(): Boolean {
-        return marketCap?.let { it < decimal100k } ?: true
-    }
-
-    private companion object {
-        val decimal100k: BigDecimal = BigDecimal.valueOf(100_000)
     }
 }
