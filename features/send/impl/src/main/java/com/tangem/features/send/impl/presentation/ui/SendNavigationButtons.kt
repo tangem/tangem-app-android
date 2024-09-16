@@ -190,29 +190,11 @@ private fun SendingText(
             val textResource = remember(uiState) {
                 val fee = feeState.fee
                 if (feeState.isTronToken && fee is Fee.Tron) {
-                    val suffix = when {
-                        fee.feeEnergy == 0L -> {
-                            resourceReference(
-                                R.string.send_summary_transaction_description_suffix_including,
-                                wrappedList(feeState.getFiatValue())
-                            )
-                        }
-                        fee.feeEnergy <= fee.remainingEnergy -> {
-                            resourceReference(
-                                R.string.send_summary_transaction_description_suffix_fee_covered,
-                                wrappedList(fee.feeEnergy)
-                            )
-                        }
-                        else -> {
-                            resourceReference(
-                                R.string.send_summary_transaction_description_suffix_fee_reduced,
-                                wrappedList(fee.remainingEnergy)
-                            )
-                        }
-                    }
-                    val prefix = resourceReference(R.string.send_summary_transaction_description_prefix, wrappedList(sendingValue))
-
-                    combinedReference(prefix, stringReference(", "), suffix)
+                    getTokenFeeSendingText(
+                        feeState = feeState,
+                        fee = fee,
+                        sendingValue = sendingValue,
+                    )
                 } else {
                     resourceReference(
                         id = if (feeState.isFeeConvertibleToFiat) {
@@ -223,7 +205,6 @@ private fun SendingText(
                         formatArgs = wrappedList(sendingValue, feeState.getFiatValue()),
                     )
                 }
-
             }
             Text(
                 text = textResource.resolveAnnotatedReference(),
@@ -289,4 +270,33 @@ private fun isButtonEnabled(currentState: SendUiCurrentScreen, uiState: SendUiSt
         SendUiStateType.EditFee -> uiState.editFeeState?.isPrimaryButtonEnabled
         else -> true
     } ?: false
+}
+
+private fun getTokenFeeSendingText(feeState: SendStates.FeeState, fee: Fee.Tron, sendingValue: String): TextReference {
+    val suffix = when {
+        fee.feeEnergy == 0L -> {
+            resourceReference(
+                R.string.send_summary_transaction_description_suffix_including,
+                wrappedList(feeState.getFiatValue()),
+            )
+        }
+        fee.feeEnergy <= fee.remainingEnergy -> {
+            resourceReference(
+                R.string.send_summary_transaction_description_suffix_fee_covered,
+                wrappedList(fee.feeEnergy),
+            )
+        }
+        else -> {
+            resourceReference(
+                R.string.send_summary_transaction_description_suffix_fee_reduced,
+                wrappedList(fee.remainingEnergy),
+            )
+        }
+    }
+    val prefix = resourceReference(
+        R.string.send_summary_transaction_description_prefix,
+        wrappedList(sendingValue),
+    )
+
+    return combinedReference(prefix, stringReference(", "), suffix)
 }

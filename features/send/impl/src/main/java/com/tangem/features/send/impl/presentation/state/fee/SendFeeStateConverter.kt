@@ -25,8 +25,8 @@ internal class SendFeeStateConverter(
             isFeeApproximate = false,
             isCustomSelected = false,
             isFeeConvertibleToFiat = cryptoCurrencyStatusProvider().currency.network.hasFiatFeeRate,
-            isTronToken = cryptoCurrencyStatusProvider().currency is CryptoCurrency.Token
-                && isTron(cryptoCurrencyStatusProvider().currency.network.id.value),
+            isTronToken = cryptoCurrencyStatusProvider().currency is CryptoCurrency.Token &&
+                isTron(cryptoCurrencyStatusProvider().currency.network.id.value),
         )
     }
 }
