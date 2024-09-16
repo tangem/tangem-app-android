@@ -78,6 +78,10 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
                     token = token.toSerializableParam(),
                     appCurrency = appCurrency,
                     showPortfolio = true,
+                    analyticsParams = MarketsTokenDetailsComponent.AnalyticsParams(
+                        blockchain = null,
+                        source = "Market",
+                    ),
                 ),
             ),
         )

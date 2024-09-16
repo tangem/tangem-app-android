@@ -1,9 +1,9 @@
 package com.tangem.features.markets.details.impl.model.converters
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.details.impl.ui.state.LinksUM
+import com.tangem.features.markets.details.impl.ui.state.LinksUM.Link
 import com.tangem.features.markets.impl.R
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
@@ -25,7 +25,7 @@ internal class LinksConverter(
 
     private fun TokenMarketInfo.Link.convert(): LinksUM.Link {
         return LinksUM.Link(
-            title = stringReference(title),
+            title = title,
             iconRes = getIconById(id),
             url = link,
         )

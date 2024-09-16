@@ -11,11 +11,7 @@ interface TokenMarketBlockComponent : ComposableContentComponent {
 
     @Serializable
     data class Params(
-        val cryptoCurrencyID: CryptoCurrency.ID,
-        val tokenId: String,
-        val tokenName: String,
-        val tokenSymbol: String,
-        val tokenImageUrl: String?,
+        val cryptoCurrency: CryptoCurrency,
     )
 
     interface Factory {
