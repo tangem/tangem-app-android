@@ -1,8 +1,10 @@
 package com.tangem.datasource.api.markets.models.response
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
+@JsonClass(generateAdapter = true)
 data class TokenMarketInfoResponse(
     @Json(name = "id")
     val id: String,
@@ -30,6 +32,7 @@ data class TokenMarketInfoResponse(
     val pricePerformance: PricePerformance?,
 ) {
 
+    @JsonClass(generateAdapter = true)
     data class PriceChangePercentage(
         @Json(name = "24h")
         val day: BigDecimal?,
@@ -47,6 +50,7 @@ data class TokenMarketInfoResponse(
         val allTime: BigDecimal?,
     )
 
+    @JsonClass(generateAdapter = true)
     data class Network(
         @Json(name = "network_id")
         val networkId: String,
@@ -58,6 +62,7 @@ data class TokenMarketInfoResponse(
         val decimalCount: Int?,
     )
 
+    @JsonClass(generateAdapter = true)
     data class Insights(
         @Json(name = "holders_change")
         val holdersChange: Change?,
@@ -70,6 +75,7 @@ data class TokenMarketInfoResponse(
         @Json(name = "networks")
         val sourceNetworks: List<SourceNetwork>?,
     ) {
+        @JsonClass(generateAdapter = true)
         data class SourceNetwork(
             @Json(name = "network_id")
             val id: String,
@@ -78,6 +84,7 @@ data class TokenMarketInfoResponse(
         )
     }
 
+    @JsonClass(generateAdapter = true)
     data class Change(
         @Json(name = "24h")
         val day: BigDecimal?,
@@ -87,6 +94,7 @@ data class TokenMarketInfoResponse(
         val month: BigDecimal?,
     )
 
+    @JsonClass(generateAdapter = true)
     data class Metrics(
         @Json(name = "market_rating")
         val marketRating: Int?,
@@ -102,6 +110,7 @@ data class TokenMarketInfoResponse(
         val fullyDilutedValuation: BigDecimal?,
     )
 
+    @JsonClass(generateAdapter = true)
     data class Links(
         @Json(name = "official_links")
         val officialLinks: List<Link>? = null,
@@ -113,6 +122,7 @@ data class TokenMarketInfoResponse(
         val blockchainSite: List<Link>? = null,
     )
 
+    @JsonClass(generateAdapter = true)
     data class Link(
         @Json(name = "title")
         val title: String,
@@ -122,6 +132,7 @@ data class TokenMarketInfoResponse(
         val link: String,
     )
 
+    @JsonClass(generateAdapter = true)
     data class PricePerformance(
         @Json(name = "24h")
         val day: Range?,
@@ -131,6 +142,7 @@ data class TokenMarketInfoResponse(
         val allTime: Range?,
     )
 
+    @JsonClass(generateAdapter = true)
     data class Range(
         @Json(name = "low_price")
         val low: BigDecimal?,
