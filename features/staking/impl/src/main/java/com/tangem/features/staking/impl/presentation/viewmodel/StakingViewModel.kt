@@ -66,6 +66,7 @@ import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -101,6 +102,7 @@ internal class StakingViewModel @Inject constructor(
     private val stakingFeeTransactionLoader: StakingFeeTransactionLoader.Factory,
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
 
@@ -174,7 +176,8 @@ internal class StakingViewModel @Inject constructor(
     private val transactionsInProgress: CopyOnWriteArrayList<StakingTransaction> = CopyOnWriteArrayList()
 
     private var approvalJobHolder: JobHolder = JobHolder()
-    private var updateBalancesJobHolder: JobHolder = JobHolder()
+    private var feeJobHolder: JobHolder = JobHolder()
+    private var sendTransactionJobHolder = JobHolder()
 
     init {
         subscribeOnSelectedAppCurrency()
@@ -184,8 +187,9 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        updateBalancesJobHolder.cancel()
         approvalJobHolder.cancel()
+        feeJobHolder.cancel()
+        sendTransactionJobHolder.cancel()
     }
 
     override fun onBackClick() {
@@ -258,7 +262,7 @@ internal class StakingViewModel @Inject constructor(
                     updateNotifications()
                 },
             )
-        }
+        }.saveIn(feeJobHolder)
     }
 
     private fun handleOnNextConfirmationClick() {
@@ -287,7 +291,7 @@ internal class StakingViewModel @Inject constructor(
                         stateController.update(SetConfirmationStateResetAssentTransformer)
                     },
                 )
-            }
+            }.saveIn(sendTransactionJobHolder)
         }
     }
 
@@ -313,12 +317,11 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onRefreshSwipe(isRefreshing: Boolean) {
         stateController.update(SetInitialLoadingStateTransformer(isRefreshing))
-        viewModelScope.launch {
+        coroutineScope.launch {
             balanceUpdater.instantUpdate()
-        }.saveIn(updateBalancesJobHolder)
-            .invokeOnCompletion {
-                stateController.update(SetInitialLoadingStateTransformer(false))
-            }
+        }.invokeOnCompletion {
+            stateController.update(SetInitialLoadingStateTransformer(false))
+        }
     }
 
     override fun onInitialInfoBannerClick() {
@@ -393,7 +396,7 @@ internal class StakingViewModel @Inject constructor(
             cryptoCurrencyStatus.currency.network.id.value,
             activeStake.pendingActions,
         )
-        val isMultiplePendingActions = activeStake.pendingActions.isSingleItem().not()
+        val isMultiplePendingActions = activeStake.pendingActions.size > 1
         if (isMultiplePendingActions && !isAllWithdrawActions) {
             stateController.update(
                 ShowActionSelectorBottomSheetTransformer(
@@ -701,65 +704,63 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
-        viewModelScope.launch {
-            getUserWalletUseCase(userWalletId).fold(
-                ifRight = { wallet ->
-                    userWallet = wallet
-                },
-                ifLeft = {
-                    Timber.e(it.toString())
-                    stakingEventFactory.createGenericErrorAlert(it.toString())
-                    stateController.update(SetConfirmationStateResetAssentTransformer)
-                },
-            )
-            getCurrencyStatusUpdatesUseCase(userWalletId, cryptoCurrencyId, false)
-                .conflate()
-                .distinctUntilChanged()
-                .filter { value.currentStep == StakingStep.InitialInfo }
-                .onEach { maybeStatus ->
-                    maybeStatus.fold(
-                        ifRight = { status ->
-                            if (!isInitialInfoAnalyticSent) {
-                                isInitialInfoAnalyticSent = true
-                                val balances = status.value.yieldBalance as? YieldBalance.Data
-                                analyticsEventHandler.send(
-                                    StakingAnalyticsEvents.StakingInfoScreenOpened(
-                                        validatorsCount = balances?.getValidatorsCount() ?: 0,
-                                        token = status.currency.symbol,
-                                    ),
-                                )
-                            }
-
-                            feeCryptoCurrencyStatus =
-                                getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
-                            cryptoCurrencyStatus = status
-                            val isAnyTokenStaked = isAnyTokenStakedUseCase(userWalletId).getOrNull() ?: false
-
-                            setupApprovalNeeded()
-                            checkIfSubtractAvailable()
-
-                            stateController.update(
-                                transformer = SetInitialDataStateTransformer(
-                                    clickIntents = this@StakingViewModel,
-                                    yield = yield,
-                                    isAnyTokenStaked = isAnyTokenStaked,
-                                    isApprovalNeeded = stakingApproval is StakingApproval.Needed,
-                                    cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-                                    userWalletProvider = Provider { userWallet },
-                                    appCurrencyProvider = Provider { appCurrency },
+        getUserWalletUseCase(userWalletId).fold(
+            ifRight = { wallet ->
+                userWallet = wallet
+            },
+            ifLeft = {
+                Timber.e(it.toString())
+                stakingEventFactory.createGenericErrorAlert(it.toString())
+                stateController.update(SetConfirmationStateResetAssentTransformer)
+            },
+        )
+        getCurrencyStatusUpdatesUseCase(userWalletId, cryptoCurrencyId, false)
+            .conflate()
+            .distinctUntilChanged()
+            .filter { value.currentStep == StakingStep.InitialInfo }
+            .onEach { maybeStatus ->
+                maybeStatus.fold(
+                    ifRight = { status ->
+                        if (!isInitialInfoAnalyticSent) {
+                            isInitialInfoAnalyticSent = true
+                            val balances = status.value.yieldBalance as? YieldBalance.Data
+                            analyticsEventHandler.send(
+                                StakingAnalyticsEvents.StakingInfoScreenOpened(
+                                    validatorsCount = balances?.getValidatorsCount() ?: 0,
+                                    token = status.currency.symbol,
                                 ),
                             )
-                        },
-                        ifLeft = { error ->
-                            Timber.e(error.toString())
-                            stakingEventFactory.createGenericErrorAlert(error.toString())
-                            stateController.update(SetConfirmationStateResetAssentTransformer)
-                        },
-                    )
-                }
-                .flowOn(dispatchers.main)
-                .launchIn(viewModelScope)
-        }
+                        }
+
+                        feeCryptoCurrencyStatus =
+                            getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
+                        cryptoCurrencyStatus = status
+                        val isAnyTokenStaked = isAnyTokenStakedUseCase(userWalletId).getOrNull() ?: false
+
+                        setupApprovalNeeded()
+                        checkIfSubtractAvailable()
+
+                        stateController.update(
+                            transformer = SetInitialDataStateTransformer(
+                                clickIntents = this@StakingViewModel,
+                                yield = yield,
+                                isAnyTokenStaked = isAnyTokenStaked,
+                                isApprovalNeeded = stakingApproval is StakingApproval.Needed,
+                                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                                userWalletProvider = Provider { userWallet },
+                                appCurrencyProvider = Provider { appCurrency },
+                            ),
+                        )
+                    },
+                    ifLeft = { error ->
+                        Timber.e(error.toString())
+                        stakingEventFactory.createGenericErrorAlert(error.toString())
+                        stateController.update(SetConfirmationStateResetAssentTransformer)
+                    },
+                )
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(viewModelScope)
     }
 
     private fun subscribeOnBalanceHiding() {
