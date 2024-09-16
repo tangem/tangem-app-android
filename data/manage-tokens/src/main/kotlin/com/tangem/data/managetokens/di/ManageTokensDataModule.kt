@@ -1,12 +1,14 @@
 package com.tangem.data.managetokens.di
 
+import com.tangem.data.managetokens.DefaultCustomTokensRepository
 import com.tangem.data.managetokens.DefaultManageTokensRepository
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
-import com.tangem.data.managetokens.utils.ManagedCryptoCurrencyFactory
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -23,7 +25,6 @@ internal object ManageTokensDataModule {
     fun provideManageTokensRepository(
         tangemTechApi: TangemTechApi,
         userWalletsStore: UserWalletsStore,
-        managedCryptoCurrencyFactory: ManagedCryptoCurrencyFactory,
         manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
         appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
@@ -31,9 +32,26 @@ internal object ManageTokensDataModule {
         return DefaultManageTokensRepository(
             tangemTechApi,
             userWalletsStore,
-            managedCryptoCurrencyFactory,
             manageTokensUpdateFetcher,
             appPreferencesStore,
+            dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCustomTokensRepository(
+        tangemTechApi: TangemTechApi,
+        userWalletsStore: UserWalletsStore,
+        appPreferencesStore: AppPreferencesStore,
+        walletManagersFacade: WalletManagersFacade,
+        dispatchers: CoroutineDispatcherProvider,
+    ): CustomTokensRepository {
+        return DefaultCustomTokensRepository(
+            tangemTechApi,
+            userWalletsStore,
+            appPreferencesStore,
+            walletManagersFacade,
             dispatchers,
         )
     }

@@ -6,6 +6,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -24,12 +25,14 @@ import kotlinx.coroutines.coroutineScope
  * @param currenciesRepository The repository for retrieving currency-related data.
  * @param networksRepository The repository for retrieving network-related data.
  * @param quotesRepository The repository for retrieving cryptocurrency quotes.
+ * @param stakingRepository The repository for retrieving staking-related data.
  */
 // TODO: Add tests
 class FetchTokenListUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val networksRepository: NetworksRepository,
     private val quotesRepository: QuotesRepository,
+    private val stakingRepository: StakingRepository,
 ) {
 
     /**
@@ -59,7 +62,15 @@ class FetchTokenListUseCase(
                     )
                 }
 
-                awaitAll(fetchStatuses, fetchQuotes)
+                val yieldBalances = async {
+                    fetchYieldBalances(
+                        userWalletId = userWalletId,
+                        currencies = currencies,
+                        refresh = refresh,
+                    )
+                }
+
+                awaitAll(fetchStatuses, fetchQuotes, yieldBalances)
             }
         }
     }
@@ -97,5 +108,16 @@ class FetchTokenListUseCase(
         ) {
             /* Ignore error */
         }
+    }
+
+    private suspend fun fetchYieldBalances(
+        userWalletId: UserWalletId,
+        currencies: List<CryptoCurrency>,
+        refresh: Boolean,
+    ) {
+        catch(
+            block = { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies, refresh) },
+            catch = { /* Ignore error */ },
+        )
     }
 }
