@@ -14,6 +14,8 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.pagination)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
 
     implementation(projects.domain.legacy)
     implementation(projects.domain.markets)
