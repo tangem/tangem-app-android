@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -75,18 +76,6 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetStakingYieldBalanceUseCase(
-        stakingRepository: StakingRepository,
-        stakingErrorResolver: StakingErrorResolver,
-    ): GetStakingYieldBalanceUseCase {
-        return GetStakingYieldBalanceUseCase(
-            stakingRepository = stakingRepository,
-            stakingErrorResolver = stakingErrorResolver,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideInitializeStakingProcessUseCase(
         stakingRepository: StakingRepository,
         stakingErrorResolver: StakingErrorResolver,
@@ -112,11 +101,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideSubmitHashUseCase(
-        stakingRepository: StakingRepository,
+        stakingTransactionHashRepository: StakingTransactionHashRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): SubmitHashUseCase {
         return SubmitHashUseCase(
-            stakingRepository = stakingRepository,
+            stakingTransactionHashRepository = stakingTransactionHashRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -124,11 +113,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideSaveUnsubmittedHashUseCase(
-        stakingRepository: StakingRepository,
+        stakingTransactionHashRepository: StakingTransactionHashRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): SaveUnsubmittedHashUseCase {
         return SaveUnsubmittedHashUseCase(
-            stakingRepository = stakingRepository,
+            stakingTransactionHashRepository = stakingTransactionHashRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -136,23 +125,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideSendUnsubmittedHashesUseCase(
-        stakingRepository: StakingRepository,
+        stakingTransactionHashRepository: StakingTransactionHashRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): SendUnsubmittedHashesUseCase {
         return SendUnsubmittedHashesUseCase(
-            stakingRepository = stakingRepository,
-            stakingErrorResolver = stakingErrorResolver,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideIsStakeMoreAvailableUseCase(
-        stakingRepository: StakingRepository,
-        stakingErrorResolver: StakingErrorResolver,
-    ): IsStakeMoreAvailableUseCase {
-        return IsStakeMoreAvailableUseCase(
-            stakingRepository = stakingRepository,
+            stakingTransactionHashRepository = stakingTransactionHashRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -176,6 +153,18 @@ internal object StakingDomainModule {
         stakingErrorResolver: StakingErrorResolver,
     ): GetConstructedStakingTransactionUseCase {
         return GetConstructedStakingTransactionUseCase(
+            stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsAnyTokenStakedUseCase(
+        stakingRepository: StakingRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): IsAnyTokenStakedUseCase {
+        return IsAnyTokenStakedUseCase(
             stakingRepository = stakingRepository,
             stakingErrorResolver = stakingErrorResolver,
         )

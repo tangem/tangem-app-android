@@ -11,12 +11,19 @@ android {
 
 
 dependencies {
+    /* Domain */
     api(projects.domain.appCurrency.models)
+    api(projects.domain.card)
     api(projects.domain.core)
-    api(projects.core.pagination)
     api(projects.domain.markets.models)
+    api(projects.domain.wallets.models)
 
-    implementation(deps.kotlin.serialization)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.tokens)
+
+    api(projects.core.pagination)
+
+    /* Utils */
+    implementation(deps.kotlin.serialization)
     implementation(projects.core.utils)
 }
