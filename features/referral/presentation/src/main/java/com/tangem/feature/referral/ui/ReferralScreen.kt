@@ -195,7 +195,7 @@ private fun ReferralInfo(
         }
 
         is ReferralInfoState.Loading -> {
-            LoadingCondition(iconResId = R.drawable.ic_tether_28)
+            LoadingCondition(iconResId = R.drawable.ic_tether_24)
             SpacerH32()
             LoadingCondition(iconResId = R.drawable.ic_discount_28)
         }
@@ -211,7 +211,7 @@ private fun Conditions(state: ReferralInfoContentState) {
 
 @Composable
 private fun ConditionForYou(state: ReferralInfoContentState) {
-    Condition(iconResId = R.drawable.ic_tether_28) {
+    Condition(iconResId = R.drawable.ic_tether_24) {
         when (state) {
             is ReferralInfoState.ParticipantContent -> InfoForYou(
                 award = state.award,

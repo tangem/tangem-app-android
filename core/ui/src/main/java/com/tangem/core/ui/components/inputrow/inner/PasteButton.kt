@@ -9,9 +9,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -65,7 +65,7 @@ fun PasteButton(isPasteButtonVisible: Boolean, onClick: (String) -> Unit, modifi
                 )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(radius = TangemTheme.dimens.radius8),
+                    indication = ripple(radius = TangemTheme.dimens.radius8),
                     enabled = isPasteEnabled,
                     onClick = {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -91,7 +91,7 @@ fun CrossIcon(onClick: (String) -> Unit, modifier: Modifier = Modifier) {
             .size(TangemTheme.dimens.size24)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(radius = TangemTheme.dimens.radius12),
+                indication = ripple(radius = TangemTheme.dimens.radius12),
                 onClick = { onClick("") },
             ),
     )
