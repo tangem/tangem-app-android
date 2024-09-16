@@ -116,7 +116,9 @@ internal class AddStakingNotificationsTransformer(
             confirmationState = confirmationState.copy(
                 notifications = notifications.toImmutableList(),
                 isPrimaryButtonEnabled = notifications.none {
-                    it is StakingNotification.Error || it is NotificationUM.Error
+                    it is StakingNotification.Error ||
+                        it is NotificationUM.Error ||
+                        it is NotificationUM.Warning.NetworkFeeUnreachable
                 },
             ),
         )
