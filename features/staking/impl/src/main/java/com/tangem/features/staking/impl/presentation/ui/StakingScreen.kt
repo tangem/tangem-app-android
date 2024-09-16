@@ -48,7 +48,7 @@ internal fun StakingScreen(uiState: StakingUiState) {
             .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        SendAppBar(
+        StakingAppBar(
             uiState = uiState,
         )
         StakingScreenContent(
@@ -85,25 +85,25 @@ fun StakingBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
 }
 
 @Composable
-private fun SendAppBar(uiState: StakingUiState) {
-    val backIcon = when (uiState.currentStep) {
+private fun StakingAppBar(uiState: StakingUiState) {
+    val (backIcon, click) = when (uiState.currentStep) {
         StakingStep.Amount,
-        StakingStep.Validators,
         StakingStep.Confirmation,
         -> {
-            R.drawable.ic_close_24
+            R.drawable.ic_close_24 to uiState.clickIntents::onBackClick
         }
+        StakingStep.Validators,
         StakingStep.RewardsValidators,
         StakingStep.InitialInfo,
         -> {
-            R.drawable.ic_back_24
+            R.drawable.ic_back_24 to uiState.clickIntents::onPrevClick
         }
     }
     AppBarWithBackButtonAndIcon(
         text = uiState.title.resolveReference(),
         subtitle = uiState.subtitle?.resolveReference(),
         backIconRes = backIcon,
-        onBackClick = uiState.clickIntents::onBackClick,
+        onBackClick = click,
         backgroundColor = TangemTheme.colors.background.secondary,
         modifier = Modifier.height(TangemTheme.dimens.size56),
     )
