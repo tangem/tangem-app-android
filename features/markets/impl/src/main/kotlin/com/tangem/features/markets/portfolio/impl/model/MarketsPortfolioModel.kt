@@ -2,6 +2,7 @@ package com.tangem.features.markets.portfolio.impl.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -24,9 +25,11 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
+import com.tangem.features.markets.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
 import com.tangem.features.markets.portfolio.impl.ui.WarningDialog
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -49,12 +52,17 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val saveMarketTokensUseCase: SaveMarketTokensUseCase,
     private val addToPortfolioManager: AddToPortfolioManager,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     val state: StateFlow<MyPortfolioUM> get() = _state
     private val _state: MutableStateFlow<MyPortfolioUM> = MutableStateFlow(value = MyPortfolioUM.Loading)
 
     private val params = paramsContainer.require<MarketsPortfolioComponent.Params>()
+    private val analyticsEventBuilder = PortfolioAnalyticsEvent.EventBuilder(
+        token = params.token,
+        source = params.analyticsParams?.source,
+    )
 
     /** Multi-wallet [UserWalletId] that user uses to add new tokens in AddToPortfolio bottom sheet */
     private val selectedMultiWalletIdFlow = MutableStateFlow<UserWalletId?>(value = null)
@@ -72,20 +80,51 @@ internal class MarketsPortfolioModel @Inject constructor(
         )
 
     private val factory = MyPortfolioUMFactory(
-        onAddClick = { onAddToPortfolioBSVisibilityChange(isShow = true) },
+        onAddClick = {
+            onAddToPortfolioBSVisibilityChange(isShow = true)
+            // === Analytics ===
+            analyticsEventHandler.send(
+                analyticsEventBuilder.addToPortfolioClicked(),
+            )
+        },
         addToPortfolioBSContentUMFactory = AddToPortfolioBSContentUMFactory(
             token = params.token,
             onAddToPortfolioVisibilityChange = ::onAddToPortfolioBSVisibilityChange,
             onWalletSelectorVisibilityChange = ::onWalletSelectorVisibilityChange,
             onNetworkSwitchClick = ::onNetworkSwitchClick,
-            onWalletSelect = ::onWalletSelect,
-            onContinueClick = ::onContinueClick,
+            onWalletSelect = {
+                onWalletSelect(it)
+                // === Analytics ===
+                analyticsEventHandler.send(
+                    analyticsEventBuilder.addToPortfolioWalletChanged(),
+                )
+            },
+            onContinueClick = { selectedWalletId, addedNetworks ->
+                onContinueClick(selectedWalletId, addedNetworks)
+
+                // === Analytics ===
+                analyticsEventHandler.send(
+                    analyticsEventBuilder.addToPortfolioContinue(
+                        blockchainNames = addedNetworks.mapNotNull {
+                            BlockchainUtils.getNetworkInfo(it.networkId)?.name
+                        },
+                    ),
+                )
+            },
         ),
         currentState = Provider { _state.value },
         tokenActionsHandler = tokenActionsIntentsFactory.create(
             currentAppCurrency = Provider { currentAppCurrency.value },
             updateTokenReceiveBSConfig = { updateBlock ->
                 updateTokensState { it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig)) }
+            },
+            onHandleQuickAction = { handledAction ->
+                analyticsEventHandler.send(
+                    analyticsEventBuilder.quickActionClick(
+                        actionUM = handledAction.action,
+                        blockchainName = handledAction.cryptoCurrencyData.status.currency.network.name,
+                    ),
+                )
             },
         ),
         updateTokens = { updateBlock ->

@@ -36,9 +36,9 @@ sealed interface TransactionState {
     ) : TransactionState {
 
         sealed class Status {
-            object Failed : Status()
-            object Confirmed : Status()
-            object Unconfirmed : Status()
+            data object Failed : Status()
+            data object Confirmed : Status()
+            data object Unconfirmed : Status()
         }
 
         enum class Direction {

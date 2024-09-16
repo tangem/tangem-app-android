@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -14,6 +15,7 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent.Params
+import com.tangem.features.markets.details.impl.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.markets.details.impl.model.MarketsTokenDetailsModel
 import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
 import com.tangem.features.markets.details.impl.ui.MarketsTokenDetailsContent
@@ -29,6 +31,7 @@ import kotlinx.coroutines.launch
 internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: Params,
+    analyticsEventHandler: AnalyticsEventHandler,
     portfolioComponentFactory: MarketsPortfolioComponent.Factory,
 ) : AppComponentContext by appComponentContext, MarketsTokenDetailsComponent {
 
@@ -38,12 +41,17 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
             id = getTokenIdIfL2Network(params.token.id),
         ),
     )
+    private val analyticsParams = params.analyticsParams
+
     private val model: MarketsTokenDetailsModel = getOrCreateModel(updatedParams)
 
     private val portfolioComponent: MarketsPortfolioComponent? = if (updatedParams.showPortfolio) {
         portfolioComponentFactory.create(
             context = child("my_portfolio"),
-            params = MarketsPortfolioComponent.Params(updatedParams.token),
+            params = MarketsPortfolioComponent.Params(
+                updatedParams.token,
+                analyticsParams = analyticsParams?.source?.let { MarketsPortfolioComponent.AnalyticsParams(it) },
+            ),
         )
     } else {
         null
@@ -58,6 +66,18 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
                     else -> {}
                 }
             }
+        }
+
+        // === Analytics ===
+        if (analyticsParams != null) {
+            analyticsEventHandler.send(
+                MarketDetailsAnalyticsEvent.EventBuilder(
+                    token = params.token,
+                ).screenOpened(
+                    blockchain = analyticsParams.blockchain,
+                    source = analyticsParams.source,
+                ),
+            )
         }
     }
 

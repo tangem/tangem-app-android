@@ -20,6 +20,13 @@ interface MarketsTokenDetailsComponent : ComposableContentComponent {
         val token: TokenMarketParams,
         val appCurrency: AppCurrency,
         val showPortfolio: Boolean,
+        val analyticsParams: AnalyticsParams?,
+    )
+
+    @Serializable
+    data class AnalyticsParams(
+        val blockchain: String?,
+        val source: String,
     )
 
     @Composable
