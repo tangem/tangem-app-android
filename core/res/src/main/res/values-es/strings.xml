@@ -117,6 +117,7 @@
   <string name="common_import">Importe</string>
   <string name="common_in_progress">En progreso</string>
   <string name="common_later">Más tarde</string>
+  <string name="common_left">%1$s quedan</string>
   <string name="common_locked">Bloqueado</string>
   <string name="common_main_network">Red principal</string>
   <string name="common_network_fee_title">Tarifa de la red</string>
@@ -295,6 +296,7 @@
   <string name="give_permission_unlimited">Ilimitado</string>
   <string name="home_button_order">Ordenar </string>
   <string name="home_button_scan">Escanee</string>
+  <string name="information_generated_with_ai">Esta información fue generada con IA</string>
   <string name="initial_message_change_access_code_body">Toque para cambiar la contraseña</string>
   <string name="initial_message_change_passcode_body">Toque para cambiar la contraseña</string>
   <string name="initial_message_create_wallet_body">Para crear la billetera, toque la tarjeta como se muestra arriba y no la retire hasta el final de la operación</string>
@@ -348,6 +350,7 @@
   <string name="markets_common_my_portfolio">Mi portafolio</string>
   <string name="markets_common_title">Mercado</string>
   <string name="markets_generate_addresses_notification">Para generar direcciones para las redes seleccionadas, debe escanear su tarjeta Tangem</string>
+  <string name="markets_hint">Para agregar tokens, abra esta página o toque la barra de búsqueda</string>
   <string name="markets_insights_info_description_message">Los datos de este apartado proceden de las siguientes redes: %s</string>
   <string name="markets_loading_error_title">No se pueden cargar los datos…</string>
   <string name="markets_loading_no_data_title">Sin datos</string>
@@ -358,12 +361,12 @@
   <string name="markets_search_token_no_result_title">Sin resultado</string>
   <string name="markets_select_network">Seleccione una red</string>
   <string name="markets_select_wallet">Seleccione una billetera</string>
-  <string name="markets_selector_interval_1m_title">1 mes</string>
+  <string name="markets_selector_interval_1m_title">1 mo</string>
   <string name="markets_selector_interval_1y_title">1 año</string>
-  <string name="markets_selector_interval_24h_title">24 horas</string>
-  <string name="markets_selector_interval_3m_title">3 meses</string>
-  <string name="markets_selector_interval_6m_title">6 meses</string>
-  <string name="markets_selector_interval_7d_title">7 días</string>
+  <string name="markets_selector_interval_24h_title">24h</string>
+  <string name="markets_selector_interval_3m_title">3mos</string>
+  <string name="markets_selector_interval_6m_title">6mos</string>
+  <string name="markets_selector_interval_7d_title">7d</string>
   <string name="markets_selector_interval_all_title">Todo</string>
   <string name="markets_sort_by_experienced_buyers_title">Compradores experimentados</string>
   <string name="markets_sort_by_rating_title">Evaluación</string>
@@ -395,7 +398,7 @@
   <string name="markets_token_details_liquidity_description">El cambio en la cantidad de liquidez disponible para el token durante el período de tiempo especificado</string>
   <string name="markets_token_details_liquidity_index">Índice de liquidez</string>
   <string name="markets_token_details_low">Bajo</string>
-  <string name="markets_token_details_market_capitalization">Capitalización de mercado</string>
+  <string name="markets_token_details_market_capitalization">Capital. de mercado</string>
   <string name="markets_token_details_market_capitalization_description">El valor total de una criptomoneda calculado multiplicando su precio por la cantidad de monedas en circulación</string>
   <string name="markets_token_details_market_rating">Evaluación de mercado</string>
   <string name="markets_token_details_market_rating_description">Posición en la clasificación de criptomonedas entre todas las monedas según la capitalización de mercado</string>
@@ -412,6 +415,7 @@
   <string name="markets_token_details_trading_volume_24h_description">La cantidad total de una criptomoneda que se ha negociado en las últimas 24 horas, lo que indica el nivel de actividad y liquidez en el mercado.</string>
   <string name="markets_tooltip_message">Tire hacia arriba o toque la barra de búsqueda para agregar tokens directamente desde el mercado</string>
   <string name="markets_tooltip_title">Agregar tokens</string>
+  <string name="nfc_error_unavailable">NFC no está disponible en su dispositivo</string>
   <string name="onboarding_access_code_feature_1_description">Deba configurar un único código de acceso para proteger todas sus tarjetas</string>
   <string name="onboarding_access_code_feature_1_title">Proteger</string>
   <string name="onboarding_access_code_feature_2_description">Puede configurar un código de acceso individual en cada tarjeta más tarde</string>
@@ -637,6 +641,7 @@
   <string name="settings_forget_wallet_footer">Esto eliminará la wallet de la aplicación. La wallet en sí puede\nañadirse de nuevo.</string>
   <string name="settings_wallet_name_title">Nombre</string>
   <string name="staking_amount_requirement_error">El monto del staking debe ser al menos %s</string>
+  <string name="staking_amount_tron_integer_error">El monto del staking se redondeará a %1$s TRX debido a las reglas de la red.</string>
   <string name="staking_claim_unstaked">Unstaking de la reclamación</string>
   <string name="staking_details_annual_percentage_rate">Porcentaje de rendimiento anual</string>
   <string name="staking_details_annual_percentage_rate_info">El porcentaje de rendimiento anual que podrá ganar como participante en el staking.</string>
@@ -660,6 +665,7 @@
   <string name="staking_details_unbonding_period_info">El período que debes esperar después de solicitar el retiro de fondos del staking antes de que los tokens estén disponibles.</string>
   <string name="staking_details_warmup_period">Periodo de calentamiento</string>
   <string name="staking_details_warmup_period_info">El tiempo permitido para activar la participación en la apuesta.</string>
+  <string name="staking_legal">Al utilizar la función de staking, usted acepta %1$s y  %2$s del proveedor</string>
   <string name="staking_locked">Bloqueado</string>
   <string name="staking_migrate">Migrar</string>
   <string name="staking_native">Native staking</string>
@@ -671,6 +677,7 @@
   <string name="staking_notification_earn_rewards_title">Gane recompensas por staking</string>
   <string name="staking_notification_unstake_text">Sus fondos estarán disponibles para su uso después del período de desvinculación de %s.</string>
   <string name="staking_notification_withdraw_text">Ya puede retirar sus fondos, estarán disponibles para usar de inmediato.</string>
+  <string name="staking_notifications_revote_tron_text">Hacer staking en la red Tron con un nuevo validador transferirá automáticamente todos los fondos de staking a este validador.</string>
   <string name="staking_ready_to_withdraw">Listo para retirar</string>
   <string name="staking_rebond">Reunir</string>
   <string name="staking_restake">Haga el staking de nuevo</string>
@@ -690,8 +697,11 @@
   <string name="staking_rewards">Recompensas</string>
   <string name="staking_stake_locked">El stake está bloqueado</string>
   <string name="staking_stake_more">Hacer más staking</string>
+  <string name="staking_tap_to_unlock">Toque para desbloquear</string>
+  <string name="staking_tap_to_withdraw">Toque para retirar</string>
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">El unstaking de %s</string>
+  <string name="staking_transaction_in_progress_text">¡La transacción se está procesando! La validación está en curso en la cadena de bloques. Esto puede tardar unos minutos.</string>
   <string name="staking_unbonding">Desunión</string>
   <string name="staking_unlocked_locked">Desbloquear</string>
   <string name="staking_unstaked">Sin staking</string>
@@ -701,6 +711,7 @@
   <string name="staking_vote">Votar</string>
   <string name="staking_vote_locked">Voto bloqueado</string>
   <string name="staking_withdraw">Retirar</string>
+  <string name="staking_your_stakes">Sus stakes</string>
   <string name="story_awe_description">Almacene sus activos crypto de forma segura manteniendo las claves privadas contenidas en su tarjeta</string>
   <string name="story_awe_title">Billetera de hardware revolucionaria</string>
   <string name="story_backup_description">Hasta 3 tarjetas físicas por billetera</string>
