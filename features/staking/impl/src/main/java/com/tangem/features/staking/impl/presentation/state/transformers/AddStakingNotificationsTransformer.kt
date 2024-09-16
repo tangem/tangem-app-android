@@ -91,7 +91,12 @@ internal class AddStakingNotificationsTransformer(
                 prevState = prevState,
                 feeError = feeError,
                 sendingAmount = sendingAmount,
-                onReload = { prevState.clickIntents.getFee(confirmationState.pendingAction) },
+                onReload = {
+                    prevState.clickIntents.getFee(
+                        confirmationState.pendingAction,
+                        confirmationState.pendingActions,
+                    )
+                },
                 feeValue = feeValue,
             )
             // warnings
