@@ -12,9 +12,13 @@ interface StakingBalanceStore {
 
     suspend fun store(userWalletId: UserWalletId, items: Set<YieldBalanceWrapperDTO>)
 
-    fun get(userWalletId: UserWalletId, integrationId: String): Flow<YieldBalanceWrapperDTO>
+    fun get(userWalletId: UserWalletId, address: String, integrationId: String): Flow<YieldBalanceWrapperDTO>
 
-    suspend fun getSyncOrNull(userWalletId: UserWalletId, integrationId: String): YieldBalanceWrapperDTO?
+    suspend fun getSyncOrNull(
+        userWalletId: UserWalletId,
+        address: String,
+        integrationId: String,
+    ): YieldBalanceWrapperDTO?
 
-    suspend fun store(userWalletId: UserWalletId, integrationId: String, item: YieldBalanceWrapperDTO)
+    suspend fun store(userWalletId: UserWalletId, integrationId: String, address: String, item: YieldBalanceWrapperDTO)
 }
