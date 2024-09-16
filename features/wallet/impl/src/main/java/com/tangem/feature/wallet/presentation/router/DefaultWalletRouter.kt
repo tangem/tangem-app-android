@@ -25,7 +25,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScree
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
-import com.tangem.features.markets.component.MarketsEntryComponent
+import com.tangem.features.markets.entry.MarketsEntryComponent
 import kotlin.properties.Delegates
 
 /** Default implementation of wallet feature router */
@@ -139,8 +139,8 @@ internal class DefaultWalletRouter(
         return router.stack.lastOrNull() is AppRoute.Wallet
     }
 
-    override fun openManageTokensScreen() {
-        router.push(AppRoute.ManageTokens(readOnlyContent = false))
+    override fun openManageTokensScreen(userWalletId: UserWalletId) {
+        router.push(AppRoute.ManageTokens(userWalletId = userWalletId))
     }
 
     override fun openScanFailedDialog(onTryAgain: () -> Unit) {

@@ -25,6 +25,7 @@ sealed class ManagedCryptoCurrency {
             override val iconUrl: String?,
             override val network: Network,
             val contractAddress: String,
+            val decimals: Int,
         ) : Custom()
 
         data class Coin(
@@ -42,7 +43,7 @@ sealed class ManagedCryptoCurrency {
         override val symbol: String,
         override val iconUrl: String,
         val availableNetworks: List<SourceNetwork>,
-        val addedIn: Set<Network.ID>,
+        val addedIn: Set<Network>,
     ) : ManagedCryptoCurrency() {
 
         val isAdded: Boolean = addedIn.isNotEmpty()
@@ -54,13 +55,18 @@ sealed class ManagedCryptoCurrency {
     sealed class SourceNetwork {
 
         abstract val network: Network
+        abstract val decimals: Int
 
         val id: Network.ID
             get() = network.id
 
         val typeName: String
             get() = when (this) {
-                is Main -> MAIN_NETWORK_TYPE_NAME
+                is Main -> if (isL2Network) {
+                    MAIN_NETWORK_L2_TYPE_NAME
+                } else {
+                    MAIN_NETWORK_TYPE_NAME
+                }
                 is Default -> when (network.standardType) {
                     is Network.StandardType.BEP2,
                     is Network.StandardType.BEP20,
@@ -73,15 +79,19 @@ sealed class ManagedCryptoCurrency {
 
         data class Main(
             override val network: Network,
+            override val decimals: Int,
+            val isL2Network: Boolean,
         ) : SourceNetwork()
 
         data class Default(
             override val network: Network,
+            override val decimals: Int,
             val contractAddress: String,
         ) : SourceNetwork()
 
         private companion object {
             const val MAIN_NETWORK_TYPE_NAME = "MAIN"
+            const val MAIN_NETWORK_L2_TYPE_NAME = "MAIN L2"
         }
     }
 }

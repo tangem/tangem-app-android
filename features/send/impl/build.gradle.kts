@@ -71,6 +71,7 @@ dependencies {
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
     implementation(projects.domain.card)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)

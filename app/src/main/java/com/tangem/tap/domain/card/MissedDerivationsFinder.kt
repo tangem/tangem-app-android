@@ -11,6 +11,7 @@ import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.KeyWalletPublicKey
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 
 private typealias DerivationData = Pair<ByteArrayKey, List<DerivationPath>>
@@ -26,8 +27,12 @@ internal class MissedDerivationsFinder(private val scanResponse: ScanResponse) {
 
     /** Find missed derivations for given currencies [currencies] */
     fun find(currencies: List<CryptoCurrency>): Derivations {
+        return currencies.map { it.network }.let(::findByNetworks)
+    }
+
+    fun findByNetworks(networks: List<Network>): Derivations {
         return buildMap<ByteArrayKey, MutableList<DerivationPath>> {
-            currencies
+            networks
                 .mapToNewDerivations()
                 .forEach { data ->
                     val current = this[data.first]
@@ -41,25 +46,25 @@ internal class MissedDerivationsFinder(private val scanResponse: ScanResponse) {
         }
     }
 
-    private fun List<CryptoCurrency>.mapToNewDerivations(): List<DerivationData> {
+    private fun List<Network>.mapToNewDerivations(): List<DerivationData> {
         val config = CardConfig.createConfig(scanResponse.card)
-        return mapNotNull { currency ->
-            val blockchain = Blockchain.fromId(id = currency.network.id.value)
+        return mapNotNull { network ->
+            val blockchain = Blockchain.fromId(id = network.id.value)
             val curve = config.primaryCurve(blockchain) ?: return@mapNotNull null
 
-            findNewDerivations(curve = curve, scanResponse = scanResponse, currency = currency)
+            findNewDerivations(curve = curve, scanResponse = scanResponse, network = network)
         }
     }
 
     private fun findNewDerivations(
         curve: EllipticCurve,
         scanResponse: ScanResponse,
-        currency: CryptoCurrency,
+        network: Network,
     ): DerivationData? {
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
         val publicKey = wallet.publicKey.toMapKey()
 
-        val derivationCandidates = currency
+        val derivationCandidates = network
             .getDerivationCandidates(curve)
             .ifEmpty { return null }
             .filterAlreadyDerivedKeys(publicKey)
@@ -68,13 +73,13 @@ internal class MissedDerivationsFinder(private val scanResponse: ScanResponse) {
         return publicKey to derivationCandidates
     }
 
-    private fun CryptoCurrency.getDerivationCandidates(curve: EllipticCurve): List<DerivationPath> {
-        val blockchain = Blockchain.fromId(id = network.id.value)
+    private fun Network.getDerivationCandidates(curve: EllipticCurve): List<DerivationPath> {
+        val blockchain = Blockchain.fromId(id = this.id.value)
 
         return buildList {
             add(blockchain.getDerivationPath(curve = curve))
-            add(blockchain.getCustomDerivationPath(curve = curve, currency = this@getDerivationCandidates))
-            add(blockchain.getCardanoDerivationPathIfNeeded(currency = this@getDerivationCandidates))
+            add(blockchain.getCustomDerivationPath(curve = curve, network = this@getDerivationCandidates))
+            add(blockchain.getCardanoDerivationPathIfNeeded(network = this@getDerivationCandidates))
         }
             .filterNotNull()
             .distinct()
@@ -88,17 +93,17 @@ internal class MissedDerivationsFinder(private val scanResponse: ScanResponse) {
         }
     }
 
-    private fun Blockchain.getCustomDerivationPath(curve: EllipticCurve, currency: CryptoCurrency): DerivationPath? {
+    private fun Blockchain.getCustomDerivationPath(curve: EllipticCurve, network: Network): DerivationPath? {
         return if (getSupportedCurves().contains(curve)) {
-            currency.network.derivationPath.value?.let(::DerivationPath)
+            network.derivationPath.value?.let(::DerivationPath)
         } else {
             null
         }
     }
 
-    private fun Blockchain.getCardanoDerivationPathIfNeeded(currency: CryptoCurrency): DerivationPath? {
-        return if (currency is CryptoCurrency.Coin && this == Blockchain.Cardano) {
-            currency.network.derivationPath.value?.let {
+    private fun Blockchain.getCardanoDerivationPathIfNeeded(network: Network): DerivationPath? {
+        return if (this == Blockchain.Cardano) {
+            network.derivationPath.value?.let {
                 CardanoUtils.extendedDerivationPath(derivationPath = DerivationPath(it))
             }
         } else {

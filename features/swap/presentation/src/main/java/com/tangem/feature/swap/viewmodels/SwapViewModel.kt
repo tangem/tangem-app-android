@@ -25,7 +25,6 @@ import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
@@ -65,7 +64,7 @@ typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
 @Suppress("LargeClass", "LongParameterList")
 @HiltViewModel
 internal class SwapViewModel @Inject constructor(
-    private val swapInteractor: SwapInteractor,
+    private val swapInteractorFactory: SwapInteractor.Factory,
     private val blockchainInteractor: BlockchainInteractor,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -79,7 +78,13 @@ internal class SwapViewModel @Inject constructor(
 
     private val initialCryptoCurrency: CryptoCurrency = savedStateHandle.get<Bundle>(AppRoute.Swap.CURRENCY_BUNDLE_KEY)
         ?.unbundle(CryptoCurrency.serializer())
-        ?: error("no expected parameter CryptoCurrency found`")
+        ?: error("no expected parameter CryptoCurrency found")
+
+    private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.Swap.USER_WALLET_ID_KEY)
+        ?.unbundle(UserWalletId.serializer())
+        ?: error("no expected parameter UserWalletId found")
+
+    private val swapInteractor = swapInteractorFactory.create(userWalletId)
 
     private lateinit var initialCryptoCurrencyStatus: CryptoCurrencyStatus
 
@@ -126,15 +131,13 @@ internal class SwapViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(dispatchers.io) {
-            swapInteractor.getSelectedWallet()?.let {
-                val cryptoCurrencyStatus =
-                    getCryptoCurrencyStatusUseCase(it.walletId, initialCryptoCurrency.id).getOrNull()
-                if (cryptoCurrencyStatus == null) {
-                    uiState = stateBuilder.addAlert(uiState = uiState, onClick = swapRouter::back)
-                } else {
-                    initialCryptoCurrencyStatus = cryptoCurrencyStatus
-                    initTokens()
-                }
+            val cryptoCurrencyStatus =
+                getCryptoCurrencyStatusUseCase(userWalletId, initialCryptoCurrency.id).getOrNull()
+            if (cryptoCurrencyStatus == null) {
+                uiState = stateBuilder.addAlert(uiState = uiState, onClick = swapRouter::back)
+            } else {
+                initialCryptoCurrencyStatus = cryptoCurrencyStatus
+                initTokens()
             }
         }
     }
@@ -191,7 +194,6 @@ internal class SwapViewModel @Inject constructor(
                     ),
                 )
 
-                val userWalletId = swapInteractor.getSelectedWallet()?.walletId ?: return@launch
                 (dataState.fromCryptoCurrency?.currency as? CryptoCurrency.Coin)?.let {
                     subscribeToCoinBalanceUpdates(
                         userWalletId = userWalletId,
@@ -439,13 +441,14 @@ internal class SwapViewModel @Inject constructor(
         val consideredProviders = state.consideredProvidersStates()
 
         return if (consideredProviders.isNotEmpty()) {
+            val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
+            val bestQuotesProvider = findBestQuoteProvider(successLoadedData)
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
-                currentSelected
+                // logic for always choose best if already selected provider
+                bestQuotesProvider ?: currentSelected
             } else {
-                val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
                 val recommendedProvider = successLoadedData.keys.firstOrNull { it.isRecommended }
-                val bestQuotesProvider = findBestQuoteProvider(successLoadedData)
                 triggerPromoProviderEvent(recommendedProvider, bestQuotesProvider)
                 recommendedProvider ?: bestQuotesProvider ?: consideredProviders.keys.first()
             }
@@ -706,8 +709,6 @@ internal class SwapViewModel @Inject constructor(
             analyticsEventHandler.send(SwapEvents.ChooseTokenScreenResult(tokenChosen = true, token = it))
         }
 
-        val userWalletId = swapInteractor.getSelectedWallet()?.walletId
-
         if (foundToken != null) {
             val fromToken: CryptoCurrencyStatus
             val toToken: CryptoCurrencyStatus
@@ -716,7 +717,7 @@ internal class SwapViewModel @Inject constructor(
                 toToken = initialCryptoCurrencyStatus
 
                 val newToken = fromToken.currency as? CryptoCurrency.Coin
-                if (userWalletId != null && newToken != null) {
+                if (newToken != null) {
                     subscribeToCoinBalanceUpdates(
                         userWalletId = userWalletId,
                         coin = newToken,
@@ -728,7 +729,7 @@ internal class SwapViewModel @Inject constructor(
                 toToken = foundToken.currencyStatus
 
                 val newToken = toToken.currency as? CryptoCurrency.Coin
-                if (userWalletId != null && newToken != null) {
+                if (newToken != null) {
                     subscribeToCoinBalanceUpdates(
                         userWalletId = userWalletId,
                         coin = newToken,
@@ -962,12 +963,10 @@ internal class SwapViewModel @Inject constructor(
                 analyticsEventHandler.send(SwapEvents.ProviderClicked)
                 val states = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
                 val pricesLowerBest = getPricesLowerBest(providerId, states)
-                val unavailableProviders = getUnavailableProvidersFor(dataState.lastLoadedSwapStates)
                 uiState = stateBuilder.showSelectProviderBottomSheet(
                     uiState = uiState,
                     selectedProviderId = providerId,
                     pricesLowerBest = pricesLowerBest,
-                    unavailableProviders = unavailableProviders,
                     providersStates = dataState.lastLoadedSwapStates,
                 ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
             },
@@ -986,12 +985,10 @@ internal class SwapViewModel @Inject constructor(
                 }
             },
             onBuyClick = { currency ->
-                swapInteractor.getSelectedWallet()?.let { userWallet ->
-                    swapRouter.openTokenDetails(
-                        userWalletId = userWallet.walletId,
-                        currency = currency,
-                    )
-                }
+                swapRouter.openTokenDetails(
+                    userWalletId = userWalletId,
+                    currency = currency,
+                )
             },
             onRetryClick = {
                 startLoadingQuotesFromLastState()
@@ -1119,15 +1116,6 @@ internal class SwapViewModel @Inject constructor(
         return groupToFind.available.find { idToFind == it.currencyStatus.currency.id.value }?.providers ?: emptyList()
     }
 
-    private fun getAllProviders(): List<SwapProvider> {
-        return dataState.tokensDataState?.allProviders ?: emptyList()
-    }
-
-    private fun getUnavailableProvidersFor(state: Map<SwapProvider, SwapState>): List<SwapProvider> {
-        val availableProviders = state.keys.map { it.providerId }
-        return getAllProviders().filterNot { availableProviders.contains(it.providerId) }
-    }
-
     private fun Map<SwapProvider, SwapState>.getLastLoadedSuccessStates(): SuccessLoadedSwapData {
         return this.filter { it.value is SwapState.QuotesLoadedState }
             .mapValues { it.value as SwapState.QuotesLoadedState }
@@ -1172,20 +1160,18 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun updateWalletBalance() {
-        swapInteractor.getSelectedWallet()?.let { userWallet ->
-            dataState.fromCryptoCurrency?.currency?.network?.let { network ->
-                viewModelScope.launch {
-                    withContext(NonCancellable) {
-                        updateForBalance(userWallet, network)
-                    }
+        dataState.fromCryptoCurrency?.currency?.network?.let { network ->
+            viewModelScope.launch {
+                withContext(NonCancellable) {
+                    updateForBalance(userWalletId, network)
                 }
             }
         }
     }
 
-    private suspend fun updateForBalance(userWallet: UserWallet, network: Network) {
+    private suspend fun updateForBalance(userWalletId: UserWalletId, network: Network) {
         updateDelayedCurrencyStatusUseCase(
-            userWalletId = userWallet.walletId,
+            userWalletId = userWalletId,
             network = network,
             delayMillis = UPDATE_BALANCE_DELAY_MILLIS,
             refresh = true,
