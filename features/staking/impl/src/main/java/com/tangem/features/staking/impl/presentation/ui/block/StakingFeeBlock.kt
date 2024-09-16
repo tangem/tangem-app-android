@@ -30,17 +30,16 @@ import java.math.BigDecimal
 
 @Composable
 internal fun StakingFeeBlock(feeState: FeeState, isTransactionSent: Boolean) {
+    val backgroundColor = if (isTransactionSent) {
+        TangemTheme.colors.background.action
+    } else {
+        TangemTheme.colors.button.disabled
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(
-                if (isTransactionSent) {
-                    TangemTheme.colors.background.action
-                } else {
-                    TangemTheme.colors.button.disabled
-                },
-            )
+            .background(backgroundColor)
             .padding(TangemTheme.dimens.spacing12),
     ) {
         Text(
@@ -49,9 +48,7 @@ internal fun StakingFeeBlock(feeState: FeeState, isTransactionSent: Boolean) {
             color = TangemTheme.colors.text.tertiary,
         )
 
-        Box(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
-        ) {
+        Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
             when (feeState) {
                 is FeeState.Content -> {
                     val feeAmount = feeState.fee?.amount
@@ -82,6 +79,7 @@ internal fun StakingFeeBlock(feeState: FeeState, isTransactionSent: Boolean) {
                     SelectorRowItem(
                         titleRes = R.string.common_fee_selector_option_market,
                         iconRes = R.drawable.ic_bird_24,
+                        isSelected = true,
                         paddingValues = PaddingValues(),
                         showDivider = false,
                     )
@@ -91,6 +89,7 @@ internal fun StakingFeeBlock(feeState: FeeState, isTransactionSent: Boolean) {
                     SelectorRowItem(
                         titleRes = R.string.common_fee_selector_option_market,
                         iconRes = R.drawable.ic_bird_24,
+                        isSelected = true,
                         paddingValues = PaddingValues(),
                     )
                     FeeError(feeState)
