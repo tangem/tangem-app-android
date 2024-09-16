@@ -10,53 +10,7 @@ interface CardTypesResolver {
 
     fun isTangemWallet(): Boolean
 
-    fun isWhiteWallet2(): Boolean
-
-    fun isAvroraWallet(): Boolean
-
-    fun isTraillantWallet(): Boolean
-
     fun isShibaWallet(): Boolean
-
-    fun isTronWallet(): Boolean
-
-    fun isKaspaWallet(): Boolean
-
-    fun isKaspa2Wallet(): Boolean
-
-    fun isKaspaResellerWallet(): Boolean
-
-    fun isBadWallet(): Boolean
-
-    fun isJrWallet(): Boolean
-
-    fun isGrimWallet(): Boolean
-
-    fun isSatoshiFriendsWallet(): Boolean
-
-    fun isBitcoinPizzaDayWallet(): Boolean
-
-    fun isVeChainWallet(): Boolean
-
-    fun isNewWorldEliteWallet(): Boolean
-
-    fun isRedPandaWallet(): Boolean
-
-    fun isCryptoSethWallet(): Boolean
-
-    fun isKishuInuWallet(): Boolean
-
-    fun isBabyDogeWallet(): Boolean
-
-    fun isCOQWallet(): Boolean
-
-    fun isCoinMetricaWallet(): Boolean
-
-    fun isVoltInuWallet(): Boolean
-
-    fun isVividWallet(): Boolean
-
-    fun isPastelWallet(): Boolean
 
     fun isWhiteWallet(): Boolean
 
