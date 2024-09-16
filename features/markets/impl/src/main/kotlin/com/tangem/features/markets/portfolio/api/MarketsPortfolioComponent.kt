@@ -11,7 +11,15 @@ import kotlinx.serialization.Serializable
 interface MarketsPortfolioComponent : ComposableContentComponent {
 
     @Serializable
-    data class Params(val token: TokenMarketParams)
+    data class Params(
+        val token: TokenMarketParams,
+        val analyticsParams: AnalyticsParams?,
+    )
+
+    @Serializable
+    data class AnalyticsParams(
+        val source: String,
+    )
 
     fun setTokenNetworks(networks: List<TokenMarketInfo.Network>)
 
