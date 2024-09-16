@@ -30,6 +30,7 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState as NotificationButtonsState
@@ -51,6 +52,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsSta
 fun Notification(
     config: NotificationConfig,
     modifier: Modifier = Modifier,
+    subtitleColor: Color = TangemTheme.colors.text.tertiary,
     containerColor: Color? = null,
     iconTint: Color? = null,
     isEnabled: Boolean = true,
@@ -68,6 +70,7 @@ fun Notification(
             iconTint = iconTint,
             title = config.title,
             subtitle = config.subtitle,
+            subtitleColor = subtitleColor,
             isClickableComponent = isEnabled && config.onClick != null,
         )
     }
@@ -94,7 +97,7 @@ internal fun NotificationBaseContainer(
     Surface(
         onClick = onClick ?: {},
         modifier = modifier
-            .defaultMinSize(minHeight = TangemTheme.dimens.size62)
+            .defaultMinSize(minHeight = TangemTheme.dimens.size44)
             .fillMaxWidth(),
         enabled = onClick != null && isEnabled,
         shape = TangemTheme.shapes.roundedCornersXMedium,
@@ -119,15 +122,17 @@ internal fun NotificationBaseContainer(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun MainContent(
     iconResId: Int,
     iconTint: Color?,
-    title: TextReference,
+    title: TextReference?,
     subtitle: TextReference,
+    subtitleColor: Color,
     isClickableComponent: Boolean,
 ) {
-    Row {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             iconResId = iconResId,
             tint = iconTint,
@@ -138,7 +143,7 @@ private fun MainContent(
 
         SpacerW(width = TangemTheme.dimens.spacing10)
 
-        TextsBlock(title = title, subtitle = subtitle)
+        TextsBlock(title = title, subtitle = subtitle, subtitleColor = subtitleColor)
 
         if (isClickableComponent) {
             SpacerWMax()
@@ -174,17 +179,23 @@ private fun Icon(@DrawableRes iconResId: Int, tint: Color?, modifier: Modifier =
 }
 
 @Composable
-private fun TextsBlock(title: TextReference, subtitle: TextReference) {
-    Column(verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing2)) {
-        Text(
-            text = title.resolveReference(),
-            color = TangemTheme.colors.text.primary1,
-            style = TangemTheme.typography.button,
-        )
+private fun TextsBlock(title: TextReference?, subtitle: TextReference, subtitleColor: Color) {
+    Column {
+        val titleText = title?.resolveReference()
+
+        if (titleText != null) {
+            Text(
+                text = titleText,
+                color = TangemTheme.colors.text.primary1,
+                style = TangemTheme.typography.button,
+            )
+
+            SpacerH(height = TangemTheme.dimens.spacing2)
+        }
 
         Text(
             text = subtitle.resolveReference(),
-            color = TangemTheme.colors.text.tertiary,
+            color = subtitleColor,
             style = TangemTheme.typography.caption2,
         )
     }
@@ -362,6 +373,10 @@ private class NotificationConfigProvider : CollectionPreviewParameterProvider<No
                 onClick = {},
             ),
             onCloseClick = {},
+        ),
+        NotificationConfig(
+            subtitle = resourceReference(id = R.string.information_generated_with_ai),
+            iconResId = R.drawable.ic_magic_28,
         ),
     ),
 )

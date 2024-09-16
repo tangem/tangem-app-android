@@ -2,18 +2,20 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.utils.getPendingActionTitle
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
+internal class SetButtonsStateTransformer(
+    private val urlOpener: UrlOpener,
+) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         val confirmState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
@@ -22,9 +24,9 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
             NavigationButtonsState.Data(
                 primaryButton = getPrimaryButton(prevState),
                 prevButton = getPrevButton(prevState),
-                secondaryButton = getSecondaryButton(prevState),
                 extraButtons = getExtraButtons(prevState),
                 txUrl = (confirmState?.transactionDoneState as? TransactionDoneState.Content)?.txUrl,
+                onTextClick = urlOpener::openUrl,
             )
         } else {
             NavigationButtonsState.Empty
@@ -37,46 +39,20 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
         val confirmState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
         val innerConfirmState = confirmState?.innerState
 
-        val isPrimaryInProgress =
-            confirmState?.pendingActions?.getPrimaryAction() == confirmState?.pendingActionInProgress
         val isConfirmation = prevState.currentStep == StakingStep.Confirmation
         val isInProgress = innerConfirmState == InnerConfirmationStakingState.IN_PROGRESS
         val isCompleted = innerConfirmState == InnerConfirmationStakingState.COMPLETED
 
         val isIconVisible = isConfirmation && !isCompleted
-        val isShowProgress = isInProgress && isPrimaryInProgress
         return NavigationButton(
             textReference = prevState.getButtonText(),
             iconRes = R.drawable.ic_tangem_24,
             isSecondary = false,
             isIconVisible = isIconVisible,
-            showProgress = isShowProgress,
+            showProgress = isInProgress,
             isEnabled = prevState.isButtonEnabled(),
             onClick = { prevState.onPrimaryClick() },
         )
-    }
-
-    private fun getSecondaryButton(prevState: StakingUiState): NavigationButton? {
-        val confirmState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
-        val innerConfirmState = confirmState?.innerState
-
-        val isConfirmation = prevState.currentStep == StakingStep.Confirmation
-        val isInProgress = innerConfirmState == InnerConfirmationStakingState.IN_PROGRESS
-        val isCompleted = innerConfirmState == InnerConfirmationStakingState.COMPLETED
-
-        return confirmState?.pendingActions?.getSecondaryAction()?.let { pendingAction ->
-            val isSecondaryInProgress = pendingAction == confirmState.pendingActionInProgress
-            val isShowProgress = isInProgress && isSecondaryInProgress
-            NavigationButton(
-                textReference = getPendingActionTitle(pendingAction.type),
-                iconRes = R.drawable.ic_tangem_24,
-                isSecondary = true,
-                isIconVisible = true,
-                showProgress = isShowProgress,
-                isEnabled = prevState.isButtonEnabled(),
-                onClick = { prevState.clickIntents.onActionClick(pendingAction) },
-            ).takeIf { isConfirmation && !isCompleted }
-        }
     }
 
     private fun getPrevButton(prevState: StakingUiState): NavigationButton? {
@@ -114,12 +90,7 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
         )
     }
 
-    private fun List<PendingAction>.getPrimaryAction(): PendingAction? = getOrNull(0)
-
-    private fun List<PendingAction>.getSecondaryAction(): PendingAction? = getOrNull(1)
-
     private fun StakingUiState.isButtonsVisible(): Boolean = when (currentStep) {
-        StakingStep.InitialInfo -> isStakeMoreAvailable()
         StakingStep.RewardsValidators -> false
         else -> true
     }
@@ -159,7 +130,7 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
                     StakingActionCommonType.EXIT -> resourceReference(R.string.common_unstake)
                     StakingActionCommonType.PENDING_OTHER,
                     StakingActionCommonType.PENDING_REWARDS,
-                    -> getPendingActionTitle(confirmationState.pendingActions.firstOrNull()?.type)
+                    -> confirmationState.pendingAction?.type.getPendingActionTitle()
                 }
             }
         } else {
@@ -170,9 +141,8 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
     private fun StakingUiState.onPrimaryClick() {
         when (currentStep) {
             StakingStep.InitialInfo -> {
-                val actionType = StakingActionCommonType.ENTER.takeIf { isStakeMoreAvailable() }
                 clickIntents.onAmountValueChange("") // reset amount state
-                clickIntents.onNextClick(actionType)
+                clickIntents.onNextClick(StakingActionCommonType.ENTER)
             }
             StakingStep.Validators,
             StakingStep.Amount,
@@ -185,7 +155,7 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
     private fun StakingUiState.onConfirmationClick() {
         if (confirmationState is StakingStates.ConfirmationState.Data) {
             if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
-                clickIntents.onBackClick()
+                clickIntents.onNextClick()
             } else {
                 val isEnterAction = actionType == StakingActionCommonType.ENTER
                 val isApproveNeeded = confirmationState.isApprovalNeeded
@@ -193,7 +163,7 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
                 if (isEnterAction && isApproveNeeded) {
                     clickIntents.showApprovalBottomSheet()
                 } else {
-                    clickIntents.onActionClick(confirmationState.pendingActions.firstOrNull())
+                    clickIntents.onActionClick()
                 }
             }
         } else {
@@ -219,31 +189,5 @@ internal class SetButtonsStateTransformer : Transformer<StakingUiState> {
             StakingStep.RewardsValidators -> rewardsValidatorsState.isPrimaryButtonEnabled
             StakingStep.Validators -> true
         }
-    }
-
-    @Suppress("CyclomaticComplexMethod")
-    private fun getPendingActionTitle(type: StakingActionType?): TextReference = when (type) {
-        StakingActionType.CLAIM_REWARDS -> resourceReference(R.string.common_claim_rewards)
-        StakingActionType.RESTAKE_REWARDS -> resourceReference(R.string.staking_restake_rewards)
-        StakingActionType.WITHDRAW -> resourceReference(R.string.staking_withdraw)
-        StakingActionType.RESTAKE -> resourceReference(R.string.staking_restake)
-        StakingActionType.CLAIM_UNSTAKED -> resourceReference(R.string.staking_claim_unstaked)
-        StakingActionType.UNLOCK_LOCKED -> resourceReference(R.string.staking_unlocked_locked)
-        StakingActionType.STAKE_LOCKED -> resourceReference(R.string.staking_stake_locked)
-        StakingActionType.VOTE -> resourceReference(R.string.staking_vote)
-        StakingActionType.REVOKE -> resourceReference(R.string.staking_revoke)
-        StakingActionType.VOTE_LOCKED -> resourceReference(R.string.staking_vote_locked)
-        StakingActionType.REVOTE -> resourceReference(R.string.staking_revote)
-        StakingActionType.REBOND -> resourceReference(R.string.staking_rebond)
-        StakingActionType.MIGRATE -> resourceReference(R.string.staking_migrate)
-        StakingActionType.STAKE -> resourceReference(R.string.common_stake)
-        StakingActionType.UNSTAKE -> resourceReference(R.string.common_unstake)
-        StakingActionType.UNKNOWN -> TextReference.EMPTY
-        null -> TextReference.EMPTY
-    }
-
-    private fun StakingUiState.isStakeMoreAvailable(): Boolean {
-        val initialState = initialInfoState as? StakingStates.InitialInfoState.Data
-        return initialState?.isStakeMoreAvailable == true || initialState?.yieldBalance is InnerYieldBalanceState.Empty
     }
 }

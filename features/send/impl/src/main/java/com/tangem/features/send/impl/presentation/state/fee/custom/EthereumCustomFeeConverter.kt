@@ -27,9 +27,9 @@ internal class EthereumCustomFeeConverter(
     private val stateRouterProvider: Provider<StateRouter>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
-) : CustomFeeConverter<Fee.Ethereum> {
+) : CustomFeeConverter<Fee.Ethereum.Legacy> {
 
-    override fun convert(value: Fee.Ethereum): ImmutableList<SendTextField.CustomFee> {
+    override fun convert(value: Fee.Ethereum.Legacy): ImmutableList<SendTextField.CustomFee> {
         val feeValue = value.amount.value
         val feeCurrency = feeCryptoCurrencyStatusProvider()?.value
         return persistentListOf(
@@ -91,7 +91,10 @@ internal class EthereumCustomFeeConverter(
         )
     }
 
-    override fun convertBack(normalFee: Fee.Ethereum, value: ImmutableList<SendTextField.CustomFee>): Fee.Ethereum {
+    override fun convertBack(
+        normalFee: Fee.Ethereum.Legacy,
+        value: ImmutableList<SendTextField.CustomFee>,
+    ): Fee.Ethereum.Legacy {
         val feeAmount = value[FEE_AMOUNT].value.parseToBigDecimal(value[FEE_AMOUNT].decimals)
         val gasPrice = value[GAS_PRICE].value.parseToBigDecimal(GAS_DECIMALS).toBigInteger()
         val gasLimit = value[GAS_LIMIT].value.parseToBigDecimal(GAS_DECIMALS).toBigInteger()

@@ -4,9 +4,9 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
 import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBlockState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
