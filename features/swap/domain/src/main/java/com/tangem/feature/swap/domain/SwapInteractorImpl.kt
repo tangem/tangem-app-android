@@ -965,13 +965,15 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return SwapAmount(token.value.amount ?: BigDecimal.ZERO, token.currency.decimals)
     }
 
-    override suspend fun selectInitialCurrencyToSwap(
+    override suspend fun getInitialCurrencyToSwap(
         initialCryptoCurrency: CryptoCurrency,
         state: TokensDataStateExpress,
+        isReverseFromTo: Boolean,
     ): CryptoCurrencyStatus? {
-        return initialToCurrencyResolver.tryGetFromCache(initialCryptoCurrency, state)
-            ?: initialToCurrencyResolver.tryGetWithMaxAmount(state)
-            ?: state.toGroup.available.firstOrNull()?.currencyStatus
+        val group = state.getGroupWithReverse(isReverseFromTo)
+        return initialToCurrencyResolver.tryGetFromCache(userWallet, initialCryptoCurrency, state, isReverseFromTo)
+            ?: initialToCurrencyResolver.tryGetWithMaxAmount(state, isReverseFromTo)
+            ?: group.available.firstOrNull()?.currencyStatus
     }
 
     override fun getNativeToken(networkId: String): CryptoCurrency {
