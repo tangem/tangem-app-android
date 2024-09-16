@@ -67,7 +67,7 @@ data class YieldDTO(
         @Json(name = "address")
         val address: String,
         @Json(name = "status")
-        val status: String,
+        val status: ValidatorStatusDTO,
         @Json(name = "name")
         val name: String,
         @Json(name = "image")
@@ -84,7 +84,24 @@ data class YieldDTO(
         val votingPower: Double?,
         @Json(name = "preferred")
         val preferred: Boolean,
-    )
+    ) {
+        @JsonClass(generateAdapter = true)
+        enum class ValidatorStatusDTO {
+            @Json(name = "active")
+            ACTIVE,
+
+            @Json(name = "deactivating")
+            DEACTIVATING,
+
+            @Json(name = "inactive")
+            INACTIVE,
+
+            @Json(name = "jailed")
+            JAILED,
+
+            UNKNOWN,
+        }
+    }
 
     @JsonClass(generateAdapter = true)
     data class MetadataDTO(
