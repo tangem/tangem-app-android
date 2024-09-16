@@ -163,13 +163,15 @@ private fun SendScreenContent(uiState: SendUiState, currentState: SendUiCurrentS
             when (state.type) {
                 SendUiStateType.Amount -> AmountScreenContent(
                     amountState = uiState.amountState,
-                    isBalanceHiding = uiState.isBalanceHidden,
+                    isBalanceHidden = uiState.isBalanceHidden,
                     clickIntents = uiState.clickIntents,
+                    modifier = Modifier.background(TangemTheme.colors.background.tertiary),
                 )
                 SendUiStateType.EditAmount -> AmountScreenContent(
-                    amountState = uiState.editAmountState!!,
-                    isBalanceHiding = uiState.isBalanceHidden,
+                    amountState = uiState.editAmountState,
+                    isBalanceHidden = uiState.isBalanceHidden,
                     clickIntents = uiState.clickIntents,
+                    modifier = Modifier.background(TangemTheme.colors.background.tertiary),
                 )
                 SendUiStateType.Recipient -> SendRecipientContent(
                     uiState = uiState.recipientState,
