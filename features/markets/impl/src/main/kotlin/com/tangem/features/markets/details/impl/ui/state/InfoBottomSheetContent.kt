@@ -6,4 +6,5 @@ import com.tangem.core.ui.extensions.TextReference
 internal data class InfoBottomSheetContent(
     val title: TextReference,
     val body: TextReference,
+    val showGeneratedAINotification: Boolean = false,
 ) : TangemBottomSheetConfigContent
