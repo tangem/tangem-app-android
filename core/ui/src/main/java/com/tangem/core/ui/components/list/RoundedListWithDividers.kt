@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.rows.CornersToRound
@@ -64,6 +65,11 @@ fun LazyListScope.roundedListWithDividersItems(
             endText = row.endText.orMaskWithStars(hideEndText && row.isEndTextHideable).resolveReference(),
             cornersToRound = getCornersToRound(index, rows.size),
             iconClick = row.iconClick,
+            endTextColor = if (row.isEndTextHighlighted) {
+                TangemTheme.colors.text.accent
+            } else {
+                TangemTheme.colors.text.tertiary
+            },
             showDivider = index < rows.lastIndex,
         )
     }
@@ -81,6 +87,7 @@ private fun InitialInfoContentRow(
     endText: String,
     cornersToRound: CornersToRound,
     showDivider: Boolean,
+    endTextColor: Color = TangemTheme.colors.text.tertiary,
     iconClick: (() -> Unit)? = null,
 ) {
     Box {
@@ -89,7 +96,7 @@ private fun InitialInfoContentRow(
             startTextColor = TangemTheme.colors.text.primary1,
             startTextStyle = TangemTheme.typography.body2,
             endText = endText,
-            endTextColor = TangemTheme.colors.text.tertiary,
+            endTextColor = endTextColor,
             endTextStyle = TangemTheme.typography.body2,
             cornersToRound = cornersToRound,
             iconResId = R.drawable.ic_information_24,
@@ -126,6 +133,7 @@ data class RoundedListWithDividersItemData(
     val id: Int,
     val startText: TextReference,
     val endText: TextReference,
+    val isEndTextHighlighted: Boolean = false,
     val iconClick: (() -> Unit)? = null,
     val isEndTextHideable: Boolean = false,
 )
