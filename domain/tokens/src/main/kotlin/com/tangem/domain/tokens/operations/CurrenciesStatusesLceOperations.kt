@@ -73,6 +73,7 @@ internal class CurrenciesStatusesLceOperations(
                 getQuotes(currenciesIds),
                 getNetworksStatuses(userWalletId, networks),
                 getYieldBalances(userWalletId, nonEmptyCurrencies),
+
             ) { maybeQuotes, maybeNetworksStatuses, maybeYieldBalances ->
                 val statuses = createCurrenciesStatuses(
                     currencies = nonEmptyCurrencies,
@@ -144,11 +145,15 @@ internal class CurrenciesStatusesLceOperations(
         currencies.map { currency ->
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
+            val address = extractAddress(networkStatus)
             val isStakingSupported = stakingRepository.isStakingSupported(
                 stakingRepository.getIntegrationKey(currency.id),
             )
             val yieldBalance = if (isStakingSupported) {
-                (yieldBalances as? YieldBalanceList.Data)?.getBalance(currency.id.rawCurrencyId)
+                (yieldBalances as? YieldBalanceList.Data)?.getBalance(
+                    address = address,
+                    rawCurrencyId = currency.id.rawCurrencyId,
+                )
             } else {
                 null
             }
@@ -220,5 +225,14 @@ internal class CurrenciesStatusesLceOperations(
         requireNotNull(networks) { "Networks IDs cannot be empty" }
 
         return networks to currenciesIds
+    }
+
+    private fun extractAddress(networkStatus: NetworkStatus?): String? {
+        return when (val value = networkStatus?.value) {
+            is NetworkStatus.NoAccount -> value.address.defaultAddress.value
+            is NetworkStatus.Unreachable -> value.address?.defaultAddress?.value
+            is NetworkStatus.Verified -> value.address.defaultAddress.value
+            else -> null
+        }
     }
 }
