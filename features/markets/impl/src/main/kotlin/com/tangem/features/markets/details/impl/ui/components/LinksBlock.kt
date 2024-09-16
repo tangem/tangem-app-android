@@ -97,7 +97,7 @@ private fun SubBlock(
             ) {
                 links.fastForEach {
                     Chip(
-                        text = it.title,
+                        text = stringReference(it.title),
                         iconResId = it.iconRes,
                         onClick = { onLinkClick(it) },
                     )
@@ -163,36 +163,36 @@ private fun ContentPreview() {
             state = LinksUM(
                 officialLinks = persistentListOf(
                     LinksUM.Link(
-                        title = stringReference("Website"),
+                        title = "Website",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                     LinksUM.Link(
-                        title = stringReference("Website"),
+                        title = "Website",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                     LinksUM.Link(
-                        title = stringReference("Website"),
+                        title = "Website",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                 ),
                 social = persistentListOf(
                     LinksUM.Link(
-                        title = stringReference("Twitter"),
+                        title = "Twitter",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                     LinksUM.Link(
-                        title = stringReference("Facebook"),
+                        title = "Facebook",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
                 ),
                 repository = persistentListOf(
                     LinksUM.Link(
-                        title = stringReference("Github"),
+                        title = "Github",
                         iconRes = R.drawable.ic_plus_24,
                         url = "https://tangem.com",
                     ),
