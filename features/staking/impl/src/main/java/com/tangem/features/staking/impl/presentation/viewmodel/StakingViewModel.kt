@@ -197,7 +197,17 @@ internal class StakingViewModel @Inject constructor(
                 stateController.update(SetConfirmationStateLoadingTransformer(yield, appCurrency))
                 onRefreshSwipe(isRefreshing = false)
             }
-            isAssentState() -> getFee(pendingAction)
+            isAssentState() -> {
+                getFee(pendingAction)
+                val amountState = value.amountState as? AmountState.Data
+                if (amountState?.amountTextField?.isWarning == true) {
+                    stateController.update(
+                        AmountRoundToIntegerTransformer(
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        ),
+                    )
+                }
+            }
         }
     }
 
