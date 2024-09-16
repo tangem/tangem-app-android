@@ -3,7 +3,9 @@ package com.tangem.datasource.local.logs
 import android.content.Context
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -30,7 +32,10 @@ class AppLogsStore @Inject constructor(
     dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    private val scope = CoroutineScope(dispatchers.io)
+    private val scope = CoroutineScope(
+        context = SupervisorJob() + dispatchers.io +
+            CoroutineExceptionHandler { _, error -> Timber.e("AppLogsStore.scope is failed $error") },
+    )
     private val mutex = Mutex()
 
     private val file = File(applicationContext.filesDir, LOG_FILE_NAME)
