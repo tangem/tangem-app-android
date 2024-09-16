@@ -2,6 +2,7 @@ package com.tangem.features.details.component.preview
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -17,7 +18,7 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
 
     private val previewState = UserWalletListUM(
         userWallets = persistentListOf(
-            UserWalletListUM.UserWalletUM(
+            UserWalletItemUM(
                 id = UserWalletId("user_wallet_1".encodeToByteArray()),
                 name = stringReference("My Wallet"),
                 information = getInformation(3, "4 496,75 $"),
@@ -25,7 +26,7 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
                 isEnabled = true,
                 onClick = {},
             ),
-            UserWalletListUM.UserWalletUM(
+            UserWalletItemUM(
                 id = UserWalletId("user_wallet_2".encodeToByteArray()),
                 name = stringReference("Old wallet"),
                 information = getInformation(3, "4 496,75 $"),
@@ -33,7 +34,7 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
                 isEnabled = true,
                 onClick = {},
             ),
-            UserWalletListUM.UserWalletUM(
+            UserWalletItemUM(
                 id = UserWalletId("user_wallet_3".encodeToByteArray()),
                 name = stringReference("Multi Card"),
                 information = getInformation(3, "4 496,75 $"),
