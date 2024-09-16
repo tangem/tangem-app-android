@@ -62,7 +62,7 @@ sealed class NotificationUM(val config: NotificationConfig) {
             ),
         )
 
-        data class ExceedsBalance(
+        data class TokenExceedsBalance(
             val networkIconId: Int,
             val currencyName: String,
             val feeName: String,
@@ -78,6 +78,41 @@ sealed class NotificationUM(val config: NotificationConfig) {
             subtitle = resourceReference(
                 id = R.string.warning_send_blocked_funds_for_fee_message,
                 formatArgs = wrappedList(currencyName, networkName, currencyName, feeName, feeSymbol),
+            ),
+            iconResId = networkIconId,
+            buttonState = onClick?.let {
+                NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                    text = resourceReference(
+                        R.string.common_buy_currency,
+                        wrappedList(
+                            if (mergeFeeNetworkName) {
+                                "$currencyName ($feeSymbol)"
+                            } else {
+                                feeName
+                            },
+                        ),
+                    ),
+                    onClick = onClick,
+                )
+            },
+        )
+
+        data class ExceedsBalance(
+            val networkIconId: Int,
+            val currencyName: String,
+            val feeName: String,
+            val feeSymbol: String,
+            val networkName: String,
+            val mergeFeeNetworkName: Boolean = false,
+            val onClick: (() -> Unit)? = null,
+        ) : Error(
+            title = resourceReference(
+                id = R.string.warning_blocked_funds_for_fee_title,
+                wrappedList(feeName),
+            ),
+            subtitle = resourceReference(
+                id = R.string.warning_blocked_funds_for_fee_message,
+                formatArgs = wrappedList(currencyName),
             ),
             iconResId = networkIconId,
             buttonState = onClick?.let {
