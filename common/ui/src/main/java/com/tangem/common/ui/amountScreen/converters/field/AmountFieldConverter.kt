@@ -4,7 +4,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.core.ui.extensions.TextReference
@@ -62,7 +61,8 @@ class AmountFieldConverter(
             cryptoAmount = cryptoAmount,
             fiatAmount = getAppCurrencyAmount(fiatDecimal, appCurrencyProvider()),
             isError = false,
-            error = TextReference.Res(R.string.send_validation_amount_exceeds_balance),
+            isWarning = false,
+            error = TextReference.EMPTY,
             isFiatUnavailable = fiatRate == null,
             isValuePasted = false,
             onValuePastedTriggerDismiss = clickIntents::onAmountPasteTriggerDismiss,

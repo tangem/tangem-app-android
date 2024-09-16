@@ -25,3 +25,5 @@ class JobHolder {
 }
 
 fun Job.saveIn(jobHolder: JobHolder): Job = jobHolder.update(job = this)
+
+suspend fun Job.saveInAndJoin(jobHolder: JobHolder) = saveIn(jobHolder).join()
