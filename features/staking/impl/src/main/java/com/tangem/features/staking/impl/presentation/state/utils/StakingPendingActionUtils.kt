@@ -3,7 +3,10 @@ package com.tangem.features.staking.impl.presentation.state.utils
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.lib.crypto.BlockchainUtils.isSolana
+import kotlinx.collections.immutable.ImmutableList
 
 @Suppress("CyclomaticComplexMethod")
 internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (this) {
@@ -24,4 +27,10 @@ internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (t
     StakingActionType.UNSTAKE -> resourceReference(R.string.common_unstake)
     StakingActionType.UNKNOWN -> TextReference.EMPTY
     null -> TextReference.EMPTY
+}
+
+internal fun isSolanaWithdraw(networkId: String, pendingActions: ImmutableList<PendingAction>?): Boolean {
+    val isSolana = isSolana(networkId)
+    val isWithdraw = pendingActions?.all { it.type == StakingActionType.WITHDRAW } == true
+    return isSolana && isWithdraw
 }
