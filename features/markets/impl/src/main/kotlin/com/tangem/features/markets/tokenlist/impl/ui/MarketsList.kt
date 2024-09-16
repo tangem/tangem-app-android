@@ -301,7 +301,8 @@ private fun Preview() {
                                 item.copy(id = index.toString())
                             }
                             .toImmutableList(),
-                        showUnder100kTokens = false,
+                        showUnder100kTokensNotification = false,
+                        showUnder100kTokensNotificationWasHidden = false,
                         loadMore = {},
                         visibleIdsChanged = {},
                         onShowTokensUnder100kClicked = {},
