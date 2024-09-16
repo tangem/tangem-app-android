@@ -44,7 +44,7 @@ class GetCurrencyStatusUpdatesUseCase(
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         return flow {
             emitAll(
-                getCurrency(
+                getCurrencyStatus(
                     userWalletId = userWalletId,
                     currencyId = currencyId,
                     isSingleWalletWithTokens = isSingleWalletWithTokens,
@@ -53,7 +53,7 @@ class GetCurrencyStatusUpdatesUseCase(
         }.flowOn(dispatchers.io)
     }
 
-    private suspend fun getCurrency(
+    private suspend fun getCurrencyStatus(
         userWalletId: UserWalletId,
         currencyId: CryptoCurrency.ID,
         isSingleWalletWithTokens: Boolean,
