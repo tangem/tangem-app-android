@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import com.tangem.core.ui.windowsize.rememberWindowSizePreview
 
 @Composable
@@ -14,12 +16,14 @@ fun TangemThemePreview(
     typography: TangemTypography = TangemTheme.typography,
     dimens: TangemDimens = TangemTheme.dimens,
     alwaysShowBottomSheets: Boolean = true,
+    rtl: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val isDarkTheme = isDark ?: isSystemInDarkTheme()
 
     CompositionLocalProvider(
         LocalBottomSheetAlwaysVisible provides alwaysShowBottomSheets,
+        LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
     ) {
         BoxWithConstraints {
             TangemTheme(

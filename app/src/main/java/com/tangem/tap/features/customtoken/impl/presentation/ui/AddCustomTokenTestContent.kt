@@ -43,7 +43,7 @@ import kotlinx.coroutines.launch
 internal fun AddCustomTokenTestContent(state: AddCustomTokenStateHolder.TestContent, modifier: Modifier = Modifier) {
     val coroutineScope = rememberCoroutineScope()
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = BottomSheetState(initialValue = BottomSheetValue.Collapsed),
+        bottomSheetState = BottomSheetState(initialValue = BottomSheetValue.Collapsed, LocalDensity.current),
     )
 
     BackHandler(
