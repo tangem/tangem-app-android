@@ -94,6 +94,8 @@ internal class WalletStateController @Inject constructor() {
             onWalletChange = {},
             event = consumedEvent(),
             isHidingMode = false,
+            showMarketsOnboarding = false,
+            onDismissMarketsOnboarding = {},
         )
     }
 }

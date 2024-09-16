@@ -708,6 +708,16 @@
                     "networkId": "cyber/test"
                 }
             ]
+        },
+        {
+            "id": "sei-network",
+            "name": "Sei Network",
+            "symbol": "SEI",
+            "networks": [
+                {
+                    "networkId": "sei-network/test"
+                }
+            ]
         }
     ]
 }

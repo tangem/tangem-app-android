@@ -1,10 +1,8 @@
 package com.tangem.domain.tokens.legacy
 
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -24,6 +22,7 @@ sealed class TradeCryptoAction : Action {
         val appCurrencyCode: String,
     ) : TradeCryptoAction()
 
+    @Deprecated("Use AppRoute instead")
     data class SendToken(
         val userWallet: UserWallet,
         val tokenCurrency: CryptoCurrency.Token,
@@ -33,19 +32,12 @@ sealed class TradeCryptoAction : Action {
         val transactionInfo: TransactionInfo? = null,
     ) : TradeCryptoAction()
 
+    @Deprecated("Use AppRoute instead")
     data class SendCoin(
         val userWallet: UserWallet,
         val coinStatus: CryptoCurrencyStatus,
         val feeCurrencyStatus: CryptoCurrencyStatus?,
         val transactionInfo: TransactionInfo? = null,
-    ) : TradeCryptoAction()
-
-    data class Swap(val cryptoCurrency: CryptoCurrency) : TradeCryptoAction()
-
-    data class Stake(
-        val userWalletId: UserWalletId,
-        val cryptoCurrencyId: CryptoCurrency.ID,
-        val yield: Yield,
     ) : TradeCryptoAction()
 
     data class TransactionInfo(

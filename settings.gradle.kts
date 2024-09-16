@@ -95,8 +95,18 @@ dependencyResolutionManagement {
                 includeGroupAndSubgroups("com.tangem.vico")
             }
         }
+        maven {
+            // setting any repository from tangem project allows maven search all packages in the project
+            url = uri("https://maven.pkg.github.com/tangem/ic4j-agent")
+            credentials {
+                username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+            content {
+                includeGroupAndSubgroups("com.tangem.ic4j")
+            }
+        }
         maven("https://jitpack.io")
-        maven("https://clients-nexus.sprinklr.com/")
     }
 
     versionCatalogs {

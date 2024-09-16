@@ -9,11 +9,14 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.rows.NetworkTitle
 import com.tangem.core.ui.components.text.TooltipText
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -29,50 +32,23 @@ class InformationBlockContentScope(val scope: BoxScope) : BoxScope by scope
 fun InformationBlock(
     title: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
+    contentHorizontalPadding: Dp = TangemTheme.dimens.spacing12,
+    shape: Shape = TangemTheme.shapes.roundedCornersXMedium,
     action: (@Composable BoxScope.() -> Unit)? = null,
     content: (@Composable InformationBlockContentScope.() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .clip(shape)
             .background(color = TangemTheme.colors.background.action),
         horizontalAlignment = Alignment.Start,
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = TangemTheme.dimens.size40)
-                .padding(
-                    top = TangemTheme.dimens.spacing12,
-                    bottom = TangemTheme.dimens.spacing6,
-                )
-                .padding(horizontal = TangemTheme.dimens.spacing12),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(weight = 1f)
-                    .heightIn(min = TangemTheme.dimens.size20),
-                contentAlignment = Alignment.CenterStart,
-                content = title,
-            )
-            if (action != null) {
-                Spacer(modifier = Modifier.size(TangemTheme.dimens.spacing8))
-                Box(
-                    modifier = Modifier
-                        .weight(weight = 1f)
-                        .heightIn(min = TangemTheme.dimens.size24),
-                    contentAlignment = Alignment.CenterEnd,
-                    content = action,
-                )
-            }
-        }
+        NetworkTitle(title = title, action = action)
 
         if (content != null) {
             Box(
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing12)
+                    .padding(horizontal = contentHorizontalPadding)
                     .fillMaxWidth(),
             ) {
                 val scope = InformationBlockContentScope(scope = this)

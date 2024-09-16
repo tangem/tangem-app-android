@@ -55,6 +55,8 @@ dependencies {
     implementation(projects.core.deepLinks)
     implementation(projects.core.deepLinks.global)
     implementation(projects.core.featuretoggles)
+    implementation(projects.core.decompose)
+    implementation(projects.common.ui)
 
     implementation(projects.libs.crypto)
 
@@ -77,6 +79,7 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.staking)
+    implementation(projects.domain.markets.models)
 
     /** Temp dependency to swap domain */
     implementation(projects.features.swap.domain)
@@ -87,5 +90,6 @@ dependencies {
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.send.api)
     implementation(projects.features.staking.api)
+    implementation(projects.features.markets.api)
 
 }

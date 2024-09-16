@@ -23,7 +23,9 @@ sealed class OnboardingWalletAction : Action {
     data object ResumeBackup : OnboardingWalletAction()
 
     data class LoadArtwork(val cardArtworkUriForUnfinishedBackup: Uri? = null) : OnboardingWalletAction()
-    class SetArtworkUrl(val artworkUri: Uri?) : OnboardingWalletAction()
+    class SetPrimaryCardArtworkUrl(val artworkUri: Uri?) : OnboardingWalletAction()
+    class SetSecondCardArtworkUrl(val artworkUri: Uri?) : OnboardingWalletAction()
+    class SetThirdCardArtworkUrl(val artworkUri: Uri?) : OnboardingWalletAction()
 
     data object OnBackPressed : OnboardingWalletAction()
 }

@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.bottomsheets
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -14,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
-import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
 import kotlinx.coroutines.coroutineScope
@@ -150,17 +150,15 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
 ) {
     val model = config.content as? T ?: return
 
-    val statusBarHeight = with(LocalDensity.current) { WindowInsets.statusBars.getTop(this).toDp() }
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     ModalBottomSheet(
-        // FIXME temporary solution to fix height of the bottom sheet
-        modifier = modifier.heightIn(max = LocalWindowSize.current.height - statusBarHeight),
+        modifier = modifier.statusBarsPadding(),
         onDismissRequest = config.onDismissRequest,
         sheetState = sheetState,
         containerColor = containerColor,
         shape = TangemTheme.shapes.bottomSheetLarge,
-        windowInsets = WindowInsetsZero,
+        contentWindowInsets = { WindowInsetsZero },
         dragHandle = { TangemBottomSheetDraggableHeader(color = containerColor) },
     ) {
         Column(
