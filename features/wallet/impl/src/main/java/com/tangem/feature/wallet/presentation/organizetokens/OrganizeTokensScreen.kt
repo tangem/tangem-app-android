@@ -34,6 +34,7 @@ import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.reordarable.ReorderableItem
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
@@ -43,7 +44,6 @@ import com.tangem.feature.wallet.presentation.common.component.DraggableNetworkT
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
-import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
