@@ -9,7 +9,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
  * Helper to apply compatibility changes for [UserTokensResponse] to support old saved tokens
  * in new application with new IDs
  */
-internal class UserTokensBackwardCompatibility {
+class UserTokensBackwardCompatibility {
 
     fun applyCompatibilityAndGetUpdated(userTokensResponse: UserTokensResponse): UserTokensResponse {
         return userTokensResponse.copy(

@@ -3,13 +3,14 @@ package com.tangem.features.staking.impl.presentation.state.previewdata
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType.Coin
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.Yield.Validator.ValidatorStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
-import com.tangem.features.staking.impl.presentation.state.StakingNotification
-import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.ValidatorState
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
@@ -18,7 +19,7 @@ internal object ConfirmationStatePreviewData {
     private val validatorList = listOf(
         Yield.Validator(
             address = "0xa6e768fef2d1af36c0cfdb276422e7881a83e951",
-            status = "active",
+            status = ValidatorStatus.ACTIVE,
             name = "Luganodes",
             image = "https://assets.stakek.it/validators/luganodes.png",
             apr = BigDecimal("0.054823398040640445"),
@@ -30,7 +31,7 @@ internal object ConfirmationStatePreviewData {
         ),
         Yield.Validator(
             address = "0x35b1ca0f398905cf752e6fe122b51c88022fca32",
-            status = "active",
+            status = ValidatorStatus.ACTIVE,
             name = "InfStones",
             image = "https://assets.stakek.it/validators/infstones.png",
             apr = BigDecimal("0.057786472172836965"),
@@ -42,7 +43,7 @@ internal object ConfirmationStatePreviewData {
         ),
         Yield.Validator(
             address = "0xd14a87025109013b0a2354a775cb335f926af65a",
-            status = "active",
+            status = ValidatorStatus.ACTIVE,
             name = "Kiln",
             image = "https://assets.stakek.it/validators/kiln.png",
             apr = BigDecimal("0.057786472172836965"),
@@ -78,15 +79,19 @@ internal object ConfirmationStatePreviewData {
             chosenValidator = validatorList[0],
             availableValidators = validatorList,
         ),
-        footerText = "You stake \$715.11 and will be receiving ~\$35 monthly",
+        footerText = stringReference("You stake \$715.11 and will be receiving ~\$35 monthly"),
         notifications = persistentListOf(
-            StakingNotification.Warning.EarnRewards(
-                currencyName = "Solana",
-                subtitleResourceId = R.string.staking_notification_earn_rewards_text_period_day,
+            StakingNotification.Info.EarnRewards(
+                subtitleText = resourceReference(
+                    id = R.string.staking_notification_earn_rewards_text_period_day,
+                    formatArgs = wrappedList("Solana"),
+                ),
             ),
         ),
         transactionDoneState = TransactionDoneState.Empty,
-        pendingActions = persistentListOf(),
+        pendingAction = null,
         isApprovalNeeded = false,
+        reduceAmountBy = null,
+        pendingActions = null,
     )
 }
