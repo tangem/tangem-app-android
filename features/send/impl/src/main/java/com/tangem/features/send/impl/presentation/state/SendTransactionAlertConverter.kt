@@ -1,5 +1,7 @@
 package com.tangem.features.send.impl.presentation.state
 
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.converter.Converter
@@ -15,7 +17,7 @@ internal class SendTransactionAlertConverter(
             is SendTransactionError.TangemSdkError -> SendAlertState.TransactionError(
                 code = value.code.toString(),
                 cause = null,
-                causeTextReference = value.messageReference,
+                causeTextReference = resourceReference(value.messageRes, wrappedList(value.args)),
                 onConfirmClick = { clickIntents.onFailedTxEmailClick(value.code.toString()) },
             )
             is SendTransactionError.BlockchainSdkError -> SendAlertState.TransactionError(

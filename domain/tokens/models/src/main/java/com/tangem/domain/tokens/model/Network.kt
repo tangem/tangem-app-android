@@ -29,6 +29,7 @@ data class Network(
     val isTestnet: Boolean,
     val standardType: StandardType,
     val hasFiatFeeRate: Boolean,
+    val canHandleTokens: Boolean,
 ) {
 
     init {
