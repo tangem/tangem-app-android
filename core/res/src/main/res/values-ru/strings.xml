@@ -654,6 +654,7 @@
   <string name="settings_wallet_name_title">Имя</string>
   <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_claim_unstaked">Забрать средства</string>
+  <string name="staking_details_account_fee_info">Стейкинг аккаунт — это специальный счет, на котором хранятся застейканные токены SOL. Он создается при делегировании ваших токенов валидатору для участия в подтверждении транзакций и получении наград. За создание стейкинг аккаунта взимается небольшая комиссия, которая возвращается после завершения стейкинга.</string>
   <string name="staking_details_annual_percentage_rate">Процентная ставка</string>
   <string name="staking_details_annual_percentage_rate_info">Годовой процентный доход, который вы можете получить от участия в стейкинге.</string>
   <string name="staking_details_apr">APR</string>
@@ -697,6 +698,7 @@
   <string name="staking_reward_schedule_block">Блок</string>
   <string name="staking_reward_schedule_day">День</string>
   <string name="staking_reward_schedule_each_day">Каждый день</string>
+  <string name="staking_reward_schedule_each_sec">Каждые ~%1$s сек</string>
   <string name="staking_reward_schedule_epoch">Эпоха</string>
   <string name="staking_reward_schedule_era">Эра</string>
   <string name="staking_reward_schedule_hour">Час</string>
