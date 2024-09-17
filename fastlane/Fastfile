@@ -96,7 +96,8 @@ platform :android do
     firebase_app_distribution(
       app: ENV['app_id_internal'],
       apk_path: ENV['apk_path_internal'],
-      groups: ENV['groups']
+      groups: ENV['groups'],
+      release_notes: ENV['releaseNotes']
     )
   end
 end
