@@ -14,9 +14,6 @@ import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
-import java.math.RoundingMode
-import java.text.NumberFormat
-import java.util.Locale
 
 @Stable
 internal class MetricsConverter(
@@ -115,20 +112,16 @@ internal class MetricsConverter(
     }
 
     private fun BigDecimal?.formatAmount(crypto: Boolean = false): String {
+        if (this == null) return StringsSigns.DASH_SIGN
+
         return if (crypto) {
-            val formatter = NumberFormat.getNumberInstance(Locale.getDefault()).apply {
-                maximumFractionDigits = 0
-                isGroupingUsed = true
-                roundingMode = RoundingMode.HALF_UP
-            }
-            formatter.format(this)
+            BigDecimalFormatter.formatCompactAmount(amount = this)
         } else {
             val currency = appCurrency()
-            BigDecimalFormatter.formatFiatAmount(
-                fiatAmount = this,
+            BigDecimalFormatter.formatCompactFiatAmount(
+                amount = this,
                 fiatCurrencyCode = currency.code,
                 fiatCurrencySymbol = currency.symbol,
-                decimals = 0,
             )
         }
     }
