@@ -2,12 +2,15 @@ package com.tangem.datasource.api.stakekit.models.response.model
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.tangem.datasource.api.stakekit.models.request.Address
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
 data class YieldBalanceWrapperDTO(
+    @Json(name = "addresses")
+    val addresses: Address,
     @Json(name = "balances")
     val balances: List<BalanceDTO>,
     @Json(name = "integrationId")
