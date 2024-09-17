@@ -356,6 +356,7 @@
   <string name="markets_loading_error_title">Unable to load the data…</string>
   <string name="markets_loading_no_data_title">No data</string>
   <string name="markets_quick_actions">Quick actions</string>
+  <string name="markets_search_header_title">Search through the market</string>
   <string name="markets_search_result_title">Result</string>
   <string name="markets_search_see_tokens_under_100k">See tokens under 100k USD market cap</string>
   <string name="markets_search_show_tokens">Show tokens</string>
