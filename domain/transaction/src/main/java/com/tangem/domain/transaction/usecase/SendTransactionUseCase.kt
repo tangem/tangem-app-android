@@ -10,7 +10,6 @@ import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.common.core.TangemSdkError
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
@@ -133,8 +132,7 @@ class SendTransactionUseCase(
                     val resource = tangemError.localizedDescriptionRes()
                     val resId = resource.resId ?: R.string.common_unknown_error
                     val resArgs = resource.args.map { it.value }
-                    val textReference = resourceReference(resId, wrappedList(resArgs))
-                    SendTransactionError.TangemSdkError(tangemError.code, textReference)
+                    SendTransactionError.TangemSdkError(tangemError.code, resId, wrappedList(resArgs))
                 }
                 is BlockchainSdkError.WrappedTangemError -> {
                     parseWrappedError(tangemError) // todo remove when sdk errors are revised

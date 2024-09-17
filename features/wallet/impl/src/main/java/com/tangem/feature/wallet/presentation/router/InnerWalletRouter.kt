@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.markets.component.MarketsEntryComponent
+import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.wallet.navigation.WalletRouter
 
 /**
@@ -54,7 +54,7 @@ internal interface InnerWalletRouter : WalletRouter {
     fun isWalletLastScreen(): Boolean
 
     /** Open manage tokens screen */
-    fun openManageTokensScreen()
+    fun openManageTokensScreen(userWalletId: UserWalletId)
 
     /** Open scan failed dialog */
     fun openScanFailedDialog(onTryAgain: () -> Unit)
