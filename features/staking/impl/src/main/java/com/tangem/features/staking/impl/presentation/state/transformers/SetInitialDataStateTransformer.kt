@@ -229,6 +229,7 @@ internal class SetInitialDataStateTransformer(
             pendingActions = null,
             isApprovalNeeded = isApprovalNeeded,
             reduceAmountBy = null,
+            balanceState = null,
         )
     }
 

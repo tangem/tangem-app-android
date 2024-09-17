@@ -9,6 +9,7 @@ import com.tangem.domain.staking.GetConstructedStakingTransactionUseCase
 import com.tangem.domain.staking.GetStakingTransactionUseCase
 import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
 import com.tangem.domain.staking.SubmitHashUseCase
+import com.tangem.domain.staking.model.SubmitHashData
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -67,6 +68,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
             ?: error("No confirmation state")
         val fee = (confirmationState.feeState as? FeeState.Content)?.fee
             ?: error("No fee provided")
+        val validator = (state.confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator
 
         val stakingTransactions = getStakingTransactions(
             state = state,
@@ -89,6 +91,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
         sendStakingTransaction(
             fullTransactionsData = fullTransactionsData,
+            validator = validator,
             onSendSuccess = onSendSuccess,
             onSendError = onSendError,
         )
@@ -191,6 +194,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
     private suspend fun sendStakingTransaction(
         fullTransactionsData: List<FullTransactionData>,
+        validator: Yield.Validator?,
         onSendSuccess: (txUrl: String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
     ) {
@@ -206,6 +210,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 submitHash(
                     transactionIds = fullTransactionsData.map { it.stakeKitTransaction.id },
                     transactionHashes = transactionHashes,
+                    validator = validator,
                 )
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
@@ -218,13 +223,22 @@ internal class StakingTransactionSender @AssistedInject constructor(
         )
     }
 
-    private suspend fun submitHash(transactionIds: List<String>, transactionHashes: List<String>) {
+    private suspend fun submitHash(
+        transactionIds: List<String>,
+        transactionHashes: List<String>,
+        validator: Yield.Validator?,
+    ) {
         transactionIds
             .zip(transactionHashes)
             .forEach { (transactionId, transactionHash) ->
-                submitHashUseCase.submitHash(
-                    transactionId = transactionId,
-                    transactionHash = transactionHash,
+                submitHashUseCase(
+                    SubmitHashData(
+                        transactionId = transactionId,
+                        transactionHash = transactionHash,
+                        validator = validator,
+                        amount = BigDecimal.ZERO,
+                        type = StakingTransactionType.STAKE,
+                    )
                 )
                     .onLeft {
                         analyticsEventHandler.send(
