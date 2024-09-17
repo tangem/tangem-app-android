@@ -26,6 +26,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.ui.extensions.setStatusBarColor
+import com.tangem.datasource.utils.isNullOrEmpty
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
@@ -186,27 +187,24 @@ class OnboardingWalletFragment :
         when {
             state.wallet2State != null -> {
                 seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
-                state.cardArtworkUri?.let {
-                    seedPhraseViewModel.setCardArtworkUri(it.toString())
-                    if (state.isRingOnboarding) {
-                        binding.imvFrontCard.load(R.drawable.img_ring_placeholder)
-                    } else {
-                        loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
-                    }
-                    loadImageIntoImageView(it, binding.imvFirstBackupCard)
-                    loadImageIntoImageView(it, binding.imvSecondBackupCard)
-                }
+                updateWalletImagesState(state.walletImages)
             }
             else -> {
-                if (state.isRingOnboarding) {
-                    binding.imvFrontCard.load(R.drawable.img_ring_placeholder)
-                } else {
-                    loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
-                }
-                loadImageIntoImageView(state.cardArtworkUri, binding.imvFirstBackupCard)
-                loadImageIntoImageView(state.cardArtworkUri, binding.imvSecondBackupCard)
+                updateWalletImagesState(state.walletImages)
                 handleOnboardingStep(state)
             }
+        }
+    }
+
+    private fun updateWalletImagesState(walletImages: WalletImages) {
+        if (!walletImages.primaryCardImage.isNullOrEmpty()) {
+            loadImageIntoImageView(walletImages.primaryCardImage, binding.imvFrontCard)
+        }
+        if (!walletImages.secondCardImage.isNullOrEmpty()) {
+            loadImageIntoImageView(walletImages.secondCardImage, binding.imvFirstBackupCard)
+        }
+        if (!walletImages.thirdCardImage.isNullOrEmpty()) {
+            loadImageIntoImageView(walletImages.thirdCardImage, binding.imvSecondBackupCard)
         }
     }
 

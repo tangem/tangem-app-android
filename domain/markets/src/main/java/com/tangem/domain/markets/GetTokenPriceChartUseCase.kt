@@ -12,13 +12,25 @@ class GetTokenPriceChartUseCase(
         appCurrency: AppCurrency,
         interval: PriceChangeInterval,
         tokenId: String,
+        tokenSymbol: String,
+        preview: Boolean,
     ): Either<Unit, TokenChart> {
         return Either.catch {
-            marketsTokenRepository.getChart(
-                fiatCurrencyCode = appCurrency.code,
-                interval = interval,
-                tokenId = tokenId,
-            )
+            if (preview) {
+                marketsTokenRepository.getChartPreview(
+                    fiatCurrencyCode = appCurrency.code,
+                    interval = interval,
+                    tokenId = tokenId,
+                    tokenSymbol = tokenSymbol,
+                )
+            } else {
+                marketsTokenRepository.getChart(
+                    fiatCurrencyCode = appCurrency.code,
+                    interval = interval,
+                    tokenId = tokenId,
+                    tokenSymbol = tokenSymbol,
+                )
+            }
         }.mapLeft {}
     }
 }
