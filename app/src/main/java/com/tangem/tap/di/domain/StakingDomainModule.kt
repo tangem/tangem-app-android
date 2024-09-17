@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.repositories.StakingErrorResolver
+import com.tangem.domain.staking.repositories.StakingPendingTransactionRepository
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
 import dagger.Module
@@ -118,6 +119,18 @@ internal object StakingDomainModule {
     ): SaveUnsubmittedHashUseCase {
         return SaveUnsubmittedHashUseCase(
             stakingTransactionHashRepository = stakingTransactionHashRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideSavePendingTransactionUseCase(
+        stakingPendingTransactionRepository: StakingPendingTransactionRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): SavePendingTransactionUseCase {
+        return SavePendingTransactionUseCase(
+            stakingPendingTransactionRepository = stakingPendingTransactionRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }

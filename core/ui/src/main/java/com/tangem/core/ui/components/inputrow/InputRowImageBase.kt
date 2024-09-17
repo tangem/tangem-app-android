@@ -43,6 +43,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param iconEndRes icon to end of row
  * @param extraContent extra content
  */
+@Suppress("LongMethod")
 @Composable
 internal fun InputRowImageBase(
     subtitle: TextReference,
@@ -99,7 +100,7 @@ internal fun InputRowImageBase(
                 if (showPendingIcon) {
                     Icon(
                         painter = rememberVectorPainter(
-                            image = ImageVector.vectorResource(id = R.drawable.ic_staking_pending_transaction)
+                            image = ImageVector.vectorResource(id = R.drawable.ic_staking_pending_transaction),
                         ),
                         tint = TangemColorPalette.Azure,
                         contentDescription = null,
