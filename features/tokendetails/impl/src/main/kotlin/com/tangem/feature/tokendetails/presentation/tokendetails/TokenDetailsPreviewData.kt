@@ -12,10 +12,10 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsPullToRefreshConfig
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -143,9 +143,14 @@ internal object TokenDetailsPreviewData {
     val stakingErrorBlock = StakingBlockUM.Error(iconState)
 
     val stakingAvailableBlock = StakingBlockUM.StakeAvailable(
-        interestRate = "7.38",
-        periodInDays = 4,
-        tokenSymbol = "XLM",
+        titleText = resourceReference(
+            id = R.string.token_details_staking_block_title,
+            formatArgs = wrappedList("3.27%"),
+        ),
+        subtitleText = resourceReference(
+            id = R.string.staking_notification_earn_rewards_text_period_day,
+            formatArgs = wrappedList("Solana"),
+        ),
         iconState = iconState,
         onStakeClicked = {},
     )
@@ -159,7 +164,7 @@ internal object TokenDetailsPreviewData {
         onStakeClicked = {},
     )
 
-    private val pullToRefreshConfig = TokenDetailsPullToRefreshConfig(
+    private val pullToRefreshConfig = PullToRefreshConfig(
         isRefreshing = false,
         onRefresh = {},
     )
