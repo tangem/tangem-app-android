@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.TokensAction
@@ -35,6 +36,8 @@ internal interface WalletContentClickIntents {
 
     fun onOrganizeTokensClick()
 
+    fun onDismissMarketsOnboarding()
+
     fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus)
 
     fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
@@ -52,6 +55,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val reduxStateHolder: ReduxStateHolder,
@@ -90,12 +94,19 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onManageTokensClick() {
         analyticsEventHandler.send(PortfolioEvent.ButtonManageTokens)
         reduxStateHolder.dispatch(action = TokensAction.SetArgs.ManageAccess)
-        router.openManageTokensScreen()
+        router.openManageTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
     }
 
     override fun onOrganizeTokensClick() {
         analyticsEventHandler.send(PortfolioEvent.OrganizeTokens)
         router.openOrganizeTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
+    }
+
+    override fun onDismissMarketsOnboarding() {
+        stateHolder.update { it.copy(showMarketsOnboarding = false) }
+        viewModelScope.launch {
+            shouldShowMarketsTooltipUseCase(isShown = true)
+        }
     }
 
     override fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus) {
