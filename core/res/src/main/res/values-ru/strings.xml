@@ -356,6 +356,7 @@
   <string name="markets_loading_error_title">Невозможно загрузить данные</string>
   <string name="markets_loading_no_data_title">Нет данных</string>
   <string name="markets_quick_actions">Быстрые действия</string>
+  <string name="markets_search_header_title">Искать на маркете</string>
   <string name="markets_search_result_title">Результат</string>
   <string name="markets_search_see_tokens_under_100k">Токены с капитализацией меньше 100к USD</string>
   <string name="markets_search_show_tokens">Показать токены</string>
