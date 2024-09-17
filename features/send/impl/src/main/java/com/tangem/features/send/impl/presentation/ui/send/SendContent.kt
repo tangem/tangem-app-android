@@ -26,8 +26,12 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.amountScreen.ui.AmountBlock
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.previewdata.ConfirmStatePreviewData
@@ -69,8 +73,14 @@ private fun LazyListScope.blocks(uiState: SendUiState) {
                 modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
             ) {
                 TransactionDoneTitle(
-                    titleRes = R.string.sent_transaction_sent_title,
-                    date = timestamp,
+                    title = resourceReference(R.string.sent_transaction_sent_title),
+                    subtitle = resourceReference(
+                        R.string.send_date_format,
+                        wrappedList(
+                            timestamp.toTimeFormat(DateTimeFormatters.dateFormatter),
+                            timestamp.toTimeFormat(),
+                        ),
+                    ),
                 )
             }
             RecipientBlock(

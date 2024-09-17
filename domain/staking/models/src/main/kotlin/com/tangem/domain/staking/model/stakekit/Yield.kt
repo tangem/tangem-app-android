@@ -53,16 +53,25 @@ data class Yield(
     @Serializable
     data class Validator(
         val address: String,
-        val status: String,
+        val status: ValidatorStatus,
         val name: String,
-        val image: String?,
-        val website: String?,
-        val apr: SerializedBigDecimal?,
-        val commission: Double?,
-        val stakedBalance: String?,
-        val votingPower: Double?,
+        val image: String? = null,
+        val website: String? = null,
+        val apr: SerializedBigDecimal? = null,
+        val commission: Double? = null,
+        val stakedBalance: String? = null,
+        val votingPower: Double? = null,
         val preferred: Boolean,
-    )
+    ) {
+
+        enum class ValidatorStatus {
+            ACTIVE,
+            DEACTIVATING,
+            INACTIVE,
+            JAILED,
+            UNKNOWN,
+        }
+    }
 
     @Serializable
     data class Metadata(

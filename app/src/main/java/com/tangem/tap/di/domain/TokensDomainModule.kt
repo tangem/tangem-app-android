@@ -7,6 +7,7 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.features.markets.MarketsFeatureToggles
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -38,8 +39,9 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
     ): FetchTokenListUseCase {
-        return FetchTokenListUseCase(currenciesRepository, networksRepository, quotesRepository)
+        return FetchTokenListUseCase(currenciesRepository, networksRepository, quotesRepository, stakingRepository)
     }
 
     @Provides
@@ -73,8 +75,8 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
-    ): GetCardTokensListUseCase {
-        return GetCardTokensListUseCase(currenciesRepository, quotesRepository, networksRepository, stakingRepository)
+    ): GetNodlTokenListUseCase {
+        return GetNodlTokenListUseCase(currenciesRepository, quotesRepository, networksRepository, stakingRepository)
     }
 
     @Provides
@@ -101,6 +103,22 @@ internal object TokensDomainModule {
             networksRepository,
             stakingRepository,
             dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetAllWalletsCryptoCurrencyStatusesUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
+    ): GetAllWalletsCryptoCurrencyStatusesUseCase {
+        return GetAllWalletsCryptoCurrencyStatusesUseCase(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
         )
     }
 
@@ -158,8 +176,9 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
     ): FetchCurrencyStatusUseCase {
-        return FetchCurrencyStatusUseCase(currenciesRepository, networksRepository, quotesRepository)
+        return FetchCurrencyStatusUseCase(currenciesRepository, networksRepository, quotesRepository, stakingRepository)
     }
 
     @Provides
@@ -213,6 +232,7 @@ internal object TokensDomainModule {
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
         stakingFeatureToggles: StakingFeatureToggles,
+        marketsFeatureToggles: MarketsFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyActionsUseCase {
         return GetCryptoCurrencyActionsUseCase(
@@ -224,6 +244,7 @@ internal object TokensDomainModule {
             networksRepository = networksRepository,
             stakingRepository = stakingRepository,
             stakingFeatureToggles = stakingFeatureToggles,
+            marketsFeatureToggles = marketsFeatureToggles,
             dispatchers = dispatchers,
         )
     }
@@ -416,7 +437,7 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideCheckHasLinkedTokensUseCase(currenciesRepository: CurrenciesRepository): CheckHasLinkedTokensUseCase {
-        return CheckHasLinkedTokensUseCase(currenciesRepository)
+    fun provideGetCurrencyCheckUseCase(currencyChecksRepository: CurrencyChecksRepository): GetCurrencyCheckUseCase {
+        return GetCurrencyCheckUseCase(currencyChecksRepository)
     }
 }

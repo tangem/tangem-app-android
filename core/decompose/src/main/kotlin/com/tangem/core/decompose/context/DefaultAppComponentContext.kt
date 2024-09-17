@@ -19,6 +19,7 @@ class DefaultAppComponentContext(
     messageHandler: UiMessageHandler,
     override val dispatchers: CoroutineDispatcherProvider,
     override val hiltComponentBuilder: DecomposeComponent.Builder,
+    private val replaceRouter: Router? = null,
 ) : AppComponentContext, ComponentContext by componentContext {
 
     override val tags: HashMap<String, Any> = HashMap()
@@ -31,5 +32,5 @@ class DefaultAppComponentContext(
         get() = instanceKeeper.getOrCreate { DefaultAppNavigationProvider() }
 
     override val router: Router
-        get() = instanceKeeper.getOrCreate { DefaultRouter(navigationProvider) }
+        get() = replaceRouter ?: instanceKeeper.getOrCreate { DefaultRouter(navigationProvider) }
 }
