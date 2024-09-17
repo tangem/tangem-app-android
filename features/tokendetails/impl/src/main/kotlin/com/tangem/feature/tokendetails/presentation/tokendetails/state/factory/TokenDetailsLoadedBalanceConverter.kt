@@ -153,8 +153,9 @@ internal class TokenDetailsLoadedBalanceConverter(
                 StakingBlockUM.Error(iconState = iconState)
             }
             else -> {
-                val stakingRewardAmount = yieldBalance?.getRewardStakingBalance()
-                val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
+                val fiatRate = status.value.fiatRate
+                val stakingRewardAmount = yieldBalance?.getRewardStakingBalance()?.let { fiatRate?.multiply(it) }
+                val stakingFiatAmount = stakingCryptoAmount?.let { fiatRate?.multiply(it) }
 
                 getStakedState(
                     status = status,
