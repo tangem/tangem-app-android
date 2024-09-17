@@ -13,15 +13,16 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
+import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.disableNestedScroll
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
 import kotlinx.coroutines.launch
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
+private const val LOAD_NEXT_PAGE_ON_END_INDEX_SEARCH = 25
 private const val TOKEN_LAZY_LIST_ID_SEPARATOR = "***"
 
 @Composable
@@ -51,7 +52,7 @@ internal fun MarketsListLazyColumn(
 
     if (state is ListUM.Loading) {
         LazyColumn(
-            modifier = Modifier.disableNestedScroll(),
+            modifier = modifier,
             state = rememberLazyListState(),
             contentPadding = PaddingValues(bottom = bottomBarHeight),
             userScrollEnabled = false,
@@ -62,7 +63,7 @@ internal fun MarketsListLazyColumn(
         }
     } else {
         LazyColumn(
-            modifier = modifier.disableNestedScroll(),
+            modifier = modifier,
             state = lazyListState,
             contentPadding = PaddingValues(bottom = bottomBarHeight),
             userScrollEnabled = true,
@@ -95,7 +96,7 @@ internal fun MarketsListLazyColumn(
                         )
                     }
 
-                    if (isInSearchMode && state.showUnder100kTokens.not()) {
+                    if (isInSearchMode && state.showUnder100kTokensNotification) {
                         item(key = "show tokens under 100k".hashCode()) {
                             ShowTokensUnder100kItem(
                                 onShowTokensClick = state.onShowTokensUnder100kClicked,
@@ -112,10 +113,15 @@ internal fun MarketsListLazyColumn(
 
     InfiniteListHandler(
         listState = lazyListState,
-        buffer = LOAD_NEXT_PAGE_ON_END_INDEX,
+        buffer = if (isInSearchMode) {
+            LOAD_NEXT_PAGE_ON_END_INDEX_SEARCH
+        } else {
+            LOAD_NEXT_PAGE_ON_END_INDEX
+        },
+        triggerLoadMoreCheckOnItemsCountChange = true,
         onLoadMore = remember(state) {
             {
-                if (state is ListUM.Content && state.showUnder100kTokens) {
+                if (state is ListUM.Content && state.showUnder100kTokensNotification.not()) {
                     state.loadMore()
                     true
                 } else {
@@ -194,28 +200,6 @@ private fun VisibleItemsTracker(listState: LazyListState, state: ListUM) {
     LaunchedEffect(listState.isScrollInProgress, visibleItems) {
         if (state is ListUM.Content && listState.isScrollInProgress.not()) {
             state.visibleIdsChanged(visibleItems)
-        }
-    }
-}
-
-@Composable
-fun InfiniteListHandler(listState: LazyListState, onLoadMore: () -> Boolean, buffer: Int = 2) {
-    val loadMore by remember {
-        derivedStateOf {
-            val layoutInfo = listState.layoutInfo
-            val totalItemsNumber = layoutInfo.totalItemsCount
-            val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
-
-            lastVisibleItemIndex > totalItemsNumber - buffer
-        }
-    }
-
-    val totalItemsCount by remember { derivedStateOf { listState.layoutInfo.totalItemsCount } }
-    var emitted by remember(totalItemsCount) { mutableStateOf(false) }
-
-    LaunchedEffect(loadMore) {
-        if (loadMore && !emitted) {
-            emitted = onLoadMore()
         }
     }
 }
