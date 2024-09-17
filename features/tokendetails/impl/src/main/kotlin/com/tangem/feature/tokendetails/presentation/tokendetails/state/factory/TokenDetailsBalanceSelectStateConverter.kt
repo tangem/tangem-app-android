@@ -2,6 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
@@ -20,8 +21,9 @@ internal class TokenDetailsBalanceSelectStateConverter(
             if (stakingBlocksState !is StakingBlockUM.Staked) return this
             val cryptoCurrencyStatus = cryptoCurrencyStatusProvider() ?: return this
 
-            val stakingCryptoAmount = stakingBlocksState.cryptoAmount
-            val stakingFiatAmount = stakingBlocksState.fiatAmount
+            val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
+            val stakingCryptoAmount = yieldBalance?.getTotalWithRewardsStakingBalance()
+            val stakingFiatAmount = stakingCryptoAmount?.let { cryptoCurrencyStatus.value.fiatRate?.multiply(it) }
 
             copy(
                 tokenBalanceBlockState = if (tokenBalanceBlockState is TokenDetailsBalanceBlockState.Content) {
