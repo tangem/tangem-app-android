@@ -1,15 +1,14 @@
 package com.tangem.core.ui.components
 
+import android.os.Build
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+@Immutable
 sealed interface Keyboard {
     val height: Dp
 
@@ -30,6 +29,34 @@ val Keyboard.isOpened: Boolean
 @Composable
 fun keyboardAsState(): State<Keyboard> {
     val bottom = WindowInsets.ime.getBottom(LocalDensity.current)
-    val isImeVisible = bottom > 0
-    return rememberUpdatedState(if (isImeVisible) Keyboard.Opened(bottom.dp) else Keyboard.Closed)
+    val bottomDp = with(LocalDensity.current) { bottom.toDp() }
+
+    val keyboardStateInternal by rememberUpdatedState(
+        if (bottom > 0) Keyboard.Opened(bottomDp) else Keyboard.Closed,
+    )
+
+    val keyboardState = remember { mutableStateOf(keyboardStateInternal) }
+
+    LaunchedEffect(keyboardStateInternal) {
+        val falsePositive = Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q &&
+            keyboardStateInternal is Keyboard.Opened &&
+            keyboardStateInternal.height < 50.dp
+        // FIX android <=10 devices can randomly send ime paddings,
+        // which leads to a false positive keyboard opening ([REDACTED_TASK_KEY])
+        if (falsePositive) return@LaunchedEffect
+
+        keyboardState.value = keyboardStateInternal
+    }
+
+    return keyboardState
+}
+
+@Composable
+fun rememberIsKeyboardVisible(): State<Boolean> {
+    val keyboard by keyboardAsState()
+    return remember(keyboard) {
+        derivedStateOf {
+            keyboard.isOpened
+        }
+    }
 }

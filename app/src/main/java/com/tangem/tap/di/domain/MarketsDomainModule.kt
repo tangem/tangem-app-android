@@ -1,10 +1,11 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
-import com.tangem.domain.markets.GetTokenMarketInfoUseCase
-import com.tangem.domain.markets.GetTokenPriceChartUseCase
-import com.tangem.domain.markets.GetTokenQuotesUseCase
+import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.tokens.repository.QuotesRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,7 +38,29 @@ object MarketsDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetTokenQuotesUseCase(marketsTokenRepository: MarketsTokenRepository): GetTokenQuotesUseCase {
-        return GetTokenQuotesUseCase(marketsTokenRepository = marketsTokenRepository)
+    fun provideTokenFullQuotesUseCase(marketsTokenRepository: MarketsTokenRepository): GetTokenFullQuotesUseCase {
+        return GetTokenFullQuotesUseCase(marketsTokenRepository = marketsTokenRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetTokenQuotesUseCase(quotesRepository: QuotesRepository): GetCurrencyQuotesUseCase {
+        return GetCurrencyQuotesUseCase(quotesRepository = quotesRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSaveMarketTokensUseCase(
+        derivationsRepository: DerivationsRepository,
+        marketsTokenRepository: MarketsTokenRepository,
+        currenciesRepository: CurrenciesRepository,
+        networksRepository: NetworksRepository,
+    ): SaveMarketTokensUseCase {
+        return SaveMarketTokensUseCase(
+            derivationsRepository = derivationsRepository,
+            marketsTokenRepository = marketsTokenRepository,
+            currenciesRepository = currenciesRepository,
+            networksRepository = networksRepository,
+        )
     }
 }
