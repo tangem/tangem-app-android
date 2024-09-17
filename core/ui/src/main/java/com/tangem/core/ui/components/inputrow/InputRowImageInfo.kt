@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.inputrow
 
 import android.content.res.Configuration
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -40,15 +41,17 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun InputRowImageInfo(
     subtitle: TextReference,
     infoTitle: TextReference,
-    imageUrl: String,
     modifier: Modifier = Modifier,
     title: TextReference? = null,
     caption: TextReference? = null,
     infoSubtitle: TextReference? = null,
+    imageUrl: String? = null,
+    @DrawableRes iconRes: Int? = null,
     subtitleColor: Color = TangemTheme.colors.text.primary1,
     captionColor: Color = TangemTheme.colors.text.tertiary,
+    iconTint: Color = TangemTheme.colors.icon.informative,
     isGrayscaleImage: Boolean = false,
-    iconEndRes: Int? = null,
+    @DrawableRes iconEndRes: Int? = null,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
@@ -66,6 +69,8 @@ fun InputRowImageInfo(
             subtitle = subtitle,
             caption = caption,
             imageUrl = imageUrl,
+            iconRes = iconRes,
+            iconTint = iconTint,
             subtitleColor = subtitleColor,
             captionColor = captionColor,
             isGrayscaleImage = isGrayscaleImage,

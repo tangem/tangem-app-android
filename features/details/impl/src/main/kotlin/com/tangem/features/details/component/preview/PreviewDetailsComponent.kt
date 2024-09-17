@@ -17,8 +17,7 @@ internal class PreviewDetailsComponent : DetailsComponent {
     private val previewBlocks = runBlocking {
         ItemsBuilder(
             router = DummyRouter(),
-            urlOpener = DummyUrlOpener(),
-        ).buildAll(isWalletConnectAvailable = true, onSupportClick = {})
+        ).buildAll(isWalletConnectAvailable = true, onSupportClick = {}, onBuyClick = {})
     }
 
     private val previewFooter = DetailsFooterUM(

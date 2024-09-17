@@ -8,15 +8,9 @@ import com.tangem.utils.transformer.Transformer
 
 internal class AmountChangeStateTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
-    private val yield: Yield,
     private val value: String,
+    private val yield: Yield,
 ) : Transformer<StakingUiState> {
-
-    private val amountRequirementStateTransformer = AmountRequirementStateTransformer(
-        cryptoCurrencyStatus,
-        yield,
-        value,
-    )
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         val updatedAmountState = AmountFieldChangeTransformer(
@@ -25,7 +19,11 @@ internal class AmountChangeStateTransformer(
         ).transform(prevState.amountState)
 
         return prevState.copy(
-            amountState = amountRequirementStateTransformer.transform(updatedAmountState),
+            amountState = AmountRequirementStateTransformer(
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                yield = yield,
+                actionType = prevState.actionType,
+            ).transform(updatedAmountState),
         )
     }
 }

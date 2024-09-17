@@ -34,7 +34,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
             blockchainProviderTypes = blockchainProviderTypes,
             accountCreator = accountCreator,
             featureToggles = BlockchainFeatureToggles(
-                isCardanoTokenSupport = blockchainSDKFeatureToggles.isCardanoTokensSupportEnabled,
+                isEthereumEIP1559Enabled = blockchainSDKFeatureToggles.isEthereumEIP1559Enabled,
             ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
