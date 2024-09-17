@@ -407,7 +407,6 @@ private inline fun BaseScaffoldWithMarkets(
             sheetContainerColor = backgroundColor.value,
             scaffoldState = scaffoldState,
             sheetPeekHeight = peekHeight,
-            sheetTonalElevation = 8.dp,
             sheetShadowElevation = 8.dp,
             sheetShape = TangemTheme.shapes.bottomSheetLarge,
             sheetContent = {
@@ -645,7 +644,7 @@ private fun BottomSheetStateEffects(
     val systemUiController = rememberSystemUiController()
     val navigationBarColor = TangemTheme.colors.background.primary
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(navigationBarColor) {
         delay(timeMillis = 100)
         when (bottomSheetState.currentValue) {
             TangemSheetValue.Hidden,
@@ -660,7 +659,7 @@ private fun BottomSheetStateEffects(
         }
     }
 
-    LaunchedEffect(key1 = bottomSheetState.targetValue, navigationBarColor) {
+    LaunchedEffect(bottomSheetState.targetValue, navigationBarColor) {
         when (bottomSheetState.targetValue) {
             TangemSheetValue.Hidden,
             TangemSheetValue.Expanded,
