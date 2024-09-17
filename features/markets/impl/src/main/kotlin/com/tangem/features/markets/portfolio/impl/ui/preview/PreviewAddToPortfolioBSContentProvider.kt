@@ -62,14 +62,14 @@ internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider
                 selectedWallet = userWallet,
                 selectNetworkUM = SelectNetworkUM(
                     tokenId = "etherium",
-                    tokenName = "Etherium",
+                    tokenName = "Etherium Etherium Etherium Etherium",
                     tokenCurrencySymbol = "ETH",
                     networks = persistentListOf(
                         blockchainRow.copy(
                             type = "MAIN",
                             isMainNetwork = true,
                             isSelected = true,
-                        ),
+                        ).copy(name = "Etherium Etherium Etherium Etherium"),
                         *Array(25) { blockchainRow },
                     ),
 
