@@ -29,7 +29,7 @@ class GetWalletTotalBalanceUseCase(
     private val stakingRepository: StakingRepository,
 ) {
 
-    suspend operator fun invoke(
+    operator fun invoke(
         userTallestIds: Collection<UserWalletId>,
     ): LceFlow<TokenListError, Map<UserWalletId, TotalFiatBalance>> {
         val flows = userTallestIds.distinct()
@@ -54,7 +54,7 @@ class GetWalletTotalBalanceUseCase(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    suspend operator fun invoke(userWalletId: UserWalletId): LceFlow<TokenListError, TotalFiatBalance> {
+    operator fun invoke(userWalletId: UserWalletId): LceFlow<TokenListError, TotalFiatBalance> {
         val currenciesStatuses = getStatuses(userWalletId)
 
         return currenciesStatuses.transformLatest { maybeStatuses ->
