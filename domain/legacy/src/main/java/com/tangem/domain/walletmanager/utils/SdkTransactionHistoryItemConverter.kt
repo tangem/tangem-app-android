@@ -54,6 +54,10 @@ internal class SdkTransactionHistoryItemConverter(
             } else {
                 mapToInteractionAddressType(sourceType = sourceType)
             }
+            is SdkTransactionHistoryItem.TransactionType.TronStakingTransactionType -> {
+                TxHistoryItem.InteractionAddressType.Staking
+            }
+
             is SdkTransactionHistoryItem.TransactionType.ContractMethod,
             is SdkTransactionHistoryItem.TransactionType.ContractMethodName,
             -> mapToInteractionAddressType(destinationType)
