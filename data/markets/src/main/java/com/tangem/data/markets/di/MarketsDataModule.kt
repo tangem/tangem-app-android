@@ -4,7 +4,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.markets.DefaultMarketsTokenRepository
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.di.DevTangemApi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -21,8 +20,8 @@ internal object MarketsDataModule {
     @Provides
     @Singleton
     fun provideMarketsRepository(
-        @DevTangemApi marketsApi: TangemTechMarketsApi,
-        @DevTangemApi tangemTechApi: TangemTechApi,
+        marketsApi: TangemTechMarketsApi,
+        tangemTechApi: TangemTechApi,
         userWalletsStore: UserWalletsStore,
         dispatchers: CoroutineDispatcherProvider,
         analyticsEventHandler: AnalyticsEventHandler,
