@@ -51,6 +51,11 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 source = state.dialog.source,
                 onTryAgain = state.dialog.onTryAgain,
             )
+            is StateDialog.NfcFeatureIsUnavailable -> SimpleAlertDialog.create(
+                titleRes = R.string.common_error,
+                messageRes = R.string.nfc_error_unavailable,
+                context = context,
+            )
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
             is AppDialog.RussianCardholdersWarningDialog -> RussianCardholdersWarningBottomSheetDialog(

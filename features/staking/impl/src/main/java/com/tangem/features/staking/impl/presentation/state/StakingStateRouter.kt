@@ -1,14 +1,21 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvents
+import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 
 internal class StakingStateRouter(
     private val appRouter: AppRouter,
     private val stateController: StakingStateController,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
 ) {
 
+    private val analyticSender = StakingAnalyticSender(analyticsEventsHandler)
+
     fun onBackClick() {
+        analyticSender.screenCancel(stateController.value)
         appRouter.pop()
         stateController.clear()
     }
@@ -26,9 +33,7 @@ internal class StakingStateRouter(
             StakingStep.Validators,
             StakingStep.Amount,
             -> showConfirmation()
-            StakingStep.Confirmation -> {
-                // TODO staking handle
-            }
+            StakingStep.Confirmation -> showInitial()
         }
     }
 
@@ -50,14 +55,21 @@ internal class StakingStateRouter(
     }
 
     private fun showInitial() {
+        analyticSender.initialInfoScreen(stateController.value)
         stateController.update { it.copy(currentStep = StakingStep.InitialInfo) }
     }
 
-    fun showRewardsValidators() {
+    private fun showRewardsValidators() {
+        analyticsEventsHandler.send(
+            StakingAnalyticsEvents.RewardScreenOpened(stateController.value.cryptoCurrencySymbol),
+        )
         stateController.update { it.copy(currentStep = StakingStep.RewardsValidators) }
     }
 
-    fun showAmount() {
+    private fun showAmount() {
+        analyticsEventsHandler.send(
+            StakingAnalyticsEvents.AmountScreenOpened(stateController.value.cryptoCurrencySymbol),
+        )
         stateController.update { it.copy(currentStep = StakingStep.Amount) }
     }
 
@@ -65,7 +77,8 @@ internal class StakingStateRouter(
         stateController.update { it.copy(currentStep = StakingStep.Validators) }
     }
 
-    fun showConfirmation() {
+    private fun showConfirmation() {
+        analyticSender.confirmationScreen(stateController.value)
         stateController.update { it.copy(currentStep = StakingStep.Confirmation) }
     }
 }

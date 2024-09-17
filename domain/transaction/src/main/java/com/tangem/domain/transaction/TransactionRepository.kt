@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionSendResult
+import com.tangem.blockchain.common.transaction.TransactionsSendResult
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.models.TransactionType
@@ -57,6 +58,13 @@ interface TransactionRepository {
         userWalletId: UserWalletId,
         network: Network,
     ): com.tangem.blockchain.extensions.Result<TransactionSendResult>
+
+    suspend fun sendMultipleTransactions(
+        txsData: List<TransactionData>,
+        signer: CommonSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): com.tangem.blockchain.extensions.Result<TransactionsSendResult>
 
     fun createTransactionDataExtras(
         data: String,

@@ -32,6 +32,7 @@ internal class DescriptionConverter(
                                 ),
                             ),
                             body = stringReference(value.fullDescription ?: ""),
+                            showGeneratedAINotification = true,
                         ),
                     )
                 },

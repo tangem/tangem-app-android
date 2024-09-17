@@ -18,8 +18,12 @@ import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImage
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.models.SwapSuccessStateHolder
 import com.tangem.feature.swap.presentation.R
@@ -60,7 +64,16 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
             .background(TangemTheme.colors.background.secondary)
             .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
-        TransactionDoneTitle(titleRes = R.string.swapping_success_view_title, date = state.timestamp)
+        TransactionDoneTitle(
+            title = resourceReference(R.string.common_in_progress),
+            subtitle = resourceReference(
+                R.string.send_date_format,
+                wrappedList(
+                    state.timestamp.toTimeFormat(DateTimeFormatters.dateFormatter),
+                    state.timestamp.toTimeFormat(),
+                ),
+            ),
+        )
         SpacerH16()
         InputRowImage(
             title = TextReference.Res(R.string.swapping_from_title),

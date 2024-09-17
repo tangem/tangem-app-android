@@ -57,14 +57,16 @@ internal class CurrencyStatusOperations(
 
         val hasCurrentNetworkTransactions = status.pendingTransactions.isNotEmpty()
         val currentTransactions = status.pendingTransactions.getOrElse(currency.id, ::emptySet)
-
+        val isCurrentAddressStaking =
+            (yieldBalance as? YieldBalance.Data)?.address == status.address.defaultAddress.value
+        val currentYieldBalance = yieldBalance.takeIf { isCurrentAddressStaking }
         return when {
             ignoreQuote -> CryptoCurrencyStatus.NoQuote(
                 amount = amount,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
                 networkAddress = status.address,
-                yieldBalance = yieldBalance,
+                yieldBalance = currentYieldBalance,
             )
             currency is CryptoCurrency.Token && currency.isCustom -> CryptoCurrencyStatus.Custom(
                 amount = amount,
@@ -74,7 +76,7 @@ internal class CurrencyStatusOperations(
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
                 networkAddress = status.address,
-                yieldBalance = yieldBalance,
+                yieldBalance = currentYieldBalance,
             )
             quote == null -> CryptoCurrencyStatus.Loading
             else -> CryptoCurrencyStatus.Loaded(
@@ -85,7 +87,7 @@ internal class CurrencyStatusOperations(
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
                 networkAddress = status.address,
-                yieldBalance = yieldBalance,
+                yieldBalance = currentYieldBalance,
             )
         }
     }

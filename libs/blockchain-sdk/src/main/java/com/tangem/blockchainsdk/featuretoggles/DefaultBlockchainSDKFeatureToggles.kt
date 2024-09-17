@@ -6,6 +6,6 @@ internal class DefaultBlockchainSDKFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : BlockchainSDKFeatureToggles {
 
-    override val isCardanoTokensSupportEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(name = "CARDANO_TOKENS_SUPPORT_ENABLED")
+    override val isEthereumEIP1559Enabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "IS_ETHEREUM_EIP_1559_ENABLED")
 }

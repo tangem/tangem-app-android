@@ -18,6 +18,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.coil)
 
     /** Deps */
     implementation(deps.kotlin.immutable.collections)
@@ -27,9 +28,14 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Project - Domain */
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.staking.models)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.transaction.models)
+    implementation(projects.domain.wallets.models)
+
+    implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain) {
         exclude(module = "joda-time")
     }
