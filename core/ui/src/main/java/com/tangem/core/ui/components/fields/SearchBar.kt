@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
@@ -69,6 +70,7 @@ fun SearchBar(state: SearchBarUM, modifier: Modifier = Modifier, colors: TextFie
         textStyle = TangemTheme.typography.body2.copy(
             color = TangemTheme.colors.text.primary1,
         ),
+        cursorBrush = SolidColor(TangemTheme.colors.icon.primary1),
         decorationBox = @Composable { innerTextField ->
             DecorationBox(
                 state = state,

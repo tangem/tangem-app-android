@@ -1,15 +1,22 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 internal class SetConfirmationStateLoadingTransformer(
     private val yield: Yield,
+    private val appCurrency: AppCurrency,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
@@ -27,50 +34,46 @@ internal class SetConfirmationStateLoadingTransformer(
                     chosenValidator = chosenValidator,
                     availableValidators = yield.validators,
                 ),
-                notifications = getNotifications(prevState),
-                footerText = "",
+                notifications = persistentListOf(),
+                footerText = getFooter(prevState),
                 transactionDoneState = TransactionDoneState.Empty,
-                pendingActions = persistentListOf(),
-                pendingActionInProgress = null,
+                pendingAction = possibleConfirmationState?.pendingAction,
+                pendingActions = possibleConfirmationState?.pendingActions,
                 isApprovalNeeded = false,
+                reduceAmountBy = null,
             ),
         )
     }
 
-    private fun getNotifications(prevState: StakingUiState): ImmutableList<StakingNotification> {
-        return persistentListOf(
-            if (prevState.actionType == StakingActionCommonType.EXIT) {
-                StakingNotification.Warning.Unstake(
-                    cooldownPeriodDays = yield.metadata.cooldownPeriod.days,
-                )
-            } else {
-                StakingNotification.Warning.EarnRewards(
-                    currencyName = yield.token.name,
-                    subtitleResourceId = getEarnRewardsPeriod(yield.metadata.rewardSchedule),
-                )
-            },
+    private fun getFooter(state: StakingUiState): TextReference {
+        val amountState = state.amountState as? AmountState.Data
+        val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
+        val validatorState = confirmationState?.validatorState as? ValidatorState.Content
+
+        val isEnterAction = state.actionType == StakingActionCommonType.ENTER
+
+        val apr = validatorState?.chosenValidator?.apr.orZero()
+        val amountDecimal = amountState?.amountTextField?.fiatAmount?.value
+        val potentialReward = amountDecimal?.multiply(apr)
+
+        val amountValue = BigDecimalFormatter.formatFiatAmount(
+            fiatAmount = amountDecimal,
+            fiatCurrencyCode = appCurrency.code,
+            fiatCurrencySymbol = appCurrency.symbol,
         )
-    }
-
-    private fun getEarnRewardsPeriod(rewardSchedule: Yield.Metadata.RewardSchedule): Int {
-        return when (rewardSchedule) {
-            Yield.Metadata.RewardSchedule.BLOCK,
-            Yield.Metadata.RewardSchedule.DAY,
-            Yield.Metadata.RewardSchedule.ERA,
-            Yield.Metadata.RewardSchedule.EPOCH,
-            -> R.string.staking_notification_earn_rewards_text_period_day
-
-            Yield.Metadata.RewardSchedule.HOUR,
-            -> R.string.staking_notification_earn_rewards_text_period_hour
-
-            Yield.Metadata.RewardSchedule.WEEK,
-            -> R.string.staking_notification_earn_rewards_text_period_week
-
-            Yield.Metadata.RewardSchedule.MONTH,
-            -> R.string.staking_notification_earn_rewards_text_period_month
-
-            else
-            -> R.string.staking_notification_earn_rewards_text_period_day
+        val potentialRewardValue = BigDecimalFormatter.formatFiatAmount(
+            fiatAmount = potentialReward,
+            fiatCurrencyCode = appCurrency.code,
+            fiatCurrencySymbol = appCurrency.symbol,
+            withApproximateSign = true,
+        )
+        return if (isEnterAction && amountDecimal != null && potentialReward != null) {
+            resourceReference(
+                id = R.string.staking_summary_description_text,
+                formatArgs = wrappedList(amountValue, potentialRewardValue),
+            )
+        } else {
+            TextReference.EMPTY
         }
     }
 }

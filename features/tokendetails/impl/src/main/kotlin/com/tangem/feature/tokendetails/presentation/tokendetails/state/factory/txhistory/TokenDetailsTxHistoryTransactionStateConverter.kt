@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory
 
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TransactionState.Content.Direction
 import com.tangem.core.ui.extensions.TextReference
@@ -8,6 +9,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.txhistory.models.TxHistoryItem.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.StringsSigns.MINUS
@@ -42,34 +44,44 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
         )
     }
 
-    private fun TxHistoryItem.extractIcon(): Int = if (status == TxHistoryItem.TransactionStatus.Failed) {
+    private fun TxHistoryItem.extractIcon(): Int = if (status == TransactionStatus.Failed) {
         R.drawable.ic_close_24
     } else {
         when (type) {
-            is TxHistoryItem.TransactionType.Approve -> R.drawable.ic_doc_24
-            is TxHistoryItem.TransactionType.Operation,
-            is TxHistoryItem.TransactionType.Swap,
-            is TxHistoryItem.TransactionType.Transfer,
-            is TxHistoryItem.TransactionType.UnknownOperation,
+            is TransactionType.Approve -> R.drawable.ic_doc_24
+            is TransactionType.TronStakingTransactionType.Stake,
+            is TransactionType.TronStakingTransactionType.Vote,
+            -> R.drawable.ic_transaction_history_staking
+            is TransactionType.TronStakingTransactionType.Withdraw,
+            is TransactionType.TronStakingTransactionType.Unstake,
+            -> R.drawable.ic_transaction_history_unstaking
+            is TransactionType.Operation,
+            is TransactionType.Swap,
+            is TransactionType.Transfer,
+            is TransactionType.UnknownOperation,
             -> if (isOutgoing) R.drawable.ic_arrow_up_24 else R.drawable.ic_arrow_down_24
         }
     }
 
     private fun TxHistoryItem.extractTitle(): TextReference = when (val type = type) {
-        is TxHistoryItem.TransactionType.Approve -> resourceReference(R.string.common_approval)
-        is TxHistoryItem.TransactionType.Operation -> stringReference(type.name)
-        is TxHistoryItem.TransactionType.Swap -> resourceReference(R.string.common_swap)
-        is TxHistoryItem.TransactionType.Transfer -> resourceReference(R.string.common_transfer)
-        is TxHistoryItem.TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
+        is TransactionType.Approve -> resourceReference(R.string.common_approval)
+        is TransactionType.Operation -> stringReference(type.name)
+        is TransactionType.Swap -> resourceReference(R.string.common_swap)
+        is TransactionType.Transfer -> resourceReference(R.string.common_transfer)
+        is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
+        is TransactionType.TronStakingTransactionType.Stake -> resourceReference(R.string.common_stake)
+        is TransactionType.TronStakingTransactionType.Unstake -> resourceReference(R.string.common_unstake)
+        is TransactionType.TronStakingTransactionType.Vote -> resourceReference(R.string.staking_vote)
+        is TransactionType.TronStakingTransactionType.Withdraw -> resourceReference(R.string.staking_withdraw)
     }
 
     private fun TxHistoryItem.extractSubtitle(): TextReference =
         when (val interactionAddress = interactionAddressType) {
-            is TxHistoryItem.InteractionAddressType.Contract -> resourceReference(
+            is InteractionAddressType.Contract -> resourceReference(
                 id = R.string.transaction_history_contract_address,
                 formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
             )
-            is TxHistoryItem.InteractionAddressType.Multiple -> resourceReference(
+            is InteractionAddressType.Multiple -> resourceReference(
                 id = if (isOutgoing) {
                     R.string.transaction_history_transaction_to_address
                 } else {
@@ -77,7 +89,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
                 },
                 formatArgs = wrappedList(resourceReference(R.string.transaction_history_multiple_addresses)),
             )
-            is TxHistoryItem.InteractionAddressType.User -> resourceReference(
+            is InteractionAddressType.User -> resourceReference(
                 id = if (isOutgoing) {
                     R.string.transaction_history_transaction_to_address
                 } else {
@@ -85,19 +97,28 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
                 },
                 formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
             )
+            is InteractionAddressType.Staking -> resourceReference(
+                id = R.string.common_staking,
+            )
         }
 
     private fun TxHistoryItem.extractDirection() = if (isOutgoing) Direction.OUTGOING else Direction.INCOMING
 
-    private fun TxHistoryItem.TransactionStatus.tiUiStatus() = when (this) {
-        TxHistoryItem.TransactionStatus.Confirmed -> TransactionState.Content.Status.Confirmed
-        TxHistoryItem.TransactionStatus.Failed -> TransactionState.Content.Status.Failed
-        TxHistoryItem.TransactionStatus.Unconfirmed -> TransactionState.Content.Status.Unconfirmed
+    private fun TransactionStatus.tiUiStatus() = when (this) {
+        TransactionStatus.Confirmed -> TransactionState.Content.Status.Confirmed
+        TransactionStatus.Failed -> TransactionState.Content.Status.Failed
+        TransactionStatus.Unconfirmed -> TransactionState.Content.Status.Unconfirmed
     }
 
     private fun TxHistoryItem.getAmount(): String {
-        val prefix = when (status) {
-            TxHistoryItem.TransactionStatus.Failed -> ""
+        if (type == TransactionType.TronStakingTransactionType.Vote ||
+            type == TransactionType.TronStakingTransactionType.Withdraw
+        ) {
+            return ""
+        }
+        val prefix = when {
+            status == TransactionStatus.Failed -> ""
+            this.amount.isZero() -> ""
             else -> if (isOutgoing) MINUS else PLUS
         }
         return prefix + amount.toFormattedCurrencyString(currency = symbol, decimals = decimals)

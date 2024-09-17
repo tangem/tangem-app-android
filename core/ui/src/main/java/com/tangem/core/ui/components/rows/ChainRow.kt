@@ -25,15 +25,8 @@ import com.tangem.core.ui.res.TangemThemePreview
  * */
 @Composable
 fun ChainRow(model: ChainRowUM, modifier: Modifier = Modifier, action: @Composable BoxScope.() -> Unit = {}) {
-    RowContentContainer(
-        modifier = modifier
-            .heightIn(min = TangemTheme.dimens.size68)
-            .padding(vertical = TangemTheme.dimens.spacing8)
-            .padding(
-                start = TangemTheme.dimens.spacing8,
-                end = TangemTheme.dimens.spacing12,
-            ),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+    ChainRowContainer(
+        modifier = modifier,
         icon = {
             CurrencyIcon(
                 state = model.icon,
@@ -53,6 +46,28 @@ fun ChainRow(model: ChainRowUM, modifier: Modifier = Modifier, action: @Composab
                 accentSecondText = false,
             )
         },
+        action = action,
+    )
+}
+
+@Composable
+inline fun ChainRowContainer(
+    icon: @Composable BoxScope.() -> Unit,
+    text: @Composable BoxScope.() -> Unit,
+    action: @Composable BoxScope.() -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    RowContentContainer(
+        modifier = modifier
+            .heightIn(min = TangemTheme.dimens.size68)
+            .padding(vertical = TangemTheme.dimens.spacing8)
+            .padding(
+                start = TangemTheme.dimens.spacing8,
+                end = TangemTheme.dimens.spacing12,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        icon = icon,
+        text = text,
         action = action,
     )
 }
