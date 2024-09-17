@@ -1,6 +1,9 @@
 package com.tangem.data.managetokens.utils
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
+import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
+import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.blockchainsdk.utils.toCoinId
@@ -13,11 +16,8 @@ import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.tokens.model.Network
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-internal class ManagedCryptoCurrencyFactory @Inject constructor() {
+internal class ManagedCryptoCurrencyFactory {
 
     fun create(
         coinsResponse: CoinsResponse,
@@ -80,6 +80,7 @@ internal class ManagedCryptoCurrencyFactory @Inject constructor() {
                 iconUrl = token.id?.let { getIconUrl(it, imageHost) },
                 contractAddress = contractAddress,
                 network = network,
+                decimals = token.decimals,
             )
         }
     }
@@ -92,15 +93,16 @@ internal class ManagedCryptoCurrencyFactory @Inject constructor() {
     ): ManagedCryptoCurrency? {
         if (coinResponse.networks.isEmpty() || !coinResponse.active) return null
 
+        val updatedNetworks = coinResponse.networks.applyL2Compatibility(coinResponse.id)
         return ManagedCryptoCurrency.Token(
             id = ManagedCryptoCurrency.ID(coinResponse.id),
             name = coinResponse.name,
             symbol = coinResponse.symbol,
             iconUrl = getIconUrl(coinResponse.id, imageHost),
-            availableNetworks = coinResponse.networks.mapNotNull { network ->
+            availableNetworks = updatedNetworks.mapNotNull { network ->
                 createSource(network, derivationStyleProvider)
             },
-            addedIn = findAddedInNetworksIds(coinResponse.id, tokensResponse),
+            addedIn = findAddedInNetworks(coinResponse.id, tokensResponse, derivationStyleProvider),
         )
     }
 
@@ -119,26 +121,36 @@ internal class ManagedCryptoCurrencyFactory @Inject constructor() {
         return if (contractAddress.isNullOrBlank()) {
             SourceNetwork.Main(
                 network = network,
+                decimals = blockchain.decimals(),
+                isL2Network = l2BlockchainsList.contains(blockchain),
             )
         } else {
             SourceNetwork.Default(
                 network = network,
+                decimals = requireNotNull(networkResponse.decimalCount?.toInt()),
                 contractAddress = contractAddress,
             )
         }
     }
 
-    private fun findAddedInNetworksIds(currencyId: String, tokensResponse: UserTokensResponse?): Set<Network.ID> {
+    private fun findAddedInNetworks(
+        currencyId: String,
+        tokensResponse: UserTokensResponse?,
+        derivationStyleProvider: DerivationStyleProvider?,
+    ): Set<Network> {
         if (tokensResponse == null) return emptySet()
 
         return tokensResponse.tokens
-            .filter { it.id == currencyId }
-            .map { it.networkId }
-            .mapNotNullTo(mutableSetOf()) { networkId ->
-                val blockchain = Blockchain.fromNetworkId(networkId)
+            .filter { getL2CompatibilityTokenComparison(it, currencyId) }
+            .mapNotNullTo(mutableSetOf()) { token ->
+                val blockchain = Blockchain.fromNetworkId(token.networkId)
 
                 if (blockchain != null && blockchain.isSupportedInApp()) {
-                    Network.ID(blockchain.id)
+                    getNetwork(
+                        blockchain = blockchain,
+                        extraDerivationPath = token.derivationPath,
+                        derivationStyleProvider = derivationStyleProvider,
+                    )
                 } else {
                     null
                 }

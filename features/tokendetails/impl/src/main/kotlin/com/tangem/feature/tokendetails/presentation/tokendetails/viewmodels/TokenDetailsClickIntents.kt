@@ -29,7 +29,7 @@ interface TokenDetailsClickIntents {
 
     fun onHideConfirmed()
 
-    fun onRefreshSwipe()
+    fun onRefreshSwipe(isRefreshing: Boolean)
 
     fun onBuyCoinClick(cryptoCurrency: CryptoCurrency)
 
