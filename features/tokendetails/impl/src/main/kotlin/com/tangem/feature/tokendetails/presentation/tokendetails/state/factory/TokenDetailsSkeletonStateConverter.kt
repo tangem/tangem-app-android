@@ -7,6 +7,7 @@ import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -15,7 +16,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsPullToRefreshConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
@@ -137,8 +137,8 @@ internal class TokenDetailsSkeletonStateConverter(
         )
     }
 
-    private fun createPullToRefresh(): TokenDetailsPullToRefreshConfig = TokenDetailsPullToRefreshConfig(
+    private fun createPullToRefresh(): PullToRefreshConfig = PullToRefreshConfig(
         isRefreshing = false,
-        onRefresh = clickIntents::onRefreshSwipe,
+        onRefresh = { clickIntents.onRefreshSwipe(it.value) },
     )
 }

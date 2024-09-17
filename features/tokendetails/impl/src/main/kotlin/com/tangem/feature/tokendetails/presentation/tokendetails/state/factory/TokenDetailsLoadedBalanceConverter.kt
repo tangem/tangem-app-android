@@ -6,25 +6,26 @@ import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryTransactionStateConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getStringResourceId
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
@@ -93,7 +94,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         currentState: TokenDetailsBalanceBlockState,
         status: CryptoCurrencyStatus,
     ): TokenDetailsBalanceBlockState {
-        val stakingCryptoAmount = (status.value.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance()
+        val stakingCryptoAmount = (status.value.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance()
         val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
         val isBalanceSelectorEnabled = stakingFeatureToggles.isStakingEnabled && !stakingCryptoAmount.isNullOrZero()
         return when (status.value) {
@@ -156,6 +157,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                 val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
 
                 getStakedState(
+                    status = status,
                     stakingCryptoAmount = stakingCryptoAmount,
                     stakingFiatAmount = stakingFiatAmount,
                     stakingRewardAmount = stakingRewardAmount,
@@ -191,19 +193,26 @@ internal class TokenDetailsLoadedBalanceConverter(
         stakingEntryInfo: StakingEntryInfo,
         iconState: IconState,
     ): StakingBlockUM.StakeAvailable {
+        val apr = BigDecimalFormatter.formatPercent(
+            percent = stakingEntryInfo.apr,
+            useAbsoluteValue = true,
+        )
         return StakingBlockUM.StakeAvailable(
-            interestRate = BigDecimalFormatter.formatPercent(
-                percent = stakingEntryInfo.interestRate,
-                useAbsoluteValue = true,
+            titleText = resourceReference(
+                id = R.string.token_details_staking_block_title,
+                formatArgs = wrappedList(apr),
             ),
-            periodInDays = stakingEntryInfo.periodInDays,
-            tokenSymbol = stakingEntryInfo.tokenSymbol,
+            subtitleText = resourceReference(
+                id = stakingEntryInfo.rewardSchedule.getStringResourceId(),
+                formatArgs = wrappedList(stakingEntryInfo.tokenSymbol),
+            ),
             iconState = iconState,
             onStakeClicked = clickIntents::onStakeBannerClick,
         )
     }
 
     private fun getStakedState(
+        status: CryptoCurrencyStatus,
         stakingCryptoAmount: BigDecimal?,
         stakingFiatAmount: BigDecimal?,
         stakingRewardAmount: BigDecimal?,
@@ -221,16 +230,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                     appCurrencyProvider().symbol,
                 ),
             ),
-            rewardValue = resourceReference(
-                R.string.staking_details_rewards_to_claim,
-                wrappedList(
-                    BigDecimalFormatter.formatFiatAmount(
-                        stakingRewardAmount,
-                        appCurrencyProvider().code,
-                        appCurrencyProvider().symbol,
-                    ),
-                ),
-            ),
+            rewardValue = getRewardText(status, stakingRewardAmount),
             onStakeClicked = clickIntents::onStakeBannerClick,
         )
     }
@@ -294,5 +294,29 @@ internal class TokenDetailsLoadedBalanceConverter(
         val totalAmount = amount.getBalance(selectedBalanceType, stakingCryptoAmount)
 
         return BigDecimalFormatter.formatCryptoAmount(totalAmount, status.currency.symbol, status.currency.decimals)
+    }
+
+    private fun getRewardText(status: CryptoCurrencyStatus, stakingRewardAmount: BigDecimal?): TextReference {
+        val isSolana = isSolana(status.currency.network.id.value)
+        val rewardBlockType = when {
+            isSolana -> RewardBlockType.RewardUnavailable
+            stakingRewardAmount.isNullOrZero() -> RewardBlockType.NoRewards
+            else -> RewardBlockType.Rewards
+        }
+
+        return when (rewardBlockType) {
+            RewardBlockType.Rewards -> resourceReference(
+                R.string.staking_details_rewards_to_claim,
+                wrappedList(
+                    BigDecimalFormatter.formatFiatAmount(
+                        stakingRewardAmount,
+                        appCurrencyProvider().code,
+                        appCurrencyProvider().symbol,
+                    ),
+                ),
+            )
+            RewardBlockType.NoRewards -> resourceReference(R.string.staking_details_no_rewards_to_claim)
+            RewardBlockType.RewardUnavailable -> TextReference.EMPTY
+        }
     }
 }
