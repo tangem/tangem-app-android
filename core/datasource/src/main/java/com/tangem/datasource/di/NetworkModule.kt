@@ -35,7 +35,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal object NetworkModule {
 
-    private const val DEV_V1_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
     private const val PROD_V2_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v2/"
     private const val TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS = 60L
 
@@ -128,44 +127,27 @@ internal object NetworkModule {
     }
 
     @Provides
-    @DevTangemApi
-    @Singleton
-    fun provideTangemTechDevApi(
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-        appVersionProvider: AppVersionProvider,
-    ): TangemTechApi {
-        return provideTangemTechApiInternal(
-            moshi = moshi,
-            context = context,
-            appVersionProvider = appVersionProvider,
-            baseUrl = DEV_V1_TANGEM_TECH_BASE_URL,
-        )
-    }
-
-    // TODO: [REDACTED_JIRA]
-    @Provides
-    @DevTangemApi
     @Singleton
     fun provideTangemTechMarketsApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        appVersionProvider: AppVersionProvider,
+        apiConfigsManager: ApiConfigsManager,
     ): TangemTechMarketsApi {
-        return provideTangemTechApiInternal(
+        return createApi(
+            id = ApiConfig.ID.TangemTech,
             moshi = moshi,
             context = context,
-            appVersionProvider = appVersionProvider,
-            baseUrl = DEV_V1_TANGEM_TECH_BASE_URL,
-            timeouts = Timeouts(
-                callTimeoutSeconds = TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS,
-                connectTimeoutSeconds = TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS,
-                readTimeoutSeconds = TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS,
-            ),
-            requestHeaders = listOf(AppVersionPlatformHeaders(appVersionProvider)),
+            apiConfigsManager = apiConfigsManager,
+            clientBuilder = {
+                this.callTimeout(TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .connectTimeout(TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .readTimeout(TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .applyTimeoutAnnotations()
+            },
         )
     }
 
+    @Deprecated("use createApi instead")
     private inline fun <reified T> provideTangemTechApiInternal(
         moshi: Moshi,
         context: Context,
