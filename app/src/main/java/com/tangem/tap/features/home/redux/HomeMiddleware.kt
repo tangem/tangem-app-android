@@ -1,7 +1,5 @@
 package com.tangem.tap.features.home.redux
 
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.ktx.Firebase
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
@@ -15,11 +13,12 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.IntroductionProcess
-import com.tangem.tap.common.analytics.events.Shop
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.extensions.eraseContext
+import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -60,21 +59,6 @@ private fun handleHomeAction(action: Action) {
             action.scope.launch {
                 readCard()
             }
-        }
-        is HomeAction.GoToShop -> {
-            Analytics.send(Shop.ScreenOpened())
-            Firebase.analytics.appInstanceId
-                .addOnSuccessListener {
-                    store.dispatchOpenUrl("$NEW_BUY_WALLET_URL&app_instance_id=$it")
-                }
-                .addOnFailureListener {
-                    store.dispatchOpenUrl(NEW_BUY_WALLET_URL)
-                }
-            // disabled for now in task [REDACTED_JIRA]
-            // when (action.userCountryCode) {
-            //     RUSSIA_COUNTRY_CODE, BELARUS_COUNTRY_CODE -> store.dispatchOpenUrl(BUY_WALLET_URL)
-            //     else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
-            // }
         }
     }
 }
