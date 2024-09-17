@@ -88,4 +88,15 @@ internal class DefaultSettingsRepository(
             preferences[PreferencesKeys.APP_LAUNCH_COUNT_KEY] = count + 1
         }
     }
+
+    override suspend fun shouldShowMarketsTooltip(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.SHOULD_SHOW_MARKETS_TOOLTIP_KEY,
+            default = true,
+        )
+    }
+
+    override suspend fun setMarketsTooltipShown(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.SHOULD_SHOW_MARKETS_TOOLTIP_KEY, value = !value)
+    }
 }

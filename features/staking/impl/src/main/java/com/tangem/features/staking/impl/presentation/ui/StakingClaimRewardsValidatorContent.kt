@@ -33,16 +33,16 @@ internal fun StakingClaimRewardsValidatorContent(
             .verticalScroll(rememberScrollState()),
     ) {
         state.rewards.forEachIndexed { index, item ->
-            key(item.validator.address) {
+            key(item.title.resolveReference() + index) {
                 InputRowImageInfo(
-                    subtitle = stringReference(item.validator.name),
+                    subtitle = item.title,
                     caption = combinedReference(
                         resourceReference(R.string.staking_details_apr),
                         annotatedReference {
                             appendSpace()
                             appendColored(
                                 text = BigDecimalFormatter.formatPercent(
-                                    percent = item.validator.apr.orZero(),
+                                    percent = item.validator?.apr.orZero(),
                                     useAbsoluteValue = true,
                                 ),
                                 color = TangemTheme.colors.text.accent,
@@ -51,7 +51,7 @@ internal fun StakingClaimRewardsValidatorContent(
                     ),
                     infoTitle = item.fiatAmount,
                     infoSubtitle = item.cryptoAmount,
-                    imageUrl = item.validator.image.orEmpty(),
+                    imageUrl = item.validator?.image.orEmpty(),
                     modifier = modifier
                         .roundedShapeItemDecoration(index, state.rewards.lastIndex, false)
                         .background(TangemTheme.colors.background.action)

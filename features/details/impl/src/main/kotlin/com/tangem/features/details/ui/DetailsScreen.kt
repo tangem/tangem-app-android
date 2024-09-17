@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,6 +28,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TestTags
 import com.tangem.features.details.component.preview.PreviewDetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
@@ -74,7 +76,7 @@ private fun Content(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.testTag(TestTags.DETAILS_SCREEN),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         contentPadding = PaddingValues(
             top = TangemTheme.dimens.spacing12,
@@ -125,7 +127,7 @@ private fun Block(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top,
     ) {
-        val itemModifier = Modifier.fillMaxWidth()
+        val itemModifier = Modifier.fillMaxWidth().testTag(TestTags.DETAILS_SCREEN_ITEM)
 
         when (model) {
             is DetailsItemUM.Basic -> {

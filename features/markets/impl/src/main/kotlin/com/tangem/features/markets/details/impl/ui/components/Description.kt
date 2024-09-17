@@ -19,6 +19,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
 import com.tangem.features.markets.impl.R
+import com.tangem.utils.StringsSigns
 
 @Composable
 internal fun Description(
@@ -33,7 +34,7 @@ internal fun Description(
                 append(description.resolveReference())
             }
             withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
-                append(" " + stringResource(R.string.common_read_more))
+                append(" " + stringResource(R.string.common_read_more).replace(' ', StringsSigns.NON_BREAKING_SPACE))
             }
         }
 

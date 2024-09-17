@@ -35,5 +35,6 @@ data class AmountFieldModel(
     val isValuePasted: Boolean,
     val onValuePastedTriggerDismiss: () -> Unit,
     val isError: Boolean,
+    val isWarning: Boolean,
     val error: TextReference,
 )

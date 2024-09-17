@@ -16,10 +16,12 @@ dependencies {
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.legacy)
 
     /** Project - Data */
     implementation(projects.core.datasource)
     implementation(projects.data.common)
+    implementation(projects.data.tokens)
 
     /** Project - Utils */
     implementation(projects.core.utils)
