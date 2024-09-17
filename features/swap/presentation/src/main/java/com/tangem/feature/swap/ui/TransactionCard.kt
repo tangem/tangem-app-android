@@ -14,7 +14,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -103,7 +103,7 @@ fun TransactionCard(
                     .height(TangemTheme.dimens.size116)
                     .width(TangemTheme.dimens.size102)
                     .clickable(
-                        indication = rememberRipple(bounded = false),
+                        indication = ripple(bounded = false),
                         interactionSource = remember { MutableInteractionSource() },
                     ) { onChangeTokenClick() },
             )
@@ -164,7 +164,7 @@ fun TransactionCardEmpty(
                     .height(TangemTheme.dimens.size116)
                     .width(TangemTheme.dimens.size102)
                     .clickable(
-                        indication = rememberRipple(bounded = false),
+                        indication = ripple(bounded = false),
                         interactionSource = remember { MutableInteractionSource() },
                     ) { onChangeTokenClick() },
             )

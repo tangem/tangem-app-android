@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButton
+import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.welcome.ui.model.WarningModel
 import com.tangem.wallet.R
@@ -27,7 +27,7 @@ internal fun WarningDialog(warning: WarningModel?) {
                     },
                 ),
                 onDismissDialog = warning.onDismiss,
-                confirmButton = DialogButton(
+                confirmButton = DialogButtonUM(
                     title = stringResource(id = R.string.common_ok),
                     onClick = warning.onDismiss,
                 ),
@@ -38,7 +38,7 @@ internal fun WarningDialog(warning: WarningModel?) {
                 title = stringResource(id = R.string.common_attention),
                 message = stringResource(id = R.string.key_invalidated_warning_description),
                 onDismissDialog = warning.onDismiss,
-                confirmButton = DialogButton(
+                confirmButton = DialogButtonUM(
                     title = stringResource(id = R.string.common_ok),
                     onClick = warning.onDismiss,
                 ),
@@ -50,7 +50,7 @@ internal fun WarningDialog(warning: WarningModel?) {
                 message = stringResource(id = R.string.biometric_unavailable_warning),
                 onDismissDialog = warning.onDismiss,
                 isDismissable = false,
-                confirmButton = DialogButton(
+                confirmButton = DialogButtonUM(
                     title = stringResource(id = R.string.common_ok),
                     onClick = warning.onDismiss,
                 ),

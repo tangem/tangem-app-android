@@ -10,7 +10,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.datasource.local.token.UserTokensStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
@@ -76,7 +76,7 @@ interface ApplicationEntryPoint {
 
     fun getBalanceHidingRepository(): BalanceHidingRepository
 
-    fun getUserTokensStore(): UserTokensStore
+    fun getAppPreferencesStore(): AppPreferencesStore
 
     fun getGetAppThemeModeUseCase(): GetAppThemeModeUseCase
 

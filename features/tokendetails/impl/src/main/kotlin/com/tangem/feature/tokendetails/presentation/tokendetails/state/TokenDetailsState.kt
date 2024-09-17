@@ -6,9 +6,9 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsPullToRefreshConfig
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 
@@ -23,7 +23,7 @@ internal data class TokenDetailsState(
     val swapTxs: PersistentList<SwapTransactionsState>,
     val txHistoryState: TxHistoryState,
     val dialogConfig: TokenDetailsDialogConfig?,
-    val pullToRefreshConfig: TokenDetailsPullToRefreshConfig,
+    val pullToRefreshConfig: PullToRefreshConfig,
     val bottomSheetConfig: TangemBottomSheetConfig?,
     val isBalanceHidden: Boolean,
     val isMarketPriceAvailable: Boolean,

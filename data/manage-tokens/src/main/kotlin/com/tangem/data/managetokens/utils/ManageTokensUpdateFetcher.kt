@@ -31,9 +31,9 @@ internal class ManageTokensUpdateFetcher @Inject constructor() :
                             is ManagedCryptoCurrency.Token -> {
                                 currency.copy(
                                     addedIn = if (updateRequest.isSelected) {
-                                        currency.addedIn + updateRequest.networkId
+                                        currency.addedIn + updateRequest.network
                                     } else {
-                                        currency.addedIn - updateRequest.networkId
+                                        currency.addedIn - updateRequest.network
                                     },
                                 )
                             }

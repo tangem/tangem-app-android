@@ -317,16 +317,16 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
 
     private fun setupTopUpWalletState(state: TwinCardsState) = with(mainBinding.onboardingActionContainer) {
         when (previousStep) {
-            TwinCardsStep.None -> {
+            TwinCardsStep.None, TwinCardsStep.Welcome -> {
                 when (state.cardNumber) {
                     TwinCardNumber.First -> {
-                        twinsWidget.leapfrogWidget.unfold(false) {
-                            twinsWidget.toActivate(false)
+                        twinsWidget.leapfrogWidget.unfold(true) {
+                            twinsWidget.toActivate(true)
                         }
                     }
                     TwinCardNumber.Second -> {
-                        switchToCard(state.cardNumber, false) {
-                            twinsWidget.toActivate(false)
+                        switchToCard(state.cardNumber, true) {
+                            twinsWidget.toActivate(true)
                         }
                     }
                     else -> {}
