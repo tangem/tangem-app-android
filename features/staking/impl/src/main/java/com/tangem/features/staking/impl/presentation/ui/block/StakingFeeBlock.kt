@@ -29,12 +29,17 @@ import com.tangem.features.staking.impl.presentation.state.FeeState
 import java.math.BigDecimal
 
 @Composable
-internal fun StakingFeeBlock(feeState: FeeState) {
+internal fun StakingFeeBlock(feeState: FeeState, isTransactionSent: Boolean) {
+    val backgroundColor = if (isTransactionSent) {
+        TangemTheme.colors.background.action
+    } else {
+        TangemTheme.colors.button.disabled
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(backgroundColor)
             .padding(TangemTheme.dimens.spacing12),
     ) {
         Text(
@@ -43,16 +48,13 @@ internal fun StakingFeeBlock(feeState: FeeState) {
             color = TangemTheme.colors.text.tertiary,
         )
 
-        Box(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
-        ) {
+        Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
             when (feeState) {
                 is FeeState.Content -> {
                     val feeAmount = feeState.fee?.amount
-                    val (title, icon) = R.string.common_fee_selector_option_market to R.drawable.ic_bird_24
                     SelectorRowItem(
-                        titleRes = title,
-                        iconRes = icon,
+                        titleRes = R.string.common_fee_selector_option_market,
+                        iconRes = R.drawable.ic_bird_24,
                         preDot = stringReference(
                             BigDecimalFormatter.formatCryptoFeeAmount(
                                 cryptoAmount = feeAmount?.value,
@@ -74,9 +76,22 @@ internal fun StakingFeeBlock(feeState: FeeState) {
                     )
                 }
                 is FeeState.Loading -> {
+                    SelectorRowItem(
+                        titleRes = R.string.common_fee_selector_option_market,
+                        iconRes = R.drawable.ic_bird_24,
+                        isSelected = true,
+                        paddingValues = PaddingValues(),
+                        showDivider = false,
+                    )
                     FeeLoading(feeState)
                 }
                 is FeeState.Error -> {
+                    SelectorRowItem(
+                        titleRes = R.string.common_fee_selector_option_market,
+                        iconRes = R.drawable.ic_bird_24,
+                        isSelected = true,
+                        paddingValues = PaddingValues(),
+                    )
                     FeeError(feeState)
                 }
             }
@@ -128,6 +143,7 @@ private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) va
     TangemThemePreview {
         StakingFeeBlock(
             feeState = value,
+            isTransactionSent = false,
         )
     }
 }
