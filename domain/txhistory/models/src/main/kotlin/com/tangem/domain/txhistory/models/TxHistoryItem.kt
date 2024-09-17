@@ -33,20 +33,28 @@ data class TxHistoryItem(
     }
 
     sealed interface TransactionType {
-        object Transfer : TransactionType
-        object Approve : TransactionType
-        object Swap : TransactionType
-        object UnknownOperation : TransactionType
+        data object Transfer : TransactionType
+        data object Approve : TransactionType
+        data object Swap : TransactionType
+        data object UnknownOperation : TransactionType
         data class Operation(val name: String) : TransactionType
+
+        sealed interface TronStakingTransactionType : TransactionType {
+            data object Vote : TronStakingTransactionType
+            data object Withdraw : TronStakingTransactionType
+            data object Stake : TronStakingTransactionType
+            data object Unstake : TronStakingTransactionType
+        }
     }
 
     sealed class TransactionStatus {
-        object Failed : TransactionStatus()
-        object Unconfirmed : TransactionStatus()
-        object Confirmed : TransactionStatus()
+        data object Failed : TransactionStatus()
+        data object Unconfirmed : TransactionStatus()
+        data object Confirmed : TransactionStatus()
     }
 
     sealed class InteractionAddressType {
+        data object Staking : InteractionAddressType()
         data class User(val address: String) : InteractionAddressType()
         data class Contract(val address: String) : InteractionAddressType()
         data class Multiple(val addresses: List<String>) : InteractionAddressType()

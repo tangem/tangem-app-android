@@ -13,9 +13,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
 
     private val previewState = WalletSettingsUM(
         popBack = {},
-        items = ItemsBuilder(
-            router = DummyRouter(),
-        ).buildItems(
+        items = ItemsBuilder(router = DummyRouter()).buildItems(
             userWalletId = UserWalletId("011"),
             userWalletName = "My Wallet",
             isReferralAvailable = true,
@@ -23,6 +21,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             renameWallet = {},
             forgetWallet = {},
             onLinkMoreCardsClick = {},
+            isManageTokensAvailable = true,
         ),
     )
 

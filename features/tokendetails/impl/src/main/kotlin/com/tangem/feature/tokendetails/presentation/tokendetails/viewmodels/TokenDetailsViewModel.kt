@@ -6,6 +6,7 @@ import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -126,6 +127,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     tokenDetailsFeatureToggles: TokenDetailsFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
+    private val appRouter: AppRouter,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
     private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.USER_WALLET_ID_KEY)
@@ -391,8 +393,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun updateStakingInfo() {
         viewModelScope.launch {
             val stakingAvailability = getStakingAvailabilityUseCase(
-                cryptoCurrencyId = cryptoCurrency.id,
-                symbol = cryptoCurrency.symbol,
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
             ).getOrElse { StakingAvailability.Unavailable }
 
             internalUiState.value = stateFactory.getStateWithUpdatedStakingAvailability(stakingAvailability)
@@ -464,6 +466,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onStakeBannerClick() {
+        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.StakingClicked(cryptoCurrency.symbol))
         openStaking()
     }
 
@@ -616,7 +619,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        reduxStateHolder.dispatch(TradeCryptoAction.Swap(cryptoCurrency))
+        appRouter.push(AppRoute.Swap(currency = cryptoCurrency, userWalletId = userWalletId))
     }
 
     override fun onDismissDialog() {
@@ -709,7 +712,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         )
     }
 
-    override fun onRefreshSwipe() {
+    override fun onRefreshSwipe(isRefreshing: Boolean) {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Refreshed(cryptoCurrency.symbol))
 
         internalUiState.value = stateFactory.getRefreshingState()

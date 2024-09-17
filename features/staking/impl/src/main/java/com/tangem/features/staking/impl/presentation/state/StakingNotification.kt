@@ -1,35 +1,31 @@
 package com.tangem.features.staking.impl.presentation.state
 
+import androidx.annotation.StringRes
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.features.staking.impl.R
 
-internal sealed class StakingNotification(val config: NotificationConfig) {
+internal object StakingNotification {
 
     sealed class Error(
         title: TextReference,
         subtitle: TextReference,
-        iconResId: Int = R.drawable.ic_alert_24,
         buttonState: NotificationConfig.ButtonsState? = null,
         onCloseClick: (() -> Unit)? = null,
-    ) : StakingNotification(
-        config = NotificationConfig(
-            title = title,
-            subtitle = subtitle,
-            iconResId = iconResId,
-            buttonsState = buttonState,
-            onCloseClick = onCloseClick,
-        ),
+    ) : NotificationUM.Error(
+        title = title,
+        subtitle = subtitle,
+        iconResId = R.drawable.ic_alert_24,
+        buttonState = buttonState,
+        onCloseClick = onCloseClick,
     ) {
-        data class StakedPositionNotFoundError(val message: String) : Error(
+        data class StakedPositionNotFoundError(val message: String) : StakingNotification.Error(
             title = stringReference(message),
             subtitle = stringReference(message),
         )
 
-        data class Common(val subtitle: TextReference) : Error(
+        data class Common(val subtitle: TextReference) : StakingNotification.Error(
             title = resourceReference(R.string.common_error),
             subtitle = subtitle,
         )
@@ -40,39 +36,66 @@ internal sealed class StakingNotification(val config: NotificationConfig) {
         subtitle: TextReference,
         buttonsState: NotificationConfig.ButtonsState? = null,
         onCloseClick: (() -> Unit)? = null,
-    ) : StakingNotification(
-        config = NotificationConfig(
-            title = title,
-            subtitle = subtitle,
-            iconResId = R.drawable.ic_alert_circle_24,
-            buttonsState = buttonsState,
-            onCloseClick = onCloseClick,
-        ),
+    ) : NotificationUM.Warning(
+        title = title,
+        subtitle = subtitle,
+        iconResId = R.drawable.ic_alert_circle_24,
+        buttonsState = buttonsState,
+        onCloseClick = onCloseClick,
+    ) {
+        data class TransactionInProgress(
+            val title: TextReference,
+            val description: TextReference,
+        ) : StakingNotification.Warning(title = title, subtitle = description)
+    }
+
+    sealed class Info(
+        title: TextReference,
+        subtitle: TextReference,
+        buttonsState: NotificationConfig.ButtonsState? = null,
+        onCloseClick: (() -> Unit)? = null,
+    ) : NotificationUM.Info(
+        title = title,
+        subtitle = subtitle,
+        buttonsState = buttonsState,
+        onCloseClick = onCloseClick,
+
     ) {
         data class EarnRewards(
-            val subtitleResourceId: Int,
-            val currencyName: String,
-        ) : Warning(
+            val subtitleText: TextReference,
+        ) : StakingNotification.Info(
             title = resourceReference(R.string.staking_notification_earn_rewards_title),
-            subtitle = resourceReference(
-                subtitleResourceId,
-                wrappedList(currencyName),
-            ),
+            subtitle = subtitleText,
         )
 
         data class Unstake(
             val cooldownPeriodDays: Int,
-        ) : Warning(
+            @StringRes val subtitleRes: Int,
+        ) : StakingNotification.Info(
             title = resourceReference(R.string.common_unstake),
             subtitle = resourceReference(
-                R.string.staking_notification_unstake_text,
-                wrappedList(cooldownPeriodDays, cooldownPeriodDays),
+                subtitleRes,
+                wrappedList(
+                    pluralReference(
+                        id = R.plurals.common_days,
+                        count = cooldownPeriodDays,
+                        formatArgs = wrappedList(cooldownPeriodDays),
+                    ),
+                ),
             ),
         )
 
-        data class TransactionInProgress(
+        data class PendingAction(
             val title: TextReference,
-            val description: TextReference,
-        ) : Warning(title = title, subtitle = description)
+            val text: TextReference,
+        ) : StakingNotification.Info(
+            title = title,
+            subtitle = text,
+        )
+
+        data object TronRevote : StakingNotification.Info(
+            title = resourceReference(R.string.staking_revote),
+            subtitle = resourceReference(R.string.staking_notifications_revote_tron_text),
+        )
     }
 }

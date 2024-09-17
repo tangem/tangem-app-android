@@ -1,13 +1,19 @@
 package com.tangem.domain.staking.model.stakekit
 
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import org.joda.time.DateTime
 import java.math.BigDecimal
 
 sealed class YieldBalance {
 
     data class Data(
         val balance: YieldBalanceItem,
+        val address: String,
     ) : YieldBalance() {
+        fun getTotalWithRewardsStakingBalance(): BigDecimal {
+            return balance.items.sumOf { it.amount }
+        }
+
         fun getTotalStakingBalance(): BigDecimal {
             return balance.items
                 .filterNot { it.type == BalanceType.REWARDS }
@@ -18,6 +24,13 @@ sealed class YieldBalance {
             return balance.items
                 .filter { it.type == BalanceType.REWARDS }
                 .sumOf { it.amount }
+        }
+
+        fun getValidatorsCount(): Int {
+            return balance.items
+                .filterNot { it.validatorAddress.isNullOrBlank() }
+                .distinctBy { it.validatorAddress }
+                .size
         }
     }
 
@@ -32,12 +45,14 @@ data class YieldBalanceItem(
 )
 
 data class BalanceItem(
+    val id: String,
     val type: BalanceType,
     val amount: BigDecimal,
     val pricePerShare: BigDecimal,
     val rawCurrencyId: String?,
     val rawNetworkId: String,
     val validatorAddress: String?,
+    val date: DateTime?,
     val pendingActions: List<PendingAction>,
 )
 
@@ -73,14 +88,42 @@ data class PendingAction(
     }
 }
 
-enum class BalanceType {
-    AVAILABLE,
-    STAKED,
-    UNSTAKING,
-    UNSTAKED,
-    PREPARING,
-    REWARDS,
-    LOCKED,
-    UNLOCKING,
-    UNKNOWN,
+/**
+ * IMPORTANT!!!
+ * Order is used to sort balances.
+ */
+@Suppress("MagicNumber")
+enum class BalanceType(val order: Int) {
+    AVAILABLE(1),
+    STAKED(2),
+    PREPARING(3),
+    LOCKED(4),
+    UNSTAKING(5),
+    UNLOCKING(6),
+    UNSTAKED(7),
+    REWARDS(8),
+    UNKNOWN(9),
+    ;
+
+    companion object {
+        fun BalanceType.isClickable() = when (this) {
+            STAKED,
+            UNSTAKED,
+            LOCKED,
+            -> true
+            AVAILABLE,
+            UNSTAKING,
+            PREPARING,
+            REWARDS,
+            UNLOCKING,
+            UNKNOWN,
+            -> false
+        }
+    }
+}
+
+enum class RewardBlockType {
+    NoRewards,
+    Rewards,
+    RewardUnavailable,
 }

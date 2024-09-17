@@ -2,9 +2,10 @@ package com.tangem.features.markets.details.impl.model.converters
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.InfoPointUM
@@ -14,13 +15,14 @@ import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 @Stable
 internal class InsightsConverter(
     private val appCurrency: Provider<AppCurrency>,
     private val onInfoClick: (InfoBottomSheetContent) -> Unit,
+    private val onIntervalChanged: (PriceChangeInterval) -> Unit,
 ) : Converter<TokenMarketInfo.Insights, InsightsUM> {
 
     override fun convert(value: TokenMarketInfo.Insights): InsightsUM {
@@ -48,10 +50,14 @@ internal class InsightsConverter(
                     onInfoClick(
                         InfoBottomSheetContent(
                             title = resourceReference(R.string.markets_token_details_insights),
-                            body = stringReference("//TODO"),
+                            body = resourceReference(
+                                R.string.markets_insights_info_description_message,
+                                wrappedList(value.sourceNetworks.joinToString { it.name }),
+                            ),
                         ),
                     )
                 },
+                onIntervalChanged = onIntervalChanged,
             )
         }
     }
@@ -62,74 +68,79 @@ internal class InsightsConverter(
         liquidityChange: BigDecimal?,
         buyPressureChange: BigDecimal?,
     ): ImmutableList<InfoPointUM> {
-        return persistentListOf(
-            InfoPointUM(
-                title = resourceReference(R.string.markets_token_details_experienced_buyers),
-                value = experiencedBuyerChange.convertChange(),
-                change = experiencedBuyerChange.changeType(),
-                onInfoClick = {
-                    onInfoClick(
-                        InfoBottomSheetContent(
-                            title = resourceReference(R.string.markets_token_details_experienced_buyers),
-                            body = resourceReference(R.string.markets_token_details_experienced_buyers_description),
-                        ),
-                    )
-                },
-            ),
-            InfoPointUM(
-                title = resourceReference(R.string.markets_token_details_buy_pressure),
-                value = buyPressureChange.convertChange(isFiatValue = true),
-                change = buyPressureChange.changeType(),
-                onInfoClick = {
-                    onInfoClick(
-                        InfoBottomSheetContent(
-                            title = resourceReference(R.string.markets_token_details_buy_pressure),
-                            body = resourceReference(R.string.markets_token_details_buy_pressure_description),
-                        ),
-                    )
-                },
-            ),
-            InfoPointUM(
-                title = resourceReference(R.string.markets_token_details_holders),
-                value = holdersChange.convertChange(),
-                change = holdersChange.changeType(),
-                onInfoClick = {
-                    onInfoClick(
-                        InfoBottomSheetContent(
-                            title = resourceReference(R.string.markets_token_details_holders),
-                            body = resourceReference(R.string.markets_token_details_holders_description),
-                        ),
-                    )
-                },
-            ),
-            InfoPointUM(
-                title = resourceReference(R.string.markets_token_details_liquidity),
-                value = liquidityChange.convertChange(),
-                change = liquidityChange.changeType(),
-                onInfoClick = {
-                    onInfoClick(
-                        InfoBottomSheetContent(
-                            title = resourceReference(R.string.markets_token_details_liquidity),
-                            body = resourceReference(R.string.markets_token_details_liquidity_description),
-                        ),
-                    )
-                },
-            ),
-        )
+        return listOfNotNull(
+            experiencedBuyerChange?.let {
+                InfoPointUM(
+                    title = resourceReference(R.string.markets_token_details_experienced_buyers),
+                    value = experiencedBuyerChange.convertChange(),
+                    change = experiencedBuyerChange.changeType(),
+                    onInfoClick = {
+                        onInfoClick(
+                            InfoBottomSheetContent(
+                                title = resourceReference(R.string.markets_token_details_experienced_buyers),
+                                body = resourceReference(R.string.markets_token_details_experienced_buyers_description),
+                            ),
+                        )
+                    },
+                )
+            },
+            buyPressureChange?.let {
+                InfoPointUM(
+                    title = resourceReference(R.string.markets_token_details_buy_pressure),
+                    value = buyPressureChange.convertChange(isFiatValue = true),
+                    change = buyPressureChange.changeType(),
+                    onInfoClick = {
+                        onInfoClick(
+                            InfoBottomSheetContent(
+                                title = resourceReference(R.string.markets_token_details_buy_pressure),
+                                body = resourceReference(R.string.markets_token_details_buy_pressure_description),
+                            ),
+                        )
+                    },
+                )
+            },
+            holdersChange?.let {
+                InfoPointUM(
+                    title = resourceReference(R.string.markets_token_details_holders),
+                    value = holdersChange.convertChange(),
+                    change = holdersChange.changeType(),
+                    onInfoClick = {
+                        onInfoClick(
+                            InfoBottomSheetContent(
+                                title = resourceReference(R.string.markets_token_details_holders),
+                                body = resourceReference(R.string.markets_token_details_holders_description),
+                            ),
+                        )
+                    },
+                )
+            },
+            liquidityChange?.let {
+                InfoPointUM(
+                    title = resourceReference(R.string.markets_token_details_liquidity),
+                    value = liquidityChange.convertChange(),
+                    change = liquidityChange.changeType(),
+                    onInfoClick = {
+                        onInfoClick(
+                            InfoBottomSheetContent(
+                                title = resourceReference(R.string.markets_token_details_liquidity),
+                                body = resourceReference(R.string.markets_token_details_liquidity_description),
+                            ),
+                        )
+                    },
+                )
+            },
+        ).toImmutableList()
     }
 
-    private fun BigDecimal?.changeType(): InfoPointUM.ChangeType? {
+    private fun BigDecimal.changeType(): InfoPointUM.ChangeType? {
         return when {
-            this == null -> null
             this > BigDecimal.ZERO -> InfoPointUM.ChangeType.UP
             this < BigDecimal.ZERO -> InfoPointUM.ChangeType.DOWN
             else -> null
         }
     }
 
-    private fun BigDecimal?.convertChange(isFiatValue: Boolean = false): String {
-        if (this == null) return StringsSigns.DASH_SIGN
-
+    private fun BigDecimal.convertChange(isFiatValue: Boolean = false): String {
         val value = if (isFiatValue) {
             val currency = appCurrency()
             BigDecimalFormatter.formatCompactFiatAmount(
@@ -141,11 +152,9 @@ internal class InsightsConverter(
             BigDecimalFormatter.formatCompactAmount(amount = this.abs())
         }
 
-        val spacing = if (isFiatValue) " " else ""
-
         return when {
-            this > BigDecimal.ZERO -> StringsSigns.PLUS + spacing + value
-            this < BigDecimal.ZERO -> StringsSigns.MINUS + spacing + value
+            this > BigDecimal.ZERO -> StringsSigns.PLUS + value
+            this < BigDecimal.ZERO -> StringsSigns.MINUS + value
             this == BigDecimal.ZERO -> value
             else -> StringsSigns.DASH_SIGN
         }

@@ -2,15 +2,17 @@ package com.tangem.features.markets.tokenlist.impl.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.TokenMarket
-import com.tangem.features.markets.component.BottomSheetState
-import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListUMStateManager
+import com.tangem.features.markets.entry.BottomSheetState
+import com.tangem.features.markets.tokenlist.impl.analytics.MarketsListAnalyticsEvent
 import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListBatchFlowManager
+import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListUMStateManager
 import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
@@ -32,6 +34,7 @@ internal class MarketsListModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private var updateQuotesJob = JobHolder()
@@ -221,8 +224,28 @@ internal class MarketsListModel @Inject constructor(
                 }
         }
 
+        // analytics
+        initAnalytics()
+
         // initial loading
         mainMarketsListManager.reload()
+    }
+
+    private fun initAnalytics() {
+        containerBottomSheetState
+            .onEach {
+                if (it == BottomSheetState.EXPANDED) {
+                    analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened)
+                }
+            }.launchIn(modelScope)
+
+        state
+            .filter { it.isInSearchMode.not() }
+            .map { MarketsListAnalyticsEvent.SortBy(it.selectedSortBy, it.selectedInterval) }
+            .distinctUntilChanged()
+            .onEach {
+                analyticsEventHandler.send(it)
+            }.launchIn(modelScope)
     }
 
     private fun onTokenUIClicked(token: MarketsListItemUM) {

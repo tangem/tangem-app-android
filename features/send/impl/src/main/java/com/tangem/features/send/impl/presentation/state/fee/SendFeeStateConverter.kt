@@ -1,8 +1,10 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendStates
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
@@ -23,6 +25,8 @@ internal class SendFeeStateConverter(
             isFeeApproximate = false,
             isCustomSelected = false,
             isFeeConvertibleToFiat = cryptoCurrencyStatusProvider().currency.network.hasFiatFeeRate,
+            isTronToken = cryptoCurrencyStatusProvider().currency is CryptoCurrency.Token &&
+                isTron(cryptoCurrencyStatusProvider().currency.network.id.value),
         )
     }
 }
