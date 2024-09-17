@@ -18,6 +18,9 @@ android {
         jniLibs {
             useLegacyPackaging = true
         }
+        resources.excludes.add("META-INF/DEPENDENCIES")
+        resources.excludes.add("META-INF/LICENSE.md")
+        resources.excludes.add("META-INF/NOTICE.md")
     }
 }
 

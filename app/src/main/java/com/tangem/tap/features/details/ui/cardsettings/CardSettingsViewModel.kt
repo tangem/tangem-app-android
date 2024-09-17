@@ -13,6 +13,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.getBackupCardsCount
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
@@ -159,6 +160,8 @@ internal class CardSettingsViewModel @Inject constructor(
         }
 
         if (scanResponse.cardTypesResolver.isTangemTwins()) {
+            // needs to prepare twin state if it's twin cards (depends on onboarding refactoring)
+            store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
             store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet(scanResponse)))
 
             cardSettingsInteractor.clear()
@@ -173,13 +176,7 @@ internal class CardSettingsViewModel @Inject constructor(
                         userWalletId = userWalletId,
                         cardId = card.cardId,
                         isActiveBackupStatus = card.backupStatus?.isActive == true,
-                        backupCardsCount = when (val status = card.backupStatus) {
-                            is CardDTO.BackupStatus.Active -> status.cardCount
-                            is CardDTO.BackupStatus.CardLinked,
-                            CardDTO.BackupStatus.NoBackup,
-                            null,
-                            -> 0
-                        },
+                        backupCardsCount = scanResponse.getBackupCardsCount() ?: 0,
                     ),
                 )
             }

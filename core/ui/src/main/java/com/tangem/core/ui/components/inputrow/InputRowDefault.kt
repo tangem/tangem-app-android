@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterVertically
@@ -43,9 +43,9 @@ import com.tangem.core.ui.res.TangemThemePreview
  */
 @Composable
 fun InputRowDefault(
-    title: TextReference,
     text: TextReference,
     modifier: Modifier = Modifier,
+    title: TextReference? = null,
     titleColor: Color = TangemTheme.colors.text.secondary,
     textColor: Color = TangemTheme.colors.text.primary1,
     iconRes: Int? = null,
@@ -66,16 +66,18 @@ fun InputRowDefault(
                 modifier = Modifier
                     .weight(1f),
             ) {
-                Text(
-                    text = title.resolveReference(),
-                    style = TangemTheme.typography.subtitle2,
-                    color = titleColor,
-                )
+                title?.let {
+                    Text(
+                        text = title.resolveReference(),
+                        style = TangemTheme.typography.subtitle2,
+                        color = titleColor,
+                        modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing8),
+                    )
+                }
                 Text(
                     text = text.resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = textColor,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
                 )
             }
             iconRes?.let {
@@ -92,7 +94,7 @@ fun InputRowDefault(
                         .clickable(
                             enabled = onIconClick != null,
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple(bounded = false),
+                            indication = ripple(bounded = false),
                         ) { onIconClick?.invoke() },
                 )
             }

@@ -19,7 +19,6 @@ import com.tangem.datasource.api.express.models.response.ExchangeDataResponseWit
 import com.tangem.datasource.api.express.models.response.SwapPair
 import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
 import com.tangem.datasource.api.express.models.response.TxDetails
-import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -44,7 +43,6 @@ import com.tangem.datasource.api.express.models.request.LeastTokenInfo as Networ
 
 @Suppress("LongParameterList", "LargeClass")
 internal class DefaultSwapRepository @Inject constructor(
-    private val tangemTechApi: TangemTechApi,
     private val tangemExpressApi: TangemExpressApi,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
@@ -184,29 +182,6 @@ internal class DefaultSwapRepository @Inject constructor(
                         raise(UnknownError(it.message))
                     },
                 )
-            }
-        }
-    }
-
-    override suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double> {
-        // workaround cause backend do not return arbitrum and optimism rates
-        val addedTokens = if (tokenIds.contains(OPTIMISM_ID) || tokenIds.contains(ARBITRUM_ID)) {
-            tokenIds.toMutableList().apply {
-                add(ETHEREUM_ID)
-            }
-        } else {
-            tokenIds
-        }
-        return withContext(coroutineDispatcher.io) {
-            val rates = tangemTechApi.getRates(currencyId.lowercase(), addedTokens.joinToString(",")).rates
-            val ethRate = rates[ETHEREUM_ID]
-            if (tokenIds.contains(OPTIMISM_ID) || tokenIds.contains(ARBITRUM_ID)) {
-                rates.toMutableMap().apply {
-                    put(OPTIMISM_ID, ethRate ?: 0.0)
-                    put(ARBITRUM_ID, ethRate ?: 0.0)
-                }
-            } else {
-                rates
             }
         }
     }
@@ -431,12 +406,5 @@ internal class DefaultSwapRepository @Inject constructor(
         } else {
             DataError.UnknownError
         }
-    }
-
-    companion object {
-        // TODO("get this ids from blockchain enum later")
-        private const val OPTIMISM_ID = "optimistic-ethereum"
-        private const val ARBITRUM_ID = "arbitrum-one"
-        private const val ETHEREUM_ID = "ethereum"
     }
 }

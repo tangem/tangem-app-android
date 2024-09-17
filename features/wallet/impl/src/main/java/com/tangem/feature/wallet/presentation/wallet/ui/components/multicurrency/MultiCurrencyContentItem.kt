@@ -1,10 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.feature.wallet.presentation.common.component.NetworkGroupItem
-import com.tangem.feature.wallet.presentation.common.component.TokenItem
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.wallet.presentation.common.component.NetworkTitleItem
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.TokensListItemState
 
 /**
@@ -21,12 +23,18 @@ internal fun MultiCurrencyContentItem(
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val modifierWithBackground = modifier.background(color = TangemTheme.colors.background.primary)
+
     when (state) {
         is TokensListItemState.NetworkGroupTitle -> {
-            NetworkGroupItem(networkName = state.name.resolveReference(), modifier = modifier)
+            NetworkTitleItem(networkName = state.name.resolveReference(), modifier = modifierWithBackground)
         }
         is TokensListItemState.Token -> {
-            TokenItem(state = state.state, isBalanceHidden = isBalanceHidden, modifier = modifier)
+            TokenItem(
+                state = state.state,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifierWithBackground,
+            )
         }
     }
 }

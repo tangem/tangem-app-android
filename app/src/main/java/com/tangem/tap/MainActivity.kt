@@ -583,8 +583,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private fun sendStakingUnsubmittedHashes() {
         lifecycleScope.launch {
             sendUnsubmittedHashesUseCase.invoke()
-                .onRight { Timber.d("Submitting hashes succeeded") }
                 .onLeft { Timber.e(it.toString()) }
+                .onRight { Timber.d("Submitting hashes succeeded") }
         }
     }
 }
