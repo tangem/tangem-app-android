@@ -47,7 +47,10 @@ internal fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
                     PriceChangeInterval.MONTH,
                 ),
                 initialSelectedItem = PriceChangeInterval.H24,
-                onClick = { currentInterval = it },
+                onClick = {
+                    currentInterval = it
+                    state.onIntervalChanged(it)
+                },
             ) {
                 Box(
                     Modifier
@@ -177,6 +180,7 @@ private fun ContentPreview() {
                     ),
                 ),
                 onInfoClick = {},
+                onIntervalChanged = {},
             ),
         )
     }
