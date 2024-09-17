@@ -9,17 +9,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
 import com.tangem.common.ui.charts.MarketChart
 import com.tangem.common.ui.charts.getMarketChartBottomAxisHeight
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.rememberMarketChartState
-import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.tokenlist.impl.ui.components.UnableToLoadData
 
 @Composable
-internal fun MarketTokenDetailsChart(state: MarketsTokenDetailsUM.ChartState, modifier: Modifier = Modifier) {
+internal fun MarketTokenDetailsChart(
+    state: MarketsTokenDetailsUM.ChartState,
+    backgroundColor: Color,
+    modifier: Modifier = Modifier,
+) {
     val growingColor = TangemTheme.colors.icon.accent
     val fallingColor = TangemTheme.colors.icon.warning
     val neutralColor = TangemTheme.colors.icon.informative
@@ -36,7 +40,6 @@ internal fun MarketTokenDetailsChart(state: MarketsTokenDetailsUM.ChartState, mo
         onMarkerShown = state.onMarkerPointSelected,
     )
 
-    val backgroundColor = LocalMainBottomSheetColor.current.value
     val bottomChartAxisHeight = getMarketChartBottomAxisHeight()
 
     Box(modifier) {
