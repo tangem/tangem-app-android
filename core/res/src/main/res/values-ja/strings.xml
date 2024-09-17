@@ -640,6 +640,8 @@
   <string name="staking_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
   <string name="staking_amount_tron_integer_error">ネットワークルールにより、ステーキング金額は%1$s TRX に切り上げられます。</string>
   <string name="staking_claim_unstaked">ステーキング解除分を請求する</string>
+  <string name="staking_details_account_fee">ステーキングアカウント手数料</string>
+  <string name="staking_details_account_fee_info">ステーキングアカウントは、ステーキングされたSOLトークンが保管される特別なアカウントです。取引の検証に参加して報酬を得るために、トークンをバリデーターに委任すると、このアカウントが作成されます。ステーキングアカウントの作成には少額の手数料がかかりますが、この手数料はステーキングが完了すると返金されます。</string>
   <string name="staking_details_annual_percentage_rate">年率</string>
   <string name="staking_details_annual_percentage_rate_info">ステーキングに参加することで得られる年間収益率。</string>
   <string name="staking_details_apr">APR</string>
@@ -695,6 +697,7 @@
   <string name="staking_reward_schedule_block">ブロック</string>
   <string name="staking_reward_schedule_day">日</string>
   <string name="staking_reward_schedule_each_day">毎日</string>
+  <string name="staking_reward_schedule_each_sec">%1$s毎</string>
   <string name="staking_reward_schedule_epoch">エポック</string>
   <string name="staking_reward_schedule_era">時代</string>
   <string name="staking_reward_schedule_hour">時</string>
@@ -711,6 +714,7 @@
   <string name="staking_transaction_in_progress_text">取引を処理中です。現在、ブロックチェーンで検証が行われています。これには数分かかる場合があります。</string>
   <string name="staking_unbonding">ステーキング解約中</string>
   <string name="staking_unlocked_locked">ロック解除</string>
+  <string name="staking_unlocking">ロック解除中</string>
   <string name="staking_unstaked">ステーキングされていない</string>
   <string name="staking_unstaking">ステーキング解除</string>
   <string name="staking_unstaking_item_name">ステーキング解除中の資産%s</string>
