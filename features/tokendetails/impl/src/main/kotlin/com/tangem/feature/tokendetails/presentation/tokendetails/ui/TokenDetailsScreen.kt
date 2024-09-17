@@ -38,6 +38,7 @@ import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
@@ -52,12 +53,13 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.e
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.swapTransactionsItems
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlock
+import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 
 // TODO: Split to blocks [REDACTED_JIRA]
 @Suppress("LongMethod")
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
-internal fun TokenDetailsScreen(state: TokenDetailsState) {
+internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockComponent: TokenMarketBlockComponent?) {
     BackHandler(onBack = state.topAppBarConfig.onBackClick)
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
@@ -79,7 +81,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
     ) { scaffoldPaddings ->
         val pullRefreshState = rememberPullRefreshState(
             refreshing = state.pullToRefreshConfig.isRefreshing,
-            onRefresh = state.pullToRefreshConfig.onRefresh,
+            onRefresh = { state.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState()) },
         )
 
         val txHistoryItems = if (state.txHistoryState is TxHistoryState.Content) {
@@ -139,12 +141,27 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                         }
                     },
                 )
-                if (state.isMarketPriceAvailable) {
-                    item(
-                        key = MarketPriceBlockState::class.java,
-                        contentType = MarketPriceBlockState::class.java,
-                        content = { MarketPriceBlock(modifier = itemModifier, state = state.marketPriceBlockState) },
-                    )
+
+                when {
+                    tokenMarketBlockComponent != null -> {
+                        item(
+                            key = TokenMarketBlockComponent::class.java,
+                            contentType = TokenMarketBlockComponent::class.java,
+                            content = { tokenMarketBlockComponent.Content(modifier = itemModifier) },
+                        )
+                    }
+                    state.isMarketPriceAvailable -> {
+                        item(
+                            key = MarketPriceBlockState::class.java,
+                            contentType = MarketPriceBlockState::class.java,
+                            content = {
+                                MarketPriceBlock(
+                                    modifier = itemModifier,
+                                    state = state.marketPriceBlockState,
+                                )
+                            },
+                        )
+                    }
                 }
 
                 if (state.isStakingBlockShown) {
@@ -153,8 +170,9 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                         contentType = StakingBlockUM::class.java,
                         content = {
                             TokenStakingBlock(
-                                modifier = itemModifier,
                                 state = state.stakingBlocksState,
+                                isBalanceHidden = state.isBalanceHidden,
+                                modifier = itemModifier,
                             )
                         },
                     )
@@ -219,7 +237,10 @@ private fun TokenDetailsScreenPreview(
     @PreviewParameter(TokenDetailsScreenParameterProvider::class) state: TokenDetailsState,
 ) {
     TangemThemePreview {
-        TokenDetailsScreen(state)
+        TokenDetailsScreen(
+            state = state,
+            tokenMarketBlockComponent = null,
+        )
     }
 }
 
