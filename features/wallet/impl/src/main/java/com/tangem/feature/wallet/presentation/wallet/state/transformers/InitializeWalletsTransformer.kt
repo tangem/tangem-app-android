@@ -34,6 +34,7 @@ internal class InitializeWalletsTransformer(
                 }
                 .toImmutableList(),
             onWalletChange = clickIntents::onWalletChange,
+            onDismissMarketsOnboarding = clickIntents::onDismissMarketsOnboarding,
         )
     }
 

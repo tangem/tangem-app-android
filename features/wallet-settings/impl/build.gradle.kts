@@ -15,6 +15,7 @@ dependencies {
 
     /* Project - API */
     implementation(projects.features.walletSettings.api)
+    implementation(projects.features.manageTokens.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)

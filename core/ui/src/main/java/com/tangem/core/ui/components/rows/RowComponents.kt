@@ -12,7 +12,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-internal inline fun RowContentContainer(
+inline fun RowContentContainer(
     icon: @Composable BoxScope.() -> Unit,
     text: @Composable BoxScope.() -> Unit,
     action: @Composable BoxScope.() -> Unit,
@@ -53,6 +53,7 @@ internal fun RowText(
     accentSecondText: Boolean,
     modifier: Modifier = Modifier,
     subtitle: TextReference? = null,
+    isEnabled: Boolean = true,
 ) {
     Column(
         modifier = modifier,
@@ -67,16 +68,24 @@ internal fun RowText(
                 modifier = Modifier.weight(weight = 10f, fill = false),
                 text = mainText,
                 style = TangemTheme.typography.subtitle2,
-                color = if (accentMainText) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
+                color = if (isEnabled) {
+                    if (accentMainText) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary
+                } else {
+                    TangemTheme.colors.text.disabled
+                },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
 
             Text(
-                modifier = Modifier.weight(weight = 4f, fill = false),
+                modifier = Modifier.weight(weight = 5f, fill = false),
                 text = secondText,
                 style = TangemTheme.typography.body2,
-                color = if (accentSecondText) TangemTheme.colors.text.accent else TangemTheme.colors.text.secondary,
+                color = if (isEnabled) {
+                    if (accentSecondText) TangemTheme.colors.text.accent else TangemTheme.colors.text.secondary
+                } else {
+                    TangemTheme.colors.text.disabled
+                },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
