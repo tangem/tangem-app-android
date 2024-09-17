@@ -190,11 +190,11 @@ private fun CommonResetDialog(dialog: ResetCardScreenState.Dialog) {
     BasicDialog(
         title = stringResource(dialog.titleResId),
         message = stringResource(dialog.messageResId),
-        dismissButton = DialogButton(
+        dismissButton = DialogButtonUM(
             title = stringResource(id = R.string.common_cancel),
             onClick = dialog.onDismiss,
         ),
-        confirmButton = DialogButton(
+        confirmButton = DialogButtonUM(
             title = stringResource(id = R.string.card_settings_action_sheet_reset),
             warning = true,
             onClick = dialog.onConfirmClick,
@@ -208,7 +208,7 @@ private fun CompletedResetDialog(dialog: ResetCardDialog) {
     BasicDialog(
         title = stringResource(id = dialog.titleResId),
         message = stringResource(id = dialog.messageResId),
-        confirmButton = DialogButton(
+        confirmButton = DialogButtonUM(
             title = stringResource(id = R.string.common_ok),
             onClick = dialog.onConfirmClick,
         ),
