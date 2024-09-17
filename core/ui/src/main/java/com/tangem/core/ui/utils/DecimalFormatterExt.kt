@@ -138,7 +138,7 @@ fun String.parseToBigDecimal(decimals: Int): BigDecimal {
     }
 }
 
-fun BigDecimal.parseBigDecimal(decimals: Int, roundingMode: RoundingMode = RoundingMode.DOWN): String {
+fun BigDecimal.parseBigDecimal(decimals: Int, roundingMode: RoundingMode = RoundingMode.HALF_UP): String {
     val decimalFormat = DecimalFormat().apply {
         decimalFormatSymbols = DecimalFormatSymbols(Locale.getDefault())
         isParseBigDecimal = true
