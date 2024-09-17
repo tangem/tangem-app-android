@@ -113,6 +113,7 @@ internal sealed class SendStates {
         val isFeeApproximate: Boolean,
         val isCustomSelected: Boolean,
         val notifications: ImmutableList<SendNotification>,
+        val isTronToken: Boolean,
     ) : SendStates()
 
     /** Send state */
