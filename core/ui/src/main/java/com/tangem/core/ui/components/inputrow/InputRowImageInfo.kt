@@ -34,6 +34,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param subtitleColor subtitle text color
  * @param captionColor caption text color
  * @param isGrayscaleImage whether to display grayscale image
+ * @param showPendingIcon whether to show pending icon
  * @param iconEndRes icon to end of row
  */
 @Suppress("LongParameterList")
@@ -51,6 +52,7 @@ fun InputRowImageInfo(
     captionColor: Color = TangemTheme.colors.text.tertiary,
     iconTint: Color = TangemTheme.colors.icon.informative,
     isGrayscaleImage: Boolean = false,
+    showPendingIcon: Boolean = false,
     @DrawableRes iconEndRes: Int? = null,
 ) {
     Column(
@@ -74,6 +76,7 @@ fun InputRowImageInfo(
             subtitleColor = subtitleColor,
             captionColor = captionColor,
             isGrayscaleImage = isGrayscaleImage,
+            showPendingIcon = showPendingIcon,
             iconEndRes = iconEndRes,
         ) {
             Column(

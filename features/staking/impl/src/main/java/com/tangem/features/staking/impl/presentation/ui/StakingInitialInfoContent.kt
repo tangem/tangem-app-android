@@ -90,7 +90,7 @@ internal fun StakingInitialInfoContent(
             if (state.showBanner) {
                 item(key = BANNER_BLOCK_KEY) {
                     Column(
-                        modifier = Modifier.animateItemPlacement(),
+                        modifier = Modifier.animateItem(),
                     ) {
                         BannerBlock(onClick = clickIntents::onInitialInfoBannerClick)
                         SpacerH12()
@@ -106,7 +106,7 @@ internal fun StakingInitialInfoContent(
 
             if (state.yieldBalance is InnerYieldBalanceState.Data) {
                 item(key = STAKING_REWARD_BLOCK_KEY) {
-                    Column(modifier = Modifier.animateItemPlacement()) {
+                    Column(modifier = Modifier.animateItem()) {
                         StakingRewardBlock(
                             rewardCrypto = state.yieldBalance.rewardsCrypto,
                             rewardFiat = state.yieldBalance.rewardsFiat,
@@ -139,7 +139,6 @@ internal fun StakingInitialInfoContent(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.activeStakingBlock(
     state: StakingStates.InitialInfoState.Data,
     clickIntents: StakingClickIntents,
@@ -176,7 +175,7 @@ private fun LazyListScope.activeStakingBlock(
                 onClick = clickIntents::onActiveStake,
                 onAnalytic = clickIntents::onActiveStakeAnalytic,
                 modifier = Modifier
-                    .animateItemPlacement()
+                    .animateItem()
                     .then(
                         if (state.yieldBalance.balance.last() == balance) {
                             Modifier.clip(CornersToRound.BOTTOM_2.getShape())

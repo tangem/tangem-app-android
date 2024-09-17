@@ -24,6 +24,7 @@ import com.tangem.core.ui.components.inputrow.inner.InputRowAsyncImage
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -38,6 +39,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param subtitleColor subtitle text color
  * @param captionColor caption text color
  * @param isGrayscaleImage whether to display grayscale image
+ * @param showPendingIcon whether to show pending icon
  * @param iconEndRes icon to end of row
  * @param extraContent extra content
  */
@@ -52,6 +54,7 @@ internal fun InputRowImageBase(
     captionColor: Color = TangemTheme.colors.text.tertiary,
     iconTint: Color = TangemTheme.colors.icon.informative,
     isGrayscaleImage: Boolean = false,
+    showPendingIcon: Boolean = false,
     iconEndRes: Int? = null,
     extraContent: (@Composable RowScope.() -> Unit)? = null,
 ) {
@@ -87,11 +90,25 @@ internal fun InputRowImageBase(
             SpacerW12()
         }
         Column {
-            Text(
-                text = subtitle.resolveReference(),
-                style = TangemTheme.typography.subtitle2,
-                color = subtitleColor,
-            )
+            Row {
+                Text(
+                    text = subtitle.resolveReference(),
+                    style = TangemTheme.typography.subtitle2,
+                    color = subtitleColor,
+                )
+                if (showPendingIcon) {
+                    Icon(
+                        painter = rememberVectorPainter(
+                            image = ImageVector.vectorResource(id = R.drawable.ic_staking_pending_transaction)
+                        ),
+                        tint = TangemColorPalette.Azure,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(start = TangemTheme.dimens.spacing4)
+                            .align(Alignment.CenterVertically),
+                    )
+                }
+            }
             if (caption != null) {
                 Text(
                     text = caption.resolveAnnotatedReference(),
@@ -138,6 +155,7 @@ private fun InputRowImageBase_Preview() {
             caption = TextReference.Str("APR 3,54%"),
             imageUrl = "",
             iconEndRes = R.drawable.ic_chevron_right_24,
+            showPendingIcon = true,
         )
     }
 }
