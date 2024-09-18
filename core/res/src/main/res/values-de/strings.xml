@@ -383,6 +383,7 @@
   <string name="markets_token_details_blockchain_site">Webseite</string>
   <string name="markets_token_details_buy_pressure">Kaufdruck</string>
   <string name="markets_token_details_buy_pressure_description">Die Differenz zwischen Käufer- und Verkäufervolumen</string>
+  <string name="markets_token_details_buy_pressure_full">Kaufdruck</string>
   <string name="markets_token_details_circulating_supply">Umlaufmenge</string>
   <string name="markets_token_details_circulating_supply_description">Die Gesamtzahl der Coins, die für den Handel verfügbar sind und auf dem Markt zirkulieren</string>
   <string name="markets_token_details_experienced_buyers">Erfahrene Käufer</string>
@@ -707,7 +708,6 @@
   <string name="staking_reward_schedule_block">Block</string>
   <string name="staking_reward_schedule_day">Tag</string>
   <string name="staking_reward_schedule_each_day">Täglich</string>
-  <string name="staking_reward_schedule_each_sec">Jeder %1$s</string>
   <string name="staking_reward_schedule_epoch">Epoche</string>
   <string name="staking_reward_schedule_era">Ära</string>
   <string name="staking_reward_schedule_hour">Stunde</string>
