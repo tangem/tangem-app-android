@@ -282,6 +282,7 @@ private fun ActiveStakingBlock(
         imageUrl = balance.getImage(),
         iconRes = icon,
         iconTint = iconTint,
+        onImageError = { ValidatorImagePlaceholder() },
         modifier = modifier
             .background(TangemTheme.colors.background.action)
             .clickable(
