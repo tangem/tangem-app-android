@@ -14,7 +14,10 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.markets.*
+import com.tangem.domain.markets.GetCurrencyQuotesUseCase
+import com.tangem.domain.markets.GetTokenPriceChartUseCase
+import com.tangem.domain.markets.PriceChangeInterval
+import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.markets.token.block.impl.ui.state.TokenMarketBlockUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -37,6 +40,7 @@ internal class TokenMarketBlockModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<TokenMarketBlockComponent.Params>()
+
     private val priceAndTimePointValuesConverter = PriceAndTimePointValuesConverter(needToFormatAxis = false)
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase()
@@ -53,7 +57,7 @@ internal class TokenMarketBlockModel @Inject constructor(
 
     val state = MutableStateFlow(
         TokenMarketBlockUM(
-            currencySymbol = params.tokenSymbol,
+            currencySymbol = params.cryptoCurrency.symbol,
             currentPrice = null,
             h24Percent = null,
             priceChangeType = PriceChangeType.NEUTRAL,
@@ -69,7 +73,7 @@ internal class TokenMarketBlockModel @Inject constructor(
     private fun startFetching() {
         modelScope.launch {
             getTokenQuotesUseCase(
-                currencyID = params.cryptoCurrencyID,
+                currencyID = params.cryptoCurrency.id,
                 interval = PriceChangeInterval.H24,
                 refresh = true,
             ).collect {
@@ -97,9 +101,12 @@ internal class TokenMarketBlockModel @Inject constructor(
             }
         }.saveIn(quotesUpdateJobHolder)
 
+        val tokenId = params.cryptoCurrency.id.rawCurrencyId ?: return
+
         modelScope.launch(dispatchers.main) {
             val result = getTokenPriceChartUseCase(
-                tokenId = params.tokenId,
+                tokenId = tokenId,
+                tokenSymbol = params.cryptoCurrency.symbol,
                 interval = PriceChangeInterval.H24,
                 appCurrency = currentAppCurrency.value, // TODO get currency from quotes use case AND-8022
                 preview = true,
@@ -125,12 +132,13 @@ internal class TokenMarketBlockModel @Inject constructor(
 
     private fun navigateToMarketDetails() {
         val quotes = quotesState ?: return
+        val tokenId = params.cryptoCurrency.id.rawCurrencyId ?: return
 
         val tokenParam = TokenMarketParams(
-            id = params.tokenId,
-            name = params.tokenSymbol,
-            imageUrl = params.tokenImageUrl,
-            symbol = params.tokenSymbol,
+            id = tokenId,
+            name = params.cryptoCurrency.name,
+            imageUrl = params.cryptoCurrency.iconUrl,
+            symbol = params.cryptoCurrency.symbol,
             tokenQuotes = TokenMarketParams.Quotes(
                 currentPrice = quotes.currentPrice,
                 h24Percent = quotes.h24Percent,
@@ -144,6 +152,10 @@ internal class TokenMarketBlockModel @Inject constructor(
                 token = tokenParam,
                 appCurrency = currentAppCurrency.value,
                 showPortfolio = false,
+                analyticsParams = AppRoute.MarketsTokenDetails.AnalyticsParams(
+                    blockchain = params.cryptoCurrency.network.name,
+                    source = "Token",
+                ),
             ),
         )
     }

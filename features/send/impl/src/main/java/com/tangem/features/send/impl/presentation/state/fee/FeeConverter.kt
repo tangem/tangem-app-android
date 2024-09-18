@@ -41,7 +41,6 @@ internal class FeeConverter(
     private val kaspaCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         KaspaCustomFeeConverter(
             clickIntents = clickIntents,
-            stateRouterProvider = stateRouterProvider,
             appCurrencyProvider = appCurrencyProvider,
             feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
         )
@@ -73,7 +72,10 @@ internal class FeeConverter(
             normalFee
         } else {
             when (normalFee) {
-                is Fee.Ethereum -> ethereumCustomFeeConverter.convertBack(normalFee = normalFee, value = customValues)
+                is Fee.Ethereum.Legacy -> ethereumCustomFeeConverter.convertBack(
+                    normalFee = normalFee,
+                    value = customValues,
+                )
                 is Fee.Bitcoin -> bitcoinCustomFeeConverter.convertBack(normalFee = normalFee, value = customValues)
                 is Fee.Kaspa -> kaspaCustomFeeConverter.convertBack(normalFee = normalFee, value = customValues)
                 else -> {

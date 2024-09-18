@@ -38,6 +38,7 @@ internal class SetConfirmationStateLoadingTransformer(
                 footerText = getFooter(prevState),
                 transactionDoneState = TransactionDoneState.Empty,
                 pendingAction = possibleConfirmationState?.pendingAction,
+                pendingActions = possibleConfirmationState?.pendingActions,
                 isApprovalNeeded = false,
                 reduceAmountBy = null,
             ),
@@ -64,6 +65,7 @@ internal class SetConfirmationStateLoadingTransformer(
             fiatAmount = potentialReward,
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
+            withApproximateSign = true,
         )
         return if (isEnterAction && amountDecimal != null && potentialReward != null) {
             resourceReference(

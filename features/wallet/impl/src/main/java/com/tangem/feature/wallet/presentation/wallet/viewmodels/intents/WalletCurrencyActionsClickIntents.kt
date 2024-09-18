@@ -386,22 +386,27 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         viewModelScope.launch {
             val rawId = cryptoCurrencyStatus.currency.id.rawCurrencyId ?: return@launch
 
+            val tokenMarketParams = TokenMarketParams(
+                id = rawId,
+                name = cryptoCurrencyStatus.currency.name,
+                symbol = cryptoCurrencyStatus.currency.symbol,
+                tokenQuotes = TokenMarketParams.Quotes(
+                    currentPrice = cryptoCurrencyStatus.value.fiatRate ?: BigDecimal.ZERO,
+                    h24Percent = cryptoCurrencyStatus.value.priceChange,
+                    weekPercent = null,
+                    monthPercent = null,
+                ),
+                imageUrl = cryptoCurrencyStatus.currency.iconUrl,
+            )
             appRouter.push(
                 AppRoute.MarketsTokenDetails(
-                    TokenMarketParams(
-                        id = rawId,
-                        name = cryptoCurrencyStatus.currency.name,
-                        symbol = cryptoCurrencyStatus.currency.symbol,
-                        tokenQuotes = TokenMarketParams.Quotes(
-                            currentPrice = cryptoCurrencyStatus.value.fiatRate ?: BigDecimal.ZERO,
-                            h24Percent = cryptoCurrencyStatus.value.priceChange,
-                            weekPercent = null,
-                            monthPercent = null,
-                        ),
-                        imageUrl = cryptoCurrencyStatus.currency.iconUrl,
-                    ),
+                    token = tokenMarketParams,
                     appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
-                    showPortfolio = true,
+                    showPortfolio = false,
+                    analyticsParams = AppRoute.MarketsTokenDetails.AnalyticsParams(
+                        blockchain = cryptoCurrencyStatus.currency.network.name,
+                        source = "Main",
+                    ),
                 ),
             )
         }

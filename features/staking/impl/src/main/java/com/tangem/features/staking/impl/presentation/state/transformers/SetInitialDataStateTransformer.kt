@@ -118,6 +118,7 @@ internal class SetInitialDataStateTransformer(
             startText = TextReference.Res(R.string.staking_details_annual_percentage_rate),
             endText = getAprRange(validators),
             iconClick = { clickIntents.onInfoClick(InfoType.ANNUAL_PERCENTAGE_RATE) },
+            isEndTextHighlighted = true,
         )
     }
 
@@ -224,6 +225,7 @@ internal class SetInitialDataStateTransformer(
             footerText = TextReference.EMPTY,
             transactionDoneState = TransactionDoneState.Empty,
             pendingAction = null,
+            pendingActions = null,
             isApprovalNeeded = isApprovalNeeded,
             reduceAmountBy = null,
         )

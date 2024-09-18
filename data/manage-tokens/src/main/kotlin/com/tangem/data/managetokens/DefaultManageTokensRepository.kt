@@ -1,6 +1,8 @@
 package com.tangem.data.managetokens
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.compatibility.l2BlockchainsCoinIds
 import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.currency.getBlockchain
@@ -86,6 +88,10 @@ internal class DefaultManageTokensRepository(
             } else {
                 retryOnError(call = call)
             }
+            // filter l2 coins
+            val updatedCoinsResponse = coinsResponse.copy(
+                coins = coinsResponse.coins.filterNot { l2BlockchainsCoinIds.contains(it.id) },
+            )
 
             val tokensResponse = request.params.userWalletId?.let { getSavedUserTokensResponseSync(it) }
             val items = if (isFirstBatchFetching &&
@@ -94,13 +100,13 @@ internal class DefaultManageTokensRepository(
                 request.params.searchText.isNullOrBlank()
             ) {
                 managedCryptoCurrencyFactory.createWithCustomTokens(
-                    coinsResponse = coinsResponse,
+                    coinsResponse = updatedCoinsResponse,
                     tokensResponse = tokensResponse,
                     derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
                 )
             } else {
                 managedCryptoCurrencyFactory.create(
-                    coinsResponse = coinsResponse,
+                    coinsResponse = updatedCoinsResponse,
                     tokensResponse = tokensResponse,
                     derivationStyleProvider = userWallet?.scanResponse?.derivationStyleProvider,
                 )
@@ -185,6 +191,21 @@ internal class DefaultManageTokensRepository(
         return when (sourceNetwork) {
             is SourceNetwork.Default -> checkTokenUnsupportedState(userWallet = userWallet, blockchain = blockchain)
             is SourceNetwork.Main -> checkBlockchainUnsupportedState(userWallet = userWallet, blockchain = blockchain)
+        }
+    }
+
+    override suspend fun checkCurrencyUnsupportedState(
+        userWalletId: UserWalletId,
+        rawNetworkId: String,
+        isMainNetwork: Boolean,
+    ): CurrencyUnsupportedState? {
+        val userWallet = getUserWallet(userWalletId = userWalletId)
+        val blockchain = Blockchain.fromNetworkId(networkId = rawNetworkId)
+            ?: error("Can not create blockchain with given networkId -> $rawNetworkId")
+        return if (isMainNetwork) {
+            checkBlockchainUnsupportedState(userWallet, blockchain)
+        } else {
+            checkTokenUnsupportedState(userWallet, blockchain)
         }
     }
 

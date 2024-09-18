@@ -9,17 +9,19 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.ContentMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
+import com.tangem.features.markets.portfolio.impl.ui.WarningDialog
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
 import com.tangem.utils.Provider
-import com.tangem.utils.isNullOrZero
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -32,15 +34,27 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
     private val reduxStateHolder: ReduxStateHolder,
-    @Assisted
-    private val currentAppCurrency: Provider<AppCurrency>,
-    @Assisted("updateTokenReceiveBSConfig")
-    private val updateTokenReceiveBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
-    @Assisted("updateTokenActionsBSConfig")
-    private val updateTokenActionsBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
+    @Assisted private val currentAppCurrency: Provider<AppCurrency>,
+    @Assisted private val updateTokenReceiveBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
+    @Assisted private val onHandleQuickAction: (HandledQuickAction) -> Unit,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val messageSender: UiMessageSender,
 ) {
 
+    private val disabledActionsInDemoMode = setOf(
+        TokenActionsBSContentUM.Action.Buy,
+        TokenActionsBSContentUM.Action.Sell,
+    )
+
     fun handle(action: TokenActionsBSContentUM.Action, cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        onHandleQuickAction(
+            HandledQuickAction(
+                action = action,
+                cryptoCurrencyData = cryptoCurrencyData,
+            ),
+        )
+        if (handleDemoMode(action, cryptoCurrencyData.userWallet)) return
+
         when (action) {
             TokenActionsBSContentUM.Action.Buy -> onBuyClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Exchange -> onExchangeClick(cryptoCurrencyData)
@@ -52,36 +66,26 @@ internal class TokenActionsHandler @AssistedInject constructor(
         }
     }
 
-    fun onTokenLongClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
-        val actions = cryptoCurrencyData.actions
-            .mapNotNull { it.toAction(cryptoCurrencyData) }
-            .sortedBy { it.order }
-            .toImmutableList()
+    private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet): Boolean {
+        val demoCard = isDemoCardUseCase.invoke(userWallet.cardId)
+        val needShowDemoWarning = demoCard && disabledActionsInDemoMode.contains(action)
 
-        if (actions.isEmpty()) {
-            return
+        if (needShowDemoWarning) {
+            showDemoModeWarning()
         }
 
-        updateTokenActionsBSConfig {
-            TangemBottomSheetConfig(
-                isShow = true,
-                onDismissRequest = {
-                    updateTokenActionsBSConfig {
-                        it.copy(isShow = false)
-                    }
-                },
-                content = TokenActionsBSContentUM(
-                    title = cryptoCurrencyData.userWallet.name,
-                    actions = actions,
-                    onActionClick = { action ->
-                        handle(action, cryptoCurrencyData)
-                        updateTokenActionsBSConfig {
-                            it.copy(isShow = false)
-                        }
-                    },
-                ),
+        return needShowDemoWarning
+    }
+
+    private fun showDemoModeWarning() {
+        val message = ContentMessage { onDismiss ->
+            WarningDialog(
+                message = resourceReference(R.string.alert_demo_feature_disabled),
+                onDismiss = onDismiss,
             )
         }
+
+        messageSender.send(message)
     }
 
     private fun onReceiveClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
@@ -174,31 +178,17 @@ internal class TokenActionsHandler @AssistedInject constructor(
         )
     }
 
-    private fun TokenActionsState.ActionState.toAction(
-        cryptoCurrencyData: PortfolioData.CryptoCurrencyData,
-    ): TokenActionsBSContentUM.Action? = when (this) {
-        is TokenActionsState.ActionState.Buy -> TokenActionsBSContentUM.Action.Buy
-        is TokenActionsState.ActionState.CopyAddress -> TokenActionsBSContentUM.Action.CopyAddress
-        is TokenActionsState.ActionState.HideToken -> null
-        is TokenActionsState.ActionState.Receive -> TokenActionsBSContentUM.Action.Receive
-        is TokenActionsState.ActionState.Sell -> TokenActionsBSContentUM.Action.Sell
-        is TokenActionsState.ActionState.Send -> TokenActionsBSContentUM.Action.Send.takeIf {
-            cryptoCurrencyData.status.value.amount.isNullOrZero().not()
-        }
-        is TokenActionsState.ActionState.Stake -> TokenActionsBSContentUM.Action.Stake
-        is TokenActionsState.ActionState.Swap -> TokenActionsBSContentUM.Action.Exchange
-        is TokenActionsState.ActionState.Analytics -> null
-    }
-        .takeIf { this.unavailabilityReason == ScenarioUnavailabilityReason.None }
-
     @AssistedFactory
     interface Factory {
         fun create(
             currentAppCurrency: Provider<AppCurrency>,
-            @Assisted("updateTokenReceiveBSConfig")
             updateTokenReceiveBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
-            @Assisted("updateTokenActionsBSConfig")
-            updateTokenActionsBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
+            onHandleQuickAction: (HandledQuickAction) -> Unit,
         ): TokenActionsHandler
     }
+
+    data class HandledQuickAction(
+        val action: TokenActionsBSContentUM.Action,
+        val cryptoCurrencyData: PortfolioData.CryptoCurrencyData,
+    )
 }

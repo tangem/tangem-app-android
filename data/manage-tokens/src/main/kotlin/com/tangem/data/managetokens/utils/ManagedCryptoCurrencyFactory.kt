@@ -1,6 +1,9 @@
 package com.tangem.data.managetokens.utils
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
+import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
+import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.blockchainsdk.utils.toCoinId
@@ -90,12 +93,13 @@ internal class ManagedCryptoCurrencyFactory {
     ): ManagedCryptoCurrency? {
         if (coinResponse.networks.isEmpty() || !coinResponse.active) return null
 
+        val updatedNetworks = coinResponse.networks.applyL2Compatibility(coinResponse.id)
         return ManagedCryptoCurrency.Token(
             id = ManagedCryptoCurrency.ID(coinResponse.id),
             name = coinResponse.name,
             symbol = coinResponse.symbol,
             iconUrl = getIconUrl(coinResponse.id, imageHost),
-            availableNetworks = coinResponse.networks.mapNotNull { network ->
+            availableNetworks = updatedNetworks.mapNotNull { network ->
                 createSource(network, derivationStyleProvider)
             },
             addedIn = findAddedInNetworks(coinResponse.id, tokensResponse, derivationStyleProvider),
@@ -118,6 +122,7 @@ internal class ManagedCryptoCurrencyFactory {
             SourceNetwork.Main(
                 network = network,
                 decimals = blockchain.decimals(),
+                isL2Network = l2BlockchainsList.contains(blockchain),
             )
         } else {
             SourceNetwork.Default(
@@ -136,7 +141,7 @@ internal class ManagedCryptoCurrencyFactory {
         if (tokensResponse == null) return emptySet()
 
         return tokensResponse.tokens
-            .filter { it.id == currencyId }
+            .filter { getL2CompatibilityTokenComparison(it, currencyId) }
             .mapNotNullTo(mutableSetOf()) { token ->
                 val blockchain = Blockchain.fromNetworkId(token.networkId)
 

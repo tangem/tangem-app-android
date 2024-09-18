@@ -19,6 +19,7 @@ import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
+import com.tangem.core.ui.components.progressbar.LinearProgressIndicator
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemAnimations
 import com.tangem.core.ui.res.TangemTheme
@@ -53,7 +54,10 @@ internal fun PricePerformanceBlock(state: PricePerformanceUM, modifier: Modifier
                     PriceChangeInterval.ALL_TIME,
                 ),
                 initialSelectedItem = PriceChangeInterval.H24,
-                onClick = { currentInterval = it },
+                onClick = {
+                    currentInterval = it
+                    state.onIntervalChanged(it)
+                },
             ) {
                 Box(
                     Modifier
@@ -119,7 +123,7 @@ private fun Content(state: PricePerformanceUM.Value, modifier: Modifier = Modifi
                 .fillMaxWidth(),
             progress = { animatedIndicatorFraction },
             color = TangemTheme.colors.text.accent,
-            trackColor = TangemTheme.colors.background.tertiary,
+            backgroundColor = TangemTheme.colors.background.tertiary,
             strokeCap = StrokeCap.Round,
         )
         Row(
@@ -226,6 +230,7 @@ private fun ContentPreview() {
                     high = "\$580,5M",
                     indicatorFraction = 0.2f,
                 ),
+                onIntervalChanged = {},
             ),
         )
     }

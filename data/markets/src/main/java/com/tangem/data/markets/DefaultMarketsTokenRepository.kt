@@ -1,14 +1,19 @@
 package com.tangem.data.markets
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
+import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.data.common.utils.retryOnError
+import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.TokenChartConverter
 import com.tangem.data.markets.converters.TokenMarketInfoConverter
 import com.tangem.data.markets.converters.TokenMarketListConverter
 import com.tangem.data.markets.converters.toRequestParam
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -29,6 +34,7 @@ internal class DefaultMarketsTokenRepository(
     private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
     private val dispatcherProvider: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : MarketsTokenRepository {
 
     private fun createTokenMarketsFetcher(firstBatchSize: Int, nextBatchSize: Int) = LimitOffsetBatchFetcher(
@@ -60,10 +66,14 @@ internal class DefaultMarketsTokenRepository(
 
                 // we shouldn't infinitely retry on the first batch request
                 val res = if (isFirstBatchFetching) {
-                    requestCall()
+                    catchApiErrorAndSendEvent(errorEvent = MarketsDataAnalyticsEvent.List.Error) {
+                        requestCall()
+                    }
                 } else {
                     retryOnError(priority = true) {
-                        requestCall()
+                        catchApiErrorAndSendEvent(errorEvent = MarketsDataAnalyticsEvent.List.Error) {
+                            requestCall()
+                        }
                     }
                 }
 
@@ -90,6 +100,9 @@ internal class DefaultMarketsTokenRepository(
         val tokenMarketsUpdateFetcher = MarketsBatchUpdateFetcher(
             tangemTechApi = tangemTechApi,
             marketsApi = marketsApi,
+            onApiError = {
+                analyticsEventHandler.send(MarketsDataAnalyticsEvent.List.Error.toEvent())
+            },
         )
 
         val atomicInteger = AtomicInteger(0)
@@ -107,28 +120,45 @@ internal class DefaultMarketsTokenRepository(
         fiatCurrencyCode: String,
         interval: PriceChangeInterval,
         tokenId: String,
+        tokenSymbol: String,
     ): TokenChart {
+        val mappedTokenId = getTokenIdIfL2Network(tokenId)
         val response = marketsApi.getCoinChart(
             currency = fiatCurrencyCode,
-            coinId = tokenId,
+            coinId = mappedTokenId,
             interval = interval.toRequestParam(),
         )
 
-        return TokenChartConverter.convert(interval, response.getOrThrow())
+        val result = catchApiErrorAndSendEvent(
+            errorEvent = MarketsDataAnalyticsEvent.Details.Error(
+                request = MarketsDataAnalyticsEvent.Details.Error.Request.Chart,
+                tokenSymbol = tokenSymbol,
+            ),
+        ) {
+            response.getOrThrow()
+        }
+
+        return TokenChartConverter.convert(interval, result)
     }
 
     override suspend fun getChartPreview(
         fiatCurrencyCode: String,
         interval: PriceChangeInterval,
         tokenId: String,
+        tokenSymbol: String,
     ): TokenChart {
+        val mappedTokenId = getTokenIdIfL2Network(tokenId)
         val response = marketsApi.getCoinsListCharts(
-            coinIds = tokenId,
+            coinIds = mappedTokenId,
             currency = fiatCurrencyCode,
             interval = interval.toRequestParam(),
         )
 
-        val chart = response.getOrThrow()[tokenId] ?: error("No chart preview data for token $tokenId")
+        val chart = catchApiErrorAndSendEvent(errorEvent = MarketsDataAnalyticsEvent.List.Error) {
+            response.getOrThrow()[mappedTokenId] ?: error(
+                "No chart preview data for the token $mappedTokenId",
+            )
+        }
 
         return TokenChartConverter.convert(interval, chart)
     }
@@ -136,6 +166,7 @@ internal class DefaultMarketsTokenRepository(
     override suspend fun getTokenInfo(
         fiatCurrencyCode: String,
         tokenId: String,
+        tokenSymbol: String,
         languageCode: String,
     ): TokenMarketInfo {
         val response = marketsApi.getCoinMarketData(
@@ -144,11 +175,22 @@ internal class DefaultMarketsTokenRepository(
             language = languageCode,
         )
 
-        return TokenMarketInfoConverter.convert(response.getOrThrow())
+        val result = catchApiErrorAndSendEvent(
+            errorEvent = MarketsDataAnalyticsEvent.Details.Error(
+                request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
+                tokenSymbol = tokenSymbol,
+            ),
+        ) {
+            response.getOrThrow()
+        }
+
+        val resultResponse = result.applyL2Compatibility(tokenId)
+        return TokenMarketInfoConverter.convert(resultResponse)
     }
 
     override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String): TokenQuotes {
         // TODO change method when backend is ready
+        // add error analytics event
         val response = marketsApi.getCoinMarketData(
             currency = fiatCurrencyCode,
             coinId = tokenId,
@@ -187,6 +229,18 @@ internal class DefaultMarketsTokenRepository(
                 decimals = network.decimalCount ?: error("Unknown decimal"),
                 contractAddress = network.contractAddress!!,
             )
+        }
+    }
+
+    private inline fun <T> catchApiErrorAndSendEvent(errorEvent: MarketsDataAnalyticsEvent, block: () -> T): T {
+        return try {
+            block()
+        } catch (e: ApiResponseError.HttpException) {
+            analyticsEventHandler.send(errorEvent.toEvent())
+            throw e
+        } catch (e: ApiResponseError.TimeoutException) {
+            analyticsEventHandler.send(errorEvent.toEvent())
+            throw e
         }
     }
 }

@@ -18,7 +18,15 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transformLatest
 
-class GetCardTokensListUseCase(
+/**
+ * Use case for getting a list of tokens for NODL card
+ *
+ * @property currenciesRepository currencies repository
+ * @property quotesRepository     quotes repository
+ * @property networksRepository   networks repository
+ * @property stakingRepository    staking repository
+ */
+class GetNodlTokenListUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
