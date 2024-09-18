@@ -26,7 +26,7 @@ internal class PendingTransactionItemConverter(
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
 
-        val cryptoAmount = value.amount
+        val cryptoAmount = value.amount ?: return null
         val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
 
         val balanceType = value.type ?: return null

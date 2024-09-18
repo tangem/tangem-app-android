@@ -7,7 +7,7 @@ import java.math.BigDecimal
 data class PendingTransaction(
     val id: String,
     val type: BalanceType?,
-    val amount: BigDecimal,
+    val amount: BigDecimal?,
     val rawCurrencyId: String?,
     val validator: Yield.Validator?,
 )

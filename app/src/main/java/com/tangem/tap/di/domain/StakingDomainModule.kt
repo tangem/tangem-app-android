@@ -103,12 +103,10 @@ internal object StakingDomainModule {
     @Singleton
     fun provideSubmitHashUseCase(
         stakingTransactionHashRepository: StakingTransactionHashRepository,
-        stakingPendingTransactionRepository: StakingPendingTransactionRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): SubmitHashUseCase {
         return SubmitHashUseCase(
             stakingTransactionHashRepository = stakingTransactionHashRepository,
-            stakingPendingTransactionRepository = stakingPendingTransactionRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }

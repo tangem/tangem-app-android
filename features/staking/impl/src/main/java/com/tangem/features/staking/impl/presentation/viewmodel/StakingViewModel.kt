@@ -432,7 +432,7 @@ internal class StakingViewModel @Inject constructor(
                 actionTypeToOverwrite = null,
                 pendingAction = activeStake.pendingActions.firstOrNull(),
                 pendingActions = activeStake.pendingActions.takeIf { isAllWithdrawActions },
-                balanceState = activeStake, // TODO .type?
+                balanceState = activeStake,
             )
         }
     }

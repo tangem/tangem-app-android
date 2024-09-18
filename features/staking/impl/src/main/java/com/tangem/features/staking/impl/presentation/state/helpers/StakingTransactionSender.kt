@@ -5,10 +5,8 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.staking.GetConstructedStakingTransactionUseCase
-import com.tangem.domain.staking.GetStakingTransactionUseCase
-import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
-import com.tangem.domain.staking.SubmitHashUseCase
+import com.tangem.domain.staking.*
+import com.tangem.domain.staking.model.PendingTransaction
 import com.tangem.domain.staking.model.SubmitHashData
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.PendingAction
@@ -36,6 +34,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 import java.math.BigDecimal
+import java.util.UUID
 
 @Suppress("LongParameterList")
 internal class StakingTransactionSender @AssistedInject constructor(
@@ -47,6 +46,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val submitHashUseCase: SubmitHashUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
+    private val savePendingTransactionUseCase: SavePendingTransactionUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
@@ -69,11 +69,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
             ?: error("No confirmation state")
         val fee = (confirmationState.feeState as? FeeState.Content)?.fee
             ?: error("No fee provided")
-        val validator = (state.confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator
-        val amountState = state.amountState as? AmountState.Data
-            ?: error("No amount provided")
-
-        val amount = getAmount(amountState, fee, confirmationState.reduceAmountBy)
 
         val stakingTransactions = getStakingTransactions(
             state = state,
@@ -96,12 +91,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
         sendStakingTransaction(
             fullTransactionsData = fullTransactionsData,
-            validator = validator,
-            amount = amount,
+            balanceState = confirmationState.balanceState,
             onSendSuccess = onSendSuccess,
             onSendError = onSendError,
-            balanceType = confirmationState.balanceState?.type,
-            rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
         )
     }
 
@@ -202,10 +194,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
     private suspend fun sendStakingTransaction(
         fullTransactionsData: List<FullTransactionData>,
-        validator: Yield.Validator?,
-        amount: BigDecimal,
-        balanceType: BalanceType?,
-        rawCurrencyId: String?,
+        balanceState: BalanceState?,
         onSendSuccess: (txUrl: String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
     ) {
@@ -221,10 +210,10 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 submitHash(
                     transactionIds = fullTransactionsData.map { it.stakeKitTransaction.id },
                     transactionHashes = transactionHashes,
-                    validator = validator,
-                    amount = amount,
-                    balanceType = balanceType,
-                    rawCurrencyId = rawCurrencyId,
+                    validator = balanceState?.validator,
+                    amount = balanceState?.cryptoDecimal,
+                    balanceType = balanceState?.type,
+                    rawCurrencyId = balanceState?.rawCurrencyId,
                 )
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
@@ -241,7 +230,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         transactionIds: List<String>,
         transactionHashes: List<String>,
         validator: Yield.Validator?,
-        amount: BigDecimal,
+        amount: BigDecimal?,
         balanceType: BalanceType?,
         rawCurrencyId: String?,
     ) {
@@ -268,6 +257,15 @@ internal class StakingTransactionSender @AssistedInject constructor(
                         )
                     }.onRight {
                         Timber.d("Successful hash submission")
+                        savePendingTransactionUseCase.invoke(
+                            PendingTransaction(
+                                id = UUID.randomUUID().toString(),
+                                type = balanceType,
+                                amount = amount,
+                                rawCurrencyId = rawCurrencyId,
+                                validator = validator,
+                            ),
+                        )
                     }
             }
     }
