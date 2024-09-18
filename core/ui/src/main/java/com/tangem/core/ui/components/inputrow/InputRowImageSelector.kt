@@ -41,6 +41,7 @@ import java.math.BigDecimal
  * @param captionColor caption text color
  * @param isSelected true if selected
  * @param selectorContent selector content
+ * @param onImageError composable to show if image loading failed
  */
 @Composable
 fun InputRowImageSelector(
@@ -52,6 +53,7 @@ fun InputRowImageSelector(
     subtitleColor: Color = TangemTheme.colors.text.primary1,
     captionColor: Color = TangemTheme.colors.text.tertiary,
     isSelected: Boolean = false,
+    onImageError: (@Composable () -> Unit)? = null,
     selectorContent: @Composable ((isSelected: Boolean, isEnabled: Boolean, onSelect: () -> Unit) -> Unit),
 ) {
     InputRowImageBase(
@@ -60,6 +62,7 @@ fun InputRowImageSelector(
         imageUrl = imageUrl,
         subtitleColor = subtitleColor,
         captionColor = captionColor,
+        onImageError = onImageError,
         modifier = modifier
             .clickable(
                 onClick = onSelect,
