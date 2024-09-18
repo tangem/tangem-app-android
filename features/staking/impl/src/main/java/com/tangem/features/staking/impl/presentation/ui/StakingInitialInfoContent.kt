@@ -57,7 +57,6 @@ import com.tangem.features.staking.impl.presentation.state.previewdata.InitialSt
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.StringsSigns.DOT
-import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.extensions.orZero
 
 private const val BANNER_BLOCK_KEY = "BannerBlock"
@@ -231,8 +230,6 @@ private fun StakingRewardBlock(
     val (text, textColor) = when (rewardBlockType) {
         RewardBlockType.Rewards -> {
             annotatedReference {
-                append(PLUS)
-                appendSpace()
                 append(rewardFiat.orMaskWithStars(isBalanceHidden))
                 appendSpace()
                 append(DOT)
@@ -282,6 +279,7 @@ private fun ActiveStakingBlock(
         imageUrl = balance.getImage(),
         iconRes = icon,
         iconTint = iconTint,
+        onImageError = { ValidatorImagePlaceholder() },
         modifier = modifier
             .background(TangemTheme.colors.background.action)
             .clickable(

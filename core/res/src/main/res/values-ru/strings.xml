@@ -38,7 +38,7 @@
   <string name="biometric_lockout_warning_title">Слишком много попыток</string>
   <string name="biometric_unavailable_warning">Вы отключили биометрическую аутентификацию на вашем телефоне и не сможете сохранять кошельки в приложении. Для сохранения кошельков, пожалуйста, включите функцию биометрической аутентификации в настройках телефона.</string>
   <string name="button_start_backup_process">Начать резервное копирование</string>
-  <string name="buy_token_description">С помощью банковской карты или банковского аккаунта</string>
+  <string name="buy_token_description">Используйте банковскую карту или другие методы оплаты</string>
   <plurals name="card_label_card_count">
     <item quantity="one">%d карта</item>
     <item quantity="few">%d карты</item>
@@ -276,7 +276,7 @@
   <string name="express_token_list_empty_search">Токены не найдены. Пожалуйста, попробуйте другой запрос</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">ID транзакции скопирован</string>
-  <string name="exсhange_token_description">С другой валютой в вашем кошельке</string>
+  <string name="exсhange_token_description">Конвертируйте одну из ваших валют в другую</string>
   <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
   <string name="feedback_preface_rate_negative">Расскажите, каких функций вам не хватает, и мы постараемся вам помочь.</string>
   <string name="feedback_preface_scan_failed">Скажите, пожалуйста, какая у вас карта?</string>
@@ -352,6 +352,7 @@
   <string name="markets_common_my_portfolio">Мой портфель</string>
   <string name="markets_common_title">Рынок</string>
   <string name="markets_generate_addresses_notification">Чтобы создать адреса для выбранных сетей, отсканируйте вашу карту Tangem кошелька</string>
+  <string name="markets_hint">Потяните вверх или коснитесь поисковой строки, чтобы добавить токен</string>
   <string name="markets_insights_info_description_message">Данные раздела получены из следующих сетей: %s</string>
   <string name="markets_loading_error_title">Невозможно загрузить данные</string>
   <string name="markets_loading_no_data_title">Нет данных</string>
@@ -386,6 +387,7 @@
   <string name="markets_token_details_blockchain_site">Веб-сайт</string>
   <string name="markets_token_details_buy_pressure">Покуп. предпоч.</string>
   <string name="markets_token_details_buy_pressure_description">Разница между объемом покупателей и продавцов</string>
+  <string name="markets_token_details_buy_pressure_full">Покуп. предпоч.</string>
   <string name="markets_token_details_circulating_supply">Циркулир. предл.</string>
   <string name="markets_token_details_circulating_supply_description">Общее количество монет, доступных для торговли и находящихся в обращении на рынке</string>
   <string name="markets_token_details_experienced_buyers">Опытные трейдеры</string>
@@ -524,7 +526,7 @@
   <string name="qr_scanner_camera_denied_title">Доступ к камере запрещен</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message_full">Отправляйте только %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
-  <string name="receive_token_description">Покажи QR-код или поделись своим адресом</string>
+  <string name="receive_token_description">Переводите средства с другого кошелька или биржи</string>
   <string name="referral_button_participate">Участвовать</string>
   <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
   <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Код ошибки: %s. Пожалуйста, попробуйте позже.</string>
@@ -654,6 +656,7 @@
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
   <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
+  <string name="staking_amount_tron_integer_error">Согласно правилам сети, сумма стейкинга будет округлена до %1$sTRX.</string>
   <string name="staking_claim_unstaked">Забрать средства</string>
   <string name="staking_details_account_fee_info">Стейкинг аккаунт — это специальный счет, на котором хранятся застейканные токены SOL. Он создается при делегировании ваших токенов валидатору для участия в подтверждении транзакций и получении наград. За создание стейкинг аккаунта взимается небольшая комиссия, которая возвращается после завершения стейкинга.</string>
   <string name="staking_details_annual_percentage_rate">Процентная ставка</string>
@@ -699,7 +702,7 @@
   <string name="staking_reward_schedule_block">Блок</string>
   <string name="staking_reward_schedule_day">День</string>
   <string name="staking_reward_schedule_each_day">Каждый день</string>
-  <string name="staking_reward_schedule_each_sec">Каждые ~%1$s сек</string>
+  <string name="staking_reward_schedule_each_minute">Каждую минуту</string>
   <string name="staking_reward_schedule_epoch">Эпоха</string>
   <string name="staking_reward_schedule_era">Эра</string>
   <string name="staking_reward_schedule_hour">Час</string>
