@@ -4,9 +4,9 @@ import com.tangem.domain.staking.model.PendingTransaction
 
 interface StakingPendingTransactionRepository {
 
-    suspend fun getTransactions(): List<PendingTransaction>
+    fun getTransactions(): List<PendingTransaction>
 
-    suspend fun saveTransaction(pendingTransaction: PendingTransaction)
+    fun saveTransaction(pendingTransaction: PendingTransaction)
 
-    suspend fun removeTransaction(pendingTransaction: PendingTransaction)
+    fun removeTransaction(pendingTransaction: PendingTransaction)
 }

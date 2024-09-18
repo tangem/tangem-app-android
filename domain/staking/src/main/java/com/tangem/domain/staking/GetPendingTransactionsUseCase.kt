@@ -7,16 +7,16 @@ import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingPendingTransactionRepository
 
 /**
- * Use case for saving hash that failed to submit during staking confirmation
+ * Use case for getting saved staking pending transactions.
  */
-class SavePendingTransactionUseCase(
+class GetPendingTransactionsUseCase(
     private val stakingPendingTransactionRepository: StakingPendingTransactionRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
-    operator fun invoke(pendingTransaction: PendingTransaction): Either<StakingError, Unit> {
+    operator fun invoke(): Either<StakingError, List<PendingTransaction>> {
         return Either.catch {
-            stakingPendingTransactionRepository.saveTransaction(pendingTransaction)
+            stakingPendingTransactionRepository.getTransactions()
         }.mapLeft {
             stakingErrorResolver.resolve(it)
         }

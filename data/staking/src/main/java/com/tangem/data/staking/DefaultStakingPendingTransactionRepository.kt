@@ -8,15 +8,15 @@ internal class DefaultStakingPendingTransactionRepository : StakingPendingTransa
 
     private val pendingTransactions = CopyOnWriteArrayList<PendingTransaction>()
 
-    override suspend fun saveTransaction(pendingTransaction: PendingTransaction) {
+    override fun saveTransaction(pendingTransaction: PendingTransaction) {
         pendingTransactions.add(pendingTransaction)
     }
 
-    override suspend fun removeTransaction(pendingTransaction: PendingTransaction) {
+    override fun removeTransaction(pendingTransaction: PendingTransaction) {
         pendingTransactions.remove(pendingTransaction)
     }
 
-    override suspend fun getTransactions(): List<PendingTransaction> {
+    override fun getTransactions(): List<PendingTransaction> {
         return pendingTransactions
     }
 }

@@ -137,6 +137,18 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetPendingTransactionsUseCase(
+        stakingPendingTransactionRepository: StakingPendingTransactionRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): GetPendingTransactionsUseCase {
+        return GetPendingTransactionsUseCase(
+            stakingPendingTransactionRepository = stakingPendingTransactionRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideSendUnsubmittedHashesUseCase(
         stakingTransactionHashRepository: StakingTransactionHashRepository,
         stakingErrorResolver: StakingErrorResolver,

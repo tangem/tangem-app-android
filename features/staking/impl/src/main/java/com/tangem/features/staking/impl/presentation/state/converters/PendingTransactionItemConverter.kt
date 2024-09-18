@@ -6,8 +6,6 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.PendingTransaction
 import com.tangem.domain.staking.model.stakekit.BalanceType
-import com.tangem.domain.staking.model.stakekit.BalanceType.Companion.isClickable
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
@@ -18,7 +16,6 @@ import kotlinx.collections.immutable.persistentListOf
 internal class PendingTransactionItemConverter(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val validator: Yield.Validator?,
 ) : Converter<PendingTransaction, BalanceState?> {
 
     override fun convert(value: PendingTransaction): BalanceState? {
@@ -30,11 +27,11 @@ internal class PendingTransactionItemConverter(
         val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
 
         val balanceType = value.type ?: return null
-        val title = balanceType.getTitle(validator?.name)
+        val title = balanceType.getTitle(value.validator?.name)
         return title?.let {
             BalanceState(
                 id = value.id,
-                validator = validator,
+                validator = value.validator,
                 title = title,
                 subtitle = TextReference.EMPTY,
                 type = balanceType,

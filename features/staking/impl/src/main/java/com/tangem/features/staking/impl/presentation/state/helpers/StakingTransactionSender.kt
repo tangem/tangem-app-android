@@ -88,6 +88,15 @@ internal class StakingTransactionSender @AssistedInject constructor(
         }
 
         onConstructSuccess(fullTransactionsData.map { it.stakeKitTransaction })
+        savePendingTransactionUseCase.invoke(
+            PendingTransaction(
+                id = UUID.randomUUID().toString(),
+                type = confirmationState.balanceState?.type,
+                amount = confirmationState.balanceState?.cryptoDecimal,
+                rawCurrencyId = confirmationState.balanceState?.rawCurrencyId,
+                validator = confirmationState.balanceState?.validator,
+            ),
+        )
 
         sendStakingTransaction(
             fullTransactionsData = fullTransactionsData,
