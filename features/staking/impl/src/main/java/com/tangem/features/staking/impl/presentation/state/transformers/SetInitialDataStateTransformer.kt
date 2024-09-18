@@ -258,10 +258,7 @@ internal class SetInitialDataStateTransformer(
             Yield.Metadata.RewardSchedule.BLOCK -> {
                 val networkId = cryptoCurrencyStatusProvider().currency.network.id.value
                 when {
-                    isCosmos(networkId) -> resourceReference(
-                        R.string.staking_reward_schedule_each_sec,
-                        wrappedList(COSMOS_BLOCK_TIME),
-                    )
+                    isCosmos(networkId) -> resourceReference(R.string.staking_reward_schedule_each_minute)
                     else -> resourceReference(R.string.staking_reward_schedule_each_day)
                 }
             }
@@ -277,8 +274,6 @@ internal class SetInitialDataStateTransformer(
 
     private companion object {
         val EQUALITY_THRESHOLD = BigDecimal(1E-10)
-
-        const val COSMOS_BLOCK_TIME = "20" // 20 seconds
 
         val rewardClaimingResources = mapOf(
             Yield.Metadata.RewardClaiming.MANUAL to R.string.staking_reward_claiming_manual,
