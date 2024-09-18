@@ -387,6 +387,7 @@
   <string name="markets_token_details_blockchain_site">Веб-сайт</string>
   <string name="markets_token_details_buy_pressure">Покуп. предпоч.</string>
   <string name="markets_token_details_buy_pressure_description">Разница между объемом покупателей и продавцов</string>
+  <string name="markets_token_details_buy_pressure_full">Покуп. предпоч.</string>
   <string name="markets_token_details_circulating_supply">Циркулир. предл.</string>
   <string name="markets_token_details_circulating_supply_description">Общее количество монет, доступных для торговли и находящихся в обращении на рынке</string>
   <string name="markets_token_details_experienced_buyers">Опытные трейдеры</string>
@@ -701,7 +702,7 @@
   <string name="staking_reward_schedule_block">Блок</string>
   <string name="staking_reward_schedule_day">День</string>
   <string name="staking_reward_schedule_each_day">Каждый день</string>
-  <string name="staking_reward_schedule_each_sec">Каждые ~%1$s сек</string>
+  <string name="staking_reward_schedule_each_minute">Каждую минуту</string>
   <string name="staking_reward_schedule_epoch">Эпоха</string>
   <string name="staking_reward_schedule_era">Эра</string>
   <string name="staking_reward_schedule_hour">Час</string>
