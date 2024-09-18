@@ -52,6 +52,7 @@ internal fun StakingClaimRewardsValidatorContent(
                     infoTitle = item.fiatAmount,
                     infoSubtitle = item.cryptoAmount,
                     imageUrl = item.validator?.image.orEmpty(),
+                    onImageError = { ValidatorImagePlaceholder() },
                     modifier = modifier
                         .roundedShapeItemDecoration(index, state.rewards.lastIndex, false)
                         .background(TangemTheme.colors.background.action)
