@@ -384,6 +384,7 @@
   <string name="markets_token_details_blockchain_site">Website</string>
   <string name="markets_token_details_buy_pressure">Buy pressure</string>
   <string name="markets_token_details_buy_pressure_description">The difference between buyers volume and sellers volume</string>
+  <string name="markets_token_details_buy_pressure_full">Buy pressure</string>
   <string name="markets_token_details_circulating_supply">Circulating supply</string>
   <string name="markets_token_details_circulating_supply_description">The total number of coins that are available for trading and are circulating in the market</string>
   <string name="markets_token_details_experienced_buyers">Experienced buyers</string>
@@ -678,6 +679,7 @@
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_notification_claim_rewards_text">Earned rewards will be sent to your wallet and available for use immediately</string>
+  <string name="staking_notification_earn_rewards_text">Stake securely and start earning your rewards</string>
   <string name="staking_notification_earn_rewards_text_daily">Stake securely and start earning daily rewards</string>
   <string name="staking_notification_earn_rewards_text_hourly">Stake securely and start earning hourly rewards</string>
   <string name="staking_notification_earn_rewards_text_monthly">Stake securely and start earning monthly rewards</string>
@@ -706,7 +708,7 @@
   <string name="staking_reward_schedule_block">Block</string>
   <string name="staking_reward_schedule_day">Day</string>
   <string name="staking_reward_schedule_each_day">Each day</string>
-  <string name="staking_reward_schedule_each_sec">Each ~%1$ssec</string>
+  <string name="staking_reward_schedule_each_minute">Each minute</string>
   <string name="staking_reward_schedule_epoch">Epoch</string>
   <string name="staking_reward_schedule_era">Era</string>
   <string name="staking_reward_schedule_hour">Hour</string>
