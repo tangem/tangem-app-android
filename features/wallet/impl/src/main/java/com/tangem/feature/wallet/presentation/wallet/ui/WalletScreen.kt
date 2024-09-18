@@ -473,6 +473,7 @@ private inline fun BaseScaffoldWithMarkets(
                             state.showMarketsOnboarding,
                         onDismissRequest = {
                             coroutineScope.launch { bottomSheetState.partialExpand() }
+                            state.onDismissMarketsOnboarding()
                         },
                     )
 
