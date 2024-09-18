@@ -19,7 +19,7 @@ internal class YieldBalanceConverter : Converter<YieldBalanceWrapperDTO, YieldBa
                 balance = YieldBalanceItem(
                     items = value.balances.map { item ->
                         BalanceItem(
-                            id = item.groupId,
+                            groupId = item.groupId,
                             type = BalanceType.valueOf(item.type.name),
                             amount = item.amount,
                             rawCurrencyId = item.tokenDTO.coinGeckoId,

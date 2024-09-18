@@ -91,6 +91,7 @@ internal object InitialStakingStatePreview {
                     isClickable = true,
                     type = BalanceType.STAKED,
                     subtitle = null,
+                    isPending = false,
                 ),
             ),
         ),

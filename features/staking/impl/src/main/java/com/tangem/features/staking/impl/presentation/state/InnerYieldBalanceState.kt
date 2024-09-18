@@ -34,4 +34,5 @@ internal data class BalanceState(
     val rawCurrencyId: String?,
     val validator: Yield.Validator?,
     val pendingActions: ImmutableList<PendingAction>,
+    val isPending: Boolean,
 )

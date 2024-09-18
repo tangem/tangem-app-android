@@ -281,6 +281,7 @@ private fun ActiveStakingBlock(
         imageUrl = balance.getImage(),
         iconRes = icon,
         iconTint = iconTint,
+        showPendingIcon = balance.isPending,
         modifier = modifier
             .background(TangemTheme.colors.background.action)
             .clickable(

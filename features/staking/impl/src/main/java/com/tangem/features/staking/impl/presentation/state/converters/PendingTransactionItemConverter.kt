@@ -17,7 +17,7 @@ internal object PendingTransactionItemConverter : Converter<PendingTransaction, 
         val title = balanceType.getTitle(value.validator?.name)
         return title?.let {
             BalanceItem(
-                id = value.id,
+                groupId = value.id,
                 type = balanceType,
                 amount = cryptoAmount,
                 rawCurrencyId = value.rawCurrencyId,
