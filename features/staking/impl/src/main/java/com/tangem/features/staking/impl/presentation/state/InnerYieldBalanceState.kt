@@ -22,7 +22,7 @@ internal sealed class InnerYieldBalanceState {
 
 @Immutable
 internal data class BalanceState(
-    val id: String,
+    val groupId: String,
     val title: TextReference,
     val type: BalanceType,
     val subtitle: TextReference?,

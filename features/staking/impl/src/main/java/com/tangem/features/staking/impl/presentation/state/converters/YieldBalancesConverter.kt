@@ -50,11 +50,28 @@ internal class YieldBalancesConverter(
                     fiatCurrencySymbol = appCurrency.symbol,
                 ),
                 rewardBlockType = getRewardBlockType(),
-                balance = (yieldBalance.balance.items + pendingTransactionBalanceItems).mapBalances(),
+                balance = mergeRealAndPendingTransactions(
+                    real = yieldBalance.balance.items,
+                    pending = pendingTransactionBalanceItems,
+                ).mapBalances(),
             )
         } else {
             InnerYieldBalanceState.Empty
         }
+    }
+
+    private fun mergeRealAndPendingTransactions(
+        real: List<BalanceItem>,
+        pending: List<BalanceItem>,
+    ): List<BalanceItem> {
+        val map = real.associateBy { Triple(it.groupId, it.type, it.amount) }.toMutableMap()
+
+        pending.forEach { pendingItem ->
+            val key = Triple(pendingItem.groupId, pendingItem.type, pendingItem.amount)
+            map[key] = pendingItem
+        }
+        // TODO staking add removal
+        return map.values.toList()
     }
 
     private fun List<BalanceItem>.mapBalances() = asSequence()

@@ -5,7 +5,7 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import java.math.BigDecimal
 
 data class PendingTransaction(
-    val id: String,
+    val groupId: String?,
     val type: BalanceType?,
     val amount: BigDecimal?,
     val rawCurrencyId: String?,

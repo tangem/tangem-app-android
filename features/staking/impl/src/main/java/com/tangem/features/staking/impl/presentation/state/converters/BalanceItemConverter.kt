@@ -38,7 +38,7 @@ internal class BalanceItemConverter(
         val title = value.type.getTitle(validator?.name)
         return title?.let {
             BalanceState(
-                id = value.groupId,
+                groupId = value.groupId,
                 validator = validator,
                 title = title,
                 subtitle = getSubtitle(value),

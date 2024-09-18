@@ -34,7 +34,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 import java.math.BigDecimal
-import java.util.UUID
 
 @Suppress("LongParameterList")
 internal class StakingTransactionSender @AssistedInject constructor(
@@ -70,6 +69,17 @@ internal class StakingTransactionSender @AssistedInject constructor(
         val fee = (confirmationState.feeState as? FeeState.Content)?.fee
             ?: error("No fee provided")
 
+        // TODO staking remove
+        savePendingTransactionUseCase.invoke(
+            PendingTransaction(
+                groupId = confirmationState.balanceState?.groupId,
+                type = confirmationState.balanceState?.type,
+                amount = confirmationState.balanceState?.cryptoDecimal,
+                rawCurrencyId = confirmationState.balanceState?.rawCurrencyId,
+                validator = confirmationState.balanceState?.validator,
+            ),
+        )
+
         val stakingTransactions = getStakingTransactions(
             state = state,
             confirmationState = confirmationState,
@@ -88,15 +98,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
         }
 
         onConstructSuccess(fullTransactionsData.map { it.stakeKitTransaction })
-        savePendingTransactionUseCase.invoke(
-            PendingTransaction(
-                id = UUID.randomUUID().toString(),
-                type = confirmationState.balanceState?.type,
-                amount = confirmationState.balanceState?.cryptoDecimal,
-                rawCurrencyId = confirmationState.balanceState?.rawCurrencyId,
-                validator = confirmationState.balanceState?.validator,
-            ),
-        )
 
         sendStakingTransaction(
             fullTransactionsData = fullTransactionsData,
@@ -219,6 +220,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 submitHash(
                     transactionIds = fullTransactionsData.map { it.stakeKitTransaction.id },
                     transactionHashes = transactionHashes,
+                    groupId = balanceState?.groupId,
                     validator = balanceState?.validator,
                     amount = balanceState?.cryptoDecimal,
                     balanceType = balanceState?.type,
@@ -238,6 +240,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private suspend fun submitHash(
         transactionIds: List<String>,
         transactionHashes: List<String>,
+        groupId: String?,
         validator: Yield.Validator?,
         amount: BigDecimal?,
         balanceType: BalanceType?,
@@ -268,7 +271,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                         Timber.d("Successful hash submission")
                         savePendingTransactionUseCase.invoke(
                             PendingTransaction(
-                                id = UUID.randomUUID().toString(),
+                                groupId = groupId,
                                 type = balanceType,
                                 amount = amount,
                                 rawCurrencyId = rawCurrencyId,

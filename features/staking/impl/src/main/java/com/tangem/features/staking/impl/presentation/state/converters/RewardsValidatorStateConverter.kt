@@ -78,7 +78,7 @@ internal class RewardsValidatorStateConverter(
         )
 
         return BalanceState(
-            id = balance.groupId,
+            groupId = balance.groupId,
             validator = this,
             title = stringReference(this.name),
             subtitle = null,

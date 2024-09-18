@@ -11,15 +11,13 @@ import org.joda.time.DateTime
 internal object PendingTransactionItemConverter : Converter<PendingTransaction, BalanceItem?> {
 
     override fun convert(value: PendingTransaction): BalanceItem? {
-        val cryptoAmount = value.amount ?: return null
-
         val balanceType = value.type ?: return null
         val title = balanceType.getTitle(value.validator?.name)
         return title?.let {
             BalanceItem(
-                groupId = value.id,
+                groupId = value.groupId ?: return null,
                 type = balanceType,
-                amount = cryptoAmount,
+                amount = value.amount ?: return null,
                 rawCurrencyId = value.rawCurrencyId,
                 validatorAddress = value.validator?.address,
                 date = DateTime.now(),
