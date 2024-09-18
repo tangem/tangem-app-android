@@ -39,7 +39,7 @@
   <string name="biometric_lockout_warning_title">Too many attempts</string>
   <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
   <string name="button_start_backup_process">Start backup process</string>
-  <string name="buy_token_description">With your bank card or bank account</string>
+  <string name="buy_token_description">Use a bank card or other payment methods</string>
   <plurals name="card_label_card_count">
     <item quantity="one">%d card</item>
     <item quantity="other">%d cards</item>
@@ -275,7 +275,7 @@
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>
-  <string name="exсhange_token_description">With another currency in your wallet</string>
+  <string name="exсhange_token_description">Convert one of your currencies to another</string>
   <string name="feedback_data_collection_message">The following information is optional. You can erase it if you don\'t want to share it.</string>
   <string name="feedback_preface_rate_negative">Tell us what functions you are missing, and we will try to help you.</string>
   <string name="feedback_preface_scan_failed">Please tell us what card do you have</string>
@@ -518,7 +518,7 @@
   <string name="qr_scanner_camera_denied_title">Camera access denied</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message_full">Send only %s to this address. Sending any other currency will result in its irreversible loss.</string>
-  <string name="receive_token_description">Show a QR-code or share your address</string>
+  <string name="receive_token_description">Transfer funds from another wallet or exchange</string>
   <string name="referral_button_participate">Participate</string>
   <string name="referral_error_failed_to_load_info">Failed to load the information about the referral program. Please try again later.</string>
   <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Error code: %s. Please try again later.</string>
