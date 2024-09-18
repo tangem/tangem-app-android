@@ -21,7 +21,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryTransactionStateConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getStringResourceId
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.impl.R
@@ -204,7 +203,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                 formatArgs = wrappedList(apr),
             ),
             subtitleText = resourceReference(
-                id = stakingEntryInfo.rewardSchedule.getStringResourceId(),
+                id = R.string.staking_notification_earn_rewards_text,
                 formatArgs = wrappedList(stakingEntryInfo.tokenSymbol),
             ),
             iconState = iconState,
