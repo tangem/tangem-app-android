@@ -380,6 +380,7 @@
   <string name="markets_token_details_blockchain_site">ウェブサイト</string>
   <string name="markets_token_details_buy_pressure">買い圧力</string>
   <string name="markets_token_details_buy_pressure_description">買い手と売り手の取引量の差</string>
+  <string name="markets_token_details_buy_pressure_full">買い圧力</string>
   <string name="markets_token_details_circulating_supply">循環供給量</string>
   <string name="markets_token_details_circulating_supply_description">取引可能で市場に流通しているコインの総数</string>
   <string name="markets_token_details_experienced_buyers">経験豊富な買い手</string>
@@ -698,7 +699,6 @@
   <string name="staking_reward_schedule_block">ブロック</string>
   <string name="staking_reward_schedule_day">日</string>
   <string name="staking_reward_schedule_each_day">毎日</string>
-  <string name="staking_reward_schedule_each_sec">%1$s毎</string>
   <string name="staking_reward_schedule_epoch">エポック</string>
   <string name="staking_reward_schedule_era">時代</string>
   <string name="staking_reward_schedule_hour">時</string>
