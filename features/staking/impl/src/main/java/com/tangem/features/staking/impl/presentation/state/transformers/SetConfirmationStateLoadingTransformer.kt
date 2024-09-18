@@ -35,7 +35,7 @@ internal class SetConfirmationStateLoadingTransformer(
                     availableValidators = yield.validators,
                 ),
                 notifications = persistentListOf(),
-                footerText = getFooter(prevState),
+                footerText = getFooter(prevState, chosenValidator),
                 transactionDoneState = TransactionDoneState.Empty,
                 pendingAction = possibleConfirmationState?.pendingAction,
                 pendingActions = possibleConfirmationState?.pendingActions,
@@ -45,14 +45,12 @@ internal class SetConfirmationStateLoadingTransformer(
         )
     }
 
-    private fun getFooter(state: StakingUiState): TextReference {
+    private fun getFooter(state: StakingUiState, validator: Yield.Validator): TextReference {
         val amountState = state.amountState as? AmountState.Data
-        val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
-        val validatorState = confirmationState?.validatorState as? ValidatorState.Content
 
         val isEnterAction = state.actionType == StakingActionCommonType.ENTER
 
-        val apr = validatorState?.chosenValidator?.apr.orZero()
+        val apr = validator.apr.orZero()
         val amountDecimal = amountState?.amountTextField?.fiatAmount?.value
         val potentialReward = amountDecimal?.multiply(apr)
 
