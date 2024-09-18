@@ -35,6 +35,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param captionColor caption text color
  * @param isGrayscaleImage whether to display grayscale image
  * @param iconEndRes icon to end of row
+ * @param onImageError composable to show if image loading failed
  */
 @Suppress("LongParameterList")
 @Composable
@@ -52,6 +53,7 @@ fun InputRowImageInfo(
     iconTint: Color = TangemTheme.colors.icon.informative,
     isGrayscaleImage: Boolean = false,
     @DrawableRes iconEndRes: Int? = null,
+    onImageError: (@Composable () -> Unit)? = null,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
@@ -75,6 +77,7 @@ fun InputRowImageInfo(
             captionColor = captionColor,
             isGrayscaleImage = isGrayscaleImage,
             iconEndRes = iconEndRes,
+            onImageError = onImageError,
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
