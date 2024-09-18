@@ -391,6 +391,7 @@
   <string name="markets_token_details_blockchain_site">Веб-сайт</string>
   <string name="markets_token_details_buy_pressure">Давлення покупця</string>
   <string name="markets_token_details_buy_pressure_description">Різниця між обсягом покупців та обсягом продавців</string>
+  <string name="markets_token_details_buy_pressure_full">Давлення покупця</string>
   <string name="markets_token_details_circulating_supply">Циркуляційний запас</string>
   <string name="markets_token_details_circulating_supply_description">Загальна кількість монет, які доступні для торгівлі та перебувають в обігу на ринку</string>
   <string name="markets_token_details_experienced_buyers">Досвідчені покупці</string>
