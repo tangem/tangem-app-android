@@ -1,58 +1,30 @@
 package com.tangem.features.staking.impl.presentation.state.converters
 
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.utils.BigDecimalFormatter
-import com.tangem.core.ui.utils.parseBigDecimal
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.PendingTransaction
+import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.BalanceType
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.BalanceState
-import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.persistentListOf
+import org.joda.time.DateTime
 
-internal class PendingTransactionItemConverter(
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-    private val appCurrencyProvider: Provider<AppCurrency>,
-) : Converter<PendingTransaction, BalanceState?> {
+internal object PendingTransactionItemConverter : Converter<PendingTransaction, BalanceItem?> {
 
-    override fun convert(value: PendingTransaction): BalanceState? {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val appCurrency = appCurrencyProvider()
-        val cryptoCurrency = cryptoCurrencyStatus.currency
-
+    override fun convert(value: PendingTransaction): BalanceItem? {
         val cryptoAmount = value.amount ?: return null
-        val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
 
         val balanceType = value.type ?: return null
         val title = balanceType.getTitle(value.validator?.name)
         return title?.let {
-            BalanceState(
+            BalanceItem(
                 id = value.id,
-                validator = value.validator,
-                title = title,
-                subtitle = TextReference.EMPTY,
                 type = balanceType,
-                cryptoValue = cryptoAmount.parseBigDecimal(cryptoCurrency.decimals),
-                cryptoDecimal = cryptoAmount,
-                cryptoAmount = stringReference(
-                    BigDecimalFormatter.formatCryptoAmount(
-                        cryptoAmount = cryptoAmount,
-                        cryptoCurrency = cryptoCurrency,
-                    ),
-                ),
-                fiatAmount = stringReference(
-                    BigDecimalFormatter.formatFiatAmount(
-                        fiatAmount = fiatAmount,
-                        fiatCurrencyCode = appCurrency.code,
-                        fiatCurrencySymbol = appCurrency.symbol,
-                    ),
-                ),
+                amount = cryptoAmount,
                 rawCurrencyId = value.rawCurrencyId,
-                pendingActions = persistentListOf(),
-                isClickable = false,
+                validatorAddress = value.validator?.address,
+                date = DateTime.now(),
+                pendingActions = emptyList(),
+                isPending = true,
             )
         }
     }

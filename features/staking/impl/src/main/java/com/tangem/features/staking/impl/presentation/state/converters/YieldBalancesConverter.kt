@@ -23,10 +23,6 @@ internal class YieldBalancesConverter(
         BalanceItemConverter(cryptoCurrencyStatusProvider, appCurrencyProvider, yield)
     }
 
-    private val pendingTransactionItemConverter by lazy(LazyThreadSafetyMode.NONE) {
-        PendingTransactionItemConverter(cryptoCurrencyStatusProvider, appCurrencyProvider)
-    }
-
     override fun convert(value: Unit): InnerYieldBalanceState {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val appCurrency = appCurrencyProvider()
@@ -39,9 +35,9 @@ internal class YieldBalancesConverter(
             val fiatRewardsValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoRewardsValue)
 
             val pendingTransactions = pendingTransactionsProvider()
-            // val pendingTransactionBalanceItems = pendingTransactions.mapNotNull {
-            //     pendingTransactionItemConverter.convert(it)
-            // }
+            val pendingTransactionBalanceItems = pendingTransactions.mapNotNull {
+                PendingTransactionItemConverter.convert(it)
+            }
 
             InnerYieldBalanceState.Data(
                 rewardsCrypto = BigDecimalFormatter.formatCryptoAmount(
@@ -54,7 +50,7 @@ internal class YieldBalancesConverter(
                     fiatCurrencySymbol = appCurrency.symbol,
                 ),
                 rewardBlockType = getRewardBlockType(),
-                balance = yieldBalance.balance.items.mapBalances(),
+                balance = (yieldBalance.balance.items + pendingTransactionBalanceItems).mapBalances(),
             )
         } else {
             InnerYieldBalanceState.Empty
