@@ -39,6 +39,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param captionColor caption text color
  * @param isGrayscaleImage whether to display grayscale image
  * @param iconEndRes icon to end of row
+ * @param onImageError composable to show if image loading failed
  * @param extraContent extra content
  */
 @Composable
@@ -53,6 +54,7 @@ internal fun InputRowImageBase(
     iconTint: Color = TangemTheme.colors.icon.informative,
     isGrayscaleImage: Boolean = false,
     iconEndRes: Int? = null,
+    onImageError: (@Composable () -> Unit)? = null,
     extraContent: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Row(
@@ -63,13 +65,13 @@ internal fun InputRowImageBase(
             InputRowAsyncImage(
                 imageUrl = imageUrl,
                 isGrayscale = isGrayscaleImage,
+                onImageError = onImageError,
                 modifier = Modifier
                     .size(TangemTheme.dimens.spacing36)
                     .clip(TangemTheme.shapes.roundedCornersXLarge),
             )
             SpacerW12()
-        }
-        if (iconRes != null) {
+        } else if (iconRes != null) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
