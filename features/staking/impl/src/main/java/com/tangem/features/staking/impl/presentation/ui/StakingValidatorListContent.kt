@@ -3,10 +3,7 @@ package com.tangem.features.staking.impl.presentation.ui
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -95,6 +92,7 @@ internal fun StakingValidatorListContent(
                             )
                         }
                     },
+                    onImageError = { ValidatorImagePlaceholder() },
                 )
             }
         }
