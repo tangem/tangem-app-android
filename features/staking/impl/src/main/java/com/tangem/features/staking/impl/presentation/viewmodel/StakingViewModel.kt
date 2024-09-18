@@ -200,6 +200,7 @@ internal class StakingViewModel @Inject constructor(
         actionTypeToOverwrite: StakingActionCommonType?,
         pendingAction: PendingAction?,
         pendingActions: ImmutableList<PendingAction>?,
+        balanceState: BalanceState?,
     ) {
         if (actionTypeToOverwrite != null) {
             stateController.update(SetActionToExecuteTransformer(actionTypeToOverwrite, pendingAction, pendingActions))
@@ -208,10 +209,12 @@ internal class StakingViewModel @Inject constructor(
         when {
             isInitState() -> {
                 stateController.update(SetConfirmationStateLoadingTransformer(yield, appCurrency))
+                stateController.update(SetBalanceStateTransformer(balanceState))
                 onRefreshSwipe(isRefreshing = false)
             }
             isAssentState() -> {
                 getFee(pendingAction, pendingActions)
+                stateController.update(SetBalanceStateTransformer(balanceState))
                 val amountState = value.amountState as? AmountState.Data
                 if (amountState?.amountTextField?.isWarning == true) {
                     stateController.update(
@@ -413,6 +416,7 @@ internal class StakingViewModel @Inject constructor(
                         onNextClick(
                             actionTypeToOverwrite = StakingActionCommonType.PENDING_OTHER,
                             pendingAction = action,
+                            balanceState = activeStake,
                         )
                         stateController.update(DismissBottomSheetStateTransformer)
                     },
@@ -428,6 +432,7 @@ internal class StakingViewModel @Inject constructor(
                 actionTypeToOverwrite = null,
                 pendingAction = activeStake.pendingActions.firstOrNull(),
                 pendingActions = activeStake.pendingActions.takeIf { isAllWithdrawActions },
+                balanceState = activeStake, // TODO .type?
             )
         }
     }

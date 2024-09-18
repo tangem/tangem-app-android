@@ -10,6 +10,7 @@ import com.tangem.domain.staking.GetStakingTransactionUseCase
 import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
 import com.tangem.domain.staking.SubmitHashUseCase
 import com.tangem.domain.staking.model.SubmitHashData
+import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -69,6 +70,10 @@ internal class StakingTransactionSender @AssistedInject constructor(
         val fee = (confirmationState.feeState as? FeeState.Content)?.fee
             ?: error("No fee provided")
         val validator = (state.confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator
+        val amountState = state.amountState as? AmountState.Data
+            ?: error("No amount provided")
+
+        val amount = getAmount(amountState, fee, confirmationState.reduceAmountBy)
 
         val stakingTransactions = getStakingTransactions(
             state = state,
@@ -92,8 +97,11 @@ internal class StakingTransactionSender @AssistedInject constructor(
         sendStakingTransaction(
             fullTransactionsData = fullTransactionsData,
             validator = validator,
+            amount = amount,
             onSendSuccess = onSendSuccess,
             onSendError = onSendError,
+            balanceType = confirmationState.balanceState?.type,
+            rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
         )
     }
 
@@ -195,6 +203,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private suspend fun sendStakingTransaction(
         fullTransactionsData: List<FullTransactionData>,
         validator: Yield.Validator?,
+        amount: BigDecimal,
+        balanceType: BalanceType?,
+        rawCurrencyId: String?,
         onSendSuccess: (txUrl: String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
     ) {
@@ -211,6 +222,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
                     transactionIds = fullTransactionsData.map { it.stakeKitTransaction.id },
                     transactionHashes = transactionHashes,
                     validator = validator,
+                    amount = amount,
+                    balanceType = balanceType,
+                    rawCurrencyId = rawCurrencyId,
                 )
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
@@ -227,6 +241,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
         transactionIds: List<String>,
         transactionHashes: List<String>,
         validator: Yield.Validator?,
+        amount: BigDecimal,
+        balanceType: BalanceType?,
+        rawCurrencyId: String?,
     ) {
         transactionIds
             .zip(transactionHashes)
@@ -236,9 +253,10 @@ internal class StakingTransactionSender @AssistedInject constructor(
                         transactionId = transactionId,
                         transactionHash = transactionHash,
                         validator = validator,
-                        amount = BigDecimal.ZERO,
-                        type = StakingTransactionType.STAKE,
-                    )
+                        amount = amount,
+                        balanceType = balanceType,
+                        rawCurrencyId = rawCurrencyId,
+                    ),
                 )
                     .onLeft {
                         analyticsEventHandler.send(

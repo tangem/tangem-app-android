@@ -1,11 +1,13 @@
 package com.tangem.domain.staking
 
 import arrow.core.Either
+import com.tangem.domain.staking.model.PendingTransaction
 import com.tangem.domain.staking.model.SubmitHashData
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingPendingTransactionRepository
 import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
+import java.util.UUID
 
 /**
  * Use case for submitting transaction hash to stakekit
@@ -24,13 +26,15 @@ class SubmitHashUseCase(
                     transactionHash = submitHashData.transactionHash,
                 )
 
-                // stakingPendingTransactionRepository.saveTransaction(
-                //     PendingTransaction(
-                //         id = "",
-                //         type = BalanceType.STAKED,
-                //         cryptoDecimal =
-                //     )
-                // )
+                stakingPendingTransactionRepository.saveTransaction(
+                    PendingTransaction(
+                        id = UUID.randomUUID().toString(),
+                        type = submitHashData.balanceType,
+                        amount = submitHashData.amount,
+                        validator = submitHashData.validator,
+                        rawCurrencyId = submitHashData.rawCurrencyId,
+                    ),
+                )
             }.mapLeft {
                 stakingErrorResolver.resolve(it)
             }
