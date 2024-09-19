@@ -38,5 +38,9 @@
     {
         "name": "IS_ETHEREUM_EIP_1559_ENABLED",
         "version": "5.16.0"
+    },
+    {
+        "name": "MIGRATE_USER_COUNTRY_CODE_ENABLED",
+        "version": "5.16.0"
     }
 ]
