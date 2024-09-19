@@ -127,6 +127,7 @@ private fun SendNavigationButton(
             }
         }
         TangemButton(
+            modifier = Modifier.fillMaxWidth(),
             text = stringResource(buttonTextId),
             icon = buttonIcon,
             enabled = isButtonEnabled,
@@ -135,8 +136,8 @@ private fun SendNavigationButton(
                 buttonClick()
             },
             showProgress = false,
-            modifier = Modifier.fillMaxWidth(),
             colors = TangemButtonsDefaults.primaryButtonColors,
+            textStyle = TangemTheme.typography.subtitle1,
         )
     }
 }
@@ -274,7 +275,7 @@ private fun isButtonEnabled(currentState: SendUiCurrentScreen, uiState: SendUiSt
 
 private fun getTokenFeeSendingText(feeState: SendStates.FeeState, fee: Fee.Tron, sendingValue: String): TextReference {
     val suffix = when {
-        fee.feeEnergy == 0L -> {
+        fee.remainingEnergy == 0L -> {
             resourceReference(
                 R.string.send_summary_transaction_description_suffix_including,
                 wrappedList(feeState.getFiatValue()),
