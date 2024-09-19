@@ -110,6 +110,13 @@ private fun Button(config: NotificationConfig) {
     button?.let {
         val isDarkMode = LocalIsInDarkTheme.current
         TangemButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = TangemTheme.dimens.spacing12,
+                    end = TangemTheme.dimens.spacing12,
+                    bottom = TangemTheme.dimens.spacing12,
+                ),
             text = button.text.resolveReference(),
             icon = TangemButtonIconPosition.Start(button.iconResId ?: R.drawable.ic_exchange_vertical_24),
             onClick = button.onClick,
@@ -119,15 +126,9 @@ private fun Button(config: NotificationConfig) {
                 disabledBackgroundColor = TangemTheme.colors.button.disabled,
                 disabledContentColor = TangemTheme.colors.text.disabled,
             ),
+            textStyle = TangemTheme.typography.subtitle1,
             enabled = true,
             showProgress = false,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = TangemTheme.dimens.spacing12,
-                    end = TangemTheme.dimens.spacing12,
-                    bottom = TangemTheme.dimens.spacing12,
-                ),
         )
     }
 }
