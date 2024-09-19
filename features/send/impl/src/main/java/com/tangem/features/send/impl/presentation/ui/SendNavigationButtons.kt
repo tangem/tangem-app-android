@@ -127,6 +127,7 @@ private fun SendNavigationButton(
             }
         }
         TangemButton(
+            modifier = Modifier.fillMaxWidth(),
             text = stringResource(buttonTextId),
             icon = buttonIcon,
             enabled = isButtonEnabled,
@@ -135,8 +136,8 @@ private fun SendNavigationButton(
                 buttonClick()
             },
             showProgress = false,
-            modifier = Modifier.fillMaxWidth(),
             colors = TangemButtonsDefaults.primaryButtonColors,
+            textStyle = TangemTheme.typography.subtitle1,
         )
     }
 }
