@@ -1,7 +1,7 @@
 package com.tangem.domain.staking
 
 import arrow.core.Either
-import com.tangem.domain.staking.model.PendingTransaction
+import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingPendingTransactionRepository
@@ -14,9 +14,9 @@ class GetPendingTransactionsUseCase(
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
-    operator fun invoke(): Either<StakingError, List<PendingTransaction>> {
+    operator fun invoke(): Either<StakingError, List<BalanceItem>> {
         return Either.catch {
-            stakingPendingTransactionRepository.getTransactions()
+            stakingPendingTransactionRepository.getTransactionsWithBalanceItems().map { it.second }
         }.mapLeft {
             stakingErrorResolver.resolve(it)
         }

@@ -3,7 +3,6 @@ package com.tangem.features.staking.impl.presentation.state.converters
 import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.staking.model.PendingTransaction
 import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
@@ -15,7 +14,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal class YieldBalancesConverter(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val pendingTransactionsProvider: Provider<List<PendingTransaction>>,
+    private val pendingTransactionBalanceItemProvider: Provider<List<BalanceItem>>,
     private val yield: Yield,
 ) : Converter<Unit, InnerYieldBalanceState> {
 
@@ -34,10 +33,7 @@ internal class YieldBalancesConverter(
             val cryptoRewardsValue = yieldBalance.getRewardStakingBalance()
             val fiatRewardsValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoRewardsValue)
 
-            val pendingTransactions = pendingTransactionsProvider()
-            val pendingTransactionBalanceItems = pendingTransactions.mapNotNull {
-                PendingTransactionItemConverter.convert(it)
-            }
+            val pendingTransactionBalanceItems = pendingTransactionBalanceItemProvider()
 
             InnerYieldBalanceState.Data(
                 rewardsCrypto = BigDecimalFormatter.formatCryptoAmount(
@@ -70,7 +66,7 @@ internal class YieldBalancesConverter(
             val key = Triple(pendingItem.groupId, pendingItem.type, pendingItem.amount)
             map[key] = pendingItem
         }
-        // TODO staking add removal
+
         return map.values.toList()
     }
 

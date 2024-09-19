@@ -1,12 +1,13 @@
 package com.tangem.domain.staking.repositories
 
 import com.tangem.domain.staking.model.PendingTransaction
+import com.tangem.domain.staking.model.stakekit.BalanceItem
 
 interface StakingPendingTransactionRepository {
 
-    fun getTransactions(): List<PendingTransaction>
+    fun getTransactionsWithBalanceItems(): List<Pair<PendingTransaction, BalanceItem>>
 
-    fun saveTransaction(pendingTransaction: PendingTransaction)
+    fun saveTransaction(transaction: PendingTransaction)
 
-    fun removeTransaction(pendingTransaction: PendingTransaction)
+    fun removeTransactions(transactions: Set<PendingTransaction>)
 }
