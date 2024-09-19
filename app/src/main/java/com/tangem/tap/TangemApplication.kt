@@ -37,6 +37,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -60,6 +61,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -191,6 +193,12 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val tangemAppLoggerInitializer: TangemAppLoggerInitializer
         get() = entryPoint.getTangemAppLogger()
+
+    private val homeFeatureToggles: HomeFeatureToggles
+        get() = entryPoint.getHomeFeatureToggles()
+
+    private val getUserCountryUseCase: GetUserCountryUseCase
+        get() = entryPoint.getGetUserCountryCodeUseCase()
     // endregion
 
     override fun onCreate() {
@@ -273,6 +281,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     shareManager = shareManager,
                     appRouter = appRouter,
                     pushNotificationsFeatureToggles = pushNotificationsFeatureToggles,
+                    homeFeatureToggles = homeFeatureToggles,
+                    getUserCountryUseCase = getUserCountryUseCase,
                 ),
             ),
         )
