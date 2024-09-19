@@ -69,17 +69,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
         val fee = (confirmationState.feeState as? FeeState.Content)?.fee
             ?: error("No fee provided")
 
-        // TODO staking remove
-        savePendingTransactionUseCase.invoke(
-            PendingTransaction(
-                groupId = confirmationState.balanceState?.groupId,
-                type = confirmationState.balanceState?.type,
-                amount = confirmationState.balanceState?.cryptoDecimal,
-                rawCurrencyId = confirmationState.balanceState?.rawCurrencyId,
-                validator = confirmationState.balanceState?.validator,
-            ),
-        )
-
         val stakingTransactions = getStakingTransactions(
             state = state,
             confirmationState = confirmationState,

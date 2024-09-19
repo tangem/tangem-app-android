@@ -11,10 +11,9 @@ import com.tangem.domain.staking.repositories.StakingPendingTransactionRepositor
 class InvalidatePendingTransactionsUseCase(
     private val stakingPendingTransactionRepository: StakingPendingTransactionRepository,
     private val stakingErrorResolver: StakingErrorResolver,
-    private val yieldBalance: YieldBalance,
 ) {
 
-    operator fun invoke(): Either<StakingError, List<BalanceItem>> {
+    operator fun invoke(yieldBalance: YieldBalance): Either<StakingError, List<BalanceItem>> {
         return Either.catch {
             if (yieldBalance is YieldBalance.Data) {
                 val (balancesToDisplay, transactionsToRemove) = mergeRealAndPendingTransactions(

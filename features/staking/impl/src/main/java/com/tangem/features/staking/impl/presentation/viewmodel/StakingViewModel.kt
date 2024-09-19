@@ -23,10 +23,11 @@ import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.staking.GetPendingTransactionsUseCase
+import com.tangem.domain.staking.InvalidatePendingTransactionsUseCase
 import com.tangem.domain.staking.IsAnyTokenStakedUseCase
 import com.tangem.domain.staking.IsApproveNeededUseCase
 import com.tangem.domain.staking.model.StakingApproval
+import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
@@ -99,7 +100,7 @@ internal class StakingViewModel @Inject constructor(
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val isAnyTokenStakedUseCase: IsAnyTokenStakedUseCase,
-    private val getPendingTransactionsUseCase: GetPendingTransactionsUseCase,
+    private val invalidatePendingTransactionsUseCase: InvalidatePendingTransactionsUseCase,
     private val stakingTransactionLoader: StakingTransactionSender.Factory,
     private val stakingFeeTransactionLoader: StakingFeeTransactionLoader.Factory,
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
@@ -132,6 +133,13 @@ internal class StakingViewModel @Inject constructor(
     private var innerRouter: InnerStakingRouter by Delegates.notNull()
     private var userWallet: UserWallet by Delegates.notNull()
     private var appCurrency: AppCurrency by Delegates.notNull()
+
+    private val balancesToShow: List<BalanceItem>
+        get() {
+            return cryptoCurrencyStatus.value.yieldBalance?.let {
+                invalidatePendingTransactionsUseCase(it).getOrElse { emptyList() }
+            } ?: emptyList()
+        }
 
     private var isInitialInfoAnalyticSent: Boolean = false
 
@@ -756,9 +764,7 @@ internal class StakingViewModel @Inject constructor(
                                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                                 userWalletProvider = Provider { userWallet },
                                 appCurrencyProvider = Provider { appCurrency },
-                                pendingTransactionsProvider = Provider {
-                                    getPendingTransactionsUseCase().getOrElse { emptyList() }
-                                },
+                                pendingTransactionsProvider = Provider { balancesToShow },
                             ),
                         )
                     },
