@@ -14,7 +14,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal class YieldBalancesConverter(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val pendingTransactionBalanceItemProvider: Provider<List<BalanceItem>>,
+    private val balancesToShowProvider: Provider<List<BalanceItem>>,
     private val yield: Yield,
 ) : Converter<Unit, InnerYieldBalanceState> {
 
@@ -33,7 +33,7 @@ internal class YieldBalancesConverter(
             val cryptoRewardsValue = yieldBalance.getRewardStakingBalance()
             val fiatRewardsValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoRewardsValue)
 
-            val pendingTransactionBalanceItems = pendingTransactionBalanceItemProvider()
+            val balanceToShowItems = balancesToShowProvider()
 
             InnerYieldBalanceState.Data(
                 rewardsCrypto = BigDecimalFormatter.formatCryptoAmount(
@@ -46,29 +46,14 @@ internal class YieldBalancesConverter(
                     fiatCurrencySymbol = appCurrency.symbol,
                 ),
                 rewardBlockType = getRewardBlockType(),
-                balance = mergeRealAndPendingTransactions(
-                    real = yieldBalance.balance.items,
-                    pending = pendingTransactionBalanceItems,
-                ).mapBalances(),
+                balance = balanceToShowItems.mapBalances(),
             )
         } else {
             InnerYieldBalanceState.Empty
         }
     }
 
-    private fun mergeRealAndPendingTransactions(
-        real: List<BalanceItem>,
-        pending: List<BalanceItem>,
-    ): List<BalanceItem> {
-        val map = real.associateBy { Triple(it.groupId, it.type, it.amount) }.toMutableMap()
 
-        pending.forEach { pendingItem ->
-            val key = Triple(pendingItem.groupId, pendingItem.type, pendingItem.amount)
-            map[key] = pendingItem
-        }
-
-        return map.values.toList()
-    }
 
     private fun List<BalanceItem>.mapBalances() = asSequence()
         .filterNot { it.amount.isZero() || it.type == BalanceType.REWARDS }

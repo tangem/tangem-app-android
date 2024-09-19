@@ -764,7 +764,7 @@ internal class StakingViewModel @Inject constructor(
                                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                                 userWalletProvider = Provider { userWallet },
                                 appCurrencyProvider = Provider { appCurrency },
-                                pendingTransactionsProvider = Provider { balancesToShow },
+                                balancesToShowProvider = Provider { balancesToShow },
                             ),
                         )
                     },

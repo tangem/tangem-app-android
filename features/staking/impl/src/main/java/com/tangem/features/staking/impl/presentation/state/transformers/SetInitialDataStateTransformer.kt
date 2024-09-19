@@ -39,7 +39,7 @@ internal class SetInitialDataStateTransformer(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val pendingTransactionsProvider: Provider<List<BalanceItem>>,
+    private val balancesToShowProvider: Provider<List<BalanceItem>>,
 ) : Transformer<StakingUiState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -62,7 +62,7 @@ internal class SetInitialDataStateTransformer(
         YieldBalancesConverter(
             cryptoCurrencyStatusProvider,
             appCurrencyProvider,
-            pendingTransactionsProvider,
+            balancesToShowProvider,
             yield,
         )
     }
