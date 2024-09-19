@@ -239,9 +239,8 @@ class WalletConnectSdkHelper {
     private suspend fun signTransaction(data: WcTransactionData, cardId: String?): String? {
         val dataToSign = EthereumUtils.buildTransactionToSign(
             transactionData = data.transaction,
-            nonce = null,
             blockchain = data.walletManager.wallet.blockchain,
-        ) ?: return null
+        )
 
         val command = SignHashCommand(
             hash = dataToSign.hash,
