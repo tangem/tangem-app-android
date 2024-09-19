@@ -24,6 +24,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -35,6 +36,7 @@ import com.tangem.features.pushnotifications.api.featuretoggles.PushNotification
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -119,4 +121,8 @@ interface ApplicationEntryPoint {
     fun getPushNotificationsFeatureToggles(): PushNotificationsFeatureToggles
 
     fun getTangemAppLogger(): TangemAppLoggerInitializer
+
+    fun getHomeFeatureToggles(): HomeFeatureToggles
+
+    fun getGetUserCountryCodeUseCase(): GetUserCountryUseCase
 }
