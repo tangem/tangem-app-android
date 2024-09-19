@@ -23,6 +23,7 @@ data class GlobalState(
     val scanCardFailsCounter: Int = 0,
     val dialog: StateDialog? = null,
     val exchangeManager: CurrencyExchangeManager = CurrencyExchangeManager.dummy(),
+    @Deprecated("Use GetUserCountryCodeUseCase instead")
     val userCountryCode: String? = null,
     val appThemeMode: AppThemeMode = AppThemeMode.DEFAULT,
 ) : StateType
