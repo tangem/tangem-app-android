@@ -14,6 +14,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal class YieldBalancesConverter(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val balancesToShowProvider: Provider<List<BalanceItem>>,
     private val yield: Yield,
 ) : Converter<Unit, InnerYieldBalanceState> {
 
@@ -32,6 +33,8 @@ internal class YieldBalancesConverter(
             val cryptoRewardsValue = yieldBalance.getRewardStakingBalance()
             val fiatRewardsValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoRewardsValue)
 
+            val balanceToShowItems = balancesToShowProvider()
+
             InnerYieldBalanceState.Data(
                 rewardsCrypto = BigDecimalFormatter.formatCryptoAmount(
                     cryptoAmount = cryptoRewardsValue,
@@ -43,7 +46,7 @@ internal class YieldBalancesConverter(
                     fiatCurrencySymbol = appCurrency.symbol,
                 ),
                 rewardBlockType = getRewardBlockType(),
-                balance = yieldBalance.balance.items.mapBalances(),
+                balance = balanceToShowItems.mapBalances(),
             )
         } else {
             InnerYieldBalanceState.Empty
