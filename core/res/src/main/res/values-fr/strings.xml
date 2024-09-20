@@ -718,8 +718,6 @@
   <string name="staking_reward_schedule_block">Bloquer</string>
   <string name="staking_reward_schedule_day">Jour</string>
   <string name="staking_reward_schedule_each_day">Chaque jour</string>
-  <string name="staking_reward_schedule_each_minute">Chaque minute</string>
-  <string name="staking_reward_schedule_each_sec">Toute(s) les ~%1$sseconde(s)</string>
   <string name="staking_reward_schedule_epoch">Époque</string>
   <string name="staking_reward_schedule_era">Ère</string>
   <string name="staking_reward_schedule_hour">Heure</string>
