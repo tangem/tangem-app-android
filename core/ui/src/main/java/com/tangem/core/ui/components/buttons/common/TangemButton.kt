@@ -20,6 +20,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.res.TangemTheme
@@ -85,7 +86,9 @@ fun TangemButton(
             },
             icon = { iconResId ->
                 Icon(
-                    modifier = Modifier.buttonContentSize(maxContentSize),
+                    modifier = Modifier
+                        .buttonContentSize(maxContentSize)
+                        .padding(vertical = 2.dp),
                     painter = painterResource(id = iconResId),
                     tint = colors.contentColor(enabled = enabled).value,
                     contentDescription = null,
