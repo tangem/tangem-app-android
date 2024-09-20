@@ -1,10 +1,7 @@
 package com.tangem.features.staking.impl.presentation.viewmodel
 
 import android.os.Bundle
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRoute
@@ -23,9 +20,11 @@ import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.staking.InvalidatePendingTransactionsUseCase
 import com.tangem.domain.staking.IsAnyTokenStakedUseCase
 import com.tangem.domain.staking.IsApproveNeededUseCase
 import com.tangem.domain.staking.model.StakingApproval
+import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
@@ -98,6 +97,7 @@ internal class StakingViewModel @Inject constructor(
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val isAnyTokenStakedUseCase: IsAnyTokenStakedUseCase,
+    private val invalidatePendingTransactionsUseCase: InvalidatePendingTransactionsUseCase,
     private val stakingTransactionLoader: StakingTransactionSender.Factory,
     private val stakingFeeTransactionLoader: StakingFeeTransactionLoader.Factory,
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
@@ -131,6 +131,13 @@ internal class StakingViewModel @Inject constructor(
     private var userWallet: UserWallet by Delegates.notNull()
     private var appCurrency: AppCurrency by Delegates.notNull()
 
+    private val balancesToShow: List<BalanceItem>
+        get() {
+            return cryptoCurrencyStatus.value.yieldBalance?.let {
+                invalidatePendingTransactionsUseCase(it).getOrElse { emptyList() }
+            } ?: emptyList()
+        }
+
     private var isInitialInfoAnalyticSent: Boolean = false
 
     private val balanceUpdater by lazy(LazyThreadSafetyMode.NONE) {
@@ -161,7 +168,7 @@ internal class StakingViewModel @Inject constructor(
     private val stakingEventFactory: StakingEventFactory
         get() = StakingEventFactory(
             stateController = stateController,
-            popBackStack = stakingStateRouter::onBackClick,
+            popBackStack = ::onBackClick,
             onFailedTxEmailClick = ::onFailedTxEmailClick,
         )
 
@@ -200,6 +207,7 @@ internal class StakingViewModel @Inject constructor(
         actionTypeToOverwrite: StakingActionCommonType?,
         pendingAction: PendingAction?,
         pendingActions: ImmutableList<PendingAction>?,
+        balanceState: BalanceState?,
     ) {
         if (actionTypeToOverwrite != null) {
             stateController.update(SetActionToExecuteTransformer(actionTypeToOverwrite, pendingAction, pendingActions))
@@ -208,10 +216,12 @@ internal class StakingViewModel @Inject constructor(
         when {
             isInitState() -> {
                 stateController.update(SetConfirmationStateLoadingTransformer(yield, appCurrency))
+                stateController.update(SetBalanceStateTransformer(balanceState))
                 onRefreshSwipe(isRefreshing = false)
             }
             isAssentState() -> {
                 getFee(pendingAction, pendingActions)
+                stateController.update(SetBalanceStateTransformer(balanceState))
                 val amountState = value.amountState as? AmountState.Data
                 if (amountState?.amountTextField?.isWarning == true) {
                     stateController.update(
@@ -413,6 +423,7 @@ internal class StakingViewModel @Inject constructor(
                         onNextClick(
                             actionTypeToOverwrite = StakingActionCommonType.PENDING_OTHER,
                             pendingAction = action,
+                            balanceState = activeStake,
                         )
                         stateController.update(DismissBottomSheetStateTransformer)
                     },
@@ -428,6 +439,7 @@ internal class StakingViewModel @Inject constructor(
                 actionTypeToOverwrite = null,
                 pendingAction = activeStake.pendingActions.firstOrNull(),
                 pendingActions = activeStake.pendingActions.takeIf { isAllWithdrawActions },
+                balanceState = activeStake,
             )
         }
     }
@@ -749,6 +761,7 @@ internal class StakingViewModel @Inject constructor(
                                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                                 userWalletProvider = Provider { userWallet },
                                 appCurrencyProvider = Provider { appCurrency },
+                                balancesToShowProvider = Provider { balancesToShow },
                             ),
                         )
                     },
