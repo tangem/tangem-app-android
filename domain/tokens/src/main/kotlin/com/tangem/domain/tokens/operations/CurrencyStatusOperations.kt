@@ -61,7 +61,7 @@ internal class CurrencyStatusOperations(
             (yieldBalance as? YieldBalance.Data)?.address == status.address.defaultAddress.value
         val currentYieldBalance = yieldBalance.takeIf { isCurrentAddressStaking }
         return when {
-            ignoreQuote -> CryptoCurrencyStatus.NoQuote(
+            ignoreQuote || quote == null -> CryptoCurrencyStatus.NoQuote(
                 amount = amount,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
@@ -70,15 +70,14 @@ internal class CurrencyStatusOperations(
             )
             currency is CryptoCurrency.Token && currency.isCustom -> CryptoCurrencyStatus.Custom(
                 amount = amount,
-                fiatAmount = calculateFiatAmountOrNull(amount, quote?.fiatRate),
-                fiatRate = quote?.fiatRate,
-                priceChange = quote?.priceChange,
+                fiatAmount = calculateFiatAmountOrNull(amount, quote.fiatRate),
+                fiatRate = quote.fiatRate,
+                priceChange = quote.priceChange,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
                 networkAddress = status.address,
                 yieldBalance = currentYieldBalance,
             )
-            quote == null -> CryptoCurrencyStatus.Loading
             else -> CryptoCurrencyStatus.Loaded(
                 amount = amount,
                 fiatAmount = calculateFiatAmount(amount, quote.fiatRate),

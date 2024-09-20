@@ -73,6 +73,7 @@ internal class AddStakingNotificationsTransformer(
             isSubtractAvailable = isSubtractAvailable,
             reduceAmountBy = reduceAmountBy,
         )
+        val minimumRequirement = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum.orZero()
         val sendingAmount = if (isEnterAction) {
             checkAndCalculateSubtractedAmount(
                 isAmountSubtractAvailable = isSubtractAvailable,
@@ -84,7 +85,7 @@ internal class AddStakingNotificationsTransformer(
         } else {
             // No amount is taken from account balance on exit or pending actions
             BigDecimal.ZERO
-        }
+        }.max(minimumRequirement)
 
         val notifications = buildList {
             // errors
@@ -106,7 +107,7 @@ internal class AddStakingNotificationsTransformer(
                 amountState = amountState,
                 feeState = feeState,
                 sendingAmount = sendingAmount,
-                isFeeCoverage = isFeeCoverage && isEnterAction,
+                isFeeCoverage = isFeeCoverage && isEnterAction && !sendingAmount.equals(minimumRequirement),
             )
 
             addInfoNotifications(prevState)
@@ -223,11 +224,10 @@ internal class AddStakingNotificationsTransformer(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         onClick: (CryptoCurrency) -> Unit,
     ) {
-        val minimumRequirement = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         if (!isSubtractionAvailable) return
 
-        val showNotification = sendingAmount + feeAmount > balance - minimumRequirement.orZero()
+        val showNotification = sendingAmount + feeAmount > balance
         if (showNotification) {
             val notification = if (actionType == StakingActionCommonType.ENTER) {
                 NotificationUM.Error.TotalExceedsBalance
