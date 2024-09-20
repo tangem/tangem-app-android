@@ -17,7 +17,6 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
-import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.converter.Converter
@@ -28,7 +27,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class TokenDetailsSkeletonStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
-    private val featureToggles: TokenDetailsFeatureToggles,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
@@ -98,12 +96,14 @@ internal class TokenDetailsSkeletonStateConverter(
         cryptoCurrency: CryptoCurrency,
     ) {
         val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return
-        val isGenerateXPubEnabled = featureToggles.isGenerateXPubEnabled()
-        val isBitcoin = isBitcoin(cryptoCurrency.network.id.value)
-        val hasDerivations =
-            networkHasDerivationUseCase(userWallet.scanResponse, cryptoCurrency.network).getOrElse { false }
 
-        if (isGenerateXPubEnabled && isBitcoin && hasDerivations) {
+        val isBitcoin = isBitcoin(cryptoCurrency.network.id.value)
+        val hasDerivations = networkHasDerivationUseCase(
+            scanResponse = userWallet.scanResponse,
+            network = cryptoCurrency.network,
+        ).getOrElse { false }
+
+        if (isBitcoin && hasDerivations) {
             add(
                 TokenDetailsAppBarMenuConfig.MenuItem(
                     title = resourceReference(R.string.token_details_generate_xpub),
