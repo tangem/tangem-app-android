@@ -7,7 +7,9 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.*
+import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
 internal class TokenListSortingOperations(
@@ -83,7 +85,7 @@ internal class TokenListSortingOperations(
         return if (isAnyTokenLoading) {
             tokens
         } else {
-            tokens.sortedByDescending { it.value.fiatAmount ?: BigDecimal.ZERO }
+            tokens.sortedByDescending { it.getTotalBalance() }
                 .toNonEmptyListOrNull()
                 ?: error("Tokens can not be empty here")
         }
@@ -92,10 +94,18 @@ internal class TokenListSortingOperations(
     private fun sortGroupsByBalance(groupsWithSortedTokens: NonEmptyList<NetworkGroup>): NonEmptyList<NetworkGroup> {
         return groupsWithSortedTokens
             .sortedByDescending { group ->
-                group.currencies.sumOf { it.value.fiatAmount ?: BigDecimal.ZERO }
+                group.currencies.sumOf { it.getTotalBalance() }
             }
             .toNonEmptyListOrNull()
             ?: error("Tokens can not be empty here")
+    }
+
+    private fun CryptoCurrencyStatus.getTotalBalance(): BigDecimal {
+        val yieldBalance = value.yieldBalance as? YieldBalance.Data
+        val totalYieldBalance = yieldBalance?.getTotalWithRewardsStakingBalance().orZero()
+        val totalFiatYieldBalance = totalYieldBalance.multiply(value.fiatRate.orZero())
+
+        return value.fiatAmount?.plus(totalFiatYieldBalance).orZero()
     }
 
     sealed class Error {
