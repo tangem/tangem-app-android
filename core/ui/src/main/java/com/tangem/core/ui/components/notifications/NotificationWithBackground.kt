@@ -7,9 +7,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ripple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -132,17 +132,6 @@ fun NotificationWithBackground(config: NotificationConfig, modifier: Modifier = 
         )
         val isDarkMode = LocalIsInDarkTheme.current
         TangemButton(
-            text = button?.text?.resolveReference().orEmpty(),
-            icon = TangemButtonIconPosition.Start(button?.iconResId ?: R.drawable.ic_exchange_vertical_24),
-            onClick = button?.onClick ?: {},
-            colors = TangemButtonColors(
-                backgroundColor = if (isDarkMode) Light4 else TangemTheme.colors.button.secondary,
-                contentColor = Dark6,
-                disabledBackgroundColor = TangemTheme.colors.button.disabled,
-                disabledContentColor = TangemTheme.colors.text.disabled,
-            ),
-            enabled = true,
-            showProgress = false,
             modifier = Modifier.constrainAs(buttonRef) {
                 start.linkTo(parent.start, spacing12)
                 end.linkTo(parent.end, spacing12)
@@ -154,6 +143,18 @@ fun NotificationWithBackground(config: NotificationConfig, modifier: Modifier = 
                     Visibility.Visible
                 }
             },
+            text = button?.text?.resolveReference().orEmpty(),
+            icon = TangemButtonIconPosition.Start(button?.iconResId ?: R.drawable.ic_exchange_vertical_24),
+            onClick = button?.onClick ?: {},
+            colors = TangemButtonColors(
+                backgroundColor = if (isDarkMode) Light4 else TangemTheme.colors.button.secondary,
+                contentColor = Dark6,
+                disabledBackgroundColor = TangemTheme.colors.button.disabled,
+                disabledContentColor = TangemTheme.colors.text.disabled,
+            ),
+            textStyle = TangemTheme.typography.subtitle1,
+            enabled = true,
+            showProgress = false,
         )
     }
 }
