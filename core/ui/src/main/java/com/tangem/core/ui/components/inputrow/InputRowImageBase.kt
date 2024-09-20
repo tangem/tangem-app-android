@@ -129,15 +129,14 @@ private fun RowScope.SubtitleEndIconRes(subtitleEndIconRes: Int?, subtitleEndIco
     AnimatedVisibility(
         visible = subtitleEndIconRes != null,
         label = "Subtitle end icon visibility animation",
+        modifier = Modifier.align(Alignment.CenterVertically),
     ) {
         val icon = remember(this) { requireNotNull(subtitleEndIconRes) }
         Icon(
             painter = rememberVectorPainter(image = ImageVector.vectorResource(id = icon)),
             tint = subtitleEndIconTint,
             contentDescription = null,
-            modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing4)
-                .align(Alignment.CenterVertically),
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
         )
     }
 }
