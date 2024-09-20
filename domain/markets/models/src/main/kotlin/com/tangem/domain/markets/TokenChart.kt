@@ -9,13 +9,5 @@ data class TokenChart(
 ) {
     init {
         require(priceY.size == timeStamps.size)
-
-        // temporary fix for the issue with generic collection serialization adapter
-        timeStamps.forEach {
-            it.inc()
-        }
-        priceY.forEach {
-            it.inc()
-        }
     }
 }
