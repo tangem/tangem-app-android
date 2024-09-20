@@ -25,7 +25,6 @@ internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
 
     TangemBottomSheet<InfoBottomSheetContent>(
         config = config,
-        skipPartiallyExpanded = false,
         addBottomInsets = false,
         title = { TangemBottomSheetTitle(title = it.title) },
         content = {
