@@ -78,7 +78,7 @@ internal class RewardsValidatorStateConverter(
         )
 
         return BalanceState(
-            id = balance.id,
+            groupId = balance.groupId,
             validator = this,
             title = stringReference(this.name),
             subtitle = null,
@@ -90,6 +90,7 @@ internal class RewardsValidatorStateConverter(
             pendingActions = balance.pendingActions.toPersistentList(),
             isClickable = true,
             type = balance.type,
+            isPending = balance.isPending,
         )
     }
 }
