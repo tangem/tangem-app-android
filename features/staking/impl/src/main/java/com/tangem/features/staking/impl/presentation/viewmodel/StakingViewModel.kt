@@ -1,10 +1,7 @@
 package com.tangem.features.staking.impl.presentation.viewmodel
 
 import android.os.Bundle
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRoute
@@ -161,7 +158,7 @@ internal class StakingViewModel @Inject constructor(
     private val stakingEventFactory: StakingEventFactory
         get() = StakingEventFactory(
             stateController = stateController,
-            popBackStack = stakingStateRouter::onBackClick,
+            popBackStack = ::onBackClick,
             onFailedTxEmailClick = ::onFailedTxEmailClick,
         )
 
