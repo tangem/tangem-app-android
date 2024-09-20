@@ -99,7 +99,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
         scope.launch {
             context.actionsFlow
-                .conflate()
+                .buffer()
                 .collect { action ->
                     collectActions(action)
                 }
