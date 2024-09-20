@@ -31,7 +31,12 @@ internal fun checkAndCalculateSubtractedAmount(
         reduceAmountBy = reduceAmountBy,
     )
     return if (isFeeCoverage) {
-        balance.minus(reduceAmountBy).minus(feeValueRounded)
+        val reducedAmount = balance.minus(reduceAmountBy).minus(feeValueRounded)
+        if (isTron(cryptoCurrencyStatus.currency.network.id.value)) {
+            reducedAmount.setScale(0, RoundingMode.DOWN)
+        } else {
+            reducedAmount
+        }
     } else {
         amountValue
     }
