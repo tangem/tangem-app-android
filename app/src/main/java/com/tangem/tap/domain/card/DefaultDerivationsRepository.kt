@@ -21,6 +21,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.domain.sdk.TangemSdkManager
+import com.tangem.tap.domain.tasks.UserWalletIdPreflightReadFilter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -92,15 +93,20 @@ internal class DefaultDerivationsRepository(
     }
 
     override suspend fun derivePublicKeys(userWalletId: UserWalletId, derivations: Derivations): DerivedKeys {
-        tangemSdkManager.derivePublicKeys(cardId = null, derivations = derivations)
-            .doOnSuccess { response ->
-                updatePublicKeys(userWalletId = userWalletId, keys = response.entries)
-                    .doOnSuccess {
-                        validateDerivations(scanResponse = it.scanResponse, derivations = derivations)
-                        return response.entries
-                    }
-                    .doOnFailure { throw it }
-            }
+// [REDACTED_TODO_COMMENT]
+        val preflightReadFilter = UserWalletIdPreflightReadFilter(userWalletId)
+        tangemSdkManager.derivePublicKeys(
+            cardId = null,
+            derivations = derivations,
+            preflightReadFilter = preflightReadFilter,
+        ).doOnSuccess { response ->
+            updatePublicKeys(userWalletId = userWalletId, keys = response.entries)
+                .doOnSuccess {
+                    validateDerivations(scanResponse = it.scanResponse, derivations = derivations)
+                    return response.entries
+                }
+                .doOnFailure { throw it }
+        }
             .doOnFailure { throw it }
 
         error("This code should never be reached")
