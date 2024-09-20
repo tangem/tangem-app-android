@@ -10,6 +10,7 @@ import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.serialization.SerializedBigDecimal
+import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
@@ -37,6 +38,7 @@ internal class SetInitialDataStateTransformer(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val balancesToShowProvider: Provider<List<BalanceItem>>,
 ) : Transformer<StakingUiState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -59,6 +61,7 @@ internal class SetInitialDataStateTransformer(
         YieldBalancesConverter(
             cryptoCurrencyStatusProvider,
             appCurrencyProvider,
+            balancesToShowProvider,
             yield,
         )
     }
@@ -228,6 +231,7 @@ internal class SetInitialDataStateTransformer(
             pendingActions = null,
             isApprovalNeeded = isApprovalNeeded,
             reduceAmountBy = null,
+            balanceState = null,
         )
     }
 
