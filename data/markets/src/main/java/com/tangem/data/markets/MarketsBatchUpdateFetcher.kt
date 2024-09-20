@@ -1,6 +1,8 @@
 package com.tangem.data.markets
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.utils.retryOnError
+import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.TokenMarketChartsConverter
 import com.tangem.data.markets.converters.TokenQuotesShortConverter
 import com.tangem.data.markets.converters.toRequestParam
@@ -22,6 +24,7 @@ import kotlinx.coroutines.launch
 internal class MarketsBatchUpdateFetcher(
     private val marketsApi: TangemTechMarketsApi,
     private val tangemTechApi: TangemTechApi,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val onApiError: () -> Unit,
 ) : BatchUpdateFetcher<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
 
@@ -52,6 +55,7 @@ internal class MarketsBatchUpdateFetcher(
                 updateTasks.forEachIndexed { index, deferred ->
                     launch {
                         val res = deferred.await()
+                        checkForNulls(res)
                         val batchToUpdate = toUpdate[index]
 
                         update {
@@ -111,6 +115,22 @@ internal class MarketsBatchUpdateFetcher(
                 )
             },
         )
+    }
+
+    private fun checkForNulls(response: TokenMarketChartListResponse) {
+        response.values.forEach { chart ->
+            chart.prices.forEach { (_, price) ->
+                if (price == null) {
+                    analyticsEventHandler.send(
+                        MarketsDataAnalyticsEvent.ChartNullValuesError(
+                            requestPath = "coins/history_preview",
+                        ),
+                    )
+
+                    return
+                }
+            }
+        }
     }
 
     private inline fun <T> catchApiError(onError: () -> Unit, block: () -> T): T {
