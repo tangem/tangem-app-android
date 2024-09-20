@@ -709,8 +709,6 @@
   <string name="staking_reward_schedule_block">ブロック</string>
   <string name="staking_reward_schedule_day">日</string>
   <string name="staking_reward_schedule_each_day">毎日</string>
-  <string name="staking_reward_schedule_each_minute">毎分</string>
-  <string name="staking_reward_schedule_each_sec">%1$s毎</string>
   <string name="staking_reward_schedule_epoch">エポック</string>
   <string name="staking_reward_schedule_era">時代</string>
   <string name="staking_reward_schedule_hour">時</string>
