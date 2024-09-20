@@ -6,6 +6,8 @@ import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
 data class TokenMarketChartResponse(
+    // There is a bug in the API, it returns null values.
+    // We need to filter them out.
     @Json(name = "prices")
-    val prices: Map<Long, BigDecimal>,
+    val prices: Map<Long, BigDecimal?>,
 )
