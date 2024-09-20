@@ -33,9 +33,8 @@ internal fun TangemButtonSize.toHeightDp(): Dp = when (this) {
 @Composable
 @ReadOnlyComposable
 internal fun TangemButtonSize.toShape(): Shape = when (this) {
-    TangemButtonSize.Default,
-    TangemButtonSize.WideAction,
-    -> TangemTheme.shapes.roundedCornersMedium
+    TangemButtonSize.Default -> TangemTheme.shapes.roundedCornersXMedium
+    TangemButtonSize.WideAction -> TangemTheme.shapes.roundedCornersMedium
     TangemButtonSize.Text -> TangemTheme.shapes.roundedCornersSmall
     TangemButtonSize.Selector -> TangemTheme.shapes.roundedCornersSmall
     TangemButtonSize.Action -> TangemTheme.shapes.roundedCornersMedium
@@ -64,8 +63,8 @@ internal fun TangemButtonSize.toContentPadding(icon: TangemButtonIconPosition): 
 
     return when (this) {
         TangemButtonSize.Default -> PaddingValues(
-            top = TangemTheme.dimens.spacing14,
-            bottom = TangemTheme.dimens.spacing14,
+            top = TangemTheme.dimens.spacing12,
+            bottom = TangemTheme.dimens.spacing12,
             start = horizontalPadding.first,
             end = horizontalPadding.second,
         )
