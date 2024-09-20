@@ -16,6 +16,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.ValidatorState
+import com.tangem.features.staking.impl.presentation.ui.ValidatorImagePlaceholder
 import com.tangem.utils.extensions.orZero
 
 @Composable
@@ -45,6 +46,7 @@ internal fun ValidatorBlock(validatorState: ValidatorState, onClick: () -> Unit)
                     )
                 },
                 imageUrl = validatorState.chosenValidator.image.orEmpty(),
+                onImageError = { ValidatorImagePlaceholder() },
             )
         }
     }

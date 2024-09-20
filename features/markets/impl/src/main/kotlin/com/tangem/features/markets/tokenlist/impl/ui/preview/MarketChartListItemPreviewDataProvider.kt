@@ -22,6 +22,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             chardData = MarketChartRawData(
                 y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
             ),
+            isUnder100kMarketCap = false,
         ),
         MarketsListItemUM(
             id = "1",
@@ -34,6 +35,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             trendPercentText = "12.43%",
             trendType = PriceChangeType.NEUTRAL,
             chardData = null,
+            isUnder100kMarketCap = false,
         ),
         MarketsListItemUM(
             id = "1",
@@ -48,6 +50,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             chardData = MarketChartRawData(
                 y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
             ),
+            isUnder100kMarketCap = false,
         ),
         MarketsListItemUM(
             id = "1",
@@ -62,6 +65,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             chardData = MarketChartRawData(
                 y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
             ),
+            isUnder100kMarketCap = false,
         ),
         MarketsListItemUM(
             id = "1",
@@ -76,6 +80,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             chardData = MarketChartRawData(
                 y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
             ),
+            isUnder100kMarketCap = false,
         ),
         MarketsListItemUM(
             id = "1",
@@ -90,6 +95,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             chardData = MarketChartRawData(
                 y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
             ),
+            isUnder100kMarketCap = false,
         ),
     ),
 )
