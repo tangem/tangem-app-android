@@ -98,6 +98,7 @@ internal sealed class StakingStates {
             val transactionDoneState: TransactionDoneState,
             val isApprovalNeeded: Boolean,
             val reduceAmountBy: BigDecimal?,
+            val balanceState: BalanceState?,
         ) : ConfirmationState()
 
         data class Empty(
