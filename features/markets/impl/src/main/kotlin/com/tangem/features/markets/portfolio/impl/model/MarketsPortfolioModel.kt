@@ -92,7 +92,7 @@ internal class MarketsPortfolioModel @Inject constructor(
             onAddToPortfolioVisibilityChange = ::onAddToPortfolioBSVisibilityChange,
             onWalletSelectorVisibilityChange = ::onWalletSelectorVisibilityChange,
             onNetworkSwitchClick = ::onNetworkSwitchClick,
-            onWalletSelect = {
+            onAnotherWalletSelect = {
                 onWalletSelect(it)
                 // === Analytics ===
                 analyticsEventHandler.send(
