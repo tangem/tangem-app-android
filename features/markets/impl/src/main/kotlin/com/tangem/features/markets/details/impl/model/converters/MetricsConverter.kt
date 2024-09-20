@@ -32,7 +32,9 @@ internal class MetricsConverter(
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_market_capitalization),
+                                    title = resourceReference(
+                                        R.string.markets_token_details_market_capitalization_full,
+                                    ),
                                     body = resourceReference(
                                         R.string.markets_token_details_market_capitalization_description,
                                     ),
@@ -46,7 +48,7 @@ internal class MetricsConverter(
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_market_rating),
+                                    title = resourceReference(R.string.markets_token_details_market_rating_full),
                                     body = resourceReference(R.string.markets_token_details_market_rating_description),
                                 ),
                             )
@@ -58,7 +60,7 @@ internal class MetricsConverter(
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_trading_volume),
+                                    title = resourceReference(R.string.markets_token_details_trading_volume_full),
                                     body = resourceReference(
                                         R.string.markets_token_details_trading_volume_24h_description,
                                     ),
@@ -72,7 +74,9 @@ internal class MetricsConverter(
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_fully_diluted_valuation),
+                                    title = resourceReference(
+                                        R.string.markets_token_details_fully_diluted_valuation_full,
+                                    ),
                                     body = resourceReference(
                                         R.string.markets_token_details_fully_diluted_valuation_description,
                                     ),
@@ -86,7 +90,7 @@ internal class MetricsConverter(
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_circulating_supply),
+                                    title = resourceReference(R.string.markets_token_details_circulating_supply_full),
                                     body = resourceReference(
                                         R.string.markets_token_details_circulating_supply_description,
                                     ),
@@ -100,7 +104,7 @@ internal class MetricsConverter(
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_total_supply),
+                                    title = resourceReference(R.string.markets_token_details_total_supply_full),
                                     body = resourceReference(R.string.markets_token_details_total_supply_description),
                                 ),
                             )
