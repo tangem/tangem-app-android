@@ -719,8 +719,6 @@
   <string name="staking_reward_schedule_block">Block</string>
   <string name="staking_reward_schedule_day">Tag</string>
   <string name="staking_reward_schedule_each_day">Täglich</string>
-  <string name="staking_reward_schedule_each_minute">Minütlich</string>
-  <string name="staking_reward_schedule_each_sec">Alle ~ %1$s Sek.</string>
   <string name="staking_reward_schedule_epoch">Epoche</string>
   <string name="staking_reward_schedule_era">Ära</string>
   <string name="staking_reward_schedule_hour">Stunde</string>
