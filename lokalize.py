@@ -9,7 +9,7 @@
 # 5) Use script when you need to download translations:
 # > python3 lokalize.py
 # In case you want to filter languages, just add --langs argument with specific values
-# > python3 lokalize.py --langs 'en' 'ru'
+# > python3 lokalize.py --langs en,ru
 
 import os
 import urllib.request
@@ -25,10 +25,10 @@ config = configparser.ConfigParser()
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--langs",
-    nargs="*",
+    nargs='?',
     type=str,
-    help="--langs 'en' 'ru'",
-    default=[],
+    help="--langs en,ru",
+    default='',
 )
 
 config_file_path = "local.properties"
@@ -39,7 +39,7 @@ token_key = "lokalise.token"
 directory_prefix = "core/res/src/main/res/values-%LANG_ISO%/"
 
 if not os.path.isfile(config_file_path):
-    print("{config_file_path} not found!")
+    print(f"{config_file_path} not found!")
 else:
     with open(config_file_path) as stream:
         config.read_string(f'[{section_default}]\n' + stream.read())
@@ -50,7 +50,7 @@ else:
     elif api_token is None:
         print(f"Key '{token_key}' not found in file {config_file_path}")
     else:
-        print(f"Found project: {project_id_key}")
+        print(f"Found project: {project_id}")
         print(f"Found token: {api_token}")
 
         folder_path = "."
@@ -68,7 +68,7 @@ else:
         response = client.download_files(project_id, {
             "format": "xml",
             "original_filenames": True,
-            "filter_langs": args.langs,
+            "filter_langs": list(filter(None, args.langs.split(",") if args.langs is not None else "")),
             "directory_prefix": directory_prefix,
             "filter_data": ["translated"]
         })
