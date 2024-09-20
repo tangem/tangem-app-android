@@ -9,6 +9,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketChartListResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.TangemTechApi.Companion.marketsQuoteFields
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketUpdateRequest
 import com.tangem.pagination.Batch
@@ -70,7 +71,7 @@ internal class MarketsBatchUpdateFetcher(
                         tangemTechApi.getQuotes(
                             currencyId = updateRequest.currencyId,
                             coinIds = idsToUpdate.map { it.second }.flatten().joinToString(separator = ","),
-                            fields = quoteFields.joinToString(separator = ","),
+                            fields = marketsQuoteFields.joinToString(separator = ","),
                         ).getOrThrow()
                     }
                 }
@@ -119,14 +120,5 @@ internal class MarketsBatchUpdateFetcher(
             onError()
             throw e
         }
-    }
-
-    companion object {
-        private val quoteFields = listOf(
-            "price",
-            "priceChange24h",
-            "priceChange1w",
-            "priceChange30d",
-        )
     }
 }
