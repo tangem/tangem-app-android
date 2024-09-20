@@ -38,4 +38,6 @@ sealed interface LegacyAction : Action {
         val errorMessage: String,
         val scanResponse: ScanResponse,
     ) : LegacyAction
+
+    data object PrepareDetailsScreen : LegacyAction
 }
