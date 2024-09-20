@@ -20,6 +20,7 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
         actionTypeToOverwrite: StakingActionCommonType? = null,
         pendingAction: PendingAction? = null,
         pendingActions: ImmutableList<PendingAction>? = null,
+        balanceState: BalanceState? = null,
     )
 
     fun onActionClick()
