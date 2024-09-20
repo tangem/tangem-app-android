@@ -278,7 +278,7 @@ private fun ActiveStakingBlock(
         imageUrl = balance.getImage(),
         iconRes = icon,
         iconTint = iconTint,
-        showPendingIcon = balance.isPending,
+        subtitleEndIconRes = R.drawable.ic_staking_pending_transaction.takeIf { balance.isPending },
         onImageError = { ValidatorImagePlaceholder() },
         modifier = modifier
             .background(TangemTheme.colors.background.action)

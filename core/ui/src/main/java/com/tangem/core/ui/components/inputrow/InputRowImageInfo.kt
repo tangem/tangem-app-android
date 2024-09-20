@@ -53,7 +53,7 @@ fun InputRowImageInfo(
     captionColor: Color = TangemTheme.colors.text.tertiary,
     iconTint: Color = TangemTheme.colors.icon.informative,
     isGrayscaleImage: Boolean = false,
-    showPendingIcon: Boolean = false,
+    @DrawableRes subtitleEndIconRes: Int? = null,
     @DrawableRes iconEndRes: Int? = null,
     onImageError: (@Composable () -> Unit)? = null,
 ) {
@@ -78,7 +78,7 @@ fun InputRowImageInfo(
             subtitleColor = subtitleColor,
             captionColor = captionColor,
             isGrayscaleImage = isGrayscaleImage,
-            showPendingIcon = showPendingIcon,
+            subtitleEndIconRes = subtitleEndIconRes,
             iconEndRes = iconEndRes,
             onImageError = onImageError,
         ) {
