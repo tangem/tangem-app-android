@@ -120,7 +120,7 @@
   <string name="common_go_to_provider">Перейти до провайдера</string>
   <string name="common_go_to_token">Перейти до токену</string>
   <string name="common_import">Імпортувати</string>
-  <string name="common_in_progress">процесі</string>
+  <string name="common_in_progress">В процесі</string>
   <string name="common_later">Пізніше</string>
   <string name="common_left">Залишилося %1$s</string>
   <string name="common_locked">Заблокований</string>
@@ -357,6 +357,7 @@
   <string name="markets_common_my_portfolio">Моє портфоліо</string>
   <string name="markets_common_title">Маркет</string>
   <string name="markets_generate_addresses_notification">Щоб згенерувати адреси для обраних мереж, потрібно відсканувати свою картку Tangem</string>
+  <string name="markets_hint">Щоб додати токени, потягніть вгору або торкніться панелі пошуку</string>
   <string name="markets_insights_info_description_message">Дані цього розділу отримані з наступних мереж: %s</string>
   <string name="markets_loading_error_title">Не вдалося завантажити дані...</string>
   <string name="markets_loading_no_data_title">Немає даних</string>
@@ -367,13 +368,13 @@
   <string name="markets_search_token_no_result_title">Жодного результату</string>
   <string name="markets_select_network">Виберіть мережу</string>
   <string name="markets_select_wallet">Оберіть гаманець</string>
-  <string name="markets_selector_interval_1m_title">1 міс.</string>
-  <string name="markets_selector_interval_1y_title">1 рік</string>
-  <string name="markets_selector_interval_24h_title">24 год.</string>
-  <string name="markets_selector_interval_3m_title">3 міс.</string>
-  <string name="markets_selector_interval_6m_title">6 міс.</string>
+  <string name="markets_selector_interval_1m_title">1м</string>
+  <string name="markets_selector_interval_1y_title">1р</string>
+  <string name="markets_selector_interval_24h_title">24г</string>
+  <string name="markets_selector_interval_3m_title">3м</string>
+  <string name="markets_selector_interval_6m_title">6м</string>
   <string name="markets_selector_interval_7d_title">7д</string>
-  <string name="markets_selector_interval_all_title">Увесь</string>
+  <string name="markets_selector_interval_all_title">Усе</string>
   <string name="markets_sort_by_experienced_buyers_title">Досвідчені покупці</string>
   <string name="markets_sort_by_rating_title">За рейтингом</string>
   <string name="markets_sort_by_title">Сортувати за</string>
@@ -390,11 +391,12 @@
   <string name="markets_token_details_blockchain_site">Веб-сайт</string>
   <string name="markets_token_details_buy_pressure">Давлення покупця</string>
   <string name="markets_token_details_buy_pressure_description">Різниця між обсягом покупців та обсягом продавців</string>
+  <string name="markets_token_details_buy_pressure_full">Давлення покупця</string>
   <string name="markets_token_details_circulating_supply">Циркуляційний запас</string>
   <string name="markets_token_details_circulating_supply_description">Загальна кількість монет, які доступні для торгівлі та перебувають в обігу на ринку</string>
   <string name="markets_token_details_experienced_buyers">Досвідчені покупці</string>
   <string name="markets_token_details_experienced_buyers_description">Мережеві покупці з додатковою вимогою мати не менше 100 вихідних транзакцій</string>
-  <string name="markets_token_details_fully_diluted_valuation">Повністю розведена ринкова капіталізація</string>
+  <string name="markets_token_details_fully_diluted_valuation">Повн. розведена кап.</string>
   <string name="markets_token_details_fully_diluted_valuation_description">Загальна теоретична вартість криптовалюти, якщо всі монети, які могли б існувати, перебувають в обігу, включаючи ті, що не перебувають в обігу в даний час</string>
   <string name="markets_token_details_genesis_date">Дата створення</string>
   <string name="markets_token_details_high">Високий</string>
@@ -661,6 +663,7 @@
   <string name="settings_forget_wallet_footer">Це призведе до видалення гаманця з застосунку. Сам гаманець можна додати знову.</string>
   <string name="settings_wallet_name_title">Ім\'я</string>
   <string name="staking_amount_requirement_error">Сума для стейкінгу має бути не менше %s</string>
+  <string name="staking_amount_tron_integer_error">Сума стейкінгу буде округлена до %1$s TRX відповідно до правил мережі.</string>
   <string name="staking_claim_unstaked">Зняти кошти</string>
   <string name="staking_details_annual_percentage_rate">Процентна ставка</string>
   <string name="staking_details_annual_percentage_rate_info">Річний відсоток, який ви можете отримати, беручи участь у стейкінгу.</string>
@@ -733,6 +736,7 @@
   <string name="staking_transaction_in_progress_text">Транзакція обробляється! Наразі триває перевірка в блокчейні. Це може зайняти кілька хвилин.</string>
   <string name="staking_unbonding">Розблокування</string>
   <string name="staking_unlocked_locked">Розблокувати</string>
+  <string name="staking_unlocking">Розблокування</string>
   <string name="staking_unstaked">Вивід зі стейкінгу</string>
   <string name="staking_unstaking">Зняти зі стейкінгу</string>
   <string name="staking_unstaking_item_name">Виведення зі стейкінгу %s</string>
@@ -875,6 +879,8 @@
   <string name="warning_backup_errors_title">Помилка активації</string>
   <string name="warning_beacon_chain_retirement_content">За рішенням розробників мережі BNB стандарт BEP-2 перестане підтримуватись у червні 2024 року. Щоб не втратити свої активи, їх необхідно конвертувати у стандарт BEP-20. Використовуйте функцію обміну, щоб перевести їх у мережу BNB Smart Chain.</string>
   <string name="warning_beacon_chain_retirement_title">Відключення мережі BNB Beacon Chain</string>
+  <string name="warning_blocked_funds_for_fee_message">Будь ласка, поповніть рахунок на %1$s для покриття комісії мережі</string>
+  <string name="warning_blocked_funds_for_fee_title">Недостатньо коштів для покриття комісії мережі</string>
   <string name="warning_button_could_be_better">Можна краще</string>
   <string name="warning_button_like_it">Вподобати</string>
   <string name="warning_button_ok">Зрозуміло!</string>
