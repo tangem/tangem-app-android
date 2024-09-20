@@ -163,6 +163,7 @@ private fun ContinueButton(
         showProgress = false,
         size = TangemButtonSize.Default,
         colors = TangemButtonsDefaults.primaryButtonColors,
+        textStyle = TangemTheme.typography.subtitle1,
         onClick = onClick,
         animateContentChange = true,
     )
