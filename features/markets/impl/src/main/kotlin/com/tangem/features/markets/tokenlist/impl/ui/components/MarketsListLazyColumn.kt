@@ -22,6 +22,7 @@ import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
 import kotlinx.coroutines.launch
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
+private const val LOAD_NEXT_PAGE_ON_END_INDEX_SEARCH = 25
 private const val TOKEN_LAZY_LIST_ID_SEPARATOR = "***"
 
 @Composable
@@ -95,7 +96,7 @@ internal fun MarketsListLazyColumn(
                         )
                     }
 
-                    if (isInSearchMode && state.showUnder100kTokens.not()) {
+                    if (isInSearchMode && state.showUnder100kTokensNotification) {
                         item(key = "show tokens under 100k".hashCode()) {
                             ShowTokensUnder100kItem(
                                 onShowTokensClick = state.onShowTokensUnder100kClicked,
@@ -112,10 +113,15 @@ internal fun MarketsListLazyColumn(
 
     InfiniteListHandler(
         listState = lazyListState,
-        buffer = LOAD_NEXT_PAGE_ON_END_INDEX,
+        buffer = if (isInSearchMode) {
+            LOAD_NEXT_PAGE_ON_END_INDEX_SEARCH
+        } else {
+            LOAD_NEXT_PAGE_ON_END_INDEX
+        },
+        triggerLoadMoreCheckOnItemsCountChange = true,
         onLoadMore = remember(state) {
             {
-                if (state is ListUM.Content && state.showUnder100kTokens) {
+                if (state is ListUM.Content && state.showUnder100kTokensNotification.not()) {
                     state.loadMore()
                     true
                 } else {
