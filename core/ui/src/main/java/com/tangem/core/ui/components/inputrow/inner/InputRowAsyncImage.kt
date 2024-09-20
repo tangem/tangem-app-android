@@ -18,9 +18,15 @@ import com.tangem.core.ui.utils.getGreyScaleColorFilter
  * @param imageUrl url of the image
  * @param modifier modifier
  * @param isGrayscale whether to apply grayscale filter
+ * @param onImageError composable to show if image loading failed
  */
 @Composable
-internal fun InputRowAsyncImage(imageUrl: String, modifier: Modifier = Modifier, isGrayscale: Boolean = false) {
+internal fun InputRowAsyncImage(
+    imageUrl: String,
+    modifier: Modifier = Modifier,
+    isGrayscale: Boolean = false,
+    onImageError: (@Composable () -> Unit)? = null,
+) {
     val (alpha, colorFilter) = getGreyScaleColorFilter(isGrayscale = isGrayscale)
     SubcomposeAsyncImage(
         modifier = modifier,
@@ -33,7 +39,7 @@ internal fun InputRowAsyncImage(imageUrl: String, modifier: Modifier = Modifier,
             .build(),
         loading = { LoadingIcon() },
         error = {
-            Box(
+            onImageError?.invoke() ?: Box(
                 modifier = Modifier
                     .background(
                         color = TangemTheme.colors.background.tertiary,

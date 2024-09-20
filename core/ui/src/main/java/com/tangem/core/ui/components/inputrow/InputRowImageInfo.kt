@@ -36,6 +36,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param isGrayscaleImage whether to display grayscale image
  * @param showPendingIcon whether to show pending icon
  * @param iconEndRes icon to end of row
+ * @param onImageError composable to show if image loading failed
  */
 @Suppress("LongParameterList")
 @Composable
@@ -54,6 +55,7 @@ fun InputRowImageInfo(
     isGrayscaleImage: Boolean = false,
     showPendingIcon: Boolean = false,
     @DrawableRes iconEndRes: Int? = null,
+    onImageError: (@Composable () -> Unit)? = null,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
@@ -78,6 +80,7 @@ fun InputRowImageInfo(
             isGrayscaleImage = isGrayscaleImage,
             showPendingIcon = showPendingIcon,
             iconEndRes = iconEndRes,
+            onImageError = onImageError,
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
