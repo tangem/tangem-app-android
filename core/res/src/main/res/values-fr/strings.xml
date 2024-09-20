@@ -382,6 +382,7 @@
   <string name="markets_token_details_blockchain_site">Site web</string>
   <string name="markets_token_details_buy_pressure">Pression d\'achat</string>
   <string name="markets_token_details_buy_pressure_description">La différence entre le volume des acheteurs et le volume des vendeurs</string>
+  <string name="markets_token_details_buy_pressure_full">Pression d\'achat</string>
   <string name="markets_token_details_circulating_supply">Approvisionnement en circulation</string>
   <string name="markets_token_details_circulating_supply_description">Le nombre total de pièces disponibles pour le trading et en circulation sur le marché</string>
   <string name="markets_token_details_experienced_buyers">Acheteurs expérimentés</string>
