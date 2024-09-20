@@ -383,6 +383,7 @@
   <string name="markets_token_details_blockchain_site">Webseite</string>
   <string name="markets_token_details_buy_pressure">Kaufdruck</string>
   <string name="markets_token_details_buy_pressure_description">Die Differenz zwischen Käufer- und Verkäufervolumen</string>
+  <string name="markets_token_details_buy_pressure_full">Kaufdruck</string>
   <string name="markets_token_details_circulating_supply">Umlaufmenge</string>
   <string name="markets_token_details_circulating_supply_description">Die Gesamtzahl der Coins, die für den Handel verfügbar sind und auf dem Markt zirkulieren</string>
   <string name="markets_token_details_experienced_buyers">Erfahrene Käufer</string>
@@ -650,6 +651,8 @@
   <string name="staking_amount_requirement_error">Die Anzahl der zu stakenden Krypros muss mindesten %s betragen</string>
   <string name="staking_amount_tron_integer_error">Der Stakingbetrag wird aufgrund der Netzwerkregeln auf %1$s TRX aufgerundet.</string>
   <string name="staking_claim_unstaked">Nicht gestakte beanspruche</string>
+  <string name="staking_details_account_fee">Gebühr für das Staking-Konto</string>
+  <string name="staking_details_account_fee_info">Ein Staking-Konto ist ein spezielles Konto, auf dem eingesetzte SOL-Token gelagert werden. Es wird erstellt, wenn du deine Token an einen Validator delegierst, um an der Transaktionsvalidierung teilzunehmen und Belohnungen zu verdienen. Für die Erstellung des Staking-Kontos wird eine geringe Gebühr erhoben, die nach Abschluss des Stakings zurückgegeben wird.</string>
   <string name="staking_details_annual_percentage_rate">Jährliche prozentuale Rendite</string>
   <string name="staking_details_annual_percentage_rate_info">Die jährliche prozentuale Rendite, die du durch die Teilnahme am Staking erzielen kannst.</string>
   <string name="staking_details_apr">Effektiver Jahreszins</string>
@@ -721,6 +724,7 @@
   <string name="staking_transaction_in_progress_text">Die Transaktion wird bearbeitet! Derzeit findet eine Validierung in der Blockchain statt. Dies kann einige Minuten dauern.</string>
   <string name="staking_unbonding">Lösen der Bindungen</string>
   <string name="staking_unlocked_locked">Gelocktes unlocken</string>
+  <string name="staking_unlocking">Entsperren</string>
   <string name="staking_unstaked">Unstaken</string>
   <string name="staking_unstaking">Staking beenden</string>
   <string name="staking_unstaking_item_name">Unstake Assets %s</string>
@@ -863,6 +867,8 @@
   <string name="warning_backup_errors_title">Aktivierungsfehler</string>
   <string name="warning_beacon_chain_retirement_content">Laut den Entwicklern des BNB-Netzes wird die Unterstützung für den BEP-2-Standard im Juni 2024 enden. Um den Verlust von Vermögenswerten mit diesem Standard zu vermeiden, konvertiere bitte in den BEP-20 Standard. Nutze gerne unseren Swap-Service, um sie auf das BNB Smart Chain Netzwerk zu übertragen.</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain wird abgeschaltet</string>
+  <string name="warning_blocked_funds_for_fee_message">Bitte zahle ein paar %1$s ein, um die Netzwerkgebühr zu decken</string>
+  <string name="warning_blocked_funds_for_fee_title">Unzureichende Mittel zur Deckung der Netzgebühr</string>
   <string name="warning_button_could_be_better">Ausbaufähig</string>
   <string name="warning_button_like_it">Gefällt mir</string>
   <string name="warning_button_ok">OK, habe ich verstanden!</string>
