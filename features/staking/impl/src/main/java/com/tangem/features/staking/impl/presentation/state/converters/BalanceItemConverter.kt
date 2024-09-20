@@ -22,6 +22,7 @@ internal class BalanceItemConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val yield: Yield,
 ) : Converter<BalanceItem, BalanceState?> {
+
     override fun convert(value: BalanceItem): BalanceState? {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val appCurrency = appCurrencyProvider()
@@ -37,7 +38,7 @@ internal class BalanceItemConverter(
         val title = value.type.getTitle(validator?.name)
         return title?.let {
             BalanceState(
-                id = value.id,
+                groupId = value.groupId,
                 validator = validator,
                 title = title,
                 subtitle = getSubtitle(value),
@@ -59,7 +60,8 @@ internal class BalanceItemConverter(
                 ),
                 rawCurrencyId = value.rawCurrencyId,
                 pendingActions = value.pendingActions.toPersistentList(),
-                isClickable = value.type.isClickable(),
+                isClickable = value.type.isClickable() && !value.isPending,
+                isPending = value.isPending,
             )
         }
     }
