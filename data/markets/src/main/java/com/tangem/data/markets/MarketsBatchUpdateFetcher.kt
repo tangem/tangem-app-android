@@ -125,7 +125,6 @@ internal class MarketsBatchUpdateFetcher(
                         MarketsDataAnalyticsEvent.ChartNullValuesError(
                             requestPath = "coins/history_preview",
                             requestParams = mapOf(
-                                "coin_ids" to response.keys.joinToString(separator = ","),
                                 "currency" to request.currency,
                                 "interval" to request.interval.toRequestParam(),
                             ),
