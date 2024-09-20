@@ -14,8 +14,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.common.*
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 // region TextButton
 /**
@@ -102,6 +102,7 @@ fun PrimaryButton(
         enabled = enabled,
         showProgress = showProgress,
         size = size,
+        textStyle = TangemTheme.typography.subtitle1,
     )
 }
 
@@ -127,6 +128,7 @@ fun PrimaryButtonIconEnd(
         enabled = enabled,
         showProgress = showProgress,
         size = size,
+        textStyle = TangemTheme.typography.subtitle1,
     )
 }
 
@@ -153,6 +155,7 @@ fun PrimaryButtonIconEndTwoLines(
         showProgress = showProgress,
         additionalText = additionalText,
         size = TangemButtonSize.TwoLines,
+        textStyle = TangemTheme.typography.subtitle1,
     )
 }
 
@@ -176,6 +179,7 @@ fun PrimaryButtonIconStart(
         colors = TangemButtonsDefaults.primaryButtonColors,
         enabled = enabled,
         showProgress = showProgress,
+        textStyle = TangemTheme.typography.subtitle1,
     )
 }
 // endregion PrimaryButton
@@ -201,6 +205,7 @@ fun SecondaryButton(
         showProgress = showProgress,
         size = size,
         shape = shape,
+        textStyle = TangemTheme.typography.subtitle1,
     )
 }
 
@@ -224,6 +229,7 @@ fun SecondaryButtonIconEnd(
         colors = TangemButtonsDefaults.secondaryButtonColors,
         enabled = enabled,
         showProgress = showProgress,
+        textStyle = TangemTheme.typography.subtitle1,
     )
 }
 
@@ -247,6 +253,7 @@ fun SecondaryButtonIconStart(
         colors = TangemButtonsDefaults.secondaryButtonColors,
         enabled = enabled,
         showProgress = showProgress,
+        textStyle = TangemTheme.typography.subtitle1,
     )
 }
 // endregion SecondaryButton
