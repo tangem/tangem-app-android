@@ -151,11 +151,6 @@ internal class DefaultMarketsTokenRepository(
                 analyticsEventHandler.send(
                     MarketsDataAnalyticsEvent.ChartNullValuesError(
                         requestPath = "coins/history",
-                        requestParams = mapOf(
-                            "coin_id" to mappedTokenId,
-                            "currency" to fiatCurrencyCode,
-                            "interval" to interval.toRequestParam(),
-                        ),
                     ),
                 )
             },
@@ -190,11 +185,6 @@ internal class DefaultMarketsTokenRepository(
                 analyticsEventHandler.send(
                     MarketsDataAnalyticsEvent.ChartNullValuesError(
                         requestPath = "coins/history_preview",
-                        requestParams = mapOf(
-                            "coin_ids" to mappedTokenId,
-                            "currency" to fiatCurrencyCode,
-                            "interval" to interval.toRequestParam(),
-                        ),
                     ),
                 )
             },

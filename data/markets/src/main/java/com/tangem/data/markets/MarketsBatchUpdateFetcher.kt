@@ -55,7 +55,7 @@ internal class MarketsBatchUpdateFetcher(
                 updateTasks.forEachIndexed { index, deferred ->
                     launch {
                         val res = deferred.await()
-                        checkForNulls(res, updateRequest)
+                        checkForNulls(res)
                         val batchToUpdate = toUpdate[index]
 
                         update {
@@ -117,18 +117,14 @@ internal class MarketsBatchUpdateFetcher(
         )
     }
 
-    private fun checkForNulls(response: TokenMarketChartListResponse, request: TokenMarketUpdateRequest.UpdateChart) {
+    private fun checkForNulls(response: TokenMarketChartListResponse) {
         response.values.forEach { chart ->
             chart.prices.forEach { (_, price) ->
                 if (price == null) {
                     analyticsEventHandler.send(
                         MarketsDataAnalyticsEvent.ChartNullValuesError(
                             requestPath = "coins/history_preview",
-                            requestParams = mapOf(
-                                "currency" to request.currency,
-                                "interval" to request.interval.toRequestParam(),
-                            ),
-                        ).toEvent(),
+                        ),
                     )
 
                     return
