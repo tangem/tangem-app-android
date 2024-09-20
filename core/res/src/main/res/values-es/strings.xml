@@ -382,6 +382,7 @@
   <string name="markets_token_details_blockchain_site">Sitio web</string>
   <string name="markets_token_details_buy_pressure">Presión de compra</string>
   <string name="markets_token_details_buy_pressure_description">La diferencia entre el volumen de compradores y el volumen de vendedores</string>
+  <string name="markets_token_details_buy_pressure_full">Presión de compra</string>
   <string name="markets_token_details_circulating_supply">Suministro circulante</string>
   <string name="markets_token_details_circulating_supply_description">El número total de monedas que están disponibles para el comercio y que circulan en el mercado.</string>
   <string name="markets_token_details_experienced_buyers">Compradores experimentados</string>
