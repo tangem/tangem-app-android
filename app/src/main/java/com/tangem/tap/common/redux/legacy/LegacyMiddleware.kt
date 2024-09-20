@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.feedback.FeedbackEmail
@@ -11,13 +12,23 @@ import com.tangem.tap.common.feedback.RateCanBeBetterEmail
 import com.tangem.tap.common.feedback.SendTransactionFailedEmail
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 
 internal object LegacyMiddleware {
+    private val prepareDetailsScreenJobHolder = JobHolder()
+
     val legacyMiddleware: Middleware<AppState> = { _, _ ->
         { next ->
             { action ->
@@ -84,6 +95,24 @@ internal object LegacyMiddleware {
                                 )
                             }
                         }
+                    }
+                    is LegacyAction.PrepareDetailsScreen -> {
+                        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+                        val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
+
+                        userWalletsListManager.selectedUserWallet
+                            .distinctUntilChanged()
+                            .onEach { selectedUserWallet ->
+                                store.dispatchWithMain(
+                                    DetailsAction.PrepareScreen(
+                                        scanResponse = selectedUserWallet.scanResponse,
+                                        shouldSaveUserWallets = walletsRepository.shouldSaveUserWalletsSync(),
+                                    ),
+                                )
+                            }
+                            .flowOn(Dispatchers.IO)
+                            .launchIn(scope)
+                            .saveIn(prepareDetailsScreenJobHolder)
                     }
                 }
                 next(action)
