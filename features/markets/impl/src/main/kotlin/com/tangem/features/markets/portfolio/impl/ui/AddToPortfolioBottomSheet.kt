@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.util.fastForEachIndexed
@@ -162,6 +163,7 @@ private fun ContinueButton(
         showProgress = false,
         size = TangemButtonSize.Default,
         colors = TangemButtonsDefaults.primaryButtonColors,
+        textStyle = TangemTheme.typography.subtitle1,
         onClick = onClick,
         animateContentChange = true,
     )
@@ -200,10 +202,13 @@ private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifi
                 Text(
                     modifier = Modifier
                         .align(Alignment.CenterVertically)
+                        .weight(1f, fill = false)
                         .alignByBaseline(),
                     text = state.tokenName,
                     style = TangemTheme.typography.body1,
                     color = TangemTheme.colors.text.primary1,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
                 )
                 SpacerW6()
                 Text(
@@ -213,6 +218,8 @@ private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifi
                     text = state.tokenCurrencySymbol,
                     style = TangemTheme.typography.body1,
                     color = TangemTheme.colors.text.tertiary,
+                    overflow = TextOverflow.Visible,
+                    maxLines = 1,
                 )
             }
 
