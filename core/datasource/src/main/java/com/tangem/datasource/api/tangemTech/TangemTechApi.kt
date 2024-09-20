@@ -135,4 +135,13 @@ interface TangemTechApi {
     @ReadTimeout(duration = 5, unit = TimeUnit.SECONDS)
     @GET("networks/providers")
     suspend fun getBlockchainProviders(): Map<String, List<ProviderModel>>
+
+    companion object {
+        val marketsQuoteFields = listOf(
+            "price",
+            "priceChange24h",
+            "priceChange1w",
+            "priceChange30d",
+        )
+    }
 }
