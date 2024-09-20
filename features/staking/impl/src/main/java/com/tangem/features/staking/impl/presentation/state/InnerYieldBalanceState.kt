@@ -22,7 +22,7 @@ internal sealed class InnerYieldBalanceState {
 
 @Immutable
 internal data class BalanceState(
-    val id: String,
+    val groupId: String,
     val title: TextReference,
     val type: BalanceType,
     val subtitle: TextReference?,
@@ -34,4 +34,5 @@ internal data class BalanceState(
     val rawCurrencyId: String?,
     val validator: Yield.Validator?,
     val pendingActions: ImmutableList<PendingAction>,
+    val isPending: Boolean,
 )
