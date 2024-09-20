@@ -7,11 +7,16 @@ import com.tangem.domain.markets.repositories.MarketsTokenRepository
 class GetTokenFullQuotesUseCase(
     private val marketsTokenRepository: MarketsTokenRepository,
 ) {
-    suspend operator fun invoke(appCurrency: AppCurrency, tokenId: String): Either<Unit, TokenQuotes> {
+    suspend operator fun invoke(
+        appCurrency: AppCurrency,
+        tokenId: String,
+        tokenSymbol: String,
+    ): Either<Unit, TokenQuotes> {
         return Either.catch {
             marketsTokenRepository.getTokenQuotes(
                 fiatCurrencyCode = appCurrency.code,
                 tokenId = tokenId,
+                tokenSymbol = tokenSymbol,
             )
         }.mapLeft {}
     }
