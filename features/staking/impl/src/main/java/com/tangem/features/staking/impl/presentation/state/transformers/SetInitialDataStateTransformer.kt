@@ -10,6 +10,7 @@ import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.serialization.SerializedBigDecimal
+import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
@@ -19,7 +20,6 @@ import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
-import com.tangem.lib.crypto.BlockchainUtils.isCosmos
 import com.tangem.lib.crypto.BlockchainUtils.isPolkadot
 import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
@@ -38,6 +38,7 @@ internal class SetInitialDataStateTransformer(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val balancesToShowProvider: Provider<List<BalanceItem>>,
 ) : Transformer<StakingUiState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -60,6 +61,7 @@ internal class SetInitialDataStateTransformer(
         YieldBalancesConverter(
             cryptoCurrencyStatusProvider,
             appCurrencyProvider,
+            balancesToShowProvider,
             yield,
         )
     }
@@ -229,6 +231,7 @@ internal class SetInitialDataStateTransformer(
             pendingActions = null,
             isApprovalNeeded = isApprovalNeeded,
             reduceAmountBy = null,
+            balanceState = null,
         )
     }
 
@@ -255,13 +258,7 @@ internal class SetInitialDataStateTransformer(
 
     private fun getRewardScheduleText(rewardSchedule: Yield.Metadata.RewardSchedule): TextReference? {
         return when (rewardSchedule) {
-            Yield.Metadata.RewardSchedule.BLOCK -> {
-                val networkId = cryptoCurrencyStatusProvider().currency.network.id.value
-                when {
-                    isCosmos(networkId) -> resourceReference(R.string.staking_reward_schedule_each_minute)
-                    else -> resourceReference(R.string.staking_reward_schedule_each_day)
-                }
-            }
+            Yield.Metadata.RewardSchedule.BLOCK -> resourceReference(R.string.staking_reward_schedule_block)
             Yield.Metadata.RewardSchedule.WEEK -> resourceReference(R.string.staking_reward_schedule_week)
             Yield.Metadata.RewardSchedule.HOUR -> resourceReference(R.string.staking_reward_schedule_hour)
             Yield.Metadata.RewardSchedule.DAY -> resourceReference(R.string.staking_reward_schedule_each_day)
