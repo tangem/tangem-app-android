@@ -45,15 +45,14 @@ data class YieldBalanceItem(
 )
 
 data class BalanceItem(
-    val id: String,
+    val groupId: String,
     val type: BalanceType,
     val amount: BigDecimal,
-    val pricePerShare: BigDecimal,
     val rawCurrencyId: String?,
-    val rawNetworkId: String,
     val validatorAddress: String?,
     val date: DateTime?,
     val pendingActions: List<PendingAction>,
+    val isPending: Boolean,
 )
 
 data class PendingAction(
