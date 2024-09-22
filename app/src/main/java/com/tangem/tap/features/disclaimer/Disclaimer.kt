@@ -24,12 +24,6 @@ abstract class BaseDisclaimer(
     override suspend fun isAccepted(): Boolean = dataProvider.isAccepted()
 }
 
-class DummyDisclaimer : Disclaimer {
-    override fun getUri(): Uri = Uri.parse("https://tangem.com/tangem_tos.html")
-    override suspend fun accept() {}
-    override suspend fun isAccepted(): Boolean = false
-}
-
 class TangemDisclaimer(dataProvider: DisclaimerDataProvider) : BaseDisclaimer(dataProvider) {
     override fun getUri(): Uri = Uri.parse("$baseUrl/tangem_tos.html")
 }
