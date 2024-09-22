@@ -10,8 +10,6 @@ import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectMiddleware
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
-import com.tangem.tap.features.disclaimer.redux.DisclaimerMiddleware
-import com.tangem.tap.features.disclaimer.redux.DisclaimerState
 import com.tangem.tap.features.home.redux.HomeMiddleware
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteMiddleware
@@ -43,7 +41,6 @@ data class AppState(
     val onboardingOtherCardsState: OnboardingOtherCardsState = OnboardingOtherCardsState(),
     val twinCardsState: TwinCardsState = TwinCardsState(),
     val detailsState: DetailsState = DetailsState(),
-    val disclaimerState: DisclaimerState = DisclaimerState(),
     val tokensState: TokensState = TokensState(),
     val walletConnectState: WalletConnectState = WalletConnectState(),
     val welcomeState: WelcomeState = WelcomeState(),
@@ -75,7 +72,6 @@ data class AppState(
                 OnboardingOtherCardsMiddleware.handler,
                 TwinCardsMiddleware.handler,
                 DetailsMiddleware().detailsMiddleware,
-                DisclaimerMiddleware().disclaimerMiddleware,
                 WalletConnectMiddleware().walletConnectMiddleware,
                 BackupMiddleware().backupMiddleware,
                 WelcomeMiddleware().middleware,
