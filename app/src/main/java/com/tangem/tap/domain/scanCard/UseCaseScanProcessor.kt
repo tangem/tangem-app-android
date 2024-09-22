@@ -59,11 +59,7 @@ internal object UseCaseScanProcessor {
                 ),
             )
             add(AnalyticsChain(Basic.CardWasScanned(analyticsSource)))
-            val pushNotificationsToggles =
-                store.inject(getDependency = DaggerGraphState::pushNotificationsFeatureToggles)
-            if (pushNotificationsToggles.isPushNotificationsEnabled) {
-                add(DisclaimerChain(store, disclaimerWillShow))
-            }
+            add(DisclaimerChain(store, disclaimerWillShow))
             add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager))
         }
 
