@@ -45,7 +45,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.details.DetailsFeatureToggles
-import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
@@ -188,9 +187,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val appRouter: AppRouter
         get() = entryPoint.getAppRouter()
 
-    private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles
-        get() = entryPoint.getPushNotificationsFeatureToggles()
-
     private val tangemAppLoggerInitializer: TangemAppLoggerInitializer
         get() = entryPoint.getTangemAppLogger()
 
@@ -280,7 +276,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     urlOpener = urlOpener,
                     shareManager = shareManager,
                     appRouter = appRouter,
-                    pushNotificationsFeatureToggles = pushNotificationsFeatureToggles,
                     homeFeatureToggles = homeFeatureToggles,
                     getUserCountryUseCase = getUserCountryUseCase,
                 ),
