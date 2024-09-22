@@ -12,7 +12,6 @@ import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.managetokens.ManageTokensToggles
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
-import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
@@ -28,7 +27,6 @@ import com.tangem.tap.features.details.ui.details.DetailsFragment
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
-import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.main.ui.ModalNotificationBottomSheetFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
@@ -59,7 +57,6 @@ internal class ChildFactory @Inject constructor(
     private val stakingRouter: StakingRouter,
     private val testerRouter: TesterRouter,
     private val detailsFeatureToggles: DetailsFeatureToggles,
-    private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles,
     private val manageTokensToggles: ManageTokensToggles,
     private val pushNotificationRouter: PushNotificationsRouter,
 ) {
@@ -111,15 +108,11 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { SecurityModeFragment() })
             }
             is AppRoute.Disclaimer -> {
-                if (pushNotificationsFeatureToggles.isPushNotificationsEnabled) {
-                    route.asComponentChild(
-                        contextProvider = contextProvider(route, contextFactory),
-                        params = DisclaimerComponent.Params(route.isTosAccepted),
-                        componentFactory = disclaimerComponentFactory,
-                    )
-                } else {
-                    route.asFragmentChild(Provider { DisclaimerFragment() })
-                }
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = DisclaimerComponent.Params(route.isTosAccepted),
+                    componentFactory = disclaimerComponentFactory,
+                )
             }
             is AppRoute.Home -> {
                 route.asFragmentChild(Provider { HomeFragment() })
