@@ -1,21 +1,15 @@
 package com.tangem.tap.domain.scanCard.chains
 
-import arrow.core.left
 import arrow.core.right
+import com.tangem.common.routing.AppRoute
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.core.chain.ResultChain
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.disclaimer.Disclaimer
 import com.tangem.tap.features.disclaimer.createDisclaimer
-import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
-import com.tangem.tap.features.disclaimer.redux.DisclaimerCallback
-import com.tangem.tap.features.disclaimer.redux.DisclaimerSource
-import kotlinx.coroutines.suspendCancellableCoroutine
 import org.rekotlin.Store
-import kotlin.coroutines.resume
 
 /**
  * Handles disclaimer display after the card scanning operation.
@@ -40,31 +34,12 @@ internal class DisclaimerChain(
             previousChainResult.right()
         } else {
             disclaimerWillShow()
-            showDisclaimer(disclaimer, previousChainResult)
-        }
-    }
+// [REDACTED_TODO_COMMENT]
+            store.dispatchNavigationAction {
+                push(route = AppRoute.Disclaimer(isTosAccepted = false))
+            }
 
-    private suspend fun showDisclaimer(disclaimer: Disclaimer, response: ScanResponse): ScanChainResult {
-        store.dispatchOnMain(DisclaimerAction.SetDisclaimer(disclaimer))
-
-        return suspendCancellableCoroutine { continuation ->
-            store.dispatchOnMain(
-                DisclaimerAction.Show(
-                    from = DisclaimerSource.Home,
-                    callback = DisclaimerCallback(
-                        onAccept = {
-                            if (continuation.isActive) {
-                                continuation.resume(response.right())
-                            }
-                        },
-                        onDismiss = {
-                            if (continuation.isActive) {
-                                continuation.resume(ScanChainException.DisclaimerWasCanceled.left())
-                            }
-                        },
-                    ),
-                ),
-            )
+            previousChainResult.right()
         }
     }
 }

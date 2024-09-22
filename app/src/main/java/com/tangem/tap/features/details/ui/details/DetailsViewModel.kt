@@ -7,7 +7,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
@@ -22,8 +21,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
-import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
-import com.tangem.tap.features.disclaimer.redux.DisclaimerSource
 import com.tangem.tap.features.home.LocaleRegionProvider
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.scope
@@ -128,7 +125,9 @@ internal class DetailsViewModel(
     }
 
     private fun navigateToToS() {
-        store.dispatchOnMain(DisclaimerAction.Show(DisclaimerSource.Details))
+        store.dispatchNavigationAction {
+            push(AppRoute.Disclaimer(isTosAccepted = true))
+        }
     }
 
     private fun navigateToReferralProgram() {

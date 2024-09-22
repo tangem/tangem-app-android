@@ -20,10 +20,6 @@
         "version": "5.13.0"
     },
     {
-        "name": "PUSH_NOTIFICATIONS_ENABLED",
-        "version": "5.13.0"
-    },
-    {
         "name": "MARKETS_ENABLED",
         "version": "5.15.0"
     },
