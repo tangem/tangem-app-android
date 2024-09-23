@@ -15,6 +15,7 @@
   <string name="alert_manage_tokens_unsupported_message">Токены в сети %1$s не поддерживаются этой картой из-за ограничений прошивки.</string>
   <string name="alert_troubleshooting_scan_card_title">У вас возникли трудности со сканированием карты?</string>
   <string name="alert_unsupported_card">Эта карта не предназначена для работы с этим приложением</string>
+  <string name="app_settings_default_fee">Комиссия по-умолчанию</string>
   <string name="app_settings_default_fee_footer">Подключите функцию комиссии по умолчанию и при формировании транзакции на отправку средств комиссия будет выставлена автоматически, а экран комиссии пропущен. Вы всегда сможете на него вернуться.</string>
   <string name="app_settings_enable_biometrics_description">Перейдите в настройки, чтобы включить биометрическую аутентификацию в приложении Tangem</string>
   <string name="app_settings_enable_biometrics_title">Включите биометрическую аутентификацию</string>
@@ -178,6 +179,7 @@
   <string name="custom_token_contract_address_input_title">Адрес контракта</string>
   <string name="custom_token_creation_error_invalid_contract_address">Адрес контракта некорректен</string>
   <string name="custom_token_creation_error_network_not_selected">Пожалуйста, выберите сеть</string>
+  <string name="custom_token_creation_error_token_already_exist_message">Этот токен уже добавлен в список</string>
   <string name="custom_token_creation_error_token_already_exist_title">Токен уже существует</string>
   <string name="custom_token_creation_error_wrong_decimals">Десятичное число должно быть действительным целым числом, до %d</string>
   <string name="custom_token_custom_derivation">Своя деривация</string>
@@ -358,7 +360,7 @@
   <string name="markets_loading_error_title">Невозможно загрузить данные</string>
   <string name="markets_loading_no_data_title">Нет данных</string>
   <string name="markets_quick_actions">Быстрые действия</string>
-  <string name="markets_search_header_title">Искать на маркете</string>
+  <string name="markets_search_header_title">Поиск на рынке</string>
   <string name="markets_search_result_title">Результат</string>
   <string name="markets_search_see_tokens_under_100k">Токены с капитализацией меньше 100к USD</string>
   <string name="markets_search_show_tokens">Показать токены</string>
@@ -416,7 +418,9 @@
   <string name="markets_token_details_market_rating">Рейтинг</string>
   <string name="markets_token_details_market_rating_description">Позиция в рейтинге криптовалют среди всех монет на основе рыночной капитализации.</string>
   <string name="markets_token_details_market_rating_full">Рейтинг</string>
-  <string name="markets_token_details_max_supply">Максимальный объем</string>
+  <string name="markets_token_details_max_supply">Макс. объем</string>
+  <string name="markets_token_details_max_supply_description">Максимальное количество монет или токенов, которое может когда-либо существовать для выбранной криптовалюты</string>
+  <string name="markets_token_details_max_supply_full">Максимальный объем</string>
   <string name="markets_token_details_metrics">Метрики</string>
   <string name="markets_token_details_official_links">Официальные ссылки</string>
   <string name="markets_token_details_price_performance">Динамика цены</string>
@@ -424,7 +428,7 @@
   <string name="markets_token_details_security_score">Оценка безопасности</string>
   <string name="markets_token_details_social">Социальные</string>
   <string name="markets_token_details_total_supply">Общ. предл.</string>
-  <string name="markets_token_details_total_supply_description">Максимальное количество монет или токенов, которое может когда-либо существовать для выбранной криптовалюты.</string>
+  <string name="markets_token_details_total_supply_description">Максимальное количество монет или токенов, которое может когда-либо существовать для выбранной криптовалюты</string>
   <string name="markets_token_details_total_supply_full">Общее предложение</string>
   <string name="markets_token_details_trading_volume">Объем торгов (24ч)</string>
   <string name="markets_token_details_trading_volume_24h_description">Общая сумма криптовалюты, которая была продана за последние 24 часа, показывающая уровень активности и ликвидности на рынке.</string>
@@ -536,7 +540,7 @@
   <string name="qr_scanner_camera_denied_title">Доступ к камере запрещен</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message_full">Отправляйте только %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
-  <string name="receive_token_description">Переводите средства с другого кошелька или биржи</string>
+  <string name="receive_token_description">Переводите средства с любого кошелька или биржи</string>
   <string name="referral_button_participate">Участвовать</string>
   <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
   <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Код ошибки: %s. Пожалуйста, попробуйте позже.</string>
@@ -597,6 +601,7 @@
   <string name="send_amount_label">Сумма</string>
   <string name="send_bitcoin_custom_fee_footer">Вы можете установить комиссию за транзакцию, изменив значение в поле Satoshi per vByte.</string>
   <string name="send_custom_amount_fee_footer">Комиссия, которая будет взята за вашу транзакцию. Вы можете выставить своё собственное значение.</string>
+  <string name="send_custom_evm_max_fee">Максимальная комиссия</string>
   <string name="send_custom_evm_max_fee_footer">Это стоимость, которую вы готовы заплатить за каждую единицу газа. Чем выше цена газа, тем быстрее ваша транзакция будет обработана. (Приоритетная комиссия включена)</string>
   <string name="send_custom_evm_priority_fee">Приоритетная комиссия</string>
   <string name="send_custom_evm_priority_fee_footer">Комиссия, которую пользователь может заплатить майнерам или валидаторам за ускорение включения его транзакции в блок.</string>
@@ -685,7 +690,7 @@
   <string name="staking_details_minimum_requirement">Минимальное количество</string>
   <string name="staking_details_no_rewards_to_claim">Нет вознаграждений к получению</string>
   <string name="staking_details_reward_claiming">Способ вознаграждения</string>
-  <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Он может быть автоматическим, при котором вознаграждение само зачисляется вам на адрес или в ручную, когда вознаграждение нужно вывести, создав транзакцию на её получение.</string>
+  <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Оно может зачисляться автоматически на ваш адрес или вручную, когда вознаграждение нужно вывести, создав транзакцию на её получение.</string>
   <string name="staking_details_reward_schedule">Период вознагражения</string>
   <string name="staking_details_reward_schedule_info">Это период, определяющий, когда участники стейкинга получат свои вознаграждения.</string>
   <string name="staking_details_rewards_to_claim">Вознаграждение для получения: %s</string>
@@ -725,14 +730,14 @@
   <string name="staking_revote">Переголосовать</string>
   <string name="staking_reward_claiming_auto">Авто</string>
   <string name="staking_reward_claiming_manual">Вручную</string>
-  <string name="staking_reward_schedule_block">Блок</string>
-  <string name="staking_reward_schedule_day">День</string>
+  <string name="staking_reward_schedule_block">За блок</string>
+  <string name="staking_reward_schedule_day">Ежедневно</string>
   <string name="staking_reward_schedule_each_day">Каждый день</string>
-  <string name="staking_reward_schedule_epoch">Эпоха</string>
-  <string name="staking_reward_schedule_era">Эра</string>
-  <string name="staking_reward_schedule_hour">Час</string>
+  <string name="staking_reward_schedule_epoch">За эпоху</string>
+  <string name="staking_reward_schedule_era">За эру</string>
+  <string name="staking_reward_schedule_hour">Ежечасно</string>
   <string name="staking_reward_schedule_month">Месяц</string>
-  <string name="staking_reward_schedule_week">Неделя</string>
+  <string name="staking_reward_schedule_week">Еженедельно</string>
   <string name="staking_rewards">Вознаграждения</string>
   <string name="staking_stake_locked">Стейкинг закрыт</string>
   <string name="staking_stake_more">Застейкать еще</string>
@@ -815,6 +820,7 @@
   <string name="transaction_history_operation">Операция</string>
   <string name="transaction_history_transaction_from_address">от: %s</string>
   <string name="transaction_history_transaction_to_address">на: %s</string>
+  <string name="transaction_history_transaction_validator">валидатор: %s</string>
   <string name="try_to_load_data_again_button_title">Попробовать снова</string>
   <string name="twin_error_same_card">Вы отсканировали ту же карту. Для создания twin-кошелька вам необходимо отсканировать карту с номером %d</string>
   <string name="twin_error_wrong_twin">Вы отсканировали не ту twin-карту. Пожалуйста, попробуйте отсканировать другую</string>
