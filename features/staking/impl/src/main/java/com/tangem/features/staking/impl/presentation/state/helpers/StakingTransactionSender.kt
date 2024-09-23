@@ -185,7 +185,12 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 type = action?.type,
             ),
         ).getOrElse {
-            analyticsEventHandler.send(StakingAnalyticsEvents.StakingError(state.cryptoCurrencyName))
+            analyticsEventHandler.send(
+                StakingAnalyticsEvents.StakingError(
+                    token = state.cryptoCurrencyName,
+                    errorType = it.javaClass.simpleName,
+                ),
+            )
             onConstructError(it)
             return emptyList()
         }
@@ -248,9 +253,12 @@ internal class StakingTransactionSender @AssistedInject constructor(
                         rawCurrencyId = rawCurrencyId,
                     ),
                 )
-                    .onLeft {
+                    .onLeft { error ->
                         analyticsEventHandler.send(
-                            StakingAnalyticsEvents.StakingError(stateController.value.cryptoCurrencyName),
+                            StakingAnalyticsEvents.StakingError(
+                                token = stateController.value.cryptoCurrencyName,
+                                errorType = error.javaClass.simpleName,
+                            ),
                         )
                         saveUnsubmittedHashUseCase.invoke(
                             transactionId = transactionId,
