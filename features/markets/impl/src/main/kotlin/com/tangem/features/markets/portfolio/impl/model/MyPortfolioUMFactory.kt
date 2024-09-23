@@ -30,9 +30,8 @@ internal class MyPortfolioUMFactory(
     fun create(portfolioData: PortfolioData, portfolioUIData: PortfolioUIData): MyPortfolioUM {
         val addToPortfolioData = portfolioUIData.addToPortfolioData
 
-        val hasAvailableNetworks = addToPortfolioData.availableNetworks?.isEmpty() == true
-        val isOnlySingleWalletsAdded = portfolioData.walletsWithCurrencies.keys.all { !it.isMultiCurrency }
-        if (hasAvailableNetworks || isOnlySingleWalletsAdded) return MyPortfolioUM.Unavailable
+        val isOnlyUnavailableNetworks = addToPortfolioData.availableNetworks?.isEmpty() == true
+        if (isOnlyUnavailableNetworks) return MyPortfolioUM.Unavailable
 
         val walletsWithCurrencies = if (addToPortfolioData.availableNetworks == null) {
             portfolioData.walletsWithCurrencies
@@ -79,16 +78,13 @@ internal class MyPortfolioUMFactory(
         val selectedWallet = portfolioData.walletsWithCurrencies.keys
             .firstOrNull { it.walletId == portfolioUIData.selectedWalletId }
             ?: portfolioData.walletsWithCurrencies.keys.firstOrNull { it.isMultiCurrency }
-            ?: error("walletsWithCurrencies don't contain selected wallet or any multi-currency wallet")
 
         val availableNetworks = portfolioUIData.addToPortfolioData.availableNetworks.orEmpty()
 
-        val alreadyAddedNetworks = requireNotNull(
-            value = portfolioData.walletsWithCurrencies.filterAvailableNetworks(availableNetworks)[selectedWallet],
-            lazyMessage = { "walletsWithCurrencies don't contain ${selectedWallet.walletId}" },
-        )
-            .map { it.status.currency.network.backendId }
-            .toSet()
+        val alreadyAddedNetworks = portfolioData.walletsWithCurrencies
+            .filterAvailableNetworks(availableNetworks)[selectedWallet]
+            ?.map { it.status.currency.network.backendId }
+            ?.toSet()
 
         return addToPortfolioBSContentUMFactory.create(
             portfolioData = portfolioData,
