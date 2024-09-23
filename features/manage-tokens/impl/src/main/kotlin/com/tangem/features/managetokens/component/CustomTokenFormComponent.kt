@@ -14,6 +14,7 @@ internal interface CustomTokenFormComponent : ComposableContentComponent {
         val network: SelectedNetwork,
         val derivationPath: SelectedDerivationPath?,
         val formValues: CustomTokenFormValues,
+        val source: ManageTokensSource,
         val onSelectNetworkClick: (CustomTokenFormValues) -> Unit,
         val onSelectDerivationPathClick: (CustomTokenFormValues) -> Unit,
         val onCurrencyAdded: () -> Unit,
