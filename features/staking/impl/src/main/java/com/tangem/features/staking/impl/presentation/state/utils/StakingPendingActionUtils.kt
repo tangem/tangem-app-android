@@ -32,5 +32,5 @@ internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (t
 internal fun isSolanaWithdraw(networkId: String, pendingActions: ImmutableList<PendingAction>?): Boolean {
     val isSolana = isSolana(networkId)
     val isWithdraw = pendingActions?.all { it.type == StakingActionType.WITHDRAW } == true
-    return isSolana && isWithdraw
+    return isSolana && isWithdraw && !pendingActions.isNullOrEmpty()
 }
