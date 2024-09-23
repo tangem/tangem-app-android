@@ -127,7 +127,7 @@ private fun AddFirstTokenContent(state: MyPortfolioUM.AddFirstToken, modifier: M
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         Text(
-            text = "To start buying, exchanging or receiving this asset, add this token to at least 1 network", // FIXME
+            text = stringResource(R.string.markets_add_to_my_portfolio_description),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.tertiary,
         )
