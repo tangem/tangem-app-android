@@ -3,6 +3,7 @@ package com.tangem.features.markets.portfolio.impl.model
 import com.tangem.common.ui.userwallet.converter.UserWalletItemUMConverter
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
@@ -45,47 +46,51 @@ internal class AddToPortfolioBSContentUMFactory(
     fun create(
         portfolioData: PortfolioData,
         portfolioUIData: PortfolioUIData,
-        selectedWallet: UserWallet,
-        alreadyAddedNetworks: Set<String>,
+        selectedWallet: UserWallet?,
+        alreadyAddedNetworks: Set<String>?,
     ): TangemBottomSheetConfig {
         return TangemBottomSheetConfig(
             isShow = portfolioUIData.portfolioBSVisibilityModel.addToPortfolioBSVisibility,
             onDismissRequest = { onAddToPortfolioVisibilityChange(false) },
-            content = AddToPortfolioBSContentUM(
-                selectedWallet = selectedWallet.toSelectedUserWalletItemUM(),
-                selectNetworkUM = SelectNetworkUMConverter(
-                    networksWithToggle = portfolioUIData.addToPortfolioData.associateWithToggle(
-                        userWalletId = selectedWallet.walletId,
-                        alreadyAddedNetworkIds = alreadyAddedNetworks,
-                    ),
-                    alreadyAddedNetworks = alreadyAddedNetworks,
-                    onNetworkSwitchClick = onNetworkSwitchClick,
-                ).convert(value = token),
-                isScanCardNotificationVisible = portfolioUIData.hasMissedDerivations,
-                continueButtonEnabled = portfolioUIData.addToPortfolioData.isUserAddedNetworks(
-                    userWalletId = selectedWallet.walletId,
-                ),
-                onContinueButtonClick = {
-                    val alreadyAddedNetworkIds = portfolioData.walletsWithCurrencies[selectedWallet].orEmpty()
-                        .map { it.status.currency.network.backendId }
-                        .toSet()
-
-                    onContinueClick(
-                        selectedWallet.walletId,
-                        portfolioUIData.addToPortfolioData.getAddedNetworks(
+            content = if (selectedWallet != null && alreadyAddedNetworks != null) {
+                AddToPortfolioBSContentUM(
+                    selectedWallet = selectedWallet.toSelectedUserWalletItemUM(),
+                    selectNetworkUM = SelectNetworkUMConverter(
+                        networksWithToggle = portfolioUIData.addToPortfolioData.associateWithToggle(
                             userWalletId = selectedWallet.walletId,
-                            alreadyAddedNetworkIds = alreadyAddedNetworkIds,
+                            alreadyAddedNetworkIds = alreadyAddedNetworks,
                         ),
-                    )
-                },
-                walletSelectorConfig = crateWalletSelectorBSConfig(
-                    isShow = portfolioUIData.portfolioBSVisibilityModel.walletSelectorBSVisibility,
-                    portfolioData = portfolioData,
-                    selectedWalletId = selectedWallet.walletId,
-                ),
-                isWalletBlockVisible = portfolioData.walletsWithCurrencies
-                    .filterKeys(UserWallet::isMultiCurrency).size > 1,
-            ),
+                        alreadyAddedNetworks = alreadyAddedNetworks,
+                        onNetworkSwitchClick = onNetworkSwitchClick,
+                    ).convert(value = token),
+                    isScanCardNotificationVisible = portfolioUIData.hasMissedDerivations,
+                    continueButtonEnabled = portfolioUIData.addToPortfolioData.isUserAddedNetworks(
+                        userWalletId = selectedWallet.walletId,
+                    ),
+                    onContinueButtonClick = {
+                        val alreadyAddedNetworkIds = portfolioData.walletsWithCurrencies[selectedWallet].orEmpty()
+                            .map { it.status.currency.network.backendId }
+                            .toSet()
+
+                        onContinueClick(
+                            selectedWallet.walletId,
+                            portfolioUIData.addToPortfolioData.getAddedNetworks(
+                                userWalletId = selectedWallet.walletId,
+                                alreadyAddedNetworkIds = alreadyAddedNetworkIds,
+                            ),
+                        )
+                    },
+                    walletSelectorConfig = crateWalletSelectorBSConfig(
+                        isShow = portfolioUIData.portfolioBSVisibilityModel.walletSelectorBSVisibility,
+                        portfolioData = portfolioData,
+                        selectedWalletId = selectedWallet.walletId,
+                    ),
+                    isWalletBlockVisible = portfolioData.walletsWithCurrencies
+                        .filterKeys(UserWallet::isMultiCurrency).size > 1,
+                )
+            } else {
+                TangemBottomSheetConfigContent.Empty
+            },
         )
     }
 
