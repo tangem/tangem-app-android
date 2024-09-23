@@ -104,6 +104,7 @@ internal class StakingAnalyticSender(
             StakingAnalyticsEvents.StakeInProgressScreenOpened(
                 validator = validatorName,
                 token = value.cryptoCurrencySymbol,
+                action = getStakingActionType(value),
             ),
         )
     }

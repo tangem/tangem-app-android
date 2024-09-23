@@ -1,7 +1,10 @@
 package com.tangem.features.staking.impl.presentation.viewmodel
 
 import android.os.Bundle
-import androidx.lifecycle.*
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRoute
@@ -256,8 +259,18 @@ internal class StakingViewModel @Inject constructor(
                     )
                     updateNotifications()
                 },
+                onStakingFeeError = { error ->
+                    analyticsEventHandler.send(
+                        StakingAnalyticsEvents.StakingError(
+                            value.cryptoCurrencyName,
+                            error.javaClass.simpleName,
+                        ),
+                    )
+                    stateController.update(AddStakingErrorTransformer())
+                    updateNotifications(GetFeeError.UnknownError)
+                },
                 onFeeError = { error ->
-                    analyticsEventHandler.send(StakingAnalyticsEvents.StakingError(value.cryptoCurrencyName))
+                    analyticsEventHandler.send(StakingAnalyticsEvents.TransactionError(value.cryptoCurrencyName))
                     stateController.update(AddStakingErrorTransformer())
                     updateNotifications(error)
                 },
@@ -285,7 +298,12 @@ internal class StakingViewModel @Inject constructor(
                     },
                     onConstructError = { error ->
                         Timber.e(error.toString())
-                        analyticsEventHandler.send(StakingAnalyticsEvents.StakingError(value.cryptoCurrencyName))
+                        analyticsEventHandler.send(
+                            StakingAnalyticsEvents.StakingError(
+                                token = value.cryptoCurrencyName,
+                                errorType = error.javaClass.simpleName,
+                            ),
+                        )
                         stakingEventFactory.createStakingErrorAlert(error)
                         stateController.update(SetConfirmationStateResetAssentTransformer)
                     },
@@ -296,7 +314,7 @@ internal class StakingViewModel @Inject constructor(
                     },
                     onSendError = { error ->
                         Timber.e(error.toString())
-                        analyticsEventHandler.send(StakingAnalyticsEvents.StakingError(value.cryptoCurrencyName))
+                        analyticsEventHandler.send(StakingAnalyticsEvents.TransactionError(value.cryptoCurrencyName))
                         stakingEventFactory.createSendTransactionErrorAlert(error)
                         stateController.update(SetConfirmationStateResetAssentTransformer)
                     },
