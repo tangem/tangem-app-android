@@ -413,6 +413,8 @@
   <string name="markets_token_details_market_rating_description">Position dans le classement des crypto-monnaies entre toutes les pièces en fonction de la capitalisation boursière</string>
   <string name="markets_token_details_market_rating_full">Évaluation du marché</string>
   <string name="markets_token_details_max_supply">Approvisionnement maximal</string>
+  <string name="markets_token_details_max_supply_description">Le nombre maximal de pièces ou de jetons pouvant exister pour une crypto-monnaie particulière</string>
+  <string name="markets_token_details_max_supply_full">Approvisionnement maximal</string>
   <string name="markets_token_details_metrics">Métriques</string>
   <string name="markets_token_details_official_links">Official links</string>
   <string name="markets_token_details_price_performance">Performance des prix</string>
