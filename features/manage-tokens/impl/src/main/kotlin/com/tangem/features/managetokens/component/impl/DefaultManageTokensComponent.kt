@@ -61,6 +61,7 @@ internal class DefaultManageTokensComponent @AssistedInject constructor(
                 context = childByContext(componentContext),
                 params = AddCustomTokenComponent.Params(
                     userWalletId = config.userWalletId,
+                    source = params.source,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onCurrencyAdded = model::reloadList,
                 ),
