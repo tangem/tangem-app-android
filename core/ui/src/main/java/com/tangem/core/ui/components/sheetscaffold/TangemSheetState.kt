@@ -207,8 +207,8 @@ class TangemSheetState(
                 absVelocityThreshold = 0.5f,
             ),
             confirmValueChange = confirmValueChange,
-            positionalThreshold = { with(density) { 56.dp.toPx() } },
-            velocityThreshold = { with(density) { 125.dp.toPx() } },
+            positionalThreshold = { with(density) { 156.dp.toPx() } },
+            velocityThreshold = { with(density) { 225.dp.toPx() } },
         )
 
     internal val offset: Float
