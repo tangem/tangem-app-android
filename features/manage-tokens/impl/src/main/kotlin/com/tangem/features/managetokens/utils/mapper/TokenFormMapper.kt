@@ -5,9 +5,9 @@ import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormUM
 
 internal fun CustomTokenFormUM.TokenFormUM.mapToDomainModel(): AddCustomTokenForm.Raw {
     return AddCustomTokenForm.Raw(
-        contractAddress = contractAddress.value,
-        symbol = symbol.value,
-        name = name.value,
-        decimals = decimals.value,
+        contractAddress = fields.getValue(CustomTokenFormUM.TokenFormUM.Field.CONTRACT_ADDRESS).value,
+        symbol = fields.getValue(CustomTokenFormUM.TokenFormUM.Field.SYMBOL).value,
+        name = fields.getValue(CustomTokenFormUM.TokenFormUM.Field.NAME).value,
+        decimals = fields.getValue(CustomTokenFormUM.TokenFormUM.Field.DECIMALS).value,
     )
 }
