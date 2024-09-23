@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideIn
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,7 +18,6 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,7 +44,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.BottomFade
+import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -54,6 +53,7 @@ import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBot
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
@@ -468,7 +468,11 @@ private inline fun BaseScaffoldWithMarkets(
                     }
 
                     BottomSheetScrim(
-                        color = BottomSheetDefaults.ScrimColor,
+                        color = if (state.showMarketsOnboarding) {
+                            Color.Black.copy(alpha = .65f)
+                        } else {
+                            BottomSheetDefaults.ScrimColor
+                        },
                         visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
                             state.showMarketsOnboarding,
                         onDismissRequest = {
@@ -575,7 +579,7 @@ internal fun MarketsHint(isVisible: Boolean, modifier: Modifier = Modifier) {
 
 @Composable
 private fun MarketsTooltipContent(modifier: Modifier = Modifier) {
-    val backgroundColor = TangemTheme.colors.background.primary
+    val backgroundColor = TangemTheme.colors.background.action
     val cornerRadius = CornerRadius(x = 14.dp.toPx())
     val tipDpSize = DpSize(width = 20.dp, height = 8.dp)
 
