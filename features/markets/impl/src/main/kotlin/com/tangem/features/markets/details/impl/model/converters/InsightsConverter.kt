@@ -77,7 +77,7 @@ internal class InsightsConverter(
                     onInfoClick = {
                         onInfoClick(
                             InfoBottomSheetContent(
-                                title = resourceReference(R.string.markets_token_details_experienced_buyers),
+                                title = resourceReference(R.string.markets_token_details_experienced_buyers_full),
                                 body = resourceReference(R.string.markets_token_details_experienced_buyers_description),
                             ),
                         )
@@ -92,7 +92,7 @@ internal class InsightsConverter(
                     onInfoClick = {
                         onInfoClick(
                             InfoBottomSheetContent(
-                                title = resourceReference(R.string.markets_token_details_buy_pressure),
+                                title = resourceReference(R.string.markets_token_details_buy_pressure_full),
                                 body = resourceReference(R.string.markets_token_details_buy_pressure_description),
                             ),
                         )
@@ -107,7 +107,7 @@ internal class InsightsConverter(
                     onInfoClick = {
                         onInfoClick(
                             InfoBottomSheetContent(
-                                title = resourceReference(R.string.markets_token_details_holders),
+                                title = resourceReference(R.string.markets_token_details_holders_full),
                                 body = resourceReference(R.string.markets_token_details_holders_description),
                             ),
                         )
@@ -122,7 +122,7 @@ internal class InsightsConverter(
                     onInfoClick = {
                         onInfoClick(
                             InfoBottomSheetContent(
-                                title = resourceReference(R.string.markets_token_details_liquidity),
+                                title = resourceReference(R.string.markets_token_details_liquidity_full),
                                 body = resourceReference(R.string.markets_token_details_liquidity_description),
                             ),
                         )
