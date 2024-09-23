@@ -15,6 +15,7 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
+import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionStatus
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
@@ -130,7 +131,10 @@ internal class StakingTransactionSender @AssistedInject constructor(
         fee: Fee,
         onConstructError: (StakingError) -> Unit,
     ) = coroutineScope {
-        stakingTransactions?.filterNot { it.type == StakingTransactionType.APPROVAL }
+        stakingTransactions
+            ?.filterNot {
+                it.type == StakingTransactionType.APPROVAL || it.status == StakingTransactionStatus.SKIPPED
+            }
             ?.map { transaction ->
                 async {
                     getConstructedStakingTransactionUseCase(
@@ -150,7 +154,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
                         },
                     )
                 }
-            }?.awaitAll()?.filterNotNull()
+            }
+            ?.awaitAll()
+            ?.filterNotNull()
     }
 
     private suspend fun getStakingTransaction(
