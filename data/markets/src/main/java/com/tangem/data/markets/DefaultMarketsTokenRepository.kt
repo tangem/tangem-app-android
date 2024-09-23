@@ -103,6 +103,7 @@ internal class DefaultMarketsTokenRepository(
         val tokenMarketsUpdateFetcher = MarketsBatchUpdateFetcher(
             tangemTechApi = tangemTechApi,
             marketsApi = marketsApi,
+            analyticsEventHandler = analyticsEventHandler,
             onApiError = {
                 analyticsEventHandler.send(MarketsDataAnalyticsEvent.List.Error.toEvent())
             },
@@ -141,7 +142,19 @@ internal class DefaultMarketsTokenRepository(
             response.getOrThrow()
         }
 
-        return TokenChartConverter.convert(interval, result)
+        return TokenChartConverter.convert(
+            interval = interval,
+            value = result,
+
+            // === Analytics ===
+            onNullPresented = {
+                analyticsEventHandler.send(
+                    MarketsDataAnalyticsEvent.ChartNullValuesError(
+                        requestPath = "coins/history",
+                    ),
+                )
+            },
+        )
     }
 
     override suspend fun getChartPreview(
@@ -163,7 +176,19 @@ internal class DefaultMarketsTokenRepository(
             )
         }
 
-        return TokenChartConverter.convert(interval, chart)
+        return TokenChartConverter.convert(
+            interval = interval,
+            value = chart,
+
+            // === Analytics ===
+            onNullPresented = {
+                analyticsEventHandler.send(
+                    MarketsDataAnalyticsEvent.ChartNullValuesError(
+                        requestPath = "coins/history_preview",
+                    ),
+                )
+            },
+        )
     }
 
     override suspend fun getTokenInfo(
