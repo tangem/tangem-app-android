@@ -24,6 +24,7 @@ internal class DevFeatureTogglesManager(
 ) : MutableFeatureTogglesManager {
 
     private var featureTogglesMap: MutableMap<String, Boolean> by Delegates.notNull()
+    private var localFeatureTogglesMap: Map<String, Boolean> by Delegates.notNull()
 
     override suspend fun init() {
         localFeatureTogglesStorage.init()
@@ -32,8 +33,12 @@ internal class DevFeatureTogglesManager(
             key = PreferencesKeys.FEATURE_TOGGLES_KEY,
         ) ?: emptyMap()
 
-        featureTogglesMap = localFeatureTogglesStorage.featureToggles
+        val localFeatureToggles = localFeatureTogglesStorage.featureToggles
             .associateToggles(currentVersion = versionProvider.get().orEmpty())
+
+        localFeatureTogglesMap = localFeatureToggles
+
+        featureTogglesMap = localFeatureToggles
             .mapValues { resultToggle ->
                 savedFeatureToggles[resultToggle.key] ?: resultToggle.value
             }
@@ -42,16 +47,27 @@ internal class DevFeatureTogglesManager(
 
     override fun isFeatureEnabled(name: String): Boolean = featureTogglesMap[name] ?: false
 
+    override fun isMatchLocalConfig(): Boolean = featureTogglesMap == localFeatureTogglesMap
+
     override fun getFeatureToggles(): Map<String, Boolean> = featureTogglesMap
 
     override suspend fun changeToggle(name: String, isEnabled: Boolean) {
         featureTogglesMap[name] ?: return
         featureTogglesMap[name] = isEnabled
-        appPreferencesStore.storeObject(PreferencesKeys.FEATURE_TOGGLES_KEY, featureTogglesMap)
+        appPreferencesStore.storeFeatureToggles(value = featureTogglesMap)
+    }
+
+    override suspend fun recoverLocalConfig() {
+        featureTogglesMap = localFeatureTogglesMap.toMutableMap()
+        appPreferencesStore.storeFeatureToggles(value = localFeatureTogglesMap)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun setFeatureToggles(map: MutableMap<String, Boolean>) {
         featureTogglesMap = map
+    }
+
+    private suspend fun AppPreferencesStore.storeFeatureToggles(value: Map<String, Boolean>) {
+        storeObject(PreferencesKeys.FEATURE_TOGGLES_KEY, value)
     }
 }
