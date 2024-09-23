@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType.Companion.asAnalyticName
 
 internal sealed class StakingAnalyticsEvents(
     event: String,
@@ -47,7 +48,7 @@ internal sealed class StakingAnalyticsEvents(
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
             "Validator" to validator,
-            "Action" to action.type,
+            "Action" to action.asAnalyticName,
         ),
     )
 
@@ -60,7 +61,7 @@ internal sealed class StakingAnalyticsEvents(
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
             "Validator" to validator,
-            "Action" to action.type,
+            "Action" to action.asAnalyticName,
         ),
     )
 
@@ -143,7 +144,7 @@ internal sealed class StakingAnalyticsEvents(
         event = "Errors",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
-            "ErrorType" to errorType,
+            AnalyticsParam.ERROR_DESCRIPTION to errorType,
         ),
     )
 
