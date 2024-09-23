@@ -28,6 +28,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun LinksBlock(state: LinksUM, modifier: Modifier = Modifier) {
     InformationBlock(
         modifier = modifier,
+        contentHorizontalPadding = 0.dp,
         title = {
             Text(
                 text = stringResource(id = R.string.markets_token_details_links),
@@ -81,7 +82,7 @@ private fun SubBlock(
         showDivider = !lastBlock,
     ) {
         Column(
-            modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
+            modifier = Modifier.padding(TangemTheme.dimens.spacing12),
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
             Text(
@@ -111,6 +112,7 @@ private fun SubBlock(
 fun LinksBlockPlaceholder(modifier: Modifier = Modifier) {
     InformationBlock(
         modifier = modifier,
+        contentHorizontalPadding = 0.dp,
         title = {
             TextShimmer(
                 modifier = Modifier.fillMaxWidth(),
@@ -134,7 +136,7 @@ private fun SubBlockPlaceholder(modifier: Modifier = Modifier, lastBlock: Boolea
         showDivider = !lastBlock,
     ) {
         Column(
-            modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
+            modifier = Modifier.padding(TangemTheme.dimens.spacing12),
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
             TextShimmer(
