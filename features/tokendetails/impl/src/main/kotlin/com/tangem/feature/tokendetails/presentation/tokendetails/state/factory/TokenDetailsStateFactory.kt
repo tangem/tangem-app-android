@@ -39,7 +39,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.t
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
-import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toImmutableList
@@ -53,7 +52,6 @@ internal class TokenDetailsStateFactory(
     private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val clickIntents: TokenDetailsClickIntents,
-    private val featureToggles: TokenDetailsFeatureToggles,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
@@ -65,7 +63,6 @@ internal class TokenDetailsStateFactory(
     private val skeletonStateConverter by lazy {
         TokenDetailsSkeletonStateConverter(
             clickIntents = clickIntents,
-            featureToggles = featureToggles,
             networkHasDerivationUseCase = networkHasDerivationUseCase,
             getUserWalletUseCase = getUserWalletUseCase,
             userWalletId = userWalletId,
@@ -390,10 +387,9 @@ internal class TokenDetailsStateFactory(
         isSupported: Boolean,
     ): TokenDetailsAppBarMenuConfig? {
         if (cardTypesResolver.isSingleWalletWithToken()) return null
-        val showGenerateExtendedKey = featureToggles.isGenerateXPubEnabled() && isSupported
         return copy(
             items = buildList {
-                if (showGenerateExtendedKey && hasDerivations) {
+                if (isSupported && hasDerivations) {
                     TokenDetailsAppBarMenuConfig.MenuItem(
                         title = resourceReference(R.string.token_details_generate_xpub),
                         textColorProvider = { TangemTheme.colors.text.primary1 },
