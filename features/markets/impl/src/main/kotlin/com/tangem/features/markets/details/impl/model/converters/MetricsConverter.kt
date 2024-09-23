@@ -18,6 +18,7 @@ import java.math.BigDecimal
 @Stable
 internal class MetricsConverter(
     private val appCurrency: Provider<AppCurrency>,
+    private val tokenSymbol: String,
     private val onInfoClick: (InfoBottomSheetContent) -> Unit,
 ) : Converter<TokenMarketInfo.Metrics, MetricsUM> {
 
@@ -119,9 +120,13 @@ internal class MetricsConverter(
         if (this == null) return StringsSigns.DASH_SIGN
 
         return if (crypto) {
-            BigDecimalFormatter.formatCompactAmount(amount = this)
+            BigDecimalFormatter.formatCompactCryptoAmount(
+                amount = this,
+                cryptoCurrencySymbol = tokenSymbol,
+            )
         } else {
             val currency = appCurrency()
+
             BigDecimalFormatter.formatCompactFiatAmount(
                 amount = this,
                 fiatCurrencyCode = currency.code,
