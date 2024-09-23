@@ -20,8 +20,8 @@ internal object StakingClickIntentsStub : StakingClickIntents {
         actionTypeToOverwrite: StakingActionCommonType?,
         pendingAction: PendingAction?,
         pendingActions: ImmutableList<PendingAction>?,
-    ) {
-    }
+        balanceState: BalanceState?,
+    ) { }
 
     override fun onActionClick() {}
 

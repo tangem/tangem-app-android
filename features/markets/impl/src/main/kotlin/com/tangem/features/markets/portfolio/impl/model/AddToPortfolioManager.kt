@@ -152,6 +152,10 @@ internal class AddToPortfolioManager @Inject constructor() {
                 .orEmpty()
         }
 
+        fun isUserAddedNetworks(userWalletId: UserWalletId): Boolean {
+            return addedNetworks[userWalletId].orEmpty().isNotEmpty()
+        }
+
         fun isUserChangedNetworks(userWalletId: UserWalletId): Boolean {
             return addedNetworks[userWalletId].orEmpty().isNotEmpty() ||
                 removedNetworks[userWalletId].orEmpty().isNotEmpty()
