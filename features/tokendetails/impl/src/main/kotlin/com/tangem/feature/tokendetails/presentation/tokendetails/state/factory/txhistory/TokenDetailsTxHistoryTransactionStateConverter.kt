@@ -97,9 +97,13 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
                 },
                 formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
             )
-            is InteractionAddressType.Staking -> resourceReference(
-                id = R.string.common_staking,
+            is InteractionAddressType.Validator -> resourceReference(
+                id = R.string.transaction_history_transaction_validator,
+                formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
             )
+            null -> {
+                TextReference.EMPTY
+            }
         }
 
     private fun TxHistoryItem.extractDirection() = if (isOutgoing) Direction.OUTGOING else Direction.INCOMING
@@ -111,7 +115,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
     }
 
     private fun TxHistoryItem.getAmount(): String {
-        if (type == TransactionType.TronStakingTransactionType.Vote ||
+        if (type is TransactionType.TronStakingTransactionType.Vote ||
             type == TransactionType.TronStakingTransactionType.Withdraw
         ) {
             return ""
