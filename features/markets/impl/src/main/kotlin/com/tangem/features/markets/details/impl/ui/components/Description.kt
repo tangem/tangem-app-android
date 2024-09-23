@@ -1,8 +1,8 @@
 package com.tangem.features.markets.details.impl.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -38,17 +38,16 @@ internal fun Description(
             }
         }
 
-        ClickableText(
-            modifier = modifier,
+        Text(
+            modifier = modifier
+                .clickable(
+                    interactionSource = null,
+                    indication = null,
+                    onClick = onReadMoreClick,
+                ),
             text = text,
             style = TangemTheme.typography.body2,
-        ) {
-            text.spanStyles.getOrNull(1)?.let { spanStyle ->
-                if (it in spanStyle.start..spanStyle.end) {
-                    onReadMoreClick()
-                }
-            }
-        }
+        )
     } else {
         Text(
             modifier = modifier,

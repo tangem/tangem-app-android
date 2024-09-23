@@ -36,7 +36,20 @@ sealed interface MarketsDataAnalyticsEvent {
     }
 
     fun toEvent(): AnalyticsEvent = when (this) {
+        is ChartNullValuesError -> this
         is List -> this
         is Details -> this
     }
+
+    data class ChartNullValuesError(
+        val requestPath: String,
+    ) : AnalyticsEvent(
+        category = "Markets / Chart",
+        event = "Data Error",
+        params = mapOf("Request path" to requestPath),
+        error = IllegalStateException(
+            "Chart data contains null values from the API",
+        ),
+    ),
+        MarketsDataAnalyticsEvent
 }
