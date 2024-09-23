@@ -8,7 +8,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.GetSupportedNetworksUseCase
 import com.tangem.domain.tokens.model.Network
@@ -90,7 +89,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
                 onSelectedStateChange = {
                     val model = SelectedNetwork(
                         id = network.id,
-                        name = stringReference(network.name),
+                        name = network.name,
                         derivationPath = network.derivationPath,
                         canHandleTokens = network.canHandleTokens,
                     )
@@ -109,8 +108,9 @@ internal class CustomTokenSelectorModel @Inject constructor(
                 onSelectedStateChange = {
                     val model = SelectedDerivationPath(
                         id = network.id,
-                        networkName = resourceReference(R.string.custom_token_derivation_path_default),
+                        name = network.name,
                         value = network.derivationPath,
+                        isDefault = true,
                     )
 
                     selector.onDerivationPathSelected(model)
@@ -133,8 +133,9 @@ internal class CustomTokenSelectorModel @Inject constructor(
                     onSelectedStateChange = {
                         val model = SelectedDerivationPath(
                             id = network.id,
-                            networkName = stringReference(network.name),
+                            name = network.name,
                             value = network.derivationPath,
+                            isDefault = false,
                         )
 
                         selector.onDerivationPathSelected(model)

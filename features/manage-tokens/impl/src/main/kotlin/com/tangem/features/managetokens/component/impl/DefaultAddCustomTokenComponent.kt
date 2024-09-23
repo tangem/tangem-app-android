@@ -8,10 +8,12 @@ import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
 import com.arkivanov.decompose.router.stack.*
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.CustomTokenFormComponent
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
@@ -29,6 +31,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
     @Assisted private val params: AddCustomTokenComponent.Params,
     private val selectorComponentFactory: CustomTokenSelectorComponent.Factory,
     private val formComponentFactory: CustomTokenFormComponent.Factory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : AddCustomTokenComponent, AppComponentContext by context {
 
     private val navigation = StackNavigation<AddCustomTokenConfig>()
@@ -44,6 +47,10 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
         serializer = AddCustomTokenConfig.serializer(),
         childFactory = ::contentChild,
     )
+
+    init {
+        analyticsEventHandler.send(CustomTokenAnalyticsEvent.ScreenOpened(params.source))
+    }
 
     override fun dismiss() {
         params.onDismiss()
@@ -85,9 +92,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                 params = CustomTokenSelectorComponent.Params.NetworkSelector(
                     userWalletId = config.userWalletId,
                     selectedNetwork = null,
-                    onNetworkSelected = { network ->
-                        showForm(network = network)
-                    },
+                    onNetworkSelected = ::changeSelectedNetwork,
                 ),
             )
         }
@@ -97,9 +102,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                 params = CustomTokenSelectorComponent.Params.NetworkSelector(
                     userWalletId = config.userWalletId,
                     selectedNetwork = config.selectedNetwork,
-                    onNetworkSelected = { network ->
-                        showForm(network = network)
-                    },
+                    onNetworkSelected = ::changeSelectedNetwork,
                 ),
             )
         }
@@ -112,9 +115,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                         "Network is not selected"
                     },
                     selectedDerivationPath = config.selectedDerivationPath,
-                    onDerivationPathSelected = { derivationPath ->
-                        showForm(derivationPath = derivationPath)
-                    },
+                    onDerivationPathSelected = ::changeDerivationPath,
                 ),
             )
         }
@@ -128,12 +129,33 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                     },
                     derivationPath = config.selectedDerivationPath,
                     formValues = config.formValues,
+                    source = params.source,
                     onSelectNetworkClick = ::showNetworkSelector,
                     onSelectDerivationPathClick = ::showDerivationPathSelector,
                     onCurrencyAdded = ::dismissAndNotify,
                 ),
             )
         }
+    }
+
+    private fun changeSelectedNetwork(network: SelectedNetwork) {
+        val event = CustomTokenAnalyticsEvent.NetworkSelected(
+            networkName = network.name,
+            source = params.source,
+        )
+        analyticsEventHandler.send(event)
+
+        showForm(network = network)
+    }
+
+    private fun changeDerivationPath(derivationPath: SelectedDerivationPath) {
+        val event = CustomTokenAnalyticsEvent.DerivationSelected(
+            derivationName = derivationPath.name,
+            source = params.source,
+        )
+        analyticsEventHandler.send(event)
+
+        showForm(derivationPath = derivationPath)
     }
 
     private fun showDerivationPathSelector(formValues: CustomTokenFormValues) {
