@@ -5,6 +5,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.LOWER_SIGN
 import com.tangem.utils.StringsSigns.TILDE_SIGN
+import com.tangem.utils.extensions.isNotWhitespace
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -20,8 +21,6 @@ object BigDecimalFormatter {
     private const val CAN_BE_LOWER_SIGN = LOWER_SIGN
     private val FORMAT_THRESHOLD = BigDecimal("0.01")
 
-    private const val TEMP_CURRENCY_CODE = "USD"
-
     private val FIAT_FORMAT_THRESHOLD = BigDecimal("0.01")
     private val CRYPTO_FEE_FORMAT_THRESHOLD = BigDecimal("0.000001")
 
@@ -29,6 +28,12 @@ object BigDecimalFormatter {
     private const val FIAT_MARKET_EXTENDED_DIGITS = 6
     private const val FRACTIONAL_PART_LENGTH_AFTER_LEADING_ZEROES = 4
 
+    private val usdCurrency = Currency.getInstance("USD")
+
+    @Deprecated(
+        "Use formatCryptoAmount2",
+        replaceWith = ReplaceWith("formatCryptoAmount2"),
+    )
     fun formatCryptoAmount(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: String,
@@ -51,6 +56,30 @@ object BigDecimalFormatter {
                 it + "\u2009$cryptoCurrency"
             }
         }
+    }
+
+    // Migrate to this method from formatCryptoAmount ([REDACTED_TASK_KEY])
+    fun formatCryptoAmount2(
+        cryptoAmount: BigDecimal?,
+        cryptoCurrency: String,
+        decimals: Int,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        if (cryptoAmount == null) return EMPTY_BALANCE_SIGN
+
+        val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+            currency = usdCurrency
+            maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
+            minimumFractionDigits = 2
+            isGroupingUsed = true
+            roundingMode = RoundingMode.HALF_UP
+        }
+
+        return formatter.format(cryptoAmount)
+            .replaceFiatSymbolWithCrypto(
+                fiatCurrencySymbol = usdCurrency.symbol,
+                cryptoCurrencySymbol = cryptoCurrency,
+            )
     }
 
     fun formatCryptoAmountShorted(
@@ -305,7 +334,7 @@ object BigDecimalFormatter {
             .getOrElse { e ->
                 // Currency code is not valid ISO 4217 code
                 if (e is IllegalArgumentException) {
-                    Currency.getInstance(TEMP_CURRENCY_CODE)
+                    usdCurrency
                 } else {
                     throw e
                 }
@@ -316,7 +345,7 @@ object BigDecimalFormatter {
      * Adds a proper currency sign for the provided formatted [amount]
      * ex. '10.0k" -> "$10.0k", "string" -> "$string"
      */
-    fun addCurrencySymbolToStringAmount(
+    private fun addCurrencySymbolToStringAmount(
         amount: String,
         fiatCurrencyCode: String,
         fiatCurrencySymbol: String,
@@ -336,6 +365,32 @@ object BigDecimalFormatter {
             .replace(sampleAmount.toString(), amount)
 
         return formatted
+    }
+
+    /**
+     * Adds a proper currency sign for the provided formatted [amount]
+     * ex. '10.0k" -> "ETH 10.0k", "string" -> "ETH string"
+     */
+    private fun addCryptoCurrencySymbolToStringAmount(
+        amount: String,
+        cryptoCurrencySymbol: String,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        val sampleAmount = BigDecimal.TEN
+
+        val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+            maximumFractionDigits = 0
+            minimumFractionDigits = 0
+            currency = usdCurrency
+        }
+
+        val formatted = formatter.format(sampleAmount)
+            .replace(sampleAmount.toString(), amount)
+
+        return formatted.replaceFiatSymbolWithCrypto(
+            fiatCurrencySymbol = usdCurrency.symbol,
+            cryptoCurrencySymbol = cryptoCurrencySymbol,
+        )
     }
 
     /**
@@ -381,6 +436,45 @@ object BigDecimalFormatter {
     }
 
     /**
+     * "123456.6" -> "ETH 123.457K"
+     * "12345.6" -> "123.046K ETH"
+     * Negative amount is not supported
+     * @param threeDigitsMethod if true, will format the amount always with 3 significant digits
+     * @param scale the number of digits to the right of the decimal point
+     */
+    fun formatCompactCryptoAmount(
+        amount: BigDecimal?,
+        cryptoCurrencySymbol: String,
+        threeDigitsMethod: Boolean = false,
+        decimals: Int = 0,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        if (amount == null) return EMPTY_BALANCE_SIGN
+
+        if (amount < BigDecimal.ONE) {
+            return formatCryptoAmount2(
+                cryptoAmount = amount,
+                cryptoCurrency = cryptoCurrencySymbol,
+                decimals = decimals,
+                locale = locale,
+            )
+        }
+
+        val rawAmount = formatCompactAmount(
+            amount = amount,
+            locale = locale,
+            threeDigitsMethod = threeDigitsMethod,
+            scale = decimals,
+        )
+
+        return addCryptoCurrencySymbolToStringAmount(
+            amount = rawAmount,
+            cryptoCurrencySymbol = cryptoCurrencySymbol,
+            locale = locale,
+        )
+    }
+
+    /**
      * "123456.6" -> "123.457K"
      * "12345.6" -> "123.046K"
      * Negative amount is not supported
@@ -413,14 +507,61 @@ object BigDecimalFormatter {
 
             return formatter.format(amount.setScale(scale, RoundingMode.HALF_UP))
         } else {
-            val value = amount.setScale(scale, RoundingMode.HALF_UP)
+            val scaledAmount = amount.setScale(scale, RoundingMode.HALF_UP)
+            val digitsCount = scaledAmount.longValueExact().toString().count()
+            val digitsToFormat = 5 - when (digitsCount % 3) {
+                0 -> 0
+                1 -> 2
+                else -> 1
+            }
 
             val formatter = CompactDecimalFormat.getInstance(
                 locale,
                 CompactDecimalFormat.CompactStyle.SHORT,
-            )
+            ).apply {
+                minimumSignificantDigits = 2
+                maximumSignificantDigits = digitsToFormat
+            }
 
-            return formatter.format(value)
+            return formatter.format(amount.setScale(scale, RoundingMode.HALF_UP))
+        }
+    }
+
+    // Replaces fiat currency symbol with crypto currency symbol
+    // with respect to the position of the symbol and whitespace
+    private fun String.replaceFiatSymbolWithCrypto(fiatCurrencySymbol: String, cryptoCurrencySymbol: String): String {
+        val str = this
+        if (str.isEmpty()) return str
+
+        return buildString {
+            when {
+                str.endsWith(fiatCurrencySymbol) -> {
+                    val withoutSymbol = str.dropLast(fiatCurrencySymbol.length)
+                    val last = withoutSymbol.lastOrNull() ?: return cryptoCurrencySymbol
+
+                    append(withoutSymbol)
+
+                    if (last.isNotWhitespace()) {
+                        append("\u2009")
+                    }
+
+                    append(cryptoCurrencySymbol)
+                }
+                str.startsWith(fiatCurrencySymbol) -> {
+                    append(cryptoCurrencySymbol)
+
+                    val withoutSymbol = str.drop(fiatCurrencySymbol.length)
+                    val first = withoutSymbol.firstOrNull()
+                        ?: return cryptoCurrencySymbol
+
+                    if (first.isNotWhitespace()) {
+                        append("\u2009")
+                    }
+
+                    append(withoutSymbol)
+                }
+                else -> append(str)
+            }
         }
     }
 
