@@ -81,11 +81,11 @@ internal class AddStakingNotificationsTransformer(
                 amountValue = amountValue,
                 feeValue = feeValue,
                 reduceAmountBy = reduceAmountBy,
-            )
+            ).max(minimumRequirement)
         } else {
             // No amount is taken from account balance on exit or pending actions
             BigDecimal.ZERO
-        }.max(minimumRequirement)
+        }
 
         val notifications = buildList {
             // errors
