@@ -100,12 +100,12 @@ internal class MetricsConverter(
                         },
                     ),
                     InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_total_supply),
-                        value = totalSupply.formatAmount(crypto = true),
+                        title = resourceReference(R.string.markets_token_details_max_supply),
+                        value = maxSupply.formatMaxSupply(),
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_total_supply_full),
+                                    title = resourceReference(R.string.markets_token_details_max_supply_full),
                                     body = resourceReference(R.string.markets_token_details_total_supply_description),
                                 ),
                             )
@@ -114,6 +114,15 @@ internal class MetricsConverter(
                 ),
             )
         }
+    }
+
+    private fun BigDecimal?.formatMaxSupply(): String {
+        when (this) {
+            null -> return StringsSigns.DASH_SIGN
+            BigDecimal.ZERO -> return StringsSigns.INFINITY_SIGN
+        }
+
+        return this.formatAmount(crypto = true)
     }
 
     private fun BigDecimal?.formatAmount(crypto: Boolean = false): String {
