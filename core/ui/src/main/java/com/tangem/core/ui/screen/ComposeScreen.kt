@@ -50,9 +50,14 @@ internal interface ComposeScreen {
  * Creates a [ComposeView] with the defined content for the Compose screen.
  *
  * @param context The context.
+ * @param overrideSystemBarColors Whether to override the system bar colors to make them transparent.
  * @return A [ComposeView] instance with the defined screen content.
  */
-internal fun ComposeScreen.createComposeView(context: Context, activity: Activity): ComposeView {
+internal fun ComposeScreen.createComposeView(
+    context: Context,
+    activity: Activity,
+    overrideSystemBarColors: Boolean = true,
+): ComposeView {
     return ComposeView(context).apply {
         setContent {
             val appThemeMode by uiDependencies.appThemeModeHolder.appThemeMode
@@ -63,6 +68,7 @@ internal fun ComposeScreen.createComposeView(context: Context, activity: Activit
                 windowSize = windowSize,
                 vibratorHapticManager = uiDependencies.vibratorHapticManager,
                 snackbarHostState = uiDependencies.globalSnackbarHostState,
+                overrideSystemBarColors = overrideSystemBarColors,
             ) {
                 ScreenContent(modifier = screenModifier)
             }
