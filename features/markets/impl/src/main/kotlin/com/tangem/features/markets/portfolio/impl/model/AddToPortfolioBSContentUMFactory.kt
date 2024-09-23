@@ -20,7 +20,7 @@ import kotlinx.collections.immutable.toImmutableList
  * @property onAddToPortfolioVisibilityChange callback is invoked when add to portfolio visibility is changed
  * @property onWalletSelectorVisibilityChange callback is invoked when wallet selector visibility is changed
  * @property onNetworkSwitchClick             callback is invoked when network switch is clicked
- * @property onWalletSelect                   callback is invoked when wallet is selected
+ * @property onAnotherWalletSelect                   callback is invoked when wallet is selected
  * @property onContinueClick                  callback is invoked when continue button is clicked
  *
 [REDACTED_AUTHOR]
@@ -30,7 +30,7 @@ internal class AddToPortfolioBSContentUMFactory(
     private val onAddToPortfolioVisibilityChange: (Boolean) -> Unit,
     private val onWalletSelectorVisibilityChange: (Boolean) -> Unit,
     private val onNetworkSwitchClick: (BlockchainRowUM, Boolean) -> Unit,
-    private val onWalletSelect: (UserWalletId) -> Unit,
+    private val onAnotherWalletSelect: (UserWalletId) -> Unit,
     private val onContinueClick: (selectedWalletId: UserWalletId, addedNetworks: Set<TokenMarketInfo.Network>) -> Unit,
 ) {
 
@@ -62,7 +62,7 @@ internal class AddToPortfolioBSContentUMFactory(
                     onNetworkSwitchClick = onNetworkSwitchClick,
                 ).convert(value = token),
                 isScanCardNotificationVisible = portfolioUIData.hasMissedDerivations,
-                continueButtonEnabled = portfolioUIData.addToPortfolioData.isUserChangedNetworks(
+                continueButtonEnabled = portfolioUIData.addToPortfolioData.isUserAddedNetworks(
                     userWalletId = selectedWallet.walletId,
                 ),
                 onContinueButtonClick = {
@@ -112,7 +112,12 @@ internal class AddToPortfolioBSContentUMFactory(
                         val balance = portfolioData.walletsWithBalance[userWallet.walletId]
 
                         UserWalletItemUMConverter(
-                            onClick = onWalletSelect,
+                            onClick = {
+                                if (it != selectedWalletId) {
+                                    onAnotherWalletSelect(it)
+                                    onWalletSelectorVisibilityChange(false)
+                                }
+                            },
                             appCurrency = portfolioData.appCurrency,
                             balance = balance?.getOrNull(),
                             isLoading = balance?.isLoading() == true,
