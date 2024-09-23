@@ -8,10 +8,6 @@
         "version": "5.14.0"
     },
     {
-        "name": "GENERATE_XPUB_ENABLED",
-        "version": "5.12.0"
-    },
-    {
         "name": "WC_SOLANA_TX_SIGN_ENABLED",
         "version": "undefined"
     },
@@ -37,6 +33,10 @@
     },
     {
         "name": "IS_ETHEREUM_EIP_1559_ENABLED",
+        "version": "5.16.0"
+    },
+    {
+        "name": "MIGRATE_USER_COUNTRY_CODE_ENABLED",
         "version": "5.16.0"
     }
 ]
