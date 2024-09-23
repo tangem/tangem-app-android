@@ -47,18 +47,20 @@ internal sealed class StakingAnalyticsEvents(
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
             "Validator" to validator,
-            "Action" to action.name,
+            "Action" to action.type,
         ),
     )
 
     data class StakeInProgressScreenOpened(
         val validator: String,
         val token: String,
+        val action: StakingActionType,
     ) : StakingAnalyticsEvents(
         event = "Stake In Progress Screen Opened",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
             "Validator" to validator,
+            "Action" to action.type,
         ),
     )
 
@@ -136,9 +138,13 @@ internal sealed class StakingAnalyticsEvents(
 
     data class StakingError(
         val token: String,
+        val errorType: String,
     ) : StakingAnalyticsEvents(
         event = "Errors",
-        params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
+        params = mapOf(
+            AnalyticsParam.TOKEN_PARAM to token,
+            "ErrorType" to errorType,
+        ),
     )
 
     data class TransactionError(
