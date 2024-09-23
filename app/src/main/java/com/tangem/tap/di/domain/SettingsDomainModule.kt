@@ -10,6 +10,8 @@ import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.settings.repositories.PromoSettingsRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.settings.DefaultLegacySettingsRepository
 import dagger.Module
@@ -212,4 +214,16 @@ internal object SettingsDomainModule {
         return ShouldSaveAccessCodesUseCase(settingsRepository = settingsRepository)
     }
     // endregion
+
+    @Provides
+    @Singleton
+    fun provideFetchUserCountryCodeUseCase(settingsRepository: SettingsRepository): FetchUserCountryUseCase {
+        return FetchUserCountryUseCase(settingsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetUserCountryCodeUseCase(settingsRepository: SettingsRepository): GetUserCountryUseCase {
+        return GetUserCountryUseCase(settingsRepository)
+    }
 }
