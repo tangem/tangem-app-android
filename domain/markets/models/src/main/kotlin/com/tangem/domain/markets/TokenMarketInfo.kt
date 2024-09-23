@@ -46,7 +46,7 @@ data class TokenMarketInfo(
         val circulatingSupply: BigDecimal?,
         val marketCap: BigDecimal?,
         val volume24h: BigDecimal?,
-        val totalSupply: BigDecimal?,
+        val maxSupply: BigDecimal?,
         val fullyDilutedValuation: BigDecimal?,
     )
 
