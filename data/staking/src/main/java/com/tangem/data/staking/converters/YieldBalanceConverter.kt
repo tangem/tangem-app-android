@@ -19,12 +19,10 @@ internal class YieldBalanceConverter : Converter<YieldBalanceWrapperDTO, YieldBa
                 balance = YieldBalanceItem(
                     items = value.balances.map { item ->
                         BalanceItem(
-                            id = item.groupId,
+                            groupId = item.groupId,
                             type = BalanceType.valueOf(item.type.name),
                             amount = item.amount,
-                            pricePerShare = item.pricePerShare,
                             rawCurrencyId = item.tokenDTO.coinGeckoId,
-                            rawNetworkId = item.tokenDTO.network.name,
                             // tron-specific. operates validatorAddresses instead of validatorAddress
                             validatorAddress = item.validatorAddress ?: item.validatorAddresses?.get(0),
                             date = item.date?.toDateTime(),
@@ -32,6 +30,7 @@ internal class YieldBalanceConverter : Converter<YieldBalanceWrapperDTO, YieldBa
                                 .convertList(item.pendingActions)
                                 // temporarily exclude VOTE_LOCKED, it will be implemented in future iterations
                                 .filterNot { it.type == StakingActionType.VOTE_LOCKED },
+                            isPending = false,
                         )
                     },
                     integrationId = value.integrationId,
