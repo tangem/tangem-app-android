@@ -25,6 +25,7 @@ fun TangemTheme(
     dimens: TangemDimens = TangemTheme.dimens,
     vibratorHapticManager: VibratorHapticManager? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    overrideSystemBarColors: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val themeColors = if (isDark) darkThemeColors() else lightThemeColors()
@@ -32,14 +33,18 @@ fun TangemTheme(
         .also { it.update(themeColors) }
 
     val shapes = remember { TangemShapes(dimens) }
-    val systemUiController = rememberSystemUiController()
 
-    SideEffect {
-        systemUiController.setSystemBarsColor(
-            color = Color.Transparent,
-            darkIcons = !isDark,
-            isNavigationBarContrastEnforced = false,
-        )
+    // we don't want to override system bar colors in case of fragment bottom sheets for example
+    if (overrideSystemBarColors) {
+        val systemUiController = rememberSystemUiController()
+
+        SideEffect {
+            systemUiController.setSystemBarsColor(
+                color = Color.Transparent,
+                darkIcons = !isDark,
+                isNavigationBarContrastEnforced = false,
+            )
+        }
     }
 
     val view = LocalView.current
