@@ -13,18 +13,15 @@ import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
-import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.features.main.model.MainScreenState
-import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -43,13 +40,11 @@ internal class MainViewModel @Inject constructor(
     private val incrementAppLaunchCounterUseCase: IncrementAppLaunchCounterUseCase,
     private val blockchainSDKFactory: BlockchainSDKFactory,
     private val userWalletsListManager: UserWalletsListManager,
-    private val walletManagersFacade: WalletManagersFacade,
-    private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
     stakingFeatureToggles: StakingFeatureToggles,
     private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
     private val apiConfigsManager: ApiConfigsManager,
-    private val homeFeatureToggles: HomeFeatureToggles,
+    homeFeatureToggles: HomeFeatureToggles,
     private val fetchUserCountryUseCase: FetchUserCountryUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
@@ -109,19 +104,6 @@ internal class MainViewModel @Inject constructor(
             .onEach { userWallet ->
                 Analytics.setContext(userWallet.scanResponse)
                 Analytics.send(Basic.WalletOpened())
-
-                if (!feedbackManagerFeatureToggles.isLocalLogsEnabled) {
-                    store.state.globalState.feedbackManager?.infoHolder?.let { infoHolder ->
-                        infoHolder.setCardInfo(userWallet.scanResponse)
-
-                        walletManagersFacade
-                            .getAll(userWallet.walletId)
-                            .distinctUntilChanged()
-                            .onEach(infoHolder::setWalletsInfo)
-                            .catch { Timber.e(it) }
-                            .launchIn(viewModelScope)
-                    }
-                }
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
