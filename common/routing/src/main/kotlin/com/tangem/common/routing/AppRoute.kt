@@ -227,13 +227,16 @@ sealed class AppRoute(val path: String) : Route {
     data class Swap(
         val currency: CryptoCurrency,
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/swap/${currency.id.value}/${userWalletId.stringValue}"), RouteBundleParams {
+        val isInitialReverseOrder: Boolean = false,
+    ) : AppRoute(path = "/swap/${currency.id.value}/${userWalletId.stringValue}/$isInitialReverseOrder"),
+        RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
 
         companion object {
             const val CURRENCY_BUNDLE_KEY = "currency"
             const val USER_WALLET_ID_KEY = "userWalletId"
+            const val IS_INITIAL_REVERSE_ORDER = "isInitialReverseOrder"
         }
     }
 
