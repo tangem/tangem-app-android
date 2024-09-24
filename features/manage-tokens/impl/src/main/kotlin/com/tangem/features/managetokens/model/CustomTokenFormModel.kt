@@ -2,6 +2,7 @@ package com.tangem.features.managetokens.model
 
 import androidx.compose.ui.res.stringResource
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -15,22 +16,27 @@ import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationE
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
+import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.component.CustomTokenFormComponent
 import com.tangem.features.managetokens.entity.customtoken.ClickableFieldUM
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormUM
+import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormUM.TokenFormUM.Field
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormValues
 import com.tangem.features.managetokens.entity.customtoken.TextInputFieldUM
 import com.tangem.features.managetokens.impl.R
+import com.tangem.features.managetokens.utils.CustomCurrencyFormBuilder
 import com.tangem.features.managetokens.utils.CustomCurrencyValidator
 import com.tangem.features.managetokens.utils.mapper.mapToDomainModel
 import com.tangem.features.managetokens.utils.ui.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.mutate
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ComponentScoped
 internal class CustomTokenFormModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -38,6 +44,8 @@ internal class CustomTokenFormModel @Inject constructor(
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val messageSender: UiMessageSender,
+    private val customTokenFormManager: CustomCurrencyFormBuilder,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -68,20 +76,23 @@ internal class CustomTokenFormModel @Inject constructor(
         return CustomTokenFormUM(
             networkName = ClickableFieldUM(
                 label = resourceReference(R.string.custom_token_network_input_title),
-                value = params.network.name,
+                value = stringReference(params.network.name),
                 onClick = ::selectNetwork,
             ),
             tokenForm = if (params.network.canHandleTokens) {
-                getInitialTokenForm()
+                customTokenFormManager.buildForm(
+                    updateFormFieldValue = ::updateFormFieldValue,
+                    updateFormFieldFocus = ::updateFormFieldFocus,
+                )
             } else {
                 null
             },
             derivationPath = ClickableFieldUM(
                 label = resourceReference(R.string.custom_token_derivation_path),
-                value = if (params.derivationPath == null || params.derivationPath.id == params.network.id) {
+                value = if (params.derivationPath == null || params.derivationPath.isDefault) {
                     resourceReference(R.string.custom_token_derivation_path_default)
                 } else {
-                    params.derivationPath.networkName
+                    stringReference(params.derivationPath.name)
                 },
                 onClick = ::selectDerivationPath,
             ),
@@ -241,79 +252,52 @@ internal class CustomTokenFormModel @Inject constructor(
         }
     }
 
-    private fun getInitialTokenForm(): CustomTokenFormUM.TokenFormUM {
-        val formValues = params.formValues
-
-        val form = CustomTokenFormUM.TokenFormUM(
-            contractAddress = TextInputFieldUM(
-                label = resourceReference(R.string.custom_token_contract_address_input_title),
-                placeholder = stringReference(CONTRACT_ADDRESS_PLACEHOLDER),
-                onValueChange = ::updateContractAddress,
-            ),
-            name = TextInputFieldUM(
-                label = resourceReference(R.string.custom_token_name_input_title),
-                placeholder = resourceReference(R.string.custom_token_name_input_placeholder),
-                onValueChange = ::updateTokenName,
-            ),
-            symbol = TextInputFieldUM(
-                label = resourceReference(R.string.custom_token_token_symbol_input_title),
-                placeholder = resourceReference(R.string.custom_token_token_symbol_input_placeholder),
-                onValueChange = ::updateTokenSymbol,
-            ),
-            decimals = TextInputFieldUM(
-                label = resourceReference(R.string.custom_token_decimals_input_title),
-                placeholder = stringReference(DECIMALS_PLACEHOLDER),
-                onValueChange = ::updateDecimals,
-            ),
-        )
-
-        return formValues.fillValues(form)
-    }
-
     private fun getDerivationPath(): Network.DerivationPath {
         return params.derivationPath?.value ?: params.network.derivationPath
     }
 
-    private fun updateContractAddress(value: String) {
+    private fun updateFormFieldValue(field: Field, value: String) {
         state.update { state ->
             state.updateTokenForm {
+                val fieldValue = fields.getValue(field)
+
+                if (!fieldValue.isEnabled) return@updateTokenForm this
+
+                val updatedFieldValue = fieldValue.copy(
+                    value = value,
+                )
+                val updatedFields = fields.mutate {
+                    it[field] = updatedFieldValue
+                }
+
                 copy(
-                    contractAddress = contractAddress.updateValue(value),
+                    fields = updatedFields,
                     wasFilled = false,
                 )
             }
         }
     }
 
-    private fun updateTokenName(value: String) {
+    private fun updateFormFieldFocus(field: Field, isFocused: Boolean) {
         state.update { state ->
             state.updateTokenForm {
-                copy(
-                    name = name.updateValue(value),
-                    wasFilled = false,
-                )
-            }
-        }
-    }
+                val fieldValue = fields.getValue(field)
 
-    private fun updateTokenSymbol(value: String) {
-        state.update { state ->
-            state.updateTokenForm {
-                copy(
-                    symbol = symbol.updateValue(value),
-                    wasFilled = false,
-                )
-            }
-        }
-    }
+                if (!fieldValue.isEnabled) return@updateTokenForm this
 
-    private fun updateDecimals(value: String) {
-        state.update { state ->
-            state.updateTokenForm {
-                copy(
-                    decimals = decimals.updateValue(value),
-                    wasFilled = false,
+                val updatedFieldValue = fieldValue.copy(
+                    isFocused = isFocused,
                 )
+                val updatedFields = fields.mutate {
+                    it[field] = updatedFieldValue
+                }
+
+                // Checking if a field is out of focus
+                if (fieldValue.isFocused && !isFocused && fieldValue.value.isNotEmpty()) {
+                    sendFieldAnalyticsEvent(field, fieldValue)
+                }
+
+                copy(fields = updatedFields)
             }
         }
     }
@@ -336,6 +320,13 @@ internal class CustomTokenFormModel @Inject constructor(
             showErrorDialog()
             return@resource
         }
+
+        val event = CustomTokenAnalyticsEvent.CustomTokenWasAdded(
+            currencySymbol = currency.symbol,
+            derivationPath = currency.network.derivationPath.value.orEmpty(),
+            source = params.source,
+        )
+        analyticsEventHandler.send(event)
 
         derivePublicKeysUseCase(params.userWalletId, listOf(currency)).getOrElse {
             Timber.e(it, "Failed to derive public keys")
@@ -360,8 +351,17 @@ internal class CustomTokenFormModel @Inject constructor(
         params.onSelectDerivationPathClick(CustomTokenFormValues(state.value.tokenForm))
     }
 
-    private companion object {
-        const val CONTRACT_ADDRESS_PLACEHOLDER = "0x000000000000000000000000000..."
-        const val DECIMALS_PLACEHOLDER = "0"
+    private fun sendFieldAnalyticsEvent(field: Field, fieldValue: TextInputFieldUM) {
+        val event = when (field) {
+            Field.CONTRACT_ADDRESS -> CustomTokenAnalyticsEvent.Address(
+                isValid = fieldValue.error == null,
+                source = params.source,
+            )
+            Field.NAME -> CustomTokenAnalyticsEvent.Name(params.source)
+            Field.SYMBOL -> CustomTokenAnalyticsEvent.Symbol(params.source)
+            Field.DECIMALS -> CustomTokenAnalyticsEvent.Decimals(params.source)
+        }
+
+        analyticsEventHandler.send(event)
     }
 }
