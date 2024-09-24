@@ -9,5 +9,7 @@ internal sealed class Settings(
     error: Throwable? = null,
 ) : AnalyticsEvent(category, event, params, error) {
 
-    class ButtonCreateBackup : Settings(event = "Button - Create Backup")
+    data object ButtonCreateBackup : Settings(event = "Button - Create Backup")
+
+    data object ButtonManageTokens : Settings(event = "Button - Manage Tokens")
 }
