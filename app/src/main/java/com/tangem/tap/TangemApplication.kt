@@ -1,13 +1,10 @@
 package com.tangem.tap
 
 import android.app.Application
-import android.content.Context
-import android.content.pm.PackageManager
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.tangem.Log
-import com.tangem.LogFormat
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
@@ -30,7 +27,6 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.LogConfig
-import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -48,11 +44,9 @@ import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
-import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
-import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -152,9 +146,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val cardRepository: CardRepository
         get() = entryPoint.getCardRepository()
-
-    private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles
-        get() = entryPoint.getFeedbackManagerFeatureToggles()
 
     private val tangemSdkLogger: TangemSdkLogger
         get() = entryPoint.getTangemSdkLogger()
@@ -260,7 +251,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
                     generateWalletNameUseCase = generateWalletNameUseCase,
                     cardRepository = cardRepository,
-                    feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
                     tangemSdkLogger = tangemSdkLogger,
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
@@ -298,7 +288,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private fun initWithConfigDependency(config: Config) {
         initAnalytics(this, config)
-        initFeedbackManager(this, store)
+        initFeedbackManager(store)
     }
 
     private fun initAnalytics(application: Application, config: Config) {
@@ -319,50 +309,10 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         // ExceptionHandler.append(blockchainExceptionHandler) TODO: https://tangem.atlassian.net/browse/AND-4173
     }
 
-    private fun initFeedbackManager(context: Context, store: Store<AppState>) {
-        fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo {
-            return AdditionalFeedbackInfo().apply {
-                appVersion = try {
-                    // TODO don't use deprecated method
-                    val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                    pInfo.versionName
-                } catch (e: PackageManager.NameNotFoundException) {
-                    e.printStackTrace()
-                    "x.y.z"
-                }
-            }
-        }
+    private fun initFeedbackManager(store: Store<AppState>) {
+        Log.addLogger(logger = tangemSdkLogger)
 
-        fun initTangemLogCollector(): TangemLogCollector {
-            val logLevels = listOf(
-                Log.Level.ApduCommand,
-                Log.Level.Apdu,
-                Log.Level.Tlv,
-                Log.Level.Nfc,
-                Log.Level.Command,
-                Log.Level.Session,
-                Log.Level.View,
-                Log.Level.Network,
-                Log.Level.Error,
-                Log.Level.Biometric,
-                Log.Level.Info,
-            )
-            return TangemLogCollector(logLevels, LogFormat.StairsFormatter())
-        }
-
-        val additionalFeedbackInfo = initAdditionalFeedbackInfo(context)
-        val tangemLogCollector = initTangemLogCollector()
-
-        Log.addLogger(
-            logger = if (feedbackManagerFeatureToggles.isLocalLogsEnabled) tangemSdkLogger else tangemLogCollector,
-        )
-
-        val feedbackManager = LegacyFeedbackManager(
-            infoHolder = additionalFeedbackInfo,
-            logCollector = tangemLogCollector,
-            feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
-            getFeedbackEmailUseCase = getFeedbackEmailUseCase,
-        )
+        val feedbackManager = LegacyFeedbackManager(getFeedbackEmailUseCase = getFeedbackEmailUseCase)
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
     }
 }

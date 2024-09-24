@@ -8,12 +8,11 @@ import androidx.core.view.isVisible
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.analytics.events.ScanFailsDialogAnalytics
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchOpenUrl
-import com.tangem.tap.common.feedback.ScanFailsEmail
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.home.LocaleRegionProvider
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.store
@@ -65,7 +64,8 @@ internal object ScanFailsDialog {
             }
             customView.findViewById<TextView>(R.id.request_support_button)?.setOnClickListener {
                 Analytics.send(Basic.ButtonSupport(sourceAnalytics))
-                store.dispatch(GlobalAction.SendEmail(feedbackData = ScanFailsEmail(), scanResponse = null))
+
+                store.state.globalState.feedbackManager?.sendEmail(type = FeedbackEmailType.ScanningProblem)
             }
             customView.findViewById<TextView>(R.id.cancel_button)?.setOnClickListener {
                 store.dispatchDialogHide()
