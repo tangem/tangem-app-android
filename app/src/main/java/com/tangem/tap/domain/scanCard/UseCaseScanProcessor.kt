@@ -60,7 +60,7 @@ internal object UseCaseScanProcessor {
             )
             add(AnalyticsChain(Basic.CardWasScanned(analyticsSource)))
             add(DisclaimerChain(store, disclaimerWillShow))
-            add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager))
+            add(CheckForOnboardingChain(store))
         }
 
         scanCardUseCase(cardId, afterScanChains = chains).fold(
