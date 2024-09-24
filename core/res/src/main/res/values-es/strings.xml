@@ -75,8 +75,8 @@
   <string name="common_approval">Aprobación</string>
   <string name="common_approve">Aprobar</string>
   <string name="common_attention">Atención</string>
-  <string name="common_balance">Soldo: %s</string>
-  <string name="common_balance_title">Soldo</string>
+  <string name="common_balance">Saldo: %s</string>
+  <string name="common_balance_title">Saldo</string>
   <string name="common_biometric_authentication">autenticación biométrica</string>
   <string name="common_biometrics">biometría</string>
   <string name="common_buy">Comprar</string>
@@ -103,7 +103,7 @@
   <string name="common_enable">Activar</string>
   <string name="common_enabled">Activado</string>
   <string name="common_error">Error</string>
-  <string name="common_exchange">Intercambie</string>
+  <string name="common_exchange">Intercambiar</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore historial de transacciones</string>
   <string name="common_explorer">Explorador(a)</string>
@@ -211,7 +211,7 @@
   <string name="details_row_description_flip_to_hide">Gire la pantalla de su dispositivo hacia abajo para ocultar y mostrar rápidamente los saldos</string>
   <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
   <string name="details_row_title_cid">ID de la tarjeta</string>
-  <string name="details_row_title_contact_to_support">Contacta con el equipo de soporte</string>
+  <string name="details_row_title_contact_to_support">Contactar con el equipo de soporte</string>
   <string name="details_row_title_create_backup">Vincular más tarjetas</string>
   <string name="details_row_title_currency">Moneda de la aplicación</string>
   <string name="details_row_title_flip_to_hide">Girar para ocultar saldos</string>
@@ -351,7 +351,7 @@
   <string name="markets_common_my_portfolio">Mi portafolio</string>
   <string name="markets_common_title">Mercado</string>
   <string name="markets_generate_addresses_notification">Para generar direcciones para las redes seleccionadas, debe escanear su tarjeta Tangem</string>
-  <string name="markets_hint">Para agregar tokens, abra esta página o toque la barra de búsqueda</string>
+  <string name="markets_hint">Para agregar tokens, abra esta página o pulse sobre la barra de búsqueda</string>
   <string name="markets_insights_info_description_message">Los datos de este apartado proceden de las siguientes redes: %s</string>
   <string name="markets_loading_error_title">No se pueden cargar los datos…</string>
   <string name="markets_loading_no_data_title">Sin datos</string>
@@ -363,11 +363,11 @@
   <string name="markets_search_token_no_result_title">Sin resultado</string>
   <string name="markets_select_network">Seleccione una red</string>
   <string name="markets_select_wallet">Seleccione una billetera</string>
-  <string name="markets_selector_interval_1m_title">1 mo</string>
-  <string name="markets_selector_interval_1y_title">1 año</string>
+  <string name="markets_selector_interval_1m_title">1m</string>
+  <string name="markets_selector_interval_1y_title">1a</string>
   <string name="markets_selector_interval_24h_title">24h</string>
-  <string name="markets_selector_interval_3m_title">3mos</string>
-  <string name="markets_selector_interval_6m_title">6mos</string>
+  <string name="markets_selector_interval_3m_title">3m</string>
+  <string name="markets_selector_interval_6m_title">6m</string>
   <string name="markets_selector_interval_7d_title">7d</string>
   <string name="markets_selector_interval_all_title">Todo</string>
   <string name="markets_sort_by_experienced_buyers_title">Compradores experimentados</string>
@@ -413,6 +413,8 @@
   <string name="markets_token_details_market_rating_description">Posición en la clasificación de criptomonedas entre todas las monedas según la capitalización de mercado</string>
   <string name="markets_token_details_market_rating_full">Evaluación de mercado</string>
   <string name="markets_token_details_max_supply">Suministro máximo</string>
+  <string name="markets_token_details_max_supply_description">La cantidad máxima de monedas o tokens que pueden existir para una criptomoneda en particular</string>
+  <string name="markets_token_details_max_supply_full">Suministro máximo</string>
   <string name="markets_token_details_metrics">Métrica</string>
   <string name="markets_token_details_official_links">Enlaces oficiales</string>
   <string name="markets_token_details_price_performance">Rendimiento de precios</string>
