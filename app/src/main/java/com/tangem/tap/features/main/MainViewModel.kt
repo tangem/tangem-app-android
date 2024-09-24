@@ -16,11 +16,13 @@ import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
+import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.tap.common.extensions.setContext
+import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.features.main.model.MainScreenState
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -47,6 +49,8 @@ internal class MainViewModel @Inject constructor(
     stakingFeatureToggles: StakingFeatureToggles,
     private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
     private val apiConfigsManager: ApiConfigsManager,
+    private val homeFeatureToggles: HomeFeatureToggles,
+    private val fetchUserCountryUseCase: FetchUserCountryUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
 
@@ -66,6 +70,14 @@ internal class MainViewModel @Inject constructor(
         loadApplicationResources()
 
         viewModelScope.launch(dispatchers.main) { incrementAppLaunchCounterUseCase() }
+
+        if (homeFeatureToggles.isMigrateUserCountryCodeEnabled) {
+            viewModelScope.launch {
+                fetchUserCountryUseCase().onLeft {
+                    Timber.e("Unable to fetch the user country code $it")
+                }
+            }
+        }
 
         updateAppCurrencies()
         observeFlips()
