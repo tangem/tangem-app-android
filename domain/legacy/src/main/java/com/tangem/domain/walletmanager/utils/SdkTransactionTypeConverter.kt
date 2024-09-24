@@ -32,6 +32,9 @@ internal class SdkTransactionTypeConverter(
             is TransactionType.TronStakingTransactionType.WithdrawBalanceContract -> {
                 TxHistoryItem.TransactionType.TronStakingTransactionType.Withdraw
             }
+            is TransactionType.TronStakingTransactionType.WithdrawExpireUnfreezeContract -> {
+                TxHistoryItem.TransactionType.TronStakingTransactionType.WithdrawExpireUnfreeze
+            }
         }
     }
 

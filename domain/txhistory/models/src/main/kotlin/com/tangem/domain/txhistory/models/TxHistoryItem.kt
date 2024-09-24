@@ -45,6 +45,7 @@ data class TxHistoryItem(
             data object Withdraw : TronStakingTransactionType
             data object Stake : TronStakingTransactionType
             data object Unstake : TronStakingTransactionType
+            data object WithdrawExpireUnfreeze : TronStakingTransactionType
         }
     }
 
