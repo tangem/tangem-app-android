@@ -42,10 +42,10 @@ data class TxHistoryItem(
 
         sealed interface TronStakingTransactionType : TransactionType {
             data class Vote(val validatorAddress: String) : TronStakingTransactionType
-            data object Withdraw : TronStakingTransactionType
+            data object ClaimRewards : TronStakingTransactionType
             data object Stake : TronStakingTransactionType
             data object Unstake : TronStakingTransactionType
-            data object WithdrawExpireUnfreeze : TronStakingTransactionType
+            data object Withdraw : TronStakingTransactionType
         }
     }
 

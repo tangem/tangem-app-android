@@ -51,9 +51,10 @@ internal class TxHistoryItemStateConverter(
             is TransactionType.TronStakingTransactionType.Stake,
             is TransactionType.TronStakingTransactionType.Vote,
             -> R.drawable.ic_transaction_history_staking
-            is TransactionType.TronStakingTransactionType.Withdraw,
+            is TransactionType.TronStakingTransactionType.ClaimRewards,
+            -> R.drawable.ic_transaction_history_claim_rewards
             is TransactionType.TronStakingTransactionType.Unstake,
-            is TransactionType.TronStakingTransactionType.WithdrawExpireUnfreeze,
+            is TransactionType.TronStakingTransactionType.Withdraw,
             -> R.drawable.ic_transaction_history_unstaking
             is TransactionType.Operation,
             is TransactionType.Swap,
@@ -71,10 +72,8 @@ internal class TxHistoryItemStateConverter(
         is TransactionType.TronStakingTransactionType.Stake -> resourceReference(R.string.common_stake)
         is TransactionType.TronStakingTransactionType.Unstake -> resourceReference(R.string.common_unstake)
         is TransactionType.TronStakingTransactionType.Vote -> resourceReference(R.string.staking_vote)
-        is TransactionType.TronStakingTransactionType.Withdraw -> resourceReference(R.string.staking_withdraw)
-        is TransactionType.TronStakingTransactionType.WithdrawExpireUnfreeze -> {
-            resourceReference(R.string.staking_withdraw)
-        }
+        is TransactionType.TronStakingTransactionType.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
+        is TransactionType.TronStakingTransactionType.Withdraw -> { resourceReference(R.string.staking_withdraw) }
         is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
     }
 
@@ -120,7 +119,7 @@ internal class TxHistoryItemStateConverter(
 
     private fun TxHistoryItem.getAmount(): String {
         if (type is TransactionType.TronStakingTransactionType.Vote ||
-            type == TransactionType.TronStakingTransactionType.Withdraw
+            type == TransactionType.TronStakingTransactionType.ClaimRewards
         ) {
             return ""
         }
