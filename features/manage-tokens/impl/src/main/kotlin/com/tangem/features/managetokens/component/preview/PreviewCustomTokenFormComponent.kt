@@ -1,5 +1,6 @@
 package com.tangem.features.managetokens.component.preview
 
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -13,6 +14,7 @@ import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.ui.CustomTokenFormContent
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentMap
 
 internal class PreviewCustomTokenFormComponent(
     networkName: ClickableFieldUM = PreviewCustomTokenFormComponent.networkName,
@@ -48,30 +50,40 @@ internal class PreviewCustomTokenFormComponent(
             onClick = {},
         )
         val tokenForm: CustomTokenFormUM.TokenFormUM = CustomTokenFormUM.TokenFormUM(
-            contractAddress = TextInputFieldUM(
-                label = resourceReference(R.string.custom_token_contract_address_input_title),
-                placeholder = stringReference(value = "0x000000000000000000000000000"),
-                value = "",
-                onValueChange = {},
-            ),
-            name = TextInputFieldUM(
-                label = resourceReference(R.string.custom_token_name_input_title),
-                placeholder = stringReference(value = "E.g. USD Coin"),
-                value = "",
-                onValueChange = {},
-            ),
-            symbol = TextInputFieldUM(
-                label = resourceReference(R.string.custom_token_token_symbol_input_title),
-                placeholder = stringReference(value = "E.g. USDC"),
-                value = "",
-                onValueChange = {},
-            ),
-            decimals = TextInputFieldUM(
-                label = resourceReference(R.string.custom_token_decimals_input_title),
-                placeholder = stringReference(value = "8"),
-                value = "",
-                onValueChange = {},
-            ),
+            fields = mapOf(
+                CustomTokenFormUM.TokenFormUM.Field.CONTRACT_ADDRESS to TextInputFieldUM(
+                    label = resourceReference(R.string.custom_token_contract_address_input_title),
+                    placeholder = stringReference(value = "0x000000000000000000000000000"),
+                    value = "",
+                    keyboardOptions = KeyboardOptions(),
+                    onValueChange = {},
+                    onFocusChange = {},
+                ),
+                CustomTokenFormUM.TokenFormUM.Field.NAME to TextInputFieldUM(
+                    label = resourceReference(R.string.custom_token_name_input_title),
+                    placeholder = stringReference(value = "E.g. USD Coin"),
+                    value = "",
+                    keyboardOptions = KeyboardOptions(),
+                    onValueChange = {},
+                    onFocusChange = {},
+                ),
+                CustomTokenFormUM.TokenFormUM.Field.SYMBOL to TextInputFieldUM(
+                    label = resourceReference(R.string.custom_token_token_symbol_input_title),
+                    placeholder = stringReference(value = "E.g. USDC"),
+                    value = "",
+                    keyboardOptions = KeyboardOptions(),
+                    onValueChange = {},
+                    onFocusChange = {},
+                ),
+                CustomTokenFormUM.TokenFormUM.Field.DECIMALS to TextInputFieldUM(
+                    label = resourceReference(R.string.custom_token_decimals_input_title),
+                    placeholder = stringReference(value = "8"),
+                    value = "",
+                    keyboardOptions = KeyboardOptions(),
+                    onValueChange = {},
+                    onFocusChange = {},
+                ),
+            ).toPersistentMap(),
         )
         val notifications: PersistentList<CustomTokenFormUM.NotificationUM> = persistentListOf(
             CustomTokenFormUM.NotificationUM(
