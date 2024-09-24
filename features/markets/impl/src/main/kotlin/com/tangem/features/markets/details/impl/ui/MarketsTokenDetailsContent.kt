@@ -52,6 +52,7 @@ internal fun MarketsTokenDetailsContent(
     addTopBarStatusBarPadding: Boolean,
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
+    backButtonEnabled: Boolean,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
@@ -61,6 +62,7 @@ internal fun MarketsTokenDetailsContent(
         state = state,
         onBackClick = onBackClick,
         onHeaderSizeChange = onHeaderSizeChange,
+        backButtonEnabled = backButtonEnabled,
         portfolioBlock = portfolioBlock,
         addTopBarStatusBarInsets = addTopBarStatusBarPadding,
     )
@@ -76,6 +78,7 @@ private fun Content(
     addTopBarStatusBarInsets: Boolean,
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
+    backButtonEnabled: Boolean,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
@@ -98,7 +101,10 @@ private fun Content(
                     }
                 },
             title = state.tokenName,
-            startButton = TopAppBarButtonUM.Back(onBackClick),
+            startButton = TopAppBarButtonUM.Back(
+                onBackClicked = onBackClick,
+                enabled = backButtonEnabled,
+            ),
         )
 
         SpacerH4()
@@ -305,6 +311,7 @@ private fun Preview() {
             onBackClick = {},
             backgroundColor = TangemTheme.colors.background.tertiary,
             portfolioBlock = {},
+            backButtonEnabled = true,
             addTopBarStatusBarPadding = false,
         )
     }
