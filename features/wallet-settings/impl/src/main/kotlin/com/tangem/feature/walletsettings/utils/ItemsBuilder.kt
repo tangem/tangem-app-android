@@ -1,12 +1,15 @@
 package com.tangem.feature.walletsettings.utils
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.ManageTokens.Source
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.impl.R
 import kotlinx.collections.immutable.PersistentList
@@ -17,6 +20,7 @@ import javax.inject.Inject
 @ComponentScoped
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     @Suppress("LongParameterList")
@@ -62,7 +66,10 @@ internal class ItemsBuilder @Inject constructor(
                 BlockUM(
                     text = resourceReference(R.string.add_tokens_title),
                     iconRes = R.drawable.ic_tether_24,
-                    onClick = { router.push(AppRoute.ManageTokens(userWalletId)) },
+                    onClick = {
+                        analyticsEventHandler.send(Settings.ButtonManageTokens)
+                        router.push(AppRoute.ManageTokens(Source.SETTINGS, userWalletId))
+                    },
                 ).let(::add)
             }
 
