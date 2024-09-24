@@ -110,11 +110,8 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
             backgroundColor = LocalMainBottomSheetColor.current.value,
             addTopBarStatusBarPadding = false,
             state = state,
-            onBackClick = {
-                if (bsState == BottomSheetState.EXPANDED) {
-                    navigateBack()
-                }
-            },
+            onBackClick = ::navigateBack,
+            backButtonEnabled = bsState == BottomSheetState.EXPANDED,
             onHeaderSizeChange = onHeaderSizeChange,
             portfolioBlock = portfolioComponent?.let { component ->
                 { blockModifier ->
@@ -145,6 +142,7 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
             addTopBarStatusBarPadding = true,
             state = state,
             onBackClick = ::navigateBack,
+            backButtonEnabled = true,
             onHeaderSizeChange = {},
             portfolioBlock = portfolioComponent?.let { component ->
                 { blockModifier ->
