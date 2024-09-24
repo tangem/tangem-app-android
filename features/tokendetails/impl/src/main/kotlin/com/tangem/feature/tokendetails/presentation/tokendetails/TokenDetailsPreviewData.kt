@@ -140,7 +140,6 @@ internal object TokenDetailsPreviewData {
     private val marketPriceLoading = MarketPriceBlockState.Loading(currencySymbol = "USDT")
 
     val stakingLoadingBlock = StakingBlockUM.Loading(iconState)
-    val stakingEmptyBlock = StakingBlockUM.Empty(iconState)
 
     val stakingAvailableBlock = StakingBlockUM.StakeAvailable(
         titleText = resourceReference(
@@ -312,7 +311,6 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
-        isStakingBlockShown = false,
         event = consumedEvent(),
     )
 
@@ -343,7 +341,6 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = true,
-        isStakingBlockShown = true,
         event = consumedEvent(),
     )
 

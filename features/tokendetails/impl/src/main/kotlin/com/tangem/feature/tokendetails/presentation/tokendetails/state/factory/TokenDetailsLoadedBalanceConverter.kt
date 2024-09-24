@@ -59,7 +59,6 @@ internal class TokenDetailsLoadedBalanceConverter(
     private fun convertError(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(
-            isStakingBlockShown = false,
             tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(
                 actionButtons = state.tokenBalanceBlockState.actionButtons,
                 balanceSegmentedButtonConfig = state.tokenBalanceBlockState.balanceSegmentedButtonConfig,
@@ -139,7 +138,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         }
     }
 
-    private fun getYieldBalance(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM {
+    private fun getYieldBalance(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM? {
         val yieldBalance = status.value.yieldBalance as? YieldBalance.Data
         val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance()
 
@@ -152,13 +151,13 @@ internal class TokenDetailsLoadedBalanceConverter(
                 StakingBlockUM.TemporaryDisabled(iconState)
             }
             stakingAvailability == StakingAvailability.Unavailable -> {
-                StakingBlockUM.Empty(iconState)
+                null
             }
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null -> {
                 getStakeAvailableState(stakingEntryInfo, iconState)
             }
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo == null -> {
-                StakingBlockUM.Empty(iconState = iconState)
+                null
             }
             else -> {
                 val fiatRate = status.value.fiatRate
