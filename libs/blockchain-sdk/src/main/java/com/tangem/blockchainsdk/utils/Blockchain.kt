@@ -128,6 +128,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "internet-computer" -> Blockchain.InternetComputer
         "energy-web-chain" -> Blockchain.EnergyWebChain
         "energy-web-chain/test" -> Blockchain.EnergyWebChainTestnet
+        "energy-web-x" -> Blockchain.EnergyWebX
+        "energy-web-x/test" -> Blockchain.EnergyWebXTestnet
         else -> null
     }
 }
@@ -257,6 +259,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.InternetComputer -> "internet-computer"
         Blockchain.EnergyWebChain -> "energy-web-chain"
         Blockchain.EnergyWebChainTestnet -> "energy-web-chain/test"
+        Blockchain.EnergyWebX -> "energy-web-x"
+        Blockchain.EnergyWebXTestnet -> "energy-web-x/test"
     }
 }
 
@@ -342,6 +346,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Sei, Blockchain.SeiTestnet -> "sei-network"
         Blockchain.InternetComputer -> "internet-computer"
         Blockchain.EnergyWebChain, Blockchain.EnergyWebChainTestnet -> "energy-web-chain"
+        Blockchain.EnergyWebX, Blockchain.EnergyWebXTestnet -> "energy-web-x"
     }
 }
 
@@ -375,4 +380,5 @@ private val excludedBlockchains = listOf(
     Blockchain.Sei,
     Blockchain.InternetComputer,
     Blockchain.EnergyWebChain,
+    Blockchain.EnergyWebX,
 )
