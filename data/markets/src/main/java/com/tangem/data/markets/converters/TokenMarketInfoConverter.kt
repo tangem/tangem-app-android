@@ -99,7 +99,7 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
             circulatingSupply = circulatingSupply,
             marketCap = marketCap,
             volume24h = volume24h,
-            totalSupply = totalSupply,
+            maxSupply = maxSupply,
             fullyDilutedValuation = fullyDilutedValuation,
         )
     }

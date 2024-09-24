@@ -104,8 +104,8 @@ data class TokenMarketInfoResponse(
         val marketCap: BigDecimal?,
         @Json(name = "volume_24h")
         val volume24h: BigDecimal?,
-        @Json(name = "total_supply")
-        val totalSupply: BigDecimal?,
+        @Json(name = "max_supply")
+        val maxSupply: BigDecimal?,
         @Json(name = "fully_diluted_valuation")
         val fullyDilutedValuation: BigDecimal?,
     )
