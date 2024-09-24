@@ -11,7 +11,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Analytics - Models */
-    implementation(projects.core.analytics.models)
+    api(projects.core.analytics.models)
 
     /** Domain */
     implementation(projects.domain.analytics)
