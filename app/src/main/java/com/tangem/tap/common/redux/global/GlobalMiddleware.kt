@@ -92,21 +92,24 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             scope.launch { exchangeManager.update() }
         }
         is GlobalAction.FetchUserCountry -> {
-            scope.launch {
-                // TODO("After adding DI") get dependencies by DI
-                runCatching { store.state.featureRepositoryProvider.homeRepository.getUserCountryCode() }
-                    .onSuccess {
-                        store.dispatchOnMain(
-                            GlobalAction.FetchUserCountry.Success(countryCode = it.code.lowercase()),
-                        )
-                    }
-                    .onFailure {
-                        store.dispatchOnMain(
-                            GlobalAction.FetchUserCountry.Success(
-                                countryCode = Locale.getDefault().country.lowercase(),
-                            ),
-                        )
-                    }
+            val homeFeatureToggles = store.inject(DaggerGraphState::homeFeatureToggles)
+
+            if (!homeFeatureToggles.isMigrateUserCountryCodeEnabled) {
+                scope.launch {
+                    runCatching { store.state.featureRepositoryProvider.homeRepository.getUserCountryCode() }
+                        .onSuccess {
+                            store.dispatchOnMain(
+                                GlobalAction.FetchUserCountry.Success(countryCode = it.code.lowercase()),
+                            )
+                        }
+                        .onFailure {
+                            store.dispatchOnMain(
+                                GlobalAction.FetchUserCountry.Success(
+                                    countryCode = Locale.getDefault().country.lowercase(),
+                                ),
+                            )
+                        }
+                }
             }
         }
     }
