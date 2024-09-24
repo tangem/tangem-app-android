@@ -132,10 +132,6 @@ internal object LegacyScanProcessor {
         crossinline onWalletNotCreated: suspend () -> Unit,
         crossinline onSuccess: suspend (ScanResponse) -> Unit,
     ) {
-        val globalState = store.state.globalState
-        val tapWalletManager = globalState.tapWalletManager
-        tapWalletManager.updateConfigManager(scanResponse)
-
         store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
         if (OnboardingHelper.isOnboardingCase(scanResponse)) {
