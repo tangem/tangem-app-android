@@ -1,17 +1,17 @@
 package com.tangem.features.managetokens.utils.ui
 
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.managetokens.ValidateTokenFormUseCase
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormUM
-import com.tangem.features.managetokens.entity.customtoken.TextInputFieldUM
+import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormUM.TokenFormUM.Field
 import com.tangem.features.managetokens.impl.R
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentMap
 
 internal fun CustomTokenFormUM.updateTokenForm(
     block: CustomTokenFormUM.TokenFormUM.() -> CustomTokenFormUM.TokenFormUM,
@@ -21,19 +21,6 @@ internal fun CustomTokenFormUM.updateTokenForm(
     val updatedForm = form.block()
 
     return copy(tokenForm = updatedForm)
-}
-
-internal fun TextInputFieldUM.updateValue(
-    value: String = this.value,
-    error: TextReference? = this.error,
-    isEnabled: Boolean = this.isEnabled,
-    clearError: Boolean = false,
-): TextInputFieldUM {
-    return copy(
-        value = value,
-        error = if (clearError) null else error,
-        isEnabled = isEnabled,
-    )
 }
 
 internal fun CustomTokenFormUM.updateWithProgress(
@@ -49,22 +36,21 @@ internal fun CustomTokenFormUM.updateWithProgress(
         canAddToken = canAddToken,
         notifications = if (clearNotifications) persistentListOf() else notifications,
     ).updateTokenForm {
+        val updatedFields = fields.mapValues { (key, field) ->
+            field.copy(
+                isEnabled = when (key) {
+                    Field.CONTRACT_ADDRESS -> field.isEnabled
+                    Field.NAME,
+                    Field.SYMBOL,
+                    Field.DECIMALS,
+                    -> !(showProgress || disableSecondaryFields)
+                },
+                error = if (clearFieldErrors) null else field.error,
+            )
+        }
+
         copy(
-            contractAddress = contractAddress.updateValue(
-                clearError = clearFieldErrors,
-            ),
-            name = name.updateValue(
-                isEnabled = !showProgress && !disableSecondaryFields,
-                clearError = clearFieldErrors,
-            ),
-            symbol = symbol.updateValue(
-                isEnabled = !showProgress && !disableSecondaryFields,
-                clearError = clearFieldErrors,
-            ),
-            decimals = decimals.updateValue(
-                isEnabled = !showProgress && !disableSecondaryFields,
-                clearError = clearFieldErrors,
-            ),
+            fields = updatedFields.toPersistentMap(),
             wasFilled = isWasFilled,
         )
     }
@@ -72,11 +58,31 @@ internal fun CustomTokenFormUM.updateWithProgress(
 
 internal fun CustomTokenFormUM.updateWithCurrency(currency: CryptoCurrency): CustomTokenFormUM {
     return updateTokenForm {
+        val updatedFields = fields.mapValues { (key, field) ->
+            when (key) {
+                Field.CONTRACT_ADDRESS -> field.copy(
+                    error = null,
+                )
+                Field.NAME -> field.copy(
+                    value = currency.name,
+                    error = null,
+                    isEnabled = false,
+                )
+                Field.SYMBOL -> field.copy(
+                    value = currency.symbol,
+                    error = null,
+                    isEnabled = false,
+                )
+                Field.DECIMALS -> field.copy(
+                    value = currency.decimals.toString(),
+                    error = null,
+                    isEnabled = false,
+                )
+            }
+        }
+
         copy(
-            contractAddress = contractAddress.updateValue(error = null),
-            name = name.updateValue(currency.name),
-            symbol = symbol.updateValue(currency.symbol),
-            decimals = decimals.updateValue(currency.decimals.toString()),
+            fields = updatedFields.toPersistentMap(),
         )
     }
 }
@@ -85,18 +91,20 @@ internal fun CustomTokenFormUM.updateWithContractAddressException(
     exception: CustomTokenFormValidationException.ContractAddress,
 ): CustomTokenFormUM {
     return updateTokenForm {
-        copy(
-            contractAddress = contractAddress.updateValue(
+        val updatedFields = fields.mutate {
+            it[Field.CONTRACT_ADDRESS] = it.getValue(Field.CONTRACT_ADDRESS).copy(
                 error = when (exception) {
                     CustomTokenFormValidationException.ContractAddress.Empty -> {
-                        null
+                        null // Should not display this error
                     }
                     CustomTokenFormValidationException.ContractAddress.Invalid -> {
                         resourceReference(R.string.custom_token_creation_error_invalid_contract_address)
                     }
                 },
-            ),
-        )
+            )
+        }
+
+        copy(fields = updatedFields)
     }
 }
 
@@ -104,11 +112,11 @@ internal fun CustomTokenFormUM.updateWithDecimalsException(
     exception: CustomTokenFormValidationException.Decimals,
 ): CustomTokenFormUM {
     return updateTokenForm {
-        copy(
-            decimals = decimals.updateValue(
+        val updatedFields = fields.mutate {
+            it[Field.DECIMALS] = it.getValue(Field.DECIMALS).copy(
                 error = when (exception) {
                     is CustomTokenFormValidationException.Decimals.Empty -> {
-                        null
+                        null // Should not display this error
                     }
                     is CustomTokenFormValidationException.Decimals.Invalid -> {
                         resourceReference(
@@ -117,8 +125,10 @@ internal fun CustomTokenFormUM.updateWithDecimalsException(
                         )
                     }
                 },
-            ),
-        )
+            )
+        }
+
+        copy(fields = updatedFields)
     }
 }
 
