@@ -1,6 +1,7 @@
 package com.tangem.features.managetokens.utils.list
 
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
@@ -8,12 +9,15 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
+import com.tangem.domain.managetokens.CheckHasLinkedTokensUseCase
 import com.tangem.domain.managetokens.GetManagedTokensUseCase
 import com.tangem.domain.managetokens.RemoveCustomManagedCryptoCurrencyUseCase
-import com.tangem.domain.managetokens.CheckHasLinkedTokensUseCase
 import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
+import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.pagination.BatchAction
@@ -42,10 +46,12 @@ internal class ManageTokensListManager @Inject constructor(
     private val checkCurrencyUnsupportedUseCase: CheckCurrencyUnsupportedUseCase,
     private val messageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     clipboardManager: ClipboardManager,
 ) : ManageTokensUiActions {
 
     private lateinit var scope: CoroutineScope
+    private lateinit var source: ManageTokensSource
 
     private val jobHolder = JobHolder()
     private val actionsFlow: MutableSharedFlow<ManageTokensBatchAction> = MutableSharedFlow(
@@ -74,8 +80,9 @@ internal class ManageTokensListManager @Inject constructor(
         .distinctUntilChanged()
     val uiItems: Flow<ImmutableList<CurrencyItemUM>> = uiManager.items
 
-    suspend fun launchPagination(userWalletId: UserWalletId?) = coroutineScope {
+    suspend fun launchPagination(params: ManageTokensComponent.Params) = coroutineScope {
         scope = this
+        source = params.source
 
         val batchFlow = getManagedTokensUseCase(
             context = ManageTokensListBatchingContext(
@@ -85,13 +92,13 @@ internal class ManageTokensListManager @Inject constructor(
         )
 
         batchFlow.state
-            .onEach { state -> updateState(state, userWalletId) }
+            .onEach { state -> updateState(state, params.userWalletId) }
             .flowOn(dispatchers.default)
             .launchIn(scope = this)
             .saveIn(jobHolder)
 
         // Initial load
-        reload(userWalletId)
+        reload(params.userWalletId)
     }
 
     suspend fun reload(userWalletId: UserWalletId?) {
@@ -159,12 +166,16 @@ internal class ManageTokensListManager @Inject constructor(
         changedCurrenciesManager.addCurrency(currency, network)
 
         sendSelectCurrencyAction(batchKey, currency.id, network, isSelected = true)
+
+        sendSelectCurrencyAnalyticsEvent(currency, isSelected = true)
     }
 
     override fun removeCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network) {
         changedCurrenciesManager.removeCurrency(currency, network)
 
         sendSelectCurrencyAction(batchKey, currency.id, network, isSelected = false)
+
+        sendSelectCurrencyAnalyticsEvent(currency, isSelected = false)
     }
 
     override fun removeCustomCurrency(userWalletId: UserWalletId, currency: ManagedCryptoCurrency.Custom) {
@@ -179,6 +190,15 @@ internal class ManageTokensListManager @Inject constructor(
         currency: ManagedCryptoCurrency.Token,
         network: Network,
     ): Boolean = !changedCurrenciesManager.containsCurrency(currency, network)
+
+    private fun sendSelectCurrencyAnalyticsEvent(currency: ManagedCryptoCurrency.Token, isSelected: Boolean) {
+        val event = ManageTokensAnalyticEvent.TokenSwitcherChanged(
+            tokenSymbol = currency.symbol,
+            isSelected = isSelected,
+            source = source,
+        )
+        analyticsEventHandler.send(event)
+    }
 
     private fun sendSelectCurrencyAction(
         batchKey: Int,
