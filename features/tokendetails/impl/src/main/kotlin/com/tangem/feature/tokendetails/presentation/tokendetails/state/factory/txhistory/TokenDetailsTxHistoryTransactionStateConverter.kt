@@ -51,10 +51,12 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             is TransactionType.Approve -> R.drawable.ic_doc_24
             is TransactionType.TronStakingTransactionType.Stake,
             is TransactionType.TronStakingTransactionType.Vote,
-            -> R.drawable.ic_transaction_history_staking
-            is TransactionType.TronStakingTransactionType.Withdraw,
+            -> R.drawable.ic_transaction_history_staking_24
+            is TransactionType.TronStakingTransactionType.ClaimRewards,
+            -> R.drawable.ic_transaction_history_claim_rewards_24
             is TransactionType.TronStakingTransactionType.Unstake,
-            -> R.drawable.ic_transaction_history_unstaking
+            is TransactionType.TronStakingTransactionType.Withdraw,
+            -> R.drawable.ic_transaction_history_unstaking_24
             is TransactionType.Operation,
             is TransactionType.Swap,
             is TransactionType.Transfer,
@@ -72,6 +74,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
         is TransactionType.TronStakingTransactionType.Stake -> resourceReference(R.string.common_stake)
         is TransactionType.TronStakingTransactionType.Unstake -> resourceReference(R.string.common_unstake)
         is TransactionType.TronStakingTransactionType.Vote -> resourceReference(R.string.staking_vote)
+        is TransactionType.TronStakingTransactionType.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
         is TransactionType.TronStakingTransactionType.Withdraw -> resourceReference(R.string.staking_withdraw)
     }
 
@@ -97,9 +100,13 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
                 },
                 formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
             )
-            is InteractionAddressType.Staking -> resourceReference(
-                id = R.string.common_staking,
+            is InteractionAddressType.Validator -> resourceReference(
+                id = R.string.transaction_history_transaction_validator,
+                formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
             )
+            null -> {
+                TextReference.EMPTY
+            }
         }
 
     private fun TxHistoryItem.extractDirection() = if (isOutgoing) Direction.OUTGOING else Direction.INCOMING
@@ -111,7 +118,8 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
     }
 
     private fun TxHistoryItem.getAmount(): String {
-        if (type == TransactionType.TronStakingTransactionType.Vote ||
+        if (type is TransactionType.TronStakingTransactionType.Vote ||
+            type == TransactionType.TronStakingTransactionType.ClaimRewards ||
             type == TransactionType.TronStakingTransactionType.Withdraw
         ) {
             return ""
