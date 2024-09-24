@@ -11,13 +11,4 @@ interface ConfigManager {
     val config: Config
 
     suspend fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)? = null)
-
-    fun turnOff(name: String)
-
-    fun resetToDefault(name: String)
-
-    companion object {
-        const val IS_CREATING_TWIN_CARDS_ALLOWED = "isCreatingTwinCardsAllowed"
-        const val IS_TOP_UP_ENABLED = "isTopUpEnabled"
-    }
 }
