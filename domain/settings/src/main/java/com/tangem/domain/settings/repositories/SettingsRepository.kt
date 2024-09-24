@@ -1,5 +1,7 @@
 package com.tangem.domain.settings.repositories
 
+import com.tangem.domain.settings.usercountry.models.UserCountry
+
 interface SettingsRepository {
 
     suspend fun shouldShowSaveUserWalletScreen(): Boolean
@@ -33,4 +35,8 @@ interface SettingsRepository {
     suspend fun shouldShowMarketsTooltip(): Boolean
 
     suspend fun setMarketsTooltipShown(value: Boolean)
+
+    suspend fun getUserCountryCodeSync(): UserCountry?
+
+    suspend fun fetchUserCountryCode()
 }
