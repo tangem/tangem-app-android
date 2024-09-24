@@ -1,7 +1,6 @@
 package com.tangem.tap.features.details.redux
 
 import com.tangem.domain.apptheme.model.AppThemeMode
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -21,7 +20,7 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
     val detailsState = state.detailsState
     return when (action) {
         is DetailsAction.PrepareScreen -> {
-            handlePrepareScreen(action, state)
+            handlePrepareScreen(action)
         }
         is DetailsAction.AppSettings -> {
             handlePrivacyAction(action, detailsState)
@@ -31,26 +30,12 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
                 selectedAppCurrency = action.currency,
             ),
         )
-        is DetailsAction.ScanAndSaveUserWallet -> detailsState.copy(
-            isScanningInProgress = true,
-        )
-        is DetailsAction.ScanAndSaveUserWallet.Error -> detailsState.copy(
-            isScanningInProgress = false,
-            error = action.error,
-        )
-        is DetailsAction.ScanAndSaveUserWallet.Success -> detailsState.copy(
-            isScanningInProgress = false,
-        )
-        is DetailsAction.DismissError -> detailsState.copy(
-            error = null,
-        )
     }
 }
 
-private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: AppState): DetailsState {
+private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsState {
     return DetailsState(
         scanResponse = action.scanResponse,
-        createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         appSettingsState = AppSettingsState(
             isBiometricsAvailable = runBlocking {
                 tangemSdkManager.checkCanUseBiometry()
