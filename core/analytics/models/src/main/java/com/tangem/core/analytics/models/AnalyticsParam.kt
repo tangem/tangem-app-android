@@ -22,9 +22,19 @@ sealed class AnalyticsParam {
         data object Closed : RateApp("Close")
     }
 
-    sealed class OnOffState(val value: String) {
-        data object On : OnOffState("On")
-        data object Off : OnOffState("Off")
+    enum class OnOffState(val value: String) {
+        On("On"),
+        Off("Off"),
+        ;
+
+        companion object {
+
+            fun from(enabled: Boolean): String {
+                val state = if (enabled) On else Off
+
+                return state.value
+            }
+        }
     }
 
     sealed class OrganizeSortType(val value: String) {
@@ -135,6 +145,22 @@ sealed class AnalyticsParam {
         class SingleCurrency(currencyName: String) : WalletType(currencyName)
     }
 
+    enum class Validation(val value: String) {
+
+        OK(value = "Ok"),
+        ERROR(value = "Error"),
+        ;
+
+        companion object {
+
+            fun from(isValid: Boolean): String {
+                val status = if (isValid) OK else ERROR
+
+                return status.value
+            }
+        }
+    }
+
     companion object Key {
         const val BLOCKCHAIN = "blockchain"
         const val TOKEN_PARAM = "Token"
@@ -158,6 +184,9 @@ sealed class AnalyticsParam {
         const val VALIDATION = "Validation"
         const val BLOCKCHAIN_EXCEPTION_HOST = "exception_host"
         const val BLOCKCHAIN_SELECTED_HOST = "selected_host"
+        const val INPUT = "Input"
+        const val COUNT = "Count"
+        const val DERIVATION = "Derivation"
 
         // region swap
         const val TOKEN_CATEGORY = "Token"
