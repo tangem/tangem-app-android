@@ -52,7 +52,7 @@ internal class MyPortfolioUMFactory(
                     onAddClick = onAddClick,
                 )
             } else {
-                MyPortfolioUM.Unavailable
+                MyPortfolioUM.UnavailableForWallet
             }
         }
 
