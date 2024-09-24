@@ -19,6 +19,4 @@ internal class MockConfigManager : ConfigManager {
     )
 
     override suspend fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)?) = Unit
-    override fun turnOff(name: String) = Unit
-    override fun resetToDefault(name: String) = Unit
 }
