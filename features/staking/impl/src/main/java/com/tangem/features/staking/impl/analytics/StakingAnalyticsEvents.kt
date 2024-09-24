@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType.Companion.asAnalyticName
 
 internal sealed class StakingAnalyticsEvents(
     event: String,
@@ -47,18 +48,20 @@ internal sealed class StakingAnalyticsEvents(
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
             "Validator" to validator,
-            "Action" to action.name,
+            "Action" to action.asAnalyticName,
         ),
     )
 
     data class StakeInProgressScreenOpened(
         val validator: String,
         val token: String,
+        val action: StakingActionType,
     ) : StakingAnalyticsEvents(
         event = "Stake In Progress Screen Opened",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
             "Validator" to validator,
+            "Action" to action.asAnalyticName,
         ),
     )
 
@@ -136,9 +139,13 @@ internal sealed class StakingAnalyticsEvents(
 
     data class StakingError(
         val token: String,
+        val errorType: String,
     ) : StakingAnalyticsEvents(
         event = "Errors",
-        params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
+        params = mapOf(
+            AnalyticsParam.TOKEN_PARAM to token,
+            AnalyticsParam.ERROR_DESCRIPTION to errorType,
+        ),
     )
 
     data class TransactionError(
