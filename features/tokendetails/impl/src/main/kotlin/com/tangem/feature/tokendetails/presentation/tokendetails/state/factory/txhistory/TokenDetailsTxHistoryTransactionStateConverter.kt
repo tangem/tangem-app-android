@@ -119,7 +119,8 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
 
     private fun TxHistoryItem.getAmount(): String {
         if (type is TransactionType.TronStakingTransactionType.Vote ||
-            type == TransactionType.TronStakingTransactionType.ClaimRewards
+            type == TransactionType.TronStakingTransactionType.ClaimRewards ||
+            type == TransactionType.TronStakingTransactionType.Withdraw
         ) {
             return ""
         }
