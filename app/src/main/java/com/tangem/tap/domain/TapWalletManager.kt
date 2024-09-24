@@ -4,10 +4,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
-import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.common.extensions.setContext
@@ -50,22 +47,11 @@ class TapWalletManager(
 
         tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
 
-        updateConfigManager(scanResponse)
         withMainContext {
             // Order is important
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
             store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
-        }
-    }
-
-    fun updateConfigManager(data: ScanResponse) {
-        val configManager = store.state.globalState.configManager
-
-        if (data.cardTypesResolver.isStart2Coin()) {
-            configManager?.turnOff(ConfigManager.IS_TOP_UP_ENABLED)
-        } else {
-            configManager?.resetToDefault(ConfigManager.IS_TOP_UP_ENABLED)
         }
     }
 }
