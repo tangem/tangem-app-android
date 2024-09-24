@@ -20,8 +20,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.constraintlayout.compose.ChainStyle
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.constraintlayout.compose.Visibility
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
@@ -68,6 +70,9 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
         ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
             val (iconItem, titleItem, subtitleItem, amountItem, timestampItem) = createRefs()
 
+            createVerticalChain(titleItem, subtitleItem, chainStyle = ChainStyle.Spread)
+            createVerticalChain(amountItem, timestampItem, chainStyle = ChainStyle.Spread)
+
             Icon(
                 state = state,
                 modifier = Modifier
@@ -102,6 +107,7 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
                         end = TangemTheme.dimens.spacing4,
                     )
                     .constrainAs(subtitleItem) {
+                        visibility = state.isGoneIf { subtitle.isNullOrEmpty() }
                         top.linkTo(titleItem.bottom)
                         bottom.linkTo(parent.bottom)
                         start.linkTo(iconItem.end)
@@ -114,6 +120,7 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
                 state = state,
                 isBalanceHidden = isBalanceHidden,
                 modifier = Modifier.constrainAs(amountItem) {
+                    visibility = state.isGoneIf { amount.isEmpty() }
                     top.linkTo(parent.top)
                     bottom.linkTo(timestampItem.top)
                     start.linkTo(titleItem.end)
@@ -313,6 +320,10 @@ private fun LockedContent(modifier: Modifier = Modifier) {
             shape = RoundedCornerShape(TangemTheme.dimens.radius6),
         ),
     )
+}
+
+private fun TransactionState.isGoneIf(goneCondition: TransactionState.Content.() -> Boolean): Visibility {
+    return if ((this as? TransactionState.Content)?.goneCondition() == true) Visibility.Gone else Visibility.Visible
 }
 
 @Preview(showBackground = true, widthDp = 368)
