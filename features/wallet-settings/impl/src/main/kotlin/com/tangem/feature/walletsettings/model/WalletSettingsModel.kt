@@ -145,7 +145,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onLinkMoreCardsClick(scanResponse: ScanResponse) {
-        analyticsEventHandler.send(Settings.ButtonCreateBackup())
+        analyticsEventHandler.send(Settings.ButtonCreateBackup)
 
         analyticsContextProxy.addContext(scanResponse)
 
