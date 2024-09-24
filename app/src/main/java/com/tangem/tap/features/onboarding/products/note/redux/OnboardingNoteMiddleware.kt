@@ -4,12 +4,8 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
-
-import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.*
@@ -20,7 +16,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.mainScope
@@ -178,23 +173,11 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 return
             }
 
-            val blockchain = walletManager.wallet.blockchain
-            val cryptoCurrency = CryptoCurrencyFactory().createCoin(
-                blockchain,
-                null,
-                scanResponse.derivationStyleProvider,
-            ) ?: return
-            val topUpUrl = walletManager.getTopUpUrl(cryptoCurrency) ?: return
-
-            val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
-            Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
-
-            if (globalState.userCountryCode == RUSSIA_COUNTRY_CODE) {
-                val dialogData = AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl)
-                store.dispatchDialogShow(AppDialog.RussianCardholdersWarningDialog(dialogData))
-            } else {
-                store.dispatchOpenUrl(topUpUrl)
-            }
+            OnboardingHelper.handleTopUpAction(
+                walletManager = walletManager,
+                scanResponse = scanResponse,
+                globalState = globalState,
+            )
         }
         is OnboardingNoteAction.Done -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
