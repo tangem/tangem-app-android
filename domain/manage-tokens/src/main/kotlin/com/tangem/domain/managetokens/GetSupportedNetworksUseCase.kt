@@ -21,7 +21,7 @@ class GetSupportedNetworksUseCase(
 
             ensureNotNull(networks.takeIf { it.isNotEmpty() }) {
                 SupportedBlockchainException.EmptyList
-            }
+            }.sortedBy(Network::name)
         }
     }
 }
