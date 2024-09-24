@@ -51,12 +51,12 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             is TransactionType.Approve -> R.drawable.ic_doc_24
             is TransactionType.TronStakingTransactionType.Stake,
             is TransactionType.TronStakingTransactionType.Vote,
-            -> R.drawable.ic_transaction_history_staking
+            -> R.drawable.ic_transaction_history_staking_24
             is TransactionType.TronStakingTransactionType.ClaimRewards,
-            -> R.drawable.ic_transaction_history_claim_rewards
+            -> R.drawable.ic_transaction_history_claim_rewards_24
             is TransactionType.TronStakingTransactionType.Unstake,
             is TransactionType.TronStakingTransactionType.Withdraw,
-            -> R.drawable.ic_transaction_history_unstaking
+            -> R.drawable.ic_transaction_history_unstaking_24
             is TransactionType.Operation,
             is TransactionType.Swap,
             is TransactionType.Transfer,
