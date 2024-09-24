@@ -7,7 +7,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import arrow.core.getOrElse
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.managetokens.ValidateDerivationPathUseCase
 import com.tangem.domain.managetokens.model.exceptoin.DerivationPathValidationException
 import com.tangem.domain.tokens.model.Network
@@ -111,7 +110,8 @@ internal class DefaultCustomTokenDerivationInputComponent @AssistedInject constr
         val model = SelectedDerivationPath(
             id = null,
             value = Network.DerivationPath.Custom(value),
-            networkName = stringReference(value = value),
+            name = value,
+            isDefault = false,
         )
 
         params.onConfirm(model)
