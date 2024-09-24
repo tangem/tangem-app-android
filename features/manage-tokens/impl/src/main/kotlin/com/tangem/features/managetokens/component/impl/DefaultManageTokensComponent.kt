@@ -24,7 +24,7 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultManageTokensComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted params: ManageTokensComponent.Params,
+    @Assisted private val params: ManageTokensComponent.Params,
     private val addCustomTokenComponentFactory: AddCustomTokenComponent.Factory,
 ) : ManageTokensComponent, AppComponentContext by context {
 
