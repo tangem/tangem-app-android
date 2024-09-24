@@ -76,6 +76,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "sei", "sei/test" -> R.drawable.img_sei_22
         "internet-computer" -> R.drawable.img_icp_22
         "energy-web-chain", "energy-web-chain/test" -> R.drawable.img_energy_web_22
+        "energy-web-x", "energy-web-x/test" -> R.drawable.img_energy_web_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -153,6 +154,7 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "sei", "sei/test" -> R.drawable.img_sei_22
         "internet-computer" -> R.drawable.img_icp_22
         "energy-web-chain", "energy-web-chain/test" -> R.drawable.img_energy_web_22
+        "energy-web-x", "energy-web-x/test" -> R.drawable.img_energy_web_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -227,6 +229,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "sei", "sei/test" -> R.drawable.img_sei_22
         "internet-computer" -> R.drawable.img_icp_22
         "energy-web-chain", "energy-web-chain/test" -> R.drawable.img_energy_web_22
+        "energy-web-x", "energy-web-x/test" -> R.drawable.img_energy_web_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -304,6 +307,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "sei", "sei/test" -> R.drawable.ic_sei_22
         "internet-computer" -> R.drawable.ic_icp_22
         "energy-web-chain", "energy-web-chain/test" -> R.drawable.ic_energy_web_22
+        "energy-web-x", "energy-web-x/test" -> R.drawable.ic_energy_web_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -381,6 +385,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "sei", "sei/test" -> R.drawable.ic_sei_22
         "internet-computer" -> R.drawable.ic_icp_22
         "energy-web-chain", "energy-web-chain/test" -> R.drawable.ic_energy_web_22
+        "energy-web-x", "energy-web-x/test" -> R.drawable.ic_energy_web_22
         else -> R.drawable.ic_alert_24
     }
 }
