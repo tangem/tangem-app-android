@@ -8,6 +8,7 @@ interface AddCustomTokenComponent : ComposableBottomSheetComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
+        val source: ManageTokensSource,
         val onDismiss: () -> Unit,
         val onCurrencyAdded: () -> Unit,
     )
