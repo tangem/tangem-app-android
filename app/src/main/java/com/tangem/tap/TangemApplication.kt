@@ -44,7 +44,6 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
-import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
@@ -175,9 +174,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val getCardInfoUseCase: GetCardInfoUseCase
         get() = entryPoint.getGetCardInfoUseCase()
 
-    private val detailsFeatureToggles: DetailsFeatureToggles
-        get() = entryPoint.getDetailsFeatureToggles()
-
     private val urlOpener
         get() = entryPoint.getUrlOpener()
 
@@ -272,7 +268,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     getFeedbackEmailUseCase = getFeedbackEmailUseCase,
                     getCardInfoUseCase = getCardInfoUseCase,
                     assetLoader = assetLoader,
-                    detailsFeatureToggles = detailsFeatureToggles,
                     urlOpener = urlOpener,
                     shareManager = shareManager,
                     appRouter = appRouter,
