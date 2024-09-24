@@ -55,12 +55,6 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
         is GlobalAction.RestoreAppCurrency -> {
             restoreAppCurrency()
         }
-        is GlobalAction.SendEmail -> {
-            store.state.globalState.feedbackManager?.sendEmail(
-                feedbackData = action.feedbackData,
-                scanResponse = action.scanResponse,
-            )
-        }
         is GlobalAction.ExchangeManager.Init -> {
             val appStateSafe = appState() ?: return
             val config = appStateSafe.globalState.configManager?.config ?: return
