@@ -45,7 +45,7 @@ internal fun TokenStakingBlock(state: StakingBlockUM, isBalanceHidden: Boolean, 
         label = "Staking block animation",
     ) {
         when (it) {
-            is StakingBlockUM.TemporaryDisabled -> StakingTemporaryUnavailableBlock(modifier)
+            is StakingBlockUM.TemporaryUnavailable -> StakingTemporaryUnavailableBlock(modifier)
             is StakingBlockUM.Loading -> StakingLoading(
                 iconState = it.iconState,
                 modifier = modifier,

@@ -147,8 +147,8 @@ internal class TokenDetailsLoadedBalanceConverter(
         val iconState = state.tokenInfoBlockState.iconState
 
         return when {
-            stakingAvailability == StakingAvailability.TemporaryDisabled -> {
-                StakingBlockUM.TemporaryDisabled(iconState)
+            stakingAvailability == StakingAvailability.TemporaryUnavailable -> {
+                StakingBlockUM.TemporaryUnavailable
             }
             stakingAvailability == StakingAvailability.Unavailable -> {
                 null

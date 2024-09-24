@@ -176,7 +176,7 @@ internal class DefaultStakingRepository(
                     StakingAvailability.Available(prefetchedYield.id)
                 }
                 prefetchedYield == null && isSupportedInMobileApp -> {
-                    StakingAvailability.TemporaryDisabled
+                    StakingAvailability.TemporaryUnavailable
                 }
                 else -> StakingAvailability.Unavailable
             }
@@ -623,7 +623,6 @@ internal class DefaultStakingRepository(
             // Blockchain.Kava.run { id + toCoinId() } to KAVA_INTEGRATION_ID,
             // Blockchain.Near.run { id + toCoinId() } to NEAR_INTEGRATION_ID,
             // Blockchain.Tezos.run { id + toCoinId() } to TEZOS_INTEGRATION_ID,
-            // Blockchain.TON.run { id + toCoinId() } to "ton_intergration",
         )
     }
 }

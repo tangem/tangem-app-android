@@ -7,7 +7,7 @@ import java.math.BigDecimal
 @Stable
 internal sealed interface StakingBlockUM {
 
-    data class TemporaryDisabled(val iconState: IconState) : StakingBlockUM
+    data object TemporaryUnavailable : StakingBlockUM
 
     data class Loading(val iconState: IconState) : StakingBlockUM
 
