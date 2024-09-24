@@ -6,7 +6,10 @@ import java.math.BigDecimal
 
 @Stable
 internal sealed interface StakingBlockUM {
-    data class Error(val iconState: IconState) : StakingBlockUM
+
+    data class TemporaryDisabled(val iconState: IconState) : StakingBlockUM
+
+    data class Empty(val iconState: IconState) : StakingBlockUM
 
     data class Loading(val iconState: IconState) : StakingBlockUM
 

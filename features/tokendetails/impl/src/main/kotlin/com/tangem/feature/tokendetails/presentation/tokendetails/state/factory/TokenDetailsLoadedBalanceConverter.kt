@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.YieldBalance
@@ -37,6 +38,7 @@ internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
+    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
@@ -142,14 +144,21 @@ internal class TokenDetailsLoadedBalanceConverter(
         val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance()
 
         val stakingEntryInfo = stakingEntryInfoProvider.invoke()
+        val stakingAvailability = stakingAvailabilityProvider.invoke()
         val iconState = state.tokenInfoBlockState.iconState
 
         return when {
+            stakingAvailability == StakingAvailability.TemporaryDisabled -> {
+                StakingBlockUM.TemporaryDisabled(iconState)
+            }
+            stakingAvailability == StakingAvailability.Unavailable -> {
+                StakingBlockUM.Empty(iconState)
+            }
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null -> {
                 getStakeAvailableState(stakingEntryInfo, iconState)
             }
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo == null -> {
-                StakingBlockUM.Error(iconState = iconState)
+                StakingBlockUM.Empty(iconState = iconState)
             }
             else -> {
                 val fiatRate = status.value.fiatRate

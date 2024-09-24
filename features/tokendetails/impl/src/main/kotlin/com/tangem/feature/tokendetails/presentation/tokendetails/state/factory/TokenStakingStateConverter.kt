@@ -25,7 +25,7 @@ internal class TokenStakingStateConverter(
         val iconState = state.tokenInfoBlockState.iconState
         return value.fold(
             ifLeft = {
-                StakingBlockUM.Error(iconState = iconState)
+                StakingBlockUM.Empty(iconState = iconState)
             },
             ifRight = { stakingEntryInfo ->
                 val apr = BigDecimalFormatter.formatPercent(

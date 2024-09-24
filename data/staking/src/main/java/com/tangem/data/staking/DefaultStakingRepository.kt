@@ -111,7 +111,7 @@ internal class DefaultStakingRepository(
         rawNetworkId.plus(rawCurrencyId)
     }
 
-    override fun isStakingSupported(integrationKey: String): Boolean {
+    override fun isStakingSupportedInMobileApp(integrationKey: String): Boolean {
         return integrationIdMap.containsKey(integrationKey)
     }
 
@@ -169,13 +169,13 @@ internal class DefaultStakingRepository(
             val yields = getEnabledYields() ?: return@withContext StakingAvailability.Unavailable
 
             val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, cryptoCurrency.symbol)
-            val isSupported = isStakingSupported(getIntegrationKey(cryptoCurrency.id))
+            val isSupportedInMobileApp = isStakingSupportedInMobileApp(getIntegrationKey(cryptoCurrency.id))
 
             when {
-                prefetchedYield != null && isSupported -> {
+                prefetchedYield != null && isSupportedInMobileApp -> {
                     StakingAvailability.Available(prefetchedYield.id)
                 }
-                prefetchedYield == null && isSupported -> {
+                prefetchedYield == null && isSupportedInMobileApp -> {
                     StakingAvailability.TemporaryDisabled
                 }
                 else -> StakingAvailability.Unavailable
@@ -623,6 +623,7 @@ internal class DefaultStakingRepository(
             // Blockchain.Kava.run { id + toCoinId() } to KAVA_INTEGRATION_ID,
             // Blockchain.Near.run { id + toCoinId() } to NEAR_INTEGRATION_ID,
             // Blockchain.Tezos.run { id + toCoinId() } to TEZOS_INTEGRATION_ID,
+            Blockchain.TON.run { id + toCoinId() } to "ton_intergration",
         )
     }
 }

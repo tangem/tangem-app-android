@@ -140,7 +140,7 @@ internal object TokenDetailsPreviewData {
     private val marketPriceLoading = MarketPriceBlockState.Loading(currencySymbol = "USDT")
 
     val stakingLoadingBlock = StakingBlockUM.Loading(iconState)
-    val stakingErrorBlock = StakingBlockUM.Error(iconState)
+    val stakingEmptyBlock = StakingBlockUM.Empty(iconState)
 
     val stakingAvailableBlock = StakingBlockUM.StakeAvailable(
         titleText = resourceReference(
