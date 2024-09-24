@@ -12,8 +12,8 @@ import com.tangem.utils.converter.Converter
 
 @Stable
 internal class TokenMarketInfoConverter(
-    appCurrency: Provider<AppCurrency>,
-    onInfoClick: (InfoBottomSheetContent) -> Unit,
+    private val appCurrency: Provider<AppCurrency>,
+    private val onInfoClick: (InfoBottomSheetContent) -> Unit,
     onLinkClick: (LinksUM.Link) -> Unit,
     onPricePerformanceIntervalChanged: (PriceChangeInterval) -> Unit,
     onInsightsIntervalChanged: (PriceChangeInterval) -> Unit,
@@ -28,7 +28,6 @@ internal class TokenMarketInfoConverter(
     @Suppress("UnusedPrivateMember")
     // TODO second markets iteration
     private val securityScoreConverter = SecurityScoreConverter(onInfoClick = onInfoClick)
-    private val metricsConverter = MetricsConverter(appCurrency = appCurrency, onInfoClick = onInfoClick)
     private val pricePerformanceConverter = PricePerformanceConverter(
         appCurrency = appCurrency,
         onIntervalChanged = onPricePerformanceIntervalChanged,
@@ -36,6 +35,12 @@ internal class TokenMarketInfoConverter(
     private val linksConverter = LinksConverter(onLinkClick = onLinkClick)
 
     override fun convert(value: TokenMarketInfo): MarketsTokenDetailsUM.InformationBlocks {
+        val metricsConverter = MetricsConverter(
+            tokenSymbol = value.symbol,
+            appCurrency = appCurrency,
+            onInfoClick = onInfoClick,
+        )
+
         return MarketsTokenDetailsUM.InformationBlocks(
             insights = value.insights?.let { insightsConverter.convert(it) },
             securityScore = null,
