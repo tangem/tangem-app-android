@@ -75,6 +75,8 @@ fun getActiveIconRes(blockchainId: String): Int {
         "cyber", "cyber/test" -> R.drawable.img_cyber_22
         "sei", "sei/test" -> R.drawable.img_sei_22
         "internet-computer" -> R.drawable.img_icp_22
+        "energy-web-chain", "energy-web-chain/test" -> R.drawable.img_energy_web_22
+        "energy-web-x", "energy-web-x/test" -> R.drawable.img_energy_web_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -151,6 +153,8 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "cyber", "cyber/test" -> R.drawable.img_cyber_22
         "sei", "sei/test" -> R.drawable.img_sei_22
         "internet-computer" -> R.drawable.img_icp_22
+        "energy-web-chain", "energy-web-chain/test" -> R.drawable.img_energy_web_22
+        "energy-web-x", "energy-web-x/test" -> R.drawable.img_energy_web_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -224,6 +228,8 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "cyber", "cyber/test" -> R.drawable.img_cyber_22
         "sei", "sei/test" -> R.drawable.img_sei_22
         "internet-computer" -> R.drawable.img_icp_22
+        "energy-web-chain", "energy-web-chain/test" -> R.drawable.img_energy_web_22
+        "energy-web-x", "energy-web-x/test" -> R.drawable.img_energy_web_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -300,6 +306,8 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "cyber", "cyber/test" -> R.drawable.ic_cyber_22
         "sei", "sei/test" -> R.drawable.ic_sei_22
         "internet-computer" -> R.drawable.ic_icp_22
+        "energy-web-chain", "energy-web-chain/test" -> R.drawable.ic_energy_web_22
+        "energy-web-x", "energy-web-x/test" -> R.drawable.ic_energy_web_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -376,6 +384,8 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "cyber", "cyber/test" -> R.drawable.ic_cyber_22
         "sei", "sei/test" -> R.drawable.ic_sei_22
         "internet-computer" -> R.drawable.ic_icp_22
+        "energy-web-chain", "energy-web-chain/test" -> R.drawable.ic_energy_web_22
+        "energy-web-x", "energy-web-x/test" -> R.drawable.ic_energy_web_22
         else -> R.drawable.ic_alert_24
     }
 }
