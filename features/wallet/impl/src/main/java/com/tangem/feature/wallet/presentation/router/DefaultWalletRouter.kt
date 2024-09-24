@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.redux.ReduxStateHolder
@@ -140,7 +141,7 @@ internal class DefaultWalletRouter(
     }
 
     override fun openManageTokensScreen(userWalletId: UserWalletId) {
-        router.push(AppRoute.ManageTokens(userWalletId = userWalletId))
+        router.push(AppRoute.ManageTokens(Source.SETTINGS, userWalletId))
     }
 
     override fun openScanFailedDialog(onTryAgain: () -> Unit) {
