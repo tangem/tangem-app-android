@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.ktx.Firebase
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -67,7 +68,7 @@ internal class HomeViewModel @Inject constructor(
         analyticsEventHandler.send(IntroductionProcess.ButtonTokensList())
 
         store.dispatch(TokensAction.SetArgs.ReadAccess)
-        store.dispatchNavigationAction { push(AppRoute.ManageTokens()) }
+        store.dispatchNavigationAction { push(AppRoute.ManageTokens(Source.STORIES)) }
     }
 
     private fun scanCard() {
