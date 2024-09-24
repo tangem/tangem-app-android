@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideIn
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -425,8 +426,17 @@ private inline fun BaseScaffoldWithMarkets(
                     modifier = Modifier.sizeIn(maxHeight = maxHeight - statusBarHeight),
                 ) {
                     Hand(Modifier.drawBehind { drawRect(backgroundColor.value) })
+
                     Box(
                         modifier = Modifier
+                            // expand bottom sheet when clicked on the header
+                            .clickable(
+                                enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
+                                indication = null,
+                                interactionSource = null,
+                            ) {
+                                coroutineScope.launch { bottomSheetState.expand() }
+                            }
                             .onFocusChanged {
                                 isSearchFieldFocused = it.isFocused
                             },
