@@ -728,6 +728,16 @@
                     "networkId": "energy-web-chain/test"
                 }
             ]
+        },
+        {
+            "id": "energy-web-x",
+            "name": "Energy Web X",
+            "symbol": "EWT",
+            "networks": [
+                {
+                    "networkId": "energy-web-x/test"
+                }
+            ]
         }
     ]
 }
