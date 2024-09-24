@@ -72,7 +72,9 @@ internal class TxHistoryItemStateConverter(
         is TransactionType.TronStakingTransactionType.Unstake -> resourceReference(R.string.common_unstake)
         is TransactionType.TronStakingTransactionType.Vote -> resourceReference(R.string.staking_vote)
         is TransactionType.TronStakingTransactionType.Withdraw -> resourceReference(R.string.staking_withdraw)
-        is TransactionType.TronStakingTransactionType.WithdrawExpireUnfreeze -> stringReference("TODO")
+        is TransactionType.TronStakingTransactionType.WithdrawExpireUnfreeze -> {
+            resourceReference(R.string.staking_withdraw)
+        }
         is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
     }
 

@@ -74,7 +74,9 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
         is TransactionType.TronStakingTransactionType.Unstake -> resourceReference(R.string.common_unstake)
         is TransactionType.TronStakingTransactionType.Vote -> resourceReference(R.string.staking_vote)
         is TransactionType.TronStakingTransactionType.Withdraw -> resourceReference(R.string.staking_withdraw)
-        is TransactionType.TronStakingTransactionType.WithdrawExpireUnfreeze -> stringReference("TODO")
+        is TransactionType.TronStakingTransactionType.WithdrawExpireUnfreeze -> resourceReference(
+            R.string.staking_withdraw,
+        )
     }
 
     private fun TxHistoryItem.extractSubtitle(): TextReference =
