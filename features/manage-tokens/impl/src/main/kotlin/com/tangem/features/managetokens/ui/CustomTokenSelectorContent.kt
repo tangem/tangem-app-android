@@ -26,7 +26,6 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.ChainRowUM
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.tokens.model.Network
@@ -271,14 +270,15 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
                     userWalletId = UserWalletId(stringValue = "321"),
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "0"),
-                        name = stringReference("Ethereum"),
+                        name = "Ethereum",
                         derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
                         canHandleTokens = true,
                     ),
                     selectedDerivationPath = SelectedDerivationPath(
                         id = Network.ID(value = "0"),
                         value = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
-                        networkName = stringReference(""),
+                        name = "",
+                        isDefault = false,
                     ),
                     onDerivationPathSelected = {},
                 ),
