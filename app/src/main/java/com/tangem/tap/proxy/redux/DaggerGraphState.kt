@@ -15,7 +15,6 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -71,7 +70,6 @@ data class DaggerGraphState(
     val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase? = null,
     val generateWalletNameUseCase: GenerateWalletNameUseCase? = null,
     val cardRepository: CardRepository? = null,
-    val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles? = null,
     val tangemSdkLogger: TangemSdkLogger? = null,
     val settingsRepository: SettingsRepository? = null,
     val blockchainSDKFactory: BlockchainSDKFactory? = null,
