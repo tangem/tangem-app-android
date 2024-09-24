@@ -24,6 +24,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingAvailableBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingLoadingBlock
+import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingTemporaryUnavailableBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.IconState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.CurrencyIcon
@@ -44,7 +45,7 @@ internal fun TokenStakingBlock(state: StakingBlockUM, isBalanceHidden: Boolean, 
         label = "Staking block animation",
     ) {
         when (it) {
-            is StakingBlockUM.TemporaryDisabled -> Text("temp disabled")
+            is StakingBlockUM.TemporaryDisabled -> StakingTemporaryUnavailableBlock(modifier)
             is StakingBlockUM.Loading -> StakingLoading(
                 iconState = it.iconState,
                 modifier = modifier,
@@ -184,6 +185,7 @@ private class StakingBlockStateProvider : CollectionPreviewParameterProvider<Sta
     collection = listOf(
         stakingLoadingBlock,
         stakingAvailableBlock,
+        stakingTemporaryUnavailableBlock,
     ),
 )
 // endregion Preview
