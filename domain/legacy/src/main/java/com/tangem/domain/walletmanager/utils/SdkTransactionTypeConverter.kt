@@ -27,9 +27,12 @@ internal class SdkTransactionTypeConverter(
                 TxHistoryItem.TransactionType.TronStakingTransactionType.Unstake
             }
             is TransactionType.TronStakingTransactionType.VoteWitnessContract -> {
-                TxHistoryItem.TransactionType.TronStakingTransactionType.Vote
+                TxHistoryItem.TransactionType.TronStakingTransactionType.Vote(value.validatorAddress)
             }
             is TransactionType.TronStakingTransactionType.WithdrawBalanceContract -> {
+                TxHistoryItem.TransactionType.TronStakingTransactionType.ClaimRewards
+            }
+            is TransactionType.TronStakingTransactionType.WithdrawExpireUnfreezeContract -> {
                 TxHistoryItem.TransactionType.TronStakingTransactionType.Withdraw
             }
         }
