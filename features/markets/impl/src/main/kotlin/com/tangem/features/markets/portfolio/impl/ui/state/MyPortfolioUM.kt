@@ -30,4 +30,6 @@ internal sealed class MyPortfolioUM {
     data object Loading : MyPortfolioUM()
 
     data object Unavailable : MyPortfolioUM()
+
+    data object UnavailableForWallet : MyPortfolioUM()
 }
