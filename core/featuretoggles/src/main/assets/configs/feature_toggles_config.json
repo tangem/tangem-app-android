@@ -4,10 +4,6 @@
         "version": "undefined"
     },
     {
-        "name": "LOCAL_USER_LOGS_ENABLED",
-        "version": "5.14.0"
-    },
-    {
         "name": "WC_SOLANA_TX_SIGN_ENABLED",
         "version": "undefined"
     },
