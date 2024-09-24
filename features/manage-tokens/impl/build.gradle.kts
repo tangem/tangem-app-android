@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.common.routing)
     implementation(projects.core.featuretoggles)
+    implementation(projects.core.analytics)
 
     /* Project - Domain */
     implementation(projects.domain.manageTokens)
