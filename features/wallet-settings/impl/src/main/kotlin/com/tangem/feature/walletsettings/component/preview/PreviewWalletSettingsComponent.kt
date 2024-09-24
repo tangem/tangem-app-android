@@ -2,6 +2,7 @@ package com.tangem.feature.walletsettings.component.preview
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.core.analytics.DummyAnalyticsEventHandler
 import com.tangem.core.decompose.navigation.DummyRouter
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
@@ -13,7 +14,10 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
 
     private val previewState = WalletSettingsUM(
         popBack = {},
-        items = ItemsBuilder(router = DummyRouter()).buildItems(
+        items = ItemsBuilder(
+            router = DummyRouter(),
+            analyticsEventHandler = DummyAnalyticsEventHandler(),
+        ).buildItems(
             userWalletId = UserWalletId("011"),
             userWalletName = "My Wallet",
             isReferralAvailable = true,
