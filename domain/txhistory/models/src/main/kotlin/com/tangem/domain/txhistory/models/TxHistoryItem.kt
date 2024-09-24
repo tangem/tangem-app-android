@@ -8,7 +8,7 @@ data class TxHistoryItem(
     val isOutgoing: Boolean,
     val destinationType: DestinationType,
     val sourceType: SourceType,
-    val interactionAddressType: InteractionAddressType,
+    val interactionAddressType: InteractionAddressType?,
     val status: TransactionStatus,
     val type: TransactionType,
     val amount: BigDecimal,
@@ -30,6 +30,7 @@ data class TxHistoryItem(
 
         data class User(override val address: String) : AddressType()
         data class Contract(override val address: String) : AddressType()
+        data class Validator(override val address: String) : AddressType()
     }
 
     sealed interface TransactionType {
@@ -40,10 +41,11 @@ data class TxHistoryItem(
         data class Operation(val name: String) : TransactionType
 
         sealed interface TronStakingTransactionType : TransactionType {
-            data object Vote : TronStakingTransactionType
-            data object Withdraw : TronStakingTransactionType
+            data class Vote(val validatorAddress: String) : TronStakingTransactionType
+            data object ClaimRewards : TronStakingTransactionType
             data object Stake : TronStakingTransactionType
             data object Unstake : TronStakingTransactionType
+            data object Withdraw : TronStakingTransactionType
         }
     }
 
@@ -54,7 +56,7 @@ data class TxHistoryItem(
     }
 
     sealed class InteractionAddressType {
-        data object Staking : InteractionAddressType()
+        data class Validator(val address: String) : InteractionAddressType()
         data class User(val address: String) : InteractionAddressType()
         data class Contract(val address: String) : InteractionAddressType()
         data class Multiple(val addresses: List<String>) : InteractionAddressType()
