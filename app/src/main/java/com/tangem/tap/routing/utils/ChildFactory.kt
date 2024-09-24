@@ -11,6 +11,7 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.managetokens.ManageTokensToggles
 import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
@@ -126,9 +127,15 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.ManageTokens -> {
                 if (manageTokensToggles.isFeatureEnabled) {
+                    val source = when (route.source) {
+                        AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
+                        AppRoute.ManageTokens.Source.ONBOARDING -> ManageTokensSource.ONBOARDING
+                        AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
+                    }
+
                     route.asComponentChild(
                         contextProvider = contextProvider(route, contextFactory),
-                        params = ManageTokensComponent.Params(route.userWalletId),
+                        params = ManageTokensComponent.Params(route.userWalletId, source),
                         componentFactory = manageTokensComponentFactory,
                     )
                 } else {
