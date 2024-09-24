@@ -37,14 +37,13 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
-import com.tangem.features.details.DetailsFeatureToggles
-import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
@@ -60,6 +59,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -174,9 +174,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val getCardInfoUseCase: GetCardInfoUseCase
         get() = entryPoint.getGetCardInfoUseCase()
 
-    private val detailsFeatureToggles: DetailsFeatureToggles
-        get() = entryPoint.getDetailsFeatureToggles()
-
     private val urlOpener
         get() = entryPoint.getUrlOpener()
 
@@ -186,11 +183,14 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val appRouter: AppRouter
         get() = entryPoint.getAppRouter()
 
-    private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles
-        get() = entryPoint.getPushNotificationsFeatureToggles()
-
     private val tangemAppLoggerInitializer: TangemAppLoggerInitializer
         get() = entryPoint.getTangemAppLogger()
+
+    private val homeFeatureToggles: HomeFeatureToggles
+        get() = entryPoint.getHomeFeatureToggles()
+
+    private val getUserCountryUseCase: GetUserCountryUseCase
+        get() = entryPoint.getGetUserCountryCodeUseCase()
     // endregion
 
     override fun onCreate() {
@@ -268,11 +268,11 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     getFeedbackEmailUseCase = getFeedbackEmailUseCase,
                     getCardInfoUseCase = getCardInfoUseCase,
                     assetLoader = assetLoader,
-                    detailsFeatureToggles = detailsFeatureToggles,
                     urlOpener = urlOpener,
                     shareManager = shareManager,
                     appRouter = appRouter,
-                    pushNotificationsFeatureToggles = pushNotificationsFeatureToggles,
+                    homeFeatureToggles = homeFeatureToggles,
+                    getUserCountryUseCase = getUserCountryUseCase,
                 ),
             ),
         )
