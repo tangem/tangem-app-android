@@ -42,6 +42,7 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
             ),
             MyPortfolioUM.Loading,
             MyPortfolioUM.Unavailable,
+            MyPortfolioUM.UnavailableForWallet,
         )
 
     val sampleToken = PortfolioTokenUM(
