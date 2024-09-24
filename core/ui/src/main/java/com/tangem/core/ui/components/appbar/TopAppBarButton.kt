@@ -13,6 +13,7 @@ import com.tangem.core.ui.res.TangemTheme
 @Composable
 fun TopAppBarButton(button: TopAppBarButtonUM, tint: Color, modifier: Modifier = Modifier) {
     IconButton(
+        enabled = button.enabled,
         modifier = modifier.size(TangemTheme.dimens.size32),
         onClick = button.onIconClicked,
     ) {
