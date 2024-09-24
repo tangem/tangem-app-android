@@ -70,8 +70,8 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
         ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
             val (iconItem, titleItem, subtitleItem, amountItem, timestampItem) = createRefs()
 
-            createVerticalChain(titleItem, subtitleItem, chainStyle = ChainStyle.Packed)
-            createVerticalChain(amountItem, timestampItem, chainStyle = ChainStyle.Packed)
+            createVerticalChain(titleItem, subtitleItem, chainStyle = ChainStyle.Spread)
+            createVerticalChain(amountItem, timestampItem, chainStyle = ChainStyle.Spread)
 
             Icon(
                 state = state,
