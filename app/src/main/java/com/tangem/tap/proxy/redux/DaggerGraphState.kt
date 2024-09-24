@@ -30,7 +30,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.feature.qrscanning.QrScanningRouter
-import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
@@ -81,7 +80,6 @@ data class DaggerGraphState(
     val getFeedbackEmailUseCase: GetFeedbackEmailUseCase? = null,
     val getCardInfoUseCase: GetCardInfoUseCase? = null,
     val assetLoader: AssetLoader? = null,
-    val detailsFeatureToggles: DetailsFeatureToggles? = null,
     val stakingRouter: StakingRouter? = null,
     val urlOpener: UrlOpener? = null,
     val shareManager: ShareManager? = null,
