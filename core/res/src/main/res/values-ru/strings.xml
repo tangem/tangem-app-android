@@ -349,6 +349,7 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">Кошелёк не поддерживает более одной сети</string>
   <string name="markets_add_to_my_portfolio_description">Чтобы купить, обменять или получить данный токен, вам нужно добавить его к себе в портфель</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Этот актив недоступен</string>
+  <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Этот токен не доступен для данного кошелька</string>
   <string name="markets_add_to_portfolio_button">Добавить в портфель</string>
   <string name="markets_add_token">Добавить</string>
   <string name="markets_available_networks">Доступные сети</string>
