@@ -22,6 +22,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -29,8 +30,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.feature.qrscanning.QrScanningRouter
-import com.tangem.features.details.DetailsFeatureToggles
-import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
@@ -41,6 +40,7 @@ import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.StateType
 
@@ -80,11 +80,11 @@ data class DaggerGraphState(
     val getFeedbackEmailUseCase: GetFeedbackEmailUseCase? = null,
     val getCardInfoUseCase: GetCardInfoUseCase? = null,
     val assetLoader: AssetLoader? = null,
-    val detailsFeatureToggles: DetailsFeatureToggles? = null,
     val stakingRouter: StakingRouter? = null,
     val urlOpener: UrlOpener? = null,
     val shareManager: ShareManager? = null,
     val appRouter: AppRouter? = null,
-    val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles? = null,
     val pushNotificationsRouter: PushNotificationsRouter? = null,
+    val homeFeatureToggles: HomeFeatureToggles? = null,
+    val getUserCountryUseCase: GetUserCountryUseCase? = null,
 ) : StateType
