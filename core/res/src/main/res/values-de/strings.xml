@@ -414,7 +414,8 @@
   <string name="markets_token_details_market_rating_description">Position im Krypto-Rating zwischen allen Coins basierend auf der Marktkapitalisierung</string>
   <string name="markets_token_details_market_rating_full">Marktbewertung</string>
   <string name="markets_token_details_max_supply">Maximale Versorgung</string>
-  <string name="markets_token_details_max_supply_description">Leer</string>
+  <string name="markets_token_details_max_supply_description">Die maximale Anzahl von Coins oder Tokens, die jemals für eine bestimmte Kryptowährung existieren können</string>
+  <string name="markets_token_details_max_supply_full">Maximale Versorgung</string>
   <string name="markets_token_details_metrics">Metriken</string>
   <string name="markets_token_details_official_links">Offizielle Links</string>
   <string name="markets_token_details_price_performance">Preisleistung</string>
@@ -700,6 +701,7 @@
   <string name="staking_notification_earn_rewards_text_period_week">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jede Woche.</string>
   <string name="staking_notification_earn_rewards_text_weekly">Sicher staken und wöchentliche Belohnungen verdienen.</string>
   <string name="staking_notification_earn_rewards_title">Verdiene Staking-Belohnungen</string>
+  <string name="staking_notification_network_error_text">Aufgrund von Netzwerkproblemen ist Staking derzeit nicht verfügbar. Bitte versuche es später erneut.</string>
   <string name="staking_notification_new_validator_funds_transfer">Beim Staking im %1$s -Netzwerk mit einem neuen Validator werden alle zuvor eingesetzten Kryptos automatisch an diesen Validator übertragen</string>
   <string name="staking_notification_restake_rewards_text">Reinvestiert Deine verdienten Prämien in Deinen Einsatzbetrag und erhöht so den potenziellen Gewinn.</string>
   <string name="staking_notification_unlock_text">Entsperre dein Geld, um es aus dem Staking-Prozess abzuheben. Das Freischalten nimmt %s.</string>
