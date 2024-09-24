@@ -4,8 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -216,6 +218,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         )
 
         super.onCreate(savedInstanceState)
+
+        // We have to allow adjust_resize (can only be specified in the manifest) for Android <=10,
+        // in order for imePadding to work correctly
+        // for Android 11+ we set SOFT_INPUT_ADJUST_NOTHING to prevent resizing the layout
+        // so that we don't have any distortions in the layout when displaying the keyboard
+        // https://issuetracker.google.com/issues/266331465
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+        }
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
 
