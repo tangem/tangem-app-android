@@ -1,6 +1,7 @@
 package com.tangem.features.markets.portfolio.impl.ui
 
 import android.content.res.Configuration
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,7 +51,8 @@ internal fun MyPortfolio(state: MyPortfolioUM, modifier: Modifier = Modifier) {
             is MyPortfolioUM.Tokens -> TokenList(state = state)
             is MyPortfolioUM.AddFirstToken -> AddFirstTokenContent(state = state, modifier = contentModifier)
             MyPortfolioUM.Loading -> LoadingPlaceholder(modifier = contentModifier)
-            MyPortfolioUM.Unavailable -> UnavailableContent(modifier = contentModifier)
+            MyPortfolioUM.Unavailable -> UnavailableAsset(modifier = contentModifier)
+            MyPortfolioUM.UnavailableForWallet -> UnavailableAssetForWallet(modifier = contentModifier)
         }
     }
 
@@ -111,10 +113,26 @@ private fun TokenList(state: MyPortfolioUM.Tokens, modifier: Modifier = Modifier
 }
 
 @Composable
-private fun UnavailableContent(modifier: Modifier = Modifier) {
+fun UnavailableAsset(modifier: Modifier = Modifier) {
+    UnavailableContent(
+        textId = R.string.markets_add_to_my_portfolio_unavailable_description,
+        modifier = modifier,
+    )
+}
+
+@Composable
+fun UnavailableAssetForWallet(modifier: Modifier = Modifier) {
+    UnavailableContent(
+        textId = R.string.markets_add_to_my_portfolio_unavailable_for_wallet_description,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun UnavailableContent(@StringRes textId: Int, modifier: Modifier = Modifier) {
     Text(
         modifier = modifier,
-        text = stringResource(R.string.markets_add_to_my_portfolio_unavailable_description),
+        text = stringResource(textId),
         style = TangemTheme.typography.body2,
         color = TangemTheme.colors.text.tertiary,
     )
