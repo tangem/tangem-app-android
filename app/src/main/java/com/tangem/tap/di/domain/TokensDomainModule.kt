@@ -321,12 +321,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetGlobalTokenListUseCase(tokensListRepository: TokensListRepository): GetGlobalTokenListUseCase {
-        return GetGlobalTokenListUseCase(repository = tokensListRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideCheckTokenCompatibilityUseCase(
         networksCompatibilityRepository: NetworksCompatibilityRepository,
     ): CheckCurrencyCompatibilityUseCase {
@@ -339,22 +333,6 @@ internal object TokensDomainModule {
         networksCompatibilityRepository: NetworksCompatibilityRepository,
     ): RequiresHardenedDerivationOnlyUseCase {
         return RequiresHardenedDerivationOnlyUseCase(networksCompatibilityRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideFindTokenByContractAddressUseCase(
-        tokensListRepository: TokensListRepository,
-    ): FindTokenByContractAddressUseCase {
-        return FindTokenByContractAddressUseCase(repository = tokensListRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideValidateContractAddressUseCase(
-        tokensListRepository: TokensListRepository,
-    ): ValidateContractAddressUseCase {
-        return ValidateContractAddressUseCase(tokensListRepository = tokensListRepository)
     }
 
     @Provides
