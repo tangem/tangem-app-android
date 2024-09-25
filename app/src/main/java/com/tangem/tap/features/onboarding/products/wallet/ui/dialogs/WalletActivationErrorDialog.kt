@@ -11,8 +11,10 @@ import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.wallet.R
+import kotlinx.coroutines.launch
 
 object WalletActivationErrorDialog {
 
@@ -31,7 +33,10 @@ object WalletActivationErrorDialog {
                 val cardInfo = store.inject(DaggerGraphState::getCardInfoUseCase).invoke(scanResponse).getOrNull()
                     ?: error("CardInfo must be not null")
 
-                store.state.globalState.feedbackManager?.sendEmail(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+                scope.launch {
+                    store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                        .invoke(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+                }
             }
             setOnDismissListener { store.dispatchDialogHide() }
             setCancelable(false)
