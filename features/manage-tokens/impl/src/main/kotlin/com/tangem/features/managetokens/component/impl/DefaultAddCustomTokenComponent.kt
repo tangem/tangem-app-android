@@ -22,6 +22,7 @@ import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormValues
 import com.tangem.features.managetokens.entity.customtoken.SelectedDerivationPath
 import com.tangem.features.managetokens.entity.customtoken.SelectedNetwork
 import com.tangem.features.managetokens.ui.AddCustomTokenBottomSheet
+import com.tangem.features.managetokens.utils.ui.toContentModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,15 +35,16 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : AddCustomTokenComponent, AppComponentContext by context {
 
+    private val initialConfiguration = AddCustomTokenConfig(
+        userWalletId = params.userWalletId,
+        step = AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
+    )
+
     private val navigation = StackNavigation<AddCustomTokenConfig>()
     private val contentStack = childStack(
         key = "add_custom_token_content_stack",
         source = navigation,
-        initialConfiguration = AddCustomTokenConfig(
-            userWalletId = params.userWalletId,
-            step = AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
-            popBack = ::dismiss,
-        ),
+        initialConfiguration = initialConfiguration,
         handleBackButton = true,
         serializer = AddCustomTokenConfig.serializer(),
         childFactory = ::contentChild,
@@ -62,14 +64,14 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
             TangemBottomSheetConfig(
                 isShow = true,
                 onDismissRequest = ::dismiss,
-                content = contentStack.active.configuration,
+                content = initialConfiguration.step.toContentModel(::popBack),
             )
         }
         val childStack by contentStack.subscribeAsState()
 
         AddCustomTokenBottomSheet(
             config = config.copy(
-                content = childStack.active.configuration,
+                content = childStack.active.configuration.step.toContentModel(::popBack),
             ),
             content = { modifier ->
                 Children(
@@ -80,6 +82,17 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                 }
             },
         )
+    }
+
+    private fun popBack() {
+        when (contentStack.value.active.configuration.step) {
+            AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
+            AddCustomTokenConfig.Step.FORM,
+            -> dismiss()
+            AddCustomTokenConfig.Step.NETWORK_SELECTOR,
+            AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR,
+            -> navigation.pop()
+        }
     }
 
     private fun contentChild(
@@ -164,7 +177,6 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
         val config = currentConfig.copy(
             step = AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR,
             formValues = formValues,
-            popBack = navigation::pop,
         )
         navigation.push(config)
     }
@@ -175,7 +187,6 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
         val config = currentConfig.copy(
             step = AddCustomTokenConfig.Step.NETWORK_SELECTOR,
             formValues = formValues,
-            popBack = navigation::pop,
         )
         navigation.push(config)
     }
@@ -187,7 +198,6 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
             step = AddCustomTokenConfig.Step.FORM,
             selectedNetwork = network ?: currentConfig.selectedNetwork,
             selectedDerivationPath = derivationPath ?: currentConfig.selectedDerivationPath,
-            popBack = ::dismiss,
         )
         navigation.replaceAll(config)
     }
