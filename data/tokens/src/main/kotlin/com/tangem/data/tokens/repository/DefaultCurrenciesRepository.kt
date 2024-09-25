@@ -27,7 +27,6 @@ import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
@@ -374,24 +373,6 @@ internal class DefaultCurrenciesRepository(
                     .collect(::send)
             }
         }.cancellable()
-    }
-
-    override fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
-        return channelFlow {
-            ensureIsCorrectUserWallet(userWalletId, isMultiCurrencyWalletExpected = true)
-
-            val userWallet = getUserWallet(userWalletId = userWalletId)
-            getMultiCurrencyWalletCurrencies(userWallet = userWallet)
-                .map {
-                    it.filter { currency ->
-                        val blockchain = Blockchain.fromId(id = currency.network.id.value)
-                        val derivationPath = currency.network.derivationPath.value
-
-                        derivationPath != null && !userWallet.scanResponse.hasDerivation(blockchain, derivationPath)
-                    }
-                }
-                .collectLatest(::send)
-        }
     }
 
     override fun isSendBlockedByPendingTransactions(
