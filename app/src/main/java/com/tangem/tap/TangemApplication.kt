@@ -44,7 +44,6 @@ import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
-import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.common.redux.AppState
@@ -288,7 +287,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private fun initWithConfigDependency(config: Config) {
         initAnalytics(this, config)
-        initFeedbackManager(store)
+        Log.addLogger(logger = tangemSdkLogger)
     }
 
     private fun initAnalytics(application: Application, config: Config) {
@@ -307,12 +306,5 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         )
         factory.build(Analytics, buildData)
         // ExceptionHandler.append(blockchainExceptionHandler) TODO: https://tangem.atlassian.net/browse/AND-4173
-    }
-
-    private fun initFeedbackManager(store: Store<AppState>) {
-        Log.addLogger(logger = tangemSdkLogger)
-
-        val feedbackManager = LegacyFeedbackManager(sendFeedbackEmailUseCase = sendFeedbackEmailUseCase)
-        store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
     }
 }

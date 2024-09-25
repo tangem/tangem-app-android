@@ -6,7 +6,6 @@ import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
-import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.common.redux.DebugErrorAction
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
@@ -69,7 +68,6 @@ sealed class GlobalAction : Action {
     ) : GlobalAction()
 
     data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
-    data class SetFeedbackManager(val feedbackManager: LegacyFeedbackManager) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
         object Init : GlobalAction() {

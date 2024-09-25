@@ -11,9 +11,11 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.utils.Provider
 import com.tangem.wallet.R
+import kotlinx.coroutines.launch
 
 /**
  * Created by Anton Zhilenkov on 20.10.2022.
@@ -33,7 +35,10 @@ class OnboardingMenuProvider(
             val cardInfo = store.inject(DaggerGraphState::getCardInfoUseCase).invoke(scanResponseProvider()).getOrNull()
                 ?: error("CardInfo must be not null")
 
-            store.state.globalState.feedbackManager?.sendEmail(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+            scope.launch {
+                store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                    .invoke(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+            }
 
             true
         }
