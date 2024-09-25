@@ -1,8 +1,9 @@
 package com.tangem.features.managetokens.model
 
+import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
-import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -17,6 +18,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.SaveManagedTokensUseCase
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
+import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensBottomSheetConfig
@@ -36,6 +39,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ComponentScoped
 internal class ManageTokensModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -43,6 +47,7 @@ internal class ManageTokensModel @Inject constructor(
     private val manageTokensListManager: ManageTokensListManager,
     private val messageSender: UiMessageSender,
     private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -59,6 +64,7 @@ internal class ManageTokensModel @Inject constructor(
         manageTokensListManager.paginationStatus
             .onEach { status -> updatePaginationStatus(status) }
             .launchIn(modelScope)
+
         combine(
             manageTokensListManager.currenciesToAdd,
             manageTokensListManager.currenciesToRemove,
@@ -68,17 +74,23 @@ internal class ManageTokensModel @Inject constructor(
         observeSearchQueryChanges()
 
         modelScope.launch {
-            manageTokensListManager.launchPagination(params.userWalletId)
+            manageTokensListManager.launchPagination(params)
         }
-    }
-
-    private fun getInitialState(userWalletId: UserWalletId?): ManageTokensUM {
-        return if (userWalletId != null) createManageContentModel() else createReadContentModel()
     }
 
     fun reloadList() {
         modelScope.launch {
             manageTokensListManager.reload(params.userWalletId)
+        }
+    }
+
+    private fun getInitialState(userWalletId: UserWalletId?): ManageTokensUM {
+        analyticsEventHandler.send(ManageTokensAnalyticEvent.ScreenOpened(params.source))
+
+        return if (userWalletId == null) {
+            createReadContentModel()
+        } else {
+            createManageContentModel()
         }
     }
 
@@ -136,8 +148,7 @@ internal class ManageTokensModel @Inject constructor(
         state
             .distinctUntilChanged { old, new ->
                 // It's also used to skip search activation to avoid searching an empty query
-                old.search.query == new.search.query &&
-                    (old.search.isActive == new.search.isActive || new.search.isActive)
+                old.search.query == new.search.query && new.search.isActive
             }
             .transform { state ->
                 val query = state.search.query
@@ -152,10 +163,18 @@ internal class ManageTokensModel @Inject constructor(
     }
 
     private fun updateItems(items: ImmutableList<CurrencyItemUM>) {
-        state.update { state ->
+        val updatedState = state.updateAndGet { state ->
             state.copySealed(
                 items = items,
             )
+        }
+
+        if (updatedState.items.isEmpty() && updatedState.search.isActive) {
+            val event = ManageTokensAnalyticEvent.TokensIsNotFound(
+                query = updatedState.search.query,
+                source = params.source,
+            )
+            analyticsEventHandler.send(event)
         }
     }
 
@@ -225,7 +244,7 @@ internal class ManageTokensModel @Inject constructor(
     }
 
     private fun consumeScrollToTopEvent() {
-        this.state.update { state ->
+        state.update { state ->
             state.copySealed(
                 scrollToTop = consumedEvent(),
             )
@@ -252,24 +271,33 @@ internal class ManageTokensModel @Inject constructor(
     }
 
     private fun navigateToAddCustomToken() {
+        analyticsEventHandler.send(CustomTokenAnalyticsEvent.ButtonCustomToken(params.source))
+
         params.userWalletId?.let {
             bottomSheetNavigation.activate(ManageTokensBottomSheetConfig.AddCustomToken(it))
         }
     }
 
-    private fun saveChanges() {
-        modelScope.launch {
-            state.update { state -> state.copySealed(isSavingInProgress = true) }
-            saveManagedTokensUseCase.invoke(
-                userWalletId = requireNotNull(params.userWalletId),
-                currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
-                currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
-            ).fold(
-                ifLeft = { Timber.e(it, "Failed to save changes") },
-                ifRight = { router.replaceAll(AppRoute.Wallet) },
-            )
-            state.update { state -> state.copySealed(isSavingInProgress = false) }
+    private fun saveChanges() = resource(
+        acquire = { state.update { state -> state.copySealed(isSavingInProgress = true) } },
+        release = { state.update { state -> state.copySealed(isSavingInProgress = false) } },
+    ) {
+        val event = ManageTokensAnalyticEvent.TokenAdded(
+            tokensCount = manageTokensListManager.currenciesToAdd.value.values.sumOf { it.size },
+            source = params.source,
+        )
+        analyticsEventHandler.send(event)
+
+        saveManagedTokensUseCase(
+            userWalletId = requireNotNull(params.userWalletId),
+            currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
+            currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
+        ).getOrElse {
+            Timber.e(it, "Failed to save changes")
+            return@resource
         }
+
+        router.pop()
     }
 
     private fun searchCurrencies(query: String) {

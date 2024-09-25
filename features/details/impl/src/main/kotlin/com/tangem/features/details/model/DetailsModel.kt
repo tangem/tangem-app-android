@@ -61,6 +61,9 @@ internal class DetailsModel @Inject constructor(
     )
 
     init {
+        // Use to save compatibility with screens that using Redux states
+        bootstrapScreenState()
+
         items
             .onEach(::updateState)
             .launchIn(modelScope)
@@ -80,6 +83,10 @@ internal class DetailsModel @Inject constructor(
             onSupportClick = ::sendFeedback,
             onBuyClick = ::onBuyClick,
         )
+    }
+
+    private fun bootstrapScreenState() {
+        appStateHolder.dispatch(LegacyAction.PrepareDetailsScreen)
     }
 
     private fun sendFeedback() {

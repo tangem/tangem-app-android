@@ -57,7 +57,6 @@ import com.tangem.features.staking.impl.presentation.state.previewdata.InitialSt
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.StringsSigns.DOT
-import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.extensions.orZero
 
 private const val BANNER_BLOCK_KEY = "BannerBlock"
@@ -90,7 +89,7 @@ internal fun StakingInitialInfoContent(
             if (state.showBanner) {
                 item(key = BANNER_BLOCK_KEY) {
                     Column(
-                        modifier = Modifier.animateItemPlacement(),
+                        modifier = Modifier.animateItem(),
                     ) {
                         BannerBlock(onClick = clickIntents::onInitialInfoBannerClick)
                         SpacerH12()
@@ -106,7 +105,7 @@ internal fun StakingInitialInfoContent(
 
             if (state.yieldBalance is InnerYieldBalanceState.Data) {
                 item(key = STAKING_REWARD_BLOCK_KEY) {
-                    Column(modifier = Modifier.animateItemPlacement()) {
+                    Column(modifier = Modifier.animateItem()) {
                         StakingRewardBlock(
                             rewardCrypto = state.yieldBalance.rewardsCrypto,
                             rewardFiat = state.yieldBalance.rewardsFiat,
@@ -139,7 +138,6 @@ internal fun StakingInitialInfoContent(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.activeStakingBlock(
     state: StakingStates.InitialInfoState.Data,
     clickIntents: StakingClickIntents,
@@ -176,7 +174,7 @@ private fun LazyListScope.activeStakingBlock(
                 onClick = clickIntents::onActiveStake,
                 onAnalytic = clickIntents::onActiveStakeAnalytic,
                 modifier = Modifier
-                    .animateItemPlacement()
+                    .animateItem()
                     .then(
                         if (state.yieldBalance.balance.last() == balance) {
                             Modifier.clip(CornersToRound.BOTTOM_2.getShape())
@@ -231,8 +229,6 @@ private fun StakingRewardBlock(
     val (text, textColor) = when (rewardBlockType) {
         RewardBlockType.Rewards -> {
             annotatedReference {
-                append(PLUS)
-                appendSpace()
                 append(rewardFiat.orMaskWithStars(isBalanceHidden))
                 appendSpace()
                 append(DOT)
@@ -282,6 +278,8 @@ private fun ActiveStakingBlock(
         imageUrl = balance.getImage(),
         iconRes = icon,
         iconTint = iconTint,
+        subtitleEndIconRes = R.drawable.ic_staking_pending_transaction.takeIf { balance.isPending },
+        onImageError = { ValidatorImagePlaceholder() },
         modifier = modifier
             .background(TangemTheme.colors.background.action)
             .clickable(

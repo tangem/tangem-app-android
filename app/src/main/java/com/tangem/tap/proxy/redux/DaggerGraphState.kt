@@ -15,13 +15,13 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.feedback.GetCardInfoUseCase
-import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -29,8 +29,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.feature.qrscanning.QrScanningRouter
-import com.tangem.features.details.DetailsFeatureToggles
-import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
@@ -41,6 +39,7 @@ import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.StateType
 
@@ -71,20 +70,19 @@ data class DaggerGraphState(
     val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase? = null,
     val generateWalletNameUseCase: GenerateWalletNameUseCase? = null,
     val cardRepository: CardRepository? = null,
-    val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles? = null,
     val tangemSdkLogger: TangemSdkLogger? = null,
     val settingsRepository: SettingsRepository? = null,
     val blockchainSDKFactory: BlockchainSDKFactory? = null,
     val emailSender: EmailSender? = null,
     val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase? = null,
-    val getFeedbackEmailUseCase: GetFeedbackEmailUseCase? = null,
+    val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase? = null,
     val getCardInfoUseCase: GetCardInfoUseCase? = null,
     val assetLoader: AssetLoader? = null,
-    val detailsFeatureToggles: DetailsFeatureToggles? = null,
     val stakingRouter: StakingRouter? = null,
     val urlOpener: UrlOpener? = null,
     val shareManager: ShareManager? = null,
     val appRouter: AppRouter? = null,
-    val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles? = null,
     val pushNotificationsRouter: PushNotificationsRouter? = null,
+    val homeFeatureToggles: HomeFeatureToggles? = null,
+    val getUserCountryUseCase: GetUserCountryUseCase? = null,
 ) : StateType

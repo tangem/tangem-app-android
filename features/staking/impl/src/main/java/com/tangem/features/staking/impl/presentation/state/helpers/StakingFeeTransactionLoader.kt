@@ -49,9 +49,10 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
     suspend fun getFee(
         pendingAction: PendingAction?,
         pendingActions: ImmutableList<PendingAction>?,
-        onFeeError: (GetFeeError) -> Unit,
         onStakingFee: (Fee) -> Unit,
+        onStakingFeeError: (StakingError) -> Unit,
         onApprovalFee: (TransactionFee) -> Unit,
+        onFeeError: (GetFeeError) -> Unit,
     ) {
         val state = stateController.value
         val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
@@ -85,7 +86,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
                     pendingActions = pendingActions,
                     amount = amount,
                     validatorAddress = validatorAddress,
-                    onFeeError = onFeeError,
+                    onStakingFeeError = onStakingFeeError,
                     onStakingFee = onStakingFee,
                 )
             }
@@ -95,7 +96,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
                 pendingActions = pendingActions,
                 amount = amount,
                 validatorAddress = validatorAddress,
-                onFeeError = onFeeError,
+                onStakingFeeError = onStakingFeeError,
                 onStakingFee = onStakingFee,
             )
         }
@@ -106,7 +107,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         pendingActions: ImmutableList<PendingAction>?,
         amount: BigDecimal,
         validatorAddress: String,
-        onFeeError: (GetFeeError) -> Unit,
+        onStakingFeeError: (StakingError) -> Unit,
         onStakingFee: (Fee) -> Unit,
     ) {
         val sourceAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
@@ -125,7 +126,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
                                 action = action,
                             )
                         }.getOrElse {
-                            onFeeError(GetFeeError.DataError(Throwable(it.toString())))
+                            onStakingFeeError(it)
                             null
                         }
                     }
@@ -133,7 +134,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
             }
 
             if (result.isNullOrEmpty()) {
-                onFeeError(GetFeeError.UnknownError)
+                onStakingFeeError(StakingError.UnknownError)
                 return
             }
 
@@ -151,7 +152,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
                 validatorAddress = validatorAddress,
                 action = pendingAction,
             ).getOrElse {
-                onFeeError(GetFeeError.DataError(Throwable(it.toString())))
+                onStakingFeeError(it)
                 return
             }
         }

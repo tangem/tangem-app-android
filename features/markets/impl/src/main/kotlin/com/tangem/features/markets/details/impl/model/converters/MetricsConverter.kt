@@ -18,6 +18,7 @@ import java.math.BigDecimal
 @Stable
 internal class MetricsConverter(
     private val appCurrency: Provider<AppCurrency>,
+    private val tokenSymbol: String,
     private val onInfoClick: (InfoBottomSheetContent) -> Unit,
 ) : Converter<TokenMarketInfo.Metrics, MetricsUM> {
 
@@ -32,7 +33,9 @@ internal class MetricsConverter(
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_market_capitalization),
+                                    title = resourceReference(
+                                        R.string.markets_token_details_market_capitalization_full,
+                                    ),
                                     body = resourceReference(
                                         R.string.markets_token_details_market_capitalization_description,
                                     ),
@@ -46,7 +49,7 @@ internal class MetricsConverter(
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_market_rating),
+                                    title = resourceReference(R.string.markets_token_details_market_rating_full),
                                     body = resourceReference(R.string.markets_token_details_market_rating_description),
                                 ),
                             )
@@ -58,7 +61,7 @@ internal class MetricsConverter(
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_trading_volume),
+                                    title = resourceReference(R.string.markets_token_details_trading_volume_full),
                                     body = resourceReference(
                                         R.string.markets_token_details_trading_volume_24h_description,
                                     ),
@@ -72,7 +75,9 @@ internal class MetricsConverter(
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_fully_diluted_valuation),
+                                    title = resourceReference(
+                                        R.string.markets_token_details_fully_diluted_valuation_full,
+                                    ),
                                     body = resourceReference(
                                         R.string.markets_token_details_fully_diluted_valuation_description,
                                     ),
@@ -86,7 +91,7 @@ internal class MetricsConverter(
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_circulating_supply),
+                                    title = resourceReference(R.string.markets_token_details_circulating_supply_full),
                                     body = resourceReference(
                                         R.string.markets_token_details_circulating_supply_description,
                                     ),
@@ -95,12 +100,12 @@ internal class MetricsConverter(
                         },
                     ),
                     InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_total_supply),
-                        value = totalSupply.formatAmount(crypto = true),
+                        title = resourceReference(R.string.markets_token_details_max_supply),
+                        value = maxSupply.formatMaxSupply(),
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_total_supply),
+                                    title = resourceReference(R.string.markets_token_details_max_supply_full),
                                     body = resourceReference(R.string.markets_token_details_total_supply_description),
                                 ),
                             )
@@ -111,13 +116,26 @@ internal class MetricsConverter(
         }
     }
 
+    private fun BigDecimal?.formatMaxSupply(): String {
+        when (this) {
+            null -> return StringsSigns.DASH_SIGN
+            BigDecimal.ZERO -> return StringsSigns.INFINITY_SIGN
+        }
+
+        return this.formatAmount(crypto = true)
+    }
+
     private fun BigDecimal?.formatAmount(crypto: Boolean = false): String {
         if (this == null) return StringsSigns.DASH_SIGN
 
         return if (crypto) {
-            BigDecimalFormatter.formatCompactAmount(amount = this)
+            BigDecimalFormatter.formatCompactCryptoAmount(
+                amount = this,
+                cryptoCurrencySymbol = tokenSymbol,
+            )
         } else {
             val currency = appCurrency()
+
             BigDecimalFormatter.formatCompactFiatAmount(
                 amount = this,
                 fiatCurrencyCode = currency.code,

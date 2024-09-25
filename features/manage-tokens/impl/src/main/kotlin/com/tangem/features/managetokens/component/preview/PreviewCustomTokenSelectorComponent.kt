@@ -31,13 +31,14 @@ internal class PreviewCustomTokenSelectorComponent(
                 val d = SelectedDerivationPath(
                     id = Network.ID(index.toString()),
                     value = Network.DerivationPath.Card("m/44'/0'/0'/0/$index"),
-                    networkName = stringReference(value = "Network $index"),
+                    name = "Network $index",
+                    isDefault = false,
                 )
 
                 DerivationPathUM(
                     id = d.id?.value ?: "",
                     value = d.value.value.orEmpty(),
-                    networkName = d.networkName,
+                    networkName = stringReference(d.name),
                     isSelected = d.value == params.selectedDerivationPath?.value,
                     onSelectedStateChange = { params.onDerivationPathSelected(d) },
                 )
@@ -45,7 +46,7 @@ internal class PreviewCustomTokenSelectorComponent(
             is Params.NetworkSelector -> {
                 val n = SelectedNetwork(
                     id = Network.ID(index.toString()),
-                    name = stringReference(value = "Network $index"),
+                    name = "Network $index",
                     derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/$index"),
                     canHandleTokens = false,
                 )

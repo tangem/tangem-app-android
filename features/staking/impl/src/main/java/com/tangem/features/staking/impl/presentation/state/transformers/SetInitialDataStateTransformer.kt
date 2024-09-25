@@ -10,6 +10,7 @@ import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.serialization.SerializedBigDecimal
+import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
@@ -37,6 +38,7 @@ internal class SetInitialDataStateTransformer(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val balancesToShowProvider: Provider<List<BalanceItem>>,
 ) : Transformer<StakingUiState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -59,6 +61,7 @@ internal class SetInitialDataStateTransformer(
         YieldBalancesConverter(
             cryptoCurrencyStatusProvider,
             appCurrencyProvider,
+            balancesToShowProvider,
             yield,
         )
     }
@@ -201,12 +204,12 @@ internal class SetInitialDataStateTransformer(
     private fun createRewardScheduleItem(
         rewardSchedule: Yield.Metadata.RewardSchedule,
     ): RoundedListWithDividersItemData? {
-        val endTextId = rewardScheduleResources[rewardSchedule] ?: return null
+        val endTextReference = getRewardScheduleText(rewardSchedule) ?: return null
 
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_reward_schedule,
-            startText = TextReference.Res(R.string.staking_details_reward_schedule),
-            endText = TextReference.Res(endTextId),
+            startText = resourceReference(R.string.staking_details_reward_schedule),
+            endText = endTextReference,
             iconClick = { clickIntents.onInfoClick(InfoType.REWARD_SCHEDULE) },
         )
     }
@@ -228,6 +231,7 @@ internal class SetInitialDataStateTransformer(
             pendingActions = null,
             isApprovalNeeded = isApprovalNeeded,
             reduceAmountBy = null,
+            balanceState = null,
         )
     }
 
@@ -252,21 +256,23 @@ internal class SetInitialDataStateTransformer(
         return resourceReference(R.string.common_range, wrappedList(formattedMinApr, formattedMaxApr))
     }
 
-    companion object {
-        private val EQUALITY_THRESHOLD = BigDecimal(1E-10)
+    private fun getRewardScheduleText(rewardSchedule: Yield.Metadata.RewardSchedule): TextReference? {
+        return when (rewardSchedule) {
+            Yield.Metadata.RewardSchedule.BLOCK -> resourceReference(R.string.staking_reward_schedule_block)
+            Yield.Metadata.RewardSchedule.WEEK -> resourceReference(R.string.staking_reward_schedule_week)
+            Yield.Metadata.RewardSchedule.HOUR -> resourceReference(R.string.staking_reward_schedule_hour)
+            Yield.Metadata.RewardSchedule.DAY -> resourceReference(R.string.staking_reward_schedule_each_day)
+            Yield.Metadata.RewardSchedule.MONTH -> resourceReference(R.string.staking_reward_schedule_month)
+            Yield.Metadata.RewardSchedule.ERA -> resourceReference(R.string.staking_reward_schedule_era)
+            Yield.Metadata.RewardSchedule.EPOCH -> resourceReference(R.string.staking_reward_schedule_epoch)
+            Yield.Metadata.RewardSchedule.UNKNOWN -> null
+        }
+    }
 
-        private val rewardScheduleResources = mapOf(
-            Yield.Metadata.RewardSchedule.BLOCK to R.string.staking_reward_schedule_each_day,
-            Yield.Metadata.RewardSchedule.WEEK to R.string.staking_reward_schedule_week,
-            Yield.Metadata.RewardSchedule.HOUR to R.string.staking_reward_schedule_hour,
-            Yield.Metadata.RewardSchedule.DAY to R.string.staking_reward_schedule_each_day,
-            Yield.Metadata.RewardSchedule.MONTH to R.string.staking_reward_schedule_month,
-            Yield.Metadata.RewardSchedule.ERA to R.string.staking_reward_schedule_era,
-            Yield.Metadata.RewardSchedule.EPOCH to R.string.staking_reward_schedule_epoch,
-            Yield.Metadata.RewardSchedule.UNKNOWN to null,
-        )
+    private companion object {
+        val EQUALITY_THRESHOLD = BigDecimal(1E-10)
 
-        private val rewardClaimingResources = mapOf(
+        val rewardClaimingResources = mapOf(
             Yield.Metadata.RewardClaiming.MANUAL to R.string.staking_reward_claiming_manual,
             Yield.Metadata.RewardClaiming.AUTO to R.string.staking_reward_claiming_auto,
             Yield.Metadata.RewardSchedule.UNKNOWN to null,

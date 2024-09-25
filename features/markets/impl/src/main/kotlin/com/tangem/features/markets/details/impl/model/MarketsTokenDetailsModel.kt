@@ -229,6 +229,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             val result = getTokenFullQuotesUseCase(
                 tokenId = params.token.id,
                 appCurrency = currentAppCurrency.value,
+                tokenSymbol = params.token.symbol,
             )
 
             result.onRight { res ->
@@ -389,9 +390,11 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     }
 
     private suspend fun updateQuotes(newQuotes: TokenQuotes) {
-        quotesStateUpdater.updateQuotes(newQuotes)
+        val populatedNewQuotes = currentQuotes.value.populateWith(newQuotes)
 
-        val percent = newQuotes
+        quotesStateUpdater.updateQuotes(newQuotes = populatedNewQuotes)
+
+        val percent = populatedNewQuotes
             .getPercentByInterval(interval = state.value.selectedInterval)
 
         chartDataProducer.runTransaction {

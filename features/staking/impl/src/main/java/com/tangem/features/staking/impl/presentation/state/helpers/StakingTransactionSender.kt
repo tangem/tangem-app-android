@@ -5,16 +5,17 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.staking.GetConstructedStakingTransactionUseCase
-import com.tangem.domain.staking.GetStakingTransactionUseCase
-import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
-import com.tangem.domain.staking.SubmitHashUseCase
+import com.tangem.domain.staking.*
+import com.tangem.domain.staking.model.PendingTransaction
+import com.tangem.domain.staking.model.SubmitHashData
+import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
+import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionStatus
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
@@ -45,6 +46,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val submitHashUseCase: SubmitHashUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
+    private val savePendingTransactionUseCase: SavePendingTransactionUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
@@ -89,6 +91,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
         sendStakingTransaction(
             fullTransactionsData = fullTransactionsData,
+            balanceState = confirmationState.balanceState,
             onSendSuccess = onSendSuccess,
             onSendError = onSendError,
         )
@@ -128,7 +131,10 @@ internal class StakingTransactionSender @AssistedInject constructor(
         fee: Fee,
         onConstructError: (StakingError) -> Unit,
     ) = coroutineScope {
-        stakingTransactions?.filterNot { it.type == StakingTransactionType.APPROVAL }
+        stakingTransactions
+            ?.filterNot {
+                it.type == StakingTransactionType.APPROVAL || it.status == StakingTransactionStatus.SKIPPED
+            }
             ?.map { transaction ->
                 async {
                     getConstructedStakingTransactionUseCase(
@@ -148,7 +154,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
                         },
                     )
                 }
-            }?.awaitAll()?.filterNotNull()
+            }
+            ?.awaitAll()
+            ?.filterNotNull()
     }
 
     private suspend fun getStakingTransaction(
@@ -183,7 +191,12 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 type = action?.type,
             ),
         ).getOrElse {
-            analyticsEventHandler.send(StakingAnalyticsEvents.StakingError(state.cryptoCurrencyName))
+            analyticsEventHandler.send(
+                StakingAnalyticsEvents.StakingError(
+                    token = state.cryptoCurrencyName,
+                    errorType = it.javaClass.simpleName,
+                ),
+            )
             onConstructError(it)
             return emptyList()
         }
@@ -191,6 +204,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
     private suspend fun sendStakingTransaction(
         fullTransactionsData: List<FullTransactionData>,
+        balanceState: BalanceState?,
         onSendSuccess: (txUrl: String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
     ) {
@@ -206,6 +220,11 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 submitHash(
                     transactionIds = fullTransactionsData.map { it.stakeKitTransaction.id },
                     transactionHashes = transactionHashes,
+                    groupId = balanceState?.groupId,
+                    validator = balanceState?.validator,
+                    amount = balanceState?.cryptoDecimal,
+                    balanceType = balanceState?.type,
+                    rawCurrencyId = balanceState?.rawCurrencyId,
                 )
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
@@ -218,17 +237,34 @@ internal class StakingTransactionSender @AssistedInject constructor(
         )
     }
 
-    private suspend fun submitHash(transactionIds: List<String>, transactionHashes: List<String>) {
+    private suspend fun submitHash(
+        transactionIds: List<String>,
+        transactionHashes: List<String>,
+        groupId: String?,
+        validator: Yield.Validator?,
+        amount: BigDecimal?,
+        balanceType: BalanceType?,
+        rawCurrencyId: String?,
+    ) {
         transactionIds
             .zip(transactionHashes)
             .forEach { (transactionId, transactionHash) ->
-                submitHashUseCase.submitHash(
-                    transactionId = transactionId,
-                    transactionHash = transactionHash,
+                submitHashUseCase(
+                    SubmitHashData(
+                        transactionId = transactionId,
+                        transactionHash = transactionHash,
+                        validator = validator,
+                        amount = amount,
+                        balanceType = balanceType,
+                        rawCurrencyId = rawCurrencyId,
+                    ),
                 )
-                    .onLeft {
+                    .onLeft { error ->
                         analyticsEventHandler.send(
-                            StakingAnalyticsEvents.StakingError(stateController.value.cryptoCurrencyName),
+                            StakingAnalyticsEvents.StakingError(
+                                token = stateController.value.cryptoCurrencyName,
+                                errorType = error.javaClass.simpleName,
+                            ),
                         )
                         saveUnsubmittedHashUseCase.invoke(
                             transactionId = transactionId,
@@ -236,6 +272,15 @@ internal class StakingTransactionSender @AssistedInject constructor(
                         )
                     }.onRight {
                         Timber.d("Successful hash submission")
+                        savePendingTransactionUseCase.invoke(
+                            PendingTransaction(
+                                groupId = groupId,
+                                type = balanceType,
+                                amount = amount,
+                                rawCurrencyId = rawCurrencyId,
+                                validator = validator,
+                            ),
+                        )
                     }
             }
     }

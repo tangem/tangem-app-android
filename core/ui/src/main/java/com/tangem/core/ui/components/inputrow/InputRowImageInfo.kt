@@ -34,7 +34,9 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param subtitleColor subtitle text color
  * @param captionColor caption text color
  * @param isGrayscaleImage whether to display grayscale image
+ * @param showPendingIcon whether to show pending icon
  * @param iconEndRes icon to end of row
+ * @param onImageError composable to show if image loading failed
  */
 @Suppress("LongParameterList")
 @Composable
@@ -51,7 +53,9 @@ fun InputRowImageInfo(
     captionColor: Color = TangemTheme.colors.text.tertiary,
     iconTint: Color = TangemTheme.colors.icon.informative,
     isGrayscaleImage: Boolean = false,
+    @DrawableRes subtitleEndIconRes: Int? = null,
     @DrawableRes iconEndRes: Int? = null,
+    onImageError: (@Composable () -> Unit)? = null,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
@@ -74,7 +78,9 @@ fun InputRowImageInfo(
             subtitleColor = subtitleColor,
             captionColor = captionColor,
             isGrayscaleImage = isGrayscaleImage,
+            subtitleEndIconRes = subtitleEndIconRes,
             iconEndRes = iconEndRes,
+            onImageError = onImageError,
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
@@ -129,6 +135,7 @@ private fun InputRowImageInfo_Preview(
             infoTitle = data.infoTitle,
             infoSubtitle = data.infoSubtitle,
             imageUrl = "",
+            subtitleEndIconRes = data.subtitleEndIconRes,
             iconEndRes = R.drawable.ic_chevron_right_24,
         )
     }
@@ -159,6 +166,22 @@ private class InputRowImageInfoPreviewDataProvider : PreviewParameterProvider<In
                 infoTitle = stringReference("5431231231231231231231232 USD"),
                 infoSubtitle = null,
             ),
+            InputRowImageInfoPreviewData(
+                title = stringReference("Validator"),
+                subtitle = stringReference("Binance"),
+                caption = combinedReference(
+                    resourceReference(R.string.staking_details_apr),
+                    annotatedReference(
+                        buildAnnotatedString {
+                            append(" ")
+                            append("3,54%")
+                        },
+                    ),
+                ),
+                infoTitle = stringReference("5431231231231231231231232 USD"),
+                infoSubtitle = stringReference("5 SOL"),
+                subtitleEndIconRes = R.drawable.ic_staking_pending_transaction,
+            ),
         )
 }
 
@@ -168,5 +191,6 @@ private data class InputRowImageInfoPreviewData(
     val caption: TextReference?,
     val infoTitle: TextReference,
     val infoSubtitle: TextReference?,
+    @DrawableRes val subtitleEndIconRes: Int? = null,
 )
 // endregion

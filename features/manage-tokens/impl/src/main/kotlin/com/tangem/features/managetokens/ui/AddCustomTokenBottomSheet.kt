@@ -16,7 +16,6 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetTitle
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.tokens.model.Network
@@ -102,7 +101,7 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     popBack = {},
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "1"),
-                        name = stringReference("Ethereum"),
+                        name = "Ethereum",
                         derivationPath = Network.DerivationPath.None,
                         canHandleTokens = false,
                     ),
@@ -115,7 +114,7 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     popBack = {},
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "0"),
-                        name = stringReference("Ethereum"),
+                        name = "Ethereum",
                         derivationPath = Network.DerivationPath.None,
                         canHandleTokens = false,
                     ),
@@ -129,7 +128,8 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                     selectedDerivationPath = SelectedDerivationPath(
                         id = Network.ID(value = "0"),
                         value = Network.DerivationPath.None,
-                        networkName = stringReference("Ethereum"),
+                        name = "Ethereum",
+                        isDefault = false,
                     ),
                 ),
             ),

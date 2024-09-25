@@ -1,8 +1,10 @@
 package com.tangem.features.managetokens.entity.customtoken
 
+import androidx.compose.foundation.text.KeyboardOptions
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentListOf
 
 internal data class CustomTokenFormUM(
@@ -16,12 +18,17 @@ internal data class CustomTokenFormUM(
 ) {
 
     data class TokenFormUM(
-        val contractAddress: TextInputFieldUM,
-        val name: TextInputFieldUM,
-        val symbol: TextInputFieldUM,
-        val decimals: TextInputFieldUM,
+        val fields: PersistentMap<Field, TextInputFieldUM>,
         val wasFilled: Boolean = false,
-    )
+    ) {
+
+        enum class Field {
+            CONTRACT_ADDRESS,
+            NAME,
+            SYMBOL,
+            DECIMALS,
+        }
+    }
 
     data class NotificationUM(
         val id: String,
@@ -32,10 +39,13 @@ internal data class CustomTokenFormUM(
 internal data class TextInputFieldUM(
     val label: TextReference,
     val placeholder: TextReference,
+    val keyboardOptions: KeyboardOptions,
     val value: String = "",
+    val isFocused: Boolean = false,
     val error: TextReference? = null,
     val isEnabled: Boolean = true,
     val onValueChange: (String) -> Unit,
+    val onFocusChange: (Boolean) -> Unit,
 )
 
 internal data class ClickableFieldUM(

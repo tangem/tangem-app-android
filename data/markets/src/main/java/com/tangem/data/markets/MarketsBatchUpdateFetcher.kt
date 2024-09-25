@@ -1,6 +1,8 @@
 package com.tangem.data.markets
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.utils.retryOnError
+import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.TokenMarketChartsConverter
 import com.tangem.data.markets.converters.TokenQuotesShortConverter
 import com.tangem.data.markets.converters.toRequestParam
@@ -9,6 +11,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketChartListResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.TangemTechApi.Companion.marketsQuoteFields
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketUpdateRequest
 import com.tangem.pagination.Batch
@@ -21,6 +24,7 @@ import kotlinx.coroutines.launch
 internal class MarketsBatchUpdateFetcher(
     private val marketsApi: TangemTechMarketsApi,
     private val tangemTechApi: TangemTechApi,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val onApiError: () -> Unit,
 ) : BatchUpdateFetcher<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
 
@@ -51,6 +55,7 @@ internal class MarketsBatchUpdateFetcher(
                 updateTasks.forEachIndexed { index, deferred ->
                     launch {
                         val res = deferred.await()
+                        checkForNulls(res)
                         val batchToUpdate = toUpdate[index]
 
                         update {
@@ -70,7 +75,7 @@ internal class MarketsBatchUpdateFetcher(
                         tangemTechApi.getQuotes(
                             currencyId = updateRequest.currencyId,
                             coinIds = idsToUpdate.map { it.second }.flatten().joinToString(separator = ","),
-                            fields = quoteFields.joinToString(separator = ","),
+                            fields = marketsQuoteFields.joinToString(separator = ","),
                         ).getOrThrow()
                     }
                 }
@@ -112,6 +117,22 @@ internal class MarketsBatchUpdateFetcher(
         )
     }
 
+    private fun checkForNulls(response: TokenMarketChartListResponse) {
+        response.values.forEach { chart ->
+            chart.prices.forEach { (_, price) ->
+                if (price == null) {
+                    analyticsEventHandler.send(
+                        MarketsDataAnalyticsEvent.ChartNullValuesError(
+                            requestPath = "coins/history_preview",
+                        ),
+                    )
+
+                    return
+                }
+            }
+        }
+    }
+
     private inline fun <T> catchApiError(onError: () -> Unit, block: () -> T): T {
         return try {
             block()
@@ -119,14 +140,5 @@ internal class MarketsBatchUpdateFetcher(
             onError()
             throw e
         }
-    }
-
-    companion object {
-        private val quoteFields = listOf(
-            "price",
-            "priceChange24h",
-            "priceChange1w",
-            "priceChange30d",
-        )
     }
 }

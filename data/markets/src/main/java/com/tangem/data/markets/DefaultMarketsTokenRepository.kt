@@ -9,14 +9,17 @@ import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
+import com.tangem.data.markets.converters.*
 import com.tangem.data.markets.converters.TokenChartConverter
 import com.tangem.data.markets.converters.TokenMarketInfoConverter
 import com.tangem.data.markets.converters.TokenMarketListConverter
+import com.tangem.data.markets.converters.TokenQuotesShortConverter
 import com.tangem.data.markets.converters.toRequestParam
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.TangemTechApi.Companion.marketsQuoteFields
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.markets.*
@@ -100,6 +103,7 @@ internal class DefaultMarketsTokenRepository(
         val tokenMarketsUpdateFetcher = MarketsBatchUpdateFetcher(
             tangemTechApi = tangemTechApi,
             marketsApi = marketsApi,
+            analyticsEventHandler = analyticsEventHandler,
             onApiError = {
                 analyticsEventHandler.send(MarketsDataAnalyticsEvent.List.Error.toEvent())
             },
@@ -138,7 +142,19 @@ internal class DefaultMarketsTokenRepository(
             response.getOrThrow()
         }
 
-        return TokenChartConverter.convert(interval, result)
+        return TokenChartConverter.convert(
+            interval = interval,
+            value = result,
+
+            // === Analytics ===
+            onNullPresented = {
+                analyticsEventHandler.send(
+                    MarketsDataAnalyticsEvent.ChartNullValuesError(
+                        requestPath = "coins/history",
+                    ),
+                )
+            },
+        )
     }
 
     override suspend fun getChartPreview(
@@ -160,7 +176,19 @@ internal class DefaultMarketsTokenRepository(
             )
         }
 
-        return TokenChartConverter.convert(interval, chart)
+        return TokenChartConverter.convert(
+            interval = interval,
+            value = chart,
+
+            // === Analytics ===
+            onNullPresented = {
+                analyticsEventHandler.send(
+                    MarketsDataAnalyticsEvent.ChartNullValuesError(
+                        requestPath = "coins/history_preview",
+                    ),
+                )
+            },
+        )
     }
 
     override suspend fun getTokenInfo(
@@ -188,16 +216,24 @@ internal class DefaultMarketsTokenRepository(
         return TokenMarketInfoConverter.convert(resultResponse)
     }
 
-    override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String): TokenQuotes {
-        // TODO change method when backend is ready
-        // add error analytics event
-        val response = marketsApi.getCoinMarketData(
-            currency = fiatCurrencyCode,
-            coinId = tokenId,
-            language = "en",
+    override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String, tokenSymbol: String): TokenQuotes {
+        // for second markets iteration we should use extended api method with all required fields
+        val response = tangemTechApi.getQuotes(
+            currencyId = fiatCurrencyCode,
+            coinIds = tokenId,
+            fields = marketsQuoteFields.joinToString(separator = ","),
         )
 
-        return TokenMarketInfoConverter.convert(response.getOrThrow()).quotes
+        val result = catchApiErrorAndSendEvent(
+            errorEvent = MarketsDataAnalyticsEvent.Details.Error(
+                request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
+                tokenSymbol = tokenSymbol,
+            ),
+        ) {
+            response.getOrThrow()
+        }
+
+        return TokenQuotesShortConverter.convert(tokenId, result).toFull()
     }
 
     override suspend fun createCryptoCurrency(
