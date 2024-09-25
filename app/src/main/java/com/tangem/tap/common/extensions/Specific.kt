@@ -20,7 +20,3 @@ fun BigDecimal.toFormattedString(
     df.roundingMode = roundingMode
     return df.format(this)
 }
-
-fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
-
-fun BigDecimal.isPositive(): Boolean = this.signum() == 1
