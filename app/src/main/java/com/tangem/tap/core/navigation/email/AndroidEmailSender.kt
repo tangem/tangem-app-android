@@ -1,27 +1,34 @@
-package com.tangem.core.navigation.email
+package com.tangem.tap.core.navigation.email
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.tangem.core.navigation.email.EmailSender
+import com.tangem.tap.foregroundActivityObserver
 import timber.log.Timber
 
 /**
  * Implementation of email sender for Android
  *
- * @property context context
- *
  * @author Andrew Khokhlov on 05/03/2024
  */
-internal class AndroidEmailSender(private val context: Context) : EmailSender {
+internal class AndroidEmailSender : EmailSender {
 
     override fun send(email: EmailSender.Email, onFail: ((Exception) -> Unit)?) {
-        val originalIntent = createEmailShareIntent(email)
+        val activity = foregroundActivityObserver.foregroundActivity
+
+        if (activity == null) {
+            Timber.e("Foreground activity not found")
+            return
+        }
+
+        val originalIntent = createEmailShareIntent(activity, email)
         val emailFilterIntent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
 
-        val packageManager = context.packageManager
+        val packageManager = activity.packageManager
         val originalIntentResults = packageManager.queryIntentActivities(originalIntent, 0)
         val emailFilterIntentResults = packageManager.queryIntentActivities(emailFilterIntent, 0)
 
@@ -32,7 +39,7 @@ internal class AndroidEmailSender(private val context: Context) : EmailSender {
                 }
             }
             .map {
-                createEmailShareIntent(email).apply { setPackage(it.activityInfo.packageName) }
+                createEmailShareIntent(activity, email).apply { setPackage(it.activityInfo.packageName) }
             }
             .toMutableList()
 
@@ -41,14 +48,14 @@ internal class AndroidEmailSender(private val context: Context) : EmailSender {
                 putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedIntents.toTypedArray())
             }
 
-            ContextCompat.startActivity(context, chooserIntent, null)
+            ContextCompat.startActivity(activity, chooserIntent, null)
         } catch (ex: Exception) {
             Timber.e("Failed to send email: $ex")
         }
     }
 
-    private fun createEmailShareIntent(email: EmailSender.Email): Intent {
-        val builder = ShareCompat.IntentBuilder(context)
+    private fun createEmailShareIntent(activity: AppCompatActivity, email: EmailSender.Email): Intent {
+        val builder = ShareCompat.IntentBuilder(activity)
             .setType("message/rfc822")
             .setEmailTo(arrayOf(email.address))
             .setSubject(email.subject)
@@ -56,7 +63,7 @@ internal class AndroidEmailSender(private val context: Context) : EmailSender {
 
         email.attachment?.let {
             builder.setStream(
-                FileProvider.getUriForFile(context, "${context.packageName}.provider", it),
+                FileProvider.getUriForFile(activity, "${activity.packageName}.provider", it),
             )
         }
 
