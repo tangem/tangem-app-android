@@ -1,6 +1,5 @@
-package com.tangem.features.staking.impl.presentation.ui
+package com.tangem.feature.swap.ui
 
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -12,13 +11,12 @@ import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.shareText
-import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
+import com.tangem.feature.swap.models.states.events.SwapEvent
+import com.tangem.feature.swap.presentation.R
 
 @Composable
-internal fun StakingEventEffect(event: StateEvent<StakingEvent>, snackbarHostState: SnackbarHostState) {
+internal fun SwapEventEffect(event: StateEvent<SwapEvent>) {
     val context = LocalContext.current
-    val resources = LocalContext.current.resources
     var alertConfig by remember { mutableStateOf<AlertUM?>(value = null) }
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -27,20 +25,17 @@ internal fun StakingEventEffect(event: StateEvent<StakingEvent>, snackbarHostSta
     }
 
     alertConfig?.let {
-        StakingAlert(state = it, onDismiss = { alertConfig = null })
+        SwapAlert(state = it, onDismiss = { alertConfig = null })
     }
 
     EventEffect(
         event = event,
         onTrigger = { value ->
             when (value) {
-                is StakingEvent.ShowSnackBar -> {
-                    snackbarHostState.showSnackbar(message = value.text.resolveReference(resources))
-                }
-                is StakingEvent.ShowAlert -> {
+                is SwapEvent.ShowAlert -> {
                     alertConfig = value.alert
                 }
-                is StakingEvent.ShowShareDialog -> {
+                is SwapEvent.ShowShareDialog -> {
                     context.shareText(value.txUrl)
                 }
             }
@@ -49,7 +44,7 @@ internal fun StakingEventEffect(event: StateEvent<StakingEvent>, snackbarHostSta
 }
 
 @Composable
-internal fun StakingAlert(state: AlertUM, onDismiss: () -> Unit) {
+internal fun SwapAlert(state: AlertUM, onDismiss: () -> Unit) {
     val confirmButton = DialogButtonUM(
         title = state.confirmButtonText.resolveReference(),
         onClick = {
