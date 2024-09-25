@@ -12,7 +12,7 @@ import com.tangem.tap.store
 // TODO: Remove this object after feature toggle was removed and use ScanCardUseCase instead
 internal class DefaultScanCardProcessor : ScanCardProcessor {
     private val isNewCardScanningEnabled: Boolean
-        get() = store.inject(DaggerGraphState::customTokenFeatureToggles).isNewCardScanningEnabled
+        get() = store.inject(DaggerGraphState::cardScanningFeatureToggles).isNewCardScanningEnabled
 
     override suspend fun scan(
         cardId: String?,
