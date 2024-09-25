@@ -116,6 +116,7 @@ internal class CurrenciesStatusesLceOperations(
         userWalletId: UserWalletId,
     ): LceFlow<TokenListError, List<CryptoCurrency>> {
         return currenciesRepository.getMultiCurrencyWalletCurrenciesUpdatesLce(userWalletId)
+            .distinctUntilChanged()
             .map { maybeCurrencies ->
                 maybeCurrencies.mapError { TokenListError.DataError(it) }
             }
