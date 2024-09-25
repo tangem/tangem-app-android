@@ -7,15 +7,14 @@ import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.tokenlist.impl.ui.state.SortByBottomSheetContentUM
-import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
-import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
-import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM
-import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.*
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 
 @Stable
 internal class MarketsListUMStateManager(
@@ -193,7 +192,7 @@ internal class MarketsListUMStateManager(
     private fun state(): MarketsListUM = MarketsListUM(
         list = ListUM.Loading,
         searchBar = SearchBarUM(
-            placeholderText = resourceReference(R.string.common_search),
+            placeholderText = resourceReference(R.string.markets_search_header_title),
             query = "",
             onQueryChange = { searchQuery = it },
             isActive = false,
