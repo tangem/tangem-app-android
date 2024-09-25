@@ -49,9 +49,9 @@ import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
-import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -89,8 +89,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val networkConnectionManager: NetworkConnectionManager
         get() = entryPoint.getNetworkConnectionManager()
 
-    private val customTokenFeatureToggles: CustomTokenFeatureToggles
-        get() = entryPoint.getCustomTokenFeatureToggles()
+    private val cardScanningFeatureToggles: CardScanningFeatureToggles
+        get() = entryPoint.getCardScanningFeatureToggles()
 
     private val walletConnect2Repository: WalletConnect2Repository
         get() = entryPoint.getWalletConnect2Repository()
@@ -233,7 +233,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
             state = AppState(
                 daggerGraphState = DaggerGraphState(
                     networkConnectionManager = networkConnectionManager,
-                    customTokenFeatureToggles = customTokenFeatureToggles,
+                    cardScanningFeatureToggles = cardScanningFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
                     scanCardProcessor = scanCardProcessor,
