@@ -21,7 +21,6 @@ import com.tangem.domain.common.extensions.canHandleBlockchain
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
@@ -85,7 +84,8 @@ internal class DefaultCustomTokensRepository(
     ): CryptoCurrency.Token? = withContext(dispatchers.io) {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId)
             ?: error("User wallet not found")
-        val network = getNetwork(networkId, derivationPath)
+        val network = getNetwork(networkId, derivationPath, userWallet.scanResponse)
+            ?: return@withContext null
         val tokenAddress = tokenAddressConverter.convertTokenAddress(
             networkId,
             contractAddress,
@@ -125,13 +125,20 @@ internal class DefaultCustomTokensRepository(
         }
     }
 
-    override fun createCoin(networkId: Network.ID, derivationPath: Network.DerivationPath): CryptoCurrency.Coin {
-        val network = getNetwork(networkId, derivationPath)
+    override suspend fun createCoin(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency.Coin {
+        val userWallet = userWalletsStore.getSyncOrNull(userWalletId)
+            ?: error("User wallet not found")
+        val network = getNetwork(networkId, derivationPath, userWallet.scanResponse)
+            ?: error("Network not found")
 
         return cryptoCurrencyFactory.createCoin(network)
     }
 
-    override fun createToken(
+    override suspend fun createToken(
         managedCryptoCurrency: ManagedCryptoCurrency.Token,
         sourceNetwork: ManagedCryptoCurrency.SourceNetwork.Default,
         rawId: String?,
@@ -147,11 +154,15 @@ internal class DefaultCustomTokensRepository(
     }
 
     override suspend fun createCustomToken(
+        userWalletId: UserWalletId,
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
         formValues: AddCustomTokenForm.Validated.All,
     ): CryptoCurrency.Token {
-        val network = getNetwork(networkId, derivationPath)
+        val userWallet = userWalletsStore.getSyncOrNull(userWalletId)
+            ?: error("User wallet not found")
+        val network = getNetwork(networkId, derivationPath, userWallet.scanResponse)
+            ?: error("Network not found")
         val tokenAddress = tokenAddressConverter.convertTokenAddress(
             networkId,
             formValues.contractAddress,
@@ -171,7 +182,11 @@ internal class DefaultCustomTokensRepository(
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: ManagedCryptoCurrency.Custom) =
         withContext(dispatchers.io) {
             val cryptoCurrency = when (currency) {
-                is ManagedCryptoCurrency.Custom.Coin -> createCoin(currency.network.id, currency.network.derivationPath)
+                is ManagedCryptoCurrency.Custom.Coin -> createCoin(
+                    userWalletId = userWalletId,
+                    networkId = currency.network.id,
+                    derivationPath = currency.network.derivationPath,
+                )
                 is ManagedCryptoCurrency.Custom.Token -> cryptoCurrencyFactory.createToken(
                     network = currency.network,
                     rawId = currency.currencyId.rawCurrencyId,
@@ -208,9 +223,7 @@ internal class DefaultCustomTokensRepository(
                     getNetwork(
                         blockchain = blockchain,
                         extraDerivationPath = null,
-                        derivationStyleProvider = scanResponse.derivationStyleProvider,
-                    )?.copy(
-                        canHandleTokens = scanResponse.card.canHandleToken(blockchain, scanResponse.cardTypesResolver),
+                        scanResponse = scanResponse,
                     )
                 } else {
                     null
