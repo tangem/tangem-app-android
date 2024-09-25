@@ -3,7 +3,6 @@ package com.tangem.features.staking.impl.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType.Companion.asAnalyticName
 
 internal sealed class StakingAnalyticsEvents(
     event: String,
@@ -101,6 +100,17 @@ internal sealed class StakingAnalyticsEvents(
         ),
     )
 
+    data class ValidatorChosen(
+        val token: String,
+        val validator: String,
+    ) : StakingAnalyticsEvents(
+        event = "Validator Chosen",
+        params = mapOf(
+            AnalyticsParam.TOKEN_PARAM to token,
+            "Validator" to validator,
+        ),
+    )
+
     data class ButtonValidator(
         val source: StakeScreenSource,
         val token: String,
@@ -122,11 +132,11 @@ internal sealed class StakingAnalyticsEvents(
     )
 
     data class ButtonAction(
-        val action: String,
+        val action: StakingActionType,
         val token: String,
         val validator: String,
     ) : StakingAnalyticsEvents(
-        event = "Button - $action",
+        event = "Button - ${action.asAnalyticName}",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
             "Validator" to validator,
