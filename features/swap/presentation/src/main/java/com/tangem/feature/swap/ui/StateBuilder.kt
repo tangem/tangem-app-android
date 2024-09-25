@@ -2,15 +2,19 @@ package com.tangem.feature.swap.ui
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.common.ui.alerts.models.AlertDemoModeUM
 import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -19,7 +23,10 @@ import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.*
+import com.tangem.feature.swap.models.states.events.SwapEvent
 import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.utils.getExpressErrorMessage
+import com.tangem.feature.swap.utils.getExpressErrorTitle
 import com.tangem.feature.swap.viewmodels.SwapProcessDataState
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -1045,73 +1052,35 @@ internal class StateBuilder(
         )
     }
 
-    fun createErrorTransaction(
+    fun createErrorTransactionAlert(
         uiState: SwapStateHolder,
-        swapTransactionState: SwapTransactionState,
-        onAlertClick: () -> Unit,
+        error: SwapTransactionState.Error,
+        onDismiss: () -> Unit,
+        onSupportClick: (String) -> Unit,
     ): SwapStateHolder {
+        val errorAlert = SwapTransactionErrorStateConverter(
+            onSupportClick = onSupportClick,
+            onDismiss = onDismiss,
+        ).convert(error)
         return uiState.copy(
-            alert = SwapWarning.GenericWarning(
-                message = if (swapTransactionState is SwapTransactionState.ExpressError) {
-                    getProviderErrorMessage(swapTransactionState.dataError)
-                } else {
-                    null
-                },
-                onClick = onAlertClick,
-                type = if (swapTransactionState is SwapTransactionState.NetworkError) {
-                    GenericWarningType.NETWORK
-                } else {
-                    GenericWarningType.OTHER
-                },
-            ),
+            event = errorAlert?.let {
+                triggeredEvent(
+                    data = SwapEvent.ShowAlert(errorAlert),
+                    onConsume = onDismiss,
+                )
+            } ?: consumedEvent(),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
         )
     }
 
-    fun createDemoModeAlert(uiState: SwapStateHolder, onAlertClick: () -> Unit): SwapStateHolder {
+    fun createDemoModeAlert(uiState: SwapStateHolder, onDismiss: () -> Unit): SwapStateHolder {
         return uiState.copy(
-            alert = SwapWarning.GenericWarning(
-                title = resourceReference(id = R.string.warning_demo_mode_title),
-                message = resourceReference(id = R.string.warning_demo_mode_message),
-                onClick = onAlertClick,
-                type = GenericWarningType.OTHER,
+            event = triggeredEvent(
+                data = SwapEvent.ShowAlert(AlertDemoModeUM(onDismiss)),
+                onConsume = onDismiss,
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
         )
-    }
-
-    private fun getProviderErrorMessage(dataError: DataError): TextReference {
-        return when (dataError) {
-            is DataError.SwapsAreUnavailableNowError -> resourceReference(
-                id = R.string.express_error_swap_unavailable,
-                formatArgs = wrappedList(dataError.code),
-            )
-            is DataError.ExchangeNotPossibleError -> resourceReference(
-                id = R.string.warning_express_pair_unavailable_message,
-                formatArgs = wrappedList(dataError.code),
-            )
-            is DataError.UnknownError -> resourceReference(R.string.common_unknown_error)
-            is DataError.ExchangeProviderNotActiveError,
-            is DataError.ExchangeProviderNotFoundError,
-            is DataError.ExchangeProviderNotAvailableError,
-            is DataError.ExchangeProviderProviderInternalError,
-            -> resourceReference(
-                id = R.string.express_error_swap_pair_unavailable,
-                formatArgs = wrappedList(dataError.code),
-            )
-            else -> resourceReference(R.string.express_error_code, wrappedList(dataError.code.toString()))
-        }
-    }
-
-    private fun getProviderErrorTitle(dataError: DataError): TextReference {
-        return when (dataError) {
-            is DataError.ExchangeNotPossibleError -> resourceReference(
-                id = R.string.warning_express_pair_unavailable_title,
-                formatArgs = wrappedList(dataError.code),
-            )
-            is DataError.UnknownError -> resourceReference(R.string.common_error)
-            else -> resourceReference(R.string.warning_express_refresh_required_title)
-        }
     }
 
     fun createAlert(
@@ -1119,7 +1088,7 @@ internal class StateBuilder(
         isPriceImpact: Boolean,
         token: String,
         providerType: ExchangeProviderType,
-        onAlertClick: () -> Unit,
+        onDismiss: () -> Unit,
     ): SwapStateHolder {
         val message = when (providerType) {
             ExchangeProviderType.CEX -> resourceReference(R.string.swapping_alert_cex_description, wrappedList(token))
@@ -1136,29 +1105,38 @@ internal class StateBuilder(
             }
         }
         return uiState.copy(
-            alert = SwapWarning.GenericWarning(
-                title = resourceReference(R.string.swapping_alert_title),
-                message = message,
-                onClick = onAlertClick,
-                type = GenericWarningType.OTHER,
+            event = triggeredEvent(
+                SwapEvent.ShowAlert(
+                    SwapAlertUM.FeesAlert(
+                        message = message,
+                        onConfirmClick = onDismiss,
+                    ),
+                ),
+                onConsume = onDismiss,
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
         )
     }
 
-    fun addAlert(uiState: SwapStateHolder, message: TextReference? = null, onClick: () -> Unit): SwapStateHolder {
+    fun addAlert(
+        uiState: SwapStateHolder,
+        message: TextReference = resourceReference(R.string.common_unknown_error),
+        onDismiss: () -> Unit = { clearAlert(uiState) },
+    ): SwapStateHolder {
         return uiState.copy(
-            alert = SwapWarning.GenericWarning(
-                message = message,
-                onClick = onClick,
+            event = triggeredEvent(
+                SwapEvent.ShowAlert(
+                    SwapAlertUM.GenericError(onDismiss, message),
+                ),
+                onConsume = onDismiss,
             ),
         )
     }
 
-    fun clearAlert(uiState: SwapStateHolder): SwapStateHolder = uiState.copy(alert = null)
+    fun clearAlert(uiState: SwapStateHolder): SwapStateHolder = uiState.copy(event = consumedEvent())
 
     fun addWarning(uiState: SwapStateHolder, message: TextReference?, onClick: () -> Unit): SwapStateHolder {
-        val renewWarnings = uiState.warnings.filterNot { it is SwapWarning.GenericWarning }.toMutableList()
+        val renewWarnings = uiState.warnings.toMutableList()
         renewWarnings.add(
             SwapWarning.GenericWarning(
                 message = message,
