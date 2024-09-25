@@ -192,9 +192,6 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data object AddCustomToken : AppRoute(path = "/add_custom_token")
-
-    @Serializable
     data object WalletConnectSessions : AppRoute(path = "/wallet_connect_sessions")
 
     @Serializable
