@@ -121,7 +121,7 @@ internal class DefaultStakingRepository(
                 key = YIELDS_STORE_KEY,
                 skipCache = refresh,
                 block = {
-                    val stakingTokensWithYields = stakeKitApi.getMultipleYields(preferredValidatorsOnly = true)
+                    val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = true)
                         .getOrThrow()
 
                     stakingYieldsStore.store(stakingTokensWithYields.data)
@@ -166,10 +166,15 @@ internal class DefaultStakingRepository(
         val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: return StakingAvailability.Unavailable
 
         return withContext(dispatchers.io) {
-            val yields = getEnabledYields() ?: return@withContext StakingAvailability.Unavailable
+            val isSupportedInMobileApp = isStakingSupportedInMobileApp(getIntegrationKey(cryptoCurrency.id))
+
+            val yields = getEnabledYields() ?: return@withContext if (isSupportedInMobileApp) {
+                StakingAvailability.TemporaryUnavailable
+            } else {
+                StakingAvailability.Unavailable
+            }
 
             val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, cryptoCurrency.symbol)
-            val isSupportedInMobileApp = isStakingSupportedInMobileApp(getIntegrationKey(cryptoCurrency.id))
 
             when {
                 prefetchedYield != null && isSupportedInMobileApp -> {
@@ -332,8 +337,13 @@ internal class DefaultStakingRepository(
                 val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)]
                     ?: error("Could not get integrationId")
                 stakingBalanceStore.get(userWalletId, address, integrationId)
+                    .distinctUntilChanged()
                     .collectLatest {
-                        send(yieldBalanceConverter.convert(it))
+                        if (it != null) {
+                            send(yieldBalanceConverter.convert(it))
+                        } else {
+                            error("No yield balance available for currency ${cryptoCurrency.id.value}")
+                        }
                     }
             }
 
@@ -381,12 +391,13 @@ internal class DefaultStakingRepository(
                 key = getYieldBalancesKey(userWalletId),
                 skipCache = refresh,
                 block = {
+                    val yields = getEnabledYields() ?: error("No yields found")
                     val availableCurrencies = cryptoCurrencies
                         .mapNotNull { currency ->
                             val addresses = walletManagersFacade.getAddresses(userWalletId, currency.network)
                             val integrationId = integrationIdMap[getIntegrationKey(currency.id)]
 
-                            if (integrationId != null) {
+                            if (integrationId != null && yields.any { it.id == integrationId }) {
                                 addresses to integrationId
                             } else {
                                 null
