@@ -16,7 +16,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.converters.TokensDataConverter
-import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
@@ -632,13 +632,13 @@ internal class StateBuilder(
         fromToken: TokenSwapInfo,
         toToken: CryptoCurrencyStatus?,
         includeFeeInAmount: IncludeFeeInAmount,
-        dataError: DataError,
+        expressDataError: ExpressDataError,
         isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         val warnings = mutableListOf<SwapWarning>()
-        warnings.add(getWarningForError(dataError, fromToken.cryptoCurrencyStatus.currency))
+        warnings.add(getWarningForError(expressDataError, fromToken.cryptoCurrencyStatus.currency))
         if (includeFeeInAmount is IncludeFeeInAmount.Included && uiStateHolder.fee is FeeItemState.Content) {
             val feeCoverageNotification = createNetworkFeeCoverageNotificationConfig(
                 uiStateHolder.fee.amountCrypto,
@@ -649,7 +649,7 @@ internal class StateBuilder(
         val providerState = getProviderStateForError(
             swapProvider = swapProvider,
             fromToken = fromToken.cryptoCurrencyStatus.currency,
-            dataError = dataError,
+            expressDataError = expressDataError,
             onProviderClick = actions.onProviderClick,
             selectionType = ProviderState.SelectionType.CLICK,
         )
@@ -705,28 +705,28 @@ internal class StateBuilder(
     private fun getProviderStateForError(
         swapProvider: SwapProvider,
         fromToken: CryptoCurrency,
-        dataError: DataError,
+        expressDataError: ExpressDataError,
         onProviderClick: (String) -> Unit,
         selectionType: ProviderState.SelectionType,
     ): ProviderState {
-        return when (dataError) {
-            is DataError.ExchangeTooSmallAmountError -> {
+        return when (expressDataError) {
+            is ExpressDataError.ExchangeTooSmallAmountError -> {
                 swapProvider.convertToAvailableFromProviderState(
                     swapProvider = swapProvider,
                     alertText = resourceReference(
                         R.string.express_provider_min_amount,
-                        wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
+                        wrappedList(expressDataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
                     selectionType = selectionType,
                     onProviderClick = onProviderClick,
                 )
             }
-            is DataError.ExchangeTooBigAmountError -> {
+            is ExpressDataError.ExchangeTooBigAmountError -> {
                 swapProvider.convertToAvailableFromProviderState(
                     swapProvider = swapProvider,
                     alertText = resourceReference(
                         R.string.express_provider_max_amount,
-                        wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
+                        wrappedList(expressDataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
                     selectionType = selectionType,
                     onProviderClick = onProviderClick,
@@ -738,25 +738,25 @@ internal class StateBuilder(
         }
     }
 
-    private fun getWarningForError(dataError: DataError, fromToken: CryptoCurrency): SwapWarning {
-        val providerErrorMessage = getProviderErrorMessage(dataError)
-        val providerErrorTitle = getProviderErrorTitle(dataError)
-        return when (dataError) {
-            is DataError.ExchangeTooSmallAmountError -> SwapWarning.GeneralError(
+    private fun getWarningForError(expressDataError: ExpressDataError, fromToken: CryptoCurrency): SwapWarning {
+        val providerErrorMessage = getExpressErrorMessage(expressDataError)
+        val providerErrorTitle = getExpressErrorTitle(expressDataError)
+        return when (expressDataError) {
+            is ExpressDataError.ExchangeTooSmallAmountError -> SwapWarning.GeneralError(
                 notificationConfig = NotificationConfig(
                     title = resourceReference(
                         id = R.string.warning_express_too_minimal_amount_title,
-                        formatArgs = wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
+                        formatArgs = wrappedList(expressDataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
                     subtitle = resourceReference(R.string.warning_express_wrong_amount_description),
                     iconResId = R.drawable.ic_alert_circle_24,
                 ),
             )
-            is DataError.ExchangeTooBigAmountError -> SwapWarning.GeneralError(
+            is ExpressDataError.ExchangeTooBigAmountError -> SwapWarning.GeneralError(
                 notificationConfig = NotificationConfig(
                     title = resourceReference(
                         id = R.string.warning_express_too_maximum_amount_title,
-                        formatArgs = wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
+                        formatArgs = wrappedList(expressDataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
                     subtitle = resourceReference(R.string.warning_express_wrong_amount_description),
                     iconResId = R.drawable.ic_alert_circle_24,
@@ -1399,7 +1399,7 @@ internal class StateBuilder(
             is SwapState.SwapError -> getProviderStateForError(
                 swapProvider = provider,
                 fromToken = state.fromTokenInfo.cryptoCurrencyStatus.currency,
-                dataError = state.error,
+                expressDataError = state.error,
                 onProviderClick = onProviderSelect,
                 selectionType = ProviderState.SelectionType.SELECT,
             )
