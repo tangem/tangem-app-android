@@ -46,6 +46,7 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.*
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.utils.Provider
 import com.tangem.wallet.R
@@ -516,7 +517,10 @@ class OnboardingWalletFragment :
             val getCardInfoUseCase = store.inject(DaggerGraphState::getCardInfoUseCase)
             val cardInfo = requireNotNull(getCardInfoUseCase.invoke(scanResponse).getOrNull())
 
-            store.state.globalState.feedbackManager?.sendEmail(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+            scope.launch {
+                store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                    .invoke(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+            }
         },
         onOpenUriClick = { uri ->
             store.dispatchOpenUrl(uri.toString())
