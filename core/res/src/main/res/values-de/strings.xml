@@ -808,6 +808,7 @@
   <string name="transaction_history_operation">Operation</string>
   <string name="transaction_history_transaction_from_address">von: %s</string>
   <string name="transaction_history_transaction_to_address">zu: %s</string>
+  <string name="transaction_history_transaction_validator">Validierer: %s</string>
   <string name="try_to_load_data_again_button_title">Versuche es erneut</string>
   <string name="twin_error_same_card">Du hast dieselbe Karte gescannt. Um ein Zwillings-Wallet zu erstellen, musst du die Karte mit der Nummer %d scannen.</string>
   <string name="twin_error_wrong_twin">Du hast die falsche Doppelkarte gescannt. Bitte versuche eine andere Karte</string>
