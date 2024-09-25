@@ -157,7 +157,7 @@ private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM?, search: SearchBarU
 }
 
 @Composable
-private fun SaveChangesButton(
+internal fun SaveChangesButton(
     isVisible: Boolean,
     showProgress: Boolean,
     onClick: () -> Unit,
@@ -202,7 +202,7 @@ private fun Content(state: ManageTokensUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Currencies(
+internal fun Currencies(
     listState: LazyListState,
     items: ImmutableList<CurrencyItemUM>,
     showLoadingItem: Boolean,
@@ -456,52 +456,16 @@ private class PreviewManageTokensComponentProvider : PreviewParameterProvider<Ma
     override val values: Sequence<ManageTokensComponent>
         get() = sequenceOf(
             PreviewManageTokensComponent(
-                isLoading = false,
-                params = ManageTokensComponent.Params(
-                    mode = ManageTokensComponent.Mode.Manage(
-                        showToolbar = true,
-                        userWalletId = UserWalletId("wallet_id"),
-                        onSaved = {},
-                    ),
-                ),
-            ),
-            PreviewManageTokensComponent(
                 isLoading = true,
-                params = ManageTokensComponent.Params(
-                    mode = ManageTokensComponent.Mode.Manage(
-                        showToolbar = true,
-                        userWalletId = UserWalletId("wallet_id"),
-                        onSaved = {},
-                    ),
-                ),
+                params = ManageTokensComponent.Params(userWalletId = UserWalletId("wallet_id")),
             ),
             PreviewManageTokensComponent(
                 isLoading = false,
-                params = ManageTokensComponent.Params(
-                    mode = ManageTokensComponent.Mode.Manage(
-                        showToolbar = false,
-                        userWalletId = UserWalletId("wallet_id"),
-                        onSaved = {},
-                    ),
-                ),
-            ),
-            PreviewManageTokensComponent(
-                isLoading = true,
-                params = ManageTokensComponent.Params(
-                    mode = ManageTokensComponent.Mode.Manage(
-                        showToolbar = false,
-                        userWalletId = UserWalletId("wallet_id"),
-                        onSaved = {},
-                    ),
-                ),
+                params = ManageTokensComponent.Params(userWalletId = null),
             ),
             PreviewManageTokensComponent(
                 isLoading = false,
-                params = ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true)),
-            ),
-            PreviewManageTokensComponent(
-                isLoading = true,
-                params = ManageTokensComponent.Params(mode = ManageTokensComponent.Mode.ReadOnly(showToolbar = true)),
+                params = ManageTokensComponent.Params(userWalletId = UserWalletId("wallet_id")),
             ),
         )
 }

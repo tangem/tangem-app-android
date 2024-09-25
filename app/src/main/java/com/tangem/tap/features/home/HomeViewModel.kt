@@ -67,15 +67,7 @@ internal class HomeViewModel @Inject constructor(
         analyticsEventHandler.send(IntroductionProcess.ButtonTokensList())
 
         store.dispatch(TokensAction.SetArgs.ReadAccess)
-        store.dispatchNavigationAction {
-            push(
-                AppRoute.ManageTokens(
-                    userWalletId = null,
-                    showToolbar = true,
-                    onSaved = {},
-                ),
-            )
-        }
+        store.dispatchNavigationAction { push(AppRoute.ManageTokens()) }
     }
 
     private fun scanCard() {

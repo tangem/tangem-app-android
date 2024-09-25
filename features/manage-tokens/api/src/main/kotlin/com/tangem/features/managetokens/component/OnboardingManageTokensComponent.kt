@@ -4,9 +4,9 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.wallets.models.UserWalletId
 
-interface ManageTokensComponent : ComposableContentComponent {
+interface OnboardingManageTokensComponent : ComposableContentComponent {
 
-    data class Params(val userWalletId: UserWalletId?)
+    data class Params(val userWalletId: UserWalletId)
 
-    interface Factory : ComponentFactory<Params, ManageTokensComponent>
+    interface Factory : ComponentFactory<Params, OnboardingManageTokensComponent>
 }

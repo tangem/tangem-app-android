@@ -129,17 +129,7 @@ internal class ChildFactory @Inject constructor(
                     val userWalletId = route.userWalletId
                     route.asComponentChild(
                         contextProvider = contextProvider(route, contextFactory),
-                        params = ManageTokensComponent.Params(
-                            mode = if (userWalletId == null) {
-                                ManageTokensComponent.Mode.ReadOnly(showToolbar = route.showToolbar)
-                            } else {
-                                ManageTokensComponent.Mode.Manage(
-                                    userWalletId = userWalletId,
-                                    showToolbar = route.showToolbar,
-                                    onSaved = route.onSaved,
-                                )
-                            },
-                        ),
+                        params = ManageTokensComponent.Params(userWalletId = userWalletId),
                         componentFactory = manageTokensComponentFactory,
                     )
                 } else {

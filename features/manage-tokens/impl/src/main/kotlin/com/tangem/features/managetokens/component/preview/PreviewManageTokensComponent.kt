@@ -37,23 +37,20 @@ internal class PreviewManageTokensComponent(
         value = ManageTokensUM.ManageContent(
             popBack = {},
             items = items,
-            topBar = if (params.mode.showToolbar) {
-                when (params.mode) {
-                    is ManageTokensComponent.Mode.Manage -> ManageTokensTopBarUM.ManageContent(
-                        title = resourceReference(id = R.string.main_manage_tokens),
-                        onBackButtonClick = {},
-                        endButton = TopAppBarButtonUM(
-                            iconRes = R.drawable.ic_plus_24,
-                            onIconClicked = {},
-                        ),
-                    )
-                    is ManageTokensComponent.Mode.ReadOnly -> ManageTokensTopBarUM.ReadContent(
-                        title = resourceReference(R.string.common_search_tokens),
-                        onBackButtonClick = {},
-                    )
-                }
+            topBar = if (params.userWalletId != null) {
+                ManageTokensTopBarUM.ManageContent(
+                    title = resourceReference(id = R.string.main_manage_tokens),
+                    onBackButtonClick = {},
+                    endButton = TopAppBarButtonUM(
+                        iconRes = R.drawable.ic_plus_24,
+                        onIconClicked = {},
+                    ),
+                )
             } else {
-                null
+                ManageTokensTopBarUM.ReadContent(
+                    title = resourceReference(R.string.common_search_tokens),
+                    onBackButtonClick = {},
+                )
             },
             search = SearchBarUM(
                 placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),

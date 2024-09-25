@@ -140,7 +140,7 @@ internal class DefaultWalletRouter(
     }
 
     override fun openManageTokensScreen(userWalletId: UserWalletId) {
-        router.push(AppRoute.ManageTokens(userWalletId = userWalletId, showToolbar = true, onSaved = router::pop))
+        router.push(AppRoute.ManageTokens(userWalletId = userWalletId))
     }
 
     override fun openScanFailedDialog(onTryAgain: () -> Unit) {

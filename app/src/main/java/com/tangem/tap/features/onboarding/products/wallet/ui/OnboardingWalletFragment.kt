@@ -45,7 +45,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSo
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseRouter
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseViewModel
-import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.sdk.ui.widget.leapfrogWidget.PropertyCalculator
 import com.tangem.tap.common.analytics.events.Onboarding
@@ -78,7 +78,7 @@ class OnboardingWalletFragment :
     FragmentOnBackPressedHandler {
 
     @Inject
-    internal lateinit var manageTokensComponentFactory: ManageTokensComponent.Factory
+    internal lateinit var onboardingManageTokensComponentFactory: OnboardingManageTokensComponent.Factory
 
     @Inject
     @RootAppComponentContext
@@ -87,7 +87,7 @@ class OnboardingWalletFragment :
     @Inject
     internal lateinit var getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase
 
-    private val manageTokensComponent by lazy(mode = LazyThreadSafetyMode.NONE) {
+    private val onboardingManageTokensComponent by lazy(mode = LazyThreadSafetyMode.NONE) {
         val componentContext = rootComponentContext.childByContext(
             componentContext = defaultComponentContext(onBackPressedDispatcher = null),
         )
@@ -95,16 +95,9 @@ class OnboardingWalletFragment :
             "Can not find selected wallet."
         }
 
-        manageTokensComponentFactory.create(
+        onboardingManageTokensComponentFactory.create(
             context = componentContext,
-            params = ManageTokensComponent.Params(
-                mode = ManageTokensComponent.Mode.Manage(
-                    showToolbar = false,
-                    userWalletId = wallet.walletId,
-                    forceShowSaveButton = true,
-                    onSaved = ::manageTokensCurrenciesSaved,
-                ),
-            ),
+            params = OnboardingManageTokensComponent.Params(userWalletId = wallet.walletId),
         )
     }
 
@@ -291,13 +284,9 @@ class OnboardingWalletFragment :
                 isDark = isSystemInDarkTheme(),
                 windowSize = rememberWindowSize(activity = requireActivity()),
             ) {
-                manageTokensComponent.Content(modifier = Modifier.fillMaxSize())
+                onboardingManageTokensComponent.Content(modifier = Modifier.fillMaxSize())
             }
         }
-    }
-
-    private fun manageTokensCurrenciesSaved() {
-        store.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
     }
 
     private fun setupCreateWalletState() = with(binding) {
