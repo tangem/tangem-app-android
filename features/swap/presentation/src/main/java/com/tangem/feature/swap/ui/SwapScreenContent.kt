@@ -101,22 +101,9 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
             )
         }
 
-        if (state.alert != null) {
-            val message = if (state.alert.type == GenericWarningType.NETWORK) {
-                stringResource(id = R.string.disclaimer_error_loading)
-            } else {
-                state.alert.message?.resolveReference() ?: stringResource(id = R.string.common_unknown_error)
-            }
-            BasicDialog(
-                title = state.alert.title?.resolveReference(),
-                message = message,
-                confirmButton = DialogButtonUM(
-                    title = stringResource(id = R.string.common_ok),
-                    onClick = state.alert.onClick,
-                ),
-                onDismissDialog = state.alert.onClick,
-            )
-        }
+        SwapEventEffect(
+            event = state.event,
+        )
     }
 }
 
