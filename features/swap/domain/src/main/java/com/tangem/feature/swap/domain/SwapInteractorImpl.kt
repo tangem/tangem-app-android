@@ -22,7 +22,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionType
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
@@ -227,7 +226,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             ),
         ).getOrElse {
             Timber.e(it, "Failed to create approveTransaction")
-            return SwapTransactionState.UnknownError
+            return SwapTransactionState.Error.UnknownError
         }
 
         val result = sendTransactionUseCase(
@@ -243,16 +242,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     timestamp = System.currentTimeMillis(),
                 )
             },
-            ifLeft = {
-                when (it) {
-                    SendTransactionError.UserCancelledError -> SwapTransactionState.UserCancelled
-                    is SendTransactionError.BlockchainSdkError -> SwapTransactionState.BlockchainError
-                    is SendTransactionError.TangemSdkError -> SwapTransactionState.TangemSdkError
-                    is SendTransactionError.NetworkError -> SwapTransactionState.NetworkError
-                    is SendTransactionError.DemoCardError -> SwapTransactionState.DemoMode
-                    else -> SwapTransactionState.UnknownError
-                }
-            },
+            ifLeft = { SwapTransactionState.Error.TransactionError(it) },
         )
     }
 
@@ -591,7 +581,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             """.trimIndent(),
         )
 
-        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return SwapTransactionState.UnknownError
         val cardId = userWallet.scanResponse.card.cardId
         if (isDemoCardUseCase(cardId)) return SwapTransactionState.DemoMode
 
@@ -693,12 +682,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             hash = dataToSign,
         ).getOrElse {
             Timber.e(it, "Failed to create swap dex tx data")
-            return SwapTransactionState.UnknownError
+            return SwapTransactionState.Error.UnknownError
         }
 
         val result = sendTransactionUseCase(
             txData = txData,
-            userWallet = getUserWalletUseCase(userWalletId).getOrElse { return SwapTransactionState.UnknownError },
+            userWallet = userWallet,
             network = currencyToSendStatus.currency.network,
         )
         return result.fold(
@@ -738,7 +727,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     timestamp = System.currentTimeMillis(),
                 )
             },
-            ifLeft = { handleSendTxError(it) },
+            ifLeft = { SwapTransactionState.Error.TransactionError(it) },
         )
     }
 
@@ -773,14 +762,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value.orEmpty(),
             refundAddress = currencyToSend.value.networkAddress?.defaultAddress?.value,
             refundExtraId = null, // currently always null
-        ).getOrElse { return SwapTransactionState.ExpressError(it) }
+        ).getOrElse { return SwapTransactionState.Error.ExpressError(it) }
 
         val exchangeDataCex =
-            exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.UnknownError
+            exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.Error.UnknownError
 
         val cardId = userWallet.scanResponse.card.cardId
 
-        if (isDemoCardUseCase(cardId)) return SwapTransactionState.UnknownError
+        if (isDemoCardUseCase(cardId)) return SwapTransactionState.Error.UnknownError
 
         val txData = createTransactionUseCase(
             amount = amount.value.convertToSdkAmount(currencyToSend.currency),
@@ -794,11 +783,11 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             network = currencyToSend.currency.network,
         ).getOrElse {
             Timber.e(it, "Failed to create swap CEX tx data")
-            return SwapTransactionState.UnknownError
+            return SwapTransactionState.Error.UnknownError
         }
 
         if (txData.extras == null && exchangeDataCex.txExtraId != null) {
-            return SwapTransactionState.UnknownError
+            return SwapTransactionState.Error.UnknownError
         }
 
         val result = sendTransactionUseCase(
@@ -809,9 +798,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
         val derivationPath = currencyToSend.currency.network.derivationPath.value
         return result.fold(
-            ifLeft = {
-                handleSendTxError(it)
-            },
+            ifLeft = { SwapTransactionState.Error.TransactionError(it) },
             ifRight = { txHash ->
                 repository.exchangeSent(
                     txId = exchangeDataCex.txId,
@@ -854,17 +841,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 )
             },
         )
-    }
-
-    private fun handleSendTxError(txError: SendTransactionError?): SwapTransactionState {
-        return when (txError) {
-            SendTransactionError.UserCancelledError -> SwapTransactionState.UserCancelled
-            is SendTransactionError.BlockchainSdkError -> SwapTransactionState.BlockchainError
-            is SendTransactionError.TangemSdkError -> SwapTransactionState.TangemSdkError
-            is SendTransactionError.NetworkError -> SwapTransactionState.NetworkError
-            is SendTransactionError.DemoCardError -> SwapTransactionState.DemoMode
-            else -> SwapTransactionState.UnknownError
-        }
     }
 
     private fun getFeeForTransaction(fee: TxFee, blockchain: Blockchain): Fee {
