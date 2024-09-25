@@ -18,8 +18,8 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
-import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
@@ -99,7 +99,7 @@ interface ApplicationEntryPoint {
 
     fun getBlockchainSDKFactory(): BlockchainSDKFactory
 
-    fun getGetFeedbackEmailUseCase(): GetFeedbackEmailUseCase
+    fun getSendFeedbackEmailUseCase(): SendFeedbackEmailUseCase
 
     fun getSaveBlockchainErrorUseCase(): SaveBlockchainErrorUseCase
 
