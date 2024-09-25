@@ -1,8 +1,8 @@
 package com.tangem.data.managetokens
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.compatibility.l2BlockchainsCoinIds
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.currency.getBlockchain
@@ -21,7 +21,6 @@ import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -102,13 +101,13 @@ internal class DefaultManageTokensRepository(
                 managedCryptoCurrencyFactory.createWithCustomTokens(
                     coinsResponse = updatedCoinsResponse,
                     tokensResponse = tokensResponse,
-                    derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                    scanResponse = userWallet.scanResponse,
                 )
             } else {
                 managedCryptoCurrencyFactory.create(
                     coinsResponse = updatedCoinsResponse,
                     tokensResponse = tokensResponse,
-                    derivationStyleProvider = userWallet?.scanResponse?.derivationStyleProvider,
+                    scanResponse = userWallet?.scanResponse,
                 )
             }
 
