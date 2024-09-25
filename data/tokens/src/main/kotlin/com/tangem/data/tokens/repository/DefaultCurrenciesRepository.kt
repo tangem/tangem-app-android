@@ -137,7 +137,7 @@ internal class DefaultCurrenciesRepository(
                 cryptoCurrencyFactory.createCoin(
                     blockchain = getBlockchain(networkId = it.network.id),
                     extraDerivationPath = it.network.derivationPath.value,
-                    derivationStyleProvider = getUserWallet(userWalletId).scanResponse.derivationStyleProvider,
+                    scanResponse = getUserWallet(userWalletId).scanResponse,
                 )
             }
             .distinct()
@@ -456,7 +456,7 @@ internal class DefaultCurrenciesRepository(
             token = token,
             networkId = networkId,
             extraDerivationPath = null,
-            derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+            scanResponse = userWallet.scanResponse,
         ) ?: error("Unable to create token")
     }
 
