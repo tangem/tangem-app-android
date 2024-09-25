@@ -9,7 +9,6 @@ import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.inject
-import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -18,6 +17,7 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.extensions.stripZeroPlainString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
