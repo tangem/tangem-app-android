@@ -16,10 +16,6 @@
         "version": "5.15.0"
     },
     {
-        "name": "NEW_MANAGE_TOKENS",
-        "version": "5.15.0"
-    },
-    {
         "name": "IS_ETHEREUM_EIP_1559_ENABLED",
         "version": "5.16.0"
     },
