@@ -17,7 +17,6 @@ import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
-import com.tangem.tap.features.customtoken.impl.presentation.AddCustomTokenFragment
 import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorFragment
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
@@ -66,9 +65,6 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.AccessCodeRecovery -> {
                 route.asFragmentChild(Provider { AccessCodeRecoveryFragment() })
-            }
-            is AppRoute.AddCustomToken -> {
-                route.asFragmentChild(Provider { AddCustomTokenFragment() })
             }
             is AppRoute.AppCurrencySelector -> {
                 route.asFragmentChild(Provider { AppCurrencySelectorFragment() })
