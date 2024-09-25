@@ -28,8 +28,8 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.feedback.GetCardInfoUseCase
-import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
@@ -156,8 +156,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val blockchainSDKFactory: BlockchainSDKFactory
         get() = entryPoint.getBlockchainSDKFactory()
 
-    private val getFeedbackEmailUseCase: GetFeedbackEmailUseCase
-        get() = entryPoint.getGetFeedbackEmailUseCase()
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase
+        get() = entryPoint.getSendFeedbackEmailUseCase()
 
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase
         get() = entryPoint.getSaveBlockchainErrorUseCase()
@@ -255,7 +255,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
                     saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,
-                    getFeedbackEmailUseCase = getFeedbackEmailUseCase,
+                    sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
                     getCardInfoUseCase = getCardInfoUseCase,
                     assetLoader = assetLoader,
                     urlOpener = urlOpener,
@@ -312,7 +312,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private fun initFeedbackManager(store: Store<AppState>) {
         Log.addLogger(logger = tangemSdkLogger)
 
-        val feedbackManager = LegacyFeedbackManager(getFeedbackEmailUseCase = getFeedbackEmailUseCase)
+        val feedbackManager = LegacyFeedbackManager(sendFeedbackEmailUseCase = sendFeedbackEmailUseCase)
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
     }
 }
