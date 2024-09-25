@@ -8,7 +8,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.utils.converter.Converter
 
-class SendTransactionAlertConverter(
+class TransactionErrorAlertConverter(
     private val popBackStack: () -> Unit,
     private val onFailedTxEmailClick: (String) -> Unit,
 ) : Converter<SendTransactionError, AlertUM?> {
