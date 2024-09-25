@@ -30,7 +30,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.converters.SwapCurrencyConverter
-import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
@@ -1057,7 +1057,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     @Suppress("LongMethod")
     private suspend fun getQuotesState(
         provider: SwapProvider,
-        quoteDataModel: Either<DataError, QuoteModel>,
+        quoteDataModel: Either<ExpressDataError, QuoteModel>,
         amount: SwapAmount,
         fromToken: CryptoCurrencyStatus,
         toToken: CryptoCurrencyStatus,
@@ -1136,7 +1136,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     fromToken = fromToken,
                     amount = amount,
                     includeFeeInAmount = includeFeeInAmount,
-                    dataError = error,
+                    expressDataError = error,
                 )
             },
         )
@@ -1146,7 +1146,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         fromToken: CryptoCurrencyStatus,
         amount: SwapAmount,
         includeFeeInAmount: IncludeFeeInAmount,
-        dataError: DataError,
+        expressDataError: ExpressDataError,
     ): SwapState.SwapError {
         val rates = getQuotes(fromToken.currency.id)
         val fromTokenSwapInfo = TokenSwapInfo(
@@ -1155,7 +1155,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 ?: BigDecimal.ZERO,
             cryptoCurrencyStatus = fromToken,
         )
-        return SwapState.SwapError(fromTokenSwapInfo, dataError, includeFeeInAmount)
+        return SwapState.SwapError(fromTokenSwapInfo, expressDataError, includeFeeInAmount)
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -1502,7 +1502,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     fromToken = fromTokenStatus,
                     amount = swapAmount,
                     includeFeeInAmount = IncludeFeeInAmount.Excluded,
-                    dataError = DataError.UnknownError,
+                    expressDataError = ExpressDataError.UnknownError,
                 )
             }
         }
