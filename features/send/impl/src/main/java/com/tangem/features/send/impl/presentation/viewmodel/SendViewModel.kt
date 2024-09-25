@@ -6,6 +6,7 @@ import androidx.lifecycle.*
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRoute
@@ -18,11 +19,14 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
-import com.tangem.domain.redux.LegacyAction
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.*
@@ -55,6 +59,7 @@ import com.tangem.features.send.impl.presentation.state.recipient.RecipientSendF
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import com.tangem.utils.extensions.stripZeroPlainString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -82,7 +87,6 @@ internal class SendViewModel @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
-    private val reduxStateHolder: ReduxStateHolder,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -96,6 +100,9 @@ internal class SendViewModel @Inject constructor(
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
     private val isUtxoConsolidationAvailableUseCase: IsUtxoConsolidationAvailableUseCase,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
+    private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
+    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     validateTransactionUseCase: ValidateTransactionUseCase,
     getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
@@ -521,17 +528,31 @@ internal class SendViewModel @Inject constructor(
         } else {
             null
         }
-        reduxStateHolder.dispatch(
-            LegacyAction.SendEmailTransactionFailed(
-                cryptoCurrency = cryptoCurrency,
-                userWalletId = userWalletId,
-                amount = receivingAmount,
-                fee = feeValue,
-                destinationAddress = recipient,
+
+        val amount = receivingAmount?.convertToSdkAmount(cryptoCurrency)
+
+        saveBlockchainErrorUseCase(
+            error = BlockchainErrorInfo(
                 errorMessage = errorMessage,
-                scanResponse = userWallet.scanResponse,
+                blockchainId = cryptoCurrency.network.id.value,
+                derivationPath = cryptoCurrency.network.derivationPath.value,
+                destinationAddress = recipient.orEmpty(),
+                tokenSymbol = if (amount?.type is AmountType.Token) {
+                    amount.currencySymbol
+                } else {
+                    ""
+                },
+                amount = amount?.value?.stripZeroPlainString() ?: "unknown",
+                fee = feeValue?.convertToSdkAmount(cryptoCurrency)
+                    ?.value?.stripZeroPlainString() ?: "unknown",
             ),
         )
+
+        val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrNull() ?: return
+
+        viewModelScope.launch {
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
+        }
     }
 
     override fun onTokenDetailsClick(currency: CryptoCurrency) = innerRouter.openTokenDetails(userWalletId, currency)
