@@ -123,7 +123,6 @@ internal object WalletScreenPreviewData {
             ),
             bottomSheetConfig = null,
             tokensListState = contentTokensState,
-            manageTokensButtonConfig = ManageTokensButtonConfig(onClick = {}),
         )
     }
 
