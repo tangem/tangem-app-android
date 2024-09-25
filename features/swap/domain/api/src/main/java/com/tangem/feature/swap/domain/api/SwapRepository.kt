@@ -3,7 +3,7 @@ package com.tangem.feature.swap.domain.api
 import arrow.core.Either
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.domain.*
 import java.math.BigDecimal
 
@@ -27,7 +27,7 @@ interface SwapRepository {
         toDecimals: Int,
         providerId: String,
         rateType: RateType,
-    ): Either<DataError, QuoteModel>
+    ): Either<ExpressDataError, QuoteModel>
 
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
@@ -66,7 +66,7 @@ interface SwapRepository {
         toAddress: String,
         refundAddress: String? = null, // for cex only
         refundExtraId: String? = null, // for cex only
-    ): Either<DataError, SwapDataModel>
+    ): Either<ExpressDataError, SwapDataModel>
 
     // TODO: Add target error handling, remove either ([REDACTED_JIRA])
     @Suppress("LongParameterList")
@@ -77,7 +77,7 @@ interface SwapRepository {
         payInAddress: String,
         txHash: String,
         payInExtraId: String?,
-    ): Either<DataError, Unit>
+    ): Either<ExpressDataError, Unit>
 
     fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
 }
