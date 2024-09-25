@@ -15,7 +15,7 @@ import com.tangem.domain.feedback.utils.*
  *
  * @author Andrew Khokhlov on 05/03/2024
  */
-class GetFeedbackEmailUseCase(
+class SendFeedbackEmailUseCase(
     private val feedbackRepository: FeedbackRepository,
     private val resources: Resources,
 ) {
@@ -24,13 +24,15 @@ class GetFeedbackEmailUseCase(
     private val emailMessageTitleResolver = EmailMessageTitleResolver(resources)
     private val emailMessageBodyResolver = EmailMessageBodyResolver(feedbackRepository)
 
-    suspend operator fun invoke(type: FeedbackEmailType): FeedbackEmail {
-        return FeedbackEmail(
+    suspend operator fun invoke(type: FeedbackEmailType) {
+        val email = FeedbackEmail(
             address = getAddress(type.cardInfo),
             subject = emailSubjectResolver.resolve(type),
             message = createMessage(type),
             file = feedbackRepository.getLogFile(),
         )
+
+        feedbackRepository.sendEmail(email)
     }
 
     private fun getAddress(cardInfo: CardInfo?): String {
