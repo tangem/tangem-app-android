@@ -793,7 +793,7 @@
   <string name="token_details_staking_block_subtitle">El staking le permite ganar %1$s y obtener recompensas cada %2$s días</string>
   <string name="token_details_staking_block_title">Gane hasta %s recompensa del staking por año</string>
   <string name="token_details_token_type_subtitle">Token de %1$s en la red %%image%% %2$s</string>
-  <string name="token_details_token_type_subtitle_no_standard" formatted="false">Token en la %image% red %1$s</string>
+  <string name="token_details_token_type_subtitle_no_standard">Token en la %%image%% red %1$s</string>
   <string name="token_details_unable_hide_alert_message">El token %1$s (%2$s) es la moneda principal en la red %3$s y no se puede ocultar mientras tengas otros tokens de esta red en la lista</string>
   <string name="token_details_unable_hide_alert_title">No se puede ocultar %s</string>
   <string name="token_swap_changelly_promotion_message">Cambie este token por otro por una tarifa de servicio de %1$s del %2$s al %3$s de febrero.</string>
