@@ -36,7 +36,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
-import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
@@ -243,7 +243,7 @@ internal class SwapViewModel @Inject constructor(
 
                 uiState = stateBuilder.createInitialErrorState(
                     uiState,
-                    (it as? ExpressException)?.dataError?.code ?: DataError.UnknownError.code,
+                    (it as? ExpressException)?.expressDataError?.code ?: ExpressDataError.UnknownError.code,
                 ) {
                     uiState = stateBuilder.createInitialLoadingState(
                         initialCurrency = initialCryptoCurrency,
@@ -431,7 +431,7 @@ internal class SwapViewModel @Inject constructor(
                     swapProvider = provider,
                     fromToken = state.fromTokenInfo,
                     toToken = dataState.toCryptoCurrency,
-                    dataError = state.error,
+                    expressDataError = state.error,
                     includeFeeInAmount = state.includeFeeInAmount,
                     isReverseSwapPossible = isReverseSwapPossible(),
                 )
@@ -440,7 +440,7 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
-    private fun sendErrorAnalyticsEvent(error: DataError, provider: SwapProvider) {
+    private fun sendErrorAnalyticsEvent(error: ExpressDataError, provider: SwapProvider) {
         val receiveToken = dataState.toCryptoCurrency?.currency?.let {
             "${it.network.backendId}:${it.symbol}"
         }
