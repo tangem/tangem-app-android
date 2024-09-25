@@ -16,8 +16,8 @@ import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
-import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
@@ -75,7 +75,7 @@ data class DaggerGraphState(
     val blockchainSDKFactory: BlockchainSDKFactory? = null,
     val emailSender: EmailSender? = null,
     val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase? = null,
-    val getFeedbackEmailUseCase: GetFeedbackEmailUseCase? = null,
+    val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase? = null,
     val getCardInfoUseCase: GetCardInfoUseCase? = null,
     val assetLoader: AssetLoader? = null,
     val stakingRouter: StakingRouter? = null,
