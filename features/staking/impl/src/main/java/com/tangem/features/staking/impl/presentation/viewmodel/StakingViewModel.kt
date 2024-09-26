@@ -37,10 +37,7 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
-import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
-import com.tangem.domain.transaction.usecase.SendTransactionUseCase
-import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
+import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -87,7 +84,7 @@ internal class StakingViewModel @Inject constructor(
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val sendTransactionUseCase: SendTransactionUseCase,
+    private val sendMultipleTransactionUseCase: SendMultipleTransactionUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val isApproveNeededUseCase: IsApproveNeededUseCase,
@@ -526,7 +523,7 @@ internal class StakingViewModel @Inject constructor(
                 ifRight = { it },
             )
 
-            sendTransactionUseCase(
+            sendMultipleTransactionUseCase(
                 txData = approvalTransaction,
                 userWallet = userWallet,
                 network = tokenCryptoCurrency.network,

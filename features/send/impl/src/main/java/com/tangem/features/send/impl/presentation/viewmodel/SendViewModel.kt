@@ -84,7 +84,7 @@ internal class SendViewModel @Inject constructor(
     private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val getFeeUseCase: GetFeeUseCase,
-    private val sendTransactionUseCase: SendTransactionUseCase,
+    private val sendMultipleTransactionUseCase: SendMultipleTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
@@ -898,7 +898,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private suspend fun sendTransaction(txData: TransactionData.Uncompiled) {
-        val result = sendTransactionUseCase(
+        val result = sendMultipleTransactionUseCase(
             txData = txData,
             userWallet = userWallet,
             network = cryptoCurrency.network,

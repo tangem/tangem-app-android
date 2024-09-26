@@ -79,6 +79,15 @@ class SendMultipleTransactionUseCase(
         )
     }
 
+    suspend operator fun invoke(
+        txData: TransactionData,
+        userWallet: UserWallet,
+        network: Network,
+    ): Either<SendTransactionError?, String> {
+        return invoke(listOf(txData), userWallet, network)
+            .map { it.first() }
+    }
+
     private suspend fun sendDemo(
         userWallet: UserWallet,
         network: Network,
@@ -137,6 +146,14 @@ class SendMultipleTransactionUseCase(
                 }
                 is BlockchainSdkError.WrappedTangemError -> {
                     parseWrappedError(tangemError) // todo remove when sdk errors are revised
+                }
+                is BlockchainSdkError.WrappedThrowable -> {
+                    val causeError = tangemError.cause
+                    if (causeError is BlockchainSdkError) {
+                        SendTransactionError.BlockchainSdkError(causeError.code, causeError.customMessage)
+                    } else {
+                        SendTransactionError.BlockchainSdkError(tangemError.code, tangemError.customMessage)
+                    }
                 }
                 else -> {
                     SendTransactionError.BlockchainSdkError(error.code, tangemError.customMessage)
