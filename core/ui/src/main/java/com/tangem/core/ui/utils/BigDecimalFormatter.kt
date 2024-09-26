@@ -58,6 +58,7 @@ object BigDecimalFormatter {
         }
     }
 
+    // FIXME
     // Migrate to this method from formatCryptoAmount (AND-8499)
     fun formatCryptoAmount2(
         cryptoAmount: BigDecimal?,
@@ -82,6 +83,7 @@ object BigDecimalFormatter {
             )
     }
 
+    // FIXME
     fun formatCryptoAmountShorted(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: String,
@@ -115,6 +117,7 @@ object BigDecimalFormatter {
         }
     }
 
+    // FIXME
     fun formatCryptoAmountUncapped(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: CryptoCurrency,
@@ -138,6 +141,7 @@ object BigDecimalFormatter {
         }
     }
 
+    // FIXME
     fun formatCryptoFeeAmount(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: String,
@@ -177,6 +181,7 @@ object BigDecimalFormatter {
         }
     }
 
+    // FIXME
     fun formatCryptoAmount(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: CryptoCurrency,
@@ -185,6 +190,7 @@ object BigDecimalFormatter {
         return formatCryptoAmount(cryptoAmount, cryptoCurrency.symbol, cryptoCurrency.decimals, locale)
     }
 
+    // FIXME
     fun formatFiatAmount(
         fiatAmount: BigDecimal?,
         fiatCurrencyCode: String,
@@ -226,6 +232,7 @@ object BigDecimalFormatter {
         }
     }
 
+    // FIXME
     fun formatFiatAmountUncapped(
         fiatAmount: BigDecimal?,
         fiatCurrencyCode: String,
@@ -251,6 +258,7 @@ object BigDecimalFormatter {
             .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
     }
 
+    // FIXME
     fun formatFiatPriceUncapped(
         fiatAmount: BigDecimal?,
         fiatCurrencyCode: String,
@@ -273,6 +281,7 @@ object BigDecimalFormatter {
             .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
     }
 
+    // FIXME
     fun getFiatPriceUncappedWithScale(value: BigDecimal): Pair<BigDecimal, Int> {
         return if (value < BigDecimal.ONE) {
             val leadingZeroes = value.scale() - value.precision()
@@ -288,6 +297,7 @@ object BigDecimalFormatter {
         }
     }
 
+    // FIXME
     fun formatFiatEditableAmount(
         fiatAmount: String?,
         fiatCurrencyCode: String,
@@ -308,6 +318,7 @@ object BigDecimalFormatter {
             .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
     }
 
+    // FIXME
     fun formatPercent(
         percent: BigDecimal,
         useAbsoluteValue: Boolean,
@@ -400,6 +411,7 @@ object BigDecimalFormatter {
      * @param threeDigitsMethod if true, will format the amount always with 3 significant digits
      * @param scale the number of digits to the right of the decimal point
      */
+    // FIXME
     @Suppress("MagicNumber")
     fun formatCompactFiatAmount(
         amount: BigDecimal?,
@@ -442,6 +454,7 @@ object BigDecimalFormatter {
      * @param threeDigitsMethod if true, will format the amount always with 3 significant digits
      * @param scale the number of digits to the right of the decimal point
      */
+    // FIXME
     fun formatCompactCryptoAmount(
         amount: BigDecimal?,
         cryptoCurrencySymbol: String,
