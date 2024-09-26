@@ -59,7 +59,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val repository: SwapRepository,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
-    private val sendMultipleTransactionUseCase: SendMultipleTransactionUseCase,
+    private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
@@ -230,7 +230,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             return SwapTransactionState.UnknownError
         }
 
-        val result = sendMultipleTransactionUseCase(
+        val result = sendTransactionUseCase(
             txData = approveTransaction,
             userWallet = userWallet,
             network = permissionOptions.fromToken.network,
@@ -696,7 +696,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             return SwapTransactionState.UnknownError
         }
 
-        val result = sendMultipleTransactionUseCase(
+        val result = sendTransactionUseCase(
             txData = txData,
             userWallet = getUserWalletUseCase(userWalletId).getOrElse { return SwapTransactionState.UnknownError },
             network = currencyToSendStatus.currency.network,
@@ -801,7 +801,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             return SwapTransactionState.UnknownError
         }
 
-        val result = sendMultipleTransactionUseCase(
+        val result = sendTransactionUseCase(
             txData = txData,
             userWallet = userWallet,
             network = currencyToSend.currency.network,

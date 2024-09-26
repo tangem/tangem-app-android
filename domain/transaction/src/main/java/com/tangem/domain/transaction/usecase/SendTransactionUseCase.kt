@@ -26,8 +26,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.utils.toFormattedString
 
-// TODO [REDACTED_TASK_KEY] merge with SendTransactionUseCase
-class SendMultipleTransactionUseCase(
+class SendTransactionUseCase(
     private val demoConfig: DemoConfig,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val transactionRepository: TransactionRepository,

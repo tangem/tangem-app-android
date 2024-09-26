@@ -84,7 +84,7 @@ internal class StakingViewModel @Inject constructor(
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val sendMultipleTransactionUseCase: SendMultipleTransactionUseCase,
+    private val sendTransactionUseCase: SendTransactionUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val isApproveNeededUseCase: IsApproveNeededUseCase,
@@ -523,7 +523,7 @@ internal class StakingViewModel @Inject constructor(
                 ifRight = { it },
             )
 
-            sendMultipleTransactionUseCase(
+            sendTransactionUseCase(
                 txData = approvalTransaction,
                 userWallet = userWallet,
                 network = tokenCryptoCurrency.network,
