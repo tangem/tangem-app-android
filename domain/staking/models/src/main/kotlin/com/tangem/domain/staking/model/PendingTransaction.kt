@@ -10,5 +10,5 @@ data class PendingTransaction(
     val amount: BigDecimal,
     val rawCurrencyId: String?,
     val validator: Yield.Validator?,
-    val balancesHash: Int,
+    val balancesId: Int,
 )

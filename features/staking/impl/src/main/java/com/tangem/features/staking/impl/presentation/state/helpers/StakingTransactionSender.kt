@@ -8,10 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.model.PendingTransaction
 import com.tangem.domain.staking.model.SubmitHashData
-import com.tangem.domain.staking.model.stakekit.BalanceType
-import com.tangem.domain.staking.model.stakekit.PendingAction
-import com.tangem.domain.staking.model.stakekit.StakingError
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
@@ -35,6 +32,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 import java.math.BigDecimal
+import java.util.UUID
 
 @Suppress("LongParameterList")
 internal class StakingTransactionSender @AssistedInject constructor(
@@ -98,15 +96,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     }
 
     private fun composePendingTransaction(confirmationState: StakingStates.ConfirmationState.Data): PendingTransaction {
-        val state = stateController.value
-
-        return confirmationState.possiblePendingTransaction ?: PendingTransaction(
-            groupId = "1",
-            type = BalanceType.STAKED,
-            amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO,
-            rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
-            validator = (confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator
-        )
+        return confirmationState.possiblePendingTransaction ?: composeStakeTransaction(confirmationState)
     }
 
     private suspend fun getStakingTransactions(
@@ -289,6 +279,19 @@ internal class StakingTransactionSender @AssistedInject constructor(
             amountValue = amountValue,
             feeValue = feeValue,
             reduceAmountBy = reduceAmountBy.orZero(),
+        )
+    }
+
+    private fun composeStakeTransaction(confirmationState: StakingStates.ConfirmationState.Data): PendingTransaction {
+        val state = stateController.value
+
+        return PendingTransaction(
+            groupId = UUID.randomUUID().toString(),
+            type = BalanceType.STAKED,
+            amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO,
+            rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
+            validator = (confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator,
+            balancesId = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.getBalancesUniqueId() ?: 0,
         )
     }
 

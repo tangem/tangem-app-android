@@ -15,7 +15,7 @@ internal class SetPossiblePendingTransactionTransformer(
         val possibleConfirmationState =
             prevState.confirmationState as? StakingStates.ConfirmationState.Data ?: return prevState
 
-        val balancesHash = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.getBalancesHash() ?: 0
+        val balancesId = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.getBalancesUniqueId() ?: 0
 
         return prevState.copy(
             confirmationState = possibleConfirmationState.copy(
@@ -25,8 +25,8 @@ internal class SetPossiblePendingTransactionTransformer(
                     amount = balanceState.cryptoDecimal,
                     rawCurrencyId = balanceState.rawCurrencyId,
                     validator = balanceState.validator,
-                    balancesHash = balancesHash
-                )
+                    balancesId = balancesId,
+                ),
             ),
         )
     }

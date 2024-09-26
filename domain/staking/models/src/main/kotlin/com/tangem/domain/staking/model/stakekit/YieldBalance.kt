@@ -33,8 +33,9 @@ sealed class YieldBalance {
                 .size
         }
 
-        fun getBalancesHash() : Int {
-            return balance.items.hashCode()
+        fun getBalancesUniqueId(): Int {
+            // need to exclude rewards because their amount may change frequently
+            return balance.items.filter { it.type != BalanceType.REWARDS }.hashCode()
         }
     }
 
