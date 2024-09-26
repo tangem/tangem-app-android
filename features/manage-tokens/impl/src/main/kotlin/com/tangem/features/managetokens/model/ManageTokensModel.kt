@@ -74,7 +74,7 @@ internal class ManageTokensModel @Inject constructor(
         observeSearchQueryChanges()
 
         modelScope.launch {
-            manageTokensListManager.launchPagination(params)
+            manageTokensListManager.launchPagination(source = params.source, userWalletId = params.userWalletId)
         }
     }
 

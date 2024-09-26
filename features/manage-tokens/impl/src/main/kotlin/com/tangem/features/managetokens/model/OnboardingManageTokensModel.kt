@@ -1,5 +1,7 @@
 package com.tangem.features.managetokens.model
 
+import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -13,6 +15,8 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.SaveManagedTokensUseCase
 import com.tangem.domain.redux.OnboardingManageTokensAction
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
+import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.managetokens.OnboardingManageTokensUM
@@ -29,6 +33,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ComponentScoped
 internal class OnboardingManageTokensModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -36,6 +41,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val reduxStateHolder: ReduxStateHolder,
     private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -54,11 +60,16 @@ internal class OnboardingManageTokensModel @Inject constructor(
         observeSearchQueryChanges()
 
         modelScope.launch {
-            manageTokensListManager.launchPagination(params.userWalletId)
+            manageTokensListManager.launchPagination(
+                source = ManageTokensSource.ONBOARDING,
+                userWalletId = params.userWalletId,
+            )
         }
     }
 
     private fun getInitialState(): OnboardingManageTokensUM {
+        analyticsEventHandler.send(ManageTokensAnalyticEvent.ScreenOpened(source = ManageTokensSource.ONBOARDING))
+
         return OnboardingManageTokensUM(
             isInitialBatchLoading = true,
             isNextBatchLoading = false,
@@ -98,7 +109,15 @@ internal class OnboardingManageTokensModel @Inject constructor(
     }
 
     private fun updateItems(items: ImmutableList<CurrencyItemUM>) {
-        state.update { state -> state.copy(items = items) }
+        val updatedState = state.updateAndGet { state -> state.copy(items = items) }
+
+        if (updatedState.items.isEmpty() && updatedState.search.isActive) {
+            val event = ManageTokensAnalyticEvent.TokensIsNotFound(
+                query = updatedState.search.query,
+                source = ManageTokensSource.ONBOARDING,
+            )
+            analyticsEventHandler.send(event)
+        }
     }
 
     private fun updatePaginationStatus(status: PaginationStatus<*>) {
@@ -174,19 +193,26 @@ internal class OnboardingManageTokensModel @Inject constructor(
         return true
     }
 
-    private fun saveChanges() {
-        modelScope.launch {
-            state.update { state -> state.copy(isSavingInProgress = true) }
-            saveManagedTokensUseCase.invoke(
-                userWalletId = requireNotNull(params.userWalletId),
-                currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
-                currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
-            ).fold(
-                ifLeft = { Timber.e(it, "Failed to save changes") },
-                ifRight = { reduxStateHolder.dispatch(OnboardingManageTokensAction.CurrenciesSaved) },
-            )
-            state.update { state -> state.copy(isSavingInProgress = false) }
+    private fun saveChanges() = resource(
+        acquire = { state.update { state -> state.copy(isSavingInProgress = true) } },
+        release = { state.update { state -> state.copy(isSavingInProgress = false) } },
+    ) {
+        val event = ManageTokensAnalyticEvent.TokenAdded(
+            tokensCount = manageTokensListManager.currenciesToAdd.value.values.sumOf { it.size },
+            source = ManageTokensSource.ONBOARDING,
+        )
+        analyticsEventHandler.send(event)
+
+        saveManagedTokensUseCase(
+            userWalletId = requireNotNull(params.userWalletId),
+            currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
+            currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
+        ).getOrElse {
+            Timber.e(it, "Failed to save changes")
+            return@resource
         }
+
+        reduxStateHolder.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
     }
 
     private fun searchCurrencies(query: String) {

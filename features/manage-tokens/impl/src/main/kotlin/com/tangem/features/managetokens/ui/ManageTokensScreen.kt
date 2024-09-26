@@ -64,6 +64,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.component.preview.PreviewManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
@@ -457,15 +458,21 @@ private class PreviewManageTokensComponentProvider : PreviewParameterProvider<Ma
         get() = sequenceOf(
             PreviewManageTokensComponent(
                 isLoading = true,
-                params = ManageTokensComponent.Params(userWalletId = UserWalletId("wallet_id")),
+                params = ManageTokensComponent.Params(
+                    source = ManageTokensSource.ONBOARDING,
+                    userWalletId = UserWalletId("wallet_id"),
+                ),
             ),
             PreviewManageTokensComponent(
                 isLoading = false,
-                params = ManageTokensComponent.Params(userWalletId = null),
+                params = ManageTokensComponent.Params(source = ManageTokensSource.ONBOARDING, userWalletId = null),
             ),
             PreviewManageTokensComponent(
                 isLoading = false,
-                params = ManageTokensComponent.Params(userWalletId = UserWalletId("wallet_id")),
+                params = ManageTokensComponent.Params(
+                    source = ManageTokensSource.ONBOARDING,
+                    userWalletId = UserWalletId("wallet_id"),
+                ),
             ),
         )
 }
