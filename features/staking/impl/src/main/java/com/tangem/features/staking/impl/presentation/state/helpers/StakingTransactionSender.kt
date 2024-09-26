@@ -220,7 +220,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
             },
             ifRight = { transactionHashes ->
                 submitHash(
-                    transactionIds = fullTransactionsData.map { it.stakeKitTransaction.id },
+                    transactions = fullTransactionsData.map { it.stakeKitTransaction },
                     transactionHashes = transactionHashes,
                     pendingTransaction = possiblePendingTransaction,
                 )
@@ -236,16 +236,16 @@ internal class StakingTransactionSender @AssistedInject constructor(
     }
 
     private suspend fun submitHash(
-        transactionIds: List<String>,
+        transactions: List<StakingTransaction>,
         transactionHashes: List<String>,
         pendingTransaction: PendingTransaction,
     ) {
-        transactionIds
+        transactions
             .zip(transactionHashes)
-            .forEach { (transactionId, transactionHash) ->
+            .forEach { (transaction, transactionHash) ->
                 submitHashUseCase(
                     SubmitHashData(
-                        transactionId = transactionId,
+                        transactionId = transaction.id,
                         transactionHash = transactionHash,
                         pendingTransaction = pendingTransaction,
                     ),
@@ -258,12 +258,14 @@ internal class StakingTransactionSender @AssistedInject constructor(
                             ),
                         )
                         saveUnsubmittedHashUseCase.invoke(
-                            transactionId = transactionId,
+                            transactionId = transaction.id,
                             transactionHash = transactionHash,
                         )
                     }.onRight {
                         Timber.d("Successful hash submission")
-                        savePendingTransactionUseCase.invoke(pendingTransaction)
+                        if (transaction.type != StakingTransactionType.FREEZE_ENERGY) {
+                            savePendingTransactionUseCase.invoke(pendingTransaction)
+                        }
                     }
             }
     }
