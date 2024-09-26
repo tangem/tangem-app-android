@@ -4,12 +4,13 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.extensions.isZero
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
-import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.StateRouter
@@ -102,13 +103,13 @@ internal class FeeStateFactory(
         )
     }
 
-    fun onFeeOnErrorState(feeError: FeeSelectorState.Error): SendUiState {
+    fun onFeeOnErrorState(feeError: GetFeeError?): SendUiState {
         val state = currentStateProvider()
         val isEditState = stateRouterProvider().isEditState
         return state.copyWrapped(
             isEditState = isEditState,
             feeState = state.getFeeState(isEditState)?.copy(
-                feeSelectorState = feeError,
+                feeSelectorState = FeeSelectorState.Error(feeError),
             ),
             sendState = state.sendState?.copy(
                 isPrimaryButtonEnabled = false,
@@ -152,7 +153,7 @@ internal class FeeStateFactory(
         )
     }
 
-    fun getFeeNotificationState(notifications: ImmutableList<SendNotification>): SendUiState {
+    fun getFeeNotificationState(notifications: ImmutableList<NotificationUM>): SendUiState {
         val state = currentStateProvider()
         val isEditState = stateRouterProvider().isEditState
         val feeState = state.getFeeState(isEditState) ?: return state
@@ -167,7 +168,7 @@ internal class FeeStateFactory(
 
     private fun isPrimaryButtonEnabled(
         feeState: SendStates.FeeState,
-        notifications: ImmutableList<SendNotification>,
+        notifications: ImmutableList<NotificationUM>,
     ): Boolean {
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return false
         val customValue = feeSelectorState.customValues.firstOrNull()
@@ -178,7 +179,7 @@ internal class FeeStateFactory(
         } else {
             false
         }
-        val noErrors = notifications.none { it is SendNotification.Error }
+        val noErrors = notifications.none { it is NotificationUM.Error }
 
         return noErrors && (isNotEmptyCustom || isNotCustom)
     }
