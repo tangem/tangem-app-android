@@ -8,6 +8,6 @@ internal class DefaultStakeKitAuthProvider(
 ) : StakeKitAuthProvider {
 
     override fun getApiKey(): String {
-        return configManager.config.stakeKitApiKey ?: error("No StakeKit api key provided")
+        return configManager.getConfigSync().stakeKitApiKey ?: error("No StakeKit api key provided")
     }
 }
