@@ -32,6 +32,10 @@ sealed class YieldBalance {
                 .distinctBy { it.validatorAddress }
                 .size
         }
+
+        fun getBalancesHash() : Int {
+            return balance.items.hashCode()
+        }
     }
 
     data object Empty : YieldBalance()

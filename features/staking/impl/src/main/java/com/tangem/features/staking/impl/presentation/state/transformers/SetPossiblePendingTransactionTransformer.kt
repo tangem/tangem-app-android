@@ -1,16 +1,21 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.domain.staking.model.PendingTransaction
+import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.utils.transformer.Transformer
 
 internal class SetPossiblePendingTransactionTransformer(
     private val balanceState: BalanceState,
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         val possibleConfirmationState =
             prevState.confirmationState as? StakingStates.ConfirmationState.Data ?: return prevState
+
+        val balancesHash = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.getBalancesHash() ?: 0
 
         return prevState.copy(
             confirmationState = possibleConfirmationState.copy(
@@ -20,6 +25,7 @@ internal class SetPossiblePendingTransactionTransformer(
                     amount = balanceState.cryptoDecimal,
                     rawCurrencyId = balanceState.rawCurrencyId,
                     validator = balanceState.validator,
+                    balancesHash = balancesHash
                 )
             ),
         )
