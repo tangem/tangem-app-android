@@ -16,7 +16,6 @@ import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.config.ConfigManager
-import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -202,10 +201,11 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         //  [REDACTED_JIRA]
         runBlocking {
             featureTogglesManager.init()
-            initConfigManager(
-                loader = FeaturesLocalLoader(assetLoader, BuildConfig.ENVIRONMENT),
-                onComplete = ::initWithConfigDependency,
-            )
+
+            val config = configManager.initialize()
+            store.dispatch(GlobalAction.SetConfigManager(configManager))
+
+            initWithConfigDependency(config = config)
         }
 
         loadNativeLibraries()
@@ -223,7 +223,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         )
         appStateHolder.mainStore = store
 
-        walletConnect2Repository.init(projectId = configManager.config.walletConnectProjectId)
+        walletConnect2Repository.init(projectId = configManager.getConfigSync().walletConnectProjectId)
     }
 
     private fun createReduxStore(): Store<AppState> {
@@ -276,13 +276,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private fun loadNativeLibraries() {
         System.loadLibrary("TrustWalletCore")
-    }
-
-    private suspend fun initConfigManager(loader: FeaturesLocalLoader, onComplete: (Config) -> Unit) {
-        configManager.load(loader) { config ->
-            store.dispatch(GlobalAction.SetConfigManager(configManager))
-            onComplete(config)
-        }
     }
 
     private fun initWithConfigDependency(config: Config) {
