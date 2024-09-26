@@ -75,11 +75,3 @@ data class GetBlockToken(
     @Json(name = "rest") val rest: String?,
     @Json(name = "rosetta") val rosetta: String?,
 )
-
-class ConfigModel(
-    val configValues: ConfigValueModel?,
-) {
-    companion object {
-        fun empty(): ConfigModel = ConfigModel(null)
-    }
-}
