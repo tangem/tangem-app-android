@@ -18,7 +18,6 @@ import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.extensions.canHandleBlockchain
-import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
@@ -64,9 +63,12 @@ internal class DefaultCustomTokensRepository(
         contractAddress: String?,
     ): Boolean {
         return withContext(dispatchers.io) {
-            val storedCurrencies: UserTokensResponse = appPreferencesStore.getObjectSyncOrNull(
+            val storedCurrencies = appPreferencesStore.getObjectSyncOrNull<UserTokensResponse>(
                 key = PreferencesKeys.getUserTokensKey(userWalletId.stringValue),
-            ) ?: error("User tokens not found")
+            )
+            requireNotNull(storedCurrencies) {
+                "User tokens not found for user wallet [$userWalletId] while checking if currency is not added"
+            }
 
             storedCurrencies.tokens.none { token ->
                 Blockchain.fromId(networkId.value).toNetworkId() == token.networkId &&
@@ -82,10 +84,12 @@ internal class DefaultCustomTokensRepository(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency.Token? = withContext(dispatchers.io) {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId)
-            ?: error("User wallet not found")
-        val network = getNetwork(networkId, derivationPath, userWallet.scanResponse)
-            ?: return@withContext null
+        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
+            "User wallet [$userWalletId] not found while finding token"
+        }
+        val network = requireNotNull(getNetwork(networkId, derivationPath, userWallet.scanResponse)) {
+            "Network [$networkId] not found while finding token"
+        }
         val tokenAddress = tokenAddressConverter.convertTokenAddress(
             networkId,
             contractAddress,
@@ -130,10 +134,12 @@ internal class DefaultCustomTokensRepository(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency.Coin {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId)
-            ?: error("User wallet not found")
-        val network = getNetwork(networkId, derivationPath, userWallet.scanResponse)
-            ?: error("Network not found")
+        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
+            "User wallet [$userWalletId] not found while creating coin"
+        }
+        val network = requireNotNull(getNetwork(networkId, derivationPath, userWallet.scanResponse)) {
+            "Network [$networkId] not found while creating coin"
+        }
 
         return cryptoCurrencyFactory.createCoin(network)
     }
@@ -159,10 +165,12 @@ internal class DefaultCustomTokensRepository(
         derivationPath: Network.DerivationPath,
         formValues: AddCustomTokenForm.Validated.All,
     ): CryptoCurrency.Token {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId)
-            ?: error("User wallet not found")
-        val network = getNetwork(networkId, derivationPath, userWallet.scanResponse)
-            ?: error("Network not found")
+        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
+            "User wallet [$userWalletId] not found while creating custom token"
+        }
+        val network = requireNotNull(getNetwork(networkId, derivationPath, userWallet.scanResponse)) {
+            "Network [$networkId] not found while creating custom token"
+        }
         val tokenAddress = tokenAddressConverter.convertTokenAddress(
             networkId,
             formValues.contractAddress,
@@ -196,15 +204,17 @@ internal class DefaultCustomTokensRepository(
                     contractAddress = currency.contractAddress,
                 )
             }
-
-            val savedCurrencies = requireNotNull(
-                value = getSavedUserTokensResponseSync(key = userWalletId),
-                lazyMessage = { "Saved tokens empty. Can not perform remove currency action" },
+            val storedCurrencies = appPreferencesStore.getObjectSyncOrNull<UserTokensResponse>(
+                key = PreferencesKeys.getUserTokensKey(userWalletId.stringValue),
             )
+            requireNotNull(storedCurrencies) {
+                "User tokens not found for user wallet [$userWalletId] while removing currency"
+            }
+
             val token = userTokensResponseFactory.createResponseToken(cryptoCurrency)
             storeAndPushTokens(
                 userWalletId = userWalletId,
-                response = savedCurrencies.copy(tokens = savedCurrencies.tokens.filterNot { it == token }),
+                response = storedCurrencies.copy(tokens = storedCurrencies.tokens.filterNot { it == token }),
             )
             when (cryptoCurrency) {
                 is CryptoCurrency.Coin -> walletManagersFacade.remove(userWalletId, setOf(cryptoCurrency.network))
@@ -213,8 +223,9 @@ internal class DefaultCustomTokensRepository(
         }
 
     override suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network> = withContext(dispatchers.io) {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId)
-            ?: error("User wallet not found")
+        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
+            "User wallet [$userWalletId] not found while getting supported networks"
+        }
         val scanResponse = userWallet.scanResponse
 
         Blockchain.entries
@@ -251,13 +262,7 @@ internal class DefaultCustomTokensRepository(
 
     private suspend fun pushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
         safeApiCall({ tangemTechApi.saveUserTokens(userWalletId.stringValue, response).bind() }) {
-            Timber.e(it, "Unable to save user tokens for: ${userWalletId.stringValue}")
+            Timber.e(it, "Unable to push user tokens for: ${userWalletId.stringValue}")
         }
-    }
-
-    private suspend fun getSavedUserTokensResponseSync(key: UserWalletId): UserTokensResponse? {
-        return appPreferencesStore.getObjectSyncOrNull<UserTokensResponse>(
-            key = PreferencesKeys.getUserTokensKey(key.stringValue),
-        )
     }
 }
