@@ -41,7 +41,7 @@ internal class SetConfirmationStateLoadingTransformer(
                 pendingActions = possibleConfirmationState?.pendingActions,
                 isApprovalNeeded = false,
                 reduceAmountBy = null,
-                balanceState = null,
+                possiblePendingTransaction = null,
             ),
         )
     }

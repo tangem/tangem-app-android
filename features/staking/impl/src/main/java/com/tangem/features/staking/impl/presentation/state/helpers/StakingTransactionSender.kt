@@ -91,9 +91,21 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
         sendStakingTransaction(
             fullTransactionsData = fullTransactionsData,
-            balanceState = confirmationState.balanceState,
+            possiblePendingTransaction = composePendingTransaction(confirmationState),
             onSendSuccess = onSendSuccess,
             onSendError = onSendError,
+        )
+    }
+
+    private fun composePendingTransaction(confirmationState: StakingStates.ConfirmationState.Data): PendingTransaction {
+        val state = stateController.value
+
+        return confirmationState.possiblePendingTransaction ?: PendingTransaction(
+            groupId = "1",
+            type = BalanceType.STAKED,
+            amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO,
+            rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
+            validator = (confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator
         )
     }
 
@@ -204,7 +216,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
     private suspend fun sendStakingTransaction(
         fullTransactionsData: List<FullTransactionData>,
-        balanceState: BalanceState?,
+        possiblePendingTransaction: PendingTransaction,
         onSendSuccess: (txUrl: String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
     ) {
@@ -220,11 +232,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 submitHash(
                     transactionIds = fullTransactionsData.map { it.stakeKitTransaction.id },
                     transactionHashes = transactionHashes,
-                    groupId = balanceState?.groupId,
-                    validator = balanceState?.validator,
-                    amount = balanceState?.cryptoDecimal,
-                    balanceType = balanceState?.type,
-                    rawCurrencyId = balanceState?.rawCurrencyId,
+                    pendingTransaction = possiblePendingTransaction,
                 )
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
@@ -240,11 +248,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private suspend fun submitHash(
         transactionIds: List<String>,
         transactionHashes: List<String>,
-        groupId: String?,
-        validator: Yield.Validator?,
-        amount: BigDecimal?,
-        balanceType: BalanceType?,
-        rawCurrencyId: String?,
+        pendingTransaction: PendingTransaction,
     ) {
         transactionIds
             .zip(transactionHashes)
@@ -253,10 +257,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                     SubmitHashData(
                         transactionId = transactionId,
                         transactionHash = transactionHash,
-                        validator = validator,
-                        amount = amount,
-                        balanceType = balanceType,
-                        rawCurrencyId = rawCurrencyId,
+                        pendingTransaction = pendingTransaction,
                     ),
                 )
                     .onLeft { error ->
@@ -272,15 +273,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                         )
                     }.onRight {
                         Timber.d("Successful hash submission")
-                        savePendingTransactionUseCase.invoke(
-                            PendingTransaction(
-                                groupId = groupId,
-                                type = balanceType,
-                                amount = amount,
-                                rawCurrencyId = rawCurrencyId,
-                                validator = validator,
-                            ),
-                        )
+                        savePendingTransactionUseCase.invoke(pendingTransaction)
                     }
             }
     }
