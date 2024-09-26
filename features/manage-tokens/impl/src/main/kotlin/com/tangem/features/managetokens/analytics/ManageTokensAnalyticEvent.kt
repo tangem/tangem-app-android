@@ -8,21 +8,21 @@ internal sealed class ManageTokensAnalyticEvent(
     event: String,
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(
-    category = "ManageTokens",
+    category = "Manage Tokens",
     event = event,
     params = params,
 ) {
 
     class ScreenOpened(source: ManageTokensSource) : ManageTokensAnalyticEvent(
         event = "Manage Tokens Screen Opened",
-        params = mapOf(AnalyticsParam.Key.SOURCE to source.name),
+        params = mapOf(AnalyticsParam.Key.SOURCE to source.analyticsName),
     )
 
     class TokensIsNotFound(query: String, source: ManageTokensSource) : ManageTokensAnalyticEvent(
         event = "Token Is Not Found",
         params = mapOf(
             AnalyticsParam.Key.INPUT to query,
-            AnalyticsParam.Key.SOURCE to source.name,
+            AnalyticsParam.Key.SOURCE to source.analyticsName,
         ),
     )
 
@@ -35,7 +35,7 @@ internal sealed class ManageTokensAnalyticEvent(
         params = mapOf(
             AnalyticsParam.Key.TOKEN_PARAM to tokenSymbol,
             AnalyticsParam.Key.STATE to AnalyticsParam.OnOffState.from(isSelected),
-            AnalyticsParam.Key.SOURCE to source.name,
+            AnalyticsParam.Key.SOURCE to source.analyticsName,
         ),
     )
 
@@ -46,7 +46,7 @@ internal sealed class ManageTokensAnalyticEvent(
         event = "Token Added",
         params = mapOf(
             AnalyticsParam.Key.COUNT to tokensCount.toString(),
-            AnalyticsParam.Key.SOURCE to source.name,
+            AnalyticsParam.Key.SOURCE to source.analyticsName,
         ),
     )
 
