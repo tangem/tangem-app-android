@@ -1,7 +1,7 @@
 package com.tangem.features.managetokens.component
 
-enum class ManageTokensSource {
-    STORIES,
-    ONBOARDING,
-    SETTINGS,
+enum class ManageTokensSource(val analyticsName: String) {
+    STORIES(analyticsName = "Stories"),
+    ONBOARDING(analyticsName = "Onboarding"),
+    SETTINGS(analyticsName = "Settings"),
 }
