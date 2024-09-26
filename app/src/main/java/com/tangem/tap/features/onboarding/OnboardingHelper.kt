@@ -8,9 +8,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
@@ -152,7 +150,7 @@ object OnboardingHelper {
         val cryptoCurrency = CryptoCurrencyFactory().createCoin(
             blockchain = blockchain,
             extraDerivationPath = null,
-            derivationStyleProvider = scanResponse.derivationStyleProvider,
+            scanResponse = scanResponse,
         ) ?: return
 
         val topUpUrl = walletManager.getTopUpUrl(cryptoCurrency) ?: return
