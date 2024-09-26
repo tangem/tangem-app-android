@@ -1,14 +1,21 @@
 package com.tangem.datasource.config
 
 import com.tangem.datasource.config.models.Config
-import com.tangem.datasource.config.models.ConfigModel
+import kotlinx.coroutines.flow.Flow
 
 /**
- * Created by Anton Zhilenkov on 12/11/2020.
+ * Config manager
+ *
+ * @author Anton Zhilenkov on 12/11/2020
  */
 interface ConfigManager {
 
-    val config: Config
+    /** Initialize and return [Config] */
+    suspend fun initialize(): Config
 
-    suspend fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)? = null)
+    /** Get [Config] as [Flow] */
+    fun getConfig(): Flow<Config>
+
+    /** Get [Config] synchronously */
+    fun getConfigSync(): Config
 }
