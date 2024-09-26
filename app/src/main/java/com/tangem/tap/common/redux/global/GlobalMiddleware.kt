@@ -57,7 +57,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
         }
         is GlobalAction.ExchangeManager.Init -> {
             val appStateSafe = appState() ?: return
-            val config = appStateSafe.globalState.configManager?.config ?: return
+            val config = appStateSafe.globalState.configManager?.getConfigSync() ?: return
 
             scope.launch {
                 val scanResponseProvider: () -> ScanResponse? = {
