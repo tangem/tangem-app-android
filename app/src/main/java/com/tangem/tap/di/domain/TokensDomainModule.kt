@@ -113,12 +113,14 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
+        dispatchers: CoroutineDispatcherProvider,
     ): GetAllWalletsCryptoCurrencyStatusesUseCase {
         return GetAllWalletsCryptoCurrencyStatusesUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
             stakingRepository = stakingRepository,
+            dispatchers = dispatchers,
         )
     }
 
