@@ -1,5 +1,6 @@
 package com.tangem.features.managetokens.model
 
+import androidx.annotation.StringRes
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -105,7 +106,7 @@ internal class ManageTokensModel @Inject constructor(
                 onBackButtonClick = router::pop,
             ),
             search = SearchBarUM(
-                placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
+                placeholderText = resourceReference(R.string.common_search),
                 query = "",
                 onQueryChange = ::searchCurrencies,
                 isActive = false,
@@ -130,7 +131,7 @@ internal class ManageTokensModel @Inject constructor(
                 ),
             ),
             search = SearchBarUM(
-                placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
+                placeholderText = resourceReference(R.string.common_search),
                 query = "",
                 onQueryChange = ::searchCurrencies,
                 isActive = false,
@@ -321,8 +322,15 @@ internal class ManageTokensModel @Inject constructor(
 
     private fun toggleSearchBar(isActive: Boolean) {
         state.update { state ->
+            @StringRes val placeholderTextRes = if (isActive) {
+                R.string.manage_tokens_search_placeholder
+            } else {
+                R.string.common_search
+            }
+
             state.copySealed(
                 search = state.search.copy(
+                    placeholderText = resourceReference(placeholderTextRes),
                     isActive = isActive,
                 ),
             )
