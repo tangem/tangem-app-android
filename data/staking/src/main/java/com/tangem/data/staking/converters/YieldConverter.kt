@@ -88,7 +88,7 @@ class YieldConverter(
             tokens = metadataDTO.tokensDTO.map { tokenConverter.convert(it) },
             type = metadataDTO.type,
             rewardSchedule = convertRewardSchedule(metadataDTO.rewardSchedule),
-            cooldownPeriod = convertPeriod(metadataDTO.cooldownPeriod),
+            cooldownPeriod = metadataDTO.cooldownPeriod?.let { convertPeriod(it) },
             warmupPeriod = convertPeriod(metadataDTO.warmupPeriod),
             rewardClaiming = convertRewardClaiming(metadataDTO.rewardClaiming),
             defaultValidator = metadataDTO.defaultValidator,
