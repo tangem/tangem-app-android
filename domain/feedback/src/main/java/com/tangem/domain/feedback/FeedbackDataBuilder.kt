@@ -95,6 +95,11 @@ internal class FeedbackDataBuilder {
         )
     }
 
+    fun addSwapInfo(providerName: String, txId: String) {
+        builder.appendKeyValue("Provider", providerName)
+        builder.appendKeyValue("Transaction ID", txId)
+    }
+
     fun addDelimiter(): StringBuilder = builder.appendDelimiter()
 
     fun build(): String = builder.trimEnd().toString()
