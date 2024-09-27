@@ -84,6 +84,9 @@ internal class SwapViewModel @Inject constructor(
         ?.unbundle(UserWalletId.serializer())
         ?: error("no expected parameter UserWalletId found")
 
+    private val isInitiallyReversed: Boolean = savedStateHandle.get<Boolean>(AppRoute.Swap.IS_INITIAL_REVERSE_ORDER)
+        ?: false
+
     private val swapInteractor = swapInteractorFactory.create(userWalletId)
 
     private lateinit var initialCryptoCurrencyStatus: CryptoCurrencyStatus
@@ -137,7 +140,7 @@ internal class SwapViewModel @Inject constructor(
                 uiState = stateBuilder.addAlert(uiState = uiState, onClick = swapRouter::back)
             } else {
                 initialCryptoCurrencyStatus = cryptoCurrencyStatus
-                initTokens()
+                initTokens(isInitiallyReversed)
             }
         }
     }
@@ -180,18 +183,21 @@ internal class SwapViewModel @Inject constructor(
         analyticsEventHandler.send(SwapEvents.ChooseTokenScreenOpened(availableTokens = isAnyAvailableTokens))
     }
 
-    private fun initTokens() {
+    private fun initTokens(isReverseFromTo: Boolean) {
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 swapInteractor.getTokensDataState(initialCryptoCurrency)
             }.onSuccess { state ->
                 updateTokensState(state)
+                val selectedCurrency = swapInteractor.getInitialCurrencyToSwap(
+                    initialCryptoCurrency = initialCryptoCurrency,
+                    state = state,
+                    isReverseFromTo = isReverseFromTo,
+                )
                 applyInitialTokenChoice(
-                    state,
-                    swapInteractor.selectInitialCurrencyToSwap(
-                        initialCryptoCurrency,
-                        state,
-                    ),
+                    state = state,
+                    selectedCurrency = selectedCurrency,
+                    isReverseFromTo = isReverseFromTo,
                 )
 
                 (dataState.fromCryptoCurrency?.currency as? CryptoCurrency.Coin)?.let {
@@ -215,6 +221,7 @@ internal class SwapViewModel @Inject constructor(
                 applyInitialTokenChoice(
                     state = TokensDataStateExpress.EMPTY,
                     selectedCurrency = null,
+                    isReverseFromTo = isReverseFromTo,
                 )
 
                 uiState = stateBuilder.createInitialErrorState(
@@ -227,33 +234,43 @@ internal class SwapViewModel @Inject constructor(
                             initialCryptoCurrency.network.backendId,
                         ),
                     )
-                    initTokens()
+                    initTokens(isReverseFromTo)
                 }
             }
         }
     }
 
-    private fun applyInitialTokenChoice(state: TokensDataStateExpress, selectedCurrency: CryptoCurrencyStatus?) {
-        val fromCurrencyStatus = initialCryptoCurrencyStatus
-        dataState = dataState.copy(
-            fromCryptoCurrency = fromCurrencyStatus,
-            toCryptoCurrency = selectedCurrency,
-            tokensDataState = state,
-        )
+    private fun applyInitialTokenChoice(
+        state: TokensDataStateExpress,
+        selectedCurrency: CryptoCurrencyStatus?,
+        isReverseFromTo: Boolean,
+    ) {
+        // exceptional case
         if (selectedCurrency == null) {
             analyticsEventHandler.send(SwapEvents.NoticeNoAvailableTokensToSwap)
             uiState = stateBuilder.createNoAvailableTokensToSwapState(
                 uiStateHolder = uiState,
-                fromToken = fromCurrencyStatus,
+                fromToken = initialCryptoCurrencyStatus,
             )
-        } else {
-            startLoadingQuotes(
-                fromToken = fromCurrencyStatus,
-                toToken = selectedCurrency,
-                amount = lastAmount.value,
-                toProvidersList = findSwapProviders(fromCurrencyStatus, selectedCurrency),
-            )
+            return
         }
+        isOrderReversed = isReverseFromTo
+        val (fromCurrencyStatus, toCurrencyStatus) = if (isOrderReversed) {
+            selectedCurrency to initialCryptoCurrencyStatus
+        } else {
+            initialCryptoCurrencyStatus to selectedCurrency
+        }
+        dataState = dataState.copy(
+            fromCryptoCurrency = fromCurrencyStatus,
+            toCryptoCurrency = toCurrencyStatus,
+            tokensDataState = state,
+        )
+        startLoadingQuotes(
+            fromToken = fromCurrencyStatus,
+            toToken = toCurrencyStatus,
+            amount = lastAmount.value,
+            toProvidersList = findSwapProviders(fromCurrencyStatus, toCurrencyStatus),
+        )
     }
 
     private fun updateTokensState(tokenDataState: TokensDataStateExpress) {
