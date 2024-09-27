@@ -4,6 +4,6 @@ import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampCurrency
 
 interface OnrampRepository {
-    suspend fun fetchCurrencies(): List<OnrampCurrency>
-    suspend fun fetchCountries(): List<OnrampCountry>
+    suspend fun getCurrencies(): List<OnrampCurrency>
+    suspend fun getCountries(): List<OnrampCountry>
 }
