@@ -164,7 +164,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                     }
                 }
 
-                if (state.isStakingBlockShown) {
+                if (state.stakingBlocksState != null) {
                     item(
                         key = StakingBlockUM::class.java,
                         contentType = StakingBlockUM::class.java,
