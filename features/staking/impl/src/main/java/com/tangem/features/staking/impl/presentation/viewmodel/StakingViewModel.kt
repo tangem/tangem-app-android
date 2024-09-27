@@ -218,6 +218,7 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onNextClick()
         when {
             isInitState() -> {
+                stateController.update(SetConfirmationStateResetAssentTransformer)
                 stateController.update(SetConfirmationStateLoadingTransformer(yield, appCurrency))
                 stateController.update(SetBalanceStateTransformer(balanceState))
                 onRefreshSwipe(isRefreshing = false)
@@ -328,6 +329,7 @@ internal class StakingViewModel @Inject constructor(
         if (value.currentStep == StakingStep.Confirmation) {
             when ((value.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState) {
                 InnerConfirmationStakingState.ASSENT -> {
+                    stateController.update(SetConfirmationStateResetAssentTransformer)
                     stakingStateRouter.onPrevClick()
                 }
                 null,
