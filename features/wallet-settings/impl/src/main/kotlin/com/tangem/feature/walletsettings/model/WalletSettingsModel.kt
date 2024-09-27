@@ -32,7 +32,6 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
-import com.tangem.features.managetokens.ManageTokensToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -54,7 +53,6 @@ internal class WalletSettingsModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsContextProxy: AnalyticsContextProxy,
     private val reduxStateHolder: ReduxStateHolder,
-    private val manageTokensToggles: ManageTokensToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -88,7 +86,7 @@ internal class WalletSettingsModel @Inject constructor(
         userWalletName = userWallet.name,
         isReferralAvailable = userWallet.cardTypesResolver.isTangemWallet(),
         isLinkMoreCardsAvailable = userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
-        isManageTokensAvailable = userWallet.isMultiCurrency && manageTokensToggles.isFeatureEnabled,
+        isManageTokensAvailable = userWallet.isMultiCurrency,
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
         forgetWallet = {
             messageSender.send(
