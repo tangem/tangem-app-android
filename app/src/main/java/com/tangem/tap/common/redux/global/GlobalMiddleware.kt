@@ -55,15 +55,9 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
         is GlobalAction.RestoreAppCurrency -> {
             restoreAppCurrency()
         }
-        is GlobalAction.SendEmail -> {
-            store.state.globalState.feedbackManager?.sendEmail(
-                feedbackData = action.feedbackData,
-                scanResponse = action.scanResponse,
-            )
-        }
         is GlobalAction.ExchangeManager.Init -> {
             val appStateSafe = appState() ?: return
-            val config = appStateSafe.globalState.configManager?.config ?: return
+            val config = appStateSafe.globalState.configManager?.getConfigSync() ?: return
 
             scope.launch {
                 val scanResponseProvider: () -> ScanResponse? = {
@@ -92,21 +86,24 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             scope.launch { exchangeManager.update() }
         }
         is GlobalAction.FetchUserCountry -> {
-            scope.launch {
-                // TODO("After adding DI") get dependencies by DI
-                runCatching { store.state.featureRepositoryProvider.homeRepository.getUserCountryCode() }
-                    .onSuccess {
-                        store.dispatchOnMain(
-                            GlobalAction.FetchUserCountry.Success(countryCode = it.code.lowercase()),
-                        )
-                    }
-                    .onFailure {
-                        store.dispatchOnMain(
-                            GlobalAction.FetchUserCountry.Success(
-                                countryCode = Locale.getDefault().country.lowercase(),
-                            ),
-                        )
-                    }
+            val homeFeatureToggles = store.inject(DaggerGraphState::homeFeatureToggles)
+
+            if (!homeFeatureToggles.isMigrateUserCountryCodeEnabled) {
+                scope.launch {
+                    runCatching { store.state.featureRepositoryProvider.homeRepository.getUserCountryCode() }
+                        .onSuccess {
+                            store.dispatchOnMain(
+                                GlobalAction.FetchUserCountry.Success(countryCode = it.code.lowercase()),
+                            )
+                        }
+                        .onFailure {
+                            store.dispatchOnMain(
+                                GlobalAction.FetchUserCountry.Success(
+                                    countryCode = Locale.getDefault().country.lowercase(),
+                                ),
+                            )
+                        }
+                }
             }
         }
     }
