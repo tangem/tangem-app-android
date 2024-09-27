@@ -4,7 +4,7 @@ import com.tangem.datasource.api.onramp.models.response.model.OnrampCountryDTO
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.utils.converter.Converter
 
-class CountryConverter(
+internal class CountryConverter(
     private val currencyConverter: CurrencyConverter,
 ) : Converter<OnrampCountryDTO, OnrampCountry> {
 
