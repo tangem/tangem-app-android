@@ -1,5 +1,6 @@
 package com.tangem.features.managetokens.model
 
+import arrow.core.flatten
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
@@ -12,6 +13,7 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.SaveManagedTokensUseCase
 import com.tangem.domain.redux.OnboardingManageTokensAction
 import com.tangem.domain.redux.ReduxStateHolder
@@ -21,6 +23,7 @@ import com.tangem.features.managetokens.component.OnboardingManageTokensComponen
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.managetokens.OnboardingManageTokensUM
 import com.tangem.features.managetokens.impl.R
+import com.tangem.features.managetokens.utils.list.ChangedCurrencies
 import com.tangem.features.managetokens.utils.list.ManageTokensListManager
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
@@ -41,6 +44,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val reduxStateHolder: ReduxStateHolder,
     private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
+    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -55,6 +59,10 @@ internal class OnboardingManageTokensModel @Inject constructor(
 
         manageTokensListManager.paginationStatus
             .onEach { status -> updatePaginationStatus(status) }
+            .launchIn(modelScope)
+
+        manageTokensListManager.currenciesToAdd
+            .onEach(::handleNewAddedCurrencies)
             .launchIn(modelScope)
 
         observeSearchQueryChanges()
@@ -75,8 +83,6 @@ internal class OnboardingManageTokensModel @Inject constructor(
             isNextBatchLoading = false,
             items = getLoadingItems(),
             loadMore = ::loadMoreItems,
-            saveChanges = ::saveChanges,
-            isSavingInProgress = false,
             onBack = {},
             search = SearchBarUM(
                 placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
@@ -84,6 +90,10 @@ internal class OnboardingManageTokensModel @Inject constructor(
                 onQueryChange = ::searchCurrencies,
                 isActive = false,
                 onActiveChange = ::toggleSearchBar,
+            ),
+            actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Later(
+                onClick = ::onLaterClick,
+                showProgress = false,
             ),
         )
     }
@@ -182,6 +192,29 @@ internal class OnboardingManageTokensModel @Inject constructor(
         state.update { state -> state.copy(scrollToTop = consumedEvent()) }
     }
 
+    private suspend fun handleNewAddedCurrencies(currenciesToAdd: ChangedCurrencies) {
+        if (currenciesToAdd.isEmpty()) {
+            state.update { state ->
+                state.copy(
+                    actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Later(onClick = ::onLaterClick),
+                )
+            }
+        } else {
+            val hasMissedDerivations = hasMissedDerivationsUseCase.invoke(
+                userWalletId = params.userWalletId,
+                networksWithDerivationPath = currenciesToAdd.values.flatten().toSet().associate { it.id to null },
+            )
+            state.update { state ->
+                state.copy(
+                    actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Continue(
+                        onClick = ::saveChanges,
+                        showTangemIcon = hasMissedDerivations,
+                    ),
+                )
+            }
+        }
+    }
+
     private fun loadMoreItems(): Boolean {
         val state = state.value
         if (state.isInitialBatchLoading || state.isNextBatchLoading) return false
@@ -194,8 +227,16 @@ internal class OnboardingManageTokensModel @Inject constructor(
     }
 
     private fun saveChanges() = resource(
-        acquire = { state.update { state -> state.copy(isSavingInProgress = true) } },
-        release = { state.update { state -> state.copy(isSavingInProgress = false) } },
+        acquire = {
+            state.update { state ->
+                state.copy(actionButtonConfig = state.actionButtonConfig.copySealed(showProgress = true))
+            }
+        },
+        release = {
+            state.update { state ->
+                state.copy(actionButtonConfig = state.actionButtonConfig.copySealed(showProgress = false))
+            }
+        },
     ) {
         val event = ManageTokensAnalyticEvent.TokenAdded(
             tokensCount = manageTokensListManager.currenciesToAdd.value.values.sumOf { it.size },
@@ -212,6 +253,21 @@ internal class OnboardingManageTokensModel @Inject constructor(
             return@resource
         }
 
+        reduxStateHolder.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
+    }
+
+    private fun onLaterClick() = resource(
+        acquire = {
+            state.update { state ->
+                state.copy(actionButtonConfig = state.actionButtonConfig.copySealed(showProgress = true))
+            }
+        },
+        release = {
+            state.update { state ->
+                state.copy(actionButtonConfig = state.actionButtonConfig.copySealed(showProgress = false))
+            }
+        },
+    ) {
         reduxStateHolder.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
     }
 

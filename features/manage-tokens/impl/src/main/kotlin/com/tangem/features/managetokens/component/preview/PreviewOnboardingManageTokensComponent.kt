@@ -26,8 +26,6 @@ internal class PreviewOnboardingManageTokensComponent(
         isInitialBatchLoading = false,
         isNextBatchLoading = true,
         loadMore = { false },
-        saveChanges = {},
-        isSavingInProgress = false,
         onBack = {},
         search = SearchBarUM(
             placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
@@ -35,6 +33,10 @@ internal class PreviewOnboardingManageTokensComponent(
             onQueryChange = {},
             isActive = false,
             onActiveChange = { },
+        ),
+        actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Later(
+            onClick = {},
+            showProgress = false,
         ),
     )
 

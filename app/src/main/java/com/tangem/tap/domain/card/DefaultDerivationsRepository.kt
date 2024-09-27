@@ -81,7 +81,7 @@ internal class DefaultDerivationsRepository(
             .findByNetworks(
                 networksWithDerivationPath.mapNotNull { (networkId, extraDerivationPath) ->
                     getNetwork(
-                        blockchain = Blockchain.fromNetworkId(networkId.value) ?: return@mapNotNull null,
+                        blockchain = Blockchain.fromNetworkId(networkId.value.lowercase()) ?: return@mapNotNull null,
                         extraDerivationPath = extraDerivationPath,
                         derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
                     )

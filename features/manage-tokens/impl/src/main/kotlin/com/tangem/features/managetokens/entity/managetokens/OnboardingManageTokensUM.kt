@@ -14,6 +14,28 @@ internal data class OnboardingManageTokensUM(
     val loadMore: () -> Boolean,
     val search: SearchBarUM,
     val scrollToTop: StateEvent<Unit> = consumedEvent(),
-    val saveChanges: () -> Unit,
-    val isSavingInProgress: Boolean,
-)
+    val actionButtonConfig: ActionButtonConfig,
+) {
+    sealed class ActionButtonConfig {
+        abstract val onClick: () -> Unit
+        abstract val showProgress: Boolean
+
+        data class Continue(
+            override val onClick: () -> Unit,
+            override val showProgress: Boolean = false,
+            val showTangemIcon: Boolean,
+        ) : ActionButtonConfig()
+
+        data class Later(
+            override val onClick: () -> Unit,
+            override val showProgress: Boolean = false,
+        ) : ActionButtonConfig()
+
+        fun copySealed(showProgress: Boolean): ActionButtonConfig {
+            return when (this) {
+                is Continue -> copy(showProgress = showProgress)
+                is Later -> copy(showProgress = showProgress)
+            }
+        }
+    }
+}

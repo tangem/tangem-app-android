@@ -158,7 +158,7 @@ private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM?, search: SearchBarU
 }
 
 @Composable
-internal fun SaveChangesButton(
+private fun SaveChangesButton(
     isVisible: Boolean,
     showProgress: Boolean,
     onClick: () -> Unit,
