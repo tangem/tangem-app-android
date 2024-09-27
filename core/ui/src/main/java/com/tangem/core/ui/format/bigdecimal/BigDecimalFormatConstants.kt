@@ -10,6 +10,7 @@ object BigDecimalFormatConstants {
     const val EMPTY_BALANCE_SIGN = DASH_SIGN
     const val CAN_BE_LOWER_SIGN = LOWER_SIGN
     val FORMAT_THRESHOLD = BigDecimal("0.01")
+    const val CURRENCY_SPACE = "\u00a0"
 
     val FIAT_FORMAT_THRESHOLD = BigDecimal("0.01")
     val CRYPTO_FEE_FORMAT_THRESHOLD = BigDecimal("0.000001")
@@ -18,5 +19,5 @@ object BigDecimalFormatConstants {
     const val FIAT_MARKET_EXTENDED_DIGITS = 6
     const val FRACTIONAL_PART_LENGTH_AFTER_LEADING_ZEROES = 4
 
-    internal val usdCurrency = Currency.getInstance("USD")
+    val usdCurrency = Currency.getInstance("USD")
 }

@@ -1,20 +1,17 @@
 package com.tangem.core.ui.utils
 
-import android.icu.text.CompactDecimalFormat
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.LOWER_SIGN
 import com.tangem.utils.StringsSigns.TILDE_SIGN
-import com.tangem.utils.extensions.isNotWhitespace
-import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
 
 @Suppress("LargeClass")
+@Deprecated("Use BigDecimal.format")
 object BigDecimalFormatter {
 
     const val EMPTY_BALANCE_SIGN = DASH_SIGN
@@ -30,10 +27,7 @@ object BigDecimalFormatter {
 
     private val usdCurrency = Currency.getInstance("USD")
 
-    @Deprecated(
-        "Use formatCryptoAmount2",
-        replaceWith = ReplaceWith("formatCryptoAmount2"),
-    )
+    @Deprecated("Use BigDecimal.format")
     fun formatCryptoAmount(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: String,
@@ -58,32 +52,7 @@ object BigDecimalFormatter {
         }
     }
 
-    // FIXME
-    // Migrate to this method from formatCryptoAmount (AND-8499)
-    fun formatCryptoAmount2(
-        cryptoAmount: BigDecimal?,
-        cryptoCurrency: String,
-        decimals: Int,
-        locale: Locale = Locale.getDefault(),
-    ): String {
-        if (cryptoAmount == null) return EMPTY_BALANCE_SIGN
-
-        val formatter = NumberFormat.getCurrencyInstance(locale).apply {
-            currency = usdCurrency
-            maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
-            minimumFractionDigits = 2
-            isGroupingUsed = true
-            roundingMode = RoundingMode.HALF_UP
-        }
-
-        return formatter.format(cryptoAmount)
-            .replaceFiatSymbolWithCrypto(
-                fiatCurrencySymbol = usdCurrency.symbol,
-                cryptoCurrencySymbol = cryptoCurrency,
-            )
-    }
-
-    // FIXME
+    @Deprecated("Use BigDecimal.format")
     fun formatCryptoAmountShorted(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: String,
@@ -117,7 +86,7 @@ object BigDecimalFormatter {
         }
     }
 
-    // FIXME
+    @Deprecated("Use BigDecimal.format")
     fun formatCryptoAmountUncapped(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: CryptoCurrency,
@@ -141,7 +110,7 @@ object BigDecimalFormatter {
         }
     }
 
-    // FIXME
+    @Deprecated("Use BigDecimal.format")
     fun formatCryptoFeeAmount(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: String,
@@ -181,7 +150,7 @@ object BigDecimalFormatter {
         }
     }
 
-    // FIXME
+    @Deprecated("Use BigDecimal.format")
     fun formatCryptoAmount(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: CryptoCurrency,
@@ -190,7 +159,7 @@ object BigDecimalFormatter {
         return formatCryptoAmount(cryptoAmount, cryptoCurrency.symbol, cryptoCurrency.decimals, locale)
     }
 
-    // FIXME
+    @Deprecated("Use BigDecimal.format")
     fun formatFiatAmount(
         fiatAmount: BigDecimal?,
         fiatCurrencyCode: String,
@@ -232,7 +201,7 @@ object BigDecimalFormatter {
         }
     }
 
-    // FIXME
+    @Deprecated("Use BigDecimal.format")
     fun formatFiatAmountUncapped(
         fiatAmount: BigDecimal?,
         fiatCurrencyCode: String,
@@ -258,7 +227,7 @@ object BigDecimalFormatter {
             .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
     }
 
-    // FIXME
+    @Deprecated("Use BigDecimal.format")
     fun formatFiatPriceUncapped(
         fiatAmount: BigDecimal?,
         fiatCurrencyCode: String,
@@ -281,7 +250,7 @@ object BigDecimalFormatter {
             .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
     }
 
-    // FIXME
+    @Deprecated("Use BigDecimal.format")
     fun getFiatPriceUncappedWithScale(value: BigDecimal): Pair<BigDecimal, Int> {
         return if (value < BigDecimal.ONE) {
             val leadingZeroes = value.scale() - value.precision()
@@ -297,28 +266,7 @@ object BigDecimalFormatter {
         }
     }
 
-    // FIXME
-    fun formatFiatEditableAmount(
-        fiatAmount: String?,
-        fiatCurrencyCode: String,
-        fiatCurrencySymbol: String,
-        locale: Locale = Locale.getDefault(),
-    ): String {
-        if (fiatAmount == null) return EMPTY_BALANCE_SIGN
-
-        val formatterCurrency = getCurrency(fiatCurrencyCode)
-        val numberFormatter = NumberFormat.getCurrencyInstance(locale).apply {
-            currency = formatterCurrency
-        }
-        val formatter = requireNotNull(numberFormatter as? DecimalFormat) {
-            Timber.e("NumberFormat is null")
-            return EMPTY_BALANCE_SIGN
-        }
-        return "${formatter.positivePrefix}$fiatAmount${formatter.positiveSuffix}"
-            .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
-    }
-
-    // FIXME
+    @Deprecated("Use BigDecimal.format")
     fun formatPercent(
         percent: BigDecimal,
         useAbsoluteValue: Boolean,

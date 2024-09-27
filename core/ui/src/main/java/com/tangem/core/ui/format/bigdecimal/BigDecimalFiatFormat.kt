@@ -1,17 +1,14 @@
 package com.tangem.core.ui.format.bigdecimal
 
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CAN_BE_LOWER_SIGN
-import com.tangem.core.ui.utils.BigDecimalFormatter.EMPTY_BALANCE_SIGN
 import com.tangem.utils.StringsSigns.TILDE_SIGN
-import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
 
-class BigDecimalFiatFormat(
+open class BigDecimalFiatFormat(
     val fiatCurrencyCode: String,
     val fiatCurrencySymbol: String,
     val locale: Locale = Locale.getDefault(),
@@ -35,6 +32,9 @@ fun BigDecimalFormatScope.fiat(
 
 // == Formatters ==
 
+/**
+ * Formats fiat amount with default precision.
+ */
 fun BigDecimalFiatFormat.defaultAmount(): BigDecimalFormat = BigDecimalFormat { value ->
     val formatterCurrency = getCurrencyByCode(fiatCurrencyCode)
 
@@ -59,6 +59,9 @@ fun BigDecimalFiatFormat.defaultAmount(): BigDecimalFormat = BigDecimalFormat { 
     }
 }
 
+/**
+ * Formats fiat amount with default precision and adds tilde sign
+ */
 fun BigDecimalFiatFormat.approximateAmount(): BigDecimalFormat = BigDecimalFormat { value ->
     val formattedAmount = defaultAmount()(value)
 
@@ -72,6 +75,9 @@ fun BigDecimalFiatFormat.approximateAmount(): BigDecimalFormat = BigDecimalForma
     }
 }
 
+/**
+ * Formats fiat amount with extended precision.
+ */
 fun BigDecimalFiatFormat.uncapped(): BigDecimalFormat = BigDecimalFormat { value ->
     val formatterCurrency = getCurrencyByCode(fiatCurrencyCode)
 
@@ -92,6 +98,10 @@ fun BigDecimalFiatFormat.uncapped(): BigDecimalFormat = BigDecimalFormat { value
         .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
 }
 
+/**
+ * Formats fiat price with precision calculated based on the value.
+ * @see getFiatPriceAmountWithScale
+ */
 fun BigDecimalFiatFormat.price(): BigDecimalFormat = BigDecimalFormat { value ->
     val formatterCurrency = getCurrencyByCode(fiatCurrencyCode)
 
@@ -105,22 +115,6 @@ fun BigDecimalFiatFormat.price(): BigDecimalFormat = BigDecimalFormat { value ->
     }
 
     formatter.format(priceAmount)
-        .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
-}
-
-fun BigDecimalFiatFormat.editable(): BigDecimalFormat = BigDecimalFormat { value ->
-    val formatterCurrency = getCurrencyByCode(fiatCurrencyCode)
-
-    val numberFormatter = NumberFormat.getCurrencyInstance(locale).apply {
-        currency = formatterCurrency
-    }
-
-    val formatter = requireNotNull(numberFormatter as? DecimalFormat) {
-        Timber.e("NumberFormat is null")
-        return@BigDecimalFormat EMPTY_BALANCE_SIGN
-    }
-
-    "${formatter.positivePrefix}$value${formatter.positiveSuffix}"
         .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
 }
 

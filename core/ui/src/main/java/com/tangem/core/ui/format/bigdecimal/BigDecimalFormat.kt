@@ -8,11 +8,11 @@ interface BigDecimalFormatScope {
 
 fun interface BigDecimalFormat : (BigDecimal) -> String, BigDecimalFormatScope
 
-inline fun BigDecimal.formatAs(block: BigDecimalFormatScope.() -> BigDecimalFormat): String {
+inline fun BigDecimal.format(block: BigDecimalFormatScope.() -> BigDecimalFormat): String {
     return BigDecimalFormatScope.Empty.block()(this)
 }
 
-inline fun BigDecimal?.formatAs(
+inline fun BigDecimal?.format(
     fallbackString: String = BigDecimalFormatConstants.EMPTY_BALANCE_SIGN,
     block: BigDecimalFormatScope.() -> BigDecimalFormat,
 ): String {
@@ -20,7 +20,7 @@ inline fun BigDecimal?.formatAs(
     return BigDecimalFormatScope.Empty.block()(this)
 }
 
-fun BigDecimal?.formatAs(
+fun BigDecimal?.format(
     format: BigDecimalFormat,
     fallbackString: String = BigDecimalFormatConstants.EMPTY_BALANCE_SIGN,
 ): String {

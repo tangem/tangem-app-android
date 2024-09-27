@@ -8,19 +8,24 @@ import java.util.Locale
 
 // == Formatters ==
 
+/**
+ * Formats the amount in compact format.
+ * "123456.6" -> "$123.457K"
+ * "12345.6" -> "$123.046K"
+ * @param threeDigitsMethod if true, will format the amount always with 3 significant digits
+ */
 fun BigDecimalFiatFormat.compact(threeDigitsMethod: Boolean = false): BigDecimalFormat = BigDecimalFormat { value ->
     if (value < BigDecimal.ONE) {
-        return@BigDecimalFormat uncapped()(value)
+        return@BigDecimalFormat defaultAmount()(value)
     }
 
     val rawAmount = formatCompactAmount(
         amount = value,
         locale = locale,
         threeDigitsMethod = threeDigitsMethod,
-        scale = 2,
     )
 
-    addCurrencySymbolToStringAmount(
+    addFiatCurrencySymbolToStringAmount(
         amount = rawAmount,
         fiatCurrencyCode = fiatCurrencyCode,
         fiatCurrencySymbol = fiatCurrencySymbol,
@@ -28,25 +33,48 @@ fun BigDecimalFiatFormat.compact(threeDigitsMethod: Boolean = false): BigDecimal
     )
 }
 
+/**
+ * Formats the amount in compact format.
+ * "123456.6" -> "ETH 123.457K"
+ * "12345.6" -> "123.046K ETH"
+ * @param threeDigitsMethod if true, will format the amount always with 3 significant digits
+ */
 fun BigDecimalCryptoFormat.compact(threeDigitsMethod: Boolean = false): BigDecimalFormat = BigDecimalFormat { value ->
     if (value < BigDecimal.ONE) {
-        return@BigDecimalFormat asDefaultAmount()(value)
+        return@BigDecimalFormat defaultAmount()(value)
+    }
+
+    val rawAmount = formatCompactAmount(
+        amount = value,
+        locale = locale,
+        threeDigitsMethod = threeDigitsMethod,
+    )
+
+    addFiatCurrencySymbolToStringAmount(
+        amount = rawAmount,
+        fiatCurrencyCode = BigDecimalFormatConstants.usdCurrency.currencyCode,
+        fiatCurrencySymbol = BigDecimalFormatConstants.usdCurrency.symbol,
+        locale = locale,
+    ).replaceFiatSymbolWithCrypto(
+        fiatCurrencySymbol = BigDecimalFormatConstants.usdCurrency.symbol,
+        cryptoCurrencySymbol = symbol,
+    )
+}
+
+/**
+ * Formats the amount in compact format.
+ * ex. "123456.6" -> "123.46K", "12345.6" -> "123.05K"
+ * Negative amount is not supported!
+ */
+fun BigDecimalFormatScope.rawCompact(locale: Locale = Locale.getDefault()) = BigDecimalFormat { value ->
+    if (value < BigDecimal.ZERO) {
+        return@BigDecimalFormat value.toPlainString()
     }
 
     formatCompactAmount(
         amount = value,
         locale = locale,
-        threeDigitsMethod = threeDigitsMethod,
-        scale = decimals,
-    ).addCryptoSymbol(symbol)
-}
-
-fun BigDecimalFormat.rawCompact(locale: Locale = Locale.getDefault()) = BigDecimalFormat { value ->
-    formatCompactAmount(
-        amount = value,
-        locale = locale,
         threeDigitsMethod = false,
-        scale = 2,
     )
 }
 
@@ -64,10 +92,9 @@ private fun formatCompactAmount(
     amount: BigDecimal,
     locale: Locale = Locale.getDefault(),
     threeDigitsMethod: Boolean = false,
-    scale: Int = 0,
 ): String {
     if (threeDigitsMethod) {
-        val scaledAmount = amount.setScale(scale, RoundingMode.HALF_UP)
+        val scaledAmount = amount.setScale(0, RoundingMode.HALF_UP)
         val digitsCount = scaledAmount.longValueExact().toString().count()
         val digitsToFormat = 6 - when (digitsCount % 3) {
             0 -> 0
@@ -83,9 +110,9 @@ private fun formatCompactAmount(
             maximumSignificantDigits = digitsToFormat
         }
 
-        return formatter.format(amount.setScale(scale, RoundingMode.HALF_UP))
+        return formatter.format(scaledAmount)
     } else {
-        val scaledAmount = amount.setScale(scale, RoundingMode.HALF_UP)
+        val scaledAmount = amount.setScale(0, RoundingMode.HALF_UP)
         val digitsCount = scaledAmount.longValueExact().toString().count()
         val digitsToFormat = 5 - when (digitsCount % 3) {
             0 -> 0
@@ -101,15 +128,15 @@ private fun formatCompactAmount(
             maximumSignificantDigits = digitsToFormat
         }
 
-        return formatter.format(amount.setScale(scale, RoundingMode.HALF_UP))
+        return formatter.format(scaledAmount)
     }
 }
 
 /**
- * Adds a proper currency sign for the provided formatted [amount]
+ * Adds a proper currency symbol for the provided formatted [amount]
  * ex. '10.0k" -> "$10.0k", "string" -> "$string"
  */
-private fun addCurrencySymbolToStringAmount(
+private fun addFiatCurrencySymbolToStringAmount(
     amount: String,
     fiatCurrencyCode: String,
     fiatCurrencySymbol: String,

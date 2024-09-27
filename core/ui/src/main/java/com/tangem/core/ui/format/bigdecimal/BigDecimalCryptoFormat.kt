@@ -2,6 +2,7 @@ package com.tangem.core.ui.format.bigdecimal
 
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CAN_BE_LOWER_SIGN
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CRYPTO_FEE_FORMAT_THRESHOLD
+import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CURRENCY_SPACE
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.FORMAT_THRESHOLD
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.extensions.isNotWhitespace
@@ -17,7 +18,7 @@ open class BigDecimalCryptoFormat(
     val locale: Locale = Locale.getDefault(),
 ) : BigDecimalFormat {
 
-    override fun invoke(value: BigDecimal): String = asDefaultAmount()(value)
+    override fun invoke(value: BigDecimal): String = defaultAmount()(value)
 }
 
 class BigDecimalCryptoFormatFull(
@@ -28,18 +29,18 @@ class BigDecimalCryptoFormatFull(
     decimals = cryptoCurrency.decimals,
     locale = locale,
 ) {
-    override fun invoke(value: BigDecimal): String = asDefaultAmount()(value)
+    override fun invoke(value: BigDecimal): String = defaultAmount()(value)
 }
 
 // == Initializers ==
 
 fun BigDecimalFormatScope.crypto(
-    cryptoCurrency: String,
+    symbol: String,
     decimals: Int,
     locale: Locale = Locale.getDefault(),
 ): BigDecimalCryptoFormat {
     return BigDecimalCryptoFormat(
-        symbol = cryptoCurrency,
+        symbol = symbol,
         decimals = decimals,
         locale = locale,
     )
@@ -58,7 +59,7 @@ fun BigDecimalFormatScope.crypto(
 
 // == Formatters ==
 
-fun BigDecimalCryptoFormat.asDefaultAmount() = BigDecimalFormat { value ->
+fun BigDecimalCryptoFormat.defaultAmount() = BigDecimalFormat { value ->
     val formatter = NumberFormat.getCurrencyInstance(locale).apply {
         currency = usdCurrency
         maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
@@ -84,7 +85,7 @@ fun BigDecimalCryptoFormat.shorted() = BigDecimalFormat { value ->
             roundingMode = RoundingMode.HALF_UP
         }
     } else {
-        NumberFormat.getNumberInstance(locale).apply {
+        NumberFormat.getCurrencyInstance(locale).apply {
             currency = usdCurrency
             maximumFractionDigits = decimals.coerceAtMost(maximumValue = 6)
             minimumFractionDigits = 2
@@ -100,10 +101,13 @@ fun BigDecimalCryptoFormat.shorted() = BigDecimalFormat { value ->
         )
 }
 
-fun BigDecimalCryptoFormatFull.uncapped() = BigDecimalFormat { value ->
+/**
+ * Format for displaying crypto amounts with their original decimals.
+ */
+fun BigDecimalCryptoFormat.uncapped() = BigDecimalFormat { value ->
     val formatter = NumberFormat.getCurrencyInstance(locale).apply {
         currency = usdCurrency
-        maximumFractionDigits = cryptoCurrency.decimals
+        maximumFractionDigits = decimals
         minimumFractionDigits = 2
         isGroupingUsed = true
         roundingMode = RoundingMode.HALF_UP
@@ -112,19 +116,24 @@ fun BigDecimalCryptoFormatFull.uncapped() = BigDecimalFormat { value ->
     formatter.format(value)
         .replaceFiatSymbolWithCrypto(
             fiatCurrencySymbol = usdCurrency.symbol,
-            cryptoCurrencySymbol = cryptoCurrency.symbol,
+            cryptoCurrencySymbol = symbol,
         )
 }
 
+/**
+ * Format for displaying fees.
+ * If the fee is less than the threshold, it will be displayed as a fixed value "<0.000001 BTC", "<BTC 0.000001".
+ */
 fun BigDecimalCryptoFormat.fee(canBeLower: Boolean = false) = BigDecimalFormat { value ->
-    val formatter = NumberFormat.getNumberInstance(locale).apply {
+    val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+        currency = usdCurrency
         maximumFractionDigits = decimals.coerceAtMost(maximumValue = 6)
         minimumFractionDigits = 2
         isGroupingUsed = true
         roundingMode = RoundingMode.HALF_UP
     }
 
-    val formatted = if (value.checkCryptoThreshold()) {
+    if (value.lessThanFeeCryptoThreshold()) {
         buildString {
             append(CAN_BE_LOWER_SIGN)
             append(
@@ -133,6 +142,7 @@ fun BigDecimalCryptoFormat.fee(canBeLower: Boolean = false) = BigDecimalFormat {
                     .replaceFiatSymbolWithCrypto(
                         fiatCurrencySymbol = usdCurrency.symbol,
                         cryptoCurrencySymbol = symbol,
+                        addStartSpace = true,
                     ),
             )
         }
@@ -146,33 +156,28 @@ fun BigDecimalCryptoFormat.fee(canBeLower: Boolean = false) = BigDecimalFormat {
                     .replaceFiatSymbolWithCrypto(
                         fiatCurrencySymbol = usdCurrency.symbol,
                         cryptoCurrencySymbol = symbol,
+                        addStartSpace = canBeLower,
                     ),
             )
         }
     }
-
-    formatted.addCryptoSymbol(symbol)
 }
 
 // == Helpers ==
 
-internal fun String.addCryptoSymbol(symbol: String): String {
-    return if (this.isEmpty()) {
-        this
-    } else {
-        "$this\u2009$symbol"
-    }
-}
-
 private fun BigDecimal.isMoreThanThreshold() = this > FORMAT_THRESHOLD
 
-private fun BigDecimal.checkCryptoThreshold() = this > BigDecimal.ZERO && this < CRYPTO_FEE_FORMAT_THRESHOLD
+private fun BigDecimal.lessThanFeeCryptoThreshold() = this > BigDecimal.ZERO && this < CRYPTO_FEE_FORMAT_THRESHOLD
 
 private val usdCurrency = Currency.getInstance("USD")
 
 // Replaces fiat currency symbol with crypto currency symbol
 // with respect to the position of the symbol and whitespace
-private fun String.replaceFiatSymbolWithCrypto(fiatCurrencySymbol: String, cryptoCurrencySymbol: String): String {
+internal fun String.replaceFiatSymbolWithCrypto(
+    fiatCurrencySymbol: String,
+    cryptoCurrencySymbol: String,
+    addStartSpace: Boolean = false,
+): String {
     val str = this
     if (str.isEmpty()) return str
 
@@ -185,12 +190,16 @@ private fun String.replaceFiatSymbolWithCrypto(fiatCurrencySymbol: String, crypt
                 append(withoutSymbol)
 
                 if (last.isNotWhitespace()) {
-                    append("\u2009")
+                    append(CURRENCY_SPACE)
                 }
 
                 append(cryptoCurrencySymbol)
             }
             str.startsWith(fiatCurrencySymbol) -> {
+                if (addStartSpace) {
+                    append(CURRENCY_SPACE)
+                }
+
                 append(cryptoCurrencySymbol)
 
                 val withoutSymbol = str.drop(fiatCurrencySymbol.length)
@@ -198,7 +207,7 @@ private fun String.replaceFiatSymbolWithCrypto(fiatCurrencySymbol: String, crypt
                     ?: return cryptoCurrencySymbol
 
                 if (first.isNotWhitespace()) {
-                    append("\u2009")
+                    append(CURRENCY_SPACE)
                 }
 
                 append(withoutSymbol)
