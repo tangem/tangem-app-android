@@ -30,4 +30,10 @@ sealed interface FeedbackEmailType {
         val transactionTypes: List<String>,
         val unsignedTransactions: List<String?>,
     ) : FeedbackEmailType
+
+    data class SwapProblem(
+        override val cardInfo: CardInfo,
+        val providerName: String,
+        val txId: String,
+    ) : FeedbackEmailType
 }
