@@ -257,16 +257,19 @@ internal class AddStakingNotificationsTransformer(
     }
 
     private fun MutableList<NotificationUM>.addExitInfoNotifications() {
-        add(
-            StakingNotification.Info.Unstake(
-                cooldownPeriodDays = yield.metadata.cooldownPeriod.days,
-                subtitleRes = if (isCosmos(cryptoCurrencyStatusProvider().currency.network.id.value)) {
-                    R.string.staking_notification_unstake_cosmos_text
-                } else {
-                    R.string.staking_notification_unstake_text
-                },
-            ),
-        )
+        val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days
+        if (cooldownPeriodDays != null) {
+            add(
+                StakingNotification.Info.Unstake(
+                    cooldownPeriodDays = cooldownPeriodDays,
+                    subtitleRes = if (isCosmos(cryptoCurrencyStatusProvider().currency.network.id.value)) {
+                        R.string.staking_notification_unstake_cosmos_text
+                    } else {
+                        R.string.staking_notification_unstake_text
+                    },
+                ),
+            )
+        }
     }
 
     private fun MutableList<NotificationUM>.addEnterInfoNotifications() {
@@ -300,17 +303,21 @@ internal class AddStakingNotificationsTransformer(
                     resourceReference(R.string.staking_notification_withdraw_text)
             }
             StakingActionType.UNLOCK_LOCKED -> {
-                val cooldownPeriodDays = yield.metadata.cooldownPeriod.days
-                resourceReference(R.string.staking_unlocked_locked) to resourceReference(
-                    R.string.staking_notification_unlock_text,
-                    wrappedList(
-                        pluralReference(
-                            id = R.plurals.common_days,
-                            count = cooldownPeriodDays,
-                            formatArgs = wrappedList(cooldownPeriodDays),
+                val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days
+                if (cooldownPeriodDays != null) {
+                    resourceReference(R.string.staking_unlocked_locked) to resourceReference(
+                        R.string.staking_notification_unlock_text,
+                        wrappedList(
+                            pluralReference(
+                                id = R.plurals.common_days,
+                                count = cooldownPeriodDays,
+                                formatArgs = wrappedList(cooldownPeriodDays),
+                            ),
                         ),
-                    ),
-                )
+                    )
+                } else {
+                    null to null
+                }
             }
             else -> null to null
         }
