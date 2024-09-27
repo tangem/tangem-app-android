@@ -16,7 +16,7 @@ import retrofit2.http.*
 interface StakeKitApi {
 
     @GET("yields/enabled")
-    suspend fun getMultipleYields(
+    suspend fun getEnabledYields(
         @Query("preferredValidatorsOnly") preferredValidatorsOnly: Boolean? = null,
         @Query("ledgerWalletAPICompatible") ledgerWalletAPICompatible: Boolean? = null,
         @Query("type") type: YieldType? = null,

@@ -19,7 +19,6 @@ import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -50,6 +49,7 @@ internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
+    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val clickIntents: TokenDetailsClickIntents,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
@@ -78,6 +78,7 @@ internal class TokenDetailsStateFactory(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
             stakingEntryInfoProvider = stakingEntryInfoProvider,
+            stakingAvailabilityProvider = stakingAvailabilityProvider,
             symbol = symbol,
             decimals = decimals,
             clickIntents = clickIntents,
@@ -111,13 +112,6 @@ internal class TokenDetailsStateFactory(
     private val refreshStateConverter by lazy {
         TokenDetailsRefreshStateConverter(
             currentStateProvider = currentStateProvider,
-        )
-    }
-
-    private val stakingStateConverter by lazy {
-        TokenStakingStateConverter(
-            currentStateProvider = currentStateProvider,
-            clickIntents = clickIntents,
         )
     }
 
@@ -230,18 +224,6 @@ internal class TokenDetailsStateFactory(
                     onConfirmClick = clickIntents::onDismissDialog,
                 ),
             ),
-        )
-    }
-
-    fun getStateWithUpdatedStakingAvailability(stakingAvailability: StakingAvailability): TokenDetailsState {
-        return currentStateProvider().copy(
-            isStakingBlockShown = stakingAvailability != StakingAvailability.Unavailable,
-        )
-    }
-
-    fun getStateWithStaking(stakingEither: Either<StakingError, StakingEntryInfo>): TokenDetailsState {
-        return currentStateProvider().copy(
-            stakingBlocksState = stakingStateConverter.convert(stakingEither),
         )
     }
 
