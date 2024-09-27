@@ -11,6 +11,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.*
  * @property quotesRepository     quotes repository
  * @property networksRepository   networks repository
  * @property stakingRepository    staking repository
+ * @property dispatchers          dispatchers
  *
 [REDACTED_AUTHOR]
  */
@@ -29,6 +31,7 @@ class GetAllWalletsCryptoCurrencyStatusesUseCase(
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
     /**
@@ -62,5 +65,6 @@ class GetAllWalletsCryptoCurrencyStatusesUseCase(
 
                 combine(walletStatusFlows) { it.toMap() }
             }
+            .flowOn(dispatchers.io)
     }
 }
