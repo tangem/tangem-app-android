@@ -23,7 +23,7 @@ interface StakingRepository {
 
     fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String
 
-    fun isStakingSupported(integrationKey: String): Boolean
+    fun isStakingSupportedInMobileApp(integrationKey: String): Boolean
 
     suspend fun fetchEnabledYields(refresh: Boolean)
 
