@@ -19,7 +19,7 @@ import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionSt
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
-import com.tangem.domain.transaction.usecase.SendMultipleTransactionUseCase
+import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvents
@@ -42,7 +42,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
     private val getStakingTransactionUseCase: GetStakingTransactionUseCase,
     private val getConstructedStakingTransactionUseCase: GetConstructedStakingTransactionUseCase,
-    private val sendMultipleTransactionUseCase: SendMultipleTransactionUseCase,
+    private val sendTransactionUseCase: SendTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val submitHashUseCase: SubmitHashUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
@@ -208,7 +208,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         onSendSuccess: (txUrl: String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
     ) {
-        sendMultipleTransactionUseCase(
+        sendTransactionUseCase(
             txsData = fullTransactionsData.map { it.tangemTransaction },
             userWallet = userWallet,
             network = cryptoCurrencyStatus.currency.network,
