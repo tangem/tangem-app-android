@@ -271,13 +271,11 @@ internal class CurrenciesStatusesOperations(
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
             val address = extractAddress(networkStatus)
 
-            val isStakingSupported = stakingRepository.isStakingSupportedInMobileApp(
-                stakingRepository.getIntegrationKey(currency.id),
-            )
-            val yieldBalance = if (isStakingSupported) {
+            val supportedIntegration = stakingRepository.getSupportedIntegrationId(currency.id)
+            val yieldBalance = if (supportedIntegration.isNullOrEmpty().not()) {
                 (yieldBalances as? YieldBalanceList.Data)?.getBalance(
                     address = address,
-                    rawCurrencyId = currency.id.rawCurrencyId,
+                    integrationId = supportedIntegration,
                 )
             } else {
                 null
