@@ -35,7 +35,6 @@ internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIn
             warnings = persistentListOf(),
             bottomSheetConfig = null,
             tokensListState = WalletTokensListState.ContentState.Loading,
-            manageTokensButtonConfig = ManageTokensButtonConfig(clickIntents::onManageTokensClick),
         )
     }
 

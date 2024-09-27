@@ -55,9 +55,9 @@ internal class Express(
 
     private fun getApiKey(isProd: Boolean): String {
         return if (isProd) {
-            configManager.config.express
+            configManager.getConfigSync().express
         } else {
-            configManager.config.devExpress
+            configManager.getConfigSync().devExpress
         }
             ?.apiKey
             ?: error("No express config provided")

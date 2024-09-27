@@ -5,7 +5,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
-import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -18,11 +17,11 @@ data class GlobalState(
     val cardVerifiedOnline: Boolean = false,
     val tapWalletManager: TapWalletManager = TapWalletManager(),
     val configManager: ConfigManager? = null,
-    val feedbackManager: LegacyFeedbackManager? = null,
     val appCurrency: AppCurrency = AppCurrency.Default,
     val scanCardFailsCounter: Int = 0,
     val dialog: StateDialog? = null,
     val exchangeManager: CurrencyExchangeManager = CurrencyExchangeManager.dummy(),
+    @Deprecated("Use GetUserCountryCodeUseCase instead")
     val userCountryCode: String? = null,
     val appThemeMode: AppThemeMode = AppThemeMode.DEFAULT,
 ) : StateType
