@@ -11,7 +11,7 @@ import com.tangem.tap.store
 // [REDACTED_TODO_COMMENT]
 internal class DefaultScanCardProcessor : ScanCardProcessor {
     private val isNewCardScanningEnabled: Boolean
-        get() = store.inject(DaggerGraphState::customTokenFeatureToggles).isNewCardScanningEnabled
+        get() = store.inject(DaggerGraphState::cardScanningFeatureToggles).isNewCardScanningEnabled
 
     override suspend fun scan(
         cardId: String?,

@@ -6,12 +6,15 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.tap.common.extensions.dispatchDialogHide
-import com.tangem.tap.common.feedback.SupportInfo
-import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.features.onboarding.OnboardingDialog
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.wallet.R
+import kotlinx.coroutines.launch
 
 object WalletActivationErrorDialog {
 
@@ -23,13 +26,17 @@ object WalletActivationErrorDialog {
             setNegativeButton(R.string.common_support) { _, _ ->
                 // changed on email support AND-6202
                 Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Intro))
-                store.dispatch(
-                    GlobalAction.SendEmail(
-                        feedbackData = SupportInfo(),
-                        scanResponse = store.state.globalState.onboardingState.onboardingManager?.scanResponse
-                            ?: error("ScanResponse must be not null"),
-                    ),
-                )
+
+                val scanResponse = store.state.globalState.onboardingState.onboardingManager?.scanResponse
+                    ?: error("ScanResponse must be not null")
+
+                val cardInfo = store.inject(DaggerGraphState::getCardInfoUseCase).invoke(scanResponse).getOrNull()
+                    ?: error("CardInfo must be not null")
+
+                scope.launch {
+                    store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                        .invoke(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+                }
             }
             setOnDismissListener { store.dispatchDialogHide() }
             setCancelable(false)

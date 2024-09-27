@@ -2,7 +2,6 @@ package com.tangem.tap.domain.scanCard
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
@@ -18,9 +17,6 @@ import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
-import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
-import com.tangem.tap.features.disclaimer.redux.DisclaimerCallback
-import com.tangem.tap.features.disclaimer.redux.DisclaimerSource
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
@@ -101,7 +97,8 @@ internal object LegacyScanProcessor {
             Analytics.send(it)
         }
     }
-
+// [REDACTED_TODO_COMMENT]
+    @Suppress("UnusedPrivateMember")
     private suspend inline fun showDisclaimerIfNeed(
         scanResponse: ScanResponse,
         crossinline disclaimerWillShow: () -> Unit = {},
@@ -109,7 +106,6 @@ internal object LegacyScanProcessor {
         crossinline onFailure: suspend (error: TangemError) -> Unit,
     ) {
         val disclaimer = scanResponse.card.createDisclaimer()
-        store.dispatchOnMain(DisclaimerAction.SetDisclaimer(disclaimer))
 
         if (disclaimer.isAccepted()) {
             nextHandler(scanResponse)
@@ -120,23 +116,9 @@ internal object LegacyScanProcessor {
                 withContext(Dispatchers.Main.immediate) {
                     disclaimerWillShow()
 
-                    store.dispatch(
-                        DisclaimerAction.Show(
-                            from = DisclaimerSource.Home,
-                            callback = DisclaimerCallback(
-                                onAccept = {
-                                    scope.launch(Dispatchers.Main.immediate) {
-                                        nextHandler(scanResponse)
-                                    }
-                                },
-                                onDismiss = {
-                                    scope.launch(Dispatchers.Main.immediate) {
-                                        onFailure(TangemSdkError.UserCancelled())
-                                    }
-                                },
-                            ),
-                        ),
-                    )
+                    store.dispatchNavigationAction {
+                        push(AppRoute.Disclaimer(isTosAccepted = false))
+                    }
                 }
             }
         }
@@ -149,10 +131,6 @@ internal object LegacyScanProcessor {
         crossinline onWalletNotCreated: suspend () -> Unit,
         crossinline onSuccess: suspend (ScanResponse) -> Unit,
     ) {
-        val globalState = store.state.globalState
-        val tapWalletManager = globalState.tapWalletManager
-        tapWalletManager.updateConfigManager(scanResponse)
-
         store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
         if (OnboardingHelper.isOnboardingCase(scanResponse)) {
