@@ -111,8 +111,8 @@ internal class DefaultStakingRepository(
         rawNetworkId.plus(rawCurrencyId)
     }
 
-    override fun isStakingSupportedInMobileApp(integrationKey: String): Boolean {
-        return integrationIdMap.containsKey(integrationKey)
+    override fun getSupportedIntegrationId(cryptoCurrencyId: CryptoCurrency.ID): String? {
+        return integrationIdMap.getOrDefault(getIntegrationKey(cryptoCurrencyId), null)
     }
 
     override suspend fun fetchEnabledYields(refresh: Boolean) {
@@ -166,7 +166,7 @@ internal class DefaultStakingRepository(
         val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: return StakingAvailability.Unavailable
 
         return withContext(dispatchers.io) {
-            val isSupportedInMobileApp = isStakingSupportedInMobileApp(getIntegrationKey(cryptoCurrency.id))
+            val isSupportedInMobileApp = getSupportedIntegrationId(cryptoCurrency.id).isNullOrEmpty().not()
 
             val yields = getEnabledYields() ?: return@withContext if (isSupportedInMobileApp) {
                 StakingAvailability.TemporaryUnavailable
@@ -575,7 +575,9 @@ internal class DefaultStakingRepository(
     }
 
     private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {
-        return yields.find { it.token.coinGeckoId == currencyId && it.token.symbol == symbol }
+        return yields.find { yield ->
+            yield.tokens.any { it.coinGeckoId == currencyId && it.symbol == symbol }
+        }
     }
 
     private suspend fun getEnabledYields(): List<Yield>? {
@@ -633,8 +635,8 @@ internal class DefaultStakingRepository(
             Blockchain.Solana.run { id + toCoinId() } to SOLANA_INTEGRATION_ID,
             Blockchain.Cosmos.run { id + toCoinId() } to COSMOS_INTEGRATION_ID,
             Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
-            // Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
-            // Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
+            Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
+            Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
             // Blockchain.Polkadot.run { id + toCoinId() } to POLKADOT_INTEGRATION_ID,
             // Blockchain.Avalanche.run { id + toCoinId() } to AVALANCHE_INTEGRATION_ID,
             // Blockchain.Cronos.run { id + toCoinId() } to CRONOS_INTEGRATION_ID,
