@@ -29,6 +29,7 @@ internal class EmailMessageBodyResolver(
                 type.transactionTypes,
                 type.unsignedTransactions,
             )
+            is FeedbackEmailType.SwapProblem -> addSwapProblemBody(type.cardInfo, type.providerName, type.txId)
         }
 
         return build()
@@ -103,6 +104,35 @@ internal class EmailMessageBodyResolver(
         }
 
         addStakingInfo(validatorName, transactionTypes, unsignedTransactions)
+        addDelimiter()
+
+        addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
+    }
+
+    private suspend fun FeedbackDataBuilder.addSwapProblemBody(
+        cardInfo: CardInfo,
+        providerName: String,
+        txId: String,
+    ) {
+        addCardInfo(cardInfo)
+        addDelimiter()
+
+        val userWalletId = requireNotNull(cardInfo.userWalletId) { "UserWalletId must be not null" }
+        val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
+        val blockchainInfo = blockchainError?.let {
+            feedbackRepository.getBlockchainInfo(
+                userWalletId = userWalletId,
+                blockchainId = blockchainError.blockchainId,
+                derivationPath = blockchainError.derivationPath,
+            )
+        }
+
+        if (blockchainInfo != null) {
+            addBlockchainError(blockchainInfo, blockchainError)
+            addDelimiter()
+        }
+
+        addSwapInfo(providerName, txId)
         addDelimiter()
 
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
