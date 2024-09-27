@@ -37,10 +37,7 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
-import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
-import com.tangem.domain.transaction.usecase.SendTransactionUseCase
-import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
+import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
