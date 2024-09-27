@@ -149,12 +149,14 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var stakingEntryInfo: StakingEntryInfo? = null
+    private var stakingAvailability: StakingAvailability = StakingAvailability.Unavailable
     private var swapTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<SwapTransactionsState>>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         stakingEntryInfoProvider = Provider { stakingEntryInfo },
+        stakingAvailabilityProvider = Provider { stakingAvailability },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         clickIntents = this,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
@@ -389,12 +391,13 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateStakingInfo() {
         viewModelScope.launch {
-            val stakingAvailability = getStakingAvailabilityUseCase(
+            val availability = getStakingAvailabilityUseCase(
                 userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,
             ).getOrElse { StakingAvailability.Unavailable }
 
-            internalUiState.value = stateFactory.getStateWithUpdatedStakingAvailability(stakingAvailability)
+            stakingAvailability = availability
+
             if (stakingAvailability is StakingAvailability.Available) {
                 val stakingInfo = getStakingEntryInfoUseCase(
                     cryptoCurrencyId = cryptoCurrency.id,

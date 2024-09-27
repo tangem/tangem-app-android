@@ -1,4 +1,4 @@
-package com.tangem.blockchainsdk.converters
+package com.tangem.datasource.config.converter
 
 import com.tangem.blockchain.common.*
 import com.tangem.datasource.config.models.ConfigValueModel

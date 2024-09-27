@@ -146,7 +146,7 @@ internal class CurrenciesStatusesLceOperations(
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
             val address = extractAddress(networkStatus)
-            val isStakingSupported = stakingRepository.isStakingSupported(
+            val isStakingSupported = stakingRepository.isStakingSupportedInMobileApp(
                 stakingRepository.getIntegrationKey(currency.id),
             )
             val yieldBalance = if (isStakingSupported) {
