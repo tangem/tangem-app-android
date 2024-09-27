@@ -24,9 +24,9 @@ import java.math.BigDecimal
 
 class MockStakingRepository : StakingRepository {
 
-    override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = ""
+    override fun getSupportedIntegrationId(cryptoCurrencyId: CryptoCurrency.ID): String? = null
 
-    override fun isStakingSupportedInMobileApp(integrationKey: String): Boolean = true
+    override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = ""
 
     override suspend fun fetchEnabledYields(refresh: Boolean) {
         /* no-op */

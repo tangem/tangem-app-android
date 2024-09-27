@@ -34,6 +34,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
+import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
@@ -123,6 +124,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
     getUserWalletUseCase: GetUserWalletUseCase,
+    getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
     private val appRouter: AppRouter,
@@ -163,6 +165,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
         stakingFeatureToggles = stakingFeatureToggles,
+        getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
     )
