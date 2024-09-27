@@ -6,5 +6,5 @@ sealed class StakingAvailability {
 
     data object Unavailable : StakingAvailability()
 
-    data object TemporaryDisabled : StakingAvailability()
+    data object TemporaryUnavailable : StakingAvailability()
 }
