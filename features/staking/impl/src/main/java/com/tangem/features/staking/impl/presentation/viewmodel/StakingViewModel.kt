@@ -18,9 +18,9 @@ import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.feedback.FeedbackManager
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.staking.InvalidatePendingTransactionsUseCase
@@ -92,7 +92,6 @@ internal class StakingViewModel @Inject constructor(
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val isApproveNeededUseCase: IsApproveNeededUseCase,
     private val vibratorHapticManager: VibratorHapticManager,
-    private val feedbackManager: FeedbackManager,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
@@ -105,6 +104,7 @@ internal class StakingViewModel @Inject constructor(
     private val stakingFeeTransactionLoader: StakingFeeTransactionLoader.Factory,
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
@@ -723,7 +723,7 @@ internal class StakingViewModel @Inject constructor(
                 unsignedTransactions = transactionsInProgress.map { it.unsignedTransaction },
             )
 
-            feedbackManager.sendEmail(email)
+            sendFeedbackEmailUseCase(email)
         }
     }
 
