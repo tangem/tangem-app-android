@@ -98,8 +98,7 @@ internal class DefaultStakingRepository(
     )
 
     private val yieldBalanceConverter = YieldBalanceConverter()
-
-    private val yieldBalanceListConverter = YieldBalanceListConverter()
+    private val yieldBalanceListConverter = YieldBalanceListConverter(yieldBalanceConverter)
 
     private val isYieldBalanceFetching = MutableStateFlow(
         value = emptyMap<UserWalletId, Boolean>(),
