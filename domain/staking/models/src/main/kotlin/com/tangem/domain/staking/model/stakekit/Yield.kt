@@ -84,7 +84,7 @@ data class Yield(
         val tokens: List<Token>,
         val type: String,
         val rewardSchedule: RewardSchedule,
-        val cooldownPeriod: Period,
+        val cooldownPeriod: Period?,
         val warmupPeriod: Period,
         val rewardClaiming: RewardClaiming,
         val defaultValidator: String?,
