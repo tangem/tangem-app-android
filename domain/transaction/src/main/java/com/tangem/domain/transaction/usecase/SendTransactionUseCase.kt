@@ -6,7 +6,7 @@ import arrow.core.right
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSigner
-import com.tangem.blockchain.common.transaction.TransactionSendResult
+import com.tangem.blockchain.common.transaction.TransactionsSendResult
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.common.core.TangemSdkError
@@ -33,10 +33,10 @@ class SendTransactionUseCase(
     private val walletManagersFacade: WalletManagersFacade,
 ) {
     suspend operator fun invoke(
-        txData: TransactionData,
+        txsData: List<TransactionData>,
         userWallet: UserWallet,
         network: Network,
-    ): Either<SendTransactionError?, String> {
+    ): Either<SendTransactionError?, List<String>> {
         val card = userWallet.scanResponse.card
         val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
 
@@ -51,12 +51,12 @@ class SendTransactionUseCase(
                 sendDemo(
                     userWallet = userWallet,
                     network = network,
-                    transactionData = txData,
+                    transactionsData = txsData,
                     signer = signer,
                 )
             } else {
-                val sendResult = transactionRepository.sendTransaction(
-                    txData = txData,
+                val sendResult = transactionRepository.sendMultipleTransactions(
+                    txsData = txsData,
                     signer = signer,
                     userWalletId = userWallet.walletId,
                     network = network,
@@ -73,29 +73,38 @@ class SendTransactionUseCase(
 
         cardSdkConfigRepository.setLinkedTerminal(linkedTerminal)
         return sendResult.fold(
-            ifRight = { result -> result.hash.right() },
+            ifRight = { result -> result.hashes.right() },
             ifLeft = { it.left() },
         )
+    }
+
+    suspend operator fun invoke(
+        txData: TransactionData,
+        userWallet: UserWallet,
+        network: Network,
+    ): Either<SendTransactionError?, String> {
+        return invoke(listOf(txData), userWallet, network)
+            .map { it.first() }
     }
 
     private suspend fun sendDemo(
         userWallet: UserWallet,
         network: Network,
-        transactionData: TransactionData,
+        transactionsData: List<TransactionData>,
         signer: TransactionSigner,
-    ): Either<SendTransactionError, TransactionSendResult> {
+    ): Either<SendTransactionError, TransactionsSendResult> {
         val demoTransactionSender = DemoTransactionSender(
             walletManagersFacade
                 .getOrCreateWalletManager(userWallet.walletId, network)
                 ?: error("WalletManager is null"),
         )
 
-        val result = demoTransactionSender.send(transactionData = transactionData, signer = signer)
+        val result = demoTransactionSender.sendMultiple(transactionDataList = transactionsData, signer = signer)
 
         return if (result is Result.Failure && result.error.customMessage.contains(DemoTransactionSender.ID)) {
             SendTransactionError.DemoCardError.left()
         } else {
-            TransactionSendResult("hash").right()
+            TransactionsSendResult(listOf("hash")).right()
         }
     }
 
