@@ -32,6 +32,11 @@ sealed class YieldBalance {
                 .distinctBy { it.validatorAddress }
                 .size
         }
+
+        fun getBalancesUniqueId(): Int {
+            // need to exclude rewards because their amount may change frequently
+            return balance.items.filter { it.type != BalanceType.REWARDS }.hashCode()
+        }
     }
 
     data object Empty : YieldBalance()
