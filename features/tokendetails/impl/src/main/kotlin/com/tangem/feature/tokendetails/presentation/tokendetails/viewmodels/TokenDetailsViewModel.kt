@@ -71,7 +71,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
-import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -124,7 +123,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
     getUserWalletUseCase: GetUserWalletUseCase,
-    tokenDetailsFeatureToggles: TokenDetailsFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
     private val appRouter: AppRouter,
@@ -159,13 +157,12 @@ internal class TokenDetailsViewModel @Inject constructor(
         stakingEntryInfoProvider = Provider { stakingEntryInfo },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         clickIntents = this,
-        symbol = cryptoCurrency.symbol,
-        decimals = cryptoCurrency.decimals,
-        featureToggles = tokenDetailsFeatureToggles,
-        stakingFeatureToggles = stakingFeatureToggles,
-        userWalletId = userWalletId,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
+        userWalletId = userWalletId,
+        stakingFeatureToggles = stakingFeatureToggles,
+        symbol = cryptoCurrency.symbol,
+        decimals = cryptoCurrency.decimals,
     )
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
