@@ -24,8 +24,8 @@ internal class Sha256SignatureVerifier(
     private fun getPubKey(): String? {
         val expressConfig = apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.Express)
         return when (expressConfig.environment) {
-            ApiEnvironment.PROD -> configManager.config.express?.signVerifierPublicKey
-            else -> configManager.config.devExpress?.signVerifierPublicKey
+            ApiEnvironment.PROD -> configManager.getConfigSync().express?.signVerifierPublicKey
+            else -> configManager.getConfigSync().devExpress?.signVerifierPublicKey
         }
     }
 }
