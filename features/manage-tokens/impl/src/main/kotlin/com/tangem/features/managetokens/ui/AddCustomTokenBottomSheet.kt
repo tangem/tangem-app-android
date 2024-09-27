@@ -14,8 +14,6 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBarHeight
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetTitle
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.tokens.model.Network
@@ -23,13 +21,13 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.preview.PreviewAddCustomTokenComponent
 import com.tangem.features.managetokens.entity.customtoken.AddCustomTokenConfig
+import com.tangem.features.managetokens.entity.customtoken.AddCustomTokenUM
 import com.tangem.features.managetokens.entity.customtoken.SelectedDerivationPath
 import com.tangem.features.managetokens.entity.customtoken.SelectedNetwork
-import com.tangem.features.managetokens.impl.R
 
 @Composable
 internal fun AddCustomTokenBottomSheet(config: TangemBottomSheetConfig, content: @Composable (Modifier) -> Unit) {
-    TangemBottomSheet<AddCustomTokenConfig>(
+    TangemBottomSheet<AddCustomTokenUM>(
         config = config,
         addBottomInsets = false,
         title = { model ->
@@ -47,35 +45,14 @@ internal fun AddCustomTokenBottomSheet(config: TangemBottomSheetConfig, content:
 }
 
 @Composable
-private fun Title(model: AddCustomTokenConfig, modifier: Modifier = Modifier) {
-    when (model.step) {
-        AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
-        AddCustomTokenConfig.Step.FORM,
-        -> {
-            TangemBottomSheetTitle(
-                modifier = modifier,
-                title = resourceReference(R.string.add_custom_token_title),
-            )
-        }
-        AddCustomTokenConfig.Step.NETWORK_SELECTOR -> {
-            TangemTopAppBar(
-                modifier = modifier,
-                title = resourceReference(R.string.custom_token_network_selector_title),
-                titleAlignment = Alignment.CenterHorizontally,
-                startButton = TopAppBarButtonUM.Back(model.popBack),
-                height = TangemTopAppBarHeight.BOTTOM_SHEET,
-            )
-        }
-        AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR -> {
-            TangemTopAppBar(
-                modifier = modifier,
-                title = resourceReference(R.string.custom_token_derivation_path),
-                titleAlignment = Alignment.CenterHorizontally,
-                startButton = TopAppBarButtonUM.Back(model.popBack),
-                height = TangemTopAppBarHeight.BOTTOM_SHEET,
-            )
-        }
-    }
+private fun Title(model: AddCustomTokenUM, modifier: Modifier = Modifier) {
+    TangemTopAppBar(
+        modifier = modifier,
+        title = model.title,
+        titleAlignment = Alignment.CenterHorizontally,
+        startButton = TopAppBarButtonUM.Back(model.popBack).takeIf { model.showBackButton },
+        height = TangemTopAppBarHeight.BOTTOM_SHEET,
+    )
 }
 
 // region Preview
@@ -98,7 +75,6 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                 initialState = AddCustomTokenConfig(
                     userWalletId = UserWalletId(stringValue = "321"),
                     step = AddCustomTokenConfig.Step.FORM,
-                    popBack = {},
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "1"),
                         name = "Ethereum",
@@ -111,7 +87,6 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                 initialState = AddCustomTokenConfig(
                     userWalletId = UserWalletId(stringValue = "321"),
                     step = AddCustomTokenConfig.Step.NETWORK_SELECTOR,
-                    popBack = {},
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "0"),
                         name = "Ethereum",
@@ -124,7 +99,6 @@ private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<
                 initialState = AddCustomTokenConfig(
                     userWalletId = UserWalletId(stringValue = "321"),
                     step = AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR,
-                    popBack = {},
                     selectedDerivationPath = SelectedDerivationPath(
                         id = Network.ID(value = "0"),
                         value = Network.DerivationPath.None,
