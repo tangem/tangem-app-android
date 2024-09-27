@@ -18,6 +18,7 @@ import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.extensions.canHandleBlockchain
+import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -208,6 +209,8 @@ internal class DefaultCustomTokensRepository(
                         blockchain = blockchain,
                         extraDerivationPath = null,
                         derivationStyleProvider = scanResponse.derivationStyleProvider,
+                    )?.copy(
+                        canHandleTokens = scanResponse.card.canHandleToken(blockchain, scanResponse.cardTypesResolver),
                     )
                 } else {
                     null
