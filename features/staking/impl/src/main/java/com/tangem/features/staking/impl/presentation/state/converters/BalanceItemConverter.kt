@@ -100,8 +100,8 @@ internal class BalanceItemConverter(
         -> null
     }
 
-    private fun getUnbondingDate(date: DateTime?): TextReference {
-        val unbondingPeriod = yield.metadata.cooldownPeriod.days
+    private fun getUnbondingDate(date: DateTime?): TextReference? {
+        val unbondingPeriod = yield.metadata.cooldownPeriod?.days ?: return null
         if (date == null) {
             return combinedReference(
                 resourceReference(R.string.staking_details_unbonding_period),
