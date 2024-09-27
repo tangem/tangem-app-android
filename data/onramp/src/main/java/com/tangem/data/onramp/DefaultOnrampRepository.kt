@@ -18,14 +18,14 @@ internal class DefaultOnrampRepository(
     private val currencyConverter = CurrencyConverter()
     private val countryConverter = CountryConverter(currencyConverter)
 
-    override suspend fun fetchCurrencies(): List<OnrampCurrency> = withContext(dispatchers.io) {
-        return@withContext onrampApi.getCurrencies()
+    override suspend fun getCurrencies(): List<OnrampCurrency> = withContext(dispatchers.io) {
+        onrampApi.getCurrencies()
             .getOrThrow()
             .map(currencyConverter::convert)
     }
 
-    override suspend fun fetchCountries(): List<OnrampCountry> = withContext(dispatchers.io) {
-        return@withContext onrampApi.getCountries()
+    override suspend fun getCountries(): List<OnrampCountry> = withContext(dispatchers.io) {
+        onrampApi.getCountries()
             .getOrThrow()
             .map(countryConverter::convert)
     }
