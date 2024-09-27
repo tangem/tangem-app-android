@@ -18,9 +18,6 @@ interface CardSdkConfigRepository {
     /** Set access code request policy by [isBiometricsRequestPolicy] */
     fun setAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean)
 
-    /** Check if config has biometrics request policy */
-    fun isBiometricsRequestPolicy(): Boolean
-
     /** Reset the card ID display format to start value */
     fun resetCardIdDisplayFormat()
 

@@ -17,7 +17,7 @@ class GetCardInfoUseCase(
     private val feedbackRepository: FeedbackRepository,
 ) {
 
-    suspend operator fun invoke(scanResponse: ScanResponse): Either<Throwable, CardInfo> {
-        return catch { feedbackRepository.getCardInfo(scanResponse) }
+    operator fun invoke(scanResponse: ScanResponse): Either<Throwable, CardInfo> = catch {
+        feedbackRepository.getCardInfo(scanResponse)
     }
 }
