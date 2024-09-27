@@ -1,23 +1,21 @@
 package com.tangem.datasource.config
 
 import com.tangem.datasource.config.models.Config
-import com.tangem.datasource.config.models.ConfigModel
+import kotlinx.coroutines.flow.Flow
 
 /**
+ * Config manager
+ *
 [REDACTED_AUTHOR]
  */
 interface ConfigManager {
 
-    val config: Config
+    /** Initialize and return [Config] */
+    suspend fun initialize(): Config
 
-    suspend fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)? = null)
+    /** Get [Config] as [Flow] */
+    fun getConfig(): Flow<Config>
 
-    fun turnOff(name: String)
-
-    fun resetToDefault(name: String)
-
-    companion object {
-        const val IS_CREATING_TWIN_CARDS_ALLOWED = "isCreatingTwinCardsAllowed"
-        const val IS_TOP_UP_ENABLED = "isTopUpEnabled"
-    }
+    /** Get [Config] synchronously */
+    fun getConfigSync(): Config
 }

@@ -1,10 +1,9 @@
 package com.tangem.datasource.api.common.config.managers
 
 import com.tangem.datasource.config.ConfigManager
-import com.tangem.datasource.config.Loader
 import com.tangem.datasource.config.models.Config
-import com.tangem.datasource.config.models.ConfigModel
 import com.tangem.datasource.config.models.ExpressModel
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * Mock [ConfigManager] implementation for [ProdApiConfigsManagerTest]
@@ -13,12 +12,17 @@ import com.tangem.datasource.config.models.ExpressModel
  */
 internal class MockConfigManager : ConfigManager {
 
-    override val config = Config(
-        express = ExpressModel(apiKey = ProdApiConfigsManagerTest.EXPRESS_API_KEY, signVerifierPublicKey = ""),
-        devExpress = ExpressModel(apiKey = ProdApiConfigsManagerTest.EXPRESS_DEV_API_KEY, signVerifierPublicKey = ""),
+    private val config = Config(
+        express = ExpressModel(apiKey = EXPRESS_API_KEY, signVerifierPublicKey = "vocibus"),
+        devExpress = ExpressModel(apiKey = EXPRESS_DEV_API_KEY, signVerifierPublicKey = "pellentesque"),
     )
 
-    override suspend fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)?) = Unit
-    override fun turnOff(name: String) = Unit
-    override fun resetToDefault(name: String) = Unit
+    override suspend fun initialize() = config
+    override fun getConfig() = flowOf(config)
+    override fun getConfigSync() = config
+
+    companion object {
+        const val EXPRESS_API_KEY = "express_api_key"
+        const val EXPRESS_DEV_API_KEY = "express_dev_api_key"
+    }
 }
