@@ -5,7 +5,7 @@ import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -29,9 +29,13 @@ internal class DefaultStakingBalanceStore(
         }
     }
 
-    override fun get(userWalletId: UserWalletId, address: String, integrationId: String): Flow<YieldBalanceWrapperDTO> {
+    override fun get(
+        userWalletId: UserWalletId,
+        address: String,
+        integrationId: String,
+    ): Flow<YieldBalanceWrapperDTO?> {
         return dataStore.get(userWalletId.stringValue)
-            .mapNotNull { balances ->
+            .map { balances ->
                 balances.firstOrNull { it.integrationId == integrationId && it.addresses.address == address }
             }
     }
