@@ -4,8 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -65,7 +67,6 @@ import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.dispatchNavigationAction
-import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.showFragmentAllowingStateLoss
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.sdk.TangemSdkManager
@@ -78,7 +79,6 @@ import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.routing.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
@@ -216,6 +216,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         )
 
         super.onCreate(savedInstanceState)
+
+        // We have to allow adjust_resize (can only be specified in the manifest) for Android <=10,
+        // in order for imePadding to work correctly
+        // for Android 11+ we set SOFT_INPUT_ADJUST_NOTHING to prevent resizing the layout
+        // so that we don't have any distortions in the layout when displaying the keyboard
+        // https://issuetracker.google.com/issues/266331465
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+        }
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
 
@@ -539,11 +548,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             }
         } else {
             lifecycleScope.launch {
-                val toggles = store.inject(getDependency = DaggerGraphState::pushNotificationsFeatureToggles)
-                val isPushPermissionEnabled = toggles.isPushNotificationsEnabled
-                val shouldShowTos = !cardRepository.isTangemTOSAccepted() && isPushPermissionEnabled
-                val wasPushInitiallyAsked = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { false }
-                val shouldShowInitialPush = wasPushInitiallyAsked && isPushPermissionEnabled
+                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
+                val shouldShowInitialPush = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { false }
 
                 val route = when {
                     shouldShowTos -> AppRoute.Disclaimer(isTosAccepted = false)

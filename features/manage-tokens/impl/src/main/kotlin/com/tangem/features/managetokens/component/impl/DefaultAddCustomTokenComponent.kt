@@ -8,10 +8,12 @@ import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
 import com.arkivanov.decompose.router.stack.*
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.CustomTokenFormComponent
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
@@ -20,6 +22,7 @@ import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormValues
 import com.tangem.features.managetokens.entity.customtoken.SelectedDerivationPath
 import com.tangem.features.managetokens.entity.customtoken.SelectedNetwork
 import com.tangem.features.managetokens.ui.AddCustomTokenBottomSheet
+import com.tangem.features.managetokens.utils.ui.toContentModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -29,21 +32,27 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
     @Assisted private val params: AddCustomTokenComponent.Params,
     private val selectorComponentFactory: CustomTokenSelectorComponent.Factory,
     private val formComponentFactory: CustomTokenFormComponent.Factory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : AddCustomTokenComponent, AppComponentContext by context {
+
+    private val initialConfiguration = AddCustomTokenConfig(
+        userWalletId = params.userWalletId,
+        step = AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
+    )
 
     private val navigation = StackNavigation<AddCustomTokenConfig>()
     private val contentStack = childStack(
         key = "add_custom_token_content_stack",
         source = navigation,
-        initialConfiguration = AddCustomTokenConfig(
-            userWalletId = params.userWalletId,
-            step = AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
-            popBack = ::dismiss,
-        ),
+        initialConfiguration = initialConfiguration,
         handleBackButton = true,
         serializer = AddCustomTokenConfig.serializer(),
         childFactory = ::contentChild,
     )
+
+    init {
+        analyticsEventHandler.send(CustomTokenAnalyticsEvent.ScreenOpened(params.source))
+    }
 
     override fun dismiss() {
         params.onDismiss()
@@ -55,14 +64,14 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
             TangemBottomSheetConfig(
                 isShow = true,
                 onDismissRequest = ::dismiss,
-                content = contentStack.active.configuration,
+                content = initialConfiguration.step.toContentModel(::popBack),
             )
         }
         val childStack by contentStack.subscribeAsState()
 
         AddCustomTokenBottomSheet(
             config = config.copy(
-                content = childStack.active.configuration,
+                content = childStack.active.configuration.step.toContentModel(::popBack),
             ),
             content = { modifier ->
                 Children(
@@ -75,6 +84,17 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
         )
     }
 
+    private fun popBack() {
+        when (contentStack.value.active.configuration.step) {
+            AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
+            AddCustomTokenConfig.Step.FORM,
+            -> dismiss()
+            AddCustomTokenConfig.Step.NETWORK_SELECTOR,
+            AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR,
+            -> navigation.pop()
+        }
+    }
+
     private fun contentChild(
         config: AddCustomTokenConfig,
         componentContext: ComponentContext,
@@ -85,9 +105,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                 params = CustomTokenSelectorComponent.Params.NetworkSelector(
                     userWalletId = config.userWalletId,
                     selectedNetwork = null,
-                    onNetworkSelected = { network ->
-                        showForm(network = network)
-                    },
+                    onNetworkSelected = ::changeSelectedNetwork,
                 ),
             )
         }
@@ -97,9 +115,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                 params = CustomTokenSelectorComponent.Params.NetworkSelector(
                     userWalletId = config.userWalletId,
                     selectedNetwork = config.selectedNetwork,
-                    onNetworkSelected = { network ->
-                        showForm(network = network)
-                    },
+                    onNetworkSelected = ::changeSelectedNetwork,
                 ),
             )
         }
@@ -112,9 +128,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                         "Network is not selected"
                     },
                     selectedDerivationPath = config.selectedDerivationPath,
-                    onDerivationPathSelected = { derivationPath ->
-                        showForm(derivationPath = derivationPath)
-                    },
+                    onDerivationPathSelected = ::changeDerivationPath,
                 ),
             )
         }
@@ -128,6 +142,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
                     },
                     derivationPath = config.selectedDerivationPath,
                     formValues = config.formValues,
+                    source = params.source,
                     onSelectNetworkClick = ::showNetworkSelector,
                     onSelectDerivationPathClick = ::showDerivationPathSelector,
                     onCurrencyAdded = ::dismissAndNotify,
@@ -136,13 +151,32 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
         }
     }
 
+    private fun changeSelectedNetwork(network: SelectedNetwork) {
+        val event = CustomTokenAnalyticsEvent.NetworkSelected(
+            networkName = network.name,
+            source = params.source,
+        )
+        analyticsEventHandler.send(event)
+
+        showForm(network = network)
+    }
+
+    private fun changeDerivationPath(derivationPath: SelectedDerivationPath) {
+        val event = CustomTokenAnalyticsEvent.DerivationSelected(
+            derivationName = derivationPath.name,
+            source = params.source,
+        )
+        analyticsEventHandler.send(event)
+
+        showForm(derivationPath = derivationPath)
+    }
+
     private fun showDerivationPathSelector(formValues: CustomTokenFormValues) {
         val currentConfig = contentStack.value.active.configuration
 
         val config = currentConfig.copy(
             step = AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR,
             formValues = formValues,
-            popBack = navigation::pop,
         )
         navigation.push(config)
     }
@@ -153,7 +187,6 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
         val config = currentConfig.copy(
             step = AddCustomTokenConfig.Step.NETWORK_SELECTOR,
             formValues = formValues,
-            popBack = navigation::pop,
         )
         navigation.push(config)
     }
@@ -165,7 +198,6 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
             step = AddCustomTokenConfig.Step.FORM,
             selectedNetwork = network ?: currentConfig.selectedNetwork,
             selectedDerivationPath = derivationPath ?: currentConfig.selectedDerivationPath,
-            popBack = ::dismiss,
         )
         navigation.replaceAll(config)
     }

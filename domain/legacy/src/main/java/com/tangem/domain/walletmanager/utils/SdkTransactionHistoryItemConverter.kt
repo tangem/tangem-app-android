@@ -45,22 +45,25 @@ internal class SdkTransactionHistoryItemConverter(
     private fun SdkTransactionHistoryItem.AddressType.toDomain(): TxHistoryItem.AddressType = when (this) {
         is SdkTransactionHistoryItem.AddressType.Contract -> TxHistoryItem.AddressType.Contract(address)
         is SdkTransactionHistoryItem.AddressType.User -> TxHistoryItem.AddressType.User(address)
+        is SdkTransactionHistoryItem.AddressType.Validator -> TxHistoryItem.AddressType.Validator(address)
     }
 
-    private fun SdkTransactionHistoryItem.extractInteractionAddressType(): TxHistoryItem.InteractionAddressType {
-        return when (type) {
+    private fun SdkTransactionHistoryItem.extractInteractionAddressType(): TxHistoryItem.InteractionAddressType? {
+        return when (val transactionType = type) {
             SdkTransactionHistoryItem.TransactionType.Transfer -> if (isOutgoing) {
                 mapToInteractionAddressType(destinationType = destinationType)
             } else {
                 mapToInteractionAddressType(sourceType = sourceType)
             }
-            is SdkTransactionHistoryItem.TransactionType.TronStakingTransactionType -> {
-                TxHistoryItem.InteractionAddressType.Staking
-            }
 
             is SdkTransactionHistoryItem.TransactionType.ContractMethod,
             is SdkTransactionHistoryItem.TransactionType.ContractMethodName,
-            -> mapToInteractionAddressType(destinationType)
+            -> mapToInteractionAddressType(destinationType = destinationType)
+
+            is SdkTransactionHistoryItem.TransactionType.TronStakingTransactionType.VoteWitnessContract -> {
+                TxHistoryItem.InteractionAddressType.Validator(address = transactionType.validatorAddress)
+            }
+            else -> null
         }
     }
 
@@ -78,6 +81,9 @@ internal class SdkTransactionHistoryItemConverter(
                 is TransactionHistoryItem.AddressType.User -> TxHistoryItem.InteractionAddressType.User(
                     destinationType.addressType.address,
                 )
+                is TransactionHistoryItem.AddressType.Validator -> TxHistoryItem.InteractionAddressType.Validator(
+                    destinationType.addressType.address,
+                )
             }
         }
     }
@@ -89,7 +95,9 @@ internal class SdkTransactionHistoryItemConverter(
             is TransactionHistoryItem.SourceType.Multiple -> TxHistoryItem.InteractionAddressType.Multiple(
                 sourceType.addresses,
             )
-            is TransactionHistoryItem.SourceType.Single -> TxHistoryItem.InteractionAddressType.User(sourceType.address)
+            is TransactionHistoryItem.SourceType.Single -> {
+                TxHistoryItem.InteractionAddressType.User(sourceType.address)
+            }
         }
     }
 }
