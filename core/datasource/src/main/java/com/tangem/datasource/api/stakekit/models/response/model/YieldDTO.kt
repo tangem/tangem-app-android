@@ -124,7 +124,7 @@ data class YieldDTO(
         @Json(name = "rewardSchedule")
         val rewardSchedule: RewardScheduleDTO,
         @Json(name = "cooldownPeriod")
-        val cooldownPeriod: PeriodDTO,
+        val cooldownPeriod: PeriodDTO?,
         @Json(name = "warmupPeriod")
         val warmupPeriod: PeriodDTO,
         @Json(name = "rewardClaiming")
