@@ -3,47 +3,35 @@ package com.tangem.datasource.config.models
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
-/**
-[REDACTED_AUTHOR]
- */
-
-// TODO remove
-class FeatureModel(
-    val isTopUpEnabled: Boolean,
-    val isCreatingTwinCardsAllowed: Boolean,
-)
-
 @Suppress("LongParameterList")
+@JsonClass(generateAdapter = true)
 class ConfigValueModel(
-    val coinMarketCapKey: String,
-    val mercuryoWidgetId: String,
-    val mercuryoSecret: String,
-    val moonPayApiKey: String,
-    val moonPayApiSecretKey: String,
-    val blockchairApiKeys: List<String>,
-    val blockchairAuthorizationToken: String?,
-    val quiknodeSubdomain: String,
-    val quiknodeApiKey: String,
-    val bscQuiknodeSubdomain: String,
-    val bscQuiknodeApiKey: String,
-    val nowNodesApiKey: String,
+    @Json(name = "mercuryoWidgetId") val mercuryoWidgetId: String,
+    @Json(name = "mercuryoSecret") val mercuryoSecret: String,
+    @Json(name = "moonPayApiKey") val moonPayApiKey: String,
+    @Json(name = "moonPayApiSecretKey") val moonPayApiSecretKey: String,
+    @Json(name = "blockchairApiKeys") val blockchairApiKeys: List<String>,
+    @Json(name = "blockchairAuthorizationToken") val blockchairAuthorizationToken: String?,
+    @Json(name = "quiknodeSubdomain") val quiknodeSubdomain: String,
+    @Json(name = "quiknodeApiKey") val quiknodeApiKey: String,
+    @Json(name = "bscQuiknodeSubdomain") val bscQuiknodeSubdomain: String,
+    @Json(name = "bscQuiknodeApiKey") val bscQuiknodeApiKey: String,
+    @Json(name = "nowNodesApiKey") val nowNodesApiKey: String,
     @Json(name = "getBlockAccessTokens") val getBlockAccessTokens: GetBlockAccessTokens?,
     @Json(name = "tonCenterApiKey") val tonCenterKeys: TonCenterKeys,
-    val blockcypherTokens: Set<String>?,
-    val infuraProjectId: String?,
-    val sprinklr: SprinklrConfig?,
-    val tronGridApiKey: String,
-    val amplitudeApiKey: String,
-    val kaspaSecondaryApiUrl: String,
-    val walletConnectProjectId: String,
-    val tangemComAuthorization: String?,
-    val chiaFireAcademyApiKey: String?,
-    val chiaTangemApiKey: String?,
-    val devExpress: ExpressModel?,
-    val express: ExpressModel?,
+    @Json(name = "blockcypherTokens") val blockcypherTokens: Set<String>?,
+    @Json(name = "infuraProjectId") val infuraProjectId: String?,
+    @Json(name = "tronGridApiKey") val tronGridApiKey: String,
+    @Json(name = "amplitudeApiKey") val amplitudeApiKey: String,
+    @Json(name = "kaspaSecondaryApiUrl") val kaspaSecondaryApiUrl: String,
+    @Json(name = "walletConnectProjectId") val walletConnectProjectId: String,
+    @Json(name = "chiaFireAcademyApiKey") val chiaFireAcademyApiKey: String?,
+    @Json(name = "chiaTangemApiKey") val chiaTangemApiKey: String?,
+    @Json(name = "devExpress") val devExpress: ExpressModel?,
+    @Json(name = "express") val express: ExpressModel?,
     @Json(name = "hederaArkhiaKey") val hederaArkhiaKey: String?,
-    val polygonScanApiKey: String?,
-    val stakeKitApiKey: String?,
+    @Json(name = "polygonScanApiKey") val polygonScanApiKey: String?,
+    @Json(name = "stakeKitApiKey") val stakeKitApiKey: String?,
     @Json(name = "bittensorDwellirKey") val bittensorDwellirApiKey: String?,
     @Json(name = "bittensorOnfinalityKey") val bittensorOnfinalityKey: String?,
     @Json(name = "koinosProApiKey") val koinosProApiKey: String?,
@@ -87,12 +75,3 @@ data class GetBlockToken(
     @Json(name = "rest") val rest: String?,
     @Json(name = "rosetta") val rosetta: String?,
 )
-
-class ConfigModel(
-    val features: FeatureModel?,
-    val configValues: ConfigValueModel?,
-) {
-    companion object {
-        fun empty(): ConfigModel = ConfigModel(null, null)
-    }
-}
