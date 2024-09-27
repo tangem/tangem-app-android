@@ -126,6 +126,10 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "sei-network" -> Blockchain.Sei
         "sei-network/test" -> Blockchain.SeiTestnet
         "internet-computer" -> Blockchain.InternetComputer
+        "energy-web-chain" -> Blockchain.EnergyWebChain
+        "energy-web-chain/test" -> Blockchain.EnergyWebChainTestnet
+        "energy-web-x" -> Blockchain.EnergyWebX
+        "energy-web-x/test" -> Blockchain.EnergyWebXTestnet
         else -> null
     }
 }
@@ -253,6 +257,10 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Sei -> "sei-network"
         Blockchain.SeiTestnet -> "sei-network/test"
         Blockchain.InternetComputer -> "internet-computer"
+        Blockchain.EnergyWebChain -> "energy-web-chain"
+        Blockchain.EnergyWebChainTestnet -> "energy-web-chain/test"
+        Blockchain.EnergyWebX -> "energy-web-x"
+        Blockchain.EnergyWebXTestnet -> "energy-web-x/test"
     }
 }
 
@@ -337,6 +345,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Cyber, Blockchain.CyberTestnet -> "cyber-ethereum"
         Blockchain.Sei, Blockchain.SeiTestnet -> "sei-network"
         Blockchain.InternetComputer -> "internet-computer"
+        Blockchain.EnergyWebChain, Blockchain.EnergyWebChainTestnet -> "energy-web-chain"
+        Blockchain.EnergyWebX, Blockchain.EnergyWebXTestnet -> "energy-web-x"
     }
 }
 
@@ -363,10 +373,12 @@ fun Blockchain.minimalAmount(): BigDecimal {
 private const val NODL = "NODL"
 private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 
+// no need to add testnets
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Nexa,
-    Blockchain.NexaTestnet,
     Blockchain.Sei,
     Blockchain.InternetComputer,
+    Blockchain.EnergyWebChain,
+    Blockchain.EnergyWebX,
 )
