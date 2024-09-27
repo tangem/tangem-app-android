@@ -73,7 +73,6 @@ internal class TokenDetailsSkeletonStateConverter(
             bottomSheetConfig = null,
             isBalanceHidden = true,
             isMarketPriceAvailable = value.id.rawCurrencyId != null,
-            isStakingBlockShown = false,
             event = consumedEvent(),
         )
     }
