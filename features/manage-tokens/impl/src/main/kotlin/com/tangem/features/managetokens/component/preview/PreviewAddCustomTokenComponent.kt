@@ -9,17 +9,17 @@ import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
 import com.tangem.features.managetokens.entity.customtoken.AddCustomTokenConfig
 import com.tangem.features.managetokens.ui.AddCustomTokenBottomSheet
+import com.tangem.features.managetokens.utils.ui.toContentModel
 import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class PreviewAddCustomTokenComponent(
     initialState: AddCustomTokenConfig = AddCustomTokenConfig(
         userWalletId = UserWalletId(stringValue = "321"),
         step = AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
-        popBack = {},
     ),
 ) : AddCustomTokenComponent {
 
-    private val previewState: MutableStateFlow<AddCustomTokenConfig> = MutableStateFlow(initialState)
+    private val previewConfig: MutableStateFlow<AddCustomTokenConfig> = MutableStateFlow(initialState)
 
     override fun dismiss() {
         /* no-op */
@@ -27,21 +27,21 @@ internal class PreviewAddCustomTokenComponent(
 
     @Composable
     override fun BottomSheet() {
-        val state by previewState.collectAsStateWithLifecycle()
-        val config = TangemBottomSheetConfig(
+        val config by previewConfig.collectAsStateWithLifecycle()
+        val bottomSheetConfig = TangemBottomSheetConfig(
             isShow = true,
             onDismissRequest = ::dismiss,
-            content = state,
+            content = config.step.toContentModel(::dismiss),
         )
 
         AddCustomTokenBottomSheet(
-            config = config,
+            config = bottomSheetConfig,
             content = { modifier ->
-                when (state.step) {
+                when (config.step) {
                     AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR -> {
                         PreviewCustomTokenSelectorComponent(
                             params = CustomTokenSelectorComponent.Params.NetworkSelector(
-                                userWalletId = state.userWalletId,
+                                userWalletId = config.userWalletId,
                                 selectedNetwork = null,
                                 onNetworkSelected = {},
                             ),
@@ -50,8 +50,8 @@ internal class PreviewAddCustomTokenComponent(
                     AddCustomTokenConfig.Step.NETWORK_SELECTOR -> {
                         PreviewCustomTokenSelectorComponent(
                             params = CustomTokenSelectorComponent.Params.NetworkSelector(
-                                userWalletId = state.userWalletId,
-                                selectedNetwork = state.selectedNetwork,
+                                userWalletId = config.userWalletId,
+                                selectedNetwork = config.selectedNetwork,
                                 onNetworkSelected = {},
                             ),
                         ).Content(modifier)
@@ -59,9 +59,9 @@ internal class PreviewAddCustomTokenComponent(
                     AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR -> {
                         PreviewCustomTokenSelectorComponent(
                             params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
-                                userWalletId = state.userWalletId,
-                                selectedNetwork = state.selectedNetwork!!,
-                                selectedDerivationPath = state.selectedDerivationPath!!,
+                                userWalletId = config.userWalletId,
+                                selectedNetwork = config.selectedNetwork!!,
+                                selectedDerivationPath = config.selectedDerivationPath!!,
                                 onDerivationPathSelected = {},
                             ),
                         ).Content(modifier)

@@ -50,9 +50,9 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
+import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
-import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -292,14 +292,18 @@ internal class DefaultStakingRepository(
     ) = withContext(dispatchers.io) {
         if (!stakingFeatureToggle.isStakingEnabled) return@withContext
 
-        val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)] ?: return@withContext
-
-        val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network).orEmpty()
-
         cacheRegistry.invokeOnExpire(
             key = getYieldBalancesKey(userWalletId),
             skipCache = refresh,
             block = {
+                val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)]
+                val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network)
+
+                if (integrationId == null || address.isNullOrBlank()) {
+                    cacheRegistry.invalidate(getYieldBalancesKey(userWalletId))
+                    error("IntegrationId or address is null")
+                }
+
                 val requestBody = getBalanceRequestData(address, integrationId)
                 val result = stakeKitApi.getSingleYieldBalance(
                     integrationId = requestBody.integrationId,
@@ -307,10 +311,10 @@ internal class DefaultStakingRepository(
                 ).getOrThrow()
 
                 stakingBalanceStore.store(
-                    userWalletId,
-                    requestBody.integrationId,
-                    address,
-                    YieldBalanceWrapperDTO(
+                    userWalletId = userWalletId,
+                    integrationId = requestBody.integrationId,
+                    address = address,
+                    item = YieldBalanceWrapperDTO(
                         balances = result,
                         integrationId = requestBody.integrationId,
                         addresses = requestBody.addresses,
@@ -396,7 +400,10 @@ internal class DefaultStakingRepository(
                             addresses.map { address -> address to integrationId }
                         }
                         .map { getBalanceRequestData(it.first.value, it.second) }
-                        .ifEmpty { return@invokeOnExpire }
+                        .ifEmpty {
+                            cacheRegistry.invalidate(getYieldBalancesKey(userWalletId))
+                            error("No addresses found")
+                        }
                     val result = stakeKitApi.getMultipleYieldBalances(availableCurrencies).getOrThrow()
 
                     stakingBalanceStore.store(userWalletId, result)
