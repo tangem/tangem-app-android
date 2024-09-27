@@ -2,7 +2,7 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
@@ -67,7 +67,7 @@ sealed class GlobalAction : Action {
         val walletPublicKey: ByteArray,
     ) : GlobalAction()
 
-    data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
+    data class SetConfigManager(val environmentConfigStorage: EnvironmentConfigStorage) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
         object Init : GlobalAction() {

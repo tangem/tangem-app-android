@@ -8,8 +8,8 @@ import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.datasource.asset.loader.AssetLoader
-import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
@@ -45,7 +45,7 @@ import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 @Suppress("TooManyFunctions")
 interface ApplicationEntryPoint {
 
-    fun getConfigManager(): ConfigManager
+    fun getEnvironmentConfigStorage(): EnvironmentConfigStorage
 
     fun getAppStateHolder(): AppStateHolder
 

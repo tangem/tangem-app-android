@@ -15,9 +15,9 @@ import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.asset.loader.AssetLoader
-import com.tangem.datasource.config.ConfigManager
-import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
@@ -76,8 +76,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val appStateHolder: AppStateHolder
         get() = entryPoint.getAppStateHolder()
 
-    private val configManager: ConfigManager
-        get() = entryPoint.getConfigManager()
+    private val environmentConfigStorage: EnvironmentConfigStorage
+        get() = entryPoint.getEnvironmentConfigStorage()
 
     private val assetLoader: AssetLoader
         get() = entryPoint.getAssetLoader()
@@ -202,10 +202,10 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         runBlocking {
             featureTogglesManager.init()
 
-            val config = configManager.initialize()
-            store.dispatch(GlobalAction.SetConfigManager(configManager))
+            val config = environmentConfigStorage.initialize()
+            store.dispatch(GlobalAction.SetConfigManager(environmentConfigStorage))
 
-            initWithConfigDependency(config = config)
+            initWithConfigDependency(environmentConfig = config)
         }
 
         loadNativeLibraries()
@@ -223,7 +223,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         )
         appStateHolder.mainStore = store
 
-        walletConnect2Repository.init(projectId = configManager.getConfigSync().walletConnectProjectId)
+        walletConnect2Repository.init(projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId)
     }
 
     private fun createReduxStore(): Store<AppState> {
@@ -278,12 +278,12 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         System.loadLibrary("TrustWalletCore")
     }
 
-    private fun initWithConfigDependency(config: Config) {
-        initAnalytics(this, config)
+    private fun initWithConfigDependency(environmentConfig: EnvironmentConfig) {
+        initAnalytics(this, environmentConfig)
         Log.addLogger(logger = tangemSdkLogger)
     }
 
-    private fun initAnalytics(application: Application, config: Config) {
+    private fun initAnalytics(application: Application, environmentConfig: EnvironmentConfig) {
         val factory = AnalyticsFactory()
         factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
@@ -292,7 +292,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
         val buildData = AnalyticsHandlerBuilder.Data(
             application = application,
-            config = config,
+            config = environmentConfig,
             isDebug = BuildConfig.DEBUG,
             logConfig = LogConfig.analyticsHandlers,
             jsonConverter = MoshiConverter.sdkMoshiConverter,
