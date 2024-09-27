@@ -1,4 +1,4 @@
-package com.tangem.datasource.config.models
+package com.tangem.datasource.local.config.environment.models
 
 import com.squareup.moshi.Json
 
