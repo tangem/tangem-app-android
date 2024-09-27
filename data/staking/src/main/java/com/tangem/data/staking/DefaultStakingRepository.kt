@@ -121,7 +121,7 @@ internal class DefaultStakingRepository(
                 key = YIELDS_STORE_KEY,
                 skipCache = refresh,
                 block = {
-                    val stakingTokensWithYields = stakeKitApi.getMultipleYields(preferredValidatorsOnly = true)
+                    val stakingTokensWithYields = stakeKitApi.getMultipleYields(preferredValidatorsOnly = false)
                         .getOrThrow()
 
                     stakingYieldsStore.store(stakingTokensWithYields.data)
