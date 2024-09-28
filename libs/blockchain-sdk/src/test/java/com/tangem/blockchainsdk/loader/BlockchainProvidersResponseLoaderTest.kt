@@ -1,16 +1,11 @@
 package com.tangem.blockchainsdk.loader
 
-import android.annotation.SuppressLint
 import com.google.common.truth.Truth
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.adapter
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.asset.loader.AssetLoader
-import com.tangem.datasource.asset.reader.AssetReader
-import com.tangem.datasource.local.config.environment.models.ProviderModel
+import com.tangem.datasource.local.config.providers.BlockchainProvidersStorage
+import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -20,21 +15,14 @@ import org.junit.Test
 /**
 [REDACTED_AUTHOR]
  */
-@SuppressLint("CheckResult")
-@OptIn(ExperimentalStdlibApi::class)
 internal class BlockchainProvidersResponseLoaderTest {
 
     private val tangemTechServiceApi = mockk<TangemTechApi>()
-    private val assetReader = mockk<AssetReader>()
-    private val moshi = mockk<Moshi>()
-    private val jsonAdapter = mockk<JsonAdapter<BlockchainProvidersResponse>>()
-
-    // Impossible to mockk AssetLoader because it implement inline functions
-    private val assetLoader = AssetLoader(assetReader = assetReader, moshi = moshi)
+    private val blockchainProvidersStorage = mockk<BlockchainProvidersStorage>()
 
     private val loader = BlockchainProvidersResponseLoader(
         tangemTechServiceApi = tangemTechServiceApi,
-        assetLoader = assetLoader,
+        blockchainProvidersStorage = blockchainProvidersStorage,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -48,17 +36,11 @@ internal class BlockchainProvidersResponseLoaderTest {
 
     @Test
     fun test_load_if_local_config_is_empty() = runTest {
-        val emptyJson = ""
-        everyGettingLocalConfig(json = emptyJson) returns null
+        coEvery { blockchainProvidersStorage.getConfigSync() } returns emptyMap()
 
         val actual = loader.load()
 
-        coVerifyOrder {
-            assetReader.read(LOCAL_CONFIG_FILE_NAME)
-            moshi.adapter<BlockchainProvidersResponse>()
-            jsonAdapter.fromJson(emptyJson)
-        }
-
+        coVerifyOrder { blockchainProvidersStorage.getConfigSync() }
         coVerify(inverse = true) { tangemTechServiceApi.getBlockchainProviders() }
 
         Truth.assertThat(actual).isEqualTo(null)
@@ -66,15 +48,13 @@ internal class BlockchainProvidersResponseLoaderTest {
 
     @Test
     fun test_load_if_remote_config_loading_is_loaded_failure() = runTest {
-        everyGettingLocalConfig(json = LOCAL_PROVIDERS_JSON) returns localProviders
+        coEvery { blockchainProvidersStorage.getConfigSync() } returns localProviders
         coEvery { tangemTechServiceApi.getBlockchainProviders() } throws IllegalStateException("Test exception")
 
         val actual = loader.load()
 
         coVerifyOrder {
-            assetReader.read(LOCAL_CONFIG_FILE_NAME)
-            moshi.adapter<BlockchainProvidersResponse>()
-            jsonAdapter.fromJson(LOCAL_PROVIDERS_JSON)
+            blockchainProvidersStorage.getConfigSync()
             tangemTechServiceApi.getBlockchainProviders()
         }
 
@@ -83,15 +63,13 @@ internal class BlockchainProvidersResponseLoaderTest {
 
     @Test
     fun test_load_if_remote_config_loading_is_loaded_successful() = runTest {
-        everyGettingLocalConfig(json = LOCAL_PROVIDERS_JSON) returns localProviders
+        coEvery { blockchainProvidersStorage.getConfigSync() } returns localProviders
         coEvery { tangemTechServiceApi.getBlockchainProviders() } returns remoteProviders
 
         val actual = loader.load()
 
         coVerifyOrder {
-            assetReader.read(LOCAL_CONFIG_FILE_NAME)
-            moshi.adapter<BlockchainProvidersResponse>()
-            jsonAdapter.fromJson(LOCAL_PROVIDERS_JSON)
+            blockchainProvidersStorage.getConfigSync()
             tangemTechServiceApi.getBlockchainProviders()
         }
 
@@ -102,15 +80,13 @@ internal class BlockchainProvidersResponseLoaderTest {
     fun test_load_if_remote_config_is_the_same_as_local() = runTest {
         val remoteProviders = localProviders
 
-        everyGettingLocalConfig(json = LOCAL_PROVIDERS_JSON) returns localProviders
+        coEvery { blockchainProvidersStorage.getConfigSync() } returns localProviders
         coEvery { tangemTechServiceApi.getBlockchainProviders() } returns remoteProviders
 
         val actual = loader.load()
 
         coVerifyOrder {
-            assetReader.read(LOCAL_CONFIG_FILE_NAME)
-            moshi.adapter<BlockchainProvidersResponse>()
-            jsonAdapter.fromJson(LOCAL_PROVIDERS_JSON)
+            blockchainProvidersStorage.getConfigSync()
             tangemTechServiceApi.getBlockchainProviders()
         }
 
@@ -122,16 +98,14 @@ internal class BlockchainProvidersResponseLoaderTest {
         val ethProvider = "ethereum" to emptyList<ProviderModel>()
         val remoteProvidersWithEth = remoteProviders + ethProvider
 
-        everyGettingLocalConfig(json = LOCAL_PROVIDERS_JSON) returns localProviders
+        coEvery { blockchainProvidersStorage.getConfigSync() } returns localProviders
         coEvery { tangemTechServiceApi.getBlockchainProviders() } returns remoteProvidersWithEth
         everyCrashlyticsRecording() just Runs
 
         val actual = loader.load()
 
         coVerifyOrder {
-            assetReader.read(LOCAL_CONFIG_FILE_NAME)
-            moshi.adapter<BlockchainProvidersResponse>()
-            jsonAdapter.fromJson(LOCAL_PROVIDERS_JSON)
+            blockchainProvidersStorage.getConfigSync()
             tangemTechServiceApi.getBlockchainProviders()
             firebaseCrashlytics.recordException(any())
         }
@@ -143,15 +117,13 @@ internal class BlockchainProvidersResponseLoaderTest {
     fun test_load_if_local_config_has_empty_providers() = runTest {
         val localProvidersWithEmptyApt = localProviders.mapValues { if (it.key == "aptos") emptyList() else it.value }
 
-        everyGettingLocalConfig(json = LOCAL_PROVIDERS_JSON) returns localProvidersWithEmptyApt
+        coEvery { blockchainProvidersStorage.getConfigSync() } returns localProvidersWithEmptyApt
         coEvery { tangemTechServiceApi.getBlockchainProviders() } returns remoteProviders
 
         val actual = loader.load()
 
         coVerifyOrder {
-            assetReader.read(LOCAL_CONFIG_FILE_NAME)
-            moshi.adapter<BlockchainProvidersResponse>()
-            jsonAdapter.fromJson(LOCAL_PROVIDERS_JSON)
+            blockchainProvidersStorage.getConfigSync()
             tangemTechServiceApi.getBlockchainProviders()
         }
 
@@ -164,16 +136,14 @@ internal class BlockchainProvidersResponseLoaderTest {
     fun test_load_if_remote_config_doesnt_contain_local_providers() = runTest {
         val remoteProvidersWithoutLocal: BlockchainProvidersResponse = remoteProviders - localProviders.keys
 
-        everyGettingLocalConfig(json = LOCAL_PROVIDERS_JSON) returns localProviders
+        coEvery { blockchainProvidersStorage.getConfigSync() } returns localProviders
         coEvery { tangemTechServiceApi.getBlockchainProviders() } returns remoteProvidersWithoutLocal
         everyCrashlyticsRecording() just Runs
 
         val actual = loader.load()
 
         coVerifyOrder {
-            assetReader.read(LOCAL_CONFIG_FILE_NAME)
-            moshi.adapter<BlockchainProvidersResponse>()
-            jsonAdapter.fromJson(LOCAL_PROVIDERS_JSON)
+            blockchainProvidersStorage.getConfigSync()
             tangemTechServiceApi.getBlockchainProviders()
             firebaseCrashlytics.recordException(any())
         }
@@ -186,16 +156,14 @@ internal class BlockchainProvidersResponseLoaderTest {
         val ethProvider = "ethereum" to listOf(ProviderModel.UnsupportedType, ProviderModel.Private(name = "nownodes"))
         val remoteProvidersWithEth = remoteProviders + ethProvider
 
-        everyGettingLocalConfig(json = LOCAL_PROVIDERS_JSON) returns localProviders
+        coEvery { blockchainProvidersStorage.getConfigSync() } returns localProviders
         coEvery { tangemTechServiceApi.getBlockchainProviders() } returns remoteProvidersWithEth
         everyCrashlyticsRecording() just Runs
 
         val actual = loader.load()
 
         coVerifyOrder {
-            assetReader.read(LOCAL_CONFIG_FILE_NAME)
-            moshi.adapter<BlockchainProvidersResponse>()
-            jsonAdapter.fromJson(LOCAL_PROVIDERS_JSON)
+            blockchainProvidersStorage.getConfigSync()
             tangemTechServiceApi.getBlockchainProviders()
             firebaseCrashlytics.recordException(any())
         }
@@ -213,16 +181,14 @@ internal class BlockchainProvidersResponseLoaderTest {
         val remoteEthProvider = "ethereum" to listOf(ProviderModel.UnsupportedType, ProviderModel.Public("adbw2138"))
         val remoteProvidersWithEth = remoteProviders + remoteEthProvider
 
-        everyGettingLocalConfig(json = LOCAL_PROVIDERS_JSON) returns localProvidersWithEth
+        coEvery { blockchainProvidersStorage.getConfigSync() } returns localProvidersWithEth
         coEvery { tangemTechServiceApi.getBlockchainProviders() } returns remoteProvidersWithEth
         everyCrashlyticsRecording() just Runs
 
         val actual = loader.load()
 
         coVerifyOrder {
-            assetReader.read(LOCAL_CONFIG_FILE_NAME)
-            moshi.adapter<BlockchainProvidersResponse>()
-            jsonAdapter.fromJson(LOCAL_PROVIDERS_JSON)
+            blockchainProvidersStorage.getConfigSync()
             tangemTechServiceApi.getBlockchainProviders()
             firebaseCrashlytics.recordException(any())
         }
@@ -242,16 +208,14 @@ internal class BlockchainProvidersResponseLoaderTest {
         val remoteDogeProvider = "dogecoin" to listOf(ProviderModel.Public(url = remotePublicProviderUrl))
         val remoteProvidersWithDoge = remoteProviders + remoteDogeProvider
 
-        everyGettingLocalConfig(json = LOCAL_PROVIDERS_JSON) returns localProvidersWithEth
+        coEvery { blockchainProvidersStorage.getConfigSync() } returns localProvidersWithEth
         coEvery { tangemTechServiceApi.getBlockchainProviders() } returns remoteProvidersWithDoge
         everyCrashlyticsRecording() just Runs
 
         val actual = loader.load()
 
         coVerifyOrder {
-            assetReader.read(LOCAL_CONFIG_FILE_NAME)
-            moshi.adapter<BlockchainProvidersResponse>()
-            jsonAdapter.fromJson(LOCAL_PROVIDERS_JSON)
+            blockchainProvidersStorage.getConfigSync()
             tangemTechServiceApi.getBlockchainProviders()
             firebaseCrashlytics.recordException(any())
         }
@@ -263,21 +227,9 @@ internal class BlockchainProvidersResponseLoaderTest {
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
-    private fun everyGettingLocalConfig(
-        json: String,
-    ): MockKStubScope<BlockchainProvidersResponse?, BlockchainProvidersResponse?> {
-        coEvery { assetReader.read(LOCAL_CONFIG_FILE_NAME) } returns json
-        every { moshi.adapter<BlockchainProvidersResponse>() } returns jsonAdapter
-        return coEvery { jsonAdapter.fromJson(json) }
-    }
-
     private fun everyCrashlyticsRecording() = every { firebaseCrashlytics.recordException(any()) }
 
     private companion object {
-        const val LOCAL_CONFIG_FILE_NAME = "tangem-app-config/providers_order.json"
-
-        const val LOCAL_PROVIDERS_JSON = "doesn't matter"
-
         val localProviders: BlockchainProvidersResponse = mapOf(
             "aptos" to listOf(ProviderModel.Private(name = "nownodes")),
             "algorand" to listOf(
