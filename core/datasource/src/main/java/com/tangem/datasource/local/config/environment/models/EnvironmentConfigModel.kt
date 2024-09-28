@@ -1,11 +1,11 @@
-package com.tangem.datasource.config.models
+package com.tangem.datasource.local.config.environment.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @Suppress("LongParameterList")
 @JsonClass(generateAdapter = true)
-class ConfigValueModel(
+class EnvironmentConfigModel(
     @Json(name = "mercuryoWidgetId") val mercuryoWidgetId: String,
     @Json(name = "mercuryoSecret") val mercuryoSecret: String,
     @Json(name = "moonPayApiKey") val moonPayApiKey: String,
@@ -69,9 +69,23 @@ data class GetBlockAccessTokens(
 )
 
 @JsonClass(generateAdapter = true)
+data class TonCenterKeys(
+    @Json(name = "mainnet") val mainnet: String,
+    @Json(name = "testnet") val testnet: String,
+)
+
+@JsonClass(generateAdapter = true)
 data class GetBlockToken(
     @Json(name = "jsonRpc") val jsonRPC: String?,
     @Json(name = "blockBookRest") val blockBookRest: String?,
     @Json(name = "rest") val rest: String?,
     @Json(name = "rosetta") val rosetta: String?,
+)
+
+@JsonClass(generateAdapter = true)
+data class ExpressModel(
+    @Json(name = "apiKey")
+    val apiKey: String,
+    @Json(name = "signVerifierPublicKey")
+    val signVerifierPublicKey: String,
 )
