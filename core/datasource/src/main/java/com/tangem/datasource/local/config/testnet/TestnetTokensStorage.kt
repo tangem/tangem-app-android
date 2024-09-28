@@ -1,6 +1,6 @@
-package com.tangem.datasource.local.testnet
+package com.tangem.datasource.local.config.testnet
 
-import com.tangem.datasource.local.testnet.models.TestnetTokensConfig
+import com.tangem.datasource.local.config.testnet.models.TestnetTokensConfig
 
 /**
  * Storage of testnet tokens data
