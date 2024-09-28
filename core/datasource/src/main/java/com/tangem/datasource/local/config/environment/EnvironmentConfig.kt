@@ -1,8 +1,9 @@
-package com.tangem.datasource.config.models
+package com.tangem.datasource.local.config.environment
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.datasource.local.config.environment.models.ExpressModel
 
-data class Config(
+data class EnvironmentConfig(
     val moonPayApiKey: String = "pk_test_kc90oYTANy7UQdBavDKGfL4K9l6VEPE",
     val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
     val mercuryoWidgetId: String = "",
