@@ -10,7 +10,7 @@ import com.tangem.blockchainsdk.BlockchainProvidersResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.asset.reader.AssetReader
-import com.tangem.datasource.config.models.ProviderModel
+import com.tangem.datasource.local.config.environment.models.ProviderModel
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
