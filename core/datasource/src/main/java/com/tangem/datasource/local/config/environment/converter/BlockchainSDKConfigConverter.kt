@@ -1,17 +1,17 @@
-package com.tangem.datasource.config.converter
+package com.tangem.datasource.local.config.environment.converter
 
 import com.tangem.blockchain.common.*
-import com.tangem.datasource.config.models.ConfigValueModel
+import com.tangem.datasource.local.config.environment.models.EnvironmentConfigModel
 import com.tangem.utils.converter.Converter
 
 /**
- * Converts [ConfigValueModel] to [BlockchainSdkConfig]
+ * Converts [EnvironmentConfigModel] to [BlockchainSdkConfig]
  *
 [REDACTED_AUTHOR]
  */
-internal object BlockchainSDKConfigConverter : Converter<ConfigValueModel, BlockchainSdkConfig> {
+internal object BlockchainSDKConfigConverter : Converter<EnvironmentConfigModel, BlockchainSdkConfig> {
 
-    override fun convert(value: ConfigValueModel): BlockchainSdkConfig {
+    override fun convert(value: EnvironmentConfigModel): BlockchainSdkConfig {
         return BlockchainSdkConfig(
             blockchairCredentials = BlockchairCredentials(
                 apiKey = value.blockchairApiKeys,
@@ -45,7 +45,7 @@ internal object BlockchainSDKConfigConverter : Converter<ConfigValueModel, Block
         )
     }
 
-    private fun createGetBlockCredentials(configValues: ConfigValueModel): GetBlockCredentials? {
+    private fun createGetBlockCredentials(configValues: EnvironmentConfigModel): GetBlockCredentials? {
         return configValues.getBlockAccessTokens?.let { accessTokens ->
             GetBlockCredentials(
                 xrp = GetBlockAccessToken(jsonRpc = accessTokens.xrp?.jsonRPC),

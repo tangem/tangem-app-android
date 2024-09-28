@@ -19,7 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
-private val configManager = MockConfigManager()
+private val configManager = MockEnvironmentConfigStorage()
 private val appVersionProvider = mockk<AppVersionProvider>()
 private val expressAuthProvider = mockk<ExpressAuthProvider>()
 private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
@@ -106,9 +106,9 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                     headers = mapOf(
                         "api-key" to Provider {
                             if (environment == ApiEnvironment.PROD) {
-                                MockConfigManager.EXPRESS_API_KEY
+                                MockEnvironmentConfigStorage.EXPRESS_API_KEY
                             } else {
-                                MockConfigManager.EXPRESS_DEV_API_KEY
+                                MockEnvironmentConfigStorage.EXPRESS_DEV_API_KEY
                             }
                         },
                         "user-id" to Provider { EXPRESS_USER_ID },
