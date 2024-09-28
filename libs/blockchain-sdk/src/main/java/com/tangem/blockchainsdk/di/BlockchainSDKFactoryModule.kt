@@ -12,7 +12,7 @@ import com.tangem.blockchainsdk.store.DefaultRuntimeStore
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -29,13 +29,13 @@ internal object BlockchainSDKFactoryModule {
     @Singleton
     fun provideBlockchainSDKFactory(
         blockchainProvidersResponseLoader: BlockchainProvidersResponseLoader,
-        configManager: ConfigManager,
+        environmentConfigStorage: EnvironmentConfigStorage,
         walletManagerFactoryCreator: WalletManagerFactoryCreator,
         dispatchers: CoroutineDispatcherProvider,
     ): BlockchainSDKFactory {
         return DefaultBlockchainSDKFactory(
             blockchainProvidersResponseLoader = blockchainProvidersResponseLoader,
-            configManager = configManager,
+            environmentConfigStorage = environmentConfigStorage,
             blockchainProviderTypesStore = DefaultRuntimeStore(defaultValue = emptyMap()),
             walletManagerFactoryCreator = walletManagerFactoryCreator,
             dispatchers = dispatchers,
