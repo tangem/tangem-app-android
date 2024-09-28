@@ -6,8 +6,8 @@ import com.tangem.blockchain.common.network.providers.ProviderType
 import com.tangem.blockchainsdk.converters.BlockchainProviderTypesConverter
 import com.tangem.blockchainsdk.loader.BlockchainProvidersResponseLoader
 import com.tangem.blockchainsdk.store.RuntimeStore
-import com.tangem.datasource.config.ConfigManager
-import com.tangem.datasource.config.models.ProviderModel
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.models.ProviderModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
@@ -22,7 +22,7 @@ internal typealias BlockchainProviderTypes = Map<Blockchain, List<ProviderType>>
  * Implementation of Blockchain SDK components factory
  *
  * @property blockchainProvidersResponseLoader blockchain providers response loader
- * @property configManager                     config manager
+ * @property environmentConfigStorage          environment config storage
  * @property blockchainProviderTypesStore      blockchain provider types store
  * @property walletManagerFactoryCreator       wallet manager factory creator
  *
@@ -30,7 +30,7 @@ internal typealias BlockchainProviderTypes = Map<Blockchain, List<ProviderType>>
  */
 internal class DefaultBlockchainSDKFactory(
     private val blockchainProvidersResponseLoader: BlockchainProvidersResponseLoader,
-    private val configManager: ConfigManager,
+    private val environmentConfigStorage: EnvironmentConfigStorage,
     private val blockchainProviderTypesStore: RuntimeStore<BlockchainProviderTypes>,
     private val walletManagerFactoryCreator: WalletManagerFactoryCreator,
     dispatchers: CoroutineDispatcherProvider,
@@ -54,7 +54,7 @@ internal class DefaultBlockchainSDKFactory(
 
     private fun createWalletManagerFactory(): Flow<WalletManagerFactory?> {
         return combine(
-            flow = configManager.getConfig().map { it.blockchainSdkConfig },
+            flow = environmentConfigStorage.getConfig().map { it.blockchainSdkConfig },
             flow2 = blockchainProviderTypesStore.get(),
             // flow3 = subscribe on feature toggles changes, TODO: [REDACTED_JIRA]
             transform = walletManagerFactoryCreator::create,

@@ -1,18 +1,18 @@
-package com.tangem.datasource.config.converter
+package com.tangem.datasource.local.config.environment.converter
 
-import com.tangem.datasource.config.models.Config
-import com.tangem.datasource.config.models.ConfigValueModel
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.datasource.local.config.environment.models.EnvironmentConfigModel
 import com.tangem.utils.converter.Converter
 
 /**
- * Converter from [ConfigValueModel] to [Config]
+ * Converter from [EnvironmentConfigModel] to [EnvironmentConfig]
  *
 [REDACTED_AUTHOR]
  */
-internal object EnvironmentConfigConverter : Converter<ConfigValueModel, Config> {
+internal object EnvironmentConfigConverter : Converter<EnvironmentConfigModel, EnvironmentConfig> {
 
-    override fun convert(value: ConfigValueModel): Config {
-        return Config(
+    override fun convert(value: EnvironmentConfigModel): EnvironmentConfig {
+        return EnvironmentConfig(
             moonPayApiKey = value.moonPayApiKey,
             moonPayApiSecretKey = value.moonPayApiSecretKey,
             mercuryoWidgetId = value.mercuryoWidgetId,
