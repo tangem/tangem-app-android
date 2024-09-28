@@ -1,6 +1,6 @@
 package com.tangem.tap.common.redux.global
 
-import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
@@ -16,7 +16,7 @@ data class GlobalState(
     val onboardingState: OnboardingState = OnboardingState(),
     val cardVerifiedOnline: Boolean = false,
     val tapWalletManager: TapWalletManager = TapWalletManager(),
-    val configManager: ConfigManager? = null,
+    val environmentConfigStorage: EnvironmentConfigStorage? = null,
     val appCurrency: AppCurrency = AppCurrency.Default,
     val scanCardFailsCounter: Int = 0,
     val dialog: StateDialog? = null,
