@@ -1,7 +1,7 @@
-package com.tangem.datasource.local.testnet
+package com.tangem.datasource.local.config.testnet
 
 import com.tangem.datasource.asset.loader.AssetLoader
-import com.tangem.datasource.local.testnet.models.TestnetTokensConfig
+import com.tangem.datasource.local.config.testnet.models.TestnetTokensConfig
 
 /**
  * Default implementation for storing testnet tokens data
