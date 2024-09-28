@@ -19,9 +19,9 @@ import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.feedback.FeedbackManager
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
@@ -82,7 +82,7 @@ internal class SwapViewModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
-    private val feedbackManager: FeedbackManager,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     swapInteractorFactory: SwapInteractor.Factory,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
@@ -1259,7 +1259,7 @@ internal class SwapViewModel @Inject constructor(
                 txId = dataState.swapDataModel?.transaction?.txId.orEmpty(),
             )
 
-            feedbackManager.sendEmail(email)
+            sendFeedbackEmailUseCase(email)
         }
     }
 

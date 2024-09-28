@@ -4,7 +4,7 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.utils.ReadTimeout
-import com.tangem.datasource.local.config.environment.models.ProviderModel
+import com.tangem.datasource.local.config.providers.models.ProviderModel
 import retrofit2.http.*
 import java.util.concurrent.TimeUnit
 

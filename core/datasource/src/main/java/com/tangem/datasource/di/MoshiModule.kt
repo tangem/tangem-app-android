@@ -8,7 +8,7 @@ import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
 import com.tangem.datasource.api.common.adapter.DateTimeAdapter
 import com.tangem.datasource.api.common.adapter.LocalDateAdapter
 import com.tangem.datasource.api.common.adapter.addStakeKitEnumFallbackAdapters
-import com.tangem.datasource.local.config.environment.models.ProviderModel
+import com.tangem.datasource.local.config.providers.models.ProviderModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
