@@ -4,6 +4,8 @@ import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.local.config.environment.DefaultEnvironmentConfigStorage
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.providers.BlockchainProvidersStorage
+import com.tangem.datasource.local.config.providers.DefaultBlockchainProvidersStorage
 import com.tangem.datasource.local.config.testnet.DefaultTestnetTokensStorage
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.datastore.RuntimeStateStore
@@ -30,5 +32,14 @@ internal object ConfigModule {
     @Singleton
     fun providesTestnetTokensStorage(assetLoader: AssetLoader): TestnetTokensStorage {
         return DefaultTestnetTokensStorage(assetLoader)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProvidersOrderConfigStorage(assetLoader: AssetLoader): BlockchainProvidersStorage {
+        return DefaultBlockchainProvidersStorage(
+            assetLoader = assetLoader,
+            runtimeStateStore = RuntimeStateStore(defaultValue = emptyMap()),
+        )
     }
 }
