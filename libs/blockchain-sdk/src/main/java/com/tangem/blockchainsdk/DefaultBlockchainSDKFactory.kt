@@ -7,7 +7,7 @@ import com.tangem.blockchainsdk.converters.BlockchainProviderTypesConverter
 import com.tangem.blockchainsdk.loader.BlockchainProvidersResponseLoader
 import com.tangem.blockchainsdk.store.RuntimeStore
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
-import com.tangem.datasource.local.config.environment.models.ProviderModel
+import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
