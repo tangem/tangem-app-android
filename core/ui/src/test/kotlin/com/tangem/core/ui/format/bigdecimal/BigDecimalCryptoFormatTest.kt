@@ -144,7 +144,7 @@ internal class BigDecimalCryptoFormatTest {
     }
 
     @Test
-    fun `shorted amount decimals less than 2 + grouping`() {
+    fun `shorted amount decimals less than 2 grouping`() {
         val testValue = BigDecimal("50000.126123")
 
         val formatted = testValue.format {
@@ -192,7 +192,7 @@ internal class BigDecimalCryptoFormatTest {
     }
 
     @Test
-    fun `shorted amount diff locale + half up`() {
+    fun `shorted amount diff locale half up`() {
         val testValue = BigDecimal("50000.126123")
 
         val formatted = testValue.format {

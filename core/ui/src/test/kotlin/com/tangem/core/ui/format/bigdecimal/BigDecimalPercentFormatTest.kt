@@ -47,7 +47,7 @@ internal class BigDecimalPercentFormatTest {
     }
 
     @Test
-    fun `default more decimals + half up`() {
+    fun `default more decimals half up`() {
         val value = BigDecimal("00.345678").negate()
 
         val formatted = value.format {
