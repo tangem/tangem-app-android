@@ -25,6 +25,9 @@ internal class BigDecimalCryptoFormatTest {
             ).defaultAmount()
         }
 
+        println(formatted)
+        println("0.12345679".addSymbolWithSpaceLeft(symbol))
+
         Truth.assertThat(formatted)
             .isEqualTo("0.12345679".addSymbolWithSpaceLeft(symbol))
     }
