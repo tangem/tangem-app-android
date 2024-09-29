@@ -1,7 +1,6 @@
 package com.tangem.core.ui.format.bigdecimal
 
 import com.google.common.truth.Truth
-import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CURRENCY_SPACE
 import org.junit.Test
 import java.math.BigDecimal
 import java.util.Locale
@@ -321,7 +320,7 @@ internal class BigDecimalCryptoFormatTest {
         }
 
         Truth.assertThat(formatted)
-            .isEqualTo("<" + CURRENCY_SPACE + "0.000123".addSymbolWithSpaceLeft(symbol))
+            .isEqualTo("<" + CURRENCY_SPACE_FOR_TESTS + "0.000123".addSymbolWithSpaceLeft(symbol))
     }
 
     @Test
@@ -353,7 +352,7 @@ internal class BigDecimalCryptoFormatTest {
         }
 
         Truth.assertThat(formatted)
-            .isEqualTo("<" + CURRENCY_SPACE + "0.000001".addSymbolWithSpaceLeft(symbol))
+            .isEqualTo("<" + CURRENCY_SPACE_FOR_TESTS + "0.000001".addSymbolWithSpaceLeft(symbol))
     }
 
     @Test
