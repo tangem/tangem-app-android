@@ -25,6 +25,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsSyncUseCase
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.DialogConfig
@@ -53,6 +54,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsContextProxy: AnalyticsContextProxy,
     private val reduxStateHolder: ReduxStateHolder,
+    private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -70,9 +72,9 @@ internal class WalletSettingsModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { maybeWallet ->
                 val wallet = maybeWallet.getOrNull() ?: return@onEach
-
+                val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
                 state.update { value ->
-                    value.copy(items = buildItems(wallet, dialogNavigation))
+                    value.copy(items = buildItems(wallet, dialogNavigation, isRenameWalletAvailable))
                 }
             }
             .launchIn(modelScope)
@@ -81,12 +83,14 @@ internal class WalletSettingsModel @Inject constructor(
     private fun buildItems(
         userWallet: UserWallet,
         dialogNavigation: SlotNavigation<DialogConfig>,
+        isRenameWalletAvailable: Boolean,
     ): PersistentList<WalletSettingsItemUM> = itemsBuilder.buildItems(
         userWalletId = userWallet.walletId,
         userWalletName = userWallet.name,
         isReferralAvailable = userWallet.cardTypesResolver.isTangemWallet(),
         isLinkMoreCardsAvailable = userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         isManageTokensAvailable = userWallet.isMultiCurrency,
+        isRenameWalletAvailable = isRenameWalletAvailable,
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
         forgetWallet = {
             messageSender.send(
