@@ -37,7 +37,7 @@ sealed class YieldBalance {
             // need to exclude rewards because their amount may change frequently
             return balance.items
                 .filter { it.type != BalanceType.REWARDS }
-                .map { it.amount.toString() + it.type.toString() + it.groupId + it.validatorAddress }
+                .map { it.amount.toString() + it.type.toString() + it.groupId }
                 .hashCode()
         }
     }

@@ -8,6 +8,7 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingPendingTransactionRepository
+import com.tangem.domain.wallets.models.UserWalletId
 import java.util.UUID
 
 class InvalidatePendingTransactionsUseCase(
@@ -15,15 +16,18 @@ class InvalidatePendingTransactionsUseCase(
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
-    operator fun invoke(yieldBalance: YieldBalance): Either<StakingError, List<BalanceItem>> {
+    operator fun invoke(
+        userWalletId: UserWalletId,
+        yieldBalance: YieldBalance,
+    ): Either<StakingError, List<BalanceItem>> {
         return Either.catch {
             if (yieldBalance is YieldBalance.Data) {
                 val (balancesToDisplay, transactionsToRemove) = mergeRealAndPendingTransactions(
                     yieldBalance = yieldBalance,
-                    pending = stakingPendingTransactionRepository.getTransactionsWithBalanceItems(),
+                    pending = stakingPendingTransactionRepository.getTransactionsWithBalanceItems(userWalletId),
                 )
 
-                stakingPendingTransactionRepository.removeTransactions(transactionsToRemove.toSet())
+                stakingPendingTransactionRepository.removeTransactions(userWalletId, transactionsToRemove.toSet())
 
                 balancesToDisplay
             } else {
