@@ -25,9 +25,6 @@ import com.tangem.features.markets.details.impl.analytics.MarketDetailsAnalytics
 import com.tangem.features.markets.details.impl.model.converters.DescriptionConverter
 import com.tangem.features.markets.details.impl.model.converters.TokenMarketInfoConverter
 import com.tangem.features.markets.details.impl.model.formatter.*
-import com.tangem.features.markets.details.impl.model.formatter.formatAsPrice
-import com.tangem.features.markets.details.impl.model.formatter.getChangePercentBetween
-import com.tangem.features.markets.details.impl.model.formatter.getPercentByInterval
 import com.tangem.features.markets.details.impl.model.state.QuotesStateUpdater
 import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
@@ -76,8 +73,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private val infoConverter = TokenMarketInfoConverter(
         appCurrency = Provider { currentAppCurrency.value },
-        onInfoClick = {
-            showInfoBottomSheet(it)
+        onInfoClick = { showInfoBottomSheet(it) },
+        onListedOnClick = {
+            // TODO: [REDACTED_JIRA]
         },
         onLinkClick = { link ->
             urlOpener.openUrl(link.url)
