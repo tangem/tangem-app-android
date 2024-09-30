@@ -23,6 +23,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
@@ -259,6 +260,14 @@ internal class DefaultMarketsTokenRepository(
                 decimals = network.decimalCount ?: error("Unknown decimal"),
                 contractAddress = network.contractAddress!!,
             )
+        }
+    }
+
+    override suspend fun getTokenExchanges(tokenId: String): List<TokenMarketExchange> {
+        return withContext(dispatcherProvider.io) {
+            val response = marketsApi.getCoinExchanges(coinId = tokenId).getOrThrow()
+
+            TokenMarketExchangeConverter.convertList(input = response.exchanges)
         }
     }
 
