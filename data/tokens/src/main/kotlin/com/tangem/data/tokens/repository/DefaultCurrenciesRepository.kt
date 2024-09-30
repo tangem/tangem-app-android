@@ -26,7 +26,6 @@ import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
@@ -137,7 +136,7 @@ internal class DefaultCurrenciesRepository(
                 cryptoCurrencyFactory.createCoin(
                     blockchain = getBlockchain(networkId = it.network.id),
                     extraDerivationPath = it.network.derivationPath.value,
-                    derivationStyleProvider = getUserWallet(userWalletId).scanResponse.derivationStyleProvider,
+                    scanResponse = getUserWallet(userWalletId).scanResponse,
                 )
             }
             .distinct()
@@ -456,7 +455,7 @@ internal class DefaultCurrenciesRepository(
             token = token,
             networkId = networkId,
             extraDerivationPath = null,
-            derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+            scanResponse = userWallet.scanResponse,
         ) ?: error("Unable to create token")
     }
 
