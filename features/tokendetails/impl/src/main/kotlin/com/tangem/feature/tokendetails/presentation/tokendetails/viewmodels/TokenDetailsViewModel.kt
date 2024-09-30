@@ -152,7 +152,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val swapTxJobHolder = JobHolder()
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
     private val stakingPendingBalances: List<BalanceItem>
-        get() = getStakingPendingTransactionsUseCase().getOrElse { emptyList() }
+        get() = getStakingPendingTransactionsUseCase(userWalletId).getOrElse { emptyList() }
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var stakingEntryInfo: StakingEntryInfo? = null
