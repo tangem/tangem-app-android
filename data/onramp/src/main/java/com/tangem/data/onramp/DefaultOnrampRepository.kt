@@ -16,7 +16,7 @@ internal class DefaultOnrampRepository(
 ) : OnrampRepository {
 
     private val currencyConverter = CurrencyConverter()
-    private val countryConverter = CountryConverter(currencyConverter)
+    private val countryConverter = CountryConverter()
 
     override suspend fun getCurrencies(): List<OnrampCurrency> = withContext(dispatchers.io) {
         onrampApi.getCurrencies()
