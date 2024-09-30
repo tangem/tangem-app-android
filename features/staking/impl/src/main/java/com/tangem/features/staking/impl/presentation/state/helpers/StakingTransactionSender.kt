@@ -264,7 +264,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                     }.onRight {
                         Timber.d("Successful hash submission")
                         if (transaction.type != StakingTransactionType.FREEZE_ENERGY) {
-                            savePendingTransactionUseCase.invoke(pendingTransaction)
+                            savePendingTransactionUseCase.invoke(userWallet.walletId, pendingTransaction)
                         }
                     }
             }
@@ -294,7 +294,8 @@ internal class StakingTransactionSender @AssistedInject constructor(
             rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
             validator = (confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator,
             balancesId = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.getBalancesUniqueId() ?: 0,
-            balanceItems = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.balance?.items ?: emptyList()
+            balanceItems = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.balance?.items
+                ?: emptyList(),
         )
     }
 
