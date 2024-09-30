@@ -328,7 +328,7 @@ internal class AddStakingNotificationsTransformer(
                     it.type == BalanceType.STAKED ||
                     it.type == BalanceType.LOCKED
             } == true
-        if (hasStakedBalance && isTron) {
+        if (isTron && hasStakedBalance) {
             add(
                 StakingNotification.Info.Ordinary(
                     title = resourceReference(R.string.staking_revote),
