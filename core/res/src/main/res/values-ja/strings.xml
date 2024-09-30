@@ -342,6 +342,7 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">ウォレットは複数のネットワークをサポートしていません。</string>
   <string name="markets_add_to_my_portfolio_description">このアセットの購入、交換、受け取りを開始するには、ポートフォリオに追加してください。</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">このアセットは利用できません</string>
+  <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">このアセットはこのウォレットでは使用できません。</string>
   <string name="markets_add_to_portfolio_button">ポートフォリオに追加</string>
   <string name="markets_add_token">追加</string>
   <string name="markets_available_networks">利用可能なネットワーク</string>
@@ -799,6 +800,7 @@
   <string name="transaction_history_operation">オペレーション</string>
   <string name="transaction_history_transaction_from_address">送金元: %s</string>
   <string name="transaction_history_transaction_to_address">送金先: %s</string>
+  <string name="transaction_history_transaction_validator">バリデーター: %s</string>
   <string name="try_to_load_data_again_button_title">もう一度やり直してください</string>
   <string name="twin_error_same_card">同じカードをスキャンしました。ツインウォレットを作成するには、番号%dのカードをスキャンする必要があります。</string>
   <string name="twin_error_wrong_twin">間違ったツインカードをスキャンしました。別のカードをお試しください。</string>
