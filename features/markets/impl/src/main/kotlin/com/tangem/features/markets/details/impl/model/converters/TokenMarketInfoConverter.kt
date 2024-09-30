@@ -6,6 +6,7 @@ import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.LinksUM
+import com.tangem.features.markets.details.impl.ui.state.ListedOnUM
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
@@ -14,6 +15,7 @@ import com.tangem.utils.converter.Converter
 internal class TokenMarketInfoConverter(
     private val appCurrency: Provider<AppCurrency>,
     private val onInfoClick: (InfoBottomSheetContent) -> Unit,
+    private val onListedOnClick: () -> Unit,
     onLinkClick: (LinksUM.Link) -> Unit,
     onPricePerformanceIntervalChanged: (PriceChangeInterval) -> Unit,
     onInsightsIntervalChanged: (PriceChangeInterval) -> Unit,
@@ -41,6 +43,7 @@ internal class TokenMarketInfoConverter(
             onInfoClick = onInfoClick,
         )
 
+        val exchangesAmount = value.exchangesAmount
         return MarketsTokenDetailsUM.InformationBlocks(
             insights = value.insights?.let { insightsConverter.convert(it) },
             securityScore = null,
@@ -50,6 +53,11 @@ internal class TokenMarketInfoConverter(
                     value = it,
                     currentPrice = value.quotes.currentPrice,
                 )
+            },
+            listedOn = if (exchangesAmount != null && exchangesAmount > 0) {
+                ListedOnUM.Content(onClick = onListedOnClick, amount = exchangesAmount)
+            } else {
+                ListedOnUM.Empty
             },
             links = value.links?.let { linksConverter.convert(it) },
         )
