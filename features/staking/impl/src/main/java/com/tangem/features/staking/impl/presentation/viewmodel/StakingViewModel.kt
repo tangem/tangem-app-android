@@ -137,7 +137,7 @@ internal class StakingViewModel @Inject constructor(
     private val balancesToShow: List<BalanceItem>
         get() {
             return cryptoCurrencyStatus.value.yieldBalance?.let {
-                invalidatePendingTransactionsUseCase(it).getOrElse { emptyList() }
+                invalidatePendingTransactionsUseCase(userWallet.walletId, it).getOrElse { emptyList() }
             } ?: emptyList()
         }
 
