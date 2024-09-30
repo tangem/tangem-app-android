@@ -35,7 +35,10 @@ sealed class YieldBalance {
 
         fun getBalancesUniqueId(): Int {
             // need to exclude rewards because their amount may change frequently
-            return balance.items.filter { it.type != BalanceType.REWARDS }.hashCode()
+            return balance.items
+                .filter { it.type != BalanceType.REWARDS }
+                .map { it.amount.toString() + it.type.toString() + it.groupId + it.validatorAddress }
+                .hashCode()
         }
     }
 
