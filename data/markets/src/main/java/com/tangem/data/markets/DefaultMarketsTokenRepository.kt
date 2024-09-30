@@ -10,11 +10,6 @@ import com.tangem.data.common.currency.getNetwork
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.*
-import com.tangem.data.markets.converters.TokenChartConverter
-import com.tangem.data.markets.converters.TokenMarketInfoConverter
-import com.tangem.data.markets.converters.TokenMarketListConverter
-import com.tangem.data.markets.converters.TokenQuotesShortConverter
-import com.tangem.data.markets.converters.toRequestParam
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
@@ -29,6 +24,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
@@ -265,6 +261,14 @@ internal class DefaultMarketsTokenRepository(
                 decimals = network.decimalCount ?: error("Unknown decimal"),
                 contractAddress = network.contractAddress!!,
             )
+        }
+    }
+
+    override suspend fun getTokenExchanges(tokenId: String): List<TokenMarketExchange> {
+        return withContext(dispatcherProvider.io) {
+            val response = marketsApi.getCoinExchanges(coinId = tokenId).getOrThrow()
+
+            TokenMarketExchangeConverter.convertList(input = response.exchanges)
         }
     }
 
