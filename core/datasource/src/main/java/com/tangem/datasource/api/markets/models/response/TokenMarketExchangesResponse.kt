@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.markets.models.response
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
 /**
@@ -10,6 +11,7 @@ import java.math.BigDecimal
  *
  * @author Andrew Khokhlov on 30/09/2024
  */
+@JsonClass(generateAdapter = true)
 data class TokenMarketExchangesResponse(
     @Json(name = "exchanges") val exchanges: List<Exchange>,
 ) {
@@ -24,6 +26,7 @@ data class TokenMarketExchangesResponse(
      * @property volumeInUsd   aggregated volume in USD
      * @property trustScore    trust score
      */
+    @JsonClass(generateAdapter = true)
     data class Exchange(
         @Json(name = "exchange_id") val id: String,
         @Json(name = "name") val name: String,
