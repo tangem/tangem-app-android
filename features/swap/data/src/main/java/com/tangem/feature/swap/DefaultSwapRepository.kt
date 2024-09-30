@@ -20,7 +20,6 @@ import com.tangem.datasource.api.express.models.response.SwapPair
 import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
 import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -390,11 +389,10 @@ internal class DefaultSwapRepository @Inject constructor(
             cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                derivationStyleProvider = requireNotNull(
+                scanResponse = requireNotNull(
                     userWalletsListManager
                         .selectedUserWalletSync
-                        ?.scanResponse
-                        ?.derivationStyleProvider,
+                        ?.scanResponse,
                 ),
             ),
         )
