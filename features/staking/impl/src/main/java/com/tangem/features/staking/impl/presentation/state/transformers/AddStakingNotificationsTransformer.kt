@@ -270,17 +270,7 @@ internal class AddStakingNotificationsTransformer(
     }
 
     private fun MutableList<NotificationUM>.addEnterInfoNotifications() {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
-        val hasStakedBalance = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.balance
-            ?.items?.any {
-                it.type == BalanceType.PREPARING ||
-                    it.type == BalanceType.STAKED ||
-                    it.type == BalanceType.LOCKED
-            } == true
-        if (hasStakedBalance && isTron) {
-            add(StakingNotification.Info.TronRevote)
-        }
+        addTronRevoteNotification()
     }
 
     private fun MutableList<NotificationUM>.addPendingInfoNotifications(prevState: StakingUiState) {
@@ -312,14 +302,37 @@ internal class AddStakingNotificationsTransformer(
                     ),
                 )
             }
+            StakingActionType.VOTE_LOCKED -> {
+                resourceReference(R.string.staking_revote) to
+                    resourceReference(R.string.staking_notifications_revote_tron_text)
+            }
             else -> null to null
         }
 
         if (titleReference != null && textReference != null) {
             add(
-                StakingNotification.Info.PendingAction(
+                StakingNotification.Info.Ordinary(
                     title = titleReference,
                     text = textReference,
+                ),
+            )
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addTronRevoteNotification() {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
+        val hasStakedBalance = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.balance
+            ?.items?.any {
+                it.type == BalanceType.PREPARING ||
+                    it.type == BalanceType.STAKED ||
+                    it.type == BalanceType.LOCKED
+            } == true
+        if (isTron && hasStakedBalance) {
+            add(
+                StakingNotification.Info.Ordinary(
+                    title = resourceReference(R.string.staking_revote),
+                    text = resourceReference(R.string.staking_notifications_revote_tron_text),
                 ),
             )
         }
