@@ -13,7 +13,6 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.DerivationsRepository
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -48,7 +47,7 @@ internal class DefaultDerivationsRepository(
                 getNetwork(
                     blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null,
                     extraDerivationPath = null,
-                    derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                    scanResponse = userWallet.scanResponse,
                 )
             },
         )
@@ -84,7 +83,7 @@ internal class DefaultDerivationsRepository(
                     getNetwork(
                         blockchain = Blockchain.fromNetworkId(networkId.value) ?: return@mapNotNull null,
                         extraDerivationPath = extraDerivationPath,
-                        derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                        scanResponse = userWallet.scanResponse,
                     )
                 },
             )
