@@ -41,6 +41,7 @@ internal data class MarketsTokenDetailsUM(
         val securityScore: SecurityScoreUM?,
         val metrics: MetricsUM?,
         val pricePerformance: PricePerformanceUM?,
+        val listedOn: ListedOnUM,
         val links: LinksUM?,
     )
 
