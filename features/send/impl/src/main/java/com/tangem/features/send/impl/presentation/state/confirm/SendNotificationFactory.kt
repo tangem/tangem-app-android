@@ -1,6 +1,7 @@
 package com.tangem.features.send.impl.presentation.state.confirm
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -246,7 +247,7 @@ internal class SendNotificationFactory(
         )
         addValidateTransactionNotifications(
             dustValue = currencyCheck.dustValue.orZero(),
-            fee = feeState.fee,
+            minAdaValue = (feeState.fee as? Fee.CardanoToken)?.minAdaValue,
             validationError = validationError,
             cryptoCurrency = currency,
             onReduceClick = clickIntents::onAmountReduceToClick,
