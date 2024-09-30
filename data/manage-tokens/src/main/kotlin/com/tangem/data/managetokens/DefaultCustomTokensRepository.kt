@@ -53,8 +53,8 @@ internal class DefaultCustomTokensRepository(
                 Blockchain.Binance,
                 Blockchain.BinanceTestnet,
                 -> true
-                Blockchain.Cardano -> blockchain.validateContractAddress(contractAddress.lowercase())
-                else -> blockchain.validateAddress(contractAddress.lowercase())
+                Blockchain.Cardano -> blockchain.validateContractAddress(contractAddress)
+                else -> blockchain.validateAddress(contractAddress)
             }
         }
 
