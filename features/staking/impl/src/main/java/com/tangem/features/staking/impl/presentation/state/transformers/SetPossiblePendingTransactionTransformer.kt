@@ -26,6 +26,7 @@ internal class SetPossiblePendingTransactionTransformer(
                     rawCurrencyId = balanceState.rawCurrencyId,
                     validator = balanceState.validator,
                     balancesId = balancesId,
+                    balanceItems = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.balance?.items ?: emptyList()
                 ),
             ),
         )
