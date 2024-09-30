@@ -12,6 +12,7 @@ data class SwapProcessDataState(
     // Initial network id
     val fromCryptoCurrency: CryptoCurrencyStatus? = null,
     val toCryptoCurrency: CryptoCurrencyStatus? = null,
+    val feePaidCryptoCurrency: CryptoCurrencyStatus? = null,
     // Amount from input
     val amount: String? = null,
     val approveDataModel: RequestApproveStateData? = null,
