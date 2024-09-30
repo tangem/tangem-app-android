@@ -28,6 +28,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
+import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -44,8 +45,8 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.SwapWarning
 import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
@@ -81,6 +82,7 @@ internal class SwapViewModel @Inject constructor(
     private val getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
+    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
@@ -400,7 +402,7 @@ internal class SwapViewModel @Inject constructor(
             },
             onError = {
                 Timber.e("Error when loading quotes: $it")
-                uiState = stateBuilder.addWarning(uiState, null) { startLoadingQuotesFromLastState() }
+                uiState = stateBuilder.addNotification(uiState, null) { startLoadingQuotesFromLastState() }
             },
         )
     }
@@ -415,13 +417,14 @@ internal class SwapViewModel @Inject constructor(
                     uiStateHolder = uiState,
                     quoteModel = state,
                     fromToken = fromToken.currency,
+                    feeCryptoCurrencyStatus = dataState.feePaidCryptoCurrency,
                     swapProvider = provider,
                     bestRatedProviderId = bestRatedProviderId,
                     isNeedBestRateBadge = dataState.lastLoadedSwapStates.consideredProvidersStates().size > 1,
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                     isReverseSwapPossible = isReverseSwapPossible(),
                 )
-                if (uiState.warnings.any { it is SwapWarning.UnableToCoverFeeWarning }) {
+                if (uiState.notifications.any { it is SwapNotificationUM.Error.UnableToCoverFeeWarning }) {
                     analyticsEventHandler.send(
                         SwapEvents.NoticeNotEnoughFee(
                             token = initialCurrencyFrom.symbol,
@@ -837,6 +840,13 @@ internal class SwapViewModel @Inject constructor(
             .distinctUntilChanged { old, new -> old.value.amount == new.value.amount } // Check only balance changes
             .onEach {
                 Timber.d("${coin.id} balance is ${it.value.amount}")
+
+                dataState = dataState.copy(
+                    feePaidCryptoCurrency = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                        userWalletId = userWalletId,
+                        cryptoCurrencyStatus = it,
+                    ).getOrNull() ?: it,
+                )
 
                 uiState = if (isFromCurrency) {
                     dataState = dataState.copy(fromCryptoCurrency = it)
