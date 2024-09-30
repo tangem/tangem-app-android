@@ -1079,7 +1079,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
                 txFee = txFee,
-                transactionFee = txFeeResult?.getOrNull(),
+                transactionFee = txFeeResult.getOrNull(),
                 includeFeeInAmount = includeFeeInAmount,
             )
         }
