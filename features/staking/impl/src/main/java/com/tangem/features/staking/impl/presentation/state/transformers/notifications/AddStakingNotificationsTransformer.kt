@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers.notifications
 
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
@@ -212,7 +213,7 @@ internal class AddStakingNotificationsTransformer(
         // blockchain specific
         addValidateTransactionNotifications(
             dustValue = currencyCheck.dustValue.orZero(),
-            fee = feeState?.fee,
+            minAdaValue = (feeState?.fee as? Fee.CardanoToken)?.minAdaValue,
             validationError = validatorError,
             cryptoCurrency = cryptoCurrency,
             onReduceClick = prevState.clickIntents::onAmountReduceToClick,
