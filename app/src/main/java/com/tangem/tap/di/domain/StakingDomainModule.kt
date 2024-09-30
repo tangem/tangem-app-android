@@ -152,8 +152,8 @@ internal object StakingDomainModule {
     fun provideGetPendingTransactionsUseCase(
         stakingPendingTransactionRepository: StakingPendingTransactionRepository,
         stakingErrorResolver: StakingErrorResolver,
-    ): GetPendingTransactionsUseCase {
-        return GetPendingTransactionsUseCase(
+    ): GetStakingPendingTransactionsUseCase {
+        return GetStakingPendingTransactionsUseCase(
             stakingPendingTransactionRepository = stakingPendingTransactionRepository,
             stakingErrorResolver = stakingErrorResolver,
         )

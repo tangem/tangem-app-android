@@ -9,7 +9,7 @@ import com.tangem.domain.staking.repositories.StakingPendingTransactionRepositor
 /**
  * Use case for getting saved staking pending transactions.
  */
-class GetPendingTransactionsUseCase(
+class GetStakingPendingTransactionsUseCase(
     private val stakingPendingTransactionRepository: StakingPendingTransactionRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
