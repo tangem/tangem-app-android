@@ -434,7 +434,7 @@
   <string name="markets_token_details_trading_volume">Объем торгов (24ч)</string>
   <string name="markets_token_details_trading_volume_24h_description">Общая сумма криптовалюты, которая была продана за последние 24 часа, показывающая уровень активности и ликвидности на рынке.</string>
   <string name="markets_token_details_trading_volume_full">Объем торгов (24ч)</string>
-  <string name="markets_tooltip_message">Потяните вверх или коснитесь поисковой строки, чтобы добавить токены напрямую из маркета</string>
+  <string name="markets_tooltip_message">Потяните вверх или коснитесь поисковой строки, чтобы добавить токены напрямую из рынка</string>
   <string name="markets_tooltip_title">Добавить токены</string>
   <string name="nfc_error_unavailable">Функция NFC недоступна на вашем устройстве</string>
   <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
@@ -744,6 +744,7 @@
   <string name="staking_stake_more">Застейкать еще</string>
   <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать %2$s ежегодно</string>
   <string name="staking_tap_to_unlock">Нажмите для разблокировки</string>
+  <string name="staking_tap_to_unlock_or_vote">Нажмите для разблокировки или голосования</string>
   <string name="staking_tap_to_withdraw">Нажмите для вывода</string>
   <string name="staking_title_stake">Застейкать %s</string>
   <string name="staking_title_unstake">Вывести %s</string>
