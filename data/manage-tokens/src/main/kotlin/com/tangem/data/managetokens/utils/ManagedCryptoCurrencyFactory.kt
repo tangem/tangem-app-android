@@ -12,6 +12,7 @@ import com.tangem.data.common.currency.getNetwork
 import com.tangem.data.common.currency.getTokenId
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.local.testnet.models.TestnetTokensConfig
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
@@ -34,15 +35,48 @@ internal class ManagedCryptoCurrencyFactory {
         tokensResponse: UserTokensResponse,
         derivationStyleProvider: DerivationStyleProvider,
     ): List<ManagedCryptoCurrency> {
-        val customTokens = tokensResponse.tokens
-            .mapNotNull { token ->
-                maybeCreateCustomToken(token, coinsResponse.imageHost, derivationStyleProvider)
-            }
-
+        val customTokens = createCustomTokens(tokensResponse, derivationStyleProvider)
         val tokens = create(coinsResponse, tokensResponse, derivationStyleProvider)
 
         return customTokens + tokens
     }
+
+    fun createTestnetWithCustomTokens(
+        testnetTokensConfig: TestnetTokensConfig,
+        tokensResponse: UserTokensResponse?,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): List<ManagedCryptoCurrency> {
+        val customTokens = tokensResponse
+            ?.let { createCustomTokens(it, derivationStyleProvider) }
+            ?: emptyList()
+        val testnetTokens = testnetTokensConfig.tokens.map { testnetToken ->
+            ManagedCryptoCurrency.Token(
+                id = ManagedCryptoCurrency.ID(testnetToken.id),
+                name = testnetToken.name,
+                symbol = testnetToken.symbol,
+                iconUrl = getIconUrl(testnetToken.id),
+                availableNetworks = testnetToken.networks?.mapNotNull { network ->
+                    createSource(
+                        networkId = network.id,
+                        contractAddress = network.address,
+                        decimals = network.decimalCount ?: return@mapNotNull null,
+                        derivationStyleProvider = derivationStyleProvider,
+                    )
+                } ?: emptyList(),
+                addedIn = findAddedInNetworks(testnetToken.id, tokensResponse, derivationStyleProvider),
+            )
+        }
+
+        return customTokens + testnetTokens
+    }
+
+    private fun createCustomTokens(
+        tokensResponse: UserTokensResponse,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): List<ManagedCryptoCurrency> = tokensResponse.tokens
+        .mapNotNull { token ->
+            maybeCreateCustomToken(token, null, derivationStyleProvider)
+        }
 
     private fun maybeCreateCustomToken(
         token: UserTokensResponse.Token,
@@ -100,23 +134,29 @@ internal class ManagedCryptoCurrencyFactory {
             symbol = coinResponse.symbol,
             iconUrl = getIconUrl(coinResponse.id, imageHost),
             availableNetworks = updatedNetworks.mapNotNull { network ->
-                createSource(network, derivationStyleProvider)
+                createSource(
+                    networkId = network.networkId,
+                    contractAddress = network.contractAddress,
+                    decimals = network.decimalCount?.toInt() ?: return@mapNotNull null,
+                    derivationStyleProvider = derivationStyleProvider,
+                )
             },
             addedIn = findAddedInNetworks(coinResponse.id, tokensResponse, derivationStyleProvider),
         )
     }
 
     private fun createSource(
-        networkResponse: CoinsResponse.Coin.Network,
+        networkId: String,
+        contractAddress: String?,
+        decimals: Int,
         derivationStyleProvider: DerivationStyleProvider?,
         extraDerivationPath: String? = null,
     ): SourceNetwork? {
-        val blockchain = Blockchain.fromNetworkId(networkResponse.networkId)
+        val blockchain = Blockchain.fromNetworkId(networkId)
             ?.takeIf { it.isSupportedInApp() }
             ?: return null
 
         val network = getNetwork(blockchain, extraDerivationPath, derivationStyleProvider) ?: return null
-        val contractAddress = networkResponse.contractAddress
 
         return if (contractAddress.isNullOrBlank()) {
             SourceNetwork.Main(
@@ -127,7 +167,7 @@ internal class ManagedCryptoCurrencyFactory {
         } else {
             SourceNetwork.Default(
                 network = network,
-                decimals = requireNotNull(networkResponse.decimalCount?.toInt()),
+                decimals = decimals,
                 contractAddress = contractAddress,
             )
         }
@@ -157,7 +197,7 @@ internal class ManagedCryptoCurrencyFactory {
             }
     }
 
-    private fun getIconUrl(id: String, imageHost: String?): String {
+    private fun getIconUrl(id: String, imageHost: String? = DEFAULT_IMAGE_HOST): String {
         return "${imageHost ?: DEFAULT_IMAGE_HOST}large/$id.png"
     }
 
