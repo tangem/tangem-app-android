@@ -10,9 +10,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.audits.AuditLabel
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.components.token.state.TokenItemState.CryptoAmountState as TokenCryptoAmountState
+import com.tangem.core.ui.components.token.state.TokenItemState.Subtitle2State as TokenCryptoAmountState
 
 @Composable
 internal fun TokenCryptoAmount(
@@ -21,11 +23,14 @@ internal fun TokenCryptoAmount(
     modifier: Modifier = Modifier,
 ) {
     when (state) {
-        is TokenCryptoAmountState.Content -> {
+        is TokenCryptoAmountState.TextContent -> {
             CryptoAmountText(
                 amount = state.text.orMaskWithStars(isBalanceHidden),
                 modifier = modifier,
             )
+        }
+        is TokenItemState.Subtitle2State.LabelContent -> {
+            AuditLabel(state = state.auditLabelUM, modifier = modifier)
         }
         is TokenCryptoAmountState.Unreachable -> {
             CryptoAmountText(amount = stringResource(id = R.string.common_unreachable), modifier = modifier)
