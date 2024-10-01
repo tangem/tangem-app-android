@@ -1,7 +1,10 @@
 package com.tangem.features.markets.details.impl.ui.state
 
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.features.markets.impl.R
 
 /**
  * "Listed on" block UI model
@@ -10,13 +13,16 @@ import com.tangem.core.ui.extensions.stringReference
  */
 internal sealed interface ListedOnUM {
 
+    /** Title */
+    val title: TextReference
+        get() = resourceReference(id = R.string.markets_token_details_listed_on)
+
     /** Description */
     val description: TextReference
 
     /** Empty state. No exchanges found */
     data object Empty : ListedOnUM {
-        // TODO [REDACTED_JIRA]
-        override val description: TextReference = stringReference(value = "No exchanges found")
+        override val description = resourceReference(id = R.string.markets_token_details_empty_exchanges)
     }
 
     /**
@@ -29,7 +35,10 @@ internal sealed interface ListedOnUM {
         val onClick: () -> Unit,
         private val amount: Int,
     ) : ListedOnUM {
-        // TODO [REDACTED_JIRA]
-        override val description: TextReference = stringReference(value = "$amount exchanges")
+        override val description: TextReference = pluralReference(
+            id = R.plurals.markets_token_details_amount_exchanges,
+            count = amount,
+            formatArgs = wrappedList(amount),
+        )
     }
 }
