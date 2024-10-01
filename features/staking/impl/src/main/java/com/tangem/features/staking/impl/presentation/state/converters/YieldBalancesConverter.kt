@@ -28,12 +28,15 @@ internal class YieldBalancesConverter(
 
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance
+        val balanceToShowItems = balancesToShowProvider()
 
-        return if (yieldBalance is YieldBalance.Data) {
-            val cryptoRewardsValue = yieldBalance.getRewardStakingBalance()
-            val fiatRewardsValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoRewardsValue)
+        return if (yieldBalance is YieldBalance.Data || balanceToShowItems.any { it.isPending }) {
+            val cryptoRewardsValue = (yieldBalance as? YieldBalance.Data)?.getRewardStakingBalance()
 
-            val balanceToShowItems = balancesToShowProvider()
+            val fiatRate = cryptoCurrencyStatus.value.fiatRate
+            val fiatRewardsValue = if (fiatRate != null && cryptoRewardsValue != null) {
+                fiatRate.times(cryptoRewardsValue)
+            } else null
 
             InnerYieldBalanceState.Data(
                 rewardsCrypto = BigDecimalFormatter.formatCryptoAmount(
