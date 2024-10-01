@@ -294,8 +294,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
             rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
             validator = (confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator,
             balancesId = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.getBalancesUniqueId() ?: 0,
-            balanceItems = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.balance?.items
-                ?: emptyList(),
         )
     }
 
