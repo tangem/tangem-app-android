@@ -36,7 +36,9 @@ internal class YieldBalancesConverter(
             val fiatRate = cryptoCurrencyStatus.value.fiatRate
             val fiatRewardsValue = if (fiatRate != null && cryptoRewardsValue != null) {
                 fiatRate.times(cryptoRewardsValue)
-            } else null
+            } else {
+                null
+            }
 
             InnerYieldBalanceState.Data(
                 rewardsCrypto = BigDecimalFormatter.formatCryptoAmount(
