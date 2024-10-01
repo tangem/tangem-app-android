@@ -374,6 +374,9 @@
   <string name="markets_sort_by_top_losers_title">下落率上位</string>
   <string name="markets_sort_by_trending_title">トレンド</string>
   <string name="markets_token_details_about_token_title">%sについて</string>
+  <plurals name="markets_token_details_amount_exchanges">
+    <item quantity="other">%1$s取引所</item>
+  </plurals>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="other">%d のレーティングに基づいて</item>
   </plurals>
@@ -384,6 +387,7 @@
   <string name="markets_token_details_circulating_supply">循環供給量</string>
   <string name="markets_token_details_circulating_supply_description">取引可能で市場に流通しているコインの総数</string>
   <string name="markets_token_details_circulating_supply_full">循環供給量</string>
+  <string name="markets_token_details_empty_exchanges">取引所が見つかりません</string>
   <string name="markets_token_details_experienced_buyers">経験豊富な買い手</string>
   <string name="markets_token_details_experienced_buyers_description">少なくとも100の発信取引を持つネット・バイヤー</string>
   <string name="markets_token_details_experienced_buyers_full">経験豊富な買い手</string>
