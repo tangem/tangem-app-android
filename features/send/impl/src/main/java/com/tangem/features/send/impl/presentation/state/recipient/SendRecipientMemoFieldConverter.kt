@@ -37,6 +37,7 @@ internal class SendRecipientMemoFieldConverter(
             Blockchain.Hedera.id,
             Blockchain.Algorand.id,
             Blockchain.Sei.id,
+            Blockchain.InternetComputer.id,
             -> {
                 convert(
                     value = Data(memo = memo, label = R.string.send_extras_hint_memo),
