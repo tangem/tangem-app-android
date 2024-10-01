@@ -382,6 +382,12 @@
   <string name="markets_sort_by_top_losers_title">Лидеры падения</string>
   <string name="markets_sort_by_trending_title">В тренде</string>
   <string name="markets_token_details_about_token_title">О %s</string>
+  <plurals name="markets_token_details_amount_exchanges">
+    <item quantity="one">%1$s биржа</item>
+    <item quantity="few">%1$s биржи</item>
+    <item quantity="many">%1$s бирж</item>
+    <item quantity="other">%1$s бирж</item>
+  </plurals>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="one">На основе %d оценки</item>
     <item quantity="few">На основе %d оценок</item>
@@ -395,6 +401,7 @@
   <string name="markets_token_details_circulating_supply">Циркулир. предл.</string>
   <string name="markets_token_details_circulating_supply_description">Общее количество монет, доступных для торговли и находящихся в обращении на рынке</string>
   <string name="markets_token_details_circulating_supply_full">Циркулирующее предложение</string>
+  <string name="markets_token_details_empty_exchanges">Биржи не найдены</string>
   <string name="markets_token_details_experienced_buyers">Опытные трейдеры</string>
   <string name="markets_token_details_experienced_buyers_description">Покупатели, у которых было как минимум 100 исходящих транзакций.</string>
   <string name="markets_token_details_experienced_buyers_full">Опытные трейдеры</string>
@@ -412,6 +419,7 @@
   <string name="markets_token_details_liquidity_description">Изменение объема ликвидности, доступной для токена в течение указанного периода времени.</string>
   <string name="markets_token_details_liquidity_full">Ликвидность</string>
   <string name="markets_token_details_liquidity_index">Индекс ликвидности</string>
+  <string name="markets_token_details_listed_on">Листинг на</string>
   <string name="markets_token_details_low">Низкий</string>
   <string name="markets_token_details_market_capitalization">Рын. кап.</string>
   <string name="markets_token_details_market_capitalization_description">Общая рыночная стоимость криптовалюты, рассчитываемая путем умножения текущей цены монеты на общее количество монет в обращении.</string>
