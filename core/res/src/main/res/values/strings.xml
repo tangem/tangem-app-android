@@ -378,6 +378,10 @@
   <string name="markets_sort_by_top_losers_title">Top Losers</string>
   <string name="markets_sort_by_trending_title">Trending</string>
   <string name="markets_token_details_about_token_title">About %s</string>
+  <plurals name="markets_token_details_amount_exchanges">
+    <item quantity="one">%1$s exchange</item>
+    <item quantity="other">%1$s exchanges</item>
+  </plurals>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="one">Based on %d rating</item>
     <item quantity="other">Based on %d ratings</item>
@@ -389,6 +393,7 @@
   <string name="markets_token_details_circulating_supply">Circulating supply</string>
   <string name="markets_token_details_circulating_supply_description">The total number of coins that are available for trading and are circulating in the market</string>
   <string name="markets_token_details_circulating_supply_full">Circulating supply</string>
+  <string name="markets_token_details_empty_exchanges">No exchanges found</string>
   <string name="markets_token_details_experienced_buyers">Experienced buyers</string>
   <string name="markets_token_details_experienced_buyers_description">Net buyers with the additional requirement of having at least 100 outgoing transactions</string>
   <string name="markets_token_details_experienced_buyers_full">Experienced buyers</string>
@@ -406,6 +411,7 @@
   <string name="markets_token_details_liquidity_description">The change in how much liquidity is available for the token during the specified timeframe</string>
   <string name="markets_token_details_liquidity_full">Liquidity</string>
   <string name="markets_token_details_liquidity_index">Liquidity index</string>
+  <string name="markets_token_details_listed_on">Listed on</string>
   <string name="markets_token_details_low">Low</string>
   <string name="markets_token_details_market_capitalization">Market cap</string>
   <string name="markets_token_details_market_capitalization_description">The total market value of a cryptocurrency, calculated by multiplying the current price of the coin by the total number of coins in circulation</string>
