@@ -6,6 +6,7 @@ import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.hedera.HederaTransactionExtras
+import com.tangem.blockchain.blockchains.icp.ICPTransactionExtras
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
@@ -249,6 +250,7 @@ internal class DefaultTransactionRepository(
         )
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
         val blockchain = Blockchain.fromId(networkId)
         if (memo == null) return null
@@ -270,6 +272,7 @@ internal class DefaultTransactionRepository(
             Blockchain.TON -> TonTransactionExtras(memo)
             Blockchain.Hedera -> HederaTransactionExtras(memo)
             Blockchain.Algorand -> AlgorandTransactionExtras(memo)
+            Blockchain.InternetComputer -> memo.toLongOrNull()?.let { ICPTransactionExtras(it) }
             else -> null
         }
     }
