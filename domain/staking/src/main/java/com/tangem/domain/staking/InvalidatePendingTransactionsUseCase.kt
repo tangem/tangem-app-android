@@ -5,7 +5,6 @@ import com.tangem.domain.staking.model.PendingTransaction
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.StakingError
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingPendingTransactionRepository
 import com.tangem.domain.wallets.models.UserWalletId
@@ -18,36 +17,34 @@ class InvalidatePendingTransactionsUseCase(
 
     operator fun invoke(
         userWalletId: UserWalletId,
-        yieldBalance: YieldBalance,
+        balanceItems: List<BalanceItem>,
+        balancesId: Int,
     ): Either<StakingError, List<BalanceItem>> {
         return Either.catch {
-            if (yieldBalance is YieldBalance.Data) {
-                val (balancesToDisplay, transactionsToRemove) = mergeRealAndPendingTransactions(
-                    yieldBalance = yieldBalance,
-                    pending = stakingPendingTransactionRepository.getTransactionsWithBalanceItems(userWalletId),
-                )
+            val (balancesToDisplay, transactionsToRemove) = mergeRealAndPendingTransactions(
+                realData = balanceItems,
+                newBalancesId = balancesId,
+                pendingData = stakingPendingTransactionRepository.getTransactionsWithBalanceItems(userWalletId),
+            )
 
-                stakingPendingTransactionRepository.removeTransactions(userWalletId, transactionsToRemove.toSet())
+            stakingPendingTransactionRepository.removeTransactions(userWalletId, transactionsToRemove.toSet())
 
-                balancesToDisplay
-            } else {
-                emptyList()
-            }
+            balancesToDisplay
         }.mapLeft {
             stakingErrorResolver.resolve(it)
         }
     }
 
     private fun mergeRealAndPendingTransactions(
-        yieldBalance: YieldBalance.Data,
-        pending: List<Pair<PendingTransaction, BalanceItem>>,
+        realData: List<BalanceItem>,
+        newBalancesId: Int,
+        pendingData: List<Pair<PendingTransaction, BalanceItem>>,
     ): Pair<List<BalanceItem>, List<PendingTransaction>> {
-        val balances = yieldBalance.balance.items.associateBy { Triple(it.groupId, it.type, it.amount) }.toMutableMap()
-        val newBalancesId = yieldBalance.getBalancesUniqueId()
+        val balances = realData.associateBy { Triple(it.groupId, it.type, it.amount) }.toMutableMap()
 
         val transactionsToRemove = mutableListOf<PendingTransaction>()
 
-        pending.forEach { (pendingTransaction, balanceItem) ->
+        pendingData.forEach { (pendingTransaction, balanceItem) ->
             val key = Triple(balanceItem.groupId, balanceItem.type, balanceItem.amount)
             val oldBalancesId = pendingTransaction.balancesId
 
