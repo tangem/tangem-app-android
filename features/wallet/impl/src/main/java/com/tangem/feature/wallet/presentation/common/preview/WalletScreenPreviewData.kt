@@ -20,7 +20,7 @@ internal object WalletScreenPreviewData {
         iconState = CurrencyIconState.Locked,
         titleState = TokenItemState.TitleState.Content(text = "Bitcoin"),
         fiatAmountState = TokenItemState.FiatAmountState.Content(text = "12 368,14 \$"),
-        cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "0,35853044 BTC"),
+        subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "0,35853044 BTC"),
         subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
             price = "34 496,75 \$",
             priceChangePercent = "0,43 %",
@@ -30,7 +30,7 @@ internal object WalletScreenPreviewData {
         onItemLongClick = {},
     )
 
-    private val contentTokensState = WalletTokensListState.ContentState.Content(
+    private val textContentTokensState = WalletTokensListState.ContentState.Content(
         items = persistentListOf(
             WalletTokensListState.TokensListItemState.NetworkGroupTitle(
                 id = 1,
@@ -46,7 +46,7 @@ internal object WalletScreenPreviewData {
                     id = "2",
                     titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
                     fiatAmountState = TokenItemState.FiatAmountState.Content(text = "3 340,79 \$"),
-                    cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "1,856660295 ETH"),
+                    subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "1,856660295 ETH"),
                     subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                         price = "1 799,41 \$",
                         priceChangePercent = "5,16 %",
@@ -68,7 +68,7 @@ internal object WalletScreenPreviewData {
                     id = "4",
                     titleState = TokenItemState.TitleState.Content(text = "Shiba Inu"),
                     fiatAmountState = TokenItemState.FiatAmountState.Content(text = "48,64 \$"),
-                    cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "6 200 220,00 SHIB"),
+                    subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "6 200 220,00 SHIB"),
                     subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                         price = "0.01 \$",
                         priceChangePercent = "1,34 %",
@@ -122,7 +122,7 @@ internal object WalletScreenPreviewData {
                 WalletNotification.Warning.SomeNetworksUnreachable,
             ),
             bottomSheetConfig = null,
-            tokensListState = contentTokensState,
+            tokensListState = textContentTokensState,
         )
     }
 
