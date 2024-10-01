@@ -149,20 +149,19 @@ internal class TokenDetailsLoadedBalanceConverter(
         val fiatRate = status.value.fiatRate
 
         return when {
-            stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null -> {
-                if (pendingBalances.isEmpty()) {
-                    getStakeAvailableState(stakingEntryInfo, iconState)
-                } else {
-                    val pendingBalancesCryptoAmount = pendingBalances.sumOf { it.amount }
+            stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null && pendingBalances.isEmpty() -> {
+                getStakeAvailableState(stakingEntryInfo, iconState)
+            }
+            stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null && pendingBalances.isNotEmpty() -> {
+                val pendingBalancesCryptoAmount = pendingBalances.sumOf { it.amount }
 
-                    val stakingFiatAmount = fiatRate?.multiply(pendingBalancesCryptoAmount)
-                    getStakedState(
-                        status = status,
-                        stakingCryptoAmount = pendingBalancesCryptoAmount,
-                        stakingFiatAmount = stakingFiatAmount,
-                        stakingRewardAmount = null,
-                    )
-                }
+                val stakingFiatAmount = fiatRate?.multiply(pendingBalancesCryptoAmount)
+                getStakedState(
+                    status = status,
+                    stakingCryptoAmount = pendingBalancesCryptoAmount,
+                    stakingFiatAmount = stakingFiatAmount,
+                    stakingRewardAmount = null,
+                )
             }
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo == null -> {
                 StakingBlockUM.Error(iconState = iconState)
