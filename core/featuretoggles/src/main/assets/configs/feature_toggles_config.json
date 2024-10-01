@@ -37,6 +37,6 @@
     },
     {
         "name": "IS_ETHEREUM_EIP_1559_ENABLED",
-        "version": "5.16.0"
+        "version": "5.17.0"
     }
 ]
