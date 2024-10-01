@@ -379,6 +379,4 @@ private val excludedBlockchains = listOf(
     Blockchain.Nexa,
     Blockchain.Sei,
     Blockchain.InternetComputer,
-    Blockchain.EnergyWebChain,
-    Blockchain.EnergyWebX,
 )
