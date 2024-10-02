@@ -379,8 +379,8 @@
   <string name="markets_sort_by_trending_title">Trending</string>
   <string name="markets_token_details_about_token_title">About %s</string>
   <plurals name="markets_token_details_amount_exchanges">
-    <item quantity="one">%1$s exchange</item>
-    <item quantity="other">%1$s exchanges</item>
+    <item quantity="one">%d exchange</item>
+    <item quantity="other">%d exchanges</item>
   </plurals>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="one">Based on %d rating</item>
@@ -394,6 +394,11 @@
   <string name="markets_token_details_circulating_supply_description">The total number of coins that are available for trading and are circulating in the market</string>
   <string name="markets_token_details_circulating_supply_full">Circulating supply</string>
   <string name="markets_token_details_empty_exchanges">No exchanges found</string>
+  <string name="markets_token_details_exchange">Exchange</string>
+  <string name="markets_token_details_exchange_trust_score_caution">Caution</string>
+  <string name="markets_token_details_exchange_trust_score_risky">Risky</string>
+  <string name="markets_token_details_exchange_trust_score_trusted">Trusted</string>
+  <string name="markets_token_details_exchanges_title">Exchanges</string>
   <string name="markets_token_details_experienced_buyers">Experienced buyers</string>
   <string name="markets_token_details_experienced_buyers_description">Net buyers with the additional requirement of having at least 100 outgoing transactions</string>
   <string name="markets_token_details_experienced_buyers_full">Experienced buyers</string>
@@ -434,6 +439,7 @@
   <string name="markets_token_details_trading_volume">Trading volume (24h)</string>
   <string name="markets_token_details_trading_volume_24h_description">The total amount of a cryptocurrency that has been traded within the last 24 hours, indicating the level of activity and liquidity in the market</string>
   <string name="markets_token_details_trading_volume_full">Trading volume (24h)</string>
+  <string name="markets_token_details_volume">Volume</string>
   <string name="markets_tooltip_message">Pull this up or tap the search bar to add tokens directly from the market</string>
   <string name="markets_tooltip_title">Add tokens</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
