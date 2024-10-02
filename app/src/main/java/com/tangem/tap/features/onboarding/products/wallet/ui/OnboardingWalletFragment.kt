@@ -40,7 +40,7 @@ import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.datasource.utils.isNullOrEmpty
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
@@ -84,22 +84,7 @@ class OnboardingWalletFragment :
     @RootAppComponentContext
     internal lateinit var rootComponentContext: AppComponentContext
 
-    @Inject
-    internal lateinit var getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase
-
-    private val onboardingManageTokensComponent by lazy(mode = LazyThreadSafetyMode.NONE) {
-        val componentContext = rootComponentContext.childByContext(
-            componentContext = defaultComponentContext(onBackPressedDispatcher = null),
-        )
-        val wallet = requireNotNull(getSelectedWalletSyncUseCase.invoke().getOrNull()) {
-            "Can not find selected wallet."
-        }
-
-        onboardingManageTokensComponentFactory.create(
-            context = componentContext,
-            params = OnboardingManageTokensComponent.Params(userWalletId = wallet.walletId),
-        )
-    }
+    private var onboardingManageTokensComponent: OnboardingManageTokensComponent? = null
 
     internal val binding: FragmentOnboardingWalletBinding by viewBinding(FragmentOnboardingWalletBinding::bind)
     internal val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
@@ -211,6 +196,7 @@ class OnboardingWalletFragment :
 
     override fun onStop() {
         super.onStop()
+        onboardingManageTokensComponent = null
         store.unsubscribe(this)
     }
 
@@ -260,13 +246,23 @@ class OnboardingWalletFragment :
         when (state.step) {
             OnboardingWalletStep.CreateWallet -> setupCreateWalletState()
             OnboardingWalletStep.Backup -> setBackupState(state = state.backupState)
-            OnboardingWalletStep.ManageTokens -> setManageTokensState()
+            OnboardingWalletStep.ManageTokens -> setManageTokensState(requireNotNull(state.userWalletId))
             OnboardingWalletStep.Done -> showSuccess()
             else -> {}
         }
     }
 
-    private fun setManageTokensState() {
+    private fun initializeOnboardingManageTokensComponent(userWalletId: UserWalletId) {
+        val componentContext = rootComponentContext.childByContext(
+            componentContext = defaultComponentContext(onBackPressedDispatcher = null),
+        )
+        onboardingManageTokensComponent = onboardingManageTokensComponentFactory.create(
+            context = componentContext,
+            params = OnboardingManageTokensComponent.Params(userWalletId = userWalletId),
+        )
+    }
+
+    private fun setManageTokensState(userWalletId: UserWalletId) {
         binding.tvHeader.show()
         binding.tvBody.show()
         binding.viewPagerBackupInfo.hide()
@@ -279,12 +275,15 @@ class OnboardingWalletFragment :
         bindingSeedPhrase.onboardingSeedPhraseContainer.hide()
         bindingManageTokens.onboardingManageTokensContainer.show()
         binding.toolbar.title = getText(R.string.onboarding_add_tokens)
+        if (onboardingManageTokensComponent == null) {
+            initializeOnboardingManageTokensComponent(userWalletId)
+        }
         bindingManageTokens.onboardingManageTokensContainer.setContent {
             TangemTheme(
                 isDark = isSystemInDarkTheme(),
                 windowSize = rememberWindowSize(activity = requireActivity()),
             ) {
-                onboardingManageTokensComponent.Content(modifier = Modifier.fillMaxSize())
+                onboardingManageTokensComponent?.Content(modifier = Modifier.fillMaxSize())
             }
         }
     }
@@ -318,7 +317,7 @@ class OnboardingWalletFragment :
             is BackupStep.WritePrimaryCard -> showWritePrimaryCard(state)
             is BackupStep.WriteBackupCard -> showWriteBackupCard(state)
             BackupStep.Finished -> {
-                // don't need to navigate here
+                // don't need to navigate here"
                 // showSuccess()
             }
         }

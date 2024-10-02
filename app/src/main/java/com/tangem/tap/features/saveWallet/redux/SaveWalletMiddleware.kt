@@ -89,7 +89,7 @@ internal class SaveWalletMiddleware {
                 .doOnSuccess {
                     mainScope.launch { store.onUserWalletSelected(userWallet) }
                     if (!shouldNavigateToWallet) {
-                        store.dispatch(OnboardingWalletAction.WalletSaved)
+                        store.dispatch(OnboardingWalletAction.WalletSaved(userWallet.walletId))
                     }
                 }
                 .doOnResult { if (shouldNavigateToWallet) navigateToWallet() }
