@@ -264,27 +264,31 @@ class OnboardingWalletFragment :
     }
 
     private fun setManageTokensState(userWalletId: UserWalletId) {
-        binding.tvHeader.show()
-        binding.tvBody.show()
-        binding.viewPagerBackupInfo.hide()
-        binding.tabLayoutBackupInfo.hide()
-        binding.onboardingWalletContainer.show()
-        bindingManageTokens.onboardingManageTokensContainer.hide()
-        binding.layoutButtonsCommon.btnWalletAlternativeAction.hide()
+        with(binding) {
+            tvHeader.show()
+            tvBody.show()
+            viewPagerBackupInfo.hide()
+            tabLayoutBackupInfo.hide()
+            onboardingWalletContainer.show()
+            layoutButtonsCommon.btnWalletAlternativeAction.hide()
+            onboardingWalletContainer.hide()
+            toolbar.title = getText(R.string.onboarding_add_tokens)
+        }
         pbBinding.pbState.show()
-        binding.onboardingWalletContainer.hide()
         bindingSeedPhrase.onboardingSeedPhraseContainer.hide()
-        bindingManageTokens.onboardingManageTokensContainer.show()
-        binding.toolbar.title = getText(R.string.onboarding_add_tokens)
         if (onboardingManageTokensComponent == null) {
             initializeOnboardingManageTokensComponent(userWalletId)
         }
-        bindingManageTokens.onboardingManageTokensContainer.setContent {
-            TangemTheme(
-                isDark = isSystemInDarkTheme(),
-                windowSize = rememberWindowSize(activity = requireActivity()),
-            ) {
-                onboardingManageTokensComponent?.Content(modifier = Modifier.fillMaxSize())
+        with(bindingManageTokens) {
+            onboardingManageTokensContainer.hide()
+            onboardingManageTokensContainer.show()
+            onboardingManageTokensContainer.setContent {
+                TangemTheme(
+                    isDark = isSystemInDarkTheme(),
+                    windowSize = rememberWindowSize(activity = requireActivity()),
+                ) {
+                    onboardingManageTokensComponent?.Content(modifier = Modifier.fillMaxSize())
+                }
             }
         }
     }
