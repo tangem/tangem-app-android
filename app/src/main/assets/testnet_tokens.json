@@ -738,6 +738,16 @@
                     "networkId": "energy-web-x/test"
                 }
             ]
+        },
+        {
+            "id": "core",
+            "name": "Core",
+            "symbol": "CORE",
+            "networks": [
+                {
+                    "networkId": "core/test"
+                }
+            ]
         }
     ]
 }
