@@ -383,10 +383,10 @@
   <string name="markets_sort_by_trending_title">В тренде</string>
   <string name="markets_token_details_about_token_title">О %s</string>
   <plurals name="markets_token_details_amount_exchanges">
-    <item quantity="one">%1$s биржа</item>
-    <item quantity="few">%1$s биржи</item>
-    <item quantity="many">%1$s бирж</item>
-    <item quantity="other">%1$s бирж</item>
+    <item quantity="one">%d биржа</item>
+    <item quantity="few">%d биржи</item>
+    <item quantity="many">%d бирж</item>
+    <item quantity="other">%d бирж</item>
   </plurals>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="one">На основе %d оценки</item>
@@ -402,6 +402,8 @@
   <string name="markets_token_details_circulating_supply_description">Общее количество монет, доступных для торговли и находящихся в обращении на рынке</string>
   <string name="markets_token_details_circulating_supply_full">Циркулирующее предложение</string>
   <string name="markets_token_details_empty_exchanges">Биржи не найдены</string>
+  <string name="markets_token_details_exchange">Биржа</string>
+  <string name="markets_token_details_exchanges_title">Биржи</string>
   <string name="markets_token_details_experienced_buyers">Опытные трейдеры</string>
   <string name="markets_token_details_experienced_buyers_description">Покупатели, у которых было как минимум 100 исходящих транзакций.</string>
   <string name="markets_token_details_experienced_buyers_full">Опытные трейдеры</string>
@@ -442,6 +444,7 @@
   <string name="markets_token_details_trading_volume">Объем торгов (24ч)</string>
   <string name="markets_token_details_trading_volume_24h_description">Общая сумма криптовалюты, которая была продана за последние 24 часа, показывающая уровень активности и ликвидности на рынке.</string>
   <string name="markets_token_details_trading_volume_full">Объем торгов (24ч)</string>
+  <string name="markets_token_details_volume">Объем</string>
   <string name="markets_tooltip_message">Потяните вверх или коснитесь поисковой строки, чтобы добавить токены напрямую из маркета</string>
   <string name="markets_tooltip_title">Добавить токены</string>
   <string name="nfc_error_unavailable">Функция NFC недоступна на вашем устройстве</string>

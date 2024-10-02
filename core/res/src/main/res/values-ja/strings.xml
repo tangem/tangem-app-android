@@ -375,7 +375,7 @@
   <string name="markets_sort_by_trending_title">トレンド</string>
   <string name="markets_token_details_about_token_title">%sについて</string>
   <plurals name="markets_token_details_amount_exchanges">
-    <item quantity="other">%1$s取引所</item>
+    <item quantity="other">%d取引所</item>
   </plurals>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="other">%d のレーティングに基づいて</item>
@@ -405,6 +405,7 @@
   <string name="markets_token_details_liquidity_description">指定された期間中のトークンに利用可能な流動性の変化</string>
   <string name="markets_token_details_liquidity_full">流動性</string>
   <string name="markets_token_details_liquidity_index">流動性指数</string>
+  <string name="markets_token_details_listed_on">上場先</string>
   <string name="markets_token_details_low">低い</string>
   <string name="markets_token_details_market_capitalization">時価総額</string>
   <string name="markets_token_details_market_capitalization_description">暗号資産の市場価値の合計。コインの現在の価格と、流通しているコインの総数を掛けて計算されます。</string>
