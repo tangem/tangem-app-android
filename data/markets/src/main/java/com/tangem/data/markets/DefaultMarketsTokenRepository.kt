@@ -10,11 +10,6 @@ import com.tangem.data.common.currency.getNetwork
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.*
-import com.tangem.data.markets.converters.TokenChartConverter
-import com.tangem.data.markets.converters.TokenMarketInfoConverter
-import com.tangem.data.markets.converters.TokenMarketListConverter
-import com.tangem.data.markets.converters.TokenQuotesShortConverter
-import com.tangem.data.markets.converters.toRequestParam
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
@@ -29,6 +24,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
@@ -125,7 +121,7 @@ internal class DefaultMarketsTokenRepository(
         interval: PriceChangeInterval,
         tokenId: String,
         tokenSymbol: String,
-    ): TokenChart {
+    ) = withContext(dispatcherProvider.io) {
         val mappedTokenId = getTokenIdIfL2Network(tokenId)
         val response = marketsApi.getCoinChart(
             currency = fiatCurrencyCode,
@@ -142,7 +138,7 @@ internal class DefaultMarketsTokenRepository(
             response.getOrThrow()
         }
 
-        return TokenChartConverter.convert(
+        return@withContext TokenChartConverter.convert(
             interval = interval,
             value = result,
 
@@ -162,7 +158,7 @@ internal class DefaultMarketsTokenRepository(
         interval: PriceChangeInterval,
         tokenId: String,
         tokenSymbol: String,
-    ): TokenChart {
+    ) = withContext(dispatcherProvider.io) {
         val mappedTokenId = getTokenIdIfL2Network(tokenId)
         val response = marketsApi.getCoinsListCharts(
             coinIds = mappedTokenId,
@@ -176,7 +172,7 @@ internal class DefaultMarketsTokenRepository(
             )
         }
 
-        return TokenChartConverter.convert(
+        return@withContext TokenChartConverter.convert(
             interval = interval,
             value = chart,
 
@@ -196,7 +192,7 @@ internal class DefaultMarketsTokenRepository(
         tokenId: String,
         tokenSymbol: String,
         languageCode: String,
-    ): TokenMarketInfo {
+    ) = withContext(dispatcherProvider.io) {
         val response = marketsApi.getCoinMarketData(
             currency = fiatCurrencyCode,
             coinId = tokenId,
@@ -213,28 +209,29 @@ internal class DefaultMarketsTokenRepository(
         }
 
         val resultResponse = result.applyL2Compatibility(tokenId)
-        return TokenMarketInfoConverter.convert(resultResponse)
+        return@withContext TokenMarketInfoConverter.convert(resultResponse)
     }
 
-    override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String, tokenSymbol: String): TokenQuotes {
-        // for second markets iteration we should use extended api method with all required fields
-        val response = tangemTechApi.getQuotes(
-            currencyId = fiatCurrencyCode,
-            coinIds = tokenId,
-            fields = marketsQuoteFields.joinToString(separator = ","),
-        )
+    override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String, tokenSymbol: String) =
+        withContext(dispatcherProvider.io) {
+            // for second markets iteration we should use extended api method with all required fields
+            val response = tangemTechApi.getQuotes(
+                currencyId = fiatCurrencyCode,
+                coinIds = tokenId,
+                fields = marketsQuoteFields.joinToString(separator = ","),
+            )
 
-        val result = catchApiErrorAndSendEvent(
-            errorEvent = MarketsDataAnalyticsEvent.Details.Error(
-                request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
-                tokenSymbol = tokenSymbol,
-            ),
-        ) {
-            response.getOrThrow()
+            val result = catchApiErrorAndSendEvent(
+                errorEvent = MarketsDataAnalyticsEvent.Details.Error(
+                    request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
+                    tokenSymbol = tokenSymbol,
+                ),
+            ) {
+                response.getOrThrow()
+            }
+
+            return@withContext TokenQuotesShortConverter.convert(tokenId, result).toFull()
         }
-
-        return TokenQuotesShortConverter.convert(tokenId, result).toFull()
-    }
 
     override suspend fun createCryptoCurrency(
         userWalletId: UserWalletId,
