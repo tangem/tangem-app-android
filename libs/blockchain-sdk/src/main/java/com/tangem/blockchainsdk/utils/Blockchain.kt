@@ -345,8 +345,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Cyber, Blockchain.CyberTestnet -> "cyber-ethereum"
         Blockchain.Sei, Blockchain.SeiTestnet -> "sei-network"
         Blockchain.InternetComputer -> "internet-computer"
-        Blockchain.EnergyWebChain, Blockchain.EnergyWebChainTestnet -> "energy-web-chain"
-        Blockchain.EnergyWebX, Blockchain.EnergyWebXTestnet -> "energy-web-x"
+        Blockchain.EnergyWebChain, Blockchain.EnergyWebChainTestnet -> "energy-web-token"
+        Blockchain.EnergyWebX, Blockchain.EnergyWebXTestnet -> "energy-web-token"
     }
 }
 
