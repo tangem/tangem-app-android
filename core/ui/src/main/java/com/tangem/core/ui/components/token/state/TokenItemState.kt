@@ -46,8 +46,8 @@ sealed class TokenItemState {
      */
     data class Loading(
         override val id: String,
-        override val iconState: CurrencyIconState,
-        override val titleState: TitleState.Content,
+        override val iconState: CurrencyIconState = CurrencyIconState.Loading,
+        override val titleState: TitleState = TitleState.Loading,
         override val subtitleState: SubtitleState = SubtitleState.Loading,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState = FiatAmountState.Loading
