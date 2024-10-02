@@ -38,7 +38,7 @@ class SaveManagedTokensUseCase(
     ) {
         if (currenciesToRemove.isEmpty()) return
 
-        val currencies = currenciesToRemove.mapToCryptoCurrencies()
+        val currencies = currenciesToRemove.mapToCryptoCurrencies(userWalletId)
         currenciesRepository.removeCurrencies(userWalletId = userWalletId, currencies = currencies)
 
         walletManagersFacade.remove(
@@ -61,7 +61,7 @@ class SaveManagedTokensUseCase(
         if (currenciesToAdd.isEmpty()) return
 
         val existingCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
-        val currencies = currenciesToAdd.mapToCryptoCurrencies()
+        val currencies = currenciesToAdd.mapToCryptoCurrencies(userWalletId)
         derivationsRepository.derivePublicKeysByNetworks(
             userWalletId = userWalletId,
             networks = currenciesToAdd.values.flatten(),
@@ -105,7 +105,9 @@ class SaveManagedTokensUseCase(
         }
     }
 
-    private fun Map<ManagedCryptoCurrency.Token, Set<Network>>.mapToCryptoCurrencies(): List<CryptoCurrency> {
+    private suspend fun Map<ManagedCryptoCurrency.Token, Set<Network>>.mapToCryptoCurrencies(
+        userWalletId: UserWalletId,
+    ): List<CryptoCurrency> {
         return flatMap { (token, networks) ->
             token.availableNetworks
                 .filter { sourceNetwork -> networks.contains(sourceNetwork.network) }
@@ -117,6 +119,7 @@ class SaveManagedTokensUseCase(
                             rawId = token.id.value,
                         )
                         is ManagedCryptoCurrency.SourceNetwork.Main -> customTokensRepository.createCoin(
+                            userWalletId = userWalletId,
                             networkId = sourceNetwork.id,
                             derivationPath = sourceNetwork.network.derivationPath,
                         )

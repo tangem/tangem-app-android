@@ -25,6 +25,7 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
                 metrics = metrics?.convert(),
                 links = links?.convert(),
                 pricePerformance = pricePerformance?.convert(),
+                exchangesAmount = exchangesAmount,
             )
         }
     }

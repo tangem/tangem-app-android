@@ -17,6 +17,7 @@ import com.tangem.tap.domain.tasks.UserWalletIdPreflightReadFilter
  *
  * @author Andrew Khokhlov on 01/06/2024
  */
+// TODO remove it after test after resolve https://tangem.atlassian.net/browse/AND-8427
 internal class ResetBackupCardTask(
     private val userWalletId: UserWalletId,
 ) : CardSessionRunnable<Boolean> {

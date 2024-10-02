@@ -136,13 +136,11 @@ internal class AddStakingNotificationsTransformer(
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val network = cryptoCurrency.network
 
-        if (feeError != null) {
-            addFeeUnreachableNotification(
-                feeError = feeError,
-                tokenName = cryptoCurrencyStatusProvider().currency.name,
-                onReload = onReload,
-            )
-        }
+        addFeeUnreachableNotification(
+            feeError = feeError,
+            tokenName = cryptoCurrencyStatusProvider().currency.name,
+            onReload = onReload,
+        )
         addStakeExceedBalanceNotification(
             feeAmount = feeValue,
             sendingAmount = sendingAmount,

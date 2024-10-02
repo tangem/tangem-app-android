@@ -15,10 +15,9 @@ import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.asset.loader.AssetLoader
-import com.tangem.datasource.config.ConfigManager
-import com.tangem.datasource.config.FeaturesLocalLoader
-import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
@@ -44,15 +43,14 @@ import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
-import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
-import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -78,8 +76,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val appStateHolder: AppStateHolder
         get() = entryPoint.getAppStateHolder()
 
-    private val configManager: ConfigManager
-        get() = entryPoint.getConfigManager()
+    private val environmentConfigStorage: EnvironmentConfigStorage
+        get() = entryPoint.getEnvironmentConfigStorage()
 
     private val assetLoader: AssetLoader
         get() = entryPoint.getAssetLoader()
@@ -90,8 +88,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val networkConnectionManager: NetworkConnectionManager
         get() = entryPoint.getNetworkConnectionManager()
 
-    private val customTokenFeatureToggles: CustomTokenFeatureToggles
-        get() = entryPoint.getCustomTokenFeatureToggles()
+    private val cardScanningFeatureToggles: CardScanningFeatureToggles
+        get() = entryPoint.getCardScanningFeatureToggles()
 
     private val walletConnect2Repository: WalletConnect2Repository
         get() = entryPoint.getWalletConnect2Repository()
@@ -203,10 +201,11 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         //  https://tangem.atlassian.net/browse/AND-3859
         runBlocking {
             featureTogglesManager.init()
-            initConfigManager(
-                loader = FeaturesLocalLoader(assetLoader, BuildConfig.ENVIRONMENT),
-                onComplete = ::initWithConfigDependency,
-            )
+
+            val config = environmentConfigStorage.initialize()
+            store.dispatch(GlobalAction.SetConfigManager(environmentConfigStorage))
+
+            initWithConfigDependency(environmentConfig = config)
         }
 
         loadNativeLibraries()
@@ -224,7 +223,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         )
         appStateHolder.mainStore = store
 
-        walletConnect2Repository.init(projectId = configManager.config.walletConnectProjectId)
+        walletConnect2Repository.init(projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId)
     }
 
     private fun createReduxStore(): Store<AppState> {
@@ -234,7 +233,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
             state = AppState(
                 daggerGraphState = DaggerGraphState(
                     networkConnectionManager = networkConnectionManager,
-                    customTokenFeatureToggles = customTokenFeatureToggles,
+                    cardScanningFeatureToggles = cardScanningFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
                     scanCardProcessor = scanCardProcessor,
@@ -279,19 +278,12 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         System.loadLibrary("TrustWalletCore")
     }
 
-    private suspend fun initConfigManager(loader: FeaturesLocalLoader, onComplete: (Config) -> Unit) {
-        configManager.load(loader) { config ->
-            store.dispatch(GlobalAction.SetConfigManager(configManager))
-            onComplete(config)
-        }
+    private fun initWithConfigDependency(environmentConfig: EnvironmentConfig) {
+        initAnalytics(this, environmentConfig)
+        Log.addLogger(logger = tangemSdkLogger)
     }
 
-    private fun initWithConfigDependency(config: Config) {
-        initAnalytics(this, config)
-        initFeedbackManager(store)
-    }
-
-    private fun initAnalytics(application: Application, config: Config) {
+    private fun initAnalytics(application: Application, environmentConfig: EnvironmentConfig) {
         val factory = AnalyticsFactory()
         factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
@@ -300,19 +292,12 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
         val buildData = AnalyticsHandlerBuilder.Data(
             application = application,
-            config = config,
+            config = environmentConfig,
             isDebug = BuildConfig.DEBUG,
             logConfig = LogConfig.analyticsHandlers,
             jsonConverter = MoshiConverter.sdkMoshiConverter,
         )
         factory.build(Analytics, buildData)
         // ExceptionHandler.append(blockchainExceptionHandler) TODO: https://tangem.atlassian.net/browse/AND-4173
-    }
-
-    private fun initFeedbackManager(store: Store<AppState>) {
-        Log.addLogger(logger = tangemSdkLogger)
-
-        val feedbackManager = LegacyFeedbackManager(sendFeedbackEmailUseCase = sendFeedbackEmailUseCase)
-        store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
     }
 }

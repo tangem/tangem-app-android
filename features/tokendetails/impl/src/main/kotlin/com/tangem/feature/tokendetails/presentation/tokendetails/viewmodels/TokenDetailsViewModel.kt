@@ -34,6 +34,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
+import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
@@ -123,6 +124,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
     getUserWalletUseCase: GetUserWalletUseCase,
+    getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
     private val appRouter: AppRouter,
@@ -149,18 +151,21 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var stakingEntryInfo: StakingEntryInfo? = null
+    private var stakingAvailability: StakingAvailability = StakingAvailability.Unavailable
     private var swapTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<SwapTransactionsState>>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         stakingEntryInfoProvider = Provider { stakingEntryInfo },
+        stakingAvailabilityProvider = Provider { stakingAvailability },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         clickIntents = this,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
         stakingFeatureToggles = stakingFeatureToggles,
+        getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
     )
@@ -389,12 +394,13 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateStakingInfo() {
         viewModelScope.launch {
-            val stakingAvailability = getStakingAvailabilityUseCase(
+            val availability = getStakingAvailabilityUseCase(
                 userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,
             ).getOrElse { StakingAvailability.Unavailable }
 
-            internalUiState.value = stateFactory.getStateWithUpdatedStakingAvailability(stakingAvailability)
+            stakingAvailability = availability
+
             if (stakingAvailability is StakingAvailability.Available) {
                 val stakingInfo = getStakingEntryInfoUseCase(
                     cryptoCurrencyId = cryptoCurrency.id,

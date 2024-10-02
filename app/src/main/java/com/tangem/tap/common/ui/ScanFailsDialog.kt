@@ -13,10 +13,14 @@ import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.analytics.events.ScanFailsDialogAnalytics
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.features.home.LocaleRegionProvider
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.wallet.R
+import kotlinx.coroutines.launch
 
 /**
  * Created by Anton Zhilenkov on 28/02/2021.
@@ -65,7 +69,10 @@ internal object ScanFailsDialog {
             customView.findViewById<TextView>(R.id.request_support_button)?.setOnClickListener {
                 Analytics.send(Basic.ButtonSupport(sourceAnalytics))
 
-                store.state.globalState.feedbackManager?.sendEmail(type = FeedbackEmailType.ScanningProblem)
+                scope.launch {
+                    store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                        .invoke(type = FeedbackEmailType.ScanningProblem)
+                }
             }
             customView.findViewById<TextView>(R.id.cancel_button)?.setOnClickListener {
                 store.dispatchDialogHide()

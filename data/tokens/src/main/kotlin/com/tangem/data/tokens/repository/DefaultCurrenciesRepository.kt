@@ -26,8 +26,6 @@ import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
@@ -138,7 +136,7 @@ internal class DefaultCurrenciesRepository(
                 cryptoCurrencyFactory.createCoin(
                     blockchain = getBlockchain(networkId = it.network.id),
                     extraDerivationPath = it.network.derivationPath.value,
-                    derivationStyleProvider = getUserWallet(userWalletId).scanResponse.derivationStyleProvider,
+                    scanResponse = getUserWallet(userWalletId).scanResponse,
                 )
             }
             .distinct()
@@ -376,24 +374,6 @@ internal class DefaultCurrenciesRepository(
         }.cancellable()
     }
 
-    override fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
-        return channelFlow {
-            ensureIsCorrectUserWallet(userWalletId, isMultiCurrencyWalletExpected = true)
-
-            val userWallet = getUserWallet(userWalletId = userWalletId)
-            getMultiCurrencyWalletCurrencies(userWallet = userWallet)
-                .map {
-                    it.filter { currency ->
-                        val blockchain = Blockchain.fromId(id = currency.network.id.value)
-                        val derivationPath = currency.network.derivationPath.value
-
-                        derivationPath != null && !userWallet.scanResponse.hasDerivation(blockchain, derivationPath)
-                    }
-                }
-                .collectLatest(::send)
-        }
-    }
-
     override fun isSendBlockedByPendingTransactions(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
@@ -475,7 +455,7 @@ internal class DefaultCurrenciesRepository(
             token = token,
             networkId = networkId,
             extraDerivationPath = null,
-            derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+            scanResponse = userWallet.scanResponse,
         ) ?: error("Unable to create token")
     }
 

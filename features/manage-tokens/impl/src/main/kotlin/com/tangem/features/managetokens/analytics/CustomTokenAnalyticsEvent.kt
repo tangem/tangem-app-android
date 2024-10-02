@@ -15,7 +15,7 @@ internal sealed class CustomTokenAnalyticsEvent(
 
     class ScreenOpened(source: ManageTokensSource) : CustomTokenAnalyticsEvent(
         event = "Custom Token Screen Opened",
-        params = mapOf(AnalyticsParam.Key.SOURCE to source.name),
+        params = mapOf(AnalyticsParam.Key.SOURCE to source.analyticsName),
     )
 
     class CustomTokenWasAdded(
@@ -27,7 +27,7 @@ internal sealed class CustomTokenAnalyticsEvent(
         params = mapOf(
             AnalyticsParam.Key.TOKEN_PARAM to currencySymbol,
             AnalyticsParam.Key.DERIVATION to derivationPath,
-            AnalyticsParam.Key.SOURCE to source.name,
+            AnalyticsParam.Key.SOURCE to source.analyticsName,
         ),
     )
 
@@ -35,7 +35,7 @@ internal sealed class CustomTokenAnalyticsEvent(
         event = "Custom Token Network Selected",
         params = mapOf(
             AnalyticsParam.Key.BLOCKCHAIN to networkName,
-            AnalyticsParam.Key.SOURCE to source.name,
+            AnalyticsParam.Key.SOURCE to source.analyticsName,
         ),
     )
 
@@ -43,7 +43,7 @@ internal sealed class CustomTokenAnalyticsEvent(
         event = "Custom Token Derivation Selected",
         params = mapOf(
             AnalyticsParam.Key.DERIVATION to derivationName,
-            AnalyticsParam.Key.SOURCE to source.name,
+            AnalyticsParam.Key.SOURCE to source.analyticsName,
         ),
     )
 
@@ -51,27 +51,27 @@ internal sealed class CustomTokenAnalyticsEvent(
         event = "Custom Token Address",
         params = mapOf(
             AnalyticsParam.Key.VALIDATION to AnalyticsParam.Validation.from(isValid),
-            AnalyticsParam.Key.SOURCE to source.name,
+            AnalyticsParam.Key.SOURCE to source.analyticsName,
         ),
     )
 
     class Name(source: ManageTokensSource) : CustomTokenAnalyticsEvent(
         event = "Custom Token Name",
-        params = mapOf(AnalyticsParam.Key.SOURCE to source.name),
+        params = mapOf(AnalyticsParam.Key.SOURCE to source.analyticsName),
     )
 
     class Symbol(source: ManageTokensSource) : CustomTokenAnalyticsEvent(
         event = "Custom Token Symbol",
-        params = mapOf(AnalyticsParam.Key.SOURCE to source.name),
+        params = mapOf(AnalyticsParam.Key.SOURCE to source.analyticsName),
     )
 
     class Decimals(source: ManageTokensSource) : CustomTokenAnalyticsEvent(
         event = "Custom Token Decimals",
-        params = mapOf(AnalyticsParam.Key.SOURCE to source.name),
+        params = mapOf(AnalyticsParam.Key.SOURCE to source.analyticsName),
     )
 
     class ButtonCustomToken(source: ManageTokensSource) : CustomTokenAnalyticsEvent(
         event = "Button - Custom Token",
-        params = mapOf(AnalyticsParam.Key.SOURCE to source.name),
+        params = mapOf(AnalyticsParam.Key.SOURCE to source.analyticsName),
     )
 }
