@@ -202,7 +202,10 @@ internal class OnboardingManageTokensModel @Inject constructor(
         } else {
             val hasMissedDerivations = hasMissedDerivationsUseCase.invoke(
                 userWalletId = params.userWalletId,
-                networksWithDerivationPath = currenciesToAdd.values.flatten().toSet().associate { it.backendId to null },
+                networksWithDerivationPath = currenciesToAdd.values
+                    .flatten()
+                    .toSet()
+                    .associate { it.backendId to null },
             )
             state.update { state ->
                 state.copy(
