@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -40,8 +41,9 @@ import java.math.BigDecimal
  * @param subtitleColor subtitle text color
  * @param captionColor caption text color
  * @param isSelected true if selected
- * @param selectorContent selector content
  * @param onImageError composable to show if image loading failed
+ * @param subtitleExtraContent subtitle selector content
+ * @param selectorContent selector content
  */
 @Composable
 fun InputRowImageSelector(
@@ -54,6 +56,7 @@ fun InputRowImageSelector(
     captionColor: Color = TangemTheme.colors.text.tertiary,
     isSelected: Boolean = false,
     onImageError: (@Composable () -> Unit)? = null,
+    subtitleExtraContent: (@Composable RowScope.() -> Unit)? = null,
     selectorContent: @Composable ((isSelected: Boolean, isEnabled: Boolean, onSelect: () -> Unit) -> Unit),
 ) {
     InputRowImageBase(
@@ -63,6 +66,7 @@ fun InputRowImageSelector(
         subtitleColor = subtitleColor,
         captionColor = captionColor,
         onImageError = onImageError,
+        subtitleExtraContent = subtitleExtraContent,
         modifier = modifier
             .clickable(
                 onClick = onSelect,
