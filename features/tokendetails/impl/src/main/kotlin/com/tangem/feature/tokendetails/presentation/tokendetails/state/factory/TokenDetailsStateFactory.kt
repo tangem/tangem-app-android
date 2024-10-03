@@ -19,6 +19,7 @@ import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.*
@@ -52,6 +53,7 @@ internal class TokenDetailsStateFactory(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
+    private val pendingBalancesProvider: Provider<List<BalanceItem>>,
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
@@ -81,6 +83,7 @@ internal class TokenDetailsStateFactory(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
             stakingEntryInfoProvider = stakingEntryInfoProvider,
+            pendingBalancesProvider = pendingBalancesProvider,
             symbol = symbol,
             decimals = decimals,
             clickIntents = clickIntents,
