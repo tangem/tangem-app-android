@@ -442,7 +442,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 when (result) {
                     is CompletionResult.Success -> {
                         updateArtworks(backupService.addedBackupCardsCount, result.data)
-                        store.dispatchOnMain(BackupAction.AddBackupCard.Success)
+                        store.dispatchOnMain(BackupAction.AddBackupCard.Success(result.data))
                     }
                     is CompletionResult.Failure -> {
                         val crashlytics = FirebaseCrashlytics.getInstance()
@@ -511,7 +511,14 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.WriteBackupCard -> {
-            backupService.proceedBackup { result ->
+            val cardIndex = if (action.cardNumber > 0) action.cardNumber - 1 else action.cardNumber
+            val backupCard = backupState.backupCards.getOrNull(cardIndex)
+            val iconScanRes = if (backupCard?.batchId?.startsWith(CardDTO.RING_BATCH_PREFIX) == true) {
+                R.drawable.img_hand_scan_ring
+            } else {
+                null
+            }
+            backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         val backupValidator = BackupValidator()
