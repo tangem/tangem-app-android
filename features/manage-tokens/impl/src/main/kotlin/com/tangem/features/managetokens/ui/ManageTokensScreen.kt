@@ -13,10 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -241,6 +238,9 @@ private fun Currencies(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+                is CurrencyItemUM.SearchNothingFound -> {
+                    SearchNothingFoundText(modifier = Modifier.fillParentMaxSize())
+                }
             }
         }
 
@@ -260,6 +260,20 @@ private fun Currencies(
         buffer = LOAD_ITEMS_BUFFER,
         onLoadMore = onLoadMore,
     )
+}
+
+@Composable
+private fun SearchNothingFoundText(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.markets_search_token_no_result_title),
+            style = TangemTheme.typography.caption1,
+            color = TangemTheme.colors.text.tertiary,
+        )
+    }
 }
 
 @Composable
