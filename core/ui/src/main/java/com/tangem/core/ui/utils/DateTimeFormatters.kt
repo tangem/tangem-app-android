@@ -37,7 +37,7 @@ object DateTimeFormatters {
                 .withLocale(Locale.getDefault())
         } else {
             DateTimeFormatterBuilder()
-                .appendHourOfDay(1)
+                .appendHourOfDay(2)
                 .appendLiteral(':')
                 .appendMinuteOfHour(2)
                 .toFormatter()

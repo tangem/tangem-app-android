@@ -106,11 +106,6 @@ internal class MockCurrenciesRepository(
         return token
     }
 
-    override fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
-        /* no-op */
-        return emptyFlow()
-    }
-
     override suspend fun getNetworkCoin(
         userWalletId: UserWalletId,
         networkId: Network.ID,
