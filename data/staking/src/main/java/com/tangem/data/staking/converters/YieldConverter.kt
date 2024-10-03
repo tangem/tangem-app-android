@@ -28,7 +28,7 @@ class YieldConverter(
             metadata = convertMetadata(value.metadata),
             validators = value.validators
                 .asSequence()
-                .filter { it.preferred && it.status == ValidatorStatusDTO.ACTIVE }
+                .filter { it.status == ValidatorStatusDTO.ACTIVE }
                 .sortedByDescending { it.apr }
                 .map { convertValidator(it) }
                 .toImmutableList(),
