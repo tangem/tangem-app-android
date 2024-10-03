@@ -86,6 +86,7 @@ internal object InitialStakingStatePreview {
                         stakedBalance = null,
                         votingPower = null,
                         preferred = false,
+                        isStrategicPartner = false,
                     ),
                     pendingActions = persistentListOf(),
                     isClickable = true,
