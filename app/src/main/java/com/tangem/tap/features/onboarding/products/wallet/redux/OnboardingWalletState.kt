@@ -2,6 +2,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.graphics.Bitmap
 import android.net.Uri
+import com.tangem.common.card.Card
 import com.tangem.domain.redux.StateDialog
 import org.rekotlin.StateType
 
@@ -14,7 +15,6 @@ data class OnboardingWalletState(
     val backupState: BackupState = BackupState(),
     val walletImages: WalletImages = WalletImages(),
     val showConfetti: Boolean = false,
-    val isRingOnboarding: Boolean = false,
 ) : StateType {
 
     @Suppress("MagicNumber")
@@ -66,6 +66,7 @@ enum class OnboardingWalletStep {
 data class BackupState(
     val primaryCardId: String? = null,
     val backupCardsNumber: Int = 0,
+    val backupCards: List<Card> = emptyList(),
     val backupCardIds: List<CardId> = emptyList(),
     @Transient
     val backupCardsArtworks: Map<CardId, Bitmap> = emptyMap(),
