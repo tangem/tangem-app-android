@@ -10,8 +10,8 @@ internal object PendingTransactionItemConverter : Converter<PendingTransaction, 
     override fun convert(value: PendingTransaction): BalanceItem? {
         return BalanceItem(
             groupId = value.groupId ?: return null,
-            type = value.type ?: return null,
-            amount = value.amount ?: return null,
+            type = value.type,
+            amount = value.amount,
             rawCurrencyId = value.rawCurrencyId,
             validatorAddress = value.validator?.address,
             date = DateTime.now(),
