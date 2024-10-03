@@ -255,30 +255,23 @@ internal class AddStakingNotificationsTransformer(
     }
 
     private fun MutableList<NotificationUM>.addExitInfoNotifications() {
-        add(
-            StakingNotification.Info.Unstake(
-                cooldownPeriodDays = yield.metadata.cooldownPeriod.days,
-                subtitleRes = if (isCosmos(cryptoCurrencyStatusProvider().currency.network.id.value)) {
-                    R.string.staking_notification_unstake_cosmos_text
-                } else {
-                    R.string.staking_notification_unstake_text
-                },
-            ),
-        )
+        val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days
+        if (cooldownPeriodDays != null) {
+            add(
+                StakingNotification.Info.Unstake(
+                    cooldownPeriodDays = cooldownPeriodDays,
+                    subtitleRes = if (isCosmos(cryptoCurrencyStatusProvider().currency.network.id.value)) {
+                        R.string.staking_notification_unstake_cosmos_text
+                    } else {
+                        R.string.staking_notification_unstake_text
+                    },
+                ),
+            )
+        }
     }
 
     private fun MutableList<NotificationUM>.addEnterInfoNotifications() {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
-        val hasStakedBalance = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.balance
-            ?.items?.any {
-                it.type == BalanceType.PREPARING ||
-                    it.type == BalanceType.STAKED ||
-                    it.type == BalanceType.LOCKED
-            } == true
-        if (hasStakedBalance && isTron) {
-            add(StakingNotification.Info.TronRevote)
-        }
+        addTronRevoteNotification()
     }
 
     private fun MutableList<NotificationUM>.addPendingInfoNotifications(prevState: StakingUiState) {
@@ -298,26 +291,53 @@ internal class AddStakingNotificationsTransformer(
                     resourceReference(R.string.staking_notification_withdraw_text)
             }
             StakingActionType.UNLOCK_LOCKED -> {
-                val cooldownPeriodDays = yield.metadata.cooldownPeriod.days
-                resourceReference(R.string.staking_unlocked_locked) to resourceReference(
-                    R.string.staking_notification_unlock_text,
-                    wrappedList(
-                        pluralReference(
-                            id = R.plurals.common_days,
-                            count = cooldownPeriodDays,
-                            formatArgs = wrappedList(cooldownPeriodDays),
+                val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days
+                if (cooldownPeriodDays != null) {
+                    resourceReference(R.string.staking_unlocked_locked) to resourceReference(
+                        R.string.staking_notification_unlock_text,
+                        wrappedList(
+                            pluralReference(
+                                id = R.plurals.common_days,
+                                count = cooldownPeriodDays,
+                                formatArgs = wrappedList(cooldownPeriodDays),
+                            ),
                         ),
-                    ),
-                )
+                    )
+                } else {
+                    null to null
+                }
+            }
+            StakingActionType.VOTE_LOCKED -> {
+                resourceReference(R.string.staking_revote) to
+                    resourceReference(R.string.staking_notifications_revote_tron_text)
             }
             else -> null to null
         }
 
         if (titleReference != null && textReference != null) {
             add(
-                StakingNotification.Info.PendingAction(
+                StakingNotification.Info.Ordinary(
                     title = titleReference,
                     text = textReference,
+                ),
+            )
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addTronRevoteNotification() {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
+        val hasStakedBalance = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.balance
+            ?.items?.any {
+                it.type == BalanceType.PREPARING ||
+                    it.type == BalanceType.STAKED ||
+                    it.type == BalanceType.LOCKED
+            } == true
+        if (isTron && hasStakedBalance) {
+            add(
+                StakingNotification.Info.Ordinary(
+                    title = resourceReference(R.string.staking_revote),
+                    text = resourceReference(R.string.staking_notifications_revote_tron_text),
                 ),
             )
         }
