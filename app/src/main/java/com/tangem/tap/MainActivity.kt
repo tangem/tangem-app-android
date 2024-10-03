@@ -67,7 +67,6 @@ import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.dispatchNavigationAction
-import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.showFragmentAllowingStateLoss
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.sdk.TangemSdkManager
@@ -80,7 +79,6 @@ import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.routing.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
@@ -550,11 +548,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             }
         } else {
             lifecycleScope.launch {
-                val toggles = store.inject(getDependency = DaggerGraphState::pushNotificationsFeatureToggles)
-                val isPushPermissionEnabled = toggles.isPushNotificationsEnabled
-                val shouldShowTos = !cardRepository.isTangemTOSAccepted() && isPushPermissionEnabled
-                val wasPushInitiallyAsked = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { false }
-                val shouldShowInitialPush = wasPushInitiallyAsked && isPushPermissionEnabled
+                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
+                val shouldShowInitialPush = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrElse { false }
 
                 val route = when {
                     shouldShowTos -> AppRoute.Disclaimer(isTosAccepted = false)
