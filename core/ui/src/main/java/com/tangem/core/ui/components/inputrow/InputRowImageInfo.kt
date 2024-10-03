@@ -2,14 +2,21 @@ package com.tangem.core.ui.components.inputrow
 
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -17,6 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -24,17 +32,19 @@ import com.tangem.core.ui.res.TangemThemePreview
  * Input row component with selector
  * [Input Row Image](https://www.figma.com/design/14ISV23YB1yVW1uNVwqrKv/Android?node-id=2841-1589&t=u6pOF6lsdpvWLELb-4)
  *
- * @param title title text
  * @param subtitle subtitle text
- * @param caption caption text
  * @param infoTitle info title text
- * @param infoSubtitle info subtitle text
  * @param modifier modifier
+ * @param title title text
+ * @param caption caption text
+ * @param infoSubtitle info subtitle text
  * @param imageUrl icon to load
+ * @param iconRes icon resource
  * @param subtitleColor subtitle text color
  * @param captionColor caption text color
+ * @param iconTint icon color
  * @param isGrayscaleImage whether to display grayscale image
- * @param showPendingIcon whether to show pending icon
+ * @param subtitleEndIconRes subtitle icon to end of row
  * @param iconEndRes icon to end of row
  * @param onImageError composable to show if image loading failed
  */
@@ -78,9 +88,14 @@ fun InputRowImageInfo(
             subtitleColor = subtitleColor,
             captionColor = captionColor,
             isGrayscaleImage = isGrayscaleImage,
-            subtitleEndIconRes = subtitleEndIconRes,
             iconEndRes = iconEndRes,
             onImageError = onImageError,
+            subtitleExtraContent = {
+                SubtitleEndIconRes(
+                    subtitleEndIconRes = subtitleEndIconRes,
+                    subtitleEndIconTint = TangemColorPalette.Azure,
+                )
+            },
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
@@ -117,6 +132,23 @@ fun InputRowImageInfo(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RowScope.SubtitleEndIconRes(subtitleEndIconRes: Int?, subtitleEndIconTint: Color) {
+    AnimatedVisibility(
+        visible = subtitleEndIconRes != null,
+        label = "Subtitle end icon visibility animation",
+        modifier = Modifier.align(Alignment.CenterVertically),
+    ) {
+        val icon = remember(this) { requireNotNull(subtitleEndIconRes) }
+        Icon(
+            painter = rememberVectorPainter(image = ImageVector.vectorResource(id = icon)),
+            tint = subtitleEndIconTint,
+            contentDescription = null,
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+        )
     }
 }
 
