@@ -30,12 +30,6 @@ internal class DefaultCardSdkConfigRepository(private val cardSdkProvider: CardS
         }
     }
 
-    override fun isBiometricsRequestPolicy(): Boolean {
-        return with(sdk.config.userCodeRequestPolicy) {
-            this is UserCodeRequestPolicy.AlwaysWithBiometrics && codeType == UserCodeType.AccessCode
-        }
-    }
-
     override fun resetCardIdDisplayFormat() {
         sdk.config.cardIdDisplayFormat = CardIdDisplayFormat.Full
     }
