@@ -20,14 +20,13 @@ import com.tangem.datasource.api.express.models.response.SwapPair
 import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
 import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
-import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.feature.swap.domain.models.domain.*
@@ -196,7 +195,7 @@ internal class DefaultSwapRepository @Inject constructor(
         toDecimals: Int,
         providerId: String,
         rateType: RateType,
-    ): Either<DataError, QuoteModel> {
+    ): Either<ExpressDataError, QuoteModel> {
         return withContext(coroutineDispatcher.io) {
             try {
                 val response = tangemExpressApi.getExchangeQuote(
@@ -234,7 +233,7 @@ internal class DefaultSwapRepository @Inject constructor(
         toAddress: String,
         refundAddress: String?, // for cex only
         refundExtraId: String?, // for cex only
-    ): Either<DataError, SwapDataModel> {
+    ): Either<ExpressDataError, SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
             try {
                 val requestId = UUID.randomUUID().toString()
@@ -256,12 +255,12 @@ internal class DefaultSwapRepository @Inject constructor(
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)
-                        ?: return@withContext DataError.UnknownError.left()
+                        ?: return@withContext ExpressDataError.UnknownError.left()
                     if (txDetails.requestId != requestId) {
-                        return@withContext DataError.InvalidRequestIdError().left()
+                        return@withContext ExpressDataError.InvalidRequestIdError().left()
                     }
                     if (!toAddress.equals(txDetails.payoutAddress, ignoreCase = true)) {
-                        return@withContext DataError.InvalidPayoutAddressError().left()
+                        return@withContext ExpressDataError.InvalidPayoutAddressError().left()
                     }
                     expressDataConverter.convert(
                         ExchangeDataResponseWithTxDetails(
@@ -270,7 +269,7 @@ internal class DefaultSwapRepository @Inject constructor(
                         ),
                     ).right()
                 } else {
-                    DataError.InvalidSignatureError().left()
+                    ExpressDataError.InvalidSignatureError().left()
                 }
             } catch (ex: Exception) {
                 getDataError(ex).left()
@@ -285,7 +284,7 @@ internal class DefaultSwapRepository @Inject constructor(
         payInAddress: String,
         txHash: String,
         payInExtraId: String?,
-    ): Either<DataError, Unit> = withContext(coroutineDispatcher.io) {
+    ): Either<ExpressDataError, Unit> = withContext(coroutineDispatcher.io) {
         try {
             tangemExpressApi.exchangeSent(
                 ExchangeSentRequestBody(
@@ -390,21 +389,20 @@ internal class DefaultSwapRepository @Inject constructor(
             cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                derivationStyleProvider = requireNotNull(
+                scanResponse = requireNotNull(
                     userWalletsListManager
                         .selectedUserWalletSync
-                        ?.scanResponse
-                        ?.derivationStyleProvider,
+                        ?.scanResponse,
                 ),
             ),
         )
     }
 
-    private fun getDataError(ex: Exception): DataError {
+    private fun getDataError(ex: Exception): ExpressDataError {
         return if (ex is ApiResponseError.HttpException) {
             errorsDataConverter.convert(ex.errorBody ?: "")
         } else {
-            DataError.UnknownError
+            ExpressDataError.UnknownError
         }
     }
 }

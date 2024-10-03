@@ -2,12 +2,9 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
-import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.store
 import com.tangem.utils.extensions.replaceBy
 import org.rekotlin.Action
 
@@ -51,7 +48,7 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
             globalState.copy(appCurrency = action.appCurrency)
         }
         is GlobalAction.SetConfigManager -> {
-            globalState.copy(configManager = action.configManager)
+            globalState.copy(environmentConfigStorage = action.environmentConfigStorage)
         }
         is GlobalAction.UpdateWalletSignedHashes -> {
             val card = globalState.scanResponse?.card ?: return globalState
@@ -71,9 +68,6 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
             )
             globalState.copy(scanResponse = globalState.scanResponse.copy(card = newCardInstance))
         }
-        is GlobalAction.SetFeedbackManager -> {
-            globalState.copy(feedbackManager = action.feedbackManager)
-        }
         is GlobalAction.ShowDialog -> {
             globalState.copy(dialog = action.stateDialog)
         }
@@ -86,10 +80,7 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
         is GlobalAction.SetIfCardVerifiedOnline ->
             globalState.copy(cardVerifiedOnline = action.verified)
         is GlobalAction.FetchUserCountry.Success -> {
-            store.dispatchOnMain(HomeAction.UpdateCountryCode(action.countryCode))
-            globalState.copy(
-                userCountryCode = action.countryCode,
-            )
+            globalState.copy(userCountryCode = action.countryCode)
         }
         else -> globalState
     }

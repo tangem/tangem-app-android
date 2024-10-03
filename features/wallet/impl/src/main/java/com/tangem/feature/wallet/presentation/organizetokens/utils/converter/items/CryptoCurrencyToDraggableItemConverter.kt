@@ -47,10 +47,10 @@ internal class CryptoCurrencyToDraggableItemConverter(
             id = getTokenItemId(currency.id),
             iconState = iconStateConverter.convert(currencyStatus),
             titleState = TokenItemState.TitleState.Content(text = currency.name),
-            cryptoAmountState = if (currencyStatus.value.isError) {
-                TokenItemState.CryptoAmountState.Unreachable
+            subtitle2State = if (currencyStatus.value.isError) {
+                TokenItemState.Subtitle2State.Unreachable
             } else {
-                TokenItemState.CryptoAmountState.Content(text = getFormattedFiatAmount(currencyStatus, appCurrency))
+                TokenItemState.Subtitle2State.TextContent(text = getFormattedFiatAmount(currencyStatus, appCurrency))
             },
         )
     }

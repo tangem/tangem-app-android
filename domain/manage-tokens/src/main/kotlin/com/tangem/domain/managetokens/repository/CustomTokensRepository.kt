@@ -24,15 +24,20 @@ interface CustomTokensRepository {
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency.Token?
 
-    fun createCoin(networkId: Network.ID, derivationPath: Network.DerivationPath): CryptoCurrency.Coin
+    suspend fun createCoin(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency.Coin
 
-    fun createToken(
+    suspend fun createToken(
         managedCryptoCurrency: ManagedCryptoCurrency.Token,
         sourceNetwork: ManagedCryptoCurrency.SourceNetwork.Default,
         rawId: String?,
     ): CryptoCurrency.Token
 
     suspend fun createCustomToken(
+        userWalletId: UserWalletId,
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
         formValues: AddCustomTokenForm.Validated.All,
