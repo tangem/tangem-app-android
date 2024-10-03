@@ -127,20 +127,24 @@ internal class ManagedCryptoCurrencyFactory {
     ): ManagedCryptoCurrency? {
         if (coinResponse.networks.isEmpty() || !coinResponse.active) return null
 
-        val updatedNetworks = coinResponse.networks.applyL2Compatibility(coinResponse.id)
-        return ManagedCryptoCurrency.Token(
-            id = ManagedCryptoCurrency.ID(coinResponse.id),
-            name = coinResponse.name,
-            symbol = coinResponse.symbol,
-            iconUrl = getIconUrl(coinResponse.id, imageHost),
-            availableNetworks = updatedNetworks.mapNotNull { network ->
+        val availableNetworks = coinResponse.networks
+            .applyL2Compatibility(coinResponse.id)
+            .mapNotNull { network ->
                 createSource(
                     networkId = network.networkId,
                     contractAddress = network.contractAddress,
                     decimals = network.decimalCount?.toInt(),
                     derivationStyleProvider = derivationStyleProvider,
                 )
-            },
+            }
+            .ifEmpty { return null }
+
+        return ManagedCryptoCurrency.Token(
+            id = ManagedCryptoCurrency.ID(coinResponse.id),
+            name = coinResponse.name,
+            symbol = coinResponse.symbol,
+            iconUrl = getIconUrl(coinResponse.id, imageHost),
+            availableNetworks = availableNetworks,
             addedIn = findAddedInNetworks(coinResponse.id, tokensResponse, derivationStyleProvider),
         )
     }
@@ -158,18 +162,18 @@ internal class ManagedCryptoCurrencyFactory {
 
         val network = getNetwork(blockchain, extraDerivationPath, derivationStyleProvider) ?: return null
 
-        return if (contractAddress.isNullOrBlank()) {
-            SourceNetwork.Main(
+        return when {
+            contractAddress.isNullOrBlank() -> SourceNetwork.Main(
                 network = network,
                 decimals = blockchain.decimals(),
                 isL2Network = l2BlockchainsList.contains(blockchain),
             )
-        } else {
-            SourceNetwork.Default(
+            network.canHandleTokens -> SourceNetwork.Default(
                 network = network,
                 decimals = decimals ?: return null,
                 contractAddress = contractAddress,
             )
+            else -> null
         }
     }
 
