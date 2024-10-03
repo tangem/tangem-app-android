@@ -62,6 +62,7 @@ data class Yield(
         val stakedBalance: String? = null,
         val votingPower: Double? = null,
         val preferred: Boolean,
+        val isStrategicPartner: Boolean,
     ) {
 
         enum class ValidatorStatus {
