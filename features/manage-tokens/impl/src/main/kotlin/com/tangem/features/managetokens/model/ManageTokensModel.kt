@@ -235,10 +235,12 @@ internal class ManageTokensModel @Inject constructor(
                         },
                     )
                 }
-                is PaginationStatus.EndOfPagination -> state.copySealed(
-                    isInitialBatchLoading = false,
-                    isNextBatchLoading = false,
-                )
+                is PaginationStatus.EndOfPagination -> {
+                    state.copySealed(
+                        isInitialBatchLoading = false,
+                        isNextBatchLoading = false,
+                    )
+                }
             }
         }
     }
