@@ -720,6 +720,7 @@
   <string name="staking_reward_schedule_block">Bloquer</string>
   <string name="staking_reward_schedule_day">Jour</string>
   <string name="staking_reward_schedule_each_day">Chaque jour</string>
+  <string name="staking_reward_schedule_each_sec">Toute(s) les %1$s seconde(s)</string>
   <string name="staking_reward_schedule_epoch">Époque</string>
   <string name="staking_reward_schedule_era">Ère</string>
   <string name="staking_reward_schedule_hour">Heure</string>
@@ -742,8 +743,9 @@
   <string name="staking_unstaking_item_name">En train de destaker les actifs %s</string>
   <string name="staking_validator">Validateur</string>
   <string name="staking_validators">Validateurs</string>
+  <string name="staking_validators_label">Partenaire stratégique</string>
   <string name="staking_vote">Voter</string>
-  <string name="staking_vote_locked">Vote bloqué</string>
+  <string name="staking_vote_locked">Voter</string>
   <string name="staking_withdraw">Retirer</string>
   <string name="staking_your_stakes">Vos stakes</string>
   <string name="story_awe_description">Stockez vos actifs crypto en toute sécurité tout en conservant les clés privées contenues dans votre carte</string>
