@@ -4,12 +4,12 @@ import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.gson.GsonBuilder
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.calculateSha256
-import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.tradeOrderSerializer
 import com.tangem.tap.features.details.redux.walletconnect.BinanceMessageData
 import com.tangem.tap.features.details.redux.walletconnect.TradeData
+import com.tangem.utils.extensions.stripZeroPlainString
 import timber.log.Timber
 
 internal object BnbHelper {
