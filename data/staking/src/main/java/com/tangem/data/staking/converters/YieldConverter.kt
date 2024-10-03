@@ -123,6 +123,7 @@ class YieldConverter(
             stakedBalance = validatorDTO.stakedBalance,
             votingPower = validatorDTO.votingPower,
             preferred = validatorDTO.preferred,
+            isStrategicPartner = isStrategicPartner(validatorDTO.address),
         )
     }
 
@@ -173,5 +174,13 @@ class YieldConverter(
             "amount" -> Yield.Args.ArgType.AMOUNT
             else -> Yield.Args.ArgType.UNKNOWN
         }
+    }
+
+    private fun isStrategicPartner(validatorAddress: String): Boolean = PARTNERS.any { it == validatorAddress }
+
+    private companion object {
+        val PARTNERS = listOf(
+            "cosmosvaloper1wrx0x9m9ykdhw9sg04v7uljme53wuj03aa5d4f",
+        )
     }
 }
