@@ -338,7 +338,7 @@
   </plurals>
   <string name="manage_tokens_remove">Eliminar</string>
   <string name="manage_tokens_search_placeholder">por ejemplo, BTC I trust, hodl I must</string>
-  <string name="manage_tokens_toast_portfolio_updated">Su cartera ha sido actualizada</string>
+  <string name="manage_tokens_toast_portfolio_updated">Su portafolio ha sido actualizada</string>
   <string name="manage_tokens_unavailable_description">El token seleccionado no está disponible actualmente para acciones dentro de la billetera cripto. Pero no se preocupa, puede expresar su interés votando a favor.</string>
   <string name="manage_tokens_unavailable_vote">Votar a favor</string>
   <string name="manage_tokens_wallet_selector_title">Elegir wallet</string>
@@ -373,7 +373,7 @@
   <string name="markets_sort_by_experienced_buyers_title">Compradores experimentados</string>
   <string name="markets_sort_by_rating_title">Evaluación</string>
   <string name="markets_sort_by_title">Ordenar por</string>
-  <string name="markets_sort_by_top_gainers_title">Mejores Ganadores</string>
+  <string name="markets_sort_by_top_gainers_title">Top Ganadores</string>
   <string name="markets_sort_by_top_losers_title">Top Perdedores</string>
   <string name="markets_sort_by_trending_title">Tendencias</string>
   <string name="markets_token_details_about_token_title">Acerca de %s</string>
@@ -720,6 +720,7 @@
   <string name="staking_reward_schedule_block">Bloquear</string>
   <string name="staking_reward_schedule_day">Día</string>
   <string name="staking_reward_schedule_each_day">Cada día</string>
+  <string name="staking_reward_schedule_each_sec">Cada %1$s segundo(s)</string>
   <string name="staking_reward_schedule_epoch">Época</string>
   <string name="staking_reward_schedule_era">Era</string>
   <string name="staking_reward_schedule_hour">Hora</string>
@@ -742,8 +743,9 @@
   <string name="staking_unstaking_item_name">Detenando el staking de activos %s</string>
   <string name="staking_validator">Validador</string>
   <string name="staking_validators">Validadores</string>
+  <string name="staking_validators_label">Socio estratégico</string>
   <string name="staking_vote">Votar</string>
-  <string name="staking_vote_locked">Voto bloqueado</string>
+  <string name="staking_vote_locked">Votar</string>
   <string name="staking_withdraw">Retirar</string>
   <string name="staking_your_stakes">Sus stakes</string>
   <string name="story_awe_description">Almacene sus activos crypto de forma segura manteniendo las claves privadas contenidas en su tarjeta</string>
