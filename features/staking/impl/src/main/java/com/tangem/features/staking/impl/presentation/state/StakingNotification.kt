@@ -85,17 +85,12 @@ internal object StakingNotification {
             ),
         )
 
-        data class PendingAction(
+        data class Ordinary(
             val title: TextReference,
             val text: TextReference,
         ) : StakingNotification.Info(
             title = title,
             subtitle = text,
-        )
-
-        data object TronRevote : StakingNotification.Info(
-            title = resourceReference(R.string.staking_revote),
-            subtitle = resourceReference(R.string.staking_notifications_revote_tron_text),
         )
     }
 }
