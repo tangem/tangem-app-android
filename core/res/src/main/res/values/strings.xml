@@ -97,6 +97,10 @@
     <item quantity="one">%d day</item>
     <item quantity="other">%d days</item>
   </plurals>
+  <plurals name="common_days_no_param">
+    <item quantity="one">day</item>
+    <item quantity="other">days</item>
+  </plurals>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
   <string name="common_done">Done</string>
@@ -128,7 +132,7 @@
   <string name="common_no_address">No address</string>
   <string name="common_now">Now</string>
   <string name="common_ok">OK</string>
-  <string name="common_origin_card">Primary Card</string>
+  <string name="common_origin_card">Primary card</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Paste</string>
   <string name="common_privacy_policy">Privacy Policy</string>
@@ -511,7 +515,7 @@
   <string name="onboarding_subtitle_scan_primary_card_format">Prepare the primary card with number %s</string>
   <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Your wallet card is configured and ready for use.</string>
   <string name="onboarding_subtitle_two_backup_cards">Max number of cards added. Finalize the backup process.</string>
-  <string name="onboarding_title">Activating card</string>
+  <string name="onboarding_title">Activating wallet</string>
   <string name="onboarding_title_backup_card_format">Backup card #%d</string>
   <string name="onboarding_title_no_backup_cards">No backup cards</string>
   <string name="onboarding_title_notifications">Notifications</string>
@@ -573,7 +577,7 @@
     <item quantity="one">%d wallet</item>
     <item quantity="other">%d wallets</item>
   </plurals>
-  <string name="reset_card_to_factory_button_title">Reset the Card</string>
+  <string name="reset_card_to_factory_button_title">Reset the card</string>
   <string name="reset_card_to_factory_condition_1">I understand that after performing this action, I will no longer have access to the current wallet</string>
   <string name="reset_card_to_factory_condition_2">I realize that I can\'t use this card to recover my access code on the other cards of the current wallet</string>
   <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
@@ -589,7 +593,7 @@
   <string name="save_user_wallet_agreement_enroll_biometrics_title">Enable biometric authorization</string>
   <string name="save_user_wallet_agreement_header_biometrics">Would you like to use biometrics?</string>
   <string name="save_user_wallet_agreement_notice">Note that making a transaction with your funds will still require your card</string>
-  <string name="scan_card_settings_button">Scan Card</string>
+  <string name="scan_card_settings_button">Scan card</string>
   <string name="scan_card_settings_message">Scan the card to change its settings. The changes will impact only the card you\'ve scanned and will not affect other cards tied to your wallet.</string>
   <string name="scan_card_settings_title">Get your card ready!</string>
   <string name="send_additional_field_already_included">Already included in the entered address</string>
@@ -691,7 +695,7 @@
   <string name="staking_details_reward_claiming">Reward claiming</string>
   <string name="staking_details_reward_claiming_info">Method of receiving staking rewards.\nIt can be either automatic, where the reward is credited to your address, or manual, where you need to withdraw the reward by creating a transaction to receive it.</string>
   <string name="staking_details_reward_schedule">Reward schedule</string>
-  <string name="staking_details_reward_schedule_info">This is a schedule that determines when participants in staking receive their rewards.</string>
+  <string name="staking_details_reward_schedule_info">This is a schedule that determines when participants in staking receive their rewards. The reward distribution time may vary slightly depending on the validator and network load.</string>
   <string name="staking_details_rewards_to_claim">Rewards: %s</string>
   <string name="staking_details_title">Staking %s</string>
   <string name="staking_details_unbonding_period">Unbonding Period</string>
@@ -732,7 +736,10 @@
   <string name="staking_reward_claiming_manual">Manual</string>
   <string name="staking_reward_schedule_block">Per Block</string>
   <string name="staking_reward_schedule_day">Daily</string>
-  <string name="staking_reward_schedule_each_day">Daily</string>
+  <string name="staking_reward_schedule_each">Each %s</string>
+  <string name="staking_reward_schedule_each_day">Each day</string>
+  <string name="staking_reward_schedule_each_days">Each %1$s days</string>
+  <string name="staking_reward_schedule_each_sec">Each %1$s sec</string>
   <string name="staking_reward_schedule_epoch">Per Epoch</string>
   <string name="staking_reward_schedule_era">Per Era</string>
   <string name="staking_reward_schedule_hour">Hourly</string>
@@ -743,6 +750,7 @@
   <string name="staking_stake_more">Stake more</string>
   <string name="staking_summary_description_text">You stake %1$s and will be receiving %2$s yearly</string>
   <string name="staking_tap_to_unlock">Tap to unlock</string>
+  <string name="staking_tap_to_unlock_or_vote">Tap to unlock or vote</string>
   <string name="staking_tap_to_withdraw">Tap to withdraw</string>
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">Unstake %s</string>
@@ -755,8 +763,9 @@
   <string name="staking_unstaking_item_name">Unstaking assets %s</string>
   <string name="staking_validator">Validator</string>
   <string name="staking_validators">Validators</string>
+  <string name="staking_validators_label">Strategic partner</string>
   <string name="staking_vote">Vote</string>
-  <string name="staking_vote_locked">Vote locked</string>
+  <string name="staking_vote_locked">Vote</string>
   <string name="staking_withdraw">Withdraw</string>
   <string name="staking_your_stakes">Your stakes</string>
   <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
@@ -843,7 +852,7 @@
   <string name="user_wallet_list_error_wallet_already_saved">This wallet has already been saved, you can add another one</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">The wallet with name %s already exists</string>
   <string name="user_wallet_list_rename_popup_placeholder">Wallet name</string>
-  <string name="user_wallet_list_rename_popup_title">Rename Wallet</string>
+  <string name="user_wallet_list_rename_popup_title">Rename wallet</string>
   <string name="user_wallet_list_unlock_all">Unlock all</string>
   <string name="user_wallet_list_unlock_all_with">Unlock all with %s</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain is unreachable. Try later</string>
