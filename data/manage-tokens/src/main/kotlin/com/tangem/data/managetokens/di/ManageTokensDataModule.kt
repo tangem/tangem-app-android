@@ -5,6 +5,7 @@ import com.tangem.data.managetokens.DefaultManageTokensRepository
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -27,6 +28,7 @@ internal object ManageTokensDataModule {
         userWalletsStore: UserWalletsStore,
         manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
         appPreferencesStore: AppPreferencesStore,
+        testnetTokensStorage: TestnetTokensStorage,
         dispatchers: CoroutineDispatcherProvider,
     ): ManageTokensRepository {
         return DefaultManageTokensRepository(
@@ -34,6 +36,7 @@ internal object ManageTokensDataModule {
             userWalletsStore,
             manageTokensUpdateFetcher,
             appPreferencesStore,
+            testnetTokensStorage,
             dispatchers,
         )
     }
