@@ -12,10 +12,12 @@ import com.tangem.data.managetokens.utils.ManagedCryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.canHandleBlockchain
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.supportedBlockchains
@@ -30,6 +32,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
+import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher.Request
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 
@@ -39,6 +42,7 @@ internal class DefaultManageTokensRepository(
     private val userWalletsStore: UserWalletsStore,
     private val manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
     private val appPreferencesStore: AppPreferencesStore,
+    private val testnetTokensStorage: TestnetTokensStorage,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ManageTokensRepository {
 
@@ -58,7 +62,6 @@ internal class DefaultManageTokensRepository(
         ).toBatchFlow()
     }
 
-    @Suppress("ComplexCondition")
     private fun createFetcher(
         batchSize: Int,
     ): LimitOffsetBatchFetcher<ManageTokensListConfig, List<ManagedCryptoCurrency>> = LimitOffsetBatchFetcher(
@@ -66,58 +69,100 @@ internal class DefaultManageTokensRepository(
         batchSize = batchSize,
         subFetcher = { request, _, isFirstBatchFetching ->
             val userWallet = request.params.userWalletId?.let { getUserWallet(it) }
-            val supportedBlockchains = getSupportedBlockchains(userWallet)
-            val searchText = request.params.searchText?.takeIf { it.isNotBlank() }
 
-            val call = suspend {
-                tangemTechApi.getCoins(
-                    networkIds = supportedBlockchains.joinToString(
-                        separator = ",",
-                        transform = Blockchain::toNetworkId,
-                    ),
-                    active = true,
-                    searchText = searchText,
-                    offset = request.offset * request.limit,
-                    limit = request.limit,
-                ).getOrThrow()
-            }
-
-            val coinsResponse = if (isFirstBatchFetching) {
-                call()
+            if (userWallet?.scanResponse?.card?.isTestCard == true) {
+                fetchTestnetCurrencies(userWallet, request)
             } else {
-                retryOnError(call = call)
+                fetchCurrencies(userWallet, request, isFirstBatchFetching)
             }
-            // filter l2 coins
-            val updatedCoinsResponse = coinsResponse.copy(
-                coins = coinsResponse.coins.filterNot { l2BlockchainsCoinIds.contains(it.id) },
-            )
-
-            val tokensResponse = request.params.userWalletId?.let { getSavedUserTokensResponseSync(it) }
-            val items = if (isFirstBatchFetching &&
-                tokensResponse != null &&
-                userWallet != null &&
-                request.params.searchText.isNullOrBlank()
-            ) {
-                managedCryptoCurrencyFactory.createWithCustomTokens(
-                    coinsResponse = updatedCoinsResponse,
-                    tokensResponse = tokensResponse,
-                    scanResponse = userWallet.scanResponse,
-                )
-            } else {
-                managedCryptoCurrencyFactory.create(
-                    coinsResponse = updatedCoinsResponse,
-                    tokensResponse = tokensResponse,
-                    scanResponse = userWallet?.scanResponse,
-                )
-            }
-
-            BatchFetchResult.Success(
-                data = items,
-                empty = items.isEmpty(),
-                last = items.size < request.limit,
-            )
         },
     )
+
+    @Suppress("ComplexCondition")
+    private suspend fun fetchCurrencies(
+        userWallet: UserWallet?,
+        request: Request<ManageTokensListConfig>,
+        isFirstBatchFetching: Boolean,
+    ): BatchFetchResult.Success<List<ManagedCryptoCurrency>> {
+        val supportedBlockchains = getSupportedBlockchains(userWallet)
+
+        val call = suspend {
+            tangemTechApi.getCoins(
+                networkIds = supportedBlockchains.joinToString(
+                    separator = ",",
+                    transform = Blockchain::toNetworkId,
+                ),
+                active = true,
+                searchText = request.params.searchText,
+                offset = request.offset * request.limit,
+                limit = request.limit,
+            ).getOrThrow()
+        }
+
+        val coinsResponse = if (isFirstBatchFetching) {
+            call()
+        } else {
+            retryOnError(call = call)
+        }
+        // filter l2 coins
+        val updatedCoinsResponse = coinsResponse.copy(
+            coins = coinsResponse.coins.filterNot { l2BlockchainsCoinIds.contains(it.id) },
+        )
+
+        val tokensResponse = request.params.userWalletId?.let { getSavedUserTokensResponseSync(it) }
+        val items = if (isFirstBatchFetching &&
+            tokensResponse != null &&
+            userWallet != null &&
+            request.params.searchText.isNullOrBlank()
+        ) {
+            managedCryptoCurrencyFactory.createWithCustomTokens(
+                coinsResponse = updatedCoinsResponse,
+                tokensResponse = tokensResponse,
+                scanResponse = userWallet.scanResponse,
+            )
+        } else {
+            managedCryptoCurrencyFactory.create(
+                coinsResponse = updatedCoinsResponse,
+                tokensResponse = tokensResponse,
+                scanResponse = userWallet?.scanResponse,
+            )
+        }
+
+        return BatchFetchResult.Success(
+            data = items,
+            empty = items.isEmpty(),
+            last = items.size < request.limit,
+        )
+    }
+
+    private suspend fun fetchTestnetCurrencies(
+        userWallet: UserWallet,
+        request: Request<ManageTokensListConfig>,
+    ): BatchFetchResult.Success<List<ManagedCryptoCurrency>> {
+        val searchText = request.params.searchText
+        val testnetTokensConfig = testnetTokensStorage.getConfig()
+
+        val items = managedCryptoCurrencyFactory.createTestnetWithCustomTokens(
+            testnetTokensConfig = if (!searchText.isNullOrBlank()) {
+                testnetTokensConfig.copy(
+                    tokens = testnetTokensConfig.tokens.filter { token ->
+                        token.symbol.contains(other = searchText, ignoreCase = true) ||
+                            token.name.contains(other = searchText, ignoreCase = true)
+                    },
+                )
+            } else {
+                testnetTokensConfig
+            },
+            tokensResponse = getSavedUserTokensResponseSync(userWallet.walletId),
+            scanResponse = userWallet.scanResponse,
+        )
+
+        return BatchFetchResult.Success(
+            data = items,
+            empty = items.isEmpty(),
+            last = true,
+        )
+    }
 
     private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
