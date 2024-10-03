@@ -8,10 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.model.PendingTransaction
 import com.tangem.domain.staking.model.SubmitHashData
-import com.tangem.domain.staking.model.stakekit.BalanceType
-import com.tangem.domain.staking.model.stakekit.PendingAction
-import com.tangem.domain.staking.model.stakekit.StakingError
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
@@ -35,6 +32,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 import java.math.BigDecimal
+import java.util.UUID
 
 @Suppress("LongParameterList")
 internal class StakingTransactionSender @AssistedInject constructor(
@@ -91,10 +89,14 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
         sendStakingTransaction(
             fullTransactionsData = fullTransactionsData,
-            balanceState = confirmationState.balanceState,
+            possiblePendingTransaction = composePendingTransaction(confirmationState),
             onSendSuccess = onSendSuccess,
             onSendError = onSendError,
         )
+    }
+
+    private fun composePendingTransaction(confirmationState: StakingStates.ConfirmationState.Data): PendingTransaction {
+        return confirmationState.possiblePendingTransaction ?: composeStakeTransaction(confirmationState)
     }
 
     private suspend fun getStakingTransactions(
@@ -204,7 +206,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
     private suspend fun sendStakingTransaction(
         fullTransactionsData: List<FullTransactionData>,
-        balanceState: BalanceState?,
+        possiblePendingTransaction: PendingTransaction,
         onSendSuccess: (txUrl: String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
     ) {
@@ -218,13 +220,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
             },
             ifRight = { transactionHashes ->
                 submitHash(
-                    transactionIds = fullTransactionsData.map { it.stakeKitTransaction.id },
+                    transactions = fullTransactionsData.map { it.stakeKitTransaction },
                     transactionHashes = transactionHashes,
-                    groupId = balanceState?.groupId,
-                    validator = balanceState?.validator,
-                    amount = balanceState?.cryptoDecimal,
-                    balanceType = balanceState?.type,
-                    rawCurrencyId = balanceState?.rawCurrencyId,
+                    pendingTransaction = possiblePendingTransaction,
                 )
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
@@ -238,25 +236,18 @@ internal class StakingTransactionSender @AssistedInject constructor(
     }
 
     private suspend fun submitHash(
-        transactionIds: List<String>,
+        transactions: List<StakingTransaction>,
         transactionHashes: List<String>,
-        groupId: String?,
-        validator: Yield.Validator?,
-        amount: BigDecimal?,
-        balanceType: BalanceType?,
-        rawCurrencyId: String?,
+        pendingTransaction: PendingTransaction,
     ) {
-        transactionIds
+        transactions
             .zip(transactionHashes)
-            .forEach { (transactionId, transactionHash) ->
+            .forEach { (transaction, transactionHash) ->
                 submitHashUseCase(
                     SubmitHashData(
-                        transactionId = transactionId,
+                        transactionId = transaction.id,
                         transactionHash = transactionHash,
-                        validator = validator,
-                        amount = amount,
-                        balanceType = balanceType,
-                        rawCurrencyId = rawCurrencyId,
+                        pendingTransaction = pendingTransaction,
                     ),
                 )
                     .onLeft { error ->
@@ -267,20 +258,14 @@ internal class StakingTransactionSender @AssistedInject constructor(
                             ),
                         )
                         saveUnsubmittedHashUseCase.invoke(
-                            transactionId = transactionId,
+                            transactionId = transaction.id,
                             transactionHash = transactionHash,
                         )
                     }.onRight {
                         Timber.d("Successful hash submission")
-                        savePendingTransactionUseCase.invoke(
-                            PendingTransaction(
-                                groupId = groupId,
-                                type = balanceType,
-                                amount = amount,
-                                rawCurrencyId = rawCurrencyId,
-                                validator = validator,
-                            ),
-                        )
+                        if (transaction.type != StakingTransactionType.FREEZE_ENERGY) {
+                            savePendingTransactionUseCase.invoke(userWallet.walletId, pendingTransaction)
+                        }
                     }
             }
     }
@@ -296,6 +281,19 @@ internal class StakingTransactionSender @AssistedInject constructor(
             amountValue = amountValue,
             feeValue = feeValue,
             reduceAmountBy = reduceAmountBy.orZero(),
+        )
+    }
+
+    private fun composeStakeTransaction(confirmationState: StakingStates.ConfirmationState.Data): PendingTransaction {
+        val state = stateController.value
+
+        return PendingTransaction(
+            groupId = UUID.randomUUID().toString(),
+            type = BalanceType.STAKED,
+            amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO,
+            rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
+            validator = (confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator,
+            balancesId = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.getBalancesUniqueId() ?: 0,
         )
     }
 
