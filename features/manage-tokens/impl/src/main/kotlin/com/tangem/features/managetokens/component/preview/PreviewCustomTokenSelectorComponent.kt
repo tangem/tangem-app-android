@@ -55,8 +55,8 @@ internal class PreviewCustomTokenSelectorComponent(
                     network = Network(
                         id = n.id,
                         backendId = n.id.value,
-                        name = "",
-                        currencySymbol = "",
+                        name = "Network $index",
+                        currencySymbol = "N$index",
                         derivationPath = Network.DerivationPath.Card(""),
                         isTestnet = false,
                         standardType = Network.StandardType.ERC20,
