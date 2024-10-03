@@ -1,6 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.events
 
-import com.tangem.common.ui.alerts.SendTransactionAlertConverter
+import com.tangem.common.ui.alerts.TransactionErrorAlertConverter
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
@@ -22,7 +22,7 @@ internal class StakingEventFactory(
 
     fun createSendTransactionErrorAlert(error: SendTransactionError?) {
         val alert = error?.let {
-            SendTransactionAlertConverter(
+            TransactionErrorAlertConverter(
                 popBackStack = popBackStack,
                 onFailedTxEmailClick = onFailedTxEmailClick,
             ).convert(error)
