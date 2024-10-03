@@ -101,6 +101,12 @@
     <item quantity="many">%d дней</item>
     <item quantity="other">%d дней</item>
   </plurals>
+  <plurals name="common_days_no_param">
+    <item quantity="one">день</item>
+    <item quantity="few">дня</item>
+    <item quantity="many">дней</item>
+    <item quantity="other">дней</item>
+  </plurals>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
   <string name="common_done">Готово</string>
@@ -403,6 +409,9 @@
   <string name="markets_token_details_circulating_supply_full">Циркулирующее предложение</string>
   <string name="markets_token_details_empty_exchanges">Биржи не найдены</string>
   <string name="markets_token_details_exchange">Биржа</string>
+  <string name="markets_token_details_exchange_trust_score_caution">Осторожно</string>
+  <string name="markets_token_details_exchange_trust_score_risky">Рискованно</string>
+  <string name="markets_token_details_exchange_trust_score_trusted">Надежно</string>
   <string name="markets_token_details_exchanges_title">Биржи</string>
   <string name="markets_token_details_experienced_buyers">Опытные трейдеры</string>
   <string name="markets_token_details_experienced_buyers_description">Покупатели, у которых было как минимум 100 исходящих транзакций.</string>
@@ -445,7 +454,7 @@
   <string name="markets_token_details_trading_volume_24h_description">Общая сумма криптовалюты, которая была продана за последние 24 часа, показывающая уровень активности и ликвидности на рынке.</string>
   <string name="markets_token_details_trading_volume_full">Объем торгов (24ч)</string>
   <string name="markets_token_details_volume">Объем</string>
-  <string name="markets_tooltip_message">Потяните вверх или коснитесь поисковой строки, чтобы добавить токены напрямую из маркета</string>
+  <string name="markets_tooltip_message">Потяните вверх или коснитесь поисковой строки, чтобы добавить токены напрямую из рынка</string>
   <string name="markets_tooltip_title">Добавить токены</string>
   <string name="nfc_error_unavailable">Функция NFC недоступна на вашем устройстве</string>
   <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
@@ -520,7 +529,7 @@
   <string name="onboarding_subtitle_scan_primary_card_format">Подготовьте основную карту с номером %s</string>
   <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Ваша карта настроена и готова к использованию.</string>
   <string name="onboarding_subtitle_two_backup_cards">Добавлено максимальное количество карт. Завершите процесс резервного копирования.</string>
-  <string name="onboarding_title">Активация карты</string>
+  <string name="onboarding_title">Активация кошелька</string>
   <string name="onboarding_title_backup_card_format">Резервная карта #%d</string>
   <string name="onboarding_title_no_backup_cards">Нет резервных карт</string>
   <string name="onboarding_title_notifications">Уведомления</string>
@@ -745,6 +754,8 @@
   <string name="staking_reward_schedule_block">За блок</string>
   <string name="staking_reward_schedule_day">Ежедневно</string>
   <string name="staking_reward_schedule_each_day">Каждый день</string>
+  <string name="staking_reward_schedule_each_days">Каждые %1$s дня</string>
+  <string name="staking_reward_schedule_each_sec">Каждые %1$s сек</string>
   <string name="staking_reward_schedule_epoch">За эпоху</string>
   <string name="staking_reward_schedule_era">За эру</string>
   <string name="staking_reward_schedule_hour">Ежечасно</string>
@@ -755,6 +766,7 @@
   <string name="staking_stake_more">Застейкать еще</string>
   <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать %2$s ежегодно</string>
   <string name="staking_tap_to_unlock">Нажмите для разблокировки</string>
+  <string name="staking_tap_to_unlock_or_vote">Нажмите для разблокировки или голосования</string>
   <string name="staking_tap_to_withdraw">Нажмите для вывода</string>
   <string name="staking_title_stake">Застейкать %s</string>
   <string name="staking_title_unstake">Вывести %s</string>
@@ -767,8 +779,9 @@
   <string name="staking_unstaking_item_name">Завершение стейкинга %s</string>
   <string name="staking_validator">Валидатор</string>
   <string name="staking_validators">Валидаторы</string>
+  <string name="staking_validators_label">Стратегический партнер</string>
   <string name="staking_vote">Проголосовать</string>
-  <string name="staking_vote_locked">Голосование заблокировано</string>
+  <string name="staking_vote_locked">Проголосовать</string>
   <string name="staking_withdraw">Вывод</string>
   <string name="staking_your_stakes">Застейканные средства</string>
   <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
