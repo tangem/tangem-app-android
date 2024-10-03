@@ -126,6 +126,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "sei-network" -> Blockchain.Sei
         "sei-network/test" -> Blockchain.SeiTestnet
         "internet-computer" -> Blockchain.InternetComputer
+        "sui" -> Blockchain.Sui
+        "sui/test" -> Blockchain.SuiTestnet
         else -> null
     }
 }
@@ -253,6 +255,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Sei -> "sei-network"
         Blockchain.SeiTestnet -> "sei-network/test"
         Blockchain.InternetComputer -> "internet-computer"
+        Blockchain.Sui -> "sui"
+        Blockchain.SuiTestnet -> "sui/test"
     }
 }
 
@@ -337,6 +341,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Cyber, Blockchain.CyberTestnet -> "cyber-ethereum"
         Blockchain.Sei, Blockchain.SeiTestnet -> "sei-network"
         Blockchain.InternetComputer -> "internet-computer"
+        Blockchain.Sui, Blockchain.SuiTestnet -> "sui"
     }
 }
 
