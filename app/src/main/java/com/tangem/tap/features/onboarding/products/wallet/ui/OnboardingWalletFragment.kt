@@ -28,6 +28,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.datasource.utils.isNullOrEmpty
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
@@ -37,8 +38,6 @@ import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.sdk.ui.widget.leapfrogWidget.PropertyCalculator
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.feedback.SupportInfo
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.BaseFragment
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
@@ -46,6 +45,8 @@ import com.tangem.tap.features.onboarding.OnboardingMenuProvider
 import com.tangem.tap.features.onboarding.products.wallet.redux.*
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.mainScope
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.utils.Provider
 import com.tangem.wallet.R
@@ -510,14 +511,16 @@ class OnboardingWalletFragment :
         onBack = ::legacyOnBackHandler,
         onOpenChat = {
             Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Intro))
-            // changed on email support [REDACTED_TASK_KEY]
-            store.dispatch(
-                GlobalAction.SendEmail(
-                    feedbackData = SupportInfo(),
-                    scanResponse = store.state.globalState.onboardingState.onboardingManager?.scanResponse
-                        ?: error("ScanResponse must be not null"),
-                ),
-            )
+
+            val scanResponse = requireNotNull(store.state.globalState.onboardingState.onboardingManager?.scanResponse)
+
+            val getCardInfoUseCase = store.inject(DaggerGraphState::getCardInfoUseCase)
+            val cardInfo = requireNotNull(getCardInfoUseCase.invoke(scanResponse).getOrNull())
+
+            scope.launch {
+                store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                    .invoke(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+            }
         },
         onOpenUriClick = { uri ->
             store.dispatchOpenUrl(uri.toString())
