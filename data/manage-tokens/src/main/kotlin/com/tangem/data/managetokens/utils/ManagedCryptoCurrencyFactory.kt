@@ -137,7 +137,7 @@ internal class ManagedCryptoCurrencyFactory {
                 createSource(
                     networkId = network.networkId,
                     contractAddress = network.contractAddress,
-                    decimals = network.decimalCount?.toInt() ?: return@mapNotNull null,
+                    decimals = network.decimalCount?.toInt(),
                     derivationStyleProvider = derivationStyleProvider,
                 )
             },
@@ -148,7 +148,7 @@ internal class ManagedCryptoCurrencyFactory {
     private fun createSource(
         networkId: String,
         contractAddress: String?,
-        decimals: Int,
+        decimals: Int?,
         derivationStyleProvider: DerivationStyleProvider?,
         extraDerivationPath: String? = null,
     ): SourceNetwork? {
@@ -167,7 +167,7 @@ internal class ManagedCryptoCurrencyFactory {
         } else {
             SourceNetwork.Default(
                 network = network,
-                decimals = decimals,
+                decimals = decimals ?: return null,
                 contractAddress = contractAddress,
             )
         }
