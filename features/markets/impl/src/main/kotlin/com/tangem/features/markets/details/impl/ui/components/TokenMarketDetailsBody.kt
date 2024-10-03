@@ -116,7 +116,7 @@ internal fun LazyListScope.infoBlocksList(state: MarketsTokenDetailsUM.Informati
     }
 
     item(key = "listedOn") {
-        ListedOnBlock(state = state.listedOn)
+        ListedOnBlock(state = state.listedOn, modifier = Modifier.blockPaddings())
     }
 
     if (state.links != null) {
