@@ -128,7 +128,7 @@
   <string name="common_no_address">Keine Adresse</string>
   <string name="common_now">Jetzt</string>
   <string name="common_ok">OK</string>
-  <string name="common_origin_card">Primär Karte</string>
+  <string name="common_origin_card">Hauptkarte</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Einfügen</string>
   <string name="common_privacy_policy">Datenschutzbestimmungen</string>
@@ -275,7 +275,7 @@
   <string name="express_token_list_empty_search">Keine Token gefunden. Bitte versuche eine andere Anfrage</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaktions-ID kopiert</string>
-  <string name="exсhange_token_description">Wechsel eine Ihrer Währungen in eine andere</string>
+  <string name="exсhange_token_description">Tauschen jeden Vermögenswert in Deinem Portfolio gegen diesen Token</string>
   <string name="feedback_data_collection_message">Die folgenden Angaben sind freiwillig. Du kannst diese löschen, wenn du sie nicht weitergeben möchtest.</string>
   <string name="feedback_preface_rate_negative">Teile uns mit, welche Funktionen du vermisst, und wir werden versuchen, dir zu helfen.</string>
   <string name="feedback_preface_scan_failed">Bitte sag uns, welche Karte du hast</string>
@@ -345,6 +345,7 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">Das Wallet unterstützt nicht mehr als ein Netzwerk</string>
   <string name="markets_add_to_my_portfolio_description">Um mit dem Kauf, Tausch oder Erhalt dieses Vermögenswerts zu beginnen, füge diesen Token zu mindestens 1 Netzwerk hinzu</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Dieses Asset ist nicht verfügbar</string>
+  <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Dieses Asset ist für dieses Wallet nicht verfügbar</string>
   <string name="markets_add_to_portfolio_button">Zum Portfolio hinzufügen</string>
   <string name="markets_add_token">Hinzufügen</string>
   <string name="markets_available_networks">Verfügbare Netzwerke</string>
@@ -561,7 +562,7 @@
     <item quantity="one">%d Wallet</item>
     <item quantity="other">%d Wallets</item>
   </plurals>
-  <string name="reset_card_to_factory_button_title">Zurücksetzen der Karte</string>
+  <string name="reset_card_to_factory_button_title">Karte zurücksetzen</string>
   <string name="reset_card_to_factory_condition_1">Mir ist bewusst, dass ich nach der Durchführung dieser Aktion keinen Zugriff mehr auf die aktuelle Wallet habe.</string>
   <string name="reset_card_to_factory_condition_2">Mir ist klar, dass ich diese Karte nicht verwenden kann, um meinen Zugangscode auf den anderen Karten der aktuellen Wallet wiederherzustellen</string>
   <string name="reset_card_with_backup_to_factory_message">Durch das Zurücksetzen auf Werkseinstellungen wird die Wallet vollständig von der ausgewählten Karte gelöscht. Du kannst die aktuelle Wallet nicht wiederherstellen oder die Karte verwenden, um den Zugangscode wiederherzustellen.</string>
@@ -686,7 +687,7 @@
   <string name="staking_details_unbonding_period_info">Der Zeitraum, den du nach der Beantragung der Abhebung von Geldern aus dem Staking warten musst, bevor die Token verfügbar werden.</string>
   <string name="staking_details_warmup_period">Aufwärmphase</string>
   <string name="staking_details_warmup_period_info">Die zugewiesene Zeit für die Aktivierung der Teilnahme am Staking.</string>
-  <string name="staking_legal">Indem Du die Staking-Funktionalität nutzen, stimmst Du den %1$s und %2$s des Anbieters zu.</string>
+  <string name="staking_legal">Indem Du die Staking-Funktionalität nutzt, stimmst Du den %1$s und %2$s des Anbieters zu.</string>
   <string name="staking_locked">Gesperrt</string>
   <string name="staking_migrate">Migrieren</string>
   <string name="staking_native">Natives Staking</string>
@@ -718,14 +719,15 @@
   <string name="staking_revote">Neuwahl</string>
   <string name="staking_reward_claiming_auto">Automatisch</string>
   <string name="staking_reward_claiming_manual">Händisch</string>
-  <string name="staking_reward_schedule_block">Block</string>
-  <string name="staking_reward_schedule_day">Tag</string>
+  <string name="staking_reward_schedule_block">Pro Block</string>
+  <string name="staking_reward_schedule_day">Täglich</string>
   <string name="staking_reward_schedule_each_day">Täglich</string>
-  <string name="staking_reward_schedule_epoch">Epoche</string>
-  <string name="staking_reward_schedule_era">Ära</string>
-  <string name="staking_reward_schedule_hour">Stunde</string>
-  <string name="staking_reward_schedule_month">Monat</string>
-  <string name="staking_reward_schedule_week">Woche</string>
+  <string name="staking_reward_schedule_each_sec">Alle %1$s Sek.</string>
+  <string name="staking_reward_schedule_epoch">Pro Epoche</string>
+  <string name="staking_reward_schedule_era">Pro Ära</string>
+  <string name="staking_reward_schedule_hour">Stündlich</string>
+  <string name="staking_reward_schedule_month">Monatlich</string>
+  <string name="staking_reward_schedule_week">Wöchentlich</string>
   <string name="staking_rewards">Belohnungen</string>
   <string name="staking_stake_locked">Stake gesperrt</string>
   <string name="staking_stake_more">Mehr staken</string>
@@ -743,6 +745,7 @@
   <string name="staking_unstaking_item_name">Unstake Assets %s</string>
   <string name="staking_validator">Validator/ Prüfer</string>
   <string name="staking_validators">Validatoren</string>
+  <string name="staking_validators_label">Strategischer Partner</string>
   <string name="staking_vote">Abstimmung</string>
   <string name="staking_vote_locked">Abstimmung gesperrt</string>
   <string name="staking_withdraw">Zurückziehen</string>
