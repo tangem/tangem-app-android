@@ -722,6 +722,7 @@
   <string name="staking_reward_schedule_block">Pro Block</string>
   <string name="staking_reward_schedule_day">Täglich</string>
   <string name="staking_reward_schedule_each_day">Täglich</string>
+  <string name="staking_reward_schedule_each_sec">Alle %1$s Sek.</string>
   <string name="staking_reward_schedule_epoch">Pro Epoche</string>
   <string name="staking_reward_schedule_era">Pro Ära</string>
   <string name="staking_reward_schedule_hour">Stündlich</string>
@@ -744,6 +745,7 @@
   <string name="staking_unstaking_item_name">Unstake Assets %s</string>
   <string name="staking_validator">Validator/ Prüfer</string>
   <string name="staking_validators">Validatoren</string>
+  <string name="staking_validators_label">Strategischer Partner</string>
   <string name="staking_vote">Abstimmung</string>
   <string name="staking_vote_locked">Abstimmung gesperrt</string>
   <string name="staking_withdraw">Zurückziehen</string>
