@@ -28,6 +28,7 @@ internal object ConfirmationStatePreviewData {
             website = "https://luganodes.com/",
             votingPower = 0.09778360195377911,
             preferred = true,
+            isStrategicPartner = false,
         ),
         Yield.Validator(
             address = "0x35b1ca0f398905cf752e6fe122b51c88022fca32",
@@ -40,6 +41,7 @@ internal object ConfirmationStatePreviewData {
             website = "https://infstones.com/",
             votingPower = 0.0034366257754399774,
             preferred = true,
+            isStrategicPartner = false,
         ),
         Yield.Validator(
             address = "0xd14a87025109013b0a2354a775cb335f926af65a",
@@ -52,6 +54,7 @@ internal object ConfirmationStatePreviewData {
             website = "https://infstones.com/",
             votingPower = 0.023487238579718264,
             preferred = true,
+            isStrategicPartner = true,
         ),
     )
 
@@ -93,6 +96,6 @@ internal object ConfirmationStatePreviewData {
         isApprovalNeeded = false,
         reduceAmountBy = null,
         pendingActions = null,
-        balanceState = null,
+        possiblePendingTransaction = null,
     )
 }
