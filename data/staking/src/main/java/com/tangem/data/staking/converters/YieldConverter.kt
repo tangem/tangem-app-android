@@ -28,7 +28,7 @@ class YieldConverter(
             metadata = convertMetadata(value.metadata),
             validators = value.validators
                 .asSequence()
-                .filter { it.preferred && it.status == ValidatorStatusDTO.ACTIVE }
+                .filter { it.status == ValidatorStatusDTO.ACTIVE }
                 .sortedByDescending { it.apr }
                 .map { convertValidator(it) }
                 .toImmutableList(),
@@ -88,7 +88,7 @@ class YieldConverter(
             tokens = metadataDTO.tokensDTO.map { tokenConverter.convert(it) },
             type = metadataDTO.type,
             rewardSchedule = convertRewardSchedule(metadataDTO.rewardSchedule),
-            cooldownPeriod = convertPeriod(metadataDTO.cooldownPeriod),
+            cooldownPeriod = metadataDTO.cooldownPeriod?.let { convertPeriod(it) },
             warmupPeriod = convertPeriod(metadataDTO.warmupPeriod),
             rewardClaiming = convertRewardClaiming(metadataDTO.rewardClaiming),
             defaultValidator = metadataDTO.defaultValidator,
@@ -123,6 +123,7 @@ class YieldConverter(
             stakedBalance = validatorDTO.stakedBalance,
             votingPower = validatorDTO.votingPower,
             preferred = validatorDTO.preferred,
+            isStrategicPartner = isStrategicPartner(validatorDTO.address),
         )
     }
 
@@ -173,5 +174,13 @@ class YieldConverter(
             "amount" -> Yield.Args.ArgType.AMOUNT
             else -> Yield.Args.ArgType.UNKNOWN
         }
+    }
+
+    private fun isStrategicPartner(validatorAddress: String): Boolean = PARTNERS.any { it == validatorAddress }
+
+    private companion object {
+        val PARTNERS = listOf(
+            "cosmosvaloper1wrx0x9m9ykdhw9sg04v7uljme53wuj03aa5d4f",
+        )
     }
 }
