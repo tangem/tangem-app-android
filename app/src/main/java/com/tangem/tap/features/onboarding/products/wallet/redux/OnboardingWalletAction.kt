@@ -2,6 +2,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.net.Uri
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.Card
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
@@ -68,7 +69,7 @@ sealed class BackupAction : Action {
 
     data object StartAddingBackupCards : BackupAction()
     data object AddBackupCard : BackupAction() {
-        data object Success : BackupAction()
+        data class Success(val card: Card) : BackupAction()
         data class ChangeButtonLoading(val isLoading: Boolean) : BackupAction()
     }
 

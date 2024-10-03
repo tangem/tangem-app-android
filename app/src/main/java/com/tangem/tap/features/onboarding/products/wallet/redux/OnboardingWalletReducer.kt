@@ -1,6 +1,5 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.backupService
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -53,7 +52,6 @@ private object ReducerForGlobalAction {
                         maxBackupCards = MAX_BACKUP_CARDS,
                         canSkipBackup = action.canSkipBackup,
                     ),
-                    isRingOnboarding = action.scanResponse.cardTypesResolver.isRing(),
                 )
             }
             is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
@@ -92,7 +90,12 @@ private object BackupReducer {
             )
             BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
             BackupAction.StartAddingBackupCards -> state.copy(backupStep = BackupStep.AddBackupCards)
-            BackupAction.AddBackupCard.Success -> state.copy(backupCardsNumber = state.backupCardsNumber + 1)
+            is BackupAction.AddBackupCard.Success -> {
+                state.copy(
+                    backupCards = state.backupCards + action.card,
+                    backupCardsNumber = state.backupCardsNumber + 1,
+                )
+            }
             is BackupAction.AddBackupCard.ChangeButtonLoading -> state.copy(showBtnLoading = action.isLoading)
             BackupAction.ShowAccessCodeInfoScreen -> state.copy(backupStep = BackupStep.SetAccessCode)
             BackupAction.ShowEnterAccessCodeScreen -> state.copy(
