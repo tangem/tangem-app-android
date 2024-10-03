@@ -153,6 +153,7 @@
   <string name="common_save_changes">Сохранить изменения</string>
   <string name="common_search">Поиск</string>
   <string name="common_search_tokens">Поиск токенов</string>
+  <string name="common_second_no_param">сек</string>
   <string name="common_seed_phrase">Seed-фраза</string>
   <string name="common_select_action">Выберите действие</string>
   <string name="common_sell">Продать</string>
@@ -296,6 +297,7 @@
   <string name="feedback_subject_support">Обращение в поддержку</string>
   <string name="feedback_subject_support_tangem">Обращение в поддержку Tangem</string>
   <string name="feedback_subject_tx_failed">Не могу отправить транзакцию</string>
+  <string name="feedback_token_description_error">Ошибка в описании монеты</string>
   <string name="give_permission_current_transaction">Транзакция</string>
   <string name="give_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
   <string name="give_permission_policy_type_footer">Укажите лимит доступа к выбранному токену</string>
@@ -754,8 +756,6 @@
   <string name="staking_reward_schedule_block">За блок</string>
   <string name="staking_reward_schedule_day">Ежедневно</string>
   <string name="staking_reward_schedule_each_day">Каждый день</string>
-  <string name="staking_reward_schedule_each_days">Каждые %1$s дня</string>
-  <string name="staking_reward_schedule_each_sec">Каждые %1$s сек</string>
   <string name="staking_reward_schedule_epoch">За эпоху</string>
   <string name="staking_reward_schedule_era">За эру</string>
   <string name="staking_reward_schedule_hour">Ежечасно</string>
@@ -766,7 +766,7 @@
   <string name="staking_stake_more">Застейкать еще</string>
   <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать %2$s ежегодно</string>
   <string name="staking_tap_to_unlock">Нажмите для разблокировки</string>
-  <string name="staking_tap_to_unlock_or_vote">Нажмите для разблокировки или голосования</string>
+  <string name="staking_tap_to_unlock_or_vote">Нажмите для разблокировки</string>
   <string name="staking_tap_to_withdraw">Нажмите для вывода</string>
   <string name="staking_title_stake">Застейкать %s</string>
   <string name="staking_title_unstake">Вывести %s</string>
@@ -797,7 +797,7 @@
   <string name="story_web3_title">Поддержка Web 3.0</string>
   <string name="swap_promo_text">Обменивайте больше токенов по лучшим курсам прямо в вашем кошельке.</string>
   <string name="swap_promo_title">Новый провайдер обмена!</string>
-  <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя</string>
+  <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя.</string>
   <string name="swapping_alert_dex_description">В сумму включена комиссия провайдера сервиса.</string>
   <string name="swapping_alert_title">Комиссии</string>
   <string name="swapping_approve_information_text">Подтверждения считаются отраслевым стандартом для всех децентрализованных бирж и защищают ваш кошелек от доступа со стороны смарт-контракта без вашего разрешения. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту 1inch разрешение тратить ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете обменять свой токен.</string>
