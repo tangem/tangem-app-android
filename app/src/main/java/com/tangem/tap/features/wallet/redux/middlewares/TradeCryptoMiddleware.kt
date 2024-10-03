@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.NetworkAddress
@@ -70,16 +71,26 @@ object TradeCryptoMiddleware {
             isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
         )
 
-        if (action.checkUserLocation && state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE) {
-            val dialogData = topUrl?.let {
-                AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl = it)
-            }
-            store.dispatchDialogShow(AppDialog.RussianCardholdersWarningDialog(data = dialogData))
-            return
-        }
+        scope.launch {
+            val homeFeatureToggles = store.inject(DaggerGraphState::homeFeatureToggles)
 
-        if (currency is CryptoCurrency.Token && currency.network.isTestnet) {
-            scope.launch {
+            val isRussia = if (homeFeatureToggles.isMigrateUserCountryCodeEnabled) {
+                val getUserCountryCodeUseCase = store.inject(DaggerGraphState::getUserCountryUseCase)
+
+                getUserCountryCodeUseCase().isRight { it is UserCountry.Russia }
+            } else {
+                state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE
+            }
+
+            if (action.checkUserLocation && isRussia) {
+                val dialogData = topUrl?.let {
+                    AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl = it)
+                }
+                store.dispatchDialogShow(AppDialog.RussianCardholdersWarningDialog(data = dialogData))
+                return@launch
+            }
+
+            if (currency is CryptoCurrency.Token && currency.network.isTestnet) {
                 val walletManager = store.inject(DaggerGraphState::walletManagersFacade)
                     .getOrCreateWalletManager(
                         userWalletId = action.userWallet.walletId,
@@ -97,13 +108,13 @@ object TradeCryptoMiddleware {
                     walletManager = walletManager,
                     destinationAddress = currency.contractAddress,
                 )
+                return@launch
             }
-            return
-        }
 
-        topUrl?.let {
-            store.dispatchOpenUrl(it)
-            Analytics.send(Token.Topup.ScreenOpened())
+            topUrl?.let {
+                store.dispatchOpenUrl(it)
+                Analytics.send(Token.Topup.ScreenOpened())
+            }
         }
     }
 

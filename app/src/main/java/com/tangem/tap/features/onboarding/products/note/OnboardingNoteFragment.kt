@@ -14,7 +14,6 @@ import com.tangem.core.navigation.ShareElement
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.getDrawableCompat
-import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.features.addBackPressHandler
@@ -24,6 +23,7 @@ import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteActi
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteState
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteStep
 import com.tangem.tap.store
+import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.wallet.R
 
 /**
