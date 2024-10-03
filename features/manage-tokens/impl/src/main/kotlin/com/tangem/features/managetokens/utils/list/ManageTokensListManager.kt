@@ -20,6 +20,7 @@ import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.impl.R
+import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
@@ -119,7 +120,7 @@ internal class ManageTokensListManager @Inject constructor(
     }
 
     suspend fun search(userWalletId: UserWalletId?, query: String) {
-        state.value = ManageTokensListState()
+        state.value = ManageTokensListState(searchQuery = query)
         actionsFlow.emit(
             BatchAction.Reload(
                 requestParams = ManageTokensListConfig(
@@ -138,6 +139,28 @@ internal class ManageTokensListManager @Inject constructor(
             state.copy(
                 status = batchListState.status,
             )
+        }
+
+        // Search nothing found
+        if (
+            state.value.searchQuery.isNullOrEmpty().not() &&
+            batchListState.status is PaginationStatus.EndOfPagination &&
+            batchListState.data.isEmpty()
+        ) {
+            state.update { state ->
+                state.copy(
+                    userWalletId = userWalletId,
+                    currencyBatches = emptyList(),
+                    uiBatches = listOf(
+                        Batch(
+                            key = Int.MAX_VALUE,
+                            data = listOf(CurrencyItemUM.SearchNothingFound),
+                        ),
+                    ),
+                )
+            }
+
+            return
         }
 
         state.update { state ->
