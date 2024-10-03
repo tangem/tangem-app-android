@@ -8,8 +8,8 @@ import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.datasource.asset.loader.AssetLoader
-import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
@@ -17,24 +17,23 @@ import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.feedback.GetCardInfoUseCase
-import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
-import com.tangem.features.details.DetailsFeatureToggles
-import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
+import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
-import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -46,7 +45,7 @@ import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 @Suppress("TooManyFunctions")
 interface ApplicationEntryPoint {
 
-    fun getConfigManager(): ConfigManager
+    fun getEnvironmentConfigStorage(): EnvironmentConfigStorage
 
     fun getAppStateHolder(): AppStateHolder
 
@@ -56,7 +55,7 @@ interface ApplicationEntryPoint {
 
     fun getNetworkConnectionManager(): NetworkConnectionManager
 
-    fun getCustomTokenFeatureToggles(): CustomTokenFeatureToggles
+    fun getCardScanningFeatureToggles(): CardScanningFeatureToggles
 
     fun getWalletConnect2Repository(): WalletConnect2Repository
 
@@ -94,19 +93,15 @@ interface ApplicationEntryPoint {
 
     fun getCardRepository(): CardRepository
 
-    fun getFeedbackManagerFeatureToggles(): FeedbackManagerFeatureToggles
-
     fun getTangemSdkLogger(): TangemSdkLogger
 
     fun getSettingsRepository(): SettingsRepository
 
     fun getBlockchainSDKFactory(): BlockchainSDKFactory
 
-    fun getGetFeedbackEmailUseCase(): GetFeedbackEmailUseCase
+    fun getSendFeedbackEmailUseCase(): SendFeedbackEmailUseCase
 
     fun getSaveBlockchainErrorUseCase(): SaveBlockchainErrorUseCase
-
-    fun getDetailsFeatureToggles(): DetailsFeatureToggles
 
     fun getGetCardInfoUseCase(): GetCardInfoUseCase
 
@@ -116,7 +111,9 @@ interface ApplicationEntryPoint {
 
     fun getAppRouter(): AppRouter
 
-    fun getPushNotificationsFeatureToggles(): PushNotificationsFeatureToggles
-
     fun getTangemAppLogger(): TangemAppLoggerInitializer
+
+    fun getHomeFeatureToggles(): HomeFeatureToggles
+
+    fun getGetUserCountryCodeUseCase(): GetUserCountryUseCase
 }
