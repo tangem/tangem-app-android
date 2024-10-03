@@ -173,6 +173,7 @@ internal class PreviewManageTokensComponent(
             )
             is CurrencyItemUM.Custom,
             is CurrencyItemUM.Loading,
+            is CurrencyItemUM.SearchNothingFound,
             -> return
         }
 
@@ -210,6 +211,7 @@ internal class PreviewManageTokensComponent(
             }
             is CurrencyItemUM.Custom,
             is CurrencyItemUM.Loading,
+            is CurrencyItemUM.SearchNothingFound,
             -> return
         }
 
