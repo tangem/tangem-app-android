@@ -19,6 +19,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -39,6 +40,7 @@ internal fun StakingConfirmationContent(
 ) {
     if (state !is StakingStates.ConfirmationState.Data) return
     val isEnterAction = type == StakingActionCommonType.ENTER
+    val showValidatorBlock = isEnterAction || state.pendingAction?.type == StakingActionType.VOTE_LOCKED
     val isTransactionSent = state.innerState == InnerConfirmationStakingState.COMPLETED
     Column(
         modifier = Modifier
@@ -63,7 +65,7 @@ internal fun StakingConfirmationContent(
             isEditingDisabled = !isEnterAction && state.innerState != InnerConfirmationStakingState.COMPLETED,
             onClick = clickIntents::onPrevClick,
         )
-        if (isEnterAction) {
+        if (showValidatorBlock) {
             ValidatorBlock(validatorState = state.validatorState, onClick = clickIntents::openValidators)
         }
         StakingFeeBlock(feeState = state.feeState, isTransactionSent = isTransactionSent)

@@ -20,9 +20,12 @@ internal class SetConfirmationStateLoadingTransformer(
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
+        val filteredValidators = yield.validators.filter {
+            it.preferred
+        }
         val possibleConfirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
         val possibleValidatorState = possibleConfirmationState?.validatorState as? ValidatorState.Content
-        val chosenValidator = possibleValidatorState?.chosenValidator ?: yield.validators[0]
+        val chosenValidator = possibleValidatorState?.chosenValidator ?: filteredValidators[0]
 
         return prevState.copy(
             confirmationState = StakingStates.ConfirmationState.Data(
@@ -32,7 +35,7 @@ internal class SetConfirmationStateLoadingTransformer(
                 validatorState = ValidatorState.Content(
                     isClickable = true,
                     chosenValidator = chosenValidator,
-                    availableValidators = yield.validators,
+                    availableValidators = filteredValidators,
                 ),
                 notifications = persistentListOf(),
                 footerText = getFooter(prevState, chosenValidator),
@@ -41,7 +44,7 @@ internal class SetConfirmationStateLoadingTransformer(
                 pendingActions = possibleConfirmationState?.pendingActions,
                 isApprovalNeeded = false,
                 reduceAmountBy = null,
-                balanceState = null,
+                possiblePendingTransaction = null,
             ),
         )
     }
