@@ -37,7 +37,10 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.usecase.*
+import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
+import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
+import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -219,7 +222,13 @@ internal class StakingViewModel @Inject constructor(
         when {
             isInitState() -> {
                 stateController.update(SetConfirmationStateResetAssentTransformer)
-                stateController.update(SetConfirmationStateLoadingTransformer(yield, appCurrency))
+                stateController.update(
+                    SetConfirmationStateLoadingTransformer(
+                        yield = yield,
+                        appCurrency = appCurrency,
+                        cryptoCurrency = cryptoCurrencyStatus.currency,
+                    ),
+                )
                 if (balanceState != null) {
                     stateController.update(SetPossiblePendingTransactionTransformer(balanceState, cryptoCurrencyStatus))
                 }
@@ -260,7 +269,13 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun getFee(pendingAction: PendingAction?, pendingActions: ImmutableList<PendingAction>?) {
-        stateController.update(SetConfirmationStateLoadingTransformer(yield, appCurrency))
+        stateController.update(
+            SetConfirmationStateLoadingTransformer(
+                yield = yield,
+                appCurrency = appCurrency,
+                cryptoCurrency = cryptoCurrencyStatus.currency,
+            ),
+        )
         viewModelScope.launch {
             feeLoader.getFee(
                 pendingAction = pendingAction,
