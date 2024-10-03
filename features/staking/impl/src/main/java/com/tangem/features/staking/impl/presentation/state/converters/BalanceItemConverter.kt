@@ -8,6 +8,7 @@ import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.BalanceType.Companion.isClickable
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
@@ -83,7 +84,11 @@ internal class BalanceItemConverter(
     private fun getSubtitle(balance: BalanceItem) = when (balance.type) {
         BalanceType.UNSTAKING -> getUnbondingDate(balance.date)
         BalanceType.UNSTAKED -> resourceReference(R.string.staking_tap_to_withdraw)
-        BalanceType.LOCKED -> resourceReference(R.string.staking_tap_to_unlock)
+        BalanceType.LOCKED -> if (balance.pendingActions.any { it.type == StakingActionType.VOTE_LOCKED }) {
+            resourceReference(R.string.staking_tap_to_unlock_or_vote)
+        } else {
+            resourceReference(R.string.staking_tap_to_unlock)
+        }
         BalanceType.PREPARING -> {
             val warmupPeriod = yield.metadata.warmupPeriod.days
             combinedReference(
@@ -100,8 +105,8 @@ internal class BalanceItemConverter(
         -> null
     }
 
-    private fun getUnbondingDate(date: DateTime?): TextReference {
-        val unbondingPeriod = yield.metadata.cooldownPeriod.days
+    private fun getUnbondingDate(date: DateTime?): TextReference? {
+        val unbondingPeriod = yield.metadata.cooldownPeriod?.days ?: return null
         if (date == null) {
             return combinedReference(
                 resourceReference(R.string.staking_details_unbonding_period),
