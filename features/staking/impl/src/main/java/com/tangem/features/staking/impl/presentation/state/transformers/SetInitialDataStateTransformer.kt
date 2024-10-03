@@ -104,7 +104,7 @@ internal class SetInitialDataStateTransformer(
         return listOfNotNull(
             createAnnualPercentageRateItem(yield.validators),
             createAvailableItem(cryptoCurrencyStatus),
-            createUnbondingPeriodItem(yield.metadata.cooldownPeriod.days),
+            createUnbondingPeriodItem(yield.metadata.cooldownPeriod?.days),
             createMinimumRequirementItem(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 minimumCryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum,
@@ -140,7 +140,8 @@ internal class SetInitialDataStateTransformer(
         )
     }
 
-    private fun createUnbondingPeriodItem(cooldownPeriodDays: Int): RoundedListWithDividersItemData {
+    private fun createUnbondingPeriodItem(cooldownPeriodDays: Int?): RoundedListWithDividersItemData? {
+        cooldownPeriodDays ?: return null
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_unbonding_period,
             startText = TextReference.Res(R.string.staking_details_unbonding_period),
@@ -231,7 +232,7 @@ internal class SetInitialDataStateTransformer(
             pendingActions = null,
             isApprovalNeeded = isApprovalNeeded,
             reduceAmountBy = null,
-            balanceState = null,
+            possiblePendingTransaction = null,
         )
     }
 
