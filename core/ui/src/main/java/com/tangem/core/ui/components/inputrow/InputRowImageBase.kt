@@ -24,7 +24,6 @@ import com.tangem.core.ui.components.inputrow.inner.InputRowAsyncImage
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -33,15 +32,17 @@ import com.tangem.core.ui.res.TangemThemePreview
  * [Input Row Image](https://www.figma.com/design/14ISV23YB1yVW1uNVwqrKv/Android?node-id=2841-1589&t=u6pOF6lsdpvWLELb-4)
  *
  * @param subtitle subtitle text
- * @param caption caption text
  * @param modifier modifier
+ * @param caption caption text
  * @param imageUrl icon to load
+ * @param iconRes icon resource
  * @param subtitleColor subtitle text color
  * @param captionColor caption text color
+ * @param iconTint icon tint
  * @param isGrayscaleImage whether to display grayscale image
- * @param subtitleEndIconRes icon to show after subtitle
  * @param iconEndRes icon to end of row
  * @param onImageError composable to show if image loading failed
+ * @param subtitleExtraContent subtitle extra content
  * @param extraContent extra content
  */
 @Suppress("LongMethod")
@@ -56,10 +57,9 @@ internal fun InputRowImageBase(
     captionColor: Color = TangemTheme.colors.text.tertiary,
     iconTint: Color = TangemTheme.colors.icon.informative,
     isGrayscaleImage: Boolean = false,
-    @DrawableRes subtitleEndIconRes: Int? = null,
-    subtitleEndIconTint: Color = TangemColorPalette.Azure,
     @DrawableRes iconEndRes: Int? = null,
     onImageError: (@Composable () -> Unit)? = null,
+    subtitleExtraContent: (@Composable RowScope.() -> Unit)? = null,
     extraContent: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Row(
@@ -100,10 +100,7 @@ internal fun InputRowImageBase(
                     style = TangemTheme.typography.subtitle2,
                     color = subtitleColor,
                 )
-                SubtitleEndIconRes(
-                    subtitleEndIconRes = subtitleEndIconRes,
-                    subtitleEndIconTint = subtitleEndIconTint,
-                )
+                subtitleExtraContent?.invoke(this)
             }
             if (caption != null) {
                 Text(
@@ -121,23 +118,6 @@ internal fun InputRowImageBase(
             SpacerWMax()
         }
         InputRowEndIcon(iconEndRes)
-    }
-}
-
-@Composable
-private fun RowScope.SubtitleEndIconRes(subtitleEndIconRes: Int?, subtitleEndIconTint: Color) {
-    AnimatedVisibility(
-        visible = subtitleEndIconRes != null,
-        label = "Subtitle end icon visibility animation",
-        modifier = Modifier.align(Alignment.CenterVertically),
-    ) {
-        val icon = remember(this) { requireNotNull(subtitleEndIconRes) }
-        Icon(
-            painter = rememberVectorPainter(image = ImageVector.vectorResource(id = icon)),
-            tint = subtitleEndIconTint,
-            contentDescription = null,
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
-        )
     }
 }
 
