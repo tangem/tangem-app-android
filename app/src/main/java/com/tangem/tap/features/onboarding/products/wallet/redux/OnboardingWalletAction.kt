@@ -2,6 +2,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.net.Uri
 import com.tangem.common.CompletionResult
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
@@ -28,6 +29,8 @@ sealed class OnboardingWalletAction : Action {
     class SetThirdCardArtworkUrl(val artworkUri: Uri?) : OnboardingWalletAction()
 
     data object OnBackPressed : OnboardingWalletAction()
+
+    data class WalletSaved(val userWalletId: UserWalletId) : OnboardingWalletAction()
 }
 
 sealed class OnboardingWallet2Action : OnboardingWalletAction() {
@@ -88,6 +91,8 @@ sealed class BackupAction : Action {
     data class WriteBackupCard(val cardNumber: Int) : BackupAction()
 
     data class FinishBackup(val withAnalytics: Boolean = true) : BackupAction()
+
+    data class BackupFinished(val userWalletId: UserWalletId?) : BackupAction()
 
     data object DiscardBackup : BackupAction()
     data object DiscardSavedBackup : BackupAction()
