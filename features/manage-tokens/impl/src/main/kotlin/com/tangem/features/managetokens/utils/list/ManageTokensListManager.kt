@@ -16,7 +16,6 @@ import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
-import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.impl.R
@@ -81,9 +80,9 @@ internal class ManageTokensListManager @Inject constructor(
         .distinctUntilChanged()
     val uiItems: Flow<ImmutableList<CurrencyItemUM>> = uiManager.items
 
-    suspend fun launchPagination(params: ManageTokensComponent.Params) = coroutineScope {
+    suspend fun launchPagination(source: ManageTokensSource, userWalletId: UserWalletId?) = coroutineScope {
         scope = this
-        source = params.source
+        this@ManageTokensListManager.source = source
 
         val batchFlow = getManagedTokensUseCase(
             context = ManageTokensListBatchingContext(
@@ -93,13 +92,13 @@ internal class ManageTokensListManager @Inject constructor(
         )
 
         batchFlow.state
-            .onEach { state -> updateState(state, params.userWalletId) }
+            .onEach { state -> updateState(state, userWalletId) }
             .flowOn(dispatchers.default)
             .launchIn(scope = this)
             .saveIn(jobHolder)
 
         // Initial load
-        reload(params.userWalletId)
+        reload(userWalletId)
     }
 
     suspend fun reload(userWalletId: UserWalletId?) {
