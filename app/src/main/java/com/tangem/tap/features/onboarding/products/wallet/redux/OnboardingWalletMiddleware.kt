@@ -612,11 +612,9 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                         canOverride = true,
                     )
                 } else {
-                    launch {
-                        readCard { newScanResponse ->
-                            scanResponse = newScanResponse
-                            userWallet = createUserWallet(newScanResponse, backupState)
-                        }
+                    readCard { newScanResponse ->
+                        scanResponse = newScanResponse
+                        userWallet = createUserWallet(newScanResponse, backupState)
                     }
                 }
 
