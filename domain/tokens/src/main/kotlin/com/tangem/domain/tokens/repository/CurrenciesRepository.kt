@@ -81,7 +81,7 @@ interface CurrenciesRepository {
      * @param userWalletId The unique identifier of the user wallet.
      * @return A list of [CryptoCurrency].
      */
-    fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): LceFlow<Throwable, List<CryptoCurrency>>
+    fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
 
     /**
      * Retrieves the primary cryptocurrency for a specific single-currency user wallet.
