@@ -7,6 +7,7 @@ import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.Yield
 import kotlinx.collections.immutable.ImmutableList
+import org.joda.time.DateTime
 import java.math.BigDecimal
 
 internal sealed class InnerYieldBalanceState {
@@ -35,4 +36,5 @@ internal data class BalanceState(
     val validator: Yield.Validator?,
     val pendingActions: ImmutableList<PendingAction>,
     val isPending: Boolean,
+    val date: DateTime,
 )
