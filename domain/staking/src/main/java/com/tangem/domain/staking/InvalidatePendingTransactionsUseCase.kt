@@ -8,6 +8,7 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingPendingTransactionRepository
 import com.tangem.domain.wallets.models.UserWalletId
+import org.joda.time.DateTime
 import java.util.UUID
 
 class InvalidatePendingTransactionsUseCase(
@@ -40,12 +41,12 @@ class InvalidatePendingTransactionsUseCase(
         newBalancesId: Int,
         pendingData: List<Pair<PendingTransaction, BalanceItem>>,
     ): Pair<List<BalanceItem>, List<PendingTransaction>> {
-        val balances = realData.associateBy { Triple(it.groupId, it.type, it.amount) }.toMutableMap()
+        val balances = realData.associateBy { Pair(it.groupId to it.type, it.amount to it.date) }.toMutableMap()
 
         val transactionsToRemove = mutableListOf<PendingTransaction>()
 
         pendingData.forEach { (pendingTransaction, balanceItem) ->
-            val key = Triple(balanceItem.groupId, balanceItem.type, balanceItem.amount)
+            val key = Pair(balanceItem.groupId to balanceItem.type, balanceItem.amount to balanceItem.date)
             val oldBalancesId = pendingTransaction.balancesId
 
             when {
@@ -57,7 +58,8 @@ class InvalidatePendingTransactionsUseCase(
                 }
                 else -> {
                     val groupId = UUID.randomUUID().toString()
-                    balances[Triple(groupId, BalanceType.STAKED, pendingTransaction.amount)] = BalanceItem(
+                    val now = DateTime.now()
+                    balances[Pair(groupId to BalanceType.STAKED, pendingTransaction.amount to now)] = BalanceItem(
                         groupId = groupId,
                         type = pendingTransaction.type,
                         amount = pendingTransaction.amount,
