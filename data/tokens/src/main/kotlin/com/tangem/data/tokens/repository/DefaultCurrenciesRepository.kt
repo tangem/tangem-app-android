@@ -42,6 +42,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import com.tangem.blockchain.common.FeePaidCurrency as FeePaidSdkCurrency
@@ -206,18 +207,14 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    override fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): LceFlow<Throwable, List<CryptoCurrency>> {
-        return lceFlow {
-            val userWallet = catch({ getUserWallet(userWalletId) }) {
-                raise(it)
-            }
+    override fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
+        return channelFlow {
+            val userWallet = getUserWallet(userWalletId)
 
             if (userWallet.isMultiCurrency) {
-                getMultiCurrencyWalletCurrenciesUpdatesLce(userWalletId).collect(::send)
+                getMultiCurrencyWalletCurrenciesUpdates(userWalletId).collect(::send)
             } else {
-                val currency = catch({ getSingleCurrencyWalletPrimaryCurrency(userWalletId) }) {
-                    raise(it)
-                }
+                val currency = getSingleCurrencyWalletPrimaryCurrency(userWalletId)
                 send(listOf(currency))
             }
         }
@@ -260,16 +257,14 @@ internal class DefaultCurrenciesRepository(
             val userWallet = getUserWallet(userWalletId)
             ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
 
-            launch(dispatchers.io) {
-                getMultiCurrencyWalletCurrencies(userWallet)
-                    .collectLatest(::send)
-            }
+            getMultiCurrencyWalletCurrencies(userWallet)
+                .onEach { send(it) }
+                .launchIn(scope = this + dispatchers.io)
 
             withContext(dispatchers.io) {
                 fetchTokensIfCacheExpired(userWallet, refresh = false)
             }
         }
-            .cancellable()
     }
 
     override fun getMultiCurrencyWalletCurrenciesUpdatesLce(
