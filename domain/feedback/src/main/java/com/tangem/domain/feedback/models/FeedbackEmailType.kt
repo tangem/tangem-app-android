@@ -36,4 +36,14 @@ sealed interface FeedbackEmailType {
         val providerName: String,
         val txId: String,
     ) : FeedbackEmailType
+
+    /**
+     * Error in currency description
+     *
+     * @property currencyId   currency id
+     * @property currencyName currency name
+     */
+    data class CurrencyDescriptionError(val currencyId: String, val currencyName: String) : FeedbackEmailType {
+        override val cardInfo: CardInfo? = null
+    }
 }
