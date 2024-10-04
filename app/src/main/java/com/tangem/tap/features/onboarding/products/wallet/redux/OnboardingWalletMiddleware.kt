@@ -595,7 +595,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 if (scanResponse != null) {
                     userWallet = createUserWallet(
                         scanResponse = requireNotNull(value = scanResponse, lazyMessage = { "ScanResponse is null" }),
-                        backupState = backupState
+                        backupState = backupState,
                     )
 
                     val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
@@ -604,7 +604,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                             scanResponse = updateScanResponseAfterBackup(
                                 scanResponse = requireNotNull(
                                     value = scanResponse,
-                                    lazyMessage = { "ScanResponse is null" }
+                                    lazyMessage = { "ScanResponse is null" },
                                 ),
                                 backupState = backupState,
                             ),
