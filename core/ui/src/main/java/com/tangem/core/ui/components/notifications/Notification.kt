@@ -71,7 +71,7 @@ fun Notification(
             title = config.title,
             subtitle = config.subtitle,
             subtitleColor = subtitleColor,
-            isClickableComponent = isEnabled && config.onClick != null,
+            showArrowIcon = isEnabled && config.showArrowIcon,
         )
     }
 }
@@ -130,7 +130,7 @@ private fun MainContent(
     title: TextReference?,
     subtitle: TextReference,
     subtitleColor: Color,
-    isClickableComponent: Boolean,
+    showArrowIcon: Boolean,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
@@ -145,7 +145,7 @@ private fun MainContent(
 
         TextsBlock(title = title, subtitle = subtitle, subtitleColor = subtitleColor)
 
-        if (isClickableComponent) {
+        if (showArrowIcon) {
             SpacerWMax()
 
             Icon(
