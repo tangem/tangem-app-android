@@ -95,6 +95,9 @@
   <plurals name="common_days">
     <item quantity="other">%d 日</item>
   </plurals>
+  <plurals name="common_days_no_param">
+    <item quantity="other">日</item>
+  </plurals>
   <string name="common_delete">削除</string>
   <string name="common_disabled">無効</string>
   <string name="common_done">完了</string>
@@ -340,8 +343,9 @@
   <string name="manage_tokens_unavailable_vote">賛成票を投じる</string>
   <string name="manage_tokens_wallet_selector_title">ウォレットを選択</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">ウォレットは複数のネットワークをサポートしていません。</string>
-  <string name="markets_add_to_my_portfolio_description">このアセットの購入、交換、受け取りを開始するには、ポートフォリオに追加してください。</string>
+  <string name="markets_add_to_my_portfolio_description">このアセットを購入・交換・受け取るには、ポートフォリオに追加してください。</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">このアセットは利用できません</string>
+  <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">このアセットはこのウォレットでは使用できません。</string>
   <string name="markets_add_to_portfolio_button">ポートフォリオに追加</string>
   <string name="markets_add_token">追加</string>
   <string name="markets_available_networks">利用可能なネットワーク</string>
@@ -388,6 +392,11 @@
   <string name="markets_token_details_circulating_supply_description">取引可能で市場に流通しているコインの総数</string>
   <string name="markets_token_details_circulating_supply_full">循環供給量</string>
   <string name="markets_token_details_empty_exchanges">取引所が見つかりません</string>
+  <string name="markets_token_details_exchange">取引所</string>
+  <string name="markets_token_details_exchange_trust_score_caution">注意</string>
+  <string name="markets_token_details_exchange_trust_score_risky">危険</string>
+  <string name="markets_token_details_exchange_trust_score_trusted">信頼できる</string>
+  <string name="markets_token_details_exchanges_title">取引所</string>
   <string name="markets_token_details_experienced_buyers">経験豊富な買い手</string>
   <string name="markets_token_details_experienced_buyers_description">少なくとも100の発信取引を持つネット・バイヤー</string>
   <string name="markets_token_details_experienced_buyers_full">経験豊富な買い手</string>
@@ -428,6 +437,7 @@
   <string name="markets_token_details_trading_volume">取引量（24時間）</string>
   <string name="markets_token_details_trading_volume_24h_description">過去24時間以内に取引された暗号資産の合計額。市場の活発さと流動性を示します。</string>
   <string name="markets_token_details_trading_volume_full">取引量（24時間）</string>
+  <string name="markets_token_details_volume">取引量</string>
   <string name="markets_tooltip_message">これをドラッグするか、検索窓をタップして、マーケットから直接トークンを追加します</string>
   <string name="markets_tooltip_title">トークンを追加</string>
   <string name="nfc_error_unavailable">お使いのデバイスではNFCが使用できません</string>
@@ -716,7 +726,10 @@
   <string name="staking_reward_claiming_manual">手動</string>
   <string name="staking_reward_schedule_block">ブロック毎</string>
   <string name="staking_reward_schedule_day">毎日</string>
+  <string name="staking_reward_schedule_each">%sごと</string>
   <string name="staking_reward_schedule_each_day">毎日</string>
+  <string name="staking_reward_schedule_each_days">%1$s日ごとに</string>
+  <string name="staking_reward_schedule_each_sec">%1$s秒毎</string>
   <string name="staking_reward_schedule_epoch">エポック毎</string>
   <string name="staking_reward_schedule_era">時代毎</string>
   <string name="staking_reward_schedule_hour">毎時間</string>
@@ -727,6 +740,7 @@
   <string name="staking_stake_more">もっとステーキングする</string>
   <string name="staking_summary_description_text">%1$sをステーキングし、年間 %2$sを受け取ります</string>
   <string name="staking_tap_to_unlock">タップしてロック解除</string>
+  <string name="staking_tap_to_unlock_or_vote">タップしてロック解除もしくは投票</string>
   <string name="staking_tap_to_withdraw">タップして引き出す</string>
   <string name="staking_title_stake">%sをステーキングする</string>
   <string name="staking_title_unstake">%sのステーキング解除</string>
@@ -739,8 +753,9 @@
   <string name="staking_unstaking_item_name">ステーキング解除中の資産%s</string>
   <string name="staking_validator">バリデーター</string>
   <string name="staking_validators">バリデーター</string>
+  <string name="staking_validators_label">戦略的パートナー</string>
   <string name="staking_vote">投票する</string>
-  <string name="staking_vote_locked">投票はロックされています</string>
+  <string name="staking_vote_locked">投票する</string>
   <string name="staking_withdraw">引き出す</string>
   <string name="staking_your_stakes">あなたのステーキング</string>
   <string name="story_awe_description">カード内に秘密鍵を保管しながら暗号資産を安全に保管します</string>
@@ -804,6 +819,7 @@
   <string name="transaction_history_operation">オペレーション</string>
   <string name="transaction_history_transaction_from_address">送金元: %s</string>
   <string name="transaction_history_transaction_to_address">送金先: %s</string>
+  <string name="transaction_history_transaction_validator">バリデーター: %s</string>
   <string name="try_to_load_data_again_button_title">もう一度やり直してください</string>
   <string name="twin_error_same_card">同じカードをスキャンしました。ツインウォレットを作成するには、番号%dのカードをスキャンする必要があります。</string>
   <string name="twin_error_wrong_twin">間違ったツインカードをスキャンしました。別のカードをお試しください。</string>

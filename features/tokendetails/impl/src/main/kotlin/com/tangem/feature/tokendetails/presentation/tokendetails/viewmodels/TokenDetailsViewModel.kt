@@ -32,12 +32,14 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
+import com.tangem.domain.staking.GetStakingPendingTransactionsUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
@@ -119,6 +121,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val associateAssetUseCase: AssociateAssetUseCase,
+    private val getStakingPendingTransactionsUseCase: GetStakingPendingTransactionsUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
@@ -148,6 +151,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val warningsJobHolder = JobHolder()
     private val swapTxJobHolder = JobHolder()
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
+    private val stakingPendingBalances: List<BalanceItem>
+        get() = getStakingPendingTransactionsUseCase(userWalletId).getOrElse { emptyList() }
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var stakingEntryInfo: StakingEntryInfo? = null
@@ -160,6 +165,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         stakingEntryInfoProvider = Provider { stakingEntryInfo },
         stakingAvailabilityProvider = Provider { stakingAvailability },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        pendingBalancesProvider = Provider { stakingPendingBalances },
         clickIntents = this,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,

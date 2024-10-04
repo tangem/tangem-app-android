@@ -11,9 +11,10 @@ android {
 
 dependencies {
     api(projects.domain.staking.models)
-
     api(projects.domain.core)
+
     implementation(deps.kotlin.serialization)
+    implementation(deps.jodatime)
 
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)

@@ -98,8 +98,7 @@ internal class DefaultStakingRepository(
     )
 
     private val yieldBalanceConverter = YieldBalanceConverter()
-
-    private val yieldBalanceListConverter = YieldBalanceListConverter()
+    private val yieldBalanceListConverter = YieldBalanceListConverter(yieldBalanceConverter)
 
     private val isYieldBalanceFetching = MutableStateFlow(
         value = emptyMap<UserWalletId, Boolean>(),
@@ -121,7 +120,7 @@ internal class DefaultStakingRepository(
                 key = YIELDS_STORE_KEY,
                 skipCache = refresh,
                 block = {
-                    val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = true)
+                    val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)
                         .getOrThrow()
 
                     stakingYieldsStore.store(stakingTokensWithYields.data)

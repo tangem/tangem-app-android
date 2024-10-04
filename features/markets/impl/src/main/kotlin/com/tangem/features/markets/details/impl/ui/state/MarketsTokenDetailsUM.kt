@@ -20,7 +20,7 @@ internal data class MarketsTokenDetailsUM(
     val markerSet: Boolean,
     val chartState: ChartState,
     val onSelectedIntervalChange: (PriceChangeInterval) -> Unit,
-    val infoBottomSheet: TangemBottomSheetConfig,
+    val bottomSheetConfig: TangemBottomSheetConfig,
     val triggerPriceChange: StateEvent<PriceChangeType>,
     val body: Body,
 ) {

@@ -133,9 +133,12 @@ internal class StakingViewModel @Inject constructor(
 
     private val balancesToShow: List<BalanceItem>
         get() {
-            return cryptoCurrencyStatus.value.yieldBalance?.let {
-                invalidatePendingTransactionsUseCase(it).getOrElse { emptyList() }
-            } ?: emptyList()
+            val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
+            return invalidatePendingTransactionsUseCase(
+                userWalletId = userWallet.walletId,
+                balanceItems = yieldBalance?.balance?.items ?: emptyList(),
+                balancesId = yieldBalance?.getBalancesUniqueId() ?: 0,
+            ).getOrElse { emptyList() }
         }
 
     private var isInitialInfoAnalyticSent: Boolean = false
@@ -215,13 +218,31 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onNextClick()
         when {
             isInitState() -> {
+                stateController.update(SetConfirmationStateResetAssentTransformer)
                 stateController.update(SetConfirmationStateLoadingTransformer(yield, appCurrency))
-                stateController.update(SetBalanceStateTransformer(balanceState))
+                if (balanceState != null) {
+                    stateController.update(SetPossiblePendingTransactionTransformer(balanceState, cryptoCurrencyStatus))
+                }
+
+                stateController.update(
+                    transformer = SetInitialDataStateTransformer(
+                        clickIntents = this@StakingViewModel,
+                        yield = yield,
+                        isAnyTokenStaked = true,
+                        isApprovalNeeded = stakingApproval is StakingApproval.Needed,
+                        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                        userWalletProvider = Provider { userWallet },
+                        appCurrencyProvider = Provider { appCurrency },
+                        balancesToShowProvider = Provider { balancesToShow },
+                    ),
+                )
                 onRefreshSwipe(isRefreshing = false)
             }
             isAssentState() -> {
                 getFee(pendingAction, pendingActions)
-                stateController.update(SetBalanceStateTransformer(balanceState))
+                if (balanceState != null) {
+                    stateController.update(SetPossiblePendingTransactionTransformer(balanceState, cryptoCurrencyStatus))
+                }
                 val amountState = value.amountState as? AmountState.Data
                 if (amountState?.amountTextField?.isWarning == true) {
                     stateController.update(
@@ -325,6 +346,7 @@ internal class StakingViewModel @Inject constructor(
         if (value.currentStep == StakingStep.Confirmation) {
             when ((value.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState) {
                 InnerConfirmationStakingState.ASSENT -> {
+                    stateController.update(SetConfirmationStateResetAssentTransformer)
                     stakingStateRouter.onPrevClick()
                 }
                 null,
