@@ -59,7 +59,9 @@ import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.component.preview.PreviewManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
@@ -128,19 +130,21 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
 }
 
 @Composable
-private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM, search: SearchBarUM, modifier: Modifier = Modifier) {
+private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM?, search: SearchBarUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.background(TangemTheme.colors.background.primary),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
-        TangemTopAppBar(
-            title = topBar.title.resolveReference(),
-            startButton = TopAppBarButtonUM.Back(topBar.onBackButtonClick),
-            endButton = when (topBar) {
-                is ManageTokensTopBarUM.ManageContent -> topBar.endButton
-                is ManageTokensTopBarUM.ReadContent -> null
-            },
-        )
+        if (topBar != null) {
+            TangemTopAppBar(
+                title = topBar.title.resolveReference(),
+                startButton = TopAppBarButtonUM.Back(topBar.onBackButtonClick),
+                endButton = when (topBar) {
+                    is ManageTokensTopBarUM.ManageContent -> topBar.endButton
+                    is ManageTokensTopBarUM.ReadContent -> null
+                },
+            )
+        }
         SearchBar(
             modifier = Modifier
                 .padding(bottom = TangemTheme.dimens.spacing12)
@@ -196,7 +200,7 @@ private fun Content(state: ManageTokensUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Currencies(
+internal fun Currencies(
     listState: LazyListState,
     items: ImmutableList<CurrencyItemUM>,
     showLoadingItem: Boolean,
@@ -466,8 +470,24 @@ private fun Preview_ManageTokens(
 private class PreviewManageTokensComponentProvider : PreviewParameterProvider<ManageTokensComponent> {
     override val values: Sequence<ManageTokensComponent>
         get() = sequenceOf(
-            PreviewManageTokensComponent(),
-            PreviewManageTokensComponent(isLoading = true),
+            PreviewManageTokensComponent(
+                isLoading = true,
+                params = ManageTokensComponent.Params(
+                    source = ManageTokensSource.ONBOARDING,
+                    userWalletId = UserWalletId("wallet_id"),
+                ),
+            ),
+            PreviewManageTokensComponent(
+                isLoading = false,
+                params = ManageTokensComponent.Params(source = ManageTokensSource.ONBOARDING, userWalletId = null),
+            ),
+            PreviewManageTokensComponent(
+                isLoading = false,
+                params = ManageTokensComponent.Params(
+                    source = ManageTokensSource.ONBOARDING,
+                    userWalletId = UserWalletId("wallet_id"),
+                ),
+            ),
         )
 }
 // endregion Preview
