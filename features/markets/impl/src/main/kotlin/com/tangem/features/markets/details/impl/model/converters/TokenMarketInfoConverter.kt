@@ -15,7 +15,7 @@ import com.tangem.utils.converter.Converter
 internal class TokenMarketInfoConverter(
     private val appCurrency: Provider<AppCurrency>,
     private val onInfoClick: (InfoBottomSheetContent) -> Unit,
-    private val onListedOnClick: () -> Unit,
+    private val onListedOnClick: (Int) -> Unit,
     onLinkClick: (LinksUM.Link) -> Unit,
     onPricePerformanceIntervalChanged: (PriceChangeInterval) -> Unit,
     onInsightsIntervalChanged: (PriceChangeInterval) -> Unit,
@@ -55,7 +55,7 @@ internal class TokenMarketInfoConverter(
                 )
             },
             listedOn = if (exchangesAmount != null && exchangesAmount > 0) {
-                ListedOnUM.Content(onClick = onListedOnClick, amount = exchangesAmount)
+                ListedOnUM.Content(onClick = { onListedOnClick(exchangesAmount) }, amount = exchangesAmount)
             } else {
                 ListedOnUM.Empty
             },
