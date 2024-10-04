@@ -1,6 +1,7 @@
 package com.tangem.features.markets.details.impl.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
@@ -23,11 +24,12 @@ import com.tangem.domain.markets.*
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.impl.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.markets.details.impl.model.converters.DescriptionConverter
+import com.tangem.features.markets.details.impl.model.converters.ExchangeItemStateConverter
 import com.tangem.features.markets.details.impl.model.converters.TokenMarketInfoConverter
 import com.tangem.features.markets.details.impl.model.formatter.*
 import com.tangem.features.markets.details.impl.model.state.QuotesStateUpdater
 import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
-import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
+import com.tangem.features.markets.details.impl.ui.state.ExchangesBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
 import com.tangem.lib.crypto.BlockchainUtils
@@ -54,6 +56,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
     private val getTokenFullQuotesUseCase: GetTokenFullQuotesUseCase,
+    private val getTokenExchangesUseCase: GetTokenExchangesUseCase,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
@@ -73,10 +76,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private val infoConverter = TokenMarketInfoConverter(
         appCurrency = Provider { currentAppCurrency.value },
-        onInfoClick = { showInfoBottomSheet(it) },
-        onListedOnClick = {
-// [REDACTED_TODO_COMMENT]
-        },
+        onInfoClick = { showBottomSheet(it) },
+        onListedOnClick = ::onListedOnClick,
         onLinkClick = { link ->
             urlOpener.openUrl(link.url)
             // === Analytics ===
@@ -104,7 +105,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private val descriptionConverter = DescriptionConverter(
         onReadModeClicked = {
-            showInfoBottomSheet(it)
+            showBottomSheet(it)
             // === Analytics ===
             analyticsEventHandler.send(analyticsEventBuilder.readMoreClicked())
         },
@@ -177,7 +178,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             markerSet = false,
             body = MarketsTokenDetailsUM.Body.Loading,
             triggerPriceChange = consumedEvent(),
-            infoBottomSheet = TangemBottomSheetConfig(
+            bottomSheetConfig = TangemBottomSheetConfig(
                 isShow = false,
                 onDismissRequest = {},
                 content = TangemBottomSheetConfigContent.Empty,
@@ -480,24 +481,22 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
     }
 
-    private fun showInfoBottomSheet(content: InfoBottomSheetContent) {
+    private fun showBottomSheet(content: TangemBottomSheetConfigContent) {
         state.update { stateToUpdate ->
             stateToUpdate.copy(
-                infoBottomSheet = stateToUpdate.infoBottomSheet.copy(
+                bottomSheetConfig = stateToUpdate.bottomSheetConfig.copy(
                     isShow = true,
-                    onDismissRequest = ::hideInfoBottomSheet,
+                    onDismissRequest = ::hideBottomSheet,
                     content = content,
                 ),
             )
         }
     }
 
-    private fun hideInfoBottomSheet() {
+    private fun hideBottomSheet() {
         state.update { stateToUpdate ->
             stateToUpdate.copy(
-                infoBottomSheet = stateToUpdate.infoBottomSheet.copy(
-                    isShow = false,
-                ),
+                bottomSheetConfig = stateToUpdate.bottomSheetConfig.copy(isShow = false),
             )
         }
     }
@@ -514,6 +513,39 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         ) {
             loadInfo()
             modelScope.loadQuotesWithTimer(QUOTES_UPDATE_INTERVAL_MILLIS)
+        }
+    }
+
+    private fun onListedOnClick(exchangesCount: Int) {
+        showBottomSheet(content = ExchangesBottomSheetContent.Loading(exchangesCount))
+
+        modelScope.launch {
+            val maybeExchanges = getTokenExchangesUseCase(tokenId = params.token.id)
+
+            updateExchangeBSContent(maybeExchanges = maybeExchanges, exchangesCount = exchangesCount)
+        }
+    }
+
+    private fun updateExchangeBSContent(
+        maybeExchanges: Either<Throwable, List<TokenMarketExchange>>,
+        exchangesCount: Int,
+    ) {
+        val content = maybeExchanges
+            .fold(
+                ifLeft = {
+                    ExchangesBottomSheetContent.Error(onRetryClick = { onListedOnClick(exchangesCount) })
+                },
+                ifRight = {
+                    ExchangesBottomSheetContent.Content(
+                        exchangeItems = ExchangeItemStateConverter.convertList(it).toImmutableList(),
+                    )
+                },
+            )
+
+        state.update { stateToUpdate ->
+            stateToUpdate.copy(
+                bottomSheetConfig = stateToUpdate.bottomSheetConfig.copy(content = content),
+            )
         }
     }
 

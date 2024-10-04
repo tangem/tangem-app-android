@@ -32,7 +32,7 @@ import kotlinx.coroutines.delay
 * [REDACTED_AUTHOR]
  */
 @Composable
-internal fun ListedOnBlock(state: ListedOnUM) {
+internal fun ListedOnBlock(state: ListedOnUM, modifier: Modifier = Modifier) {
     Box {
         InformationBlock(
             title = {
@@ -44,7 +44,7 @@ internal fun ListedOnBlock(state: ListedOnUM) {
                     overflow = TextOverflow.Ellipsis,
                 )
             },
-            modifier = Modifier.clickable(enabled = state is ListedOnUM.Content) {
+            modifier = modifier.clickable(enabled = state is ListedOnUM.Content) {
                 (state as? ListedOnUM.Content)?.onClick?.invoke()
             },
         ) {
