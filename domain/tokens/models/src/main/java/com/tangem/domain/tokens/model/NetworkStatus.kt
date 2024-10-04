@@ -22,6 +22,11 @@ data class NetworkStatus(
     sealed class Value
 
     /**
+     * Represents the state where the network is refreshing.
+     */
+    data object Refreshing : Value()
+
+    /**
      * Represents the state where the network is unreachable.
      *
      * @property address Network addresses.
