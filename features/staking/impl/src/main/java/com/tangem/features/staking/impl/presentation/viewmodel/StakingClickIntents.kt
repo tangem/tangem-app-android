@@ -33,6 +33,8 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onInfoClick(infoType: InfoType)
 
+    fun onEnterClick()
+
     fun getFee(pendingAction: PendingAction?, pendingActions: ImmutableList<PendingAction>?)
 
     override fun onAmountNext() = onNextClick(actionTypeToOverwrite = null)
