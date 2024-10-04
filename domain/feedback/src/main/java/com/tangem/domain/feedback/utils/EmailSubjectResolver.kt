@@ -29,6 +29,7 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             is FeedbackEmailType.StakingProblem,
             is FeedbackEmailType.SwapProblem,
             -> R.string.feedback_subject_tx_failed
+            is FeedbackEmailType.CurrencyDescriptionError -> R.string.feedback_token_description_error
         }
             .let(resources::getString)
     }
