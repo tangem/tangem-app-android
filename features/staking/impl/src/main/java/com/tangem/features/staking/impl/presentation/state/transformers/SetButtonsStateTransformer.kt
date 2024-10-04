@@ -140,10 +140,7 @@ internal class SetButtonsStateTransformer(
 
     private fun StakingUiState.onPrimaryClick() {
         when (currentStep) {
-            StakingStep.InitialInfo -> {
-                clickIntents.onAmountValueChange("") // reset amount state
-                clickIntents.onNextClick(StakingActionCommonType.ENTER)
-            }
+            StakingStep.InitialInfo -> clickIntents.onEnterClick()
             StakingStep.Validators -> {
                 if (confirmationState is StakingStates.ConfirmationState.Data) {
                     clickIntents.onNextClick(
@@ -154,9 +151,7 @@ internal class SetButtonsStateTransformer(
                     clickIntents.onNextClick()
                 }
             }
-            StakingStep.Amount -> {
-                clickIntents.onNextClick()
-            }
+            StakingStep.Amount -> clickIntents.onNextClick()
             StakingStep.Confirmation -> onConfirmationClick()
             StakingStep.RewardsValidators -> Unit
         }
