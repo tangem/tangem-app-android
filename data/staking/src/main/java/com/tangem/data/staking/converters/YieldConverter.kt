@@ -29,8 +29,9 @@ class YieldConverter(
             validators = value.validators
                 .asSequence()
                 .filter { it.status == ValidatorStatusDTO.ACTIVE }
-                .sortedByDescending { it.apr }
                 .map { convertValidator(it) }
+                .sortedByDescending { it.isStrategicPartner }
+                .sortedByDescending { it.apr }
                 .toImmutableList(),
             isAvailable = value.isAvailable,
         )
