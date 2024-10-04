@@ -111,6 +111,14 @@ class TransactionManagerImpl(
                                     gasPremium = normalFee.gasPremium,
                                 )
                             }
+                            is Fee.Sui -> {
+                                ProxyFee.Sui(
+                                    gasLimit = BigInteger.ZERO,
+                                    fee = convertToProxyAmount(amount = normalFee.amount),
+                                    gasPrice = normalFee.gasPrice,
+                                    gasBudget = normalFee.gasBudget,
+                                )
+                            }
                             else -> {
                                 ProxyFee.Common(
                                     gasLimit = BigInteger.ZERO,
