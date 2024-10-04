@@ -20,6 +20,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.markets.*
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.impl.analytics.MarketDetailsAnalyticsEvent
@@ -57,6 +59,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
     private val getTokenFullQuotesUseCase: GetTokenFullQuotesUseCase,
     private val getTokenExchangesUseCase: GetTokenExchangesUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
@@ -108,6 +111,16 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             showBottomSheet(it)
             // === Analytics ===
             analyticsEventHandler.send(analyticsEventBuilder.readMoreClicked())
+        },
+        onGeneratedAINotificationClick = {
+            modelScope.launch {
+                sendFeedbackEmailUseCase(
+                    type = FeedbackEmailType.CurrencyDescriptionError(
+                        currencyId = params.token.id,
+                        currencyName = params.token.name,
+                    ),
+                )
+            }
         },
     )
 
@@ -268,50 +281,54 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 )
             }
 
-            val xAxisFormatter = MarketsDateTimeFormatters.getChartXFormatterByInterval(state.value.selectedInterval)
-
-            chart.onRight {
-                chartDataProducer.runTransactionSuspend {
-                    chartData = MarketChartData.Data(
-                        y = it.priceY.toImmutableList(),
-                        x = it.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
-                    ).sorted()
-
-                    updateLook {
+            chart
+                .onRight { updateTokenChart(it) }
+                .onLeft {
+                    state.update {
                         it.copy(
-                            xAxisFormatter = xAxisFormatter,
-                            type = state.value.priceChangeType.toChartType(),
+                            chartState = it.chartState.copy(
+                                status = MarketsTokenDetailsUM.ChartState.Status.ERROR,
+                            ),
+                            body = if (it.body is MarketsTokenDetailsUM.Body.Error) {
+                                MarketsTokenDetailsUM.Body.Nothing
+                            } else {
+                                it.body
+                            },
                         )
                     }
                 }
-
-                state.update {
-                    it.copy(
-                        chartState = it.chartState.copy(
-                            status = MarketsTokenDetailsUM.ChartState.Status.DATA,
-                        ),
-                        body = if (it.body is MarketsTokenDetailsUM.Body.Nothing) {
-                            MarketsTokenDetailsUM.Body.Error(onLoadRetryClick = ::onLoadRetryClicked)
-                        } else {
-                            it.body
-                        },
-                    )
-                }
-            }.onLeft {
-                state.update {
-                    it.copy(
-                        chartState = it.chartState.copy(
-                            status = MarketsTokenDetailsUM.ChartState.Status.ERROR,
-                        ),
-                        body = if (it.body is MarketsTokenDetailsUM.Body.Error) {
-                            MarketsTokenDetailsUM.Body.Nothing
-                        } else {
-                            it.body
-                        },
-                    )
-                }
-            }
         }.saveIn(loadChartJobHolder)
+    }
+
+    private suspend fun updateTokenChart(tokenChart: TokenChart) {
+        val xAxisFormatter = MarketsDateTimeFormatters.getChartXFormatterByInterval(state.value.selectedInterval)
+
+        chartDataProducer.runTransactionSuspend {
+            chartData = MarketChartData.Data(
+                y = tokenChart.priceY.toImmutableList(),
+                x = tokenChart.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
+            ).sorted()
+
+            updateLook {
+                it.copy(
+                    xAxisFormatter = xAxisFormatter,
+                    type = state.value.priceChangeType.toChartType(),
+                )
+            }
+        }
+
+        state.update {
+            it.copy(
+                chartState = it.chartState.copy(
+                    status = MarketsTokenDetailsUM.ChartState.Status.DATA,
+                ),
+                body = if (it.body is MarketsTokenDetailsUM.Body.Nothing) {
+                    MarketsTokenDetailsUM.Body.Error(onLoadRetryClick = ::onLoadRetryClicked)
+                } else {
+                    it.body
+                },
+            )
+        }
     }
 
     private fun loadInfo() {

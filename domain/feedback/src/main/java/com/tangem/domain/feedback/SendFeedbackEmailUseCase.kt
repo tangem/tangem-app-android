@@ -54,11 +54,19 @@ class SendFeedbackEmailUseCase(
     }
 
     private fun StringBuilder.appendDisclaimerIfNeeded(type: FeedbackEmailType): StringBuilder {
-        return if (type is FeedbackEmailType.ScanningProblem) {
-            this
-        } else {
-            append(resources.getString(R.string.feedback_data_collection_message))
-            skipLine()
+        return when (type) {
+            is FeedbackEmailType.ScanningProblem,
+            is FeedbackEmailType.CurrencyDescriptionError,
+            -> this
+            is FeedbackEmailType.DirectUserRequest,
+            is FeedbackEmailType.RateCanBeBetter,
+            is FeedbackEmailType.StakingProblem,
+            is FeedbackEmailType.SwapProblem,
+            is FeedbackEmailType.TransactionSendingProblem,
+            -> {
+                append(resources.getString(R.string.feedback_data_collection_message))
+                skipLine()
+            }
         }
     }
 }

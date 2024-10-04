@@ -37,8 +37,7 @@ internal class FeedbackDataBuilder {
             if (tokens.isNotEmpty()) {
                 builder.breakLine()
                 tokens.forEach { token ->
-                    builder.appendKeyValue("Token ID", token.id ?: "[custom token]")
-                    builder.appendKeyValue("Name", token.name)
+                    addTokenShortInfo(id = token.id, name = token.name)
                     builder.appendKeyValue("Contract address", token.contractAddress)
                     builder.appendKeyValue("Decimals", token.decimals)
 
@@ -98,6 +97,11 @@ internal class FeedbackDataBuilder {
     fun addSwapInfo(providerName: String, txId: String) {
         builder.appendKeyValue("Provider", providerName)
         builder.appendKeyValue("Transaction ID", txId)
+    }
+
+    fun addTokenShortInfo(id: String?, name: String) {
+        builder.appendKeyValue("Token ID", id ?: "[custom token]")
+        builder.appendKeyValue("Name", name)
     }
 
     fun addDelimiter(): StringBuilder = builder.appendDelimiter()
