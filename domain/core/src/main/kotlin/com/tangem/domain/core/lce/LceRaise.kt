@@ -1,6 +1,8 @@
 package com.tangem.domain.core.lce
 
 import arrow.atomic.Atomic
+import arrow.core.Either
+import arrow.core.identity
 import arrow.core.raise.Raise
 import arrow.core.raise.RaiseDSL
 import arrow.core.raise.recover
@@ -97,6 +99,12 @@ class LceRaise<E : Any> @PublishedApi internal constructor(
         is Lce.Content -> content
         is Lce.Error -> raise(r = this)
     }
+
+    @RaiseDSL
+    fun <C : Any> Either<E, C>.bindEither(): C = fold(
+        ifLeft = { raise(it) },
+        ifRight = ::identity,
+    )
 }
 
 /**
