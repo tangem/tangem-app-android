@@ -5,7 +5,6 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.routing.AppRoute
@@ -19,6 +18,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.Artwork
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.wallet.presentation.wallet.domain.BackupValidator
@@ -164,16 +164,7 @@ private fun handleWalletAction(action: Action) {
         }
         is OnboardingWalletAction.FinishOnboarding -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
-
-            if (scanResponse == null) {
-                action.scope.launch {
-                    readCard { newScanResponse ->
-                        handleFinishOnboardind(newScanResponse)
-                    }
-                }
-            } else {
-                handleFinishOnboardind(scanResponse)
-            }
+            navigateToWalletScreen()
         }
         is OnboardingWalletAction.ResumeBackup -> {
             val newAction = when (val backupState = backupService.currentState) {
@@ -197,10 +188,10 @@ private fun handleWalletAction(action: Action) {
     }
 }
 
-private fun handleFinishOnboardind(scanResponse: ScanResponse) {
+private fun handleFinishBackup(scanResponse: ScanResponse) {
     val backupState = store.state.onboardingWalletState.backupState
     val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
-    OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(
+    OnboardingHelper.saveWallet(
         scanResponse = updatedScanResponse,
         accessCode = backupState.accessCode,
         backupCardsIds = backupState.backupCardIds,
@@ -208,7 +199,18 @@ private fun handleFinishOnboardind(scanResponse: ScanResponse) {
     )
 }
 
-private suspend fun readCard(onSuccess: (ScanResponse) -> Unit) {
+private fun navigateToWalletScreen() {
+    mainScope.launch {
+        val settingsRepository = store.inject(DaggerGraphState::settingsRepository)
+        store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
+        if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
+            delay(timeMillis = 1_800)
+            store.dispatchNavigationAction { push(AppRoute.SaveWallet) }
+        }
+    }
+}
+
+private suspend fun readCard(onSuccess: suspend (ScanResponse) -> Unit) {
     val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
 
     store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
@@ -403,7 +405,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
     val onboardingWalletState = appState()?.onboardingWalletState ?: return
 
     val backupState = onboardingWalletState.backupState
-    val scanResponse = globalState.onboardingState.onboardingManager?.scanResponse
+    var scanResponse = globalState.onboardingState.onboardingManager?.scanResponse
     val card = scanResponse?.card
 
     when (action) {
@@ -573,6 +575,15 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     cardIds = gatherCardIds(backupState, card),
                 )
             }
+            if (scanResponse == null) {
+                scope.launch {
+                    readCard { newScanResponse ->
+                        handleFinishBackup(newScanResponse)
+                    }
+                }
+            } else {
+                handleFinishBackup(scanResponse)
+            }
         }
         is BackupAction.FinishBackup -> {
             scope.launch {
@@ -580,28 +591,31 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
                 }
 
+                var userWallet: UserWallet? = null
                 if (scanResponse != null) {
-                    val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
-                    val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
-                        .backupCardsIds(backupState.backupCardIds.toSet())
-                        .build()
-                        .guard {
-                            Timber.e("User wallet not created")
-                            return@launch
-                        }
+                    userWallet = createUserWallet(
+                        scanResponse = requireNotNull(value = scanResponse, lazyMessage = { "ScanResponse is null" }),
+                        backupState = backupState,
+                    )
 
                     val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
-                    userWalletsListManager.update(
-                        userWalletId = userWallet.walletId,
-                        update = { wallet ->
-                            wallet.copy(
-                                scanResponse = updateScanResponseAfterBackup(
-                                    scanResponse = wallet.scanResponse,
-                                    backupState = backupState,
+                    userWalletsListManager.save(
+                        userWallet = userWallet.copy(
+                            scanResponse = updateScanResponseAfterBackup(
+                                scanResponse = requireNotNull(
+                                    value = scanResponse,
+                                    lazyMessage = { "ScanResponse is null" },
                                 ),
-                            )
-                        },
+                                backupState = backupState,
+                            ),
+                        ),
+                        canOverride = true,
                     )
+                } else {
+                    readCard { newScanResponse ->
+                        scanResponse = newScanResponse
+                        userWallet = createUserWallet(newScanResponse, backupState)
+                    }
                 }
 
                 val notActivatedCardIds = gatherCardIds(backupState, card).mapNotNull {
@@ -613,11 +627,18 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 }
 
                 // All cardIds may already be activated if the backup was skipped before.
-                if (notActivatedCardIds.isEmpty()) return@launch
+                if (notActivatedCardIds.isEmpty()) {
+                    delay(1000)
+                    store.dispatch(BackupAction.BackupFinished(userWallet?.walletId))
+                    return@launch
+                }
 
                 Analytics.send(Onboarding.Finished())
 
                 store.state.globalState.onboardingState.onboardingManager?.finishActivation(notActivatedCardIds)
+                handleFinishBackup(requireNotNull(scanResponse))
+                delay(1000)
+                store.dispatch(BackupAction.BackupFinished(userWalletId = userWallet?.walletId))
             }
         }
 
@@ -627,6 +648,16 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
         else -> Unit
     }
+}
+
+private suspend fun createUserWallet(scanResponse: ScanResponse, backupState: BackupState): UserWallet {
+    val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+    return requireNotNull(
+        value = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
+            .backupCardsIds(backupState.backupCardIds.toSet())
+            .build(),
+        lazyMessage = { "User wallet not created" },
+    )
 }
 
 fun updateArtworks(addedBackupCardsCount: Int, card: Card) {
