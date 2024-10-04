@@ -490,7 +490,7 @@ object BigDecimalFormatter {
     ): String {
         if (threeDigitsMethod) {
             val scaledAmount = amount.setScale(scale, RoundingMode.HALF_UP)
-            val digitsCount = scaledAmount.longValueExact().toString().count()
+            val digitsCount = scaledAmount.toString().count()
             val digitsToFormat = 6 - when (digitsCount % 3) {
                 0 -> 0
                 1 -> 2
@@ -508,7 +508,7 @@ object BigDecimalFormatter {
             return formatter.format(amount.setScale(scale, RoundingMode.HALF_UP))
         } else {
             val scaledAmount = amount.setScale(scale, RoundingMode.HALF_UP)
-            val digitsCount = scaledAmount.longValueExact().toString().count()
+            val digitsCount = scaledAmount.toString().count()
             val digitsToFormat = 5 - when (digitsCount % 3) {
                 0 -> 0
                 1 -> 2
