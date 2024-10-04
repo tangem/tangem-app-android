@@ -12,6 +12,7 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.card.BackendId
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -73,15 +74,15 @@ internal class DefaultDerivationsRepository(
 
     override suspend fun hasMissedDerivations(
         userWalletId: UserWalletId,
-        networksWithDerivationPath: Map<Network.ID, String?>,
+        networksWithDerivationPath: Map<BackendId, String?>,
     ): Boolean {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
 
         val derivations = MissedDerivationsFinder(scanResponse = userWallet.scanResponse)
             .findByNetworks(
-                networksWithDerivationPath.mapNotNull { (networkId, extraDerivationPath) ->
+                networksWithDerivationPath.mapNotNull { (backendId, extraDerivationPath) ->
                     getNetwork(
-                        blockchain = Blockchain.fromNetworkId(networkId.value) ?: return@mapNotNull null,
+                        blockchain = Blockchain.fromNetworkId(backendId) ?: return@mapNotNull null,
                         extraDerivationPath = extraDerivationPath,
                         scanResponse = userWallet.scanResponse,
                     )
