@@ -287,6 +287,7 @@
   <string name="feedback_subject_support">フィードバック</string>
   <string name="feedback_subject_support_tangem">Tangemへのフィードバック</string>
   <string name="feedback_subject_tx_failed">取引を送信できません</string>
+  <string name="feedback_token_description_error">コインの説明エラー</string>
   <string name="give_permission_current_transaction">取引</string>
   <string name="give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="give_permission_policy_type_footer">選択したトークンの承認制限を指定します</string>
