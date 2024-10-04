@@ -26,7 +26,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
 internal class PreviewManageTokensComponent(
-    private val isLoading: Boolean = false,
+    private val isLoading: Boolean,
+    params: ManageTokensComponent.Params,
 ) : ManageTokensComponent {
 
     private val changedItemsIds: MutableSet<String> = mutableSetOf()
@@ -36,14 +37,21 @@ internal class PreviewManageTokensComponent(
         value = ManageTokensUM.ManageContent(
             popBack = {},
             items = items,
-            topBar = ManageTokensTopBarUM.ManageContent(
-                title = resourceReference(id = R.string.main_manage_tokens),
-                onBackButtonClick = {},
-                endButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_plus_24,
-                    onIconClicked = {},
-                ),
-            ),
+            topBar = if (params.userWalletId != null) {
+                ManageTokensTopBarUM.ManageContent(
+                    title = resourceReference(id = R.string.main_manage_tokens),
+                    onBackButtonClick = {},
+                    endButton = TopAppBarButtonUM(
+                        iconRes = R.drawable.ic_plus_24,
+                        onIconClicked = {},
+                    ),
+                )
+            } else {
+                ManageTokensTopBarUM.ReadContent(
+                    title = resourceReference(R.string.common_search_tokens),
+                    onBackButtonClick = {},
+                )
+            },
             search = SearchBarUM(
                 placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
                 query = "",

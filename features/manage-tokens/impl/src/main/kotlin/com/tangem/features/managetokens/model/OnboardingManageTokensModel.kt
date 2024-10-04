@@ -1,31 +1,27 @@
 package com.tangem.features.managetokens.model
 
-import androidx.annotation.StringRes
+import arrow.core.flatten
 import arrow.core.getOrElse
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.SaveManagedTokensUseCase
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
+import com.tangem.domain.redux.OnboardingManageTokensAction
+import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
-import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.managetokens.component.ManageTokensSource
+import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
-import com.tangem.features.managetokens.entity.managetokens.ManageTokensBottomSheetConfig
-import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
-import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
+import com.tangem.features.managetokens.entity.managetokens.OnboardingManageTokensUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.utils.list.ChangedCurrencies
 import com.tangem.features.managetokens.utils.list.ManageTokensListManager
@@ -42,20 +38,19 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @ComponentScoped
-internal class ManageTokensModel @Inject constructor(
+internal class OnboardingManageTokensModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    private val router: Router,
     private val manageTokensListManager: ManageTokensListManager,
     private val messageSender: UiMessageSender,
+    private val reduxStateHolder: ReduxStateHolder,
     private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
+    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    private val params: ManageTokensComponent.Params = paramsContainer.require()
-
-    val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState(params.userWalletId))
-    val bottomSheetNavigation: SlotNavigation<ManageTokensBottomSheetConfig> = SlotNavigation()
+    private val params: OnboardingManageTokensComponent.Params = paramsContainer.require()
+    val state: MutableStateFlow<OnboardingManageTokensUM> = MutableStateFlow(getInitialState())
 
     init {
         manageTokensListManager.uiItems
@@ -66,81 +61,40 @@ internal class ManageTokensModel @Inject constructor(
             .onEach { status -> updatePaginationStatus(status) }
             .launchIn(modelScope)
 
-        combine(
-            manageTokensListManager.currenciesToAdd,
-            manageTokensListManager.currenciesToRemove,
-            ::updateChangedItems,
-        ).launchIn(modelScope)
+        manageTokensListManager.currenciesToAdd
+            .onEach(::handleNewAddedCurrencies)
+            .launchIn(modelScope)
 
         observeSearchQueryChanges()
 
         modelScope.launch {
-            manageTokensListManager.launchPagination(source = params.source, userWalletId = params.userWalletId)
+            manageTokensListManager.launchPagination(
+                source = ManageTokensSource.ONBOARDING,
+                userWalletId = params.userWalletId,
+            )
         }
     }
 
-    fun reloadList() {
-        modelScope.launch {
-            manageTokensListManager.reload(params.userWalletId)
-        }
-    }
+    private fun getInitialState(): OnboardingManageTokensUM {
+        analyticsEventHandler.send(ManageTokensAnalyticEvent.ScreenOpened(source = ManageTokensSource.ONBOARDING))
 
-    private fun getInitialState(userWalletId: UserWalletId?): ManageTokensUM {
-        analyticsEventHandler.send(ManageTokensAnalyticEvent.ScreenOpened(params.source))
-
-        return if (userWalletId == null) {
-            createReadContentModel()
-        } else {
-            createManageContentModel()
-        }
-    }
-
-    private fun createReadContentModel(): ManageTokensUM.ReadContent {
-        return ManageTokensUM.ReadContent(
-            popBack = router::pop,
+        return OnboardingManageTokensUM(
             isInitialBatchLoading = true,
             isNextBatchLoading = false,
             items = getLoadingItems(),
-            topBar = ManageTokensTopBarUM.ReadContent(
-                title = resourceReference(R.string.common_search_tokens),
-                onBackButtonClick = router::pop,
-            ),
+            loadMore = ::loadMoreItems,
+            onBack = {},
             search = SearchBarUM(
-                placeholderText = resourceReference(R.string.common_search),
+                placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
                 query = "",
                 onQueryChange = ::searchCurrencies,
                 isActive = false,
                 onActiveChange = ::toggleSearchBar,
             ),
-            loadMore = ::loadMoreItems,
-        )
-    }
-
-    private fun createManageContentModel(): ManageTokensUM.ManageContent {
-        return ManageTokensUM.ManageContent(
-            popBack = router::pop,
-            isInitialBatchLoading = true,
-            isNextBatchLoading = false,
-            items = getLoadingItems(),
-            topBar = ManageTokensTopBarUM.ManageContent(
-                title = resourceReference(id = R.string.main_manage_tokens),
-                onBackButtonClick = router::pop,
-                endButton = TopAppBarButtonUM(
-                    iconRes = R.drawable.ic_plus_24,
-                    onIconClicked = ::navigateToAddCustomToken,
-                ),
+            actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Later(
+                onClick = ::onLaterClick,
+                showProgress = false,
             ),
-            search = SearchBarUM(
-                placeholderText = resourceReference(R.string.common_search),
-                query = "",
-                onQueryChange = ::searchCurrencies,
-                isActive = false,
-                onActiveChange = ::toggleSearchBar,
-            ),
-            hasChanges = false,
-            saveChanges = ::saveChanges,
-            loadMore = ::loadMoreItems,
-            isSavingInProgress = false,
         )
     }
 
@@ -149,7 +103,8 @@ internal class ManageTokensModel @Inject constructor(
         state
             .distinctUntilChanged { old, new ->
                 // It's also used to skip search activation to avoid searching an empty query
-                old.search.query == new.search.query && new.search.isActive
+                old.search.query == new.search.query &&
+                    (old.search.isActive == new.search.isActive || new.search.isActive)
             }
             .transform { state ->
                 val query = state.search.query
@@ -164,16 +119,12 @@ internal class ManageTokensModel @Inject constructor(
     }
 
     private fun updateItems(items: ImmutableList<CurrencyItemUM>) {
-        val updatedState = state.updateAndGet { state ->
-            state.copySealed(
-                items = items,
-            )
-        }
+        val updatedState = state.updateAndGet { state -> state.copy(items = items) }
 
         if (updatedState.items.isEmpty() && updatedState.search.isActive) {
             val event = ManageTokensAnalyticEvent.TokensIsNotFound(
                 query = updatedState.search.query,
-                source = params.source,
+                source = ManageTokensSource.ONBOARDING,
             )
             analyticsEventHandler.send(event)
         }
@@ -186,19 +137,12 @@ internal class ManageTokensModel @Inject constructor(
                 is PaginationStatus.InitialLoading,
                 -> {
                     if (state.search.isActive) {
-                        state.copySealed(
-                            items = getLoadingItems(),
-                        )
+                        state.copy(items = getLoadingItems())
                     } else {
-                        state.copySealed(
-                            items = getLoadingItems(),
-                            isInitialBatchLoading = true,
-                        )
+                        state.copy(items = getLoadingItems(), isInitialBatchLoading = true)
                     }
                 }
-                is PaginationStatus.NextBatchLoading -> state.copySealed(
-                    isNextBatchLoading = true,
-                )
+                is PaginationStatus.NextBatchLoading -> state.copy(isNextBatchLoading = true)
                 is PaginationStatus.InitialLoadingError -> {
                     val message = SnackbarMessage(
                         message = status.throwable.localizedMessage
@@ -207,7 +151,7 @@ internal class ManageTokensModel @Inject constructor(
                     )
                     messageSender.send(message)
 
-                    state.copySealed(
+                    state.copy(
                         isInitialBatchLoading = false,
                         isNextBatchLoading = false,
                     )
@@ -217,7 +161,7 @@ internal class ManageTokensModel @Inject constructor(
                         Timber.e(fetchError.throwable)
                     }
 
-                    state.copySealed(
+                    state.copy(
                         isInitialBatchLoading = false,
                         isNextBatchLoading = false,
                         scrollToTop = if (state.isInitialBatchLoading && state.items.isNotEmpty()) {
@@ -230,12 +174,10 @@ internal class ManageTokensModel @Inject constructor(
                         },
                     )
                 }
-                is PaginationStatus.EndOfPagination -> {
-                    state.copySealed(
-                        isInitialBatchLoading = false,
-                        isNextBatchLoading = false,
-                    )
-                }
+                is PaginationStatus.EndOfPagination -> state.copy(
+                    isInitialBatchLoading = false,
+                    isNextBatchLoading = false,
+                )
             }
         }
     }
@@ -247,18 +189,32 @@ internal class ManageTokensModel @Inject constructor(
     }
 
     private fun consumeScrollToTopEvent() {
-        state.update { state ->
-            state.copySealed(
-                scrollToTop = consumedEvent(),
-            )
-        }
+        state.update { state -> state.copy(scrollToTop = consumedEvent()) }
     }
 
-    private fun updateChangedItems(currenciesToAdd: ChangedCurrencies, currenciesToRemove: ChangedCurrencies) {
-        state.update { state ->
-            state.copySealed(
-                hasChanges = currenciesToAdd.isNotEmpty() || currenciesToRemove.isNotEmpty(),
+    private suspend fun handleNewAddedCurrencies(currenciesToAdd: ChangedCurrencies) {
+        if (currenciesToAdd.isEmpty()) {
+            state.update { state ->
+                state.copy(
+                    actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Later(onClick = ::onLaterClick),
+                )
+            }
+        } else {
+            val hasMissedDerivations = hasMissedDerivationsUseCase.invoke(
+                userWalletId = params.userWalletId,
+                networksWithDerivationPath = currenciesToAdd.values
+                    .flatten()
+                    .toSet()
+                    .associate { it.backendId to null },
             )
+            state.update { state ->
+                state.copy(
+                    actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Continue(
+                        onClick = ::saveChanges,
+                        showTangemIcon = hasMissedDerivations,
+                    ),
+                )
+            }
         }
     }
 
@@ -273,21 +229,21 @@ internal class ManageTokensModel @Inject constructor(
         return true
     }
 
-    private fun navigateToAddCustomToken() {
-        analyticsEventHandler.send(CustomTokenAnalyticsEvent.ButtonCustomToken(params.source))
-
-        params.userWalletId?.let {
-            bottomSheetNavigation.activate(ManageTokensBottomSheetConfig.AddCustomToken(it))
-        }
-    }
-
     private fun saveChanges() = resource(
-        acquire = { state.update { state -> state.copySealed(isSavingInProgress = true) } },
-        release = { state.update { state -> state.copySealed(isSavingInProgress = false) } },
+        acquire = {
+            state.update { state ->
+                state.copy(actionButtonConfig = state.actionButtonConfig.copySealed(showProgress = true))
+            }
+        },
+        release = {
+            state.update { state ->
+                state.copy(actionButtonConfig = state.actionButtonConfig.copySealed(showProgress = false))
+            }
+        },
     ) {
         val event = ManageTokensAnalyticEvent.TokenAdded(
             tokensCount = manageTokensListManager.currenciesToAdd.value.values.sumOf { it.size },
-            source = params.source,
+            source = ManageTokensSource.ONBOARDING,
         )
         analyticsEventHandler.send(event)
 
@@ -300,12 +256,27 @@ internal class ManageTokensModel @Inject constructor(
             return@resource
         }
 
-        router.pop()
+        reduxStateHolder.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
+    }
+
+    private fun onLaterClick() = resource(
+        acquire = {
+            state.update { state ->
+                state.copy(actionButtonConfig = state.actionButtonConfig.copySealed(showProgress = true))
+            }
+        },
+        release = {
+            state.update { state ->
+                state.copy(actionButtonConfig = state.actionButtonConfig.copySealed(showProgress = false))
+            }
+        },
+    ) {
+        reduxStateHolder.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
     }
 
     private fun searchCurrencies(query: String) {
         state.update { state ->
-            state.copySealed(
+            state.copy(
                 search = state.search.copy(
                     query = query,
                     isActive = true,
@@ -316,15 +287,8 @@ internal class ManageTokensModel @Inject constructor(
 
     private fun toggleSearchBar(isActive: Boolean) {
         state.update { state ->
-            @StringRes val placeholderTextRes = if (isActive) {
-                R.string.manage_tokens_search_placeholder
-            } else {
-                R.string.common_search
-            }
-
-            state.copySealed(
+            state.copy(
                 search = state.search.copy(
-                    placeholderText = resourceReference(placeholderTextRes),
                     isActive = isActive,
                 ),
             )
