@@ -766,7 +766,7 @@
   <string name="staking_stake_more">Застейкать еще</string>
   <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать %2$s ежегодно</string>
   <string name="staking_tap_to_unlock">Нажмите для разблокировки</string>
-  <string name="staking_tap_to_unlock_or_vote">Нажмите для разблокировки или голосования</string>
+  <string name="staking_tap_to_unlock_or_vote">Нажмите для разблокировки</string>
   <string name="staking_tap_to_withdraw">Нажмите для вывода</string>
   <string name="staking_title_stake">Застейкать %s</string>
   <string name="staking_title_unstake">Вывести %s</string>

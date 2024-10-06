@@ -12,6 +12,7 @@ import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import kotlinx.collections.immutable.persistentListOf
+import org.joda.time.DateTime
 
 internal object InitialStakingStatePreview {
     val defaultState = StakingStates.InitialInfoState.Data(
@@ -93,6 +94,7 @@ internal object InitialStakingStatePreview {
                     type = BalanceType.STAKED,
                     subtitle = null,
                     isPending = false,
+                    date = DateTime.now(),
                 ),
             ),
         ),
