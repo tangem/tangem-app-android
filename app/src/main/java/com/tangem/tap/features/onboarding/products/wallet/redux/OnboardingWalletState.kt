@@ -78,6 +78,7 @@ data class BackupState(
     val isInterruptedBackup: Boolean = false,
     val showBtnLoading: Boolean = false,
     val hasBackupError: Boolean = false,
+    val hasRing: Boolean = false,
 )
 
 enum class AccessCodeError {
