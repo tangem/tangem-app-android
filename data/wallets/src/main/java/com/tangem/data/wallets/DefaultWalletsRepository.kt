@@ -23,4 +23,8 @@ internal class DefaultWalletsRepository(
     override suspend fun saveShouldSaveUserWallets(item: Boolean) {
         appPreferencesStore.store(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, value = item)
     }
+
+    override suspend fun setHasWalletsWithRing() {
+        appPreferencesStore.store(key = PreferencesKeys.IS_RING_ADDED_KEY, value = true)
+    }
 }
