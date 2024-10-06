@@ -3,7 +3,6 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
-import com.tangem.features.staking.impl.presentation.state.ValidatorState
 import com.tangem.utils.transformer.Transformer
 
 internal object SetConfirmationStateResetAssentTransformer : Transformer<StakingUiState> {
@@ -14,7 +13,7 @@ internal object SetConfirmationStateResetAssentTransformer : Transformer<Staking
                 confirmationState.copy(
                     isPrimaryButtonEnabled = true,
                     innerState = InnerConfirmationStakingState.ASSENT,
-                    validatorState = ValidatorState.Loading,
+                    validatorState = confirmationState.validatorState.copySealed(isClickable = true),
                 )
             } else {
                 confirmationState
