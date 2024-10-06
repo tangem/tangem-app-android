@@ -132,6 +132,7 @@ private object BackupReducer {
             is BackupAction.FinishBackup -> state.copy(backupStep = BackupStep.Finished)
             BackupAction.OnAccessCodeDialogClosed -> state.copy(backupStep = BackupStep.AddBackupCards)
             BackupAction.DiscardBackup -> BackupState()
+            is BackupAction.SetHasRing -> state.copy(hasRing = action.hasRing)
             else -> state
         }
     }
