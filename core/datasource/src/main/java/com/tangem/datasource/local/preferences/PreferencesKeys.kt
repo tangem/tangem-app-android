@@ -99,18 +99,13 @@ object PreferencesKeys {
 
     val apiConfigsEnvironmentKey by lazy { stringPreferencesKey(name = "apiConfigsEnvironment") }
 
+    val IS_RING_ADDED_KEY by lazy { booleanPreferencesKey(name = "isRingAdded") }
+
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
 
     fun getShouldShowInitialPermissionScreen(permission: String) =
         booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")
-
-    fun getIsFirstTimeAskingPermission(permission: String) =
-        booleanPreferencesKey("shouldAskInitialPushPermission_$permission")
-
-    fun getPermissionLaunchCount(permission: String) = intPreferencesKey("pushPermissionLaunchCount_$permission")
-
-    fun getPermissionDaysCount(permission: String) = longPreferencesKey("pushPermissionDaysCount_$permission")
     // endregion
 
     fun getUserTokensKey(userWalletId: String) = stringPreferencesKey(name = "user_tokens_$userWalletId")

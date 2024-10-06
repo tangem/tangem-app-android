@@ -60,6 +60,7 @@ sealed class BackupAction : Action {
     data object ErrorInBackupCard : BackupAction()
     data object StartAddingPrimaryCard : BackupAction()
     data object ScanPrimaryCard : BackupAction()
+    data class SetHasRing(val hasRing: Boolean) : BackupAction()
 
     /**
      * Check for unfinished backup of standard Wallets
