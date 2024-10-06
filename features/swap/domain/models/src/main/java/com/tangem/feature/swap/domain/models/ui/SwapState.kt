@@ -113,8 +113,21 @@ data class TxFee(
     val decimals: Int,
     val cryptoSymbol: String,
     val feeType: FeeType,
-    val gasPremium: Long?,
-)
+    val params: Params?,
+) {
+
+    sealed class Params {
+
+        data class Filecoin(
+            val gasPremium: Long,
+        ) : Params()
+
+        data class Sui(
+            val gasBudget: Long,
+            val gasPrice: Long,
+        ) : Params()
+    }
+}
 
 enum class FeeType {
     NORMAL, PRIORITY
