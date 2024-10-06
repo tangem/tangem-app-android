@@ -16,6 +16,8 @@ import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
+import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.Artwork
@@ -200,6 +202,13 @@ private fun handleWalletAction(action: Action) {
 private fun handleFinishOnboardind(scanResponse: ScanResponse) {
     val backupState = store.state.onboardingWalletState.backupState
     val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
+
+    if (backupState.hasRing) {
+        scope.launch {
+            store.inject(DaggerGraphState::walletsRepository).setHasWalletsWithRing()
+        }
+    }
+
     OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(
         scanResponse = updatedScanResponse,
         accessCode = backupState.accessCode,
@@ -496,11 +505,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.WritePrimaryCard -> {
-            val iconScanRes = if (scanResponse?.cardTypesResolver?.isRing() == true) {
-                R.drawable.img_hand_scan_ring
-            } else {
-                null
-            }
+            val isRing = scanResponse?.cardTypesResolver?.isRing() == true
+            val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
+
+            store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
+
             backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
@@ -513,11 +522,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         is BackupAction.WriteBackupCard -> {
             val cardIndex = if (action.cardNumber > 0) action.cardNumber - 1 else action.cardNumber
             val backupCard = backupState.backupCards.getOrNull(cardIndex)
-            val iconScanRes = if (backupCard?.batchId?.startsWith(CardDTO.RING_BATCH_PREFIX) == true) {
-                R.drawable.img_hand_scan_ring
-            } else {
-                null
-            }
+            val isRing = backupCard.isRing()
+            val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
+
+            store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
+
             backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
@@ -634,6 +643,10 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
         else -> Unit
     }
+}
+
+private fun Card?.isRing(): Boolean {
+    return this?.let { RING_BATCH_IDS.contains(batchId) || batchId.startsWith(RING_BATCH_PREFIX) } ?: false
 }
 
 fun updateArtworks(addedBackupCardsCount: Int, card: Card) {
