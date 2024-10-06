@@ -24,4 +24,11 @@ sealed interface ProxyFee {
         override val fee: ProxyAmount,
         val gasPremium: Long,
     ) : ProxyFee
+
+    data class Sui(
+        override val gasLimit: BigInteger,
+        override val fee: ProxyAmount,
+        val gasPrice: Long,
+        val gasBudget: Long,
+    ) : ProxyFee
 }
