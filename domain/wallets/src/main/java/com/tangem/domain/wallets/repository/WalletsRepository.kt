@@ -9,4 +9,6 @@ interface WalletsRepository {
     fun shouldSaveUserWallets(): Flow<Boolean>
 
     suspend fun saveShouldSaveUserWallets(item: Boolean)
+
+    suspend fun setHasWalletsWithRing()
 }
