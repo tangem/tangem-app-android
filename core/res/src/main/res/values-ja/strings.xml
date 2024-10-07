@@ -116,12 +116,14 @@
   <string name="common_generate_addresses">アドレスを取得する</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
+  <string name="common_hour">時間</string>
   <string name="common_import">インポート</string>
   <string name="common_in_progress">進行中</string>
   <string name="common_later">後で</string>
   <string name="common_left">残り%1$s</string>
   <string name="common_locked">ロックされています</string>
   <string name="common_main_network">メインネットワーク</string>
+  <string name="common_month">月</string>
   <string name="common_network_fee_title">ネットワーク手数料</string>
   <string name="common_network_fee_warning_content">送金額は、選択された手数料レベルをカバーするため、%1$s (%2$s) 減額されます。</string>
   <string name="common_next">次</string>
@@ -144,6 +146,7 @@
   <string name="common_save_changes">変更内容を保存</string>
   <string name="common_search">検索</string>
   <string name="common_search_tokens">トークンを検索</string>
+  <string name="common_second_no_param">秒</string>
   <string name="common_seed_phrase">シードフレーズ</string>
   <string name="common_select_action">アクションを選択</string>
   <string name="common_sell">売る</string>
@@ -169,6 +172,7 @@
   <string name="common_unknown_error">エラーが発生しました。もう一度お試しください。</string>
   <string name="common_unreachable">アクセスできません</string>
   <string name="common_unstake">ステーキング解除</string>
+  <string name="common_week">週</string>
   <string name="common_yes">はい</string>
   <string name="contract_address_copied_message">コントラクトアドレスをコピーしました!</string>
   <string name="currency_subtitle_expanded">利用可能なネットワーク</string>
@@ -287,6 +291,7 @@
   <string name="feedback_subject_support">フィードバック</string>
   <string name="feedback_subject_support_tangem">Tangemへのフィードバック</string>
   <string name="feedback_subject_tx_failed">取引を送信できません</string>
+  <string name="feedback_token_description_error">コインの説明エラー</string>
   <string name="give_permission_current_transaction">取引</string>
   <string name="give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="give_permission_policy_type_footer">選択したトークンの承認制限を指定します</string>
@@ -344,7 +349,7 @@
   <string name="manage_tokens_wallet_selector_title">ウォレットを選択</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">ウォレットは複数のネットワークをサポートしていません。</string>
   <string name="markets_add_to_my_portfolio_description">このアセットを購入・交換・受け取るには、ポートフォリオに追加してください。</string>
-  <string name="markets_add_to_my_portfolio_unavailable_description">このアセットは利用できません</string>
+  <string name="markets_add_to_my_portfolio_unavailable_description">このアセットは現在ウォレットで利用できません</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">このアセットはこのウォレットでは使用できません。</string>
   <string name="markets_add_to_portfolio_button">ポートフォリオに追加</string>
   <string name="markets_add_token">追加</string>
@@ -572,6 +577,8 @@
   <string name="reset_card_to_factory_condition_2">このカードを使用して、現在のウォレットの他のカードのアクセスコードを回復させられないことを認識しています。</string>
   <string name="reset_card_with_backup_to_factory_message">工場出荷時設定にリセットすると、選択したカードからウォレットが完全に削除されます。現在のウォレットを復元したり、カードを使用してアクセスコードを回復したりすることはできません。</string>
   <string name="reset_card_without_backup_to_factory_message">工場出荷時の状態にリセットすると、選択したカードからウォレットが完全に削除され、アプリから削除されます。現在のウォレットを復元することはできません。</string>
+  <string name="ring_promo_text">Tangem Ringユーザーは、11/15日までChangelly経由でスワップを3回手数料ゼロで行えます！</string>
+  <string name="ring_promo_title">今すぐ手数料0%でスワップしましょう！</string>
   <string name="russian_bank_card_warning_subtitle">他の国の銀行カードと、ロシア連邦外での居住許可証または登録をお持ちですか?</string>
   <string name="russian_bank_card_warning_title">ロシアの銀行カードは現在ご利用いただけません</string>
   <string name="save_user_wallet_agreement_access_description">アプリにログインして、カードをスキャンせずに残高を確認できます</string>
@@ -696,6 +703,7 @@
   <string name="staking_locked">ロック中</string>
   <string name="staking_migrate">移行</string>
   <string name="staking_native">ネイティブステーキング</string>
+  <string name="staking_no_validators_error_message">現在、ステーキングに使用できるアクティブなバリデータは見つかりません。しばらくしてからもう一度お試しください。</string>
   <string name="staking_notification_claim_rewards_text">獲得した報酬はあなたのアドレスに直接送られ、すぐ使用可能です。</string>
   <string name="staking_notification_earn_rewards_text">安全にステーキングして報酬を獲得しましょう</string>
   <string name="staking_notification_earn_rewards_text_daily">安全にステーキングして、報酬を毎日獲得しましょう</string>
@@ -728,8 +736,6 @@
   <string name="staking_reward_schedule_day">毎日</string>
   <string name="staking_reward_schedule_each">%sごと</string>
   <string name="staking_reward_schedule_each_day">毎日</string>
-  <string name="staking_reward_schedule_each_days">%1$s日ごとに</string>
-  <string name="staking_reward_schedule_each_sec">%1$s秒毎</string>
   <string name="staking_reward_schedule_epoch">エポック毎</string>
   <string name="staking_reward_schedule_era">時代毎</string>
   <string name="staking_reward_schedule_hour">毎時間</string>
