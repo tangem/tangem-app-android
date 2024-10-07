@@ -22,6 +22,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             userWalletName = "My Wallet",
             isReferralAvailable = true,
             isLinkMoreCardsAvailable = true,
+            isRenameWalletAvailable = false,
             renameWallet = {},
             forgetWallet = {},
             onLinkMoreCardsClick = {},
