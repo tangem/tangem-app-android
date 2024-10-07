@@ -101,6 +101,8 @@ object PreferencesKeys {
 
     val ADDED_WALLETS_WITH_RING_KEY by lazy { stringSetPreferencesKey(name = "addedWalletsWithRing") }
 
+    val SHOULD_SHOW_RING_PROMO_KEY by lazy { booleanPreferencesKey(name = "shouldShowRingPromo") }
+
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
 
