@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.OkxPromoNotification
+import com.tangem.core.ui.components.notifications.RingPromoNotification
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
@@ -32,6 +33,9 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                         config = it.config,
                         modifier = modifier.animateItemPlacement(),
                     )
+                }
+                is WalletNotification.RingPromo -> {
+                    RingPromoNotification(config = it.config, modifier = modifier.animateItemPlacement())
                 }
                 else -> {
                     Notification(
