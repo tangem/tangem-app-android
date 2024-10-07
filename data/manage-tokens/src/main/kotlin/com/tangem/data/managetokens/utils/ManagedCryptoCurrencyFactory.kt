@@ -149,7 +149,7 @@ internal class ManagedCryptoCurrencyFactory {
             symbol = coinResponse.symbol,
             iconUrl = getIconUrl(coinResponse.id, imageHost),
             availableNetworks = availableNetworks,
-            addedIn = findAddedInNetworks(coinResponse.id, tokensResponse, derivationStyleProvider),
+            addedIn = findAddedInNetworks(coinResponse.id, tokensResponse, scanResponse),
         )
     }
 
