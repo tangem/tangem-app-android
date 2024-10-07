@@ -6,30 +6,24 @@ import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
-import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
-import com.tangem.features.managetokens.ManageTokensToggles
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
-import com.tangem.features.pushnotifications.api.featuretoggles.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
-import com.tangem.tap.features.customtoken.impl.presentation.AddCustomTokenFragment
 import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorFragment
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRecoveryFragment
-import com.tangem.tap.features.details.ui.details.DetailsFragment
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
-import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.main.ui.ModalNotificationBottomSheetFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
@@ -37,7 +31,6 @@ import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCar
 import com.tangem.tap.features.onboarding.products.twins.ui.OnboardingTwinsFragment
 import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
 import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
-import com.tangem.tap.features.tokens.impl.presentation.TokensListFragment
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.routing.RoutingComponent.Child
 import com.tangem.utils.Provider
@@ -59,9 +52,6 @@ internal class ChildFactory @Inject constructor(
     private val qrScanningRouter: QrScanningRouter,
     private val stakingRouter: StakingRouter,
     private val testerRouter: TesterRouter,
-    private val detailsFeatureToggles: DetailsFeatureToggles,
-    private val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles,
-    private val manageTokensToggles: ManageTokensToggles,
     private val pushNotificationRouter: PushNotificationsRouter,
 ) {
 
@@ -75,9 +65,6 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.AccessCodeRecovery -> {
                 route.asFragmentChild(Provider { AccessCodeRecoveryFragment() })
-            }
-            is AppRoute.AddCustomToken -> {
-                route.asFragmentChild(Provider { AddCustomTokenFragment() })
             }
             is AppRoute.AppCurrencySelector -> {
                 route.asFragmentChild(Provider { AppCurrencySelectorFragment() })
@@ -98,49 +85,37 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { CardSettingsFragment() })
             }
             is AppRoute.Details -> {
-                if (detailsFeatureToggles.isRedesignEnabled) {
-                    route.asComponentChild(
-                        contextProvider = contextProvider(route, contextFactory),
-                        params = DetailsComponent.Params(route.userWalletId),
-                        componentFactory = detailsComponentFactory,
-                    )
-                } else {
-                    route.asFragmentChild(Provider { DetailsFragment() })
-                }
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = DetailsComponent.Params(route.userWalletId),
+                    componentFactory = detailsComponentFactory,
+                )
             }
             is AppRoute.DetailsSecurity -> {
                 route.asFragmentChild(Provider { SecurityModeFragment() })
             }
             is AppRoute.Disclaimer -> {
-                if (pushNotificationsFeatureToggles.isPushNotificationsEnabled) {
-                    route.asComponentChild(
-                        contextProvider = contextProvider(route, contextFactory),
-                        params = DisclaimerComponent.Params(route.isTosAccepted),
-                        componentFactory = disclaimerComponentFactory,
-                    )
-                } else {
-                    route.asFragmentChild(Provider { DisclaimerFragment() })
-                }
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = DisclaimerComponent.Params(route.isTosAccepted),
+                    componentFactory = disclaimerComponentFactory,
+                )
             }
             is AppRoute.Home -> {
                 route.asFragmentChild(Provider { HomeFragment() })
             }
             is AppRoute.ManageTokens -> {
-                if (manageTokensToggles.isFeatureEnabled) {
-                    val source = when (route.source) {
-                        AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
-                        AppRoute.ManageTokens.Source.ONBOARDING -> ManageTokensSource.ONBOARDING
-                        AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
-                    }
-
-                    route.asComponentChild(
-                        contextProvider = contextProvider(route, contextFactory),
-                        params = ManageTokensComponent.Params(route.userWalletId, source),
-                        componentFactory = manageTokensComponentFactory,
-                    )
-                } else {
-                    route.asFragmentChild(Provider { TokensListFragment() })
+                val source = when (route.source) {
+                    AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
+                    AppRoute.ManageTokens.Source.ONBOARDING -> ManageTokensSource.ONBOARDING
+                    AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
                 }
+
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = ManageTokensComponent.Params(route.userWalletId, source),
+                    componentFactory = manageTokensComponentFactory,
+                )
             }
             is AppRoute.OnboardingNote -> {
                 route.asFragmentChild(Provider { OnboardingNoteFragment() })

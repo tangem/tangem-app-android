@@ -166,6 +166,7 @@ internal class CustomCurrencyValidator @Inject constructor(
         validatedForm: AddCustomTokenForm.Validated.All?,
     ) {
         val currency = createCustomCurrencyUseCase(
+            userWalletId = userWalletId,
             networkId = networkId,
             derivationPath = derivationPath,
             formValues = validatedForm,

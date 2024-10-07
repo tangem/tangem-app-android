@@ -18,6 +18,14 @@ data class TokensDataStateExpress(
     }
 }
 
+fun TokensDataStateExpress.getGroupWithReverse(isReverseFromTo: Boolean): CurrenciesGroup {
+    return if (isReverseFromTo) {
+        this.fromGroup
+    } else {
+        this.toGroup
+    }
+}
+
 data class CurrenciesGroup(
     val available: List<CryptoCurrencySwapInfo>,
     val unavailable: List<CryptoCurrencySwapInfo>,

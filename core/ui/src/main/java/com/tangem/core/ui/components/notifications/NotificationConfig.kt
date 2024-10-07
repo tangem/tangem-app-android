@@ -24,6 +24,7 @@ data class NotificationConfig(
     val buttonsState: ButtonsState? = null,
     val onClick: (() -> Unit)? = null,
     val onCloseClick: (() -> Unit)? = null,
+    val showArrowIcon: Boolean = onClick != null,
 ) {
 
     sealed class ButtonsState {
