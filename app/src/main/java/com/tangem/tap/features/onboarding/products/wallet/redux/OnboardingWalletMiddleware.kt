@@ -20,6 +20,7 @@ import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.Artwork
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
@@ -203,9 +204,10 @@ private fun handleFinishOnboardind(scanResponse: ScanResponse) {
     val backupState = store.state.onboardingWalletState.backupState
     val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
 
-    if (backupState.hasRing) {
+    val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+    if (backupState.hasRing && userWalletId != null) {
         scope.launch {
-            store.inject(DaggerGraphState::walletsRepository).setHasWalletsWithRing()
+            store.inject(DaggerGraphState::walletsRepository).setHasWalletsWithRing(userWalletId = userWalletId)
         }
     }
 
