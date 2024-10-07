@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.card.NetworkHasDerivationUseCase
+import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
@@ -17,7 +18,6 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
-import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.converter.Converter
@@ -28,8 +28,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class TokenDetailsSkeletonStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
-    private val featureToggles: TokenDetailsFeatureToggles,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
+    private val getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
 ) : Converter<CryptoCurrency, TokenDetailsState> {
@@ -38,6 +38,8 @@ internal class TokenDetailsSkeletonStateConverter(
 
     override fun convert(value: CryptoCurrency): TokenDetailsState {
         val iconState = iconStateConverter.convert(value)
+        val isSupportedInMobileApp = getStakingIntegrationIdUseCase(value.id).isNullOrBlank().not()
+
         return TokenDetailsState(
             topAppBarConfig = TokenDetailsTopAppBarConfig(
                 onBackClick = clickIntents::onBackClick,
@@ -61,7 +63,7 @@ internal class TokenDetailsSkeletonStateConverter(
                 selectedBalanceType = BalanceType.ALL,
             ),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
-            stakingBlocksState = StakingBlockUM.Loading(iconState),
+            stakingBlocksState = StakingBlockUM.Loading(iconState).takeIf { isSupportedInMobileApp },
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
             swapTxs = persistentListOf(),
@@ -75,7 +77,6 @@ internal class TokenDetailsSkeletonStateConverter(
             bottomSheetConfig = null,
             isBalanceHidden = true,
             isMarketPriceAvailable = value.id.rawCurrencyId != null,
-            isStakingBlockShown = false,
             event = consumedEvent(),
         )
     }
@@ -98,12 +99,14 @@ internal class TokenDetailsSkeletonStateConverter(
         cryptoCurrency: CryptoCurrency,
     ) {
         val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return
-        val isGenerateXPubEnabled = featureToggles.isGenerateXPubEnabled()
-        val isBitcoin = isBitcoin(cryptoCurrency.network.id.value)
-        val hasDerivations =
-            networkHasDerivationUseCase(userWallet.scanResponse, cryptoCurrency.network).getOrElse { false }
 
-        if (isGenerateXPubEnabled && isBitcoin && hasDerivations) {
+        val isBitcoin = isBitcoin(cryptoCurrency.network.id.value)
+        val hasDerivations = networkHasDerivationUseCase(
+            scanResponse = userWallet.scanResponse,
+            network = cryptoCurrency.network,
+        ).getOrElse { false }
+
+        if (isBitcoin && hasDerivations) {
             add(
                 TokenDetailsAppBarMenuConfig.MenuItem(
                     title = resourceReference(R.string.token_details_generate_xpub),
