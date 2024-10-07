@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.domain.models.ui
 
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import java.math.BigDecimal
@@ -34,7 +34,7 @@ sealed interface SwapState {
 
     data class SwapError(
         val fromTokenInfo: TokenSwapInfo,
-        val error: DataError,
+        val error: ExpressDataError,
         val includeFeeInAmount: IncludeFeeInAmount,
     ) : SwapState
 }
