@@ -8,5 +8,5 @@ interface AlertUM {
     val title: TextReference?
     val message: TextReference
     val confirmButtonText: TextReference
-    val onConfirmClick: (() -> Unit)?
+    val onConfirmClick: () -> Unit
 }
