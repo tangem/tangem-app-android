@@ -7,12 +7,15 @@ import androidx.core.view.MenuProvider
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.common.feedback.SupportInfo
-import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.utils.Provider
 import com.tangem.wallet.R
+import kotlinx.coroutines.launch
 
 /**
 [REDACTED_AUTHOR]
@@ -28,13 +31,15 @@ class OnboardingMenuProvider(
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean = when (menuItem.itemId) {
         R.id.menu_item_chat_support -> {
             Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Intro))
-            // changed on email support [REDACTED_TASK_KEY]
-            store.dispatch(
-                GlobalAction.SendEmail(
-                    feedbackData = SupportInfo(),
-                    scanResponse = scanResponseProvider(),
-                ),
-            )
+
+            val cardInfo = store.inject(DaggerGraphState::getCardInfoUseCase).invoke(scanResponseProvider()).getOrNull()
+                ?: error("CardInfo must be not null")
+
+            scope.launch {
+                store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                    .invoke(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+            }
+
             true
         }
         else -> false
