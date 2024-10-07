@@ -14,7 +14,7 @@ internal sealed class ManageTokensUM {
     abstract val isInitialBatchLoading: Boolean
     abstract val isNextBatchLoading: Boolean
     abstract val items: ImmutableList<CurrencyItemUM>
-    abstract val topBar: ManageTokensTopBarUM
+    abstract val topBar: ManageTokensTopBarUM?
     abstract val search: SearchBarUM
     abstract val loadMore: () -> Boolean
     abstract val scrollToTop: StateEvent<Unit>
@@ -24,7 +24,7 @@ internal sealed class ManageTokensUM {
         override val isInitialBatchLoading: Boolean,
         override val isNextBatchLoading: Boolean,
         override val items: ImmutableList<CurrencyItemUM>,
-        override val topBar: ManageTokensTopBarUM,
+        override val topBar: ManageTokensTopBarUM?,
         override val search: SearchBarUM,
         override val loadMore: () -> Boolean,
         override val scrollToTop: StateEvent<Unit> = consumedEvent(),
@@ -35,7 +35,7 @@ internal sealed class ManageTokensUM {
         override val isInitialBatchLoading: Boolean,
         override val isNextBatchLoading: Boolean,
         override val items: ImmutableList<CurrencyItemUM>,
-        override val topBar: ManageTokensTopBarUM,
+        override val topBar: ManageTokensTopBarUM?,
         override val search: SearchBarUM,
         override val loadMore: () -> Boolean,
         override val scrollToTop: StateEvent<Unit> = consumedEvent(),
