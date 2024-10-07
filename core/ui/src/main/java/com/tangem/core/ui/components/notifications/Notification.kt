@@ -179,8 +179,13 @@ private fun Icon(@DrawableRes iconResId: Int, tint: Color?, modifier: Modifier =
 }
 
 @Composable
-private fun TextsBlock(title: TextReference?, subtitle: TextReference, subtitleColor: Color) {
-    Column {
+internal fun TextsBlock(
+    title: TextReference?,
+    subtitle: TextReference,
+    subtitleColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
         val titleText = title?.resolveReference()
 
         if (titleText != null) {
@@ -269,7 +274,12 @@ private fun PairButtons(config: NotificationButtonsState.PairButtonsConfig, isEn
 }
 
 @Composable
-private fun CloseableIconButton(onClick: (() -> Unit)?, modifier: Modifier = Modifier, isEnabled: Boolean = true) {
+internal fun CloseableIconButton(
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
+    iconTint: Color = TangemTheme.colors.icon.inactive,
+) {
     AnimatedVisibility(visible = onClick != null, modifier = modifier) {
         onClick ?: return@AnimatedVisibility
 
@@ -296,7 +306,7 @@ private fun CloseableIconButton(onClick: (() -> Unit)?, modifier: Modifier = Mod
                 modifier = Modifier
                     .size(size = TangemTheme.dimens.size16)
                     .align(alignment = Alignment.Center),
-                tint = TangemTheme.colors.icon.inactive,
+                tint = iconTint,
             )
         }
     }
