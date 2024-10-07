@@ -123,7 +123,7 @@ internal class DefaultStakingRepository(
                     val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)
                         .getOrThrow()
 
-                    stakingYieldsStore.store(stakingTokensWithYields.data)
+                    stakingYieldsStore.store(stakingTokensWithYields.data.filter { it.isAvailable })
                 },
             )
         }
