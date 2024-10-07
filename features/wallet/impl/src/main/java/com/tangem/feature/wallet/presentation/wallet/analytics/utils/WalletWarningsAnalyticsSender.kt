@@ -56,6 +56,10 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.Warning.SomeNetworksUnreachable,
             is WalletNotification.Warning.NetworksUnreachable,
             -> null
+            is WalletNotification.RingPromo -> TokenSwapPromoAnalyticsEvent.NoticePromotionBanner(
+                source = AnalyticsParam.ScreensSources.Main,
+                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Ring,
+            )
         }
     }
 }

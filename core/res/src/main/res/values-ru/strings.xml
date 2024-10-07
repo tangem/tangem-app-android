@@ -517,7 +517,7 @@
   <string name="onboarding_seed_import_message">Чтобы импортировать кошелек, введите seed-фразу в поле ниже</string>
   <string name="onboarding_seed_intro_button_generate">Создать seed-фразу</string>
   <string name="onboarding_seed_intro_button_import">Импорт кошелька</string>
-  <string name="onboarding_seed_intro_message">Seed-фраза — это набор слов, который дает возможность восстановить кошелек. В отличие от ключей, сгенерированных картой, seed-фраза не защищена и может быть скопирована и украдена. Используйте этот вариант на свой страх и риск.</string>
+  <string name="onboarding_seed_intro_message">Seed-фраза — это набор слов, который дает возможность восстановить кошелек. В отличие от ключей, сгенерированных картой или кольцом, seed-фраза не защищена и может быть скопирована и украдена. Используйте этот вариант на свой страх и риск.</string>
   <string name="onboarding_seed_intro_title">Использовать seed-фразу</string>
   <string name="onboarding_seed_mnemonic_invalid_checksum">Неверная seed-фраза. Пожалуйста, проверьте порядок слов.</string>
   <string name="onboarding_seed_mnemonic_wrong_words">Неверная seed-фраза. Пожалуйста, проверьте орфографию.</string>
@@ -600,7 +600,7 @@
   <string name="reset_card_to_factory_button_title">Сбросить карту</string>
   <string name="reset_card_to_factory_condition_1">Я понимаю, что после выполнения этого действия у меня больше не будет доступа к текущему кошельку</string>
   <string name="reset_card_to_factory_condition_2">Я понимаю, что не смогу этой картой восстановить пароль на остальных картах этого кошелька, если я его забуду</string>
-  <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек или использовать данную карту для восстановления кода доступа.</string>
+  <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек или использовать данную карту или кольцо для восстановления кода доступа.</string>
   <string name="reset_card_without_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек.</string>
   <string name="ring_promo_text">Владельцам колец — 3 обмена без комиссии на Changelly до 15.11!</string>
   <string name="ring_promo_title">Обмен с 0%% комиссией!</string>
