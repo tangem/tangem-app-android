@@ -2,12 +2,10 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
-import com.tangem.tap.common.feedback.FeedbackData
-import com.tangem.tap.common.feedback.LegacyFeedbackManager
 import com.tangem.tap.common.redux.DebugErrorAction
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
@@ -69,10 +67,7 @@ sealed class GlobalAction : Action {
         val walletPublicKey: ByteArray,
     ) : GlobalAction()
 
-    data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
-    data class SetFeedbackManager(val feedbackManager: LegacyFeedbackManager) : GlobalAction()
-
-    data class SendEmail(val feedbackData: FeedbackData, val scanResponse: ScanResponse?) : GlobalAction()
+    data class SetConfigManager(val environmentConfigStorage: EnvironmentConfigStorage) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
         object Init : GlobalAction() {
