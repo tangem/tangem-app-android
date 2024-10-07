@@ -16,7 +16,6 @@ import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
@@ -32,17 +31,14 @@ import org.rekotlin.Store
  * - [ScanChainException.OnboardingNeeded] if onboarding required.
  *
  * @param store the [Store] that holds the state of the app.
- * @param tapWalletManager manager responsible for handling operations related to the Wallet.
  *
  * @see Chain for more information about the Chain interface.
  */
 class CheckForOnboardingChain(
     private val store: Store<AppState>,
-    private val tapWalletManager: TapWalletManager,
 ) : ResultChain<ScanCardException, ScanResponse>() {
 
     override suspend fun launch(previousChainResult: ScanResponse): ScanChainResult {
-        tapWalletManager.updateConfigManager(previousChainResult)
         store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(previousChainResult))
 
         return when {

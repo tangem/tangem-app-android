@@ -10,16 +10,10 @@ object HomeReducer {
 private fun internalReduce(action: Action, appState: AppState): HomeState {
     if (action !is HomeAction) return appState.homeState
 
-    var state = appState.homeState
-    when (action) {
+    return when (action) {
         is HomeAction.ScanInProgress -> {
-            state = state.copy(scanInProgress = action.scanInProgress)
+            appState.homeState.copy(scanInProgress = action.scanInProgress)
         }
-        is HomeAction.UpdateCountryCode -> {
-            state.onCountryCodeUpdate(state, action.userCountryCode)
-        }
-        else -> {}
+        else -> appState.homeState
     }
-
-    return state
 }
