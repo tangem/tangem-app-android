@@ -131,20 +131,24 @@ internal class ManagedCryptoCurrencyFactory {
     ): ManagedCryptoCurrency? {
         if (coinResponse.networks.isEmpty() || !coinResponse.active) return null
 
-        val updatedNetworks = coinResponse.networks.applyL2Compatibility(coinResponse.id)
+        val availableNetworks = coinResponse.networks
+            .applyL2Compatibility(coinResponse.id)
+            .mapNotNull { network ->
+                createSource(
+                    networkId = network.networkId,
+                    contractAddress = network.contractAddress,
+                    decimals = network.decimalCount?.toInt(),
+                    scanResponse = scanResponse,
+                )
+            }
+            .ifEmpty { return null }
+
         return ManagedCryptoCurrency.Token(
             id = ManagedCryptoCurrency.ID(coinResponse.id),
             name = coinResponse.name,
             symbol = coinResponse.symbol,
             iconUrl = getIconUrl(coinResponse.id, imageHost),
-            availableNetworks = updatedNetworks.mapNotNull { network ->
-                createSource(
-                    networkId = network.networkId,
-                    contractAddress = network.contractAddress,
-                    decimals = network.decimalCount?.toInt() ?: return@mapNotNull null,
-                    scanResponse = scanResponse,
-                )
-            },
+            availableNetworks = availableNetworks,
             addedIn = findAddedInNetworks(coinResponse.id, tokensResponse, scanResponse),
         )
     }
@@ -152,7 +156,7 @@ internal class ManagedCryptoCurrencyFactory {
     private fun createSource(
         networkId: String,
         contractAddress: String?,
-        decimals: Int,
+        decimals: Int?,
         scanResponse: ScanResponse?,
         extraDerivationPath: String? = null,
     ): SourceNetwork? {
@@ -169,18 +173,18 @@ internal class ManagedCryptoCurrencyFactory {
             } ?: true,
         ) ?: return null
 
-        return if (contractAddress.isNullOrBlank()) {
-            SourceNetwork.Main(
+        return when {
+            contractAddress.isNullOrBlank() -> SourceNetwork.Main(
                 network = network,
                 decimals = blockchain.decimals(),
                 isL2Network = l2BlockchainsList.contains(blockchain),
             )
-        } else {
-            SourceNetwork.Default(
+            network.canHandleTokens -> SourceNetwork.Default(
                 network = network,
-                decimals = decimals,
+                decimals = decimals ?: return null,
                 contractAddress = contractAddress,
             )
+            else -> null
         }
     }
 
