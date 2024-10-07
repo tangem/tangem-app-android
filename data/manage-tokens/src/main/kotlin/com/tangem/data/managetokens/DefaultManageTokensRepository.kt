@@ -12,10 +12,10 @@ import com.tangem.data.managetokens.utils.ManagedCryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
-import com.tangem.datasource.local.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.canHandleBlockchain
@@ -23,7 +23,6 @@ import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -119,13 +118,13 @@ internal class DefaultManageTokensRepository(
             managedCryptoCurrencyFactory.createWithCustomTokens(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
-                derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                scanResponse = userWallet.scanResponse,
             )
         } else {
             managedCryptoCurrencyFactory.create(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
-                derivationStyleProvider = userWallet?.scanResponse?.derivationStyleProvider,
+                scanResponse = userWallet?.scanResponse,
             )
         }
 
@@ -155,7 +154,7 @@ internal class DefaultManageTokensRepository(
                 testnetTokensConfig
             },
             tokensResponse = getSavedUserTokensResponseSync(userWallet.walletId),
-            derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+            scanResponse = userWallet.scanResponse,
         )
 
         return BatchFetchResult.Success(
