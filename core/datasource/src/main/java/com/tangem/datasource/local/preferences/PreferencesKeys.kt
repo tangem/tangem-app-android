@@ -99,7 +99,7 @@ object PreferencesKeys {
 
     val apiConfigsEnvironmentKey by lazy { stringPreferencesKey(name = "apiConfigsEnvironment") }
 
-    val IS_RING_ADDED_KEY by lazy { booleanPreferencesKey(name = "isRingAdded") }
+    val ADDED_WALLETS_WITH_RING_KEY by lazy { stringSetPreferencesKey(name = "addedWalletsWithRing") }
 
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
