@@ -400,6 +400,27 @@ internal class StakingViewModel @Inject constructor(
         )
     }
 
+    override fun onEnterClick() {
+        onAmountValueChange("") // reset amount state
+
+        // TODO refactor in [REDACTED_JIRA]
+        val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
+        val filteredValidator = yield.validators.filter { it.preferred }
+        stateController.update {
+            value.copy(
+                confirmationState = confirmationState?.copy(
+                    validatorState = ValidatorState.Content(
+                        isClickable = true,
+                        chosenValidator = filteredValidator[0],
+                        availableValidators = filteredValidator,
+                    ),
+                ) as StakingStates.ConfirmationState,
+            )
+        }
+
+        onNextClick(StakingActionCommonType.ENTER)
+    }
+
     override fun onAmountValueChange(value: String) {
         stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, value, yield))
     }
