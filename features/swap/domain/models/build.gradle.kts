@@ -12,6 +12,7 @@ android {
 dependencies {
     /** Domain */
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.transaction.models)
 
     /** Core modules */
     implementation(projects.core.utils)
