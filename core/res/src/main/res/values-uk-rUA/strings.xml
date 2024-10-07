@@ -737,7 +737,6 @@
   <string name="staking_reward_schedule_block">Блок</string>
   <string name="staking_reward_schedule_day">День</string>
   <string name="staking_reward_schedule_each_day">Щодня</string>
-  <string name="staking_reward_schedule_each_sec">Кожні %1$s сек</string>
   <string name="staking_reward_schedule_epoch">Епоха</string>
   <string name="staking_reward_schedule_era">Ера</string>
   <string name="staking_reward_schedule_hour">Година</string>

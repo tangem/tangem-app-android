@@ -103,7 +103,9 @@ class AppLogsStore @Inject constructor(
     private fun launchWithLock(callback: () -> Unit) {
         scope.launch {
             mutex.withLock {
-                callback()
+                runCatching {
+                    callback()
+                }.onFailure(Timber::e)
             }
         }
     }
