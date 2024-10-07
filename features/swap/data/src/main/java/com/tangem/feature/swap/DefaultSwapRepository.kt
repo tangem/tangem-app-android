@@ -22,7 +22,7 @@ import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getSyncOrNull
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -191,6 +191,7 @@ internal class DefaultSwapRepository @Inject constructor(
     }
 
     override suspend fun findBestQuote(
+        userWalletId: UserWalletId,
         fromContractAddress: String,
         fromNetwork: String,
         toContractAddress: String,
@@ -203,7 +204,10 @@ internal class DefaultSwapRepository @Inject constructor(
     ): Either<DataError, QuoteModel> {
         return withContext(coroutineDispatcher.io) {
             try {
-                val isRingAdded = appPreferencesStore.getSyncOrNull(PreferencesKeys.IS_RING_ADDED_KEY)
+                val addedWalletsWithRings = appPreferencesStore.getSyncOrDefault(
+                    key = PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY,
+                    default = emptySet(),
+                )
 
                 val response = tangemExpressApi.getExchangeQuote(
                     fromContractAddress = fromContractAddress,
@@ -215,7 +219,7 @@ internal class DefaultSwapRepository @Inject constructor(
                     toDecimals = toDecimals,
                     providerId = providerId,
                     rateType = rateType.name.lowercase(),
-                    refCode = if (isRingAdded == true) "ring" else null,
+                    refCode = if (addedWalletsWithRings.contains(userWalletId.stringValue)) "ring" else null,
                 ).getOrThrow()
                 QuoteModel(
                     toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),

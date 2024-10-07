@@ -5,6 +5,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.repository.WalletsRepository
 import kotlinx.coroutines.flow.Flow
 
@@ -24,7 +25,11 @@ internal class DefaultWalletsRepository(
         appPreferencesStore.store(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, value = item)
     }
 
-    override suspend fun setHasWalletsWithRing() {
-        appPreferencesStore.store(key = PreferencesKeys.IS_RING_ADDED_KEY, value = true)
+    override suspend fun setHasWalletsWithRing(userWalletId: UserWalletId) {
+        appPreferencesStore.editData {
+            val added = it[PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY].orEmpty()
+
+            it[PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY] = added + userWalletId.stringValue
+        }
     }
 }

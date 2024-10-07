@@ -97,6 +97,10 @@
     <item quantity="one">%d tag</item>
     <item quantity="other">%d tage</item>
   </plurals>
+  <plurals name="common_days_no_param">
+    <item quantity="one">Tag</item>
+    <item quantity="other">Tage</item>
+  </plurals>
   <string name="common_delete">Entfernen</string>
   <string name="common_disabled">Deaktiviert</string>
   <string name="common_done">Erledigt</string>
@@ -143,6 +147,7 @@
   <string name="common_save_changes">Änderungen speichern</string>
   <string name="common_search">Suchen</string>
   <string name="common_search_tokens">Token suchen</string>
+  <string name="common_second_no_param">sek.</string>
   <string name="common_seed_phrase">Seed phrase</string>
   <string name="common_select_action">Aktion auswählen</string>
   <string name="common_sell">Verkaufen</string>
@@ -343,7 +348,7 @@
   <string name="manage_tokens_unavailable_vote">Hochstimmen</string>
   <string name="manage_tokens_wallet_selector_title">Wallet auswählen</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Das Wallet unterstützt nicht mehr als ein Netzwerk</string>
-  <string name="markets_add_to_my_portfolio_description">Um mit dem Kauf, Tausch oder Erhalt dieses Vermögenswerts zu beginnen, füge diesen Token zu mindestens 1 Netzwerk hinzu</string>
+  <string name="markets_add_to_my_portfolio_description">Um dieses Asset zu kaufen, zu tauschen oder zu erhalten, füge diesen Deinem Portfolio hinzu</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Dieses Asset ist nicht verfügbar</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Dieses Asset ist für dieses Wallet nicht verfügbar</string>
   <string name="markets_add_to_portfolio_button">Zum Portfolio hinzufügen</string>
@@ -378,6 +383,10 @@
   <string name="markets_sort_by_top_losers_title">Top-Verlierer</string>
   <string name="markets_sort_by_trending_title">Beliebt</string>
   <string name="markets_token_details_about_token_title">Über %s</string>
+  <plurals name="markets_token_details_amount_exchanges">
+    <item quantity="one">%d Börse</item>
+    <item quantity="other">%d Börsen</item>
+  </plurals>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="one">Bewertung, basierend auf %d</item>
     <item quantity="other">Bewertungen, basierend auf %d</item>
@@ -389,6 +398,12 @@
   <string name="markets_token_details_circulating_supply">Umlaufmenge</string>
   <string name="markets_token_details_circulating_supply_description">Die Gesamtzahl der Coins, die für den Handel verfügbar sind und auf dem Markt zirkulieren</string>
   <string name="markets_token_details_circulating_supply_full">Umlaufmenge</string>
+  <string name="markets_token_details_empty_exchanges">Keine Börsen gefunden</string>
+  <string name="markets_token_details_exchange">Umtausch</string>
+  <string name="markets_token_details_exchange_trust_score_caution">Vorsicht</string>
+  <string name="markets_token_details_exchange_trust_score_risky">Riskant</string>
+  <string name="markets_token_details_exchange_trust_score_trusted">Vertrauenswürdig</string>
+  <string name="markets_token_details_exchanges_title">Börsen</string>
   <string name="markets_token_details_experienced_buyers">Erfahrene Käufer</string>
   <string name="markets_token_details_experienced_buyers_description">Nettokäufer mit der zusätzlichen Anforderung, mindestens 100 ausgehende Transaktionen zu haben</string>
   <string name="markets_token_details_experienced_buyers_full">Erfahrene Käufer</string>
@@ -407,6 +422,7 @@
   <string name="markets_token_details_liquidity_full">Liquidität</string>
   <string name="markets_token_details_liquidity_index">Liquiditätsindex</string>
   <string name="markets_token_details_liquidity_index_description">Leer</string>
+  <string name="markets_token_details_listed_on">Gelistet auf</string>
   <string name="markets_token_details_low">Niedrig</string>
   <string name="markets_token_details_market_capitalization">MarketCap</string>
   <string name="markets_token_details_market_capitalization_description">Der Gesamtmarktwert einer Kryptowährung, berechnet sich durch Multiplikation des aktuellen Preises des Coins mit der Gesamtzahl der im Umlauf befindlichen Coins</string>
@@ -429,6 +445,7 @@
   <string name="markets_token_details_trading_volume">Handelsvolumen (24h)</string>
   <string name="markets_token_details_trading_volume_24h_description">Der Gesamtbetrag einer Kryptowährung, der innerhalb der letzten 24 Stunden gehandelt wurde, wobei das Aktivitäts- und Liquiditätsniveau auf dem Markt angegeben wird</string>
   <string name="markets_token_details_trading_volume_full">Handelsvolumen (24h)</string>
+  <string name="markets_token_details_volume">Volumen</string>
   <string name="markets_tooltip_message">Rufe dies auf oder tippe auf die Suchleiste, um Token direkt vom Markt hinzuzufügen</string>
   <string name="markets_tooltip_title">Token hinzufügen</string>
   <string name="nfc_error_unavailable">NFC ist auf deinem Gerät nicht verfügbar</string>
@@ -691,6 +708,7 @@
   <string name="staking_locked">Gesperrt</string>
   <string name="staking_migrate">Migrieren</string>
   <string name="staking_native">Natives Staking</string>
+  <string name="staking_no_validators_error_message">Derzeit sind keine aktiven Validatoren für das Staking verfügbar. Bitte versuchen Sie es später erneut.</string>
   <string name="staking_notification_claim_rewards_text">Verdiente Belohnungen werden an Deine Wallet gesendet und stehen Dir sofort zur Verfügung</string>
   <string name="staking_notification_earn_rewards_text">Stake sicher und verdienen Belohnungen</string>
   <string name="staking_notification_earn_rewards_text_daily">Sicher staken und tägliche Belohnungen verdienen.</string>
@@ -721,8 +739,8 @@
   <string name="staking_reward_claiming_manual">Händisch</string>
   <string name="staking_reward_schedule_block">Pro Block</string>
   <string name="staking_reward_schedule_day">Täglich</string>
+  <string name="staking_reward_schedule_each">Alle %s</string>
   <string name="staking_reward_schedule_each_day">Täglich</string>
-  <string name="staking_reward_schedule_each_sec">Alle %1$s Sek.</string>
   <string name="staking_reward_schedule_epoch">Pro Epoche</string>
   <string name="staking_reward_schedule_era">Pro Ära</string>
   <string name="staking_reward_schedule_hour">Stündlich</string>
@@ -733,6 +751,7 @@
   <string name="staking_stake_more">Mehr staken</string>
   <string name="staking_summary_description_text">Du setzt %1$s ein und erhältst jährlich %2$s</string>
   <string name="staking_tap_to_unlock">Zum Entsperren antippen</string>
+  <string name="staking_tap_to_unlock_or_vote">Tippe zum Entsperren oder Abstimmen</string>
   <string name="staking_tap_to_withdraw">Zum abheben antippen</string>
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">Staking beenden%s</string>
@@ -747,7 +766,7 @@
   <string name="staking_validators">Validatoren</string>
   <string name="staking_validators_label">Strategischer Partner</string>
   <string name="staking_vote">Abstimmung</string>
-  <string name="staking_vote_locked">Abstimmung gesperrt</string>
+  <string name="staking_vote_locked">Abstimmung</string>
   <string name="staking_withdraw">Zurückziehen</string>
   <string name="staking_your_stakes">Deine Einsätze</string>
   <string name="story_awe_description">Bewahre deine Krypto-Assets sicher auf, während die privaten Schlüssel auf deiner Karte bleiben</string>
