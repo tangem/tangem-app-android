@@ -18,6 +18,7 @@ interface SwapRepository {
 
     @Suppress("LongParameterList")
     suspend fun findBestQuote(
+        userWalletId: UserWalletId,
         fromContractAddress: String,
         fromNetwork: String,
         toContractAddress: String,
