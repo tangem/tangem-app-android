@@ -843,6 +843,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
     }
 
+    @Suppress("LongMethod")
     private fun getFeeForTransaction(fee: TxFee, blockchain: Blockchain): Fee {
         val feeAmountValue = fee.feeValue
         val feeAmount = Amount(
@@ -1035,6 +1036,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 Blockchain.Cyber,
                 Blockchain.CyberTestnet,
                 Blockchain.InternetComputer,
+                Blockchain.EnergyWebChain,
+                Blockchain.EnergyWebChainTestnet,
+                Blockchain.EnergyWebX,
+                Blockchain.EnergyWebXTestnet,
+                Blockchain.Casper,
+                Blockchain.CasperTestnet,
+                Blockchain.Core,
+                Blockchain.CoreTestnet,
                 -> Fee.Common(feeAmount)
                 // endregion
             }
