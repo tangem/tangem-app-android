@@ -6,12 +6,15 @@ sealed class YieldBalanceList {
         val balances: List<YieldBalance>,
     ) : YieldBalanceList() {
 
-        fun getBalance(address: String?, rawCurrencyId: String?): YieldBalance {
+        fun getBalance(address: String?, integrationId: String?): YieldBalance {
             return balances.firstOrNull { yieldBalance ->
                 val data = yieldBalance as? YieldBalance.Data
-                data?.balance?.items?.any {
-                    address == data.address && rawCurrencyId == it.rawCurrencyId
-                } == true
+                val balance = data?.balance
+
+                val isCorrectAddress = balance?.items?.any { address == data.address } == true
+                val isCorrectIntegration = balance?.integrationId == integrationId
+
+                isCorrectIntegration && isCorrectAddress
             } ?: YieldBalance.Error
         }
     }
