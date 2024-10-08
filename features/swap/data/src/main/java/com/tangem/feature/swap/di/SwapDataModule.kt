@@ -33,7 +33,6 @@ internal class SwapDataModule {
         walletManagerFacade: WalletManagersFacade,
         userWalletsListManager: UserWalletsListManager,
         errorsDataConverter: ErrorsDataConverter,
-        appPreferencesStore: AppPreferencesStore,
         @NetworkMoshi moshi: Moshi,
     ): SwapRepository {
         return DefaultSwapRepository(
@@ -43,7 +42,6 @@ internal class SwapDataModule {
             userWalletsListManager = userWalletsListManager,
             errorsDataConverter = errorsDataConverter,
             dataSignatureVerifier = dataSignature,
-            appPreferencesStore = appPreferencesStore,
             moshi = moshi,
         )
     }
