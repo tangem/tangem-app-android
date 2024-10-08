@@ -122,7 +122,7 @@
   <string name="common_fee_selector_option_market">По рынку</string>
   <string name="common_fee_selector_option_slow">Медленно</string>
   <string name="common_fee_selector_title">Скорость и комиссия</string>
-  <string name="common_generate_addresses">Получить адреса</string>
+  <string name="common_generate_addresses">Получить ваши адреса</string>
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
   <string name="common_import">Импортировать</string>
@@ -131,6 +131,7 @@
   <string name="common_left">Осталось %1$s</string>
   <string name="common_locked">Заблокирован</string>
   <string name="common_main_network">Основная сеть</string>
+  <string name="common_month">месяц</string>
   <string name="common_network_fee_title">Сетевая комиссия</string>
   <string name="common_network_fee_warning_content">Сумма отправки будет уменьшена на %1$s (%2$s) для покрытия выбранного уровня комиссии</string>
   <string name="common_next">Далее</string>
@@ -139,6 +140,7 @@
   <string name="common_now">Сейчас</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Основная карта</string>
+  <string name="common_origin_ring">Основное кольцо</string>
   <string name="common_passphrase">Парольная фраза</string>
   <string name="common_paste">Вставить</string>
   <string name="common_privacy_policy">Политикой конфиденциальности</string>
@@ -312,7 +314,8 @@
   <string name="information_generated_with_ai">Информация сгенерирована ИИ</string>
   <string name="initial_message_change_access_code_body">Чтобы изменить код доступа, приложите карту или кольцо как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_change_passcode_body">Чтобы изменить пароль, приложите карту как показано выше и не убирайте до окончания операции</string>
-  <string name="initial_message_create_wallet_body">Чтобы создать кошелек, приложите карту или кольцо как показано выше и не убирайте до окончания операции</string>
+  <string name="initial_message_create_wallet_body">Чтобы создать кошелек, приложите карту как показано выше и не убирайте до окончания операции</string>
+  <string name="initial_message_create_wallet_body_ring">Чтобы создать кошелек, приложите кольцо как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_reset_backup_card_header">Приложите карту #%s для сброса</string>
   <string name="initial_message_scan_header">Приложите, чтобы отсканировать</string>
   <string name="initial_message_sign_header">Приложите, чтобы подписать</string>
@@ -336,6 +339,7 @@
   <string name="manage_tokens_add">Добавить</string>
   <string name="manage_tokens_edit">Изменить</string>
   <string name="manage_tokens_list_header_title">Рыночная капитализация</string>
+  <string name="manage_tokens_network_selector_native_subtitle">Блокчейн, в котором криптовалюта изначально была создана</string>
   <string name="manage_tokens_network_selector_native_title">Основная сеть</string>
   <string name="manage_tokens_network_selector_non_native_subtitle">Не основной или основной блокчейн, на котором размещен токен</string>
   <string name="manage_tokens_network_selector_non_native_title">Не основные сети</string>
@@ -459,11 +463,11 @@
   <string name="markets_tooltip_message">Потяните вверх или коснитесь поисковой строки, чтобы добавить токены напрямую из рынка</string>
   <string name="markets_tooltip_title">Добавить токены</string>
   <string name="nfc_error_unavailable">Функция NFC недоступна на вашем устройстве</string>
-  <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт или колец</string>
+  <string name="onboarding_access_code_feature_1_description">Установите единый код доступа для защиты всех ваших карт или колец</string>
   <string name="onboarding_access_code_feature_1_title">Защита</string>
-  <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты или кольца</string>
+  <string name="onboarding_access_code_feature_2_description">Установите индивидуальный код доступа для каждой карты или кольца позже.</string>
   <string name="onboarding_access_code_feature_2_title">Персонализация</string>
-  <string name="onboarding_access_code_feature_3_description">Код доступа можно восстановить с помощью привязанной карты или кольца. Не храните все в одном месте.</string>
+  <string name="onboarding_access_code_feature_3_description">Восстановите код доступа с помощью связанной карты или кольца. Не храните все устройства в одном месте.</string>
   <string name="onboarding_access_code_feature_3_title">Восстановление</string>
   <string name="onboarding_access_code_hint">Выберите любое слово, фразу или число в качестве кода доступа</string>
   <string name="onboarding_access_code_intro_title">Создайте код доступа</string>
@@ -477,10 +481,12 @@
   <string name="onboarding_alert_message_not_max_backup_cards_added">Вы добавили одну резервную карту или кольцо. После того, как процесс будет завершен, Вы больше не сможете добавить еще. Если у Вас есть еще одна карта или кольцо, добавьте ее в резервную копию. Хотите продолжить?</string>
   <string name="onboarding_backup_exit_warning">Процесс резервного копирования почти завершен. Вы не можете выйти из него сейчас.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">Парольная фраза — это расширенная функция безопасности, которую используют криптокошельки. Она добавляет дополнительное слово или фразу по вашему выбору к уже существующей seed - фразе, чтобы разблокировать совершенно новый набор адресов.</string>
-  <string name="onboarding_button_add_backup_card">Добавить резервную карту или кольцо</string>
+  <string name="onboarding_button_add_backup_card">Добавить карту или кольцо</string>
+  <string name="onboarding_button_backup_card">Сканировать карту</string>
   <string name="onboarding_button_backup_card_format">Сканировать карту #%d</string>
   <string name="onboarding_button_backup_now">Создать резервную копию</string>
-  <string name="onboarding_button_backup_origin">Сканировать основную карту</string>
+  <string name="onboarding_button_backup_origin">Сканировать карту</string>
+  <string name="onboarding_button_backup_ring">Сканировать кольцо</string>
   <string name="onboarding_button_continue_wallet">Перейти к моему кошельку</string>
   <string name="onboarding_button_finalize_backup">Завершение бэкапа</string>
   <string name="onboarding_button_receive_crypto">Получить криптовалюту</string>
@@ -491,7 +497,7 @@
   <string name="onboarding_create_wallet_button_create_wallet">Создать кошелек</string>
   <string name="onboarding_create_wallet_header">Создать кошелек</string>
   <string name="onboarding_create_wallet_options_button_options">Другие опции</string>
-  <string name="onboarding_create_wallet_options_message">Ваши ключи будут надежно сгенерированы внутри карты или кольца. Никакой seed-фразы, а это значит, что никто не может экспортировать или украсть ее.</string>
+  <string name="onboarding_create_wallet_options_message">Ваши ключи будут надежно сгенерированы внутри чипа. Никакой seed-фразы, а это значит, что никто не может экспортировать или украсть ее.</string>
   <string name="onboarding_create_wallet_options_title">Cоздавайте ключи приватно</string>
   <string name="onboarding_done_body">Ваша карта активирована и готова к использованию</string>
   <string name="onboarding_done_header">Успешно!</string>
@@ -517,7 +523,7 @@
   <string name="onboarding_seed_import_message">Чтобы импортировать кошелек, введите seed-фразу в поле ниже</string>
   <string name="onboarding_seed_intro_button_generate">Создать seed-фразу</string>
   <string name="onboarding_seed_intro_button_import">Импорт кошелька</string>
-  <string name="onboarding_seed_intro_message">Seed-фраза — это набор слов, который дает возможность восстановить кошелек. В отличие от ключей, сгенерированных картой, seed-фраза не защищена и может быть скопирована и украдена. Используйте этот вариант на свой страх и риск.</string>
+  <string name="onboarding_seed_intro_message">Seed-фраза — это набор слов, который дает возможность восстановить кошелек. В отличие от ключей, сгенерированных картой или кольцом, seed-фраза не защищена и может быть скопирована и украдена. Используйте этот вариант на свой страх и риск.</string>
   <string name="onboarding_seed_intro_title">Использовать seed-фразу</string>
   <string name="onboarding_seed_mnemonic_invalid_checksum">Неверная seed-фраза. Пожалуйста, проверьте порядок слов.</string>
   <string name="onboarding_seed_mnemonic_wrong_words">Неверная seed-фраза. Пожалуйста, проверьте орфографию.</string>
@@ -529,11 +535,14 @@
   <string name="onboarding_subtitle_scan_backup_card_format">Подготовьте резервную карту с номером %s</string>
   <string name="onboarding_subtitle_scan_primary">Отсканируйте основную карту или кольцо, чтобы начать процесс резервного копирования.</string>
   <string name="onboarding_subtitle_scan_primary_card_format">Подготовьте основную карту с номером %s</string>
-  <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Ваш кошелек настроен и готова к использованию.</string>
+  <string name="onboarding_subtitle_scan_ring">Приготовьте кольцо и нажмите кнопку сканирования кольца внизу</string>
+  <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Ваш кошелек настроен и готов к использованию.</string>
   <string name="onboarding_subtitle_two_backup_cards">Добавлено максимальное количество устройств. Завершите процесс резервного копирования.</string>
   <string name="onboarding_title">Активация кошелька</string>
+  <string name="onboarding_title_backup_card">Резервная карта</string>
   <string name="onboarding_title_backup_card_format">Резервная карта #%d</string>
-  <string name="onboarding_title_no_backup_cards">Нет резервных карт или колец</string>
+  <string name="onboarding_title_backup_ring">Резервное кольцо</string>
+  <string name="onboarding_title_no_backup_cards">Нет резервных устройств</string>
   <string name="onboarding_title_notifications">Уведомления</string>
   <string name="onboarding_title_one_backup_card">Добавлено одно резервное устройство</string>
   <string name="onboarding_title_scan_origin_card">Подготовьте свою карту</string>
@@ -600,7 +609,7 @@
   <string name="reset_card_to_factory_button_title">Сбросить карту</string>
   <string name="reset_card_to_factory_condition_1">Я понимаю, что после выполнения этого действия у меня больше не будет доступа к текущему кошельку</string>
   <string name="reset_card_to_factory_condition_2">Я понимаю, что не смогу этой картой восстановить пароль на остальных картах этого кошелька, если я его забуду</string>
-  <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек или использовать данную карту для восстановления кода доступа.</string>
+  <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек или использовать данную карту или кольцо для восстановления кода доступа.</string>
   <string name="reset_card_without_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек.</string>
   <string name="ring_promo_text">Владельцам колец — 3 обмена без комиссии на Changelly до 15.11!</string>
   <string name="ring_promo_title">Обмен с 0%% комиссией!</string>

@@ -134,5 +134,9 @@ interface TangemSdkManager {
         initialMessage: Message,
     ): CompletionResult<CreateWalletResponse>
 
+    fun changeProductType(isRing: Boolean)
+
+    fun clearProductType()
+
     // endregion
 }
