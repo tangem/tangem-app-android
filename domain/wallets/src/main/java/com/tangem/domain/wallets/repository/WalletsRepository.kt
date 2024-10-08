@@ -11,5 +11,7 @@ interface WalletsRepository {
 
     suspend fun saveShouldSaveUserWallets(item: Boolean)
 
+    suspend fun isWalletWithRing(userWalletId: UserWalletId): Boolean
+
     suspend fun setHasWalletsWithRing(userWalletId: UserWalletId)
 }
