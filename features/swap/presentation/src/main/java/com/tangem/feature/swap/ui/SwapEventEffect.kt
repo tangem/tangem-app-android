@@ -48,7 +48,7 @@ internal fun SwapAlert(state: AlertUM, onDismiss: () -> Unit) {
     val confirmButton = DialogButtonUM(
         title = state.confirmButtonText.resolveReference(),
         onClick = {
-            state.onConfirmClick()
+            state.onConfirmClick?.invoke()
             onDismiss()
         },
     )
