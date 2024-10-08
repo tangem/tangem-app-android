@@ -85,7 +85,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
             loadMore = ::loadMoreItems,
             onBack = {},
             search = SearchBarUM(
-                placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
+                placeholderText = resourceReference(R.string.common_search),
                 query = "",
                 onQueryChange = ::searchCurrencies,
                 isActive = false,
@@ -271,6 +271,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
             }
         },
     ) {
+        analyticsEventHandler.send(ManageTokensAnalyticEvent.ButtonLater)
         reduxStateHolder.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
     }
 
