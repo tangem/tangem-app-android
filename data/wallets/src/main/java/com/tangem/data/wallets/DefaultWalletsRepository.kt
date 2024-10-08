@@ -25,6 +25,12 @@ internal class DefaultWalletsRepository(
         appPreferencesStore.store(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, value = item)
     }
 
+    override suspend fun isWalletWithRing(userWalletId: UserWalletId): Boolean {
+        return appPreferencesStore
+            .getSyncOrDefault(key = PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY, default = emptySet())
+            .contains(element = userWalletId.stringValue)
+    }
+
     override suspend fun setHasWalletsWithRing(userWalletId: UserWalletId) {
         appPreferencesStore.editData {
             val added = it[PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY].orEmpty()
