@@ -144,22 +144,24 @@ private fun LazyListScope.activeStakingBlock(
     isBalanceHidden: Boolean,
 ) {
     if (state.yieldBalance is InnerYieldBalanceState.Data) {
-        item(ACTIVE_STAKING_BLOCK_KEY) {
-            Text(
-                text = stringResource(id = R.string.staking_your_stakes),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(CornersToRound.TOP_2.getShape())
-                    .background(TangemTheme.colors.background.action)
-                    .padding(
-                        top = TangemTheme.dimens.spacing12,
-                        start = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing12,
-                        bottom = TangemTheme.dimens.spacing4,
-                    ),
-            )
+        if (state.yieldBalance.balance.isNotEmpty()) {
+            item(ACTIVE_STAKING_BLOCK_KEY) {
+                Text(
+                    text = stringResource(id = R.string.staking_your_stakes),
+                    style = TangemTheme.typography.subtitle2,
+                    color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(CornersToRound.TOP_2.getShape())
+                        .background(TangemTheme.colors.background.action)
+                        .padding(
+                            top = TangemTheme.dimens.spacing12,
+                            start = TangemTheme.dimens.spacing12,
+                            end = TangemTheme.dimens.spacing12,
+                            bottom = TangemTheme.dimens.spacing4,
+                        ),
+                )
+            }
         }
         items(
             items = state.yieldBalance.balance,

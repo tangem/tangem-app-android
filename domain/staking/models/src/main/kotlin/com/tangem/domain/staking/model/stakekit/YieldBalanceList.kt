@@ -11,8 +11,8 @@ sealed class YieldBalanceList {
                 val data = yieldBalance as? YieldBalance.Data
                 val balance = data?.balance
 
-                val isCorrectAddress = balance?.items?.any { address == data.address } == true
-                val isCorrectIntegration = balance?.integrationId == integrationId
+                val isCorrectAddress = address != null && address == data?.address
+                val isCorrectIntegration = integrationId != null && balance?.integrationId == integrationId
 
                 isCorrectIntegration && isCorrectAddress
             } ?: YieldBalance.Error
