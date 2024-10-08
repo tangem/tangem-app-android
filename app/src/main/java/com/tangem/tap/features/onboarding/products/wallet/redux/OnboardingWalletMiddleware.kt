@@ -512,6 +512,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
             store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
 
+            tangemSdkManager.changeProductType(isRing)
             backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
@@ -520,6 +521,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     is CompletionResult.Failure -> Unit
                 }
             }
+            tangemSdkManager.clearProductType()
         }
         is BackupAction.WriteBackupCard -> {
             val cardIndex = if (action.cardNumber > 0) action.cardNumber - 1 else action.cardNumber
@@ -529,6 +531,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
             store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
 
+            tangemSdkManager.changeProductType(isRing)
             backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
@@ -555,6 +558,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     }
                 }
             }
+            tangemSdkManager.clearProductType()
         }
         is BackupAction.DiscardBackup -> {
             backupService.discardSavedBackup()
