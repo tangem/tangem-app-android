@@ -187,6 +187,7 @@ class OnboardingWalletFragment :
         when {
             state.wallet2State != null -> {
                 seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
+                seedPhraseViewModel.setCardArtworkUri(cardArtworkUri = state.walletImages.primaryCardImage.toString())
                 updateWalletImagesState(state.walletImages)
             }
             else -> {
