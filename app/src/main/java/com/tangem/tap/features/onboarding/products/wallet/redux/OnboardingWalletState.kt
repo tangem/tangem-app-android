@@ -79,7 +79,12 @@ data class BackupState(
     val isInterruptedBackup: Boolean = false,
     val showBtnLoading: Boolean = false,
     val hasBackupError: Boolean = false,
+    val startedSource: BackupStartedSource = BackupStartedSource.Onboarding,
 )
+
+enum class BackupStartedSource {
+    Onboarding, CreateBackup
+}
 
 enum class AccessCodeError {
     CodeTooShort, CodesDoNotMatch
