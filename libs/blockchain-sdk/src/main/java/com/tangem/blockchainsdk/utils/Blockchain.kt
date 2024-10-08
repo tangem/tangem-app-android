@@ -366,6 +366,15 @@ fun Blockchain.toCoinId(): String {
     }
 }
 
+/**
+ * New CoinId to existing coin "id" field.
+ * To support both old and new coin id.
+ */
+fun Blockchain.toMigratedCointId(): String = when (this) {
+    Blockchain.Polygon, Blockchain.PolygonTestnet -> "polygon-ecosystem-token"
+    else -> toCoinId()
+}
+
 fun Blockchain.isSupportedInApp(): Boolean {
     return !excludedBlockchains.contains(this)
 }
