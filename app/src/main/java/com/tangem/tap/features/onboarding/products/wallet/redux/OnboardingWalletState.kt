@@ -65,9 +65,11 @@ enum class OnboardingWalletStep {
 
 data class BackupState(
     val primaryCardId: String? = null,
+    val primaryCardBatchId: String? = null,
     val backupCardsNumber: Int = 0,
     val backupCards: List<Card> = emptyList(),
     val backupCardIds: List<CardId> = emptyList(),
+    val backupCardBatchIds: List<CardId> = emptyList(),
     @Transient
     val backupCardsArtworks: Map<CardId, Bitmap> = emptyMap(),
     val accessCode: String = "",
