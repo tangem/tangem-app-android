@@ -119,12 +119,14 @@
   <string name="common_generate_addresses">Adressen abrufen</string>
   <string name="common_go_to_provider">Zum Anbieter gehen</string>
   <string name="common_go_to_token">Zum Token</string>
+  <string name="common_hour">Stunde</string>
   <string name="common_import">Importieren</string>
   <string name="common_in_progress">In Arbeit</string>
   <string name="common_later">Später</string>
   <string name="common_left">%1$s übrig</string>
   <string name="common_locked">Gesperrt</string>
   <string name="common_main_network">Hauptnetz</string>
+  <string name="common_month">Monat</string>
   <string name="common_network_fee_title">Netzgebühr</string>
   <string name="common_network_fee_warning_content">Der überwiesene Betrag wird um %1$s (%2$s) gekürzt, um die gewählte Gebührenhöhe zu decken.</string>
   <string name="common_next">Weiter</string>
@@ -133,6 +135,7 @@
   <string name="common_now">Jetzt</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Hauptkarte</string>
+  <string name="common_origin_ring">Primärring</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Einfügen</string>
   <string name="common_privacy_policy">Datenschutzbestimmungen</string>
@@ -173,6 +176,7 @@
   <string name="common_unknown_error">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
   <string name="common_unreachable">Nicht erreichbar</string>
   <string name="common_unstake">staking beenden</string>
+  <string name="common_week">Woche</string>
   <string name="common_yes">Ja</string>
   <string name="contract_address_copied_message">Vertragsadresse kopiert!</string>
   <string name="currency_subtitle_expanded">Verfügbare Netzwerke</string>
@@ -291,6 +295,7 @@
   <string name="feedback_subject_support">Rückmeldung</string>
   <string name="feedback_subject_support_tangem">Feedback zu Tangem</string>
   <string name="feedback_subject_tx_failed">Eine Transaktion kann nicht gesendet werden</string>
+  <string name="feedback_token_description_error">Fehler in der Coinbeschreibung</string>
   <string name="give_permission_current_transaction">Nur diese</string>
   <string name="give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Sie die Verwendung Ihres Tokens für den Swap genehmigen.</string>
   <string name="give_permission_policy_type_footer">Gib das Genehmigungslimit für das ausgewählte Token an</string>
@@ -306,6 +311,7 @@
   <string name="initial_message_change_access_code_body">Um den Zugangscode zu ändern, halte die Karte wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
   <string name="initial_message_change_passcode_body">Um den Passcode zu ändern, halte die Karte wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
   <string name="initial_message_create_wallet_body">Um die Wallet zu erstellen, halte die Karte wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
+  <string name="initial_message_create_wallet_body_ring">Um die Wallet zu erstellen, tippe auf den Ring wie oben gezeigt und entferne ihn erst am Ende des Vorgangs</string>
   <string name="initial_message_reset_backup_card_header">Halte deine Karte Nr. %s des Sets an dein Smartphone</string>
   <string name="initial_message_scan_header">Legen Sie die Karte zum Scannen an</string>
   <string name="initial_message_sign_header">Tippen um zu signieren</string>
@@ -349,7 +355,7 @@
   <string name="manage_tokens_wallet_selector_title">Wallet auswählen</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Das Wallet unterstützt nicht mehr als ein Netzwerk</string>
   <string name="markets_add_to_my_portfolio_description">Um dieses Asset zu kaufen, zu tauschen oder zu erhalten, füge diesen Deinem Portfolio hinzu</string>
-  <string name="markets_add_to_my_portfolio_unavailable_description">Dieses Asset ist nicht verfügbar</string>
+  <string name="markets_add_to_my_portfolio_unavailable_description">Dieses Asset wird derzeit in der Wallet nicht unterstützt.</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Dieses Asset ist für dieses Wallet nicht verfügbar</string>
   <string name="markets_add_to_portfolio_button">Zum Portfolio hinzufügen</string>
   <string name="markets_add_token">Hinzufügen</string>
@@ -468,9 +474,11 @@
   <string name="onboarding_backup_exit_warning">Der Sicherungsvorgang ist teilweise abgeschlossen. Du kannst ihn jetzt nicht beenden.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">Die Passphrase ist eine fortschrittliche Sicherheitsfunktion, die von Krypto-Wallets verwendet wird. Sie fügt ein zusätzliches Wort oder eine Phrase deiner Wahl zu der bereits bestehenden Wiederherstellungsphrase hinzu, um einen brandneuen Satz von Adressen zu erzeugen.</string>
   <string name="onboarding_button_add_backup_card">Hinzufügen einer Sicherungskarte</string>
+  <string name="onboarding_button_backup_card">Karte scannen</string>
   <string name="onboarding_button_backup_card_format">Scanne die Karte Nr. %d</string>
   <string name="onboarding_button_backup_now">Jetzt sichern</string>
   <string name="onboarding_button_backup_origin">Scannen der Hauptkarte</string>
+  <string name="onboarding_button_backup_ring">Ring scannen</string>
   <string name="onboarding_button_continue_wallet">Weiter zu meiner Wallet</string>
   <string name="onboarding_button_finalize_backup">Backup abschließen</string>
   <string name="onboarding_button_receive_crypto">Krypto empfangen</string>
@@ -584,6 +592,8 @@
   <string name="reset_card_to_factory_condition_2">Mir ist klar, dass ich diese Karte nicht verwenden kann, um meinen Zugangscode auf den anderen Karten der aktuellen Wallet wiederherzustellen</string>
   <string name="reset_card_with_backup_to_factory_message">Durch das Zurücksetzen auf Werkseinstellungen wird die Wallet vollständig von der ausgewählten Karte gelöscht. Du kannst die aktuelle Wallet nicht wiederherstellen oder die Karte verwenden, um den Zugangscode wiederherzustellen.</string>
   <string name="reset_card_without_backup_to_factory_message">Beim Zurücksetzen auf die Werkseinstellungen wird die Wallet der ausgewählten Karte vollständig gelöscht und aus der App entfernt. Es ist nicht möglich, die aktuelle Wallet wiederherzustellen.</string>
+  <string name="ring_promo_text">Ringbesitzer erhalten bis zum 15.11. 3 provisionsfreie Swaps auf Changelly!</string>
+  <string name="ring_promo_title">Jetzt mit 0 %% Gebühren tauschen!</string>
   <string name="russian_bank_card_warning_subtitle">Besitzt du eine Bankkarte aus einem anderen Land und eine Aufenthaltserlaubnis oder Registrierung außerhalb der Russischen Föderation?</string>
   <string name="russian_bank_card_warning_title">Russische Bankkarten werden derzeit nicht akzeptiert</string>
   <string name="save_user_wallet_agreement_access_description">Melde dich bei der App an und überprüfe dein Guthaben, ohne die Karte zu scannen</string>
@@ -708,6 +718,7 @@
   <string name="staking_locked">Gesperrt</string>
   <string name="staking_migrate">Migrieren</string>
   <string name="staking_native">Natives Staking</string>
+  <string name="staking_no_validators_error_message">Derzeit sind keine aktiven Validatoren für das Staking verfügbar. Bitte versuchen Sie es später erneut.</string>
   <string name="staking_notification_claim_rewards_text">Verdiente Belohnungen werden an Deine Wallet gesendet und stehen Dir sofort zur Verfügung</string>
   <string name="staking_notification_earn_rewards_text">Stake sicher und verdienen Belohnungen</string>
   <string name="staking_notification_earn_rewards_text_daily">Sicher staken und tägliche Belohnungen verdienen.</string>

@@ -79,6 +79,7 @@ fun NavigationPrimaryButton(primaryButton: NavigationButton?, modifier: Modifier
                 onClick = button.onClick,
                 showProgress = button.showProgress,
                 colors = TangemButtonsDefaults.primaryButtonColors,
+                textStyle = TangemTheme.typography.subtitle1,
                 icon = icon,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -134,6 +135,7 @@ private fun ExtraButtons(extraButtons: ImmutableList<NavigationButton>?, txUrl: 
                 TangemButton(
                     text = button.textReference.resolveReference(),
                     icon = icon,
+                    textStyle = TangemTheme.typography.subtitle1,
                     onClick = rememberHapticFeedback(state = button, onAction = button.onClick),
                     modifier = Modifier.weight(1f),
                     enabled = button.isEnabled,

@@ -843,6 +843,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
     }
 
+    @Suppress("LongMethod")
     private fun getFeeForTransaction(fee: TxFee, blockchain: Blockchain): Fee {
         val feeAmountValue = fee.feeValue
         val feeAmount = Amount(
@@ -852,50 +853,200 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             type = AmountType.Coin,
         )
 
-        return when {
-            blockchain.isEvm() -> {
-                val feeAmountWithDecimals = feeAmountValue.movePointRight(fee.decimals)
-                Fee.Ethereum.Legacy(
-                    amount = feeAmount,
-                    gasLimit = fee.gasLimit.toBigInteger(),
-                    gasPrice = (feeAmountWithDecimals / fee.gasLimit.toBigDecimal()).toBigInteger(),
-                )
-            }
-            blockchain == Blockchain.VeChain -> Fee.VeChain(
+        return if (blockchain.isEvm()) {
+            val feeAmountWithDecimals = feeAmountValue.movePointRight(fee.decimals)
+
+            Fee.Ethereum.Legacy(
                 amount = feeAmount,
-                gasPriceCoef = Fee.VeChain.getGasPriceCoef(fee.gasLimit.toLong(), fee.feeValue),
-                gasLimit = fee.gasLimit.toLong(),
+                gasLimit = fee.gasLimit.toBigInteger(),
+                gasPrice = (feeAmountWithDecimals / fee.gasLimit.toBigDecimal()).toBigInteger(),
             )
-            blockchain == Blockchain.Aptos -> {
-                val gasUnitPrice = fee.feeValue.divide(
-                    fee.gasLimit.toBigDecimal(),
-                    Blockchain.Aptos.decimals(),
-                    RoundingMode.HALF_UP,
-                )
-                Fee.Aptos(
-                    amount = feeAmount,
-                    gasUnitPrice = gasUnitPrice
-                        .movePointRight(Blockchain.Aptos.decimals())
-                        .toLong(),
-                    gasLimit = fee.gasLimit.toLong(),
-                )
+        } else {
+            when (blockchain) {
+                // region Blockchains with their own fees
+                Blockchain.VeChain,
+                Blockchain.VeChainTestnet,
+                -> {
+                    Fee.VeChain(
+                        amount = feeAmount,
+                        gasPriceCoef = Fee.VeChain.getGasPriceCoef(fee.gasLimit.toLong(), fee.feeValue),
+                        gasLimit = fee.gasLimit.toLong(),
+                    )
+                }
+                Blockchain.Aptos,
+                Blockchain.AptosTestnet,
+                -> {
+                    val gasUnitPrice = fee.feeValue.divide(
+                        fee.gasLimit.toBigDecimal(),
+                        Blockchain.Aptos.decimals(),
+                        RoundingMode.HALF_UP,
+                    )
+
+                    Fee.Aptos(
+                        amount = feeAmount,
+                        gasUnitPrice = gasUnitPrice
+                            .movePointRight(Blockchain.Aptos.decimals())
+                            .toLong(),
+                        gasLimit = fee.gasLimit.toLong(),
+                    )
+                }
+                Blockchain.Filecoin,
+                -> {
+                    val gasUnitPrice = fee.feeValue.divide(
+                        BigDecimal(fee.gasLimit),
+                        Blockchain.Filecoin.decimals(),
+                        RoundingMode.HALF_UP,
+                    )
+                    val feeParams = requireNotNull(fee.params as? TxFee.Params.Filecoin)
+
+                    Fee.Filecoin(
+                        amount = feeAmount,
+                        gasUnitPrice = gasUnitPrice
+                            .movePointRight(Blockchain.Filecoin.decimals())
+                            .toLong(),
+                        gasLimit = fee.gasLimit.toLong(),
+                        gasPremium = feeParams.gasPremium,
+                    )
+                }
+                Blockchain.Sui,
+                Blockchain.SuiTestnet,
+                -> {
+                    val feeParams = requireNotNull(fee.params as? TxFee.Params.Sui)
+
+                    Fee.Sui(
+                        amount = feeAmount,
+                        gasPrice = feeParams.gasPrice,
+                        gasBudget = feeParams.gasBudget,
+                    )
+                }
+                // endregion
+                // region Blockchains with common fees or EVM-like fees
+                Blockchain.Unknown,
+                Blockchain.Arbitrum,
+                Blockchain.ArbitrumTestnet,
+                Blockchain.Avalanche,
+                Blockchain.AvalancheTestnet,
+                Blockchain.Binance,
+                Blockchain.BinanceTestnet,
+                Blockchain.BSC,
+                Blockchain.BSCTestnet,
+                Blockchain.Bitcoin,
+                Blockchain.BitcoinTestnet,
+                Blockchain.BitcoinCash,
+                Blockchain.BitcoinCashTestnet,
+                Blockchain.Cardano,
+                Blockchain.Cosmos,
+                Blockchain.CosmosTestnet,
+                Blockchain.Dogecoin,
+                Blockchain.Ducatus,
+                Blockchain.Ethereum,
+                Blockchain.EthereumTestnet,
+                Blockchain.EthereumClassic,
+                Blockchain.EthereumClassicTestnet,
+                Blockchain.Fantom,
+                Blockchain.FantomTestnet,
+                Blockchain.Litecoin,
+                Blockchain.Near,
+                Blockchain.NearTestnet,
+                Blockchain.Polkadot,
+                Blockchain.PolkadotTestnet,
+                Blockchain.Kava,
+                Blockchain.KavaTestnet,
+                Blockchain.Kusama,
+                Blockchain.Polygon,
+                Blockchain.PolygonTestnet,
+                Blockchain.RSK,
+                Blockchain.Sei,
+                Blockchain.SeiTestnet,
+                Blockchain.Stellar,
+                Blockchain.StellarTestnet,
+                Blockchain.Solana,
+                Blockchain.SolanaTestnet,
+                Blockchain.Tezos,
+                Blockchain.Tron,
+                Blockchain.TronTestnet,
+                Blockchain.XRP,
+                Blockchain.Gnosis,
+                Blockchain.Dash,
+                Blockchain.Optimism,
+                Blockchain.OptimismTestnet,
+                Blockchain.Dischain,
+                Blockchain.EthereumPow,
+                Blockchain.EthereumPowTestnet,
+                Blockchain.Kaspa,
+                Blockchain.Telos,
+                Blockchain.TelosTestnet,
+                Blockchain.TON,
+                Blockchain.TONTestnet,
+                Blockchain.Ravencoin,
+                Blockchain.RavencoinTestnet,
+                Blockchain.TerraV1,
+                Blockchain.TerraV2,
+                Blockchain.Cronos,
+                Blockchain.AlephZero,
+                Blockchain.AlephZeroTestnet,
+                Blockchain.OctaSpace,
+                Blockchain.OctaSpaceTestnet,
+                Blockchain.Chia,
+                Blockchain.ChiaTestnet,
+                Blockchain.Decimal,
+                Blockchain.DecimalTestnet,
+                Blockchain.XDC,
+                Blockchain.XDCTestnet,
+                Blockchain.Playa3ull,
+                Blockchain.Shibarium,
+                Blockchain.ShibariumTestnet,
+                Blockchain.Algorand,
+                Blockchain.AlgorandTestnet,
+                Blockchain.Hedera,
+                Blockchain.HederaTestnet,
+                Blockchain.Aurora,
+                Blockchain.AuroraTestnet,
+                Blockchain.Areon,
+                Blockchain.AreonTestnet,
+                Blockchain.PulseChain,
+                Blockchain.PulseChainTestnet,
+                Blockchain.ZkSyncEra,
+                Blockchain.ZkSyncEraTestnet,
+                Blockchain.Nexa,
+                Blockchain.NexaTestnet,
+                Blockchain.Moonbeam,
+                Blockchain.MoonbeamTestnet,
+                Blockchain.Manta,
+                Blockchain.MantaTestnet,
+                Blockchain.PolygonZkEVM,
+                Blockchain.PolygonZkEVMTestnet,
+                Blockchain.Radiant,
+                Blockchain.Base,
+                Blockchain.BaseTestnet,
+                Blockchain.Moonriver,
+                Blockchain.MoonriverTestnet,
+                Blockchain.Mantle,
+                Blockchain.MantleTestnet,
+                Blockchain.Flare,
+                Blockchain.FlareTestnet,
+                Blockchain.Taraxa,
+                Blockchain.TaraxaTestnet,
+                Blockchain.Koinos,
+                Blockchain.KoinosTestnet,
+                Blockchain.Joystream,
+                Blockchain.Bittensor,
+                Blockchain.Blast,
+                Blockchain.BlastTestnet,
+                Blockchain.Cyber,
+                Blockchain.CyberTestnet,
+                Blockchain.InternetComputer,
+                Blockchain.EnergyWebChain,
+                Blockchain.EnergyWebChainTestnet,
+                Blockchain.EnergyWebX,
+                Blockchain.EnergyWebXTestnet,
+                Blockchain.Casper,
+                Blockchain.CasperTestnet,
+                Blockchain.Core,
+                Blockchain.CoreTestnet,
+                -> Fee.Common(feeAmount)
+                // endregion
             }
-            blockchain == Blockchain.Filecoin -> {
-                val gasUnitPrice = fee.feeValue.divide(
-                    BigDecimal(fee.gasLimit),
-                    Blockchain.Filecoin.decimals(),
-                    RoundingMode.HALF_UP,
-                )
-                Fee.Filecoin(
-                    amount = feeAmount,
-                    gasUnitPrice = gasUnitPrice
-                        .movePointRight(Blockchain.Filecoin.decimals())
-                        .toLong(),
-                    gasLimit = fee.gasLimit.toLong(),
-                    gasPremium = requireNotNull(fee.gasPremium),
-                )
-            }
-            else -> Fee.Common(feeAmount)
         }
     }
 
@@ -1593,7 +1744,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 decimals = minFee.fee.decimals,
                 cryptoSymbol = minFee.fee.currencySymbol,
                 feeType = FeeType.NORMAL,
-                gasPremium = (minFee as? ProxyFee.Filecoin)?.gasPremium,
+                params = getSwapFeeParams(minFee),
             ),
             priorityFee = TxFee(
                 feeValue = priorityFeeValue,
@@ -1606,7 +1757,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 decimals = normalFee.fee.decimals,
                 cryptoSymbol = normalFee.fee.currencySymbol,
                 feeType = FeeType.PRIORITY,
-                gasPremium = (normalFee as? ProxyFee.Filecoin)?.gasPremium,
+                params = getSwapFeeParams(normalFee),
             ),
         )
     }
@@ -1649,7 +1800,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 decimals = singleFee.fee.decimals,
                 cryptoSymbol = singleFee.fee.currencySymbol,
                 feeType = FeeType.NORMAL,
-                gasPremium = (singleFee as? ProxyFee.Filecoin)?.gasPremium,
+                params = getSwapFeeParams(singleFee),
             ),
         )
     }
@@ -1705,7 +1856,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         decimals = normalFee.amount.decimals,
                         cryptoSymbol = normalFee.amount.currencySymbol,
                         feeType = FeeType.NORMAL,
-                        gasPremium = (normalFee as? Fee.Filecoin)?.gasPremium,
+                        params = getSwapFeeParams(normalFee),
                     ),
                     priorityFee = TxFee(
                         feeValue = feePriority,
@@ -1718,7 +1869,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         decimals = priorityFee.amount.decimals,
                         cryptoSymbol = priorityFee.amount.currencySymbol,
                         feeType = FeeType.PRIORITY,
-                        gasPremium = (priorityFee as? Fee.Filecoin)?.gasPremium,
+                        params = getSwapFeeParams(priorityFee),
                     ),
                 )
             }
@@ -1750,11 +1901,44 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         decimals = normal.amount.decimals,
                         cryptoSymbol = normal.amount.currencySymbol,
                         feeType = FeeType.NORMAL,
-                        gasPremium = (normal as? Fee.Filecoin)?.gasPremium,
+                        params = getSwapFeeParams(normal),
                     ),
                 )
             }
         }
+    }
+
+    private fun getSwapFeeParams(fee: Fee): TxFee.Params? = when (fee) {
+        is Fee.Filecoin -> TxFee.Params.Filecoin(
+            gasPremium = fee.gasPremium,
+        )
+        is Fee.Sui -> TxFee.Params.Sui(
+            gasPrice = fee.gasPrice,
+            gasBudget = fee.gasBudget,
+        )
+        is Fee.Aptos,
+        is Fee.Bitcoin,
+        is Fee.CardanoToken,
+        is Fee.Common,
+        is Fee.Ethereum.EIP1559,
+        is Fee.Ethereum.Legacy,
+        is Fee.Kaspa,
+        is Fee.Tron,
+        is Fee.VeChain,
+        -> null
+    }
+
+    private fun getSwapFeeParams(proxyFee: ProxyFee): TxFee.Params? = when (proxyFee) {
+        is ProxyFee.Filecoin -> TxFee.Params.Filecoin(
+            gasPremium = proxyFee.gasPremium,
+        )
+        is ProxyFee.Sui -> TxFee.Params.Sui(
+            gasPrice = proxyFee.gasPrice,
+            gasBudget = proxyFee.gasBudget,
+        )
+        is ProxyFee.CardanoToken,
+        is ProxyFee.Common,
+        -> null
     }
 
     private fun createNativeAmountForDex(txValueAmount: String, network: Network): Amount {

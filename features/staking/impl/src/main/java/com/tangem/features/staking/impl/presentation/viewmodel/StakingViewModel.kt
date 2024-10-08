@@ -51,6 +51,8 @@ import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
+import com.tangem.features.staking.impl.presentation.state.events.StakingAlertUM
+import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
 import com.tangem.features.staking.impl.presentation.state.events.StakingEventFactory
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingBalanceUpdater
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingFeeTransactionLoader
@@ -398,6 +400,32 @@ internal class StakingViewModel @Inject constructor(
                 stateController.update(DismissBottomSheetStateTransformer)
             },
         )
+    }
+
+    override fun onEnterClick() {
+        onAmountValueChange("") // reset amount state
+
+        // TODO refactor in https://tangem.atlassian.net/browse/AND-7801
+        val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
+        val filteredValidator = yield.validators.filter { it.preferred }
+        if (filteredValidator.isEmpty()) {
+            stateController.updateEvent(
+                StakingEvent.ShowAlert(StakingAlertUM.NoAvailableValidators),
+            )
+        } else {
+            stateController.update {
+                value.copy(
+                    confirmationState = confirmationState?.copy(
+                        validatorState = ValidatorState.Content(
+                            isClickable = true,
+                            chosenValidator = filteredValidator[0],
+                            availableValidators = filteredValidator,
+                        ),
+                    ) as StakingStates.ConfirmationState,
+                )
+            }
+            onNextClick(StakingActionCommonType.ENTER)
+        }
     }
 
     override fun onAmountValueChange(value: String) {
