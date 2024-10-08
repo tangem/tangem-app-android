@@ -2,13 +2,17 @@ package com.tangem.data.staking.converters
 
 import com.tangem.data.staking.converters.action.PendingActionConverter
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
-import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.staking.model.stakekit.BalanceItem
+import com.tangem.domain.staking.model.stakekit.BalanceType
+import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.model.stakekit.YieldBalanceItem
 import com.tangem.utils.converter.Converter
 
 internal class YieldBalanceConverter : Converter<YieldBalanceWrapperDTO, YieldBalance> {
 
     private val pendingActionConverter by lazy(LazyThreadSafetyMode.NONE) { PendingActionConverter() }
-
+    private val networkTypeConverter by lazy(LazyThreadSafetyMode.NONE) { StakingNetworkTypeConverter() }
+    private val tokenConverter by lazy(LazyThreadSafetyMode.NONE) { TokenConverter(networkTypeConverter) }
     override fun convert(value: YieldBalanceWrapperDTO): YieldBalance {
         return if (value.balances.isEmpty()) {
             YieldBalance.Empty
@@ -19,6 +23,7 @@ internal class YieldBalanceConverter : Converter<YieldBalanceWrapperDTO, YieldBa
                     items = value.balances.map { item ->
                         BalanceItem(
                             groupId = item.groupId,
+                            token = tokenConverter.convert(item.tokenDTO),
                             type = BalanceType.valueOf(item.type.name),
                             amount = item.amount,
                             rawCurrencyId = item.tokenDTO.coinGeckoId,
