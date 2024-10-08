@@ -5,7 +5,10 @@ import com.tangem.datasource.api.express.models.request.AssetsRequestBody
 import com.tangem.datasource.api.express.models.request.ExchangeSentRequestBody
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.express.models.response.*
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Query
 
 /**
  * Interface of Tangem Express API (new swap mechanism)
@@ -33,7 +36,6 @@ interface TangemExpressApi {
         @Query("toDecimals") toDecimals: Int,
         @Query("providerId") providerId: String,
         @Query("rateType") rateType: String,
-        @Header("refcode") refCode: String? = null,
     ): ApiResponse<ExchangeQuoteResponse>
 
     @GET("exchange-data")
