@@ -50,17 +50,30 @@ internal fun StakingEventEffect(event: StateEvent<StakingEvent>, snackbarHostSta
 
 @Composable
 internal fun StakingAlert(state: AlertUM, onDismiss: () -> Unit) {
-    val confirmButton = DialogButtonUM(
-        title = state.confirmButtonText.resolveReference(),
-        onClick = {
-            state.onConfirmClick()
-            onDismiss()
-        },
-    )
-    val dismissButton = DialogButtonUM(
-        title = stringResource(id = R.string.common_cancel),
-        onClick = onDismiss,
-    )
+    val confirmButton: DialogButtonUM
+    val dismissButton: DialogButtonUM?
+
+    val onActionClick = state.onConfirmClick
+    if (onActionClick != null) {
+        confirmButton = DialogButtonUM(
+            title = state.confirmButtonText.resolveReference(),
+            onClick = {
+                onActionClick()
+                onDismiss()
+            },
+        )
+
+        dismissButton = DialogButtonUM(
+            title = stringResource(id = R.string.common_cancel),
+            onClick = onDismiss,
+        )
+    } else {
+        confirmButton = DialogButtonUM(
+            title = state.confirmButtonText.resolveReference(),
+            onClick = onDismiss,
+        )
+        dismissButton = null
+    }
 
     BasicDialog(
         message = state.message.resolveReference(),
