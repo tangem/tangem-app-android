@@ -207,8 +207,8 @@ class OnboardingWalletFragment :
     }
 
     override fun newState(state: OnboardingWalletState) {
-        if (activity == null || view == null) return
         Handler(Looper.getMainLooper()).post {
+            if (activity == null || view == null) return@post
             animator.updateBackupState(state.backupState)
             requireActivity().invalidateOptionsMenu()
 
