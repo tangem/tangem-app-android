@@ -548,9 +548,9 @@ internal class DefaultStakingRepository(
 
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval {
         return when (getIntegrationKey(cryptoCurrency.id)) {
-            Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() -> {
-                StakingApproval.Needed(ETHEREUM_POLYGON_APPROVE_SPENDER)
-            }
+            Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId(),
+            Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCointId(),
+            -> StakingApproval.Needed(ETHEREUM_POLYGON_APPROVE_SPENDER)
             else -> StakingApproval.Empty
         }
     }
@@ -635,6 +635,7 @@ internal class DefaultStakingRepository(
             Blockchain.Cosmos.run { id + toCoinId() } to COSMOS_INTEGRATION_ID,
             Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
             Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
+            Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCointId() to ETHEREUM_POLYGON_INTEGRATION_ID,
             Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
             // Blockchain.Polkadot.run { id + toCoinId() } to POLKADOT_INTEGRATION_ID,
             // Blockchain.Avalanche.run { id + toCoinId() } to AVALANCHE_INTEGRATION_ID,
