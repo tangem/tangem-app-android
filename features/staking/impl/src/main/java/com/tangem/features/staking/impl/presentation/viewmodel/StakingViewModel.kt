@@ -232,7 +232,9 @@ internal class StakingViewModel @Inject constructor(
                     ),
                 )
                 if (balanceState != null) {
-                    stateController.update(SetPossiblePendingTransactionTransformer(balanceState, cryptoCurrencyStatus))
+                    stateController.update(
+                        SetPossiblePendingTransactionTransformer(yield, balanceState, cryptoCurrencyStatus),
+                    )
                 }
 
                 stateController.update(
@@ -252,7 +254,9 @@ internal class StakingViewModel @Inject constructor(
             isAssentState() -> {
                 getFee(pendingAction, pendingActions)
                 if (balanceState != null) {
-                    stateController.update(SetPossiblePendingTransactionTransformer(balanceState, cryptoCurrencyStatus))
+                    stateController.update(
+                        SetPossiblePendingTransactionTransformer(yield, balanceState, cryptoCurrencyStatus),
+                    )
                 }
                 val amountState = value.amountState as? AmountState.Data
                 if (amountState?.amountTextField?.isWarning == true) {
