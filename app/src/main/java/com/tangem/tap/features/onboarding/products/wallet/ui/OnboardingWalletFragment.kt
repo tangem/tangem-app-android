@@ -86,6 +86,7 @@ class OnboardingWalletFragment :
     internal lateinit var rootComponentContext: AppComponentContext
 
     private var onboardingManageTokensComponent: OnboardingManageTokensComponent? = null
+    private lateinit var onboardingComponentContext: AppComponentContext
 
     internal val binding: FragmentOnboardingWalletBinding by viewBinding(FragmentOnboardingWalletBinding::bind)
     internal val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
@@ -113,6 +114,10 @@ class OnboardingWalletFragment :
         seedPhraseRouter = newSeedPhraseRouter
         seedPhraseViewModel.setRouter(newSeedPhraseRouter)
         seedPhraseViewModel.setMediator(makeSeedPhraseMediator())
+
+        onboardingComponentContext = rootComponentContext.childByContext(
+            componentContext = defaultComponentContext(onBackPressedDispatcher = null),
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -202,8 +207,8 @@ class OnboardingWalletFragment :
     }
 
     override fun newState(state: OnboardingWalletState) {
-        if (activity == null || view == null) return
         Handler(Looper.getMainLooper()).post {
+            if (activity == null || view == null) return@post
             animator.updateBackupState(state.backupState)
             requireActivity().invalidateOptionsMenu()
 
@@ -254,11 +259,8 @@ class OnboardingWalletFragment :
     }
 
     private fun initializeOnboardingManageTokensComponent(userWalletId: UserWalletId) {
-        val componentContext = rootComponentContext.childByContext(
-            componentContext = defaultComponentContext(onBackPressedDispatcher = null),
-        )
         onboardingManageTokensComponent = onboardingManageTokensComponentFactory.create(
-            context = componentContext,
+            context = onboardingComponentContext,
             params = OnboardingManageTokensComponent.Params(userWalletId = userWalletId),
         )
     }

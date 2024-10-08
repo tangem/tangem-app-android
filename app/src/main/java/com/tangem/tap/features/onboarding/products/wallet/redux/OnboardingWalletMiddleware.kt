@@ -17,6 +17,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.Artwork
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
@@ -599,18 +600,19 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     )
 
                     val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
-                    userWalletsListManager.save(
-                        userWallet = userWallet.copy(
-                            scanResponse = updateScanResponseAfterBackup(
-                                scanResponse = requireNotNull(
-                                    value = scanResponse,
-                                    lazyMessage = { "ScanResponse is null" },
-                                ),
-                                backupState = backupState,
-                            ),
-                        ),
-                        canOverride = true,
-                    )
+                    when (backupState.startedSource) {
+                        BackupStartedSource.Onboarding -> saveWallet(
+                            userWalletsListManager = userWalletsListManager,
+                            userWallet = userWallet,
+                            scanResponse = scanResponse,
+                            backupState = backupState,
+                        )
+                        BackupStartedSource.CreateBackup -> updateWallet(
+                            userWalletsListManager = userWalletsListManager,
+                            userWallet = userWallet,
+                            backupState = backupState,
+                        )
+                    }
                 } else {
                     readCard { newScanResponse ->
                         scanResponse = newScanResponse
@@ -648,6 +650,44 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
         else -> Unit
     }
+}
+
+private suspend fun saveWallet(
+    userWalletsListManager: UserWalletsListManager,
+    userWallet: UserWallet,
+    scanResponse: ScanResponse?,
+    backupState: BackupState,
+) {
+    userWalletsListManager.save(
+        userWallet = userWallet.copy(
+            scanResponse = updateScanResponseAfterBackup(
+                scanResponse = requireNotNull(
+                    value = scanResponse,
+                    lazyMessage = { "ScanResponse is null" },
+                ),
+                backupState = backupState,
+            ),
+        ),
+        canOverride = true,
+    )
+}
+
+private suspend fun updateWallet(
+    userWalletsListManager: UserWalletsListManager,
+    userWallet: UserWallet,
+    backupState: BackupState,
+) {
+    userWalletsListManager.update(
+        userWalletId = userWallet.walletId,
+        update = { wallet ->
+            wallet.copy(
+                scanResponse = updateScanResponseAfterBackup(
+                    scanResponse = wallet.scanResponse,
+                    backupState = backupState,
+                ),
+            )
+        },
+    )
 }
 
 private suspend fun createUserWallet(scanResponse: ScanResponse, backupState: BackupState): UserWallet {

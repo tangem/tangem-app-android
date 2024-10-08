@@ -19,6 +19,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStartedSource
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
@@ -48,6 +49,7 @@ class CheckForOnboardingChain(
                 store.dispatchOnMain(
                     GlobalAction.Onboarding.Start(
                         scanResponse = previousChainResult,
+                        source = BackupStartedSource.Onboarding,
                         canSkipBackup = previousChainResult.card.canSkipBackup,
                     ),
                 )

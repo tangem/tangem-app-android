@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
@@ -217,6 +218,7 @@ class MockStakingRepository : StakingRepository {
     override suspend fun constructTransaction(
         networkId: String,
         fee: Fee,
+        amount: Amount,
         transactionId: String,
     ): Pair<StakingTransaction, TransactionData.Compiled> = StakingTransaction(
         id = "id",
