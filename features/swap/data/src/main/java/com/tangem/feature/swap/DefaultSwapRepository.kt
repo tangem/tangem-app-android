@@ -20,9 +20,6 @@ import com.tangem.datasource.api.express.models.response.SwapPair
 import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
 import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -41,18 +38,16 @@ import timber.log.Timber
 import java.io.IOException
 import java.math.BigDecimal
 import java.util.UUID
-import javax.inject.Inject
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo as NetworkLeastTokenInfo
 
 @Suppress("LongParameterList", "LargeClass")
-internal class DefaultSwapRepository @Inject constructor(
+internal class DefaultSwapRepository(
     private val tangemExpressApi: TangemExpressApi,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
     private val userWalletsListManager: UserWalletsListManager,
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
-    private val appPreferencesStore: AppPreferencesStore,
     moshi: Moshi,
 ) : SwapRepository {
 
@@ -204,11 +199,6 @@ internal class DefaultSwapRepository @Inject constructor(
     ): Either<DataError, QuoteModel> {
         return withContext(coroutineDispatcher.io) {
             try {
-                val addedWalletsWithRings = appPreferencesStore.getSyncOrDefault(
-                    key = PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY,
-                    default = emptySet(),
-                )
-
                 val response = tangemExpressApi.getExchangeQuote(
                     fromContractAddress = fromContractAddress,
                     fromNetwork = fromNetwork,
@@ -219,7 +209,6 @@ internal class DefaultSwapRepository @Inject constructor(
                     toDecimals = toDecimals,
                     providerId = providerId,
                     rateType = rateType.name.lowercase(),
-                    refCode = if (addedWalletsWithRings.contains(userWalletId.stringValue)) "ring" else null,
                 ).getOrThrow()
                 QuoteModel(
                     toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),
