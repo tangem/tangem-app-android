@@ -14,12 +14,13 @@ object OnboardingWalletReducer {
 @Suppress("CyclomaticComplexMethod")
 private fun internalReduce(action: Action, appState: AppState): OnboardingWalletState {
     val state = appState.onboardingWalletState
+    val backupState = state.backupState
 
     return when (action) {
         is GlobalAction.Onboarding -> ReducerForGlobalAction.reduce(action, state)
         is BackupAction.BackupFinished -> {
             state.copy(
-                step = if (action.userWalletId != null) {
+                step = if (action.userWalletId != null && backupState.startedSource == BackupStartedSource.Onboarding) {
                     OnboardingWalletStep.ManageTokens
                 } else {
                     OnboardingWalletStep.Done
@@ -50,7 +51,10 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
         }
         is OnboardingManageTokensAction.CurrenciesSaved -> state.copy(step = OnboardingWalletStep.Done)
         is OnboardingWalletAction.WalletSaved -> state.copy(
-            step = OnboardingWalletStep.ManageTokens,
+            step = when (backupState.startedSource) {
+                BackupStartedSource.Onboarding -> OnboardingWalletStep.ManageTokens
+                BackupStartedSource.CreateBackup -> OnboardingWalletStep.Done
+            },
             userWalletId = action.userWalletId,
         )
         is OnboardingWalletAction.Done -> state.copy(step = OnboardingWalletStep.Done)
@@ -69,6 +73,7 @@ private object ReducerForGlobalAction {
                     backupState = state.backupState.copy(
                         maxBackupCards = MAX_BACKUP_CARDS,
                         canSkipBackup = action.canSkipBackup,
+                        startedSource = action.source,
                     ),
                     isRingOnboarding = action.scanResponse.cardTypesResolver.isRing(),
                 )
@@ -106,6 +111,7 @@ private object BackupReducer {
                 backupStep = BackupStep.InitBackup,
                 maxBackupCards = 2,
                 canSkipBackup = state.canSkipBackup,
+                startedSource = state.startedSource,
             )
             BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
             BackupAction.StartAddingBackupCards -> state.copy(backupStep = BackupStep.AddBackupCards)
