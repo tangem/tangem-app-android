@@ -110,7 +110,9 @@ private object BackupReducer {
             is BackupAction.PrepareToWritePrimaryCard -> if (state.primaryCardId == null) {
                 state.copy(
                     primaryCardId = backupService.primaryCardId,
+                    primaryCardBatchId = backupService.primaryCardBatchId,
                     backupCardIds = backupService.backupCardIds,
+                    backupCardBatchIds = backupService.backupCardsBatchIds,
                     backupCardsNumber = backupService.backupCardIds.size,
                     backupStep = BackupStep.WritePrimaryCard,
                 )
@@ -120,7 +122,9 @@ private object BackupReducer {
             is BackupAction.PrepareToWriteBackupCard -> if (state.primaryCardId == null) {
                 state.copy(
                     primaryCardId = backupService.primaryCardId,
+                    primaryCardBatchId = backupService.primaryCardBatchId,
                     backupCardIds = backupService.backupCardIds,
+                    backupCardBatchIds = backupService.backupCardsBatchIds,
                     backupCardsNumber = backupService.backupCardIds.size,
                     backupStep = BackupStep.WriteBackupCard(action.cardNumber),
                 )
