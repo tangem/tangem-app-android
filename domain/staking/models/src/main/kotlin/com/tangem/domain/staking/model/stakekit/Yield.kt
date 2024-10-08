@@ -130,6 +130,8 @@ data class Yield(
         APR, // simple rate
         UNKNOWN,
     }
+
+    fun getCurrentToken(rawCurrencyId: String?) = tokens.firstOrNull { rawCurrencyId == it.coinGeckoId } ?: token
 }
 
 @Serializable
