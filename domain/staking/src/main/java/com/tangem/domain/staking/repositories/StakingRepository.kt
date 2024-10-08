@@ -1,5 +1,6 @@
 package com.tangem.domain.staking.repositories
 
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.core.lce.LceFlow
@@ -71,6 +72,7 @@ interface StakingRepository {
     suspend fun constructTransaction(
         networkId: String,
         fee: Fee,
+        amount: Amount,
         transactionId: String,
     ): Pair<StakingTransaction, TransactionData.Compiled>
 
