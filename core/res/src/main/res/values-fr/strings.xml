@@ -344,7 +344,7 @@
   <string name="manage_tokens_wallet_selector_title">Choisissez un portefeuille</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Le portefeuille ne prend pas en charge plus d\'un réseau</string>
   <string name="markets_add_to_my_portfolio_description">Pour acheter, échanger ou recevoir cet actif, ajoutez-le à votre portefeuille</string>
-  <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est pas disponible</string>
+  <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est plus pris en charge dans le portefeuille</string>
   <string name="markets_add_to_portfolio_button">Ajouter au portfolio</string>
   <string name="markets_add_token">Ajoutez un jeton</string>
   <string name="markets_available_networks">Réseaux disponibles</string>
