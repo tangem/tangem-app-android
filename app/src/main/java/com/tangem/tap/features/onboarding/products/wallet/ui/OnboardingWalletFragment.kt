@@ -28,8 +28,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.datasource.utils.isNullOrEmpty
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
-import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
+import com.tangem.domain.models.scan.isRing
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
@@ -589,9 +588,5 @@ class OnboardingWalletFragment :
                 }
             }
         }
-    }
-
-    private fun isRing(batchId: String): Boolean {
-        return RING_BATCH_IDS.contains(batchId) || batchId.startsWith(RING_BATCH_PREFIX)
     }
 }
