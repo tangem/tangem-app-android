@@ -52,7 +52,7 @@
   <string name="card_settings_action_sheet_reset">Сбросить</string>
   <string name="card_settings_action_sheet_title">Вы уверены, что хотите это сделать?</string>
   <string name="card_settings_change_access_code">Смена кода доступа</string>
-  <string name="card_settings_change_access_code_footer">Код доступа будет изменен только на данной карте</string>
+  <string name="card_settings_change_access_code_footer">Код доступа будет изменен только на данной карте или кольце</string>
   <string name="card_settings_completed_reset_alert_message">Все устройства Tangem выбранного кошелька сброшены до заводских настроек, вы можете создать новый кошелек</string>
   <string name="card_settings_completed_reset_alert_title">Сброс завершён</string>
   <string name="card_settings_continue_reset_alert_message">Хотите сбросить следующее устройство от этого кошелька?</string>
@@ -61,7 +61,7 @@
   <string name="card_settings_interrupted_reset_alert_title">Вы сбросили не все Tangem устройства</string>
   <string name="card_settings_reset_card_to_factory">Заводские настройки</string>
   <string name="card_settings_security_mode">Тип безопасности</string>
-  <string name="card_settings_title">Настройки карты</string>
+  <string name="card_settings_title">Настройки устройства</string>
   <string name="cardano_coin_will_be_send_with_token_description">Помимо сетевой комиссий, сеть Cardano взимает %1$s ADA при транзакции с токеном %2$s</string>
   <string name="cardano_coin_will_be_send_with_token_title">Требования к транзакции Cardano</string>
   <string name="cardano_insufficient_balance_to_send_token_description">Чтобы совершить транзакцию %1$s, внесите некоторую сумму ADA для покрытия сетевой комиссии и минимального значения ADA (рекомендуется 5 ADA)</string>
@@ -223,7 +223,7 @@
   <string name="details_referral_title">Реферальная программа</string>
   <string name="details_row_description_flip_to_hide">Переверните экран вашего устройства вниз, чтобы быстро скрыть и отобразить балансы</string>
   <string name="details_row_subtitle_signed_hashes_format">%s хэшей</string>
-  <string name="details_row_title_cid">Номер карты</string>
+  <string name="details_row_title_cid">Номер устройства</string>
   <string name="details_row_title_contact_to_support">Обратиться в поддержку</string>
   <string name="details_row_title_create_backup">Добавить еще карты</string>
   <string name="details_row_title_currency">Валюта приложения</string>
