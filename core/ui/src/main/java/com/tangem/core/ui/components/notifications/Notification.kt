@@ -184,6 +184,7 @@ internal fun TextsBlock(
     subtitle: TextReference,
     subtitleColor: Color,
     modifier: Modifier = Modifier,
+    titleColor: Color = TangemTheme.colors.text.primary1,
 ) {
     Column(modifier = modifier) {
         val titleText = title?.resolveReference()
@@ -191,7 +192,7 @@ internal fun TextsBlock(
         if (titleText != null) {
             Text(
                 text = titleText,
-                color = TangemTheme.colors.text.primary1,
+                color = titleColor,
                 style = TangemTheme.typography.button,
             )
 
