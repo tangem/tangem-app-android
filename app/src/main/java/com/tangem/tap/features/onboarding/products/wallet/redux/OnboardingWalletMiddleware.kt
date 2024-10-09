@@ -183,11 +183,14 @@ private fun handleWalletAction(action: Action) {
                 BackupService.State.FinalizingPrimaryCard -> BackupAction.PrepareToWritePrimaryCard
                 is BackupService.State.FinalizingBackupCard -> BackupAction.PrepareToWriteBackupCard(backupState.index)
                 else -> {
-                    if (onboardingWalletState.backupState.backupStep == BackupStep.InitBackup ||
+                    if (onboardingWalletState.backupState.backupStep == null ||
+                        onboardingWalletState.backupState.backupStep == BackupStep.InitBackup ||
                         onboardingWalletState.backupState.backupStep == BackupStep.Finished
                     ) {
                         Analytics.send(Onboarding.Backup.ScreenOpened())
-                        BackupAction.IntroduceBackup
+
+                        val isWallet2 = scanResponse?.cardTypesResolver?.isWallet2() ?: false
+                        if (isWallet2) BackupAction.StartBackup else BackupAction.IntroduceBackup
                     } else {
                         null
                     }
@@ -520,8 +523,8 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     }
                     is CompletionResult.Failure -> Unit
                 }
+                tangemSdkManager.clearProductType()
             }
-            tangemSdkManager.clearProductType()
         }
         is BackupAction.WriteBackupCard -> {
             val cardIndex = if (action.cardNumber > 0) action.cardNumber - 1 else action.cardNumber
@@ -557,8 +560,9 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                         }
                     }
                 }
+
+                tangemSdkManager.clearProductType()
             }
-            tangemSdkManager.clearProductType()
         }
         is BackupAction.DiscardBackup -> {
             backupService.discardSavedBackup()
@@ -679,7 +683,7 @@ internal fun gatherCardIds(backupState: BackupState, card: CardDTO?): List<Strin
 
 private fun handleOnBackPressed(state: OnboardingWalletState) {
     when (state.backupState.backupStep) {
-        BackupStep.InitBackup, BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
+        null, BackupStep.InitBackup, BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
         BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard,
         -> {
             showInterruptOnboardingDialog()
