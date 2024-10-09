@@ -2,6 +2,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.graphics.Bitmap
 import android.net.Uri
+import com.tangem.common.card.Card
 import com.tangem.domain.redux.StateDialog
 import org.rekotlin.StateType
 
@@ -14,7 +15,6 @@ data class OnboardingWalletState(
     val backupState: BackupState = BackupState(),
     val walletImages: WalletImages = WalletImages(),
     val showConfetti: Boolean = false,
-    val isRingOnboarding: Boolean = false,
 ) : StateType {
 
     @Suppress("MagicNumber")
@@ -29,6 +29,7 @@ data class OnboardingWalletState(
             OnboardingWalletStep.CreateWallet -> 1
             OnboardingWalletStep.Backup -> {
                 when (backupState.backupStep) {
+                    null -> 2
                     BackupStep.InitBackup -> 2
                     BackupStep.ScanOriginCard -> 3
                     BackupStep.AddBackupCards -> 4
@@ -65,18 +66,22 @@ enum class OnboardingWalletStep {
 
 data class BackupState(
     val primaryCardId: String? = null,
+    val primaryCardBatchId: String? = null,
     val backupCardsNumber: Int = 0,
+    val backupCards: List<Card> = emptyList(),
     val backupCardIds: List<CardId> = emptyList(),
+    val backupCardBatchIds: List<CardId> = emptyList(),
     @Transient
     val backupCardsArtworks: Map<CardId, Bitmap> = emptyMap(),
     val accessCode: String = "",
     val accessCodeError: AccessCodeError? = null,
-    val backupStep: BackupStep = BackupStep.InitBackup,
+    val backupStep: BackupStep? = null,
     val maxBackupCards: Int = 2,
     val canSkipBackup: Boolean = true,
     val isInterruptedBackup: Boolean = false,
     val showBtnLoading: Boolean = false,
     val hasBackupError: Boolean = false,
+    val hasRing: Boolean = false,
 )
 
 enum class AccessCodeError {
