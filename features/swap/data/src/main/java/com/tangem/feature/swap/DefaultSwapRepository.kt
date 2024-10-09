@@ -38,11 +38,10 @@ import timber.log.Timber
 import java.io.IOException
 import java.math.BigDecimal
 import java.util.UUID
-import javax.inject.Inject
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo as NetworkLeastTokenInfo
 
 @Suppress("LongParameterList", "LargeClass")
-internal class DefaultSwapRepository @Inject constructor(
+internal class DefaultSwapRepository(
     private val tangemExpressApi: TangemExpressApi,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
@@ -187,6 +186,7 @@ internal class DefaultSwapRepository @Inject constructor(
     }
 
     override suspend fun findBestQuote(
+        userWalletId: UserWalletId,
         fromContractAddress: String,
         fromNetwork: String,
         toContractAddress: String,
