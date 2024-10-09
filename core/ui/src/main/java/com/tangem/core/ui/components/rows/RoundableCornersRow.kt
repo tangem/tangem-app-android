@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -35,12 +36,18 @@ fun RoundableCornersRow(
     endText: String,
     endTextColor: Color,
     endTextStyle: TextStyle,
-    cornersToRound: CornersToRound,
+    currentIndex: Int,
+    lastIndex: Int,
     iconResId: Int? = null,
     iconClick: (() -> Unit)? = null,
 ) {
     Surface(
-        shape = cornersToRound.getShape(),
+        modifier = Modifier
+            .roundedShapeItemDecoration(
+                currentIndex = currentIndex,
+                lastIndex = lastIndex,
+                addDefaultPadding = false,
+            ),
         color = TangemTheme.colors.background.action,
     ) {
         Row(
@@ -96,7 +103,7 @@ enum class CornersToRound {
 
     @Suppress("TopLevelComposableFunctions")
     @Composable
-    fun getShape(radius: Dp = TangemTheme.dimens.radius12): RoundedCornerShape {
+    fun getShape(radius: Dp = TangemTheme.dimens.radius12): RoundedCornerShape { // TODO
         return when (this) {
             ALL_4 -> RoundedCornerShape(radius)
             TOP_2 -> RoundedCornerShape(topStart = radius, topEnd = radius)
@@ -121,7 +128,8 @@ private fun Preview_RoundableCornersRow(
                 endText = previewData.endText,
                 endTextColor = TangemTheme.colors.text.primary1,
                 endTextStyle = TangemTheme.typography.subtitle2,
-                cornersToRound = previewData.cornersToRound,
+                currentIndex = previewData.currentIndex,
+                lastIndex = previewData.lastIndex,
                 iconResId = previewData.iconResId,
             )
         }
@@ -131,7 +139,8 @@ private fun Preview_RoundableCornersRow(
 private data class RoundableCornersRowPreviewData(
     val startText: String,
     val endText: String,
-    val cornersToRound: CornersToRound,
+    val currentIndex: Int,
+    val lastIndex: Int,
     val iconResId: Int? = null,
 )
 
@@ -140,18 +149,20 @@ private class RoundableCornersRowDataProvider :
 
     override val values: Sequence<RoundableCornersRowPreviewData>
         get() = sequenceOf(
-            getPreviewData(cornersToRound = CornersToRound.ZERO),
-            getPreviewData(cornersToRound = CornersToRound.TOP_2),
-            getPreviewData(cornersToRound = CornersToRound.BOTTOM_2),
-            getPreviewData(cornersToRound = CornersToRound.ZERO, iconResId = R.drawable.ic_alert_24),
-            getPreviewData(cornersToRound = CornersToRound.TOP_2, iconResId = R.drawable.ic_alert_24),
-            getPreviewData(cornersToRound = CornersToRound.BOTTOM_2, iconResId = R.drawable.ic_alert_24),
+            getPreviewData(currentIndex = 1, lastIndex = 2),
+            getPreviewData(currentIndex = 0, lastIndex = 2),
+            getPreviewData(currentIndex = 2, lastIndex = 2),
+            getPreviewData(currentIndex = 1, lastIndex = 2, iconResId = R.drawable.ic_alert_24),
+            getPreviewData(currentIndex = 0, lastIndex = 2, iconResId = R.drawable.ic_alert_24),
+            getPreviewData(currentIndex = 2, lastIndex = 2, iconResId = R.drawable.ic_alert_24),
         )
 
-    private fun getPreviewData(cornersToRound: CornersToRound, iconResId: Int? = null) = RoundableCornersRowPreviewData(
-        startText = "startText",
-        endText = "endText",
-        cornersToRound = cornersToRound,
-        iconResId = iconResId,
-    )
+    private fun getPreviewData(currentIndex: Int, lastIndex: Int, iconResId: Int? = null) =
+        RoundableCornersRowPreviewData(
+            startText = "startText",
+            endText = "endText",
+            currentIndex = currentIndex,
+            lastIndex = lastIndex,
+            iconResId = iconResId,
+        )
 }
