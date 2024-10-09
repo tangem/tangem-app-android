@@ -514,10 +514,13 @@
   <string name="onboarding_subtitle_scan_backup_card_format">番号%sのバックアップカードを準備してください</string>
   <string name="onboarding_subtitle_scan_primary">プライマリカードまたはリングをスキャンして、バックアップ処理を開始します。</string>
   <string name="onboarding_subtitle_scan_primary_card_format">番号%sのプライマリカードを準備してください</string>
+  <string name="onboarding_subtitle_scan_ring">リングを準備して、下のスキャンボタンを押してください</string>
   <string name="onboarding_subtitle_success_tangem_wallet_onboarding">ウォレットが設定され、使用できるようになりました。</string>
   <string name="onboarding_subtitle_two_backup_cards">最大数のデバイスが追加されました。バックアップ処理を完了します。</string>
   <string name="onboarding_title">ウォレットの有効化</string>
+  <string name="onboarding_title_backup_card">バックアップカード</string>
   <string name="onboarding_title_backup_card_format">バックアップカード # %d</string>
+  <string name="onboarding_title_backup_ring">バックアップリング</string>
   <string name="onboarding_title_no_backup_cards">バックアップカードまたはリングなし</string>
   <string name="onboarding_title_notifications">通知</string>
   <string name="onboarding_title_one_backup_card">バックアップデバイスが1つ追加されました</string>
