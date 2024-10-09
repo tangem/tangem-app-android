@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -105,8 +106,9 @@ suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletMa
     val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
     if (coinValue < fee.amount.value) return
 
+    val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
     val signer = TangemSigner(
-        card = card,
+        cardId = card.cardId.takeIf { isCardNotBackedUp },
         tangemSdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk,
         initialMessage = Message(),
     ) { signResponse ->
@@ -117,6 +119,8 @@ suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletMa
                 remainingSignatures = signResponse.remainingSignatures,
             ),
         )
+
+        store.dispatch(action = GlobalAction.IsSignWithRing(signResponse.isRing))
     }
 
     walletManager.send(
