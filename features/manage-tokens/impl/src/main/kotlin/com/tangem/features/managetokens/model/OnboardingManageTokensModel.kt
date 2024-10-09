@@ -272,6 +272,16 @@ internal class OnboardingManageTokensModel @Inject constructor(
         },
     ) {
         analyticsEventHandler.send(ManageTokensAnalyticEvent.ButtonLater)
+
+        saveManagedTokensUseCase(
+            userWalletId = requireNotNull(params.userWalletId),
+            currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
+            currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
+        ).getOrElse {
+            Timber.e(it, "Failed to save changes")
+            return@resource
+        }
+
         reduxStateHolder.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
     }
 
