@@ -32,7 +32,7 @@ interface StakingRepository {
 
     suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield
 
-    suspend fun getStakingAvailability(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): StakingAvailability
+    fun getStakingAvailability(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): StakingAvailability
 
     suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
