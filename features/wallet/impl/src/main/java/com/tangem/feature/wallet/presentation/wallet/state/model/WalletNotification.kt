@@ -194,4 +194,14 @@ sealed class WalletNotification(val config: NotificationConfig) {
             onCloseClick = onCloseClick,
         ),
     )
+
+    data class RingPromo(val onCloseClick: () -> Unit) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(id = R.string.ring_promo_title),
+            subtitle = resourceReference(id = R.string.ring_promo_text),
+            iconResId = R.drawable.img_card_with_ring,
+            backgroundResId = R.drawable.img_ring_promo_background,
+            onCloseClick = onCloseClick,
+        ),
+    )
 }
