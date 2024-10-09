@@ -235,7 +235,7 @@ interface WalletManagersFacade {
     suspend fun associateAsset(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
-        signer: CommonSigner,
+        signer: TransactionSigner,
     ): SimpleResult
 
     /**
