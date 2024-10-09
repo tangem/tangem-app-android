@@ -135,12 +135,12 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.USER_WALLET_ID_KEY)
         ?.unbundle(UserWalletId.serializer())
-        ?: error("This screen can't open without `UserWalletId`")
+        ?: error("This screen can't be opened without `UserWalletId`")
 
     private val cryptoCurrency: CryptoCurrency =
         savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
             ?.unbundle(CryptoCurrency.serializer())
-            ?: error("This screen can't open without `CryptoCurrency`")
+            ?: error("This screen can't be opened without `CryptoCurrency`")
 
     private val userWallet: UserWallet
 
@@ -172,6 +172,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         userWalletId = userWalletId,
         stakingFeatureToggles = stakingFeatureToggles,
         getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
+        getStakingAvailabilityUseCase = getStakingAvailabilityUseCase,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
     )
