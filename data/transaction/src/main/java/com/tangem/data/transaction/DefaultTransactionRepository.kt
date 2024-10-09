@@ -146,7 +146,7 @@ internal class DefaultTransactionRepository(
 
     override suspend fun sendTransaction(
         txData: TransactionData,
-        signer: CommonSigner,
+        signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
     ) = withContext(coroutineDispatcherProvider.io) {
@@ -161,7 +161,7 @@ internal class DefaultTransactionRepository(
 
     override suspend fun sendMultipleTransactions(
         txsData: List<TransactionData>,
-        signer: CommonSigner,
+        signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
     ) = withContext(coroutineDispatcherProvider.io) {

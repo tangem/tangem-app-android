@@ -5,17 +5,15 @@ import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
-import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.isRing
 import com.tangem.tap.domain.tasks.SignHashesTask
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 class TangemSigner(
-    private val card: CardDTO,
+    private val cardId: String?,
     private val tangemSdk: TangemSdk,
     private val initialMessage: Message,
-    private val accessCode: String? = null,
     private val signerCallback: (TangemSignerResponse) -> Unit,
 ) : TransactionSigner {
 
@@ -24,21 +22,20 @@ class TangemSigner(
         publicKey: Wallet.PublicKey,
     ): CompletionResult<List<ByteArray>> {
         return suspendCancellableCoroutine { continuation ->
-            val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
             val task = SignHashesTask(hashes, publicKey)
 
             tangemSdk.startSessionWithRunnable(
                 runnable = task,
-                cardId = card.cardId.takeIf { isCardNotBackedUp },
+                cardId = cardId,
                 initialMessage = initialMessage,
-                accessCode = accessCode,
             ) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         signerCallback(
                             TangemSignerResponse(
-                                result.data.totalSignedHashes,
-                                result.data.remainingSignatures,
+                                totalSignedHashes = result.data.totalSignedHashes,
+                                remainingSignatures = result.data.remainingSignatures,
+                                isRing = result.data.batchId?.let(::isRing) ?: false,
                             ),
                         )
                         if (continuation.isActive) {
@@ -70,4 +67,5 @@ class TangemSigner(
 data class TangemSignerResponse(
     val totalSignedHashes: Int?,
     val remainingSignatures: Int?,
+    val isRing: Boolean,
 )

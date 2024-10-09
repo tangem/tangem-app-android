@@ -614,7 +614,7 @@ class DefaultWalletManagersFacade(
     override suspend fun associateAsset(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
-        signer: CommonSigner,
+        signer: TransactionSigner,
     ): SimpleResult {
         return withContext(dispatchers.io) {
             val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
