@@ -58,6 +58,7 @@ import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultStakingRepository(
@@ -585,7 +586,12 @@ internal class DefaultStakingRepository(
 
     private suspend fun getEnabledYields(): List<Yield>? {
         val yields = stakingYieldsStore.getSyncOrNull() ?: return null
-        return yields.map { yieldConverter.convert(it) }
+        return yieldConverter.convertListIgnoreErrors(
+            input = yields,
+            onError = {
+                Timber.e("Error converting enabled yields list: $it")
+            },
+        )
     }
 
     private fun getBalanceRequestData(address: String, integrationId: String): YieldBalanceRequestBody {
