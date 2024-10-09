@@ -80,7 +80,7 @@ private object OnboardingWallet2Reducer {
 }
 
 private object BackupReducer {
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "LongMethod")
     fun reduce(action: BackupAction, state: BackupState): BackupState {
         return when (action) {
             is BackupAction.IntroduceBackup -> BackupState(
@@ -88,8 +88,20 @@ private object BackupReducer {
                 maxBackupCards = 2,
                 canSkipBackup = state.canSkipBackup,
             )
-            BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
-            BackupAction.StartAddingBackupCards -> state.copy(backupStep = BackupStep.AddBackupCards)
+            BackupAction.StartAddingPrimaryCard -> {
+                state.copy(
+                    backupStep = BackupStep.ScanOriginCard,
+                    maxBackupCards = 2,
+                    canSkipBackup = state.canSkipBackup,
+                )
+            }
+            BackupAction.StartAddingBackupCards -> {
+                state.copy(
+                    backupStep = BackupStep.AddBackupCards,
+                    maxBackupCards = 2,
+                    canSkipBackup = state.canSkipBackup,
+                )
+            }
             is BackupAction.AddBackupCard.Success -> {
                 state.copy(
                     backupCards = state.backupCards + action.card,
