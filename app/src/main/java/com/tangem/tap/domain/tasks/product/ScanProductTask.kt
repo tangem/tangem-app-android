@@ -24,6 +24,7 @@ import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
+import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.ScanTask
@@ -248,7 +249,7 @@ private class ScanWalletProcessor(
     }
 
     private fun getWalletProductType(card: CardDTO): ProductType {
-        if (RING_BATCH_IDS.contains(card.batchId)) {
+        if (RING_BATCH_IDS.contains(card.batchId) || card.batchId.startsWith(RING_BATCH_PREFIX)) {
             return ProductType.Ring
         }
         return if (card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
