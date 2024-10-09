@@ -46,7 +46,9 @@ internal class SwitchEnvironmentInterceptor(
 
     private fun Request.Builder.addHeaders(headers: Map<String, Provider<String>>): Request.Builder {
         headers.forEach { (name, valueProvider) ->
-            addHeader(name = name, value = valueProvider())
+            val value = valueProvider()
+
+            if (value.isNotBlank()) addHeader(name = name, value = value)
         }
 
         return this
