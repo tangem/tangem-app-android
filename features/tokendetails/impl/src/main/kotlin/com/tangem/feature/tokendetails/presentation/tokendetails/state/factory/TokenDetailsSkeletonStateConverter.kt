@@ -10,7 +10,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.card.NetworkHasDerivationUseCase
+import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
@@ -30,6 +32,7 @@ internal class TokenDetailsSkeletonStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
+    private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
 ) : Converter<CryptoCurrency, TokenDetailsState> {
@@ -39,6 +42,8 @@ internal class TokenDetailsSkeletonStateConverter(
     override fun convert(value: CryptoCurrency): TokenDetailsState {
         val iconState = iconStateConverter.convert(value)
         val isSupportedInMobileApp = getStakingIntegrationIdUseCase(value.id).isNullOrBlank().not()
+        val stakingAvailability = getStakingAvailabilityUseCase(userWalletId, value)
+            .getOrElse { StakingAvailability.Unavailable }
 
         return TokenDetailsState(
             topAppBarConfig = TokenDetailsTopAppBarConfig(
@@ -63,7 +68,11 @@ internal class TokenDetailsSkeletonStateConverter(
                 selectedBalanceType = BalanceType.ALL,
             ),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
-            stakingBlocksState = StakingBlockUM.Loading(iconState).takeIf { isSupportedInMobileApp },
+            stakingBlocksState = if (stakingAvailability == StakingAvailability.TemporaryUnavailable) {
+                StakingBlockUM.TemporaryUnavailable
+            } else {
+                StakingBlockUM.Loading(iconState).takeIf { isSupportedInMobileApp }
+            },
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
             swapTxs = persistentListOf(),
