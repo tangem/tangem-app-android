@@ -249,6 +249,7 @@ class OnboardingWalletFragment :
 
     private fun setBackupState(state: BackupState) {
         when (state.backupStep) {
+            null -> Unit
             BackupStep.InitBackup -> showBackupIntro(state)
             BackupStep.ScanOriginCard -> showScanOriginCard()
             BackupStep.AddBackupCards -> showAddBackupCards(state)
@@ -453,7 +454,7 @@ class OnboardingWalletFragment :
         } else {
             val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
             getString(
-                R.string.onboarding_subtitle_scan_primary_card_format,
+                R.string.onboarding_subtitle_scan_backup_card_format,
                 state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
             )
         }
