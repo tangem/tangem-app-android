@@ -58,6 +58,7 @@ import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultStakingRepository(
@@ -304,7 +305,10 @@ internal class DefaultStakingRepository(
 
                 if (integrationId == null || address.isNullOrBlank()) {
                     cacheRegistry.invalidate(getYieldBalancesKey(userWalletId))
-                    error("IntegrationId or address is null")
+                    Timber.w(
+                        "IntegrationId or address is null fetching ${cryptoCurrency.name} staking balance",
+                    )
+                    return@invokeOnExpire
                 }
 
                 val requestBody = getBalanceRequestData(address, integrationId)
