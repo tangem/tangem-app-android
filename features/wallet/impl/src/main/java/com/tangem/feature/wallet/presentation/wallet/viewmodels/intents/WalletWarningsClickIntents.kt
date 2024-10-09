@@ -8,10 +8,7 @@ import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
-import com.tangem.domain.settings.RemindToRateAppLaterUseCase
-import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
-import com.tangem.domain.settings.ShouldShowTravalaPromoWalletUseCase
+import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
@@ -59,6 +56,8 @@ internal interface WalletWarningsClickIntents {
 
     fun onCloseSwapPromoClick()
 
+    fun onCloseRingPromoClick()
+
     fun onTravalaPromoClick(link: String?)
 
     fun onCloseTravalaPromoClick()
@@ -83,6 +82,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
     private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
+    private val shouldShowRingPromoUseCase: ShouldShowRingPromoUseCase,
     private val shouldShowTravalaPromoWalletUseCase: ShouldShowTravalaPromoWalletUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
@@ -236,6 +236,20 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         )
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoWalletUseCase.neverToShow()
+        }
+    }
+
+    override fun onCloseRingPromoClick() {
+        analyticsEventHandler.send(
+            TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                source = AnalyticsParam.ScreensSources.Main,
+                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Ring,
+                action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
+            ),
+        )
+
+        viewModelScope.launch {
+            shouldShowRingPromoUseCase.neverToShow()
         }
     }
 
