@@ -34,7 +34,9 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.di.RootAppComponentContext
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.extensions.setStatusBarColor
+import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.datasource.utils.isNullOrEmpty
@@ -77,6 +79,9 @@ class OnboardingWalletFragment :
     BaseFragment(R.layout.fragment_onboarding_wallet),
     StoreSubscriber<OnboardingWalletState>,
     FragmentOnBackPressedHandler {
+
+    @Inject
+    internal lateinit var uiDependencies: UiDependencies
 
     @Inject
     internal lateinit var onboardingManageTokensComponentFactory: OnboardingManageTokensComponent.Factory
@@ -290,6 +295,10 @@ class OnboardingWalletFragment :
                     windowSize = rememberWindowSize(activity = requireActivity()),
                 ) {
                     onboardingManageTokensComponent?.Content(modifier = Modifier.fillMaxSize())
+                    EventMessageEffect(
+                        messageHandler = uiDependencies.eventMessageHandler,
+                        snackbarHostState = uiDependencies.globalSnackbarHostState,
+                    )
                 }
             }
         }
