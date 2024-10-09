@@ -74,7 +74,7 @@ private const val INITIAL_VISIBLE_AWARDS_MAX_COUNT = 3
 private fun CounterAndAwards(purchasedWalletCount: Int, expectedAwards: ExpectedAwards?) {
     val isExpanded = remember { mutableStateOf(false) }
 
-    val overallItemsCount = calc(
+    val overallItemsCount = calculateOverallItemsCount(
         expectedAwards = expectedAwards,
         isExpanded = isExpanded,
     )
@@ -93,22 +93,6 @@ private fun CounterAndAwards(purchasedWalletCount: Int, expectedAwards: Expected
             )
         }
     }
-}
-
-private fun calc(expectedAwards: ExpectedAwards?, isExpanded: MutableState<Boolean>): Int {
-    val totalItems = expectedAwards?.expectedAwards?.size ?: 0
-    val initialItemsCount = minOf(totalItems, INITIAL_VISIBLE_AWARDS_MAX_COUNT)
-    val extraItemsCount = maxOf(0, totalItems - INITIAL_VISIBLE_AWARDS_MAX_COUNT)
-
-    val awardItems = when {
-        expectedAwards == null -> 0
-        extraItemsCount == 0 -> 1 + initialItemsCount
-        isExpanded.value -> 1 + initialItemsCount + extraItemsCount + 1
-        else -> 1 + initialItemsCount + 1
-    }
-
-    val counterItems = 1
-    return counterItems + awardItems
 }
 
 @Composable
@@ -339,6 +323,22 @@ private fun AdditionalButtons(
             modifier = Modifier.weight(1f),
         )
     }
+}
+
+private fun calculateOverallItemsCount(expectedAwards: ExpectedAwards?, isExpanded: MutableState<Boolean>): Int {
+    val totalItems = expectedAwards?.expectedAwards?.size ?: 0
+    val initialItemsCount = minOf(totalItems, INITIAL_VISIBLE_AWARDS_MAX_COUNT)
+    val extraItemsCount = maxOf(0, totalItems - INITIAL_VISIBLE_AWARDS_MAX_COUNT)
+
+    val awardItems = when {
+        expectedAwards == null -> 0
+        extraItemsCount == 0 -> 1 + initialItemsCount
+        isExpanded.value -> 1 + initialItemsCount + extraItemsCount + 1
+        else -> 1 + initialItemsCount + 1
+    }
+
+    val counterItems = 1
+    return counterItems + awardItems
 }
 
 private fun Context.shareText(text: String) {
