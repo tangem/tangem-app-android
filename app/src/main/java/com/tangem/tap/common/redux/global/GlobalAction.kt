@@ -69,6 +69,8 @@ sealed class GlobalAction : Action {
         val walletPublicKey: ByteArray,
     ) : GlobalAction()
 
+    data class IsSignWithRing(val isSignWithRing: Boolean) : GlobalAction()
+
     data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
     data class SetFeedbackManager(val feedbackManager: LegacyFeedbackManager) : GlobalAction()
 
