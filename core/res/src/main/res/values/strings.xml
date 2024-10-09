@@ -50,7 +50,7 @@
   <string name="card_settings_action_sheet_reset">Reset</string>
   <string name="card_settings_action_sheet_title">Are you sure you want to do this?</string>
   <string name="card_settings_change_access_code">Change Access Code</string>
-  <string name="card_settings_change_access_code_footer">Access code will be changed on this card only</string>
+  <string name="card_settings_change_access_code_footer">Access code will be changed on this card or ring only</string>
   <string name="card_settings_completed_reset_alert_message">All Tangem devices in the selected wallet have been reset to factory settings. You can now create a new wallet.</string>
   <string name="card_settings_completed_reset_alert_title">Reset complete</string>
   <string name="card_settings_continue_reset_alert_message">Do you want to reset the next device in this wallet?</string>
@@ -59,7 +59,7 @@
   <string name="card_settings_interrupted_reset_alert_title">You haven\'t reset all your Tangem devices</string>
   <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
   <string name="card_settings_security_mode">Security Mode</string>
-  <string name="card_settings_title">Card settings</string>
+  <string name="card_settings_title">Device settings</string>
   <string name="cardano_coin_will_be_send_with_token_description">In addition to network fee, the Cardano network charges %1$s ADA when transacting with the %2$s token</string>
   <string name="cardano_coin_will_be_send_with_token_title">Cardano transaction requirements</string>
   <string name="cardano_insufficient_balance_to_send_token_description">To make a %1$s transaction, you must deposit some ADA to cover the network fee and minimum ADA value (5 ADA recommended)</string>
@@ -219,7 +219,7 @@
   <string name="details_referral_title">Referral program</string>
   <string name="details_row_description_flip_to_hide">Flip your device screen down to quickly hide and show balances</string>
   <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
-  <string name="details_row_title_cid">Card ID</string>
+  <string name="details_row_title_cid">Device ID</string>
   <string name="details_row_title_contact_to_support">Contact support</string>
   <string name="details_row_title_create_backup">Link More Cards</string>
   <string name="details_row_title_currency">App Currency</string>
