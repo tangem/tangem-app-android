@@ -133,11 +133,10 @@ internal class DefaultStakingRepository(
 
     override suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield {
         return withContext(dispatchers.io) {
-            val yields = getEnabledYields() ?: error("No yields found")
             val rawCurrencyId = cryptoCurrencyId.rawCurrencyId ?: error("Staking custom tokens is not available")
 
             val prefetchedYield = findPrefetchedYield(
-                yields = yields,
+                yields = getEnabledYields(),
                 currencyId = rawCurrencyId,
                 symbol = symbol,
             )
@@ -158,7 +157,7 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun getStakingAvailability(
+    override fun getStakingAvailability(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): StakingAvailability {
@@ -166,26 +165,22 @@ internal class DefaultStakingRepository(
 
         val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: return StakingAvailability.Unavailable
 
-        return withContext(dispatchers.io) {
-            val isSupportedInMobileApp = getSupportedIntegrationId(cryptoCurrency.id).isNullOrEmpty().not()
+        val isSupportedInMobileApp = getSupportedIntegrationId(cryptoCurrency.id).isNullOrEmpty().not()
 
-            val yields = getEnabledYields() ?: return@withContext if (isSupportedInMobileApp) {
+        val prefetchedYield = findPrefetchedYield(
+            yields = getEnabledYields(),
+            currencyId = rawCurrencyId,
+            symbol = cryptoCurrency.symbol,
+        )
+
+        return when {
+            prefetchedYield != null && isSupportedInMobileApp -> {
+                StakingAvailability.Available(prefetchedYield.id)
+            }
+            prefetchedYield == null && isSupportedInMobileApp -> {
                 StakingAvailability.TemporaryUnavailable
-            } else {
-                StakingAvailability.Unavailable
             }
-
-            val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, cryptoCurrency.symbol)
-
-            when {
-                prefetchedYield != null && isSupportedInMobileApp -> {
-                    StakingAvailability.Available(prefetchedYield.id)
-                }
-                prefetchedYield == null && isSupportedInMobileApp -> {
-                    StakingAvailability.TemporaryUnavailable
-                }
-                else -> StakingAvailability.Unavailable
-            }
+            else -> StakingAvailability.Unavailable
         }
     }
 
@@ -398,7 +393,7 @@ internal class DefaultStakingRepository(
                 key = getYieldBalancesKey(userWalletId),
                 skipCache = refresh,
                 block = {
-                    val yields = getEnabledYields() ?: error("No yields found")
+                    val yields = getEnabledYields()
                     val availableCurrencies = cryptoCurrencies
                         .mapNotNull { currency ->
                             val addresses = walletManagersFacade.getAddresses(userWalletId, currency.network)
@@ -583,9 +578,10 @@ internal class DefaultStakingRepository(
         }
     }
 
-    private suspend fun getEnabledYields(): List<Yield>? {
-        val yields = stakingYieldsStore.getSyncOrNull() ?: return null
-        return yields.map { yieldConverter.convert(it) }
+    private fun getEnabledYields(): List<Yield> {
+        return stakingYieldsStore
+            .get()
+            .map { yieldConverter.convert(it) }
     }
 
     private fun getBalanceRequestData(address: String, integrationId: String): YieldBalanceRequestBody {
