@@ -2,6 +2,7 @@ package com.tangem.tap.proxy.redux
 
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.blockchainsdk.signer.TransactionSignerFactory
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.navigation.share.ShareManager
@@ -87,4 +88,5 @@ data class DaggerGraphState(
     val appRouter: AppRouter? = null,
     val pushNotificationsFeatureToggles: PushNotificationsFeatureToggles? = null,
     val pushNotificationsRouter: PushNotificationsRouter? = null,
+    val transactionSignerFactory: TransactionSignerFactory? = null,
 ) : StateType
