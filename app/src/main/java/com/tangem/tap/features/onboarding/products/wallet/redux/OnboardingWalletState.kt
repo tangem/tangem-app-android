@@ -29,6 +29,7 @@ data class OnboardingWalletState(
             OnboardingWalletStep.CreateWallet -> 1
             OnboardingWalletStep.Backup -> {
                 when (backupState.backupStep) {
+                    null -> 2
                     BackupStep.InitBackup -> 2
                     BackupStep.ScanOriginCard -> 3
                     BackupStep.AddBackupCards -> 4
@@ -74,7 +75,7 @@ data class BackupState(
     val backupCardsArtworks: Map<CardId, Bitmap> = emptyMap(),
     val accessCode: String = "",
     val accessCodeError: AccessCodeError? = null,
-    val backupStep: BackupStep = BackupStep.InitBackup,
+    val backupStep: BackupStep? = null,
     val maxBackupCards: Int = 2,
     val canSkipBackup: Boolean = true,
     val isInterruptedBackup: Boolean = false,
