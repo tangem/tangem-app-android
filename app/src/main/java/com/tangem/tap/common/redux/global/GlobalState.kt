@@ -25,6 +25,7 @@ data class GlobalState(
     val exchangeManager: CurrencyExchangeManager = CurrencyExchangeManager.dummy(),
     val userCountryCode: String? = null,
     val appThemeMode: AppThemeMode = AppThemeMode.DEFAULT,
+    val isLastSignWithRing: Boolean = false,
 ) : StateType
 
 typealias CryptoCurrencyName = String
