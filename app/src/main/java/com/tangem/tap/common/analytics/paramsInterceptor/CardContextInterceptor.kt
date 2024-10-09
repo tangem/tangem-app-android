@@ -10,7 +10,11 @@ import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.MainScreen
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.store
+import kotlinx.coroutines.runBlocking
 
 /**
 * [REDACTED_AUTHOR]
@@ -18,6 +22,8 @@ import com.tangem.tap.features.demo.DemoHelper
 class CardContextInterceptor(
     private val scanResponse: ScanResponse,
 ) : ParamsInterceptor {
+
+    private val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
 
     private val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
 
@@ -33,7 +39,7 @@ class CardContextInterceptor(
     override fun intercept(params: MutableMap<String, String>) {
         val card = scanResponse.card
         params[AnalyticsParam.BATCH] = card.batchId
-        params[AnalyticsParam.PRODUCT_TYPE] = getProductType(scanResponse)
+        params[AnalyticsParam.PRODUCT_TYPE] = getProductType()
         params[AnalyticsParam.FIRMWARE] = card.firmwareVersion.stringValue
         if (userWalletId != null) {
             params[AnalyticsParam.USER_WALLET_ID] = userWalletId.stringValue
@@ -44,7 +50,13 @@ class CardContextInterceptor(
         }
     }
 
-    private fun getProductType(scanResponse: ScanResponse): String {
+    private fun getProductType(): String {
+        if (scanResponse.productType != ProductType.Ring && userWalletId != null) {
+            val isWalletWithRing = runBlocking { walletsRepository.isWalletWithRing(userWalletId) }
+
+            if (isWalletWithRing) return "Ring"
+        }
+
         return when (scanResponse.productType) {
             ProductType.Note -> "Note"
             ProductType.Twins -> "Twin"
@@ -53,18 +65,18 @@ class CardContextInterceptor(
             ProductType.Ring -> "Ring"
             ProductType.Start2Coin -> "Start2Coin"
             ProductType.Visa -> "VISA"
-            else -> if (DemoHelper.isDemoCard(scanResponse)) {
-                if (DemoHelper.isTestDemoCard(scanResponse)) {
-                    "Demo Test"
-                } else {
-                    when (scanResponse.card.cardId.substring(0..1)) {
-                        "AC" -> "Demo Wallet"
-                        "AB" -> "Demo Note"
-                        else -> "Demo Other"
-                    }
-                }
-            } else {
-                "Other"
+            else -> if (DemoHelper.isDemoCard(scanResponse)) getDemoCardProductType() else "Other"
+        }
+    }
+
+    private fun getDemoCardProductType(): String {
+        return if (DemoHelper.isTestDemoCard(scanResponse)) {
+            "Demo Test"
+        } else {
+            when (scanResponse.card.cardId.substring(0..1)) {
+                "AC" -> "Demo Wallet"
+                "AB" -> "Demo Note"
+                else -> "Demo Other"
             }
         }
     }

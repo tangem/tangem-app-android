@@ -1,7 +1,8 @@
 package com.tangem.data.card
 
 import com.tangem.TangemSdk
-import com.tangem.blockchain.common.CommonSigner
+import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchainsdk.signer.TransactionSignerFactory
 import com.tangem.common.UserCodeType
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.core.UserCodeRequestPolicy
@@ -16,7 +17,10 @@ import com.tangem.domain.models.scan.ProductType
  *
 * [REDACTED_AUTHOR]
  */
-internal class DefaultCardSdkConfigRepository(private val cardSdkProvider: CardSdkProvider) : CardSdkConfigRepository {
+internal class DefaultCardSdkConfigRepository(
+    private val cardSdkProvider: CardSdkProvider,
+    private val transactionSignerFactory: TransactionSignerFactory,
+) : CardSdkConfigRepository {
 
     @Deprecated("Use CardSdkConfigRepository's methods instead of this property")
     override val sdk: TangemSdk
@@ -53,11 +57,9 @@ internal class DefaultCardSdkConfigRepository(private val cardSdkProvider: CardS
         }
     }
 
-    override fun getCommonSigner(cardId: String?) = CommonSigner(
-        tangemSdk = sdk,
-        cardId = cardId,
-        initialMessage = null,
-    )
+    override fun getCommonSigner(cardId: String?): TransactionSigner {
+        return transactionSignerFactory.createTransactionSigner(cardId = cardId, sdk = sdk)
+    }
 
     override fun isLinkedTerminal() = sdk.config.linkedTerminal
 

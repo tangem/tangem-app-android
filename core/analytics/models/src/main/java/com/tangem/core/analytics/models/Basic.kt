@@ -67,6 +67,10 @@ sealed class Basic(
         enum class MemoType {
             Empty, Full, Null
         }
+
+        enum class WalletForm {
+            Card, Ring
+        }
     }
 
     class ScanError(error: Throwable) : Basic(

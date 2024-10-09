@@ -9,4 +9,6 @@ interface PromoRepository {
     suspend fun getTravalaPromoBanner(): PromoBanner?
 
     suspend fun getOkxPromoBanner(): PromoBanner?
+
+    suspend fun getRingPromoBanner(): PromoBanner?
 }
