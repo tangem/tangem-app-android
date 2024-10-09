@@ -12,6 +12,7 @@ class TangemSignHashesResponse(
     val signatures: List<ByteArray>,
     val totalSignedHashes: Int?,
     val remainingSignatures: Int?,
+    val batchId: String?,
 ) : CommandResponse
 
 class SignHashesTask(
@@ -22,12 +23,14 @@ class SignHashesTask(
         SignHashesCommand(hashes.toTypedArray(), publicKey.seedKey, publicKey.derivationPath).run(session) { response ->
             when (response) {
                 is CompletionResult.Success -> {
+                    val card = session.environment.card
                     callback(
                         CompletionResult.Success(
                             TangemSignHashesResponse(
-                                response.data.signatures,
-                                response.data.totalSignedHashes,
-                                session.environment.card?.wallet(publicKey.seedKey)?.remainingSignatures,
+                                signatures = response.data.signatures,
+                                totalSignedHashes = response.data.totalSignedHashes,
+                                remainingSignatures = card?.wallet(publicKey.seedKey)?.remainingSignatures,
+                                batchId = card?.batchId,
                             ),
                         ),
                     )
