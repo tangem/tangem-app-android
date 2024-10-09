@@ -71,6 +71,7 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
             )
             globalState.copy(scanResponse = globalState.scanResponse.copy(card = newCardInstance))
         }
+        is GlobalAction.IsSignWithRing -> globalState.copy(isLastSignWithRing = action.isSignWithRing)
         is GlobalAction.SetFeedbackManager -> {
             globalState.copy(feedbackManager = action.feedbackManager)
         }
