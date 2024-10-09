@@ -6,7 +6,7 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.promo.PromoBanner
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
-import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
+import com.tangem.domain.settings.ShouldShowRingPromoUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -33,7 +33,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val getTokenListUseCase: GetTokenListUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
-    private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
+    private val shouldShowRingPromoUseCase: ShouldShowRingPromoUseCase,
     private val promoRepository: PromoRepository,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val backupValidator: BackupValidator,
@@ -42,16 +42,16 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
-        val promoFlow = flow { emit(promoRepository.getOkxPromoBanner()) }
+        val promoFlow = flow { emit(promoRepository.getRingPromoBanner()) }
         return combine(
             flow = getTokenListUseCase.launch(userWallet.walletId),
             flow2 = isReadyToShowRateAppUseCase(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId),
-            flow4 = shouldShowSwapPromoWalletUseCase(),
+            flow4 = shouldShowRingPromoUseCase(userWalletId = userWallet.walletId),
             flow5 = promoFlow,
         ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, shouldShowPromo, promoBanner ->
             buildList {
-                addSwapPromoNotification(shouldShowPromo, promoBanner, clickIntents)
+                addRingPromoNotification(shouldShowPromo, promoBanner, clickIntents)
 
                 addCriticalNotifications(userWallet, clickIntents)
 
@@ -70,17 +70,13 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         }
     }
 
-    private fun MutableList<WalletNotification>.addSwapPromoNotification(
+    private fun MutableList<WalletNotification>.addRingPromoNotification(
         shouldShowPromo: Boolean,
         promoBanner: PromoBanner?,
         clickIntents: WalletClickIntents,
     ) {
         promoBanner ?: return
-        val promoNotification = WalletNotification.SwapPromo(
-            startDateTime = promoBanner.bannerState.timeline.start,
-            endDateTime = promoBanner.bannerState.timeline.end,
-            onCloseClick = clickIntents::onCloseSwapPromoClick,
-        )
+        val promoNotification = WalletNotification.RingPromo(onCloseClick = clickIntents::onCloseRingPromoClick)
         addIf(
             element = promoNotification,
             condition = shouldShowPromo && promoBanner.isActive,
