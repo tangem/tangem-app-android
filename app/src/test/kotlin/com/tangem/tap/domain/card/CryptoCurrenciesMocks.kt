@@ -100,7 +100,7 @@ internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
             sdkToken = Token(symbol = "NEVER-MIND", contractAddress = "NEVER-MIND", decimals = 8),
             blockchain = blockchain,
             extraDerivationPath = null,
-            derivationStyleProvider = scanResponse.derivationStyleProvider,
+            scanResponse = scanResponse,
         )!!
     }
 }
