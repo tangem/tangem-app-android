@@ -4,7 +4,7 @@ import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 
 interface StakingYieldsStore {
 
-    suspend fun getSyncOrNull(): List<YieldDTO>?
+    fun get(): List<YieldDTO>
 
-    suspend fun store(items: List<YieldDTO>)
+    fun store(items: List<YieldDTO>)
 }
