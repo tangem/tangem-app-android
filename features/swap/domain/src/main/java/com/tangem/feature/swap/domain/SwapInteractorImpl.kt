@@ -308,6 +308,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         isBalanceWithoutFeeEnough: Boolean,
     ): Pair<SwapProvider, SwapState> {
         val maybeQuotes = repository.findBestQuote(
+            userWalletId = userWalletId,
             fromContractAddress = fromToken.currency.getContractAddress(),
             fromNetwork = fromToken.currency.network.backendId,
             toContractAddress = toToken.currency.getContractAddress(),
@@ -1178,14 +1179,15 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             }
 
             val quotes = repository.findBestQuote(
+                userWalletId = userWalletId,
                 fromContractAddress = fromToken.getContractAddress(),
                 fromNetwork = fromToken.network.backendId,
                 toContractAddress = toToken.getContractAddress(),
                 toNetwork = toToken.network.backendId,
                 fromAmount = amountToRequest.toStringWithRightOffset(),
                 fromDecimals = amount.decimals,
-                providerId = provider.providerId,
                 toDecimals = toToken.decimals,
+                providerId = provider.providerId,
                 rateType = RateType.FLOAT,
             )
 
