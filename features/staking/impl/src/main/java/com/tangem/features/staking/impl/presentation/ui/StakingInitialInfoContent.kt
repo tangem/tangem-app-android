@@ -104,21 +104,6 @@ internal fun StakingInitialInfoContent(
                 hideEndText = isBalanceHidden,
             )
 
-            if (state.yieldBalance is InnerYieldBalanceState.Data) {
-                item(key = STAKING_REWARD_BLOCK_KEY) {
-                    Column(modifier = Modifier.animateItem()) {
-                        StakingRewardBlock(
-                            rewardCrypto = state.yieldBalance.rewardsCrypto,
-                            rewardFiat = state.yieldBalance.rewardsFiat,
-                            rewardBlockType = state.yieldBalance.rewardBlockType,
-                            onRewardsClick = clickIntents::openRewardsValidators,
-                            isBalanceHidden = isBalanceHidden,
-                        )
-                        SpacerH12()
-                    }
-                }
-            }
-
             activeStakingBlock(
                 state = state,
                 clickIntents = clickIntents,
@@ -144,29 +129,38 @@ private fun LazyListScope.activeStakingBlock(
     clickIntents: StakingClickIntents,
     isBalanceHidden: Boolean,
 ) {
-    if (state.yieldBalance is InnerYieldBalanceState.Data) {
-        if (state.yieldBalance.balance.isNotEmpty()) {
-            item(ACTIVE_STAKING_BLOCK_KEY) {
-                Text(
-                    text = stringResource(id = R.string.staking_your_stakes),
-                    style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.tertiary,
-                    modifier = Modifier
-                        .roundedShapeItemDecoration(
-                            currentIndex = 0,
-                            lastIndex = 1 + state.yieldBalance.balance.lastIndex,
-                            addDefaultPadding = false,
-                        )
-                        .fillMaxWidth()
-                        .background(TangemTheme.colors.background.action)
-                        .padding(
-                            top = TangemTheme.dimens.spacing12,
-                            start = TangemTheme.dimens.spacing12,
-                            end = TangemTheme.dimens.spacing12,
-                            bottom = TangemTheme.dimens.spacing4,
-                        ),
+    val balances = (state.yieldBalance as? InnerYieldBalanceState.Data)?.balance
+    if (!balances.isNullOrEmpty()) {
+        item(key = STAKING_REWARD_BLOCK_KEY) {
+            Column(modifier = Modifier.animateItem()) {
+                StakingRewardBlock(
+                    yieldBalanceState = state.yieldBalance,
+                    onRewardsClick = clickIntents::openRewardsValidators,
+                    isBalanceHidden = isBalanceHidden,
                 )
+                SpacerH12()
             }
+        }
+        item(ACTIVE_STAKING_BLOCK_KEY) {
+            Text(
+                text = stringResource(id = R.string.staking_your_stakes),
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier
+                    .roundedShapeItemDecoration(
+                        currentIndex = 0,
+                        lastIndex = 1 + state.yieldBalance.balance.lastIndex,
+                        addDefaultPadding = false,
+                    )
+                    .fillMaxWidth()
+                    .background(TangemTheme.colors.background.action)
+                    .padding(
+                        top = TangemTheme.dimens.spacing12,
+                        start = TangemTheme.dimens.spacing12,
+                        end = TangemTheme.dimens.spacing12,
+                        bottom = TangemTheme.dimens.spacing4,
+                    ),
+            )
         }
         itemsIndexed(
             items = state.yieldBalance.balance,
