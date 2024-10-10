@@ -177,6 +177,10 @@ class MockTangemSdkManager(
         return MockProvider.createSecondTwinWallet()
     }
 
+    override fun changeProductType(isRing: Boolean) = Unit
+
+    override fun clearProductType() = Unit
+
     override suspend fun finalizeTwin(
         secondCardPublicKey: ByteArray,
         issuerKeyPair: KeyPair,
