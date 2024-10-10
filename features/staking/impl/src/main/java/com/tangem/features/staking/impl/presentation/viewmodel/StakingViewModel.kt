@@ -365,10 +365,16 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onPrevClick() {
         if (value.currentStep == StakingStep.Confirmation) {
-            when ((value.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState) {
+            val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
+            when (confirmationState?.innerState) {
                 InnerConfirmationStakingState.ASSENT -> {
-                    stateController.update(SetConfirmationStateResetAssentTransformer)
-                    stakingStateRouter.onPrevClick()
+                    val isApprovalInProgress = confirmationState.notifications.any {
+                        it is StakingNotification.Warning.TransactionInProgress
+                    }
+                    if (!isApprovalInProgress) {
+                        stakingStateRouter.onPrevClick()
+                        stateController.update(SetConfirmationStateResetAssentTransformer)
+                    }
                 }
                 null,
                 InnerConfirmationStakingState.IN_PROGRESS,
