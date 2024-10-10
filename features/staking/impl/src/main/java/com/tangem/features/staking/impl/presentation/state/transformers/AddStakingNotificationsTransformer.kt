@@ -119,7 +119,8 @@ internal class AddStakingNotificationsTransformer(
                 isPrimaryButtonEnabled = notifications.none {
                     it is StakingNotification.Error ||
                         it is NotificationUM.Error ||
-                        it is NotificationUM.Warning.NetworkFeeUnreachable
+                        it is NotificationUM.Warning.NetworkFeeUnreachable ||
+                        it is StakingNotification.Warning.TransactionInProgress
                 },
             ),
         )
