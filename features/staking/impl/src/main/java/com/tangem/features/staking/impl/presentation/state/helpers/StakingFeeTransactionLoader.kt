@@ -12,6 +12,7 @@ import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -66,7 +67,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         val validatorAddress = validatorState.chosenValidator.address
 
         val approval = stakingApproval as? StakingApproval.Needed
-        if (approval != null) {
+        if (approval != null && state.actionType == StakingActionCommonType.ENTER) {
             val allowance = getAllowanceUseCase(
                 userWalletId = userWallet.walletId,
                 cryptoCurrency = cryptoCurrencyStatus.currency,
@@ -182,7 +183,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
             amount = amount,
             address = sourceAddress,
             validatorAddress = validatorAddress,
-            token = yield.token,
+            token = yield.getCurrentToken(cryptoCurrencyStatus.currency.id.rawCurrencyId),
             passthrough = action?.passthrough,
             type = action?.type,
         ),
