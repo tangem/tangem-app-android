@@ -127,6 +127,14 @@ internal object SettingsDomainModule {
 
     @Provides
     @Singleton
+    fun provideShouldShowRingPromoUseCase(
+        promoSettingsRepository: PromoSettingsRepository,
+    ): ShouldShowRingPromoUseCase {
+        return ShouldShowRingPromoUseCase(promoSettingsRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideShouldShowTravalaPromoWalletUseCase(
         promoSettingsRepository: PromoSettingsRepository,
     ): ShouldShowTravalaPromoWalletUseCase {
