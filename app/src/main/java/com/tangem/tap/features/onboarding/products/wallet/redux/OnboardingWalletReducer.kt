@@ -1,6 +1,5 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.redux.OnboardingManageTokensAction
 import com.tangem.tap.backupService
 import com.tangem.tap.common.redux.AppState
