@@ -219,20 +219,18 @@ private fun BannerBlock(onClick: () -> Unit) {
 
 @Composable
 private fun StakingRewardBlock(
-    rewardCrypto: String,
-    rewardFiat: String,
-    rewardBlockType: RewardBlockType,
+    yieldBalanceState: InnerYieldBalanceState.Data,
     onRewardsClick: () -> Unit,
     isBalanceHidden: Boolean,
 ) {
-    val (text, textColor) = when (rewardBlockType) {
+    val (text, textColor) = when (yieldBalanceState.rewardBlockType) {
         RewardBlockType.Rewards -> {
             annotatedReference {
-                append(rewardFiat.orMaskWithStars(isBalanceHidden))
+                append(yieldBalanceState.rewardsFiat.orMaskWithStars(isBalanceHidden))
                 appendSpace()
                 append(DOT)
                 appendSpace()
-                append(rewardCrypto.orMaskWithStars(isBalanceHidden))
+                append(yieldBalanceState.rewardsCrypto.orMaskWithStars(isBalanceHidden))
             } to TangemTheme.colors.text.primary1
         }
         RewardBlockType.RewardUnavailable -> {
@@ -243,10 +241,11 @@ private fun StakingRewardBlock(
             resourceReference(R.string.staking_details_no_rewards_to_claim) to TangemTheme.colors.text.tertiary
         }
     }
+    val isShowIcon = yieldBalanceState.rewardBlockType == RewardBlockType.Rewards && yieldBalanceState.isActionable
     InputRowDefault(
         title = resourceReference(R.string.staking_rewards),
         text = text,
-        iconRes = R.drawable.ic_chevron_right_24.takeIf { rewardBlockType == RewardBlockType.Rewards },
+        iconRes = R.drawable.ic_chevron_right_24.takeIf { isShowIcon },
         textColor = textColor,
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
@@ -254,7 +253,7 @@ private fun StakingRewardBlock(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
-                enabled = rewardBlockType == RewardBlockType.Rewards,
+                enabled = yieldBalanceState.isActionable,
                 onClick = onRewardsClick,
             ),
     )
