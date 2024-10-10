@@ -6,6 +6,9 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
+import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.*
@@ -84,6 +87,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
     private val shouldShowRingPromoUseCase: ShouldShowRingPromoUseCase,
     private val shouldShowTravalaPromoWalletUseCase: ShouldShowTravalaPromoWalletUseCase,
+    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -209,12 +214,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             neverToSuggestRateAppUseCase()
 
-            reduxStateHolder.dispatch(
-                LegacyAction.SendEmailRateCanBeBetter(
-                    scanResponse = getSelectedUserWallet()?.scanResponse
-                        ?: error("ScanResponse must be not null"),
-                ),
-            )
+            val scanResponse = getSelectedUserWallet()?.scanResponse ?: return@launch
+            val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
+
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.RateCanBeBetter(cardInfo = cardInfo))
         }
     }
 
@@ -282,12 +285,12 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onSupportClick() {
-        reduxStateHolder.dispatch(
-            LegacyAction.SendEmailSupport(
-                scanResponse = getSelectedUserWallet()?.scanResponse
-                    ?: error("ScanResponse must be not null"),
-            ),
-        )
+        val scanResponse = getSelectedUserWallet()?.scanResponse ?: return
+        val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return
+
+        viewModelScope.launch {
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(cardInfo = cardInfo))
+        }
     }
 
     private fun getSelectedUserWallet(): UserWallet? {
