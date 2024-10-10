@@ -69,7 +69,7 @@ class TokenItemStateConverter(
                 text = getFormattedFiatAmount(),
                 hasStaked = !getStakedBalance().isZero(),
             ),
-            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = getFormattedAmount()),
+            subtitle2State = TokenItemState.Subtitle2State.TextContent(text = getFormattedAmount()),
             onItemClick = { onItemClick(this) },
             onItemLongClick = onItemLongClick?.let {
                 { it(this) }
