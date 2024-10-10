@@ -9,7 +9,6 @@ import com.tangem.TangemSdk
 import com.tangem.common.*
 import com.tangem.common.authentication.AuthenticationManager
 import com.tangem.common.authentication.keystore.KeystoreManager
-import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.secure.SecureStorage
@@ -138,6 +137,14 @@ class DefaultTangemSdkManager(
         scanResponse: ScanResponse,
         shouldReset: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
+        tangemSdk.config.setupForProduct(
+            if (scanResponse.cardTypesResolver.isRing()) {
+                ProductType.RING
+            } else {
+                ProductType.CARD
+            },
+        )
+
         return runTaskAsync(
             runnable = CreateProductWalletTask(
                 cardTypesResolver = scanResponse.cardTypesResolver,
@@ -145,10 +152,15 @@ class DefaultTangemSdkManager(
                 shouldReset = shouldReset,
             ),
             cardId = scanResponse.card.cardId,
-            initialMessage = Message(resources.getString(R.string.initial_message_create_wallet_body)),
+            initialMessage = if (scanResponse.cardTypesResolver.isRing()) {
+                Message(resources.getString(R.string.initial_message_create_wallet_body_ring))
+            } else {
+                Message(resources.getString(R.string.initial_message_create_wallet_body))
+            },
             iconScanRes = if (scanResponse.cardTypesResolver.isRing()) R.drawable.img_hand_scan_ring else null,
             preflightReadFilter = null,
         )
+            .doOnResult { tangemSdk.config.setupForProduct(ProductType.ANY) }
     }
 
     override suspend fun importWallet(
@@ -162,6 +174,15 @@ class DefaultTangemSdkManager(
         } catch (e: TangemSdkError.MnemonicException) {
             return CompletionResult.Failure(e)
         }
+
+        tangemSdk.config.setupForProduct(
+            if (scanResponse.cardTypesResolver.isRing()) {
+                ProductType.RING
+            } else {
+                ProductType.CARD
+            },
+        )
+
         return runTaskAsync(
             runnable = CreateProductWalletTask(
                 cardTypesResolver = scanResponse.cardTypesResolver,
@@ -171,9 +192,14 @@ class DefaultTangemSdkManager(
                 shouldReset = shouldReset,
             ),
             cardId = scanResponse.card.cardId,
-            initialMessage = Message(resources.getString(R.string.initial_message_create_wallet_body)),
+            initialMessage = if (scanResponse.cardTypesResolver.isRing()) {
+                Message(resources.getString(R.string.initial_message_create_wallet_body_ring))
+            } else {
+                Message(resources.getString(R.string.initial_message_create_wallet_body))
+            },
             preflightReadFilter = null,
         )
+            .doOnResult { tangemSdk.config.setupForProduct(ProductType.ANY) }
     }
 
     private fun sendScanResultsToAnalytics(result: CompletionResult<ScanResponse>) {
@@ -404,6 +430,16 @@ class DefaultTangemSdkManager(
         return runTaskAsync(runnable = task, cardId = null, initialMessage = initialMessage, preflightReadFilter = null)
     }
 
+    override fun changeProductType(isRing: Boolean) {
+        tangemSdk.config.setupForProduct(
+            type = if (isRing) ProductType.RING else ProductType.CARD,
+        )
+    }
+
+    override fun clearProductType() {
+        tangemSdk.config.setupForProduct(type = ProductType.ANY)
+    }
+
     override suspend fun finalizeTwin(
         secondCardPublicKey: ByteArray,
         issuerKeyPair: KeyPair,
@@ -422,18 +458,5 @@ class DefaultTangemSdkManager(
 
     companion object {
         private const val MAX_INITIALIZE_ATTEMPTS = 10
-
-        @Deprecated("Use [DefaultCardSdkProvider] instead")
-        val config = Config(
-            linkedTerminal = true,
-            allowUntrustedCards = true,
-            filter = CardFilter(
-                allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
-                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 33),
-                batchIdFilter = CardFilter.Companion.ItemFilter.Deny(
-                    items = setOf("0027", "0030", "0031", "0035"),
-                ),
-            ),
-        )
     }
 }

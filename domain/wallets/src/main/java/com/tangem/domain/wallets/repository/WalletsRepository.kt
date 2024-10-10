@@ -1,5 +1,6 @@
 package com.tangem.domain.wallets.repository
 
+import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 interface WalletsRepository {
@@ -9,4 +10,8 @@ interface WalletsRepository {
     fun shouldSaveUserWallets(): Flow<Boolean>
 
     suspend fun saveShouldSaveUserWallets(item: Boolean)
+
+    suspend fun isWalletWithRing(userWalletId: UserWalletId): Boolean
+
+    suspend fun setHasWalletsWithRing(userWalletId: UserWalletId)
 }
