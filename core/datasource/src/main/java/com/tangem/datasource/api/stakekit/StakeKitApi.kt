@@ -5,9 +5,7 @@ import com.tangem.datasource.api.stakekit.models.request.*
 import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
 import com.tangem.datasource.api.stakekit.models.response.EnterActionResponse
 import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
-import com.tangem.datasource.api.stakekit.models.response.model.TokenWithYieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingGasEstimateDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionDTO
 import retrofit2.http.*
@@ -26,12 +24,6 @@ interface StakeKitApi {
         @Query("limit") limit: Int? = null,
     ): ApiResponse<EnabledYieldsResponse>
 
-    @GET("yields/{integrationId}")
-    suspend fun getSingleYield(
-        @Path("integrationId") integrationId: String,
-        @Query("ledgerWalletAPICompatible") ledgerWalletAPICompatible: Boolean = false,
-    ): ApiResponse<YieldDTO>
-
     @POST("yields/balances")
     suspend fun getMultipleYieldBalances(
         @Body body: List<YieldBalanceRequestBody>,
@@ -42,9 +34,6 @@ interface StakeKitApi {
         @Path("integrationId") integrationId: String,
         @Body body: YieldBalanceRequestBody,
     ): ApiResponse<List<BalanceDTO>>
-
-    @GET("tokens")
-    suspend fun getTokens(): ApiResponse<List<TokenWithYieldDTO>>
 
     @POST("actions/enter")
     suspend fun createEnterAction(@Body body: ActionRequestBody): ApiResponse<EnterActionResponse>
