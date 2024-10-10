@@ -1,6 +1,7 @@
 package com.tangem.features.send.impl.presentation.state
 
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.ui.alerts.TransactionErrorAlertConverter
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.transaction.error.SendTransactionError
@@ -24,9 +25,10 @@ internal class SendEventStateFactory(
     private val clickIntents: SendClickIntents,
     private val feeStateFactory: FeeStateFactory,
 ) {
-    private val sendTransactionErrorConverter by lazy(LazyThreadSafetyMode.NONE) {
-        SendTransactionAlertConverter(
-            clickIntents = clickIntents,
+    private val transactionErrorAlertConverter by lazy(LazyThreadSafetyMode.NONE) {
+        TransactionErrorAlertConverter(
+            popBackStack = clickIntents::popBackStack,
+            onFailedTxEmailClick = clickIntents::onFailedTxEmailClick,
         )
     }
 
@@ -37,7 +39,7 @@ internal class SendEventStateFactory(
     fun getSendTransactionErrorState(error: SendTransactionError?, onConsume: () -> Unit): SendUiState {
         val state = currentStateProvider()
         val event = error?.let {
-            sendTransactionErrorConverter.convert(error)?.let {
+            transactionErrorAlertConverter.convert(error)?.let {
                 triggeredEvent<SendEvent>(SendEvent.ShowAlert(it), onConsume)
             }
         }
@@ -68,7 +70,7 @@ internal class SendEventStateFactory(
         return if (newFeeValue > oldFeeValue) {
             updateFeeState.copy(
                 event = triggeredEvent(
-                    data = SendEvent.ShowAlert(SendAlertState.FeeIncreased),
+                    data = SendEvent.ShowAlert(SendAlertUM.FeeIncreased(onConsume)),
                     onConsume = onConsume,
                 ),
             )
@@ -83,7 +85,7 @@ internal class SendEventStateFactory(
         return state.copy(
             event = triggeredEvent(
                 data = SendEvent.ShowAlert(
-                    SendAlertState.FeeTooLow(
+                    SendAlertUM.FeeTooLow(
                         onConfirmClick = clickIntents::showSend,
                     ),
                 ),
@@ -96,7 +98,7 @@ internal class SendEventStateFactory(
         return currentStateProvider().copy(
             event = triggeredEvent(
                 data = SendEvent.ShowAlert(
-                    SendAlertState.FeeTooHigh(
+                    SendAlertUM.FeeTooHigh(
                         onConfirmClick = clickIntents::showSend,
                         times = diff,
                     ),
@@ -111,7 +113,7 @@ internal class SendEventStateFactory(
         return state.copy(
             event = triggeredEvent(
                 data = SendEvent.ShowAlert(
-                    SendAlertState.GenericError(
+                    SendAlertUM.GenericError(
                         onConfirmClick = { clickIntents.onFailedTxEmailClick(error?.localizedMessage.orEmpty()) },
                     ),
                 ),
@@ -125,7 +127,7 @@ internal class SendEventStateFactory(
         return state.copy(
             event = triggeredEvent(
                 data = SendEvent.ShowAlert(
-                    SendAlertState.FeeUnreachableError(onConfirmClick = clickIntents::feeReload),
+                    SendAlertUM.FeeUnreachableError(onConfirmClick = clickIntents::feeReload),
                 ),
                 onConsume = onConsume,
             ),

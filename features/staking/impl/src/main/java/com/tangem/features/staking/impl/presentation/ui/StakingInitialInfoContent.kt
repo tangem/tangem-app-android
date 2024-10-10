@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -40,7 +41,7 @@ import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.components.list.roundedListWithDividersItems
-import com.tangem.core.ui.components.rows.CornersToRound
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemColorPalette
@@ -144,30 +145,36 @@ private fun LazyListScope.activeStakingBlock(
     isBalanceHidden: Boolean,
 ) {
     if (state.yieldBalance is InnerYieldBalanceState.Data) {
-        item(ACTIVE_STAKING_BLOCK_KEY) {
-            Text(
-                text = stringResource(id = R.string.staking_your_stakes),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(CornersToRound.TOP_2.getShape())
-                    .background(TangemTheme.colors.background.action)
-                    .padding(
-                        top = TangemTheme.dimens.spacing12,
-                        start = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing12,
-                        bottom = TangemTheme.dimens.spacing4,
-                    ),
-            )
+        if (state.yieldBalance.balance.isNotEmpty()) {
+            item(ACTIVE_STAKING_BLOCK_KEY) {
+                Text(
+                    text = stringResource(id = R.string.staking_your_stakes),
+                    style = TangemTheme.typography.subtitle2,
+                    color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier
+                        .roundedShapeItemDecoration(
+                            currentIndex = 0,
+                            lastIndex = 1 + state.yieldBalance.balance.lastIndex,
+                            addDefaultPadding = false,
+                        )
+                        .fillMaxWidth()
+                        .background(TangemTheme.colors.background.action)
+                        .padding(
+                            top = TangemTheme.dimens.spacing12,
+                            start = TangemTheme.dimens.spacing12,
+                            end = TangemTheme.dimens.spacing12,
+                            bottom = TangemTheme.dimens.spacing4,
+                        ),
+                )
+            }
         }
-        items(
+        itemsIndexed(
             items = state.yieldBalance.balance,
-            key = {
+            key = { _, balance ->
                 // Staked balance does not have unique identifier.
-                it.toString()
+                balance.toString()
             },
-        ) { balance ->
+        ) { index, balance ->
             ActiveStakingBlock(
                 balance = balance,
                 isBalanceHidden = isBalanceHidden,
@@ -175,12 +182,10 @@ private fun LazyListScope.activeStakingBlock(
                 onAnalytic = clickIntents::onActiveStakeAnalytic,
                 modifier = Modifier
                     .animateItem()
-                    .then(
-                        if (state.yieldBalance.balance.last() == balance) {
-                            Modifier.clip(CornersToRound.BOTTOM_2.getShape())
-                        } else {
-                            Modifier
-                        },
+                    .roundedShapeItemDecoration(
+                        currentIndex = index + 1,
+                        lastIndex = state.yieldBalance.balance.lastIndex + 1,
+                        addDefaultPadding = false,
                     ),
             )
         }

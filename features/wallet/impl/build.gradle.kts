@@ -80,6 +80,7 @@ dependencies {
     implementation(projects.domain.visa)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.markets.models)
+    implementation(projects.domain.feedback)
 // [REDACTED_TODO_COMMENT]
     implementation(projects.features.onboarding)
 

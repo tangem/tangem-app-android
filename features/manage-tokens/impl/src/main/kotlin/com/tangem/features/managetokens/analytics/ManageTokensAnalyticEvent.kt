@@ -49,6 +49,8 @@ internal sealed class ManageTokensAnalyticEvent(
             AnalyticsParam.Key.SOURCE to source.analyticsName,
         ),
     )
-// [REDACTED_TODO_COMMENT]
-    data object ButtonLater : ManageTokensAnalyticEvent(event = "Button - Later")
+    data object ButtonLater : ManageTokensAnalyticEvent(
+        event = "Button - Later",
+        params = mapOf(AnalyticsParam.SOURCE to ManageTokensSource.ONBOARDING.analyticsName),
+    )
 }
