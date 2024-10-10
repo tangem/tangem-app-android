@@ -3,6 +3,8 @@ package com.tangem.tap.features.onboarding.products.wallet.ui
 import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -10,12 +12,16 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.transition.TransitionManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
+import com.arkivanov.decompose.defaultComponentContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayoutMediator
 import com.tangem.common.CardIdFormatter
@@ -25,21 +31,29 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.di.RootAppComponentContext
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.extensions.setStatusBarColor
+import com.tangem.core.ui.message.EventMessageEffect
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.datasource.utils.isNullOrEmpty
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.isRing
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseRouter
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseViewModel
+import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.sdk.ui.widget.leapfrogWidget.PropertyCalculator
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.feedback.SupportInfo
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.BaseFragment
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
@@ -47,6 +61,8 @@ import com.tangem.tap.features.onboarding.OnboardingMenuProvider
 import com.tangem.tap.features.onboarding.products.wallet.redux.*
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.mainScope
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.utils.Provider
 import com.tangem.wallet.R
@@ -56,6 +72,7 @@ import com.tangem.wallet.databinding.ViewOnboardingProgressBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
 @Suppress("LargeClass", "MagicNumber")
 @AndroidEntryPoint
@@ -64,10 +81,24 @@ class OnboardingWalletFragment :
     StoreSubscriber<OnboardingWalletState>,
     FragmentOnBackPressedHandler {
 
+    @Inject
+    internal lateinit var uiDependencies: UiDependencies
+
+    @Inject
+    internal lateinit var onboardingManageTokensComponentFactory: OnboardingManageTokensComponent.Factory
+
+    @Inject
+    @RootAppComponentContext
+    internal lateinit var rootComponentContext: AppComponentContext
+
+    private var onboardingManageTokensComponent: OnboardingManageTokensComponent? = null
+    private lateinit var onboardingComponentContext: AppComponentContext
+
     internal val binding: FragmentOnboardingWalletBinding by viewBinding(FragmentOnboardingWalletBinding::bind)
     internal val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
 
     internal val bindingSeedPhrase: LayoutOnboardingSeedPhraseBinding by lazy { binding.onboardingSeedPhraseContainer }
+    private val bindingManageTokens by lazy { binding.onboardingManageTokensContainer }
 
     private val canSkipBackup by lazy { arguments?.getBoolean(AppRoute.OnboardingWallet.CAN_SKIP_BACKUP_KEY) ?: true }
 
@@ -89,6 +120,10 @@ class OnboardingWalletFragment :
         seedPhraseRouter = newSeedPhraseRouter
         seedPhraseViewModel.setRouter(newSeedPhraseRouter)
         seedPhraseViewModel.setMediator(makeSeedPhraseMediator())
+
+        onboardingComponentContext = rootComponentContext.childByContext(
+            componentContext = defaultComponentContext(onBackPressedDispatcher = null),
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -173,27 +208,29 @@ class OnboardingWalletFragment :
 
     override fun onStop() {
         super.onStop()
+        onboardingManageTokensComponent = null
         store.unsubscribe(this)
     }
 
     override fun newState(state: OnboardingWalletState) {
-        if (activity == null || view == null) return
+        Handler(Looper.getMainLooper()).post {
+            if (activity == null || view == null) return@post
+            animator.updateBackupState(state.backupState)
+            requireActivity().invalidateOptionsMenu()
 
-        animator.updateBackupState(state.backupState)
-        requireActivity().invalidateOptionsMenu()
+            pbBinding.pbState.max = state.getMaxProgress()
+            pbBinding.pbState.progress = state.getProgressStep()
 
-        pbBinding.pbState.max = state.getMaxProgress()
-        pbBinding.pbState.progress = state.getProgressStep()
-
-        when {
-            state.wallet2State != null -> {
-                seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
-                seedPhraseViewModel.setCardArtworkUri(cardArtworkUri = state.walletImages.primaryCardImage.toString())
-                updateWalletImagesState(state.walletImages)
-            }
-            else -> {
-                updateWalletImagesState(state.walletImages)
-                handleOnboardingStep(state)
+            when {
+                state.wallet2State != null -> {
+                    seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
+                    seedPhraseViewModel.setCardArtworkUri(cardArtworkUri = state.walletImages.primaryCardImage.toString())
+                    updateWalletImagesState(state.walletImages)
+                }
+                else -> {
+                    updateWalletImagesState(state.walletImages)
+                    handleOnboardingStep(state)
+                }
             }
         }
     }
@@ -221,11 +258,51 @@ class OnboardingWalletFragment :
     internal fun handleOnboardingStep(state: OnboardingWalletState) {
         when (state.step) {
             OnboardingWalletStep.CreateWallet -> setupCreateWalletState()
-            OnboardingWalletStep.Backup -> setBackupState(
-                state = state.backupState,
-            )
-
+            OnboardingWalletStep.Backup -> setBackupState(state = state.backupState)
+            OnboardingWalletStep.ManageTokens -> setManageTokensState(requireNotNull(state.userWalletId))
+            OnboardingWalletStep.Done -> showSuccess()
             else -> {}
+        }
+    }
+
+    private fun initializeOnboardingManageTokensComponent(userWalletId: UserWalletId) {
+        onboardingManageTokensComponent = onboardingManageTokensComponentFactory.create(
+            context = onboardingComponentContext,
+            params = OnboardingManageTokensComponent.Params(userWalletId = userWalletId),
+        )
+    }
+
+    private fun setManageTokensState(userWalletId: UserWalletId) {
+        with(binding) {
+            tvHeader.show()
+            tvBody.show()
+            viewPagerBackupInfo.hide()
+            tabLayoutBackupInfo.hide()
+            onboardingWalletContainer.show()
+            layoutButtonsCommon.btnWalletAlternativeAction.hide()
+            onboardingWalletContainer.hide()
+            toolbar.title = getText(R.string.onboarding_add_tokens)
+        }
+        pbBinding.pbState.show()
+        bindingSeedPhrase.onboardingSeedPhraseContainer.hide()
+        if (onboardingManageTokensComponent == null) {
+            initializeOnboardingManageTokensComponent(userWalletId)
+        }
+        with(bindingManageTokens) {
+            onboardingManageTokensContainer.hide()
+            onboardingManageTokensContainer.show()
+            onboardingManageTokensContainer.setContent {
+                TangemTheme(
+                    isDark = isSystemInDarkTheme(),
+                    windowSize = rememberWindowSize(activity = requireActivity()),
+                ) {
+                    onboardingManageTokensComponent?.Content(modifier = Modifier.fillMaxSize())
+                    EventMessageEffect(
+                        messageHandler = uiDependencies.eventMessageHandler,
+                        snackbarHostState = uiDependencies.globalSnackbarHostState,
+                    )
+                }
+            }
         }
     }
 
@@ -258,7 +335,10 @@ class OnboardingWalletFragment :
             BackupStep.ReenterAccessCode -> showReenterAccessCode(state)
             is BackupStep.WritePrimaryCard -> showWritePrimaryCard(state)
             is BackupStep.WriteBackupCard -> showWriteBackupCard(state)
-            BackupStep.Finished -> showSuccess()
+            BackupStep.Finished -> {
+                // don't need to navigate here"
+                // showSuccess()
+            }
         }
     }
 
@@ -479,6 +559,8 @@ class OnboardingWalletFragment :
         tvBody.show()
         viewPagerBackupInfo.hide()
         tabLayoutBackupInfo.hide()
+        onboardingWalletContainer.show()
+        bindingManageTokens.onboardingManageTokensContainer.hide()
 
         tvBody.text = getText(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
         layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_continue_wallet)
@@ -536,14 +618,16 @@ class OnboardingWalletFragment :
         onBack = ::legacyOnBackHandler,
         onOpenChat = {
             Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Intro))
-            // changed on email support [REDACTED_TASK_KEY]
-            store.dispatch(
-                GlobalAction.SendEmail(
-                    feedbackData = SupportInfo(),
-                    scanResponse = store.state.globalState.onboardingState.onboardingManager?.scanResponse
-                        ?: error("ScanResponse must be not null"),
-                ),
-            )
+
+            val scanResponse = requireNotNull(store.state.globalState.onboardingState.onboardingManager?.scanResponse)
+
+            val getCardInfoUseCase = store.inject(DaggerGraphState::getCardInfoUseCase)
+            val cardInfo = requireNotNull(getCardInfoUseCase.invoke(scanResponse).getOrNull())
+
+            scope.launch {
+                store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                    .invoke(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+            }
         },
         onOpenUriClick = { uri ->
             store.dispatchOpenUrl(uri.toString())
