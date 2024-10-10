@@ -15,9 +15,12 @@ import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
+import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.Artwork
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
@@ -172,11 +175,14 @@ private fun handleWalletAction(action: Action) {
                 BackupService.State.FinalizingPrimaryCard -> BackupAction.PrepareToWritePrimaryCard
                 is BackupService.State.FinalizingBackupCard -> BackupAction.PrepareToWriteBackupCard(backupState.index)
                 else -> {
-                    if (onboardingWalletState.backupState.backupStep == BackupStep.InitBackup ||
+                    if (onboardingWalletState.backupState.backupStep == null ||
+                        onboardingWalletState.backupState.backupStep == BackupStep.InitBackup ||
                         onboardingWalletState.backupState.backupStep == BackupStep.Finished
                     ) {
                         Analytics.send(Onboarding.Backup.ScreenOpened())
-                        BackupAction.IntroduceBackup
+
+                        val isWallet2 = scanResponse?.cardTypesResolver?.isWallet2() ?: false
+                        if (isWallet2) BackupAction.StartBackup else BackupAction.IntroduceBackup
                     } else {
                         null
                     }
@@ -192,6 +198,14 @@ private fun handleWalletAction(action: Action) {
 private fun handleFinishBackup(scanResponse: ScanResponse) {
     val backupState = store.state.onboardingWalletState.backupState
     val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
+
+    val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+    if (backupState.hasRing && userWalletId != null) {
+        scope.launch {
+            store.inject(DaggerGraphState::walletsRepository).setHasWalletsWithRing(userWalletId = userWalletId)
+        }
+    }
+
     OnboardingHelper.saveWallet(
         scanResponse = updatedScanResponse,
         accessCode = backupState.accessCode,
@@ -445,7 +459,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 when (result) {
                     is CompletionResult.Success -> {
                         updateArtworks(backupService.addedBackupCardsCount, result.data)
-                        store.dispatchOnMain(BackupAction.AddBackupCard.Success)
+                        store.dispatchOnMain(BackupAction.AddBackupCard.Success(result.data))
                     }
                     is CompletionResult.Failure -> {
                         val crashlytics = FirebaseCrashlytics.getInstance()
@@ -499,11 +513,12 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.WritePrimaryCard -> {
-            val iconScanRes = if (scanResponse?.cardTypesResolver?.isRing() == true) {
-                R.drawable.img_hand_scan_ring
-            } else {
-                null
-            }
+            val isRing = scanResponse?.cardTypesResolver?.isRing() == true
+            val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
+
+            store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
+
+            tangemSdkManager.changeProductType(isRing)
             backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
@@ -511,10 +526,19 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     }
                     is CompletionResult.Failure -> Unit
                 }
+                tangemSdkManager.clearProductType()
             }
         }
         is BackupAction.WriteBackupCard -> {
-            backupService.proceedBackup { result ->
+            val cardIndex = if (action.cardNumber > 0) action.cardNumber - 1 else action.cardNumber
+            val backupCard = backupState.backupCards.getOrNull(cardIndex)
+            val isRing = backupCard.isRing()
+            val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
+
+            store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
+
+            tangemSdkManager.changeProductType(isRing)
+            backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         val backupValidator = BackupValidator()
@@ -539,6 +563,8 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                         }
                     }
                 }
+
+                tangemSdkManager.clearProductType()
             }
         }
         is BackupAction.DiscardBackup -> {
@@ -652,6 +678,10 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
     }
 }
 
+private fun Card?.isRing(): Boolean {
+    return this?.let { RING_BATCH_IDS.contains(batchId) || batchId.startsWith(RING_BATCH_PREFIX) } ?: false
+}
+
 private suspend fun saveWallet(
     userWalletsListManager: UserWalletsListManager,
     userWallet: UserWallet,
@@ -724,7 +754,7 @@ internal fun gatherCardIds(backupState: BackupState, card: CardDTO?): List<Strin
 
 private fun handleOnBackPressed(state: OnboardingWalletState) {
     when (state.backupState.backupStep) {
-        BackupStep.InitBackup, BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
+        null, BackupStep.InitBackup, BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
         BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard,
         -> {
             showInterruptOnboardingDialog()
