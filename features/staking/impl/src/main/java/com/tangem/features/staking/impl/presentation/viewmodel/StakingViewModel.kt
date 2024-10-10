@@ -11,6 +11,8 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.haptic.TangemHapticEffect
@@ -59,10 +61,7 @@ import com.tangem.features.staking.impl.presentation.state.helpers.StakingFeeTra
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingTransactionSender
 import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.*
-import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetApprovalBottomSheetInProgressTransformer
-import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetApprovalInProgressTransformer
-import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetConfirmationStateAssentApprovalTransformer
-import com.tangem.features.staking.impl.presentation.state.transformers.approval.ShowApprovalBottomSheetTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.approval.*
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
 import com.tangem.features.staking.impl.presentation.state.utils.isSolanaWithdraw
 import com.tangem.utils.Provider
@@ -562,6 +561,10 @@ internal class StakingViewModel @Inject constructor(
         )
     }
 
+    override fun onApproveTypeChange(approveType: ApproveType) {
+        stateController.update(SetApprovalBottomSheetTypeChangeTransformer(approveType))
+    }
+
     override fun onApprovalClick() {
         viewModelScope.launch {
             stateController.update(
@@ -573,15 +576,17 @@ internal class StakingViewModel @Inject constructor(
             val tokenCryptoCurrency =
                 cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: error("No token currency")
             val amountValue = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
-                ?: error("No amount provided")
 
             val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
                 ?: error("No confirmation state")
             val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: error("No fee provided")
             val approval = stakingApproval as? StakingApproval.Needed ?: error("No staking approve spender address")
 
+            val approvalBottomSheetConfig = value.bottomSheetConfig?.content as? GiveTxPermissionBottomSheetConfig
+            val isLimitedApproval = approvalBottomSheetConfig?.data?.approveType == ApproveType.LIMITED
+
             val approvalTransaction = createApprovalTransactionUseCase(
-                amount = amountValue,
+                amount = amountValue.takeIf { isLimitedApproval },
                 contractAddress = tokenCryptoCurrency.contractAddress,
                 spenderAddress = approval.spenderAddress,
                 fee = fee,
