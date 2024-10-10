@@ -116,6 +116,7 @@ internal class CurrenciesStatusesLceOperations(
         userWalletId: UserWalletId,
     ): LceFlow<TokenListError, List<CryptoCurrency>> {
         return currenciesRepository.getMultiCurrencyWalletCurrenciesUpdatesLce(userWalletId)
+            .distinctUntilChanged()
             .map { maybeCurrencies ->
                 maybeCurrencies.mapError { TokenListError.DataError(it) }
             }
@@ -146,13 +147,11 @@ internal class CurrenciesStatusesLceOperations(
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
             val address = extractAddress(networkStatus)
-            val isStakingSupported = stakingRepository.isStakingSupported(
-                stakingRepository.getIntegrationKey(currency.id),
-            )
-            val yieldBalance = if (isStakingSupported) {
+            val supportedIntegration = stakingRepository.getSupportedIntegrationId(currency.id)
+            val yieldBalance = if (supportedIntegration.isNullOrBlank().not()) {
                 (yieldBalances as? YieldBalanceList.Data)?.getBalance(
                     address = address,
-                    rawCurrencyId = currency.id.rawCurrencyId,
+                    integrationId = supportedIntegration,
                 )
             } else {
                 null
