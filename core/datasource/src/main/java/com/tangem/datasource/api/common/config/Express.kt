@@ -51,6 +51,7 @@ internal class Express(
         put(key = "user-id", value = Provider(expressAuthProvider::getUserId))
         put(key = "session-id", value = Provider(expressAuthProvider::getSessionId))
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appVersionProvider).values)
+        put(key = "refcode", value = Provider(expressAuthProvider::getRefCode))
     }
 
     private fun getApiKey(isProd: Boolean): String {

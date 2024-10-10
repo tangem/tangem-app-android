@@ -2,6 +2,7 @@ package com.tangem.tap.network.auth.di
 
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
@@ -29,8 +30,14 @@ class AuthModule {
 
     @Provides
     @Singleton
-    fun provideExpressAuthProvider(userWalletsStore: UserWalletsStore): ExpressAuthProvider {
-        return DefaultExpressAuthProvider(userWalletsStore = userWalletsStore)
+    fun provideExpressAuthProvider(
+        userWalletsStore: UserWalletsStore,
+        appPreferencesStore: AppPreferencesStore,
+    ): ExpressAuthProvider {
+        return DefaultExpressAuthProvider(
+            userWalletsStore = userWalletsStore,
+            appPreferencesStore = appPreferencesStore,
+        )
     }
 
     @Provides

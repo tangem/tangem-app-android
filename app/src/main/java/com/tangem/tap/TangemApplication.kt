@@ -8,9 +8,15 @@ import com.tangem.Log
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.blockchainsdk.signer.TransactionSignerFactory
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.filter.OneTimeEventFilter
+import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
@@ -175,6 +181,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val tangemAppLoggerInitializer: TangemAppLoggerInitializer
         get() = entryPoint.getTangemAppLogger()
 
+    private val transactionSignerFactory: TransactionSignerFactory
+        get() = entryPoint.getTransactionSignerFactory()
+
     private val homeFeatureToggles: HomeFeatureToggles
         get() = entryPoint.getHomeFeatureToggles()
 
@@ -259,6 +268,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     urlOpener = urlOpener,
                     shareManager = shareManager,
                     appRouter = appRouter,
+                    transactionSignerFactory = transactionSignerFactory,
                     homeFeatureToggles = homeFeatureToggles,
                     getUserCountryUseCase = getUserCountryUseCase,
                 ),
@@ -296,6 +306,25 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
             logConfig = LogConfig.analyticsHandlers,
             jsonConverter = MoshiConverter.sdkMoshiConverter,
         )
+
+        Analytics.addParamsInterceptor(
+            interceptor = object : ParamsInterceptor {
+                override fun id(): String = "SendTransactionSignerInfoInterceptor"
+
+                override fun canBeAppliedTo(event: AnalyticsEvent): Boolean = event is Basic.TransactionSent
+
+                override fun intercept(params: MutableMap<String, String>) {
+                    val isLastSignWithRing = store.state.globalState.isLastSignWithRing
+
+                    params[AnalyticsParam.WALLET_FORM] = if (isLastSignWithRing) {
+                        WalletForm.Ring.name
+                    } else {
+                        WalletForm.Card.name
+                    }
+                }
+            },
+        )
+
         factory.build(Analytics, buildData)
         // ExceptionHandler.append(blockchainExceptionHandler) TODO: https://tangem.atlassian.net/browse/AND-4173
     }
