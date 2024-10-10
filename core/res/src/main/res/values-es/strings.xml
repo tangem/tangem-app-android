@@ -344,7 +344,7 @@
   <string name="manage_tokens_wallet_selector_title">Elegir wallet</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">La billetera no admite más de una red</string>
   <string name="markets_add_to_my_portfolio_description">Para comprar, intercambiar o recibir este activo, agréguelo a su portafolio</string>
-  <string name="markets_add_to_my_portfolio_unavailable_description">Este activo no está disponible</string>
+  <string name="markets_add_to_my_portfolio_unavailable_description">Este activo no está disponible en la billetera</string>
   <string name="markets_add_to_portfolio_button">Añadir al portafolio</string>
   <string name="markets_add_token">Agregue un token</string>
   <string name="markets_available_networks">Redes disponibles</string>

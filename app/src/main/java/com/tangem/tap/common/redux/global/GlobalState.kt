@@ -24,6 +24,7 @@ data class GlobalState(
     @Deprecated("Use GetUserCountryCodeUseCase instead")
     val userCountryCode: String? = null,
     val appThemeMode: AppThemeMode = AppThemeMode.DEFAULT,
+    val isLastSignWithRing: Boolean = false,
 ) : StateType
 
 typealias CryptoCurrencyName = String
