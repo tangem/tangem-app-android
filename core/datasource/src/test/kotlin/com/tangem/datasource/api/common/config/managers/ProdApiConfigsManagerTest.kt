@@ -66,6 +66,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         const val VERSION_NAME = "debug"
         const val EXPRESS_USER_ID = "express_user_id"
         const val EXPRESS_SESSION_ID = "express_session_id"
+        const val EXPRESS_REF_CODE = "express_ref_code"
         const val STAKE_KIT_API_KEY = "stake_kit_api_key"
 
         @JvmStatic
