@@ -1,7 +1,6 @@
 package com.tangem.features.staking.impl.presentation.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,7 +8,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
@@ -65,7 +63,7 @@ private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
 private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
 private const val STAKE_PRIMARY_BUTTON_KEY = "StakePrimaryButton"
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 internal fun StakingInitialInfoContent(
     state: StakingStates.InitialInfoState,
