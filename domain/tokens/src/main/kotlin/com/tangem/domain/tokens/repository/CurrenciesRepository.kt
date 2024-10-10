@@ -204,8 +204,6 @@ interface CurrenciesRepository {
      */
     fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean>
 
-    fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
-
     /**
      * Determines whether the currency sending is blocked by network pending transaction
      *
