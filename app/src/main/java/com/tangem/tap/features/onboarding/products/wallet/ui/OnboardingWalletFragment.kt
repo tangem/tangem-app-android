@@ -41,8 +41,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.datasource.utils.isNullOrEmpty
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.isRing
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.scan.isRing
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
@@ -224,7 +224,9 @@ class OnboardingWalletFragment :
             when {
                 state.wallet2State != null -> {
                     seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
-                    seedPhraseViewModel.setCardArtworkUri(cardArtworkUri = state.walletImages.primaryCardImage.toString())
+                    seedPhraseViewModel.setCardArtworkUri(
+                        cardArtworkUri = state.walletImages.primaryCardImage.toString(),
+                    )
                     updateWalletImagesState(state.walletImages)
                 }
                 else -> {
