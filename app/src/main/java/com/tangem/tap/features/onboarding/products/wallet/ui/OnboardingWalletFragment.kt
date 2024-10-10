@@ -42,6 +42,7 @@ import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.datasource.utils.isNullOrEmpty
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.scan.isRing
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
@@ -223,6 +224,9 @@ class OnboardingWalletFragment :
             when {
                 state.wallet2State != null -> {
                     seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
+                    seedPhraseViewModel.setCardArtworkUri(
+                        cardArtworkUri = state.walletImages.primaryCardImage.toString(),
+                    )
                     updateWalletImagesState(state.walletImages)
                 }
                 else -> {
@@ -324,6 +328,7 @@ class OnboardingWalletFragment :
 
     private fun setBackupState(state: BackupState) {
         when (state.backupStep) {
+            null -> Unit
             BackupStep.InitBackup -> showBackupIntro(state)
             BackupStep.ScanOriginCard -> showScanOriginCard()
             BackupStep.AddBackupCards -> showAddBackupCards(state)
@@ -477,13 +482,26 @@ class OnboardingWalletFragment :
         reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         prepareViewForFinalizeStep()
 
-        val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
-        tvHeader.text = getText(R.string.common_origin_card)
-        tvBody.text = getString(
-            R.string.onboarding_subtitle_scan_primary_card_format,
-            state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
+        val isRing = state.primaryCardBatchId != null && isRing(batchId = state.primaryCardBatchId)
+
+        tvHeader.text = getText(
+            if (isRing) R.string.common_origin_ring else R.string.common_origin_card,
         )
-        layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_backup_origin)
+
+        tvBody.text = if (isRing) {
+            getString(R.string.onboarding_subtitle_scan_ring)
+        } else {
+            val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
+            getString(
+                R.string.onboarding_subtitle_scan_primary_card_format,
+                state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
+            )
+        }
+
+        layoutButtonsCommon.btnWalletMainAction.text = getText(
+            if (isRing) R.string.onboarding_button_backup_ring else R.string.onboarding_button_backup_origin,
+        )
+
         layoutButtonsCommon.btnWalletMainAction.setIconResource(R.drawable.ic_tangem_24)
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
 
@@ -507,16 +525,26 @@ class OnboardingWalletFragment :
         prepareViewForFinalizeStep()
 
         val cardNumber = (state.backupStep as? BackupStep.WriteBackupCard)?.cardNumber ?: 1
-        val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
-        tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
-        tvBody.text = getString(
-            R.string.onboarding_subtitle_scan_backup_card_format,
-            cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
+
+        val isRing = isRing(batchId = state.backupCardBatchIds[cardNumber - 1])
+        tvHeader.text = getString(
+            if (isRing) R.string.onboarding_title_backup_ring else R.string.onboarding_title_backup_card,
         )
+
+        tvBody.text = if (isRing) {
+            getString(R.string.onboarding_subtitle_scan_ring)
+        } else {
+            val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
+            getString(
+                R.string.onboarding_subtitle_scan_backup_card_format,
+                state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
+            )
+        }
+
         layoutButtonsCommon.btnWalletMainAction.text = getString(
-            R.string.onboarding_button_backup_card_format,
-            cardNumber,
+            if (isRing) R.string.onboarding_button_backup_ring else R.string.onboarding_button_backup_origin,
         )
+
         layoutButtonsCommon.btnWalletMainAction.setIconResource(R.drawable.ic_tangem_24)
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             store.dispatch(BackupAction.WriteBackupCard(cardNumber))
