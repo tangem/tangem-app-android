@@ -31,6 +31,7 @@ interface TransactionRepository {
     @Suppress("LongParameterList")
     suspend fun createApprovalTransaction(
         amount: Amount,
+        approvalAmount: Amount?,
         fee: Fee,
         contractAddress: String,
         spenderAddress: String,
