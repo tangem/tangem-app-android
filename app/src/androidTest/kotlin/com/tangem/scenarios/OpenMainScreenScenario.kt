@@ -8,6 +8,7 @@ import com.tangem.domain.models.scan.ProductType
 import com.tangem.screens.DisclaimerTestScreen
 import com.tangem.screens.MainTestScreen
 import com.tangem.screens.StoriesTestScreen
+import com.tangem.screens.TestTopBar
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import io.github.kakaocup.compose.node.element.ComposeScreen
 
@@ -32,6 +33,11 @@ class OpenMainScreenScenario(
         ComposeScreen.onComposeScreen<MainTestScreen>(testRule) {
             step("Make sure wallet screen is visible") {
                 assertIsDisplayed()
+            }
+        }
+        ComposeScreen.onComposeScreen<TestTopBar>(testRule) {
+            step("Close Markets tooltip"){
+                performClick()
             }
         }
     }
