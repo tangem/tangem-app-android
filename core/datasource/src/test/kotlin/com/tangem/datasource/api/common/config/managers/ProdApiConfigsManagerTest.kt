@@ -44,6 +44,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         every { appVersionProvider.versionName } returns VERSION_NAME
         every { expressAuthProvider.getUserId() } returns EXPRESS_USER_ID
         every { expressAuthProvider.getSessionId() } returns EXPRESS_SESSION_ID
+        every { expressAuthProvider.getRefCode() } returns EXPRESS_REF_CODE
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
     }
 
@@ -65,6 +66,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         const val VERSION_NAME = "debug"
         const val EXPRESS_USER_ID = "express_user_id"
         const val EXPRESS_SESSION_ID = "express_session_id"
+        const val EXPRESS_REF_CODE = "express_ref_code"
         const val STAKE_KIT_API_KEY = "stake_kit_api_key"
 
         @JvmStatic
@@ -113,6 +115,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         },
                         "user-id" to Provider { EXPRESS_USER_ID },
                         "session-id" to Provider { EXPRESS_SESSION_ID },
+                        "refcode" to Provider { EXPRESS_REF_CODE },
                         "version" to Provider { VERSION_NAME },
                         "platform" to Provider { "android" },
                     ),
