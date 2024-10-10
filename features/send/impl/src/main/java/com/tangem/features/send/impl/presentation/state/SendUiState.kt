@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
@@ -112,7 +113,7 @@ internal sealed class SendStates {
         val appCurrency: AppCurrency,
         val isFeeApproximate: Boolean,
         val isCustomSelected: Boolean,
-        val notifications: ImmutableList<SendNotification>,
+        val notifications: ImmutableList<NotificationUM>,
         val isTronToken: Boolean,
     ) : SendStates()
 
@@ -129,7 +130,7 @@ internal sealed class SendStates {
         val reduceAmountBy: BigDecimal?,
         val isFromConfirmation: Boolean,
         val showTapHelp: Boolean,
-        val notifications: ImmutableList<SendNotification>,
+        val notifications: ImmutableList<NotificationUM>,
     ) : SendStates()
 }
 
