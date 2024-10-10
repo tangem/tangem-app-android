@@ -211,11 +211,13 @@ class WalletConnectSdkHelper {
     }
 
     private suspend fun sendTransaction(data: WcTransactionData, cardId: String?): String? {
+        val sdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk
+
         val result = (data.walletManager as TransactionSender).send(
             transactionData = data.transaction,
-            signer = CommonSigner(
-                tangemSdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk,
+            signer = store.inject(DaggerGraphState::transactionSignerFactory).createTransactionSigner(
                 cardId = cardId,
+                sdk = sdk,
             ),
         )
         return when (result) {
