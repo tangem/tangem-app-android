@@ -1,6 +1,5 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.redux.OnboardingManageTokensAction
 import com.tangem.tap.backupService
 import com.tangem.tap.common.redux.AppState
@@ -75,7 +74,6 @@ private object ReducerForGlobalAction {
                         canSkipBackup = action.canSkipBackup,
                         startedSource = action.source,
                     ),
-                    isRingOnboarding = action.scanResponse.cardTypesResolver.isRing(),
                 )
             }
             is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
@@ -104,7 +102,7 @@ private object OnboardingWallet2Reducer {
 }
 
 private object BackupReducer {
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "LongMethod")
     fun reduce(action: BackupAction, state: BackupState): BackupState {
         return when (action) {
             is BackupAction.IntroduceBackup -> BackupState(
@@ -113,9 +111,26 @@ private object BackupReducer {
                 canSkipBackup = state.canSkipBackup,
                 startedSource = state.startedSource,
             )
-            BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
-            BackupAction.StartAddingBackupCards -> state.copy(backupStep = BackupStep.AddBackupCards)
-            BackupAction.AddBackupCard.Success -> state.copy(backupCardsNumber = state.backupCardsNumber + 1)
+            BackupAction.StartAddingPrimaryCard -> {
+                state.copy(
+                    backupStep = BackupStep.ScanOriginCard,
+                    maxBackupCards = 2,
+                    canSkipBackup = state.canSkipBackup,
+                )
+            }
+            BackupAction.StartAddingBackupCards -> {
+                state.copy(
+                    backupStep = BackupStep.AddBackupCards,
+                    maxBackupCards = 2,
+                    canSkipBackup = state.canSkipBackup,
+                )
+            }
+            is BackupAction.AddBackupCard.Success -> {
+                state.copy(
+                    backupCards = state.backupCards + action.card,
+                    backupCardsNumber = state.backupCardsNumber + 1,
+                )
+            }
             is BackupAction.AddBackupCard.ChangeButtonLoading -> state.copy(showBtnLoading = action.isLoading)
             BackupAction.ShowAccessCodeInfoScreen -> state.copy(backupStep = BackupStep.SetAccessCode)
             BackupAction.ShowEnterAccessCodeScreen -> state.copy(
@@ -130,7 +145,9 @@ private object BackupReducer {
             is BackupAction.PrepareToWritePrimaryCard -> if (state.primaryCardId == null) {
                 state.copy(
                     primaryCardId = backupService.primaryCardId,
+                    primaryCardBatchId = backupService.primaryCardBatchId,
                     backupCardIds = backupService.backupCardIds,
+                    backupCardBatchIds = backupService.backupCardsBatchIds,
                     backupCardsNumber = backupService.backupCardIds.size,
                     backupStep = BackupStep.WritePrimaryCard,
                 )
@@ -140,7 +157,9 @@ private object BackupReducer {
             is BackupAction.PrepareToWriteBackupCard -> if (state.primaryCardId == null) {
                 state.copy(
                     primaryCardId = backupService.primaryCardId,
+                    primaryCardBatchId = backupService.primaryCardBatchId,
                     backupCardIds = backupService.backupCardIds,
+                    backupCardBatchIds = backupService.backupCardsBatchIds,
                     backupCardsNumber = backupService.backupCardIds.size,
                     backupStep = BackupStep.WriteBackupCard(action.cardNumber),
                 )
@@ -152,6 +171,14 @@ private object BackupReducer {
             is BackupAction.FinishBackup -> state.copy(backupStep = BackupStep.Finished)
             BackupAction.OnAccessCodeDialogClosed -> state.copy(backupStep = BackupStep.AddBackupCards)
             BackupAction.DiscardBackup -> BackupState()
+            is BackupAction.SetHasRing -> {
+                // Don't update if state.has ring is already true
+                if (state.hasRing) {
+                    state
+                } else {
+                    state.copy(hasRing = action.hasRing)
+                }
+            }
             else -> state
         }
     }
