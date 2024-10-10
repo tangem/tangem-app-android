@@ -1,5 +1,7 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.redux.OnboardingManageTokensAction
 import com.tangem.tap.backupService
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -9,12 +11,24 @@ object OnboardingWalletReducer {
     fun reduce(action: Action, state: AppState): OnboardingWalletState = internalReduce(action, state)
 }
 
+@Suppress("CyclomaticComplexMethod")
 private fun internalReduce(action: Action, appState: AppState): OnboardingWalletState {
     val state = appState.onboardingWalletState
+    val backupState = state.backupState
 
     return when (action) {
         is GlobalAction.Onboarding -> ReducerForGlobalAction.reduce(action, state)
-        is BackupAction -> state.copy(backupState = BackupReducer.reduce(action, state.backupState))
+        is BackupAction.BackupFinished -> {
+            state.copy(
+                step = if (action.userWalletId != null && backupState.startedSource == BackupStartedSource.Onboarding) {
+                    OnboardingWalletStep.ManageTokens
+                } else {
+                    OnboardingWalletStep.Done
+                },
+                userWalletId = action.userWalletId,
+            )
+        }
+        is BackupAction -> state.copy(backupState = BackupReducer.reduce(action = action, state = state.backupState))
         is OnboardingWallet2Action -> OnboardingWallet2Reducer.reduce(action, state)
         is OnboardingWalletAction.GetToCreateWalletStep -> state.copy(
             step = OnboardingWalletStep.CreateWallet,
@@ -35,6 +49,14 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
                 walletImages = state.walletImages.copy(thirdCardImage = action.artworkUri),
             )
         }
+        is OnboardingManageTokensAction.CurrenciesSaved -> state.copy(step = OnboardingWalletStep.Done)
+        is OnboardingWalletAction.WalletSaved -> state.copy(
+            step = when (backupState.startedSource) {
+                BackupStartedSource.Onboarding -> OnboardingWalletStep.ManageTokens
+                BackupStartedSource.CreateBackup -> OnboardingWalletStep.Done
+            },
+            userWalletId = action.userWalletId,
+        )
         is OnboardingWalletAction.Done -> state.copy(step = OnboardingWalletStep.Done)
         else -> state
     }
@@ -51,6 +73,7 @@ private object ReducerForGlobalAction {
                     backupState = state.backupState.copy(
                         maxBackupCards = MAX_BACKUP_CARDS,
                         canSkipBackup = action.canSkipBackup,
+                        startedSource = action.source,
                     ),
                 )
             }
@@ -87,6 +110,7 @@ private object BackupReducer {
                 backupStep = BackupStep.InitBackup,
                 maxBackupCards = 2,
                 canSkipBackup = state.canSkipBackup,
+                startedSource = state.startedSource,
             )
             BackupAction.StartAddingPrimaryCard -> {
                 state.copy(

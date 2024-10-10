@@ -27,14 +27,14 @@ internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
         config = config,
         addBottomInsets = false,
         title = { TangemBottomSheetTitle(title = it.title) },
-        content = {
+        content = { content ->
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = TangemTheme.dimens.spacing16),
             ) {
                 MarkdownText(
-                    markdown = it.body.resolveReference(),
+                    markdown = content.body.resolveReference(),
                     disableLinkMovementMethod = true,
                     linkifyMask = 0,
                     syntaxHighlightColor = TangemTheme.colors.text.secondary,
@@ -43,8 +43,9 @@ internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
                     ),
                 )
 
-                if (it.showGeneratedAINotification) {
+                if (content.generatedAINotificationUM != null) {
                     AdditionalInfoNotification(
+                        onClick = content.generatedAINotificationUM.onClick,
                         modifier = Modifier
                             .padding(top = TangemTheme.dimens.spacing12, bottom = TangemTheme.dimens.spacing16)
                             .fillMaxWidth(),
@@ -58,11 +59,13 @@ internal fun InfoBottomSheet(config: TangemBottomSheetConfig) {
 }
 
 @Composable
-private fun AdditionalInfoNotification(modifier: Modifier = Modifier) {
+private fun AdditionalInfoNotification(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Notification(
         config = NotificationConfig(
             subtitle = TextReference.Res(id = R.string.information_generated_with_ai),
             iconResId = R.drawable.ic_magic_28,
+            onClick = onClick,
+            showArrowIcon = false,
         ),
         modifier = modifier,
         subtitleColor = TangemTheme.colors.text.primary1,
