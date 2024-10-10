@@ -63,7 +63,11 @@ internal fun OkHttpClient.Builder.addHeaders(requestHeaders: Map<String, Provide
     return addInterceptor(
         Interceptor { chain ->
             val request = chain.request().newBuilder().apply {
-                requestHeaders.forEach { addHeader(it.key, it.value.invoke()) }
+                requestHeaders.forEach {
+                    val value = it.value.invoke()
+
+                    if (value.isNotBlank()) addHeader(name = it.key, value = value)
+                }
             }.build()
 
             chain.proceed(request)
