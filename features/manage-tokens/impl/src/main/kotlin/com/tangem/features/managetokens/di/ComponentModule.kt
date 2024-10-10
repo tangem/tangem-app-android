@@ -18,6 +18,12 @@ internal interface ComponentModule {
 
     @Binds
     @Singleton
+    fun bindOnboardingManageTokensComponentFactory(
+        factory: DefaultOnboardingManageTokensComponent.Factory,
+    ): OnboardingManageTokensComponent.Factory
+
+    @Binds
+    @Singleton
     fun bindAddCustomTokenComponentFactory(
         factory: DefaultAddCustomTokenComponent.Factory,
     ): AddCustomTokenComponent.Factory
