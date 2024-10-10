@@ -1,5 +1,6 @@
 package com.tangem.data.card.di
 
+import com.tangem.blockchainsdk.signer.TransactionSignerFactory
 import com.tangem.data.card.DefaultCardRepository
 import com.tangem.data.card.DefaultCardSdkConfigRepository
 import com.tangem.data.card.sdk.CardSdkProvider
@@ -18,8 +19,14 @@ internal object CardDataModule {
 
     @Provides
     @Singleton
-    fun provideCardSdkConfigRepository(cardSdkProvider: CardSdkProvider): CardSdkConfigRepository {
-        return DefaultCardSdkConfigRepository(cardSdkProvider = cardSdkProvider)
+    fun provideCardSdkConfigRepository(
+        cardSdkProvider: CardSdkProvider,
+        transactionSignerFactory: TransactionSignerFactory,
+    ): CardSdkConfigRepository {
+        return DefaultCardSdkConfigRepository(
+            cardSdkProvider = cardSdkProvider,
+            transactionSignerFactory = transactionSignerFactory,
+        )
     }
 
     @Provides
