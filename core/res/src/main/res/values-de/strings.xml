@@ -101,10 +101,6 @@
     <item quantity="one">Tag</item>
     <item quantity="other">Tage</item>
   </plurals>
-  <plurals name="common_days_no_param">
-    <item quantity="one">Tag</item>
-    <item quantity="other">Tage</item>
-  </plurals>
   <string name="common_delete">Entfernen</string>
   <string name="common_disabled">Deaktiviert</string>
   <string name="common_done">Erledigt</string>
