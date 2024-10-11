@@ -15,9 +15,12 @@ internal class InitializeWalletsTransformer(
     private val selectedWalletIndex: Int,
     private val wallets: List<UserWallet>,
     private val clickIntents: WalletClickIntents,
+    private val walletImageResolver: WalletImageResolver,
 ) : WalletScreenStateTransformer {
 
-    private val walletLoadingStateFactory by lazy { WalletLoadingStateFactory(clickIntents = clickIntents) }
+    private val walletLoadingStateFactory by lazy {
+        WalletLoadingStateFactory(clickIntents = clickIntents, walletImageResolver = walletImageResolver)
+    }
 
     override fun transform(prevState: WalletScreenState): WalletScreenState {
         return prevState.copy(
@@ -78,7 +81,7 @@ internal class InitializeWalletsTransformer(
             id = walletId,
             title = name,
             additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = this),
-            imageResId = WalletImageResolver.resolve(userWallet = this),
+            imageResId = walletImageResolver.resolve(userWallet = this),
             onRenameClick = clickIntents::onRenameBeforeConfirmationClick,
             onDeleteClick = clickIntents::onDeleteBeforeConfirmationClick,
         )
