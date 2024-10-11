@@ -95,7 +95,9 @@ internal sealed class StakingStates {
         data class Data(
             override val isPrimaryButtonEnabled: Boolean,
             override val isClickable: Boolean,
+            val isVisibleOnConfirmation: Boolean,
             val chosenValidator: Yield.Validator,
+            val activeValidator: Yield.Validator?,
             val availableValidators: List<Yield.Validator>,
         ) : ValidatorState()
 
@@ -131,6 +133,7 @@ enum class StakingStep {
     InitialInfo,
     RewardsValidators,
     Amount,
+    RestakeValidator,
     Confirmation,
     Validators,
 }

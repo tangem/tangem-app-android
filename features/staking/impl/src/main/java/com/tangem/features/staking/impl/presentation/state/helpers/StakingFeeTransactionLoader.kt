@@ -47,19 +47,22 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
 ) {
 
     suspend fun getFee(
-        pendingAction: PendingAction?,
-        pendingActions: ImmutableList<PendingAction>?,
         onStakingFee: (Fee) -> Unit,
         onStakingFeeError: (StakingError) -> Unit,
         onApprovalFee: (TransactionFee) -> Unit,
         onFeeError: (GetFeeError) -> Unit,
     ) {
         val state = stateController.value
+        val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
+            ?: error("Illegal state")
         val validatorState = state.validatorState as? StakingStates.ValidatorState.Data
             ?: error("No validator provided")
 
         val amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
             ?: error("No amount provided")
+
+        val pendingAction = confirmationState.pendingAction
+        val pendingActions = confirmationState.pendingActions
 
         val validatorAddress = validatorState.chosenValidator.address
 

@@ -16,8 +16,8 @@ internal class SetConfirmationStateCompletedTransformer(
     }
 
     private fun StakingStates.ConfirmationState.copyWrapped(): StakingStates.ConfirmationState {
-        if (this is StakingStates.ConfirmationState.Data) {
-            return copy(
+        return if (this is StakingStates.ConfirmationState.Data) {
+            copy(
                 isPrimaryButtonEnabled = true,
                 innerState = InnerConfirmationStakingState.COMPLETED,
                 footerText = TextReference.EMPTY,
@@ -28,7 +28,7 @@ internal class SetConfirmationStateCompletedTransformer(
                 ),
             )
         } else {
-            return this
+            this
         }
     }
 }

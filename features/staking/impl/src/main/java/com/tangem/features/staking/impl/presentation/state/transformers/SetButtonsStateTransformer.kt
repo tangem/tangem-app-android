@@ -109,6 +109,7 @@ internal class SetButtonsStateTransformer(
             StakingStep.Confirmation -> getConfirmationButtonText()
             StakingStep.Validators -> resourceReference(R.string.common_continue)
             StakingStep.Amount,
+            StakingStep.RestakeValidator,
             StakingStep.RewardsValidators,
             -> resourceReference(R.string.common_next)
         }
@@ -138,18 +139,11 @@ internal class SetButtonsStateTransformer(
 
     private fun StakingUiState.onPrimaryClick() {
         when (currentStep) {
-            StakingStep.InitialInfo -> clickIntents.onEnterClick()
-            StakingStep.Validators -> {
-                if (confirmationState is StakingStates.ConfirmationState.Data) {
-                    clickIntents.onNextClick(
-                        pendingActions = confirmationState.pendingActions,
-                        pendingAction = confirmationState.pendingAction,
-                    )
-                } else {
-                    clickIntents.onNextClick()
-                }
-            }
-            StakingStep.Amount -> clickIntents.onNextClick()
+            StakingStep.InitialInfo -> clickIntents.onNextClick()
+            StakingStep.Validators,
+            StakingStep.RestakeValidator,
+            -> clickIntents.onNextClick()
+            StakingStep.Amount -> clickIntents.onEnterClick()
             StakingStep.Confirmation -> onConfirmationClick()
             StakingStep.RewardsValidators -> Unit
         }
@@ -177,6 +171,7 @@ internal class SetButtonsStateTransformer(
     private fun StakingStep.isPrevButtonVisible(): Boolean = when (this) {
         StakingStep.InitialInfo,
         StakingStep.RewardsValidators,
+        StakingStep.RestakeValidator,
         StakingStep.Confirmation,
         StakingStep.Validators,
         -> false
@@ -190,7 +185,9 @@ internal class SetButtonsStateTransformer(
             StakingStep.Amount -> amountState.isPrimaryButtonEnabled
             StakingStep.Confirmation -> confirmationState.isPrimaryButtonEnabled
             StakingStep.RewardsValidators -> rewardsValidatorsState.isPrimaryButtonEnabled
-            StakingStep.Validators -> true
+            StakingStep.RestakeValidator,
+            StakingStep.Validators,
+            -> true
         }
     }
 }

@@ -93,12 +93,7 @@ internal class AddStakingNotificationsTransformer(
                 prevState = prevState,
                 feeError = feeError,
                 sendingAmount = sendingAmount,
-                onReload = {
-                    prevState.clickIntents.getFee(
-                        confirmationState.pendingAction,
-                        confirmationState.pendingActions,
-                    )
-                },
+                onReload = prevState.clickIntents::getFee,
                 feeValue = feeValue,
             )
             // warnings
@@ -311,6 +306,10 @@ internal class AddStakingNotificationsTransformer(
             StakingActionType.VOTE_LOCKED -> {
                 resourceReference(R.string.staking_revote) to
                     resourceReference(R.string.staking_notifications_revote_tron_text)
+            }
+            StakingActionType.RESTAKE -> {
+                resourceReference(R.string.staking_restake) to
+                    resourceReference(R.string.staking_notification_restake_text)
             }
             else -> null to null
         }

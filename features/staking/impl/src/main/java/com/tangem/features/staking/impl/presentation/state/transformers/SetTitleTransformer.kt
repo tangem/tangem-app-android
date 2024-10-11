@@ -20,7 +20,9 @@ internal object SetTitleTransformer : Transformer<StakingUiState> {
 
         val title = when (currentStep) {
             StakingStep.Amount -> resourceReference(R.string.send_amount_label)
-            StakingStep.Validators -> resourceReference(R.string.staking_validators)
+            StakingStep.RestakeValidator,
+            StakingStep.Validators,
+            -> resourceReference(R.string.staking_validators)
             StakingStep.RewardsValidators -> resourceReference(R.string.common_claim_rewards)
             StakingStep.InitialInfo -> resourceReference(
                 R.string.staking_title_stake,

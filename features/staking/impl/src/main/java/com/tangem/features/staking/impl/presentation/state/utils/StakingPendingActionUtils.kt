@@ -5,8 +5,12 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.features.staking.impl.presentation.state.BalanceState
+import com.tangem.lib.crypto.BlockchainUtils.isBSC
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 
 @Suppress("CyclomaticComplexMethod")
 internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (this) {
@@ -27,6 +31,32 @@ internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (t
     StakingActionType.UNSTAKE -> resourceReference(R.string.common_unstake)
     StakingActionType.UNKNOWN -> TextReference.EMPTY
     null -> TextReference.EMPTY
+}
+
+internal fun isSingleAction(networkId: String, activeStake: BalanceState): Boolean {
+    val isSingleAction = activeStake.pendingActions.size <= 1 // Either single or none pending actions
+    val isComposePendingActions = isComposePendingActions(networkId, activeStake.pendingActions)
+    val isBscRestake = isBSC(networkId) && activeStake.pendingActions.any {
+        it.type == StakingActionType.RESTAKE
+    }
+
+    return isSingleAction && !isBscRestake || isComposePendingActions
+}
+
+internal fun withStubUnstakeAction(networkId: String, activeStake: BalanceState) = if (isBSC(networkId)) {
+    activeStake.pendingActions.plus(
+        PendingAction(
+            type = StakingActionType.UNSTAKE,
+            passthrough = "",
+            args = null,
+        ),
+    ).toPersistentList()
+} else {
+    activeStake.pendingActions
+}
+
+internal fun isTronStakedBalance(networkId: String, pendingAction: PendingAction?): Boolean {
+    return isTron(networkId) && pendingAction?.type == StakingActionType.REVOKE
 }
 
 internal fun isComposePendingActions(networkId: String, pendingActions: ImmutableList<PendingAction>?): Boolean {

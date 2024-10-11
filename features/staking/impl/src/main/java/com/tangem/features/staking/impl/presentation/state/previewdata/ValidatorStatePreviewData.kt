@@ -53,6 +53,8 @@ internal object ValidatorStatePreviewData {
         availableValidators = validatorList,
         chosenValidator = validatorList.first(),
         isPrimaryButtonEnabled = true,
+        activeValidator = null,
         isClickable = true,
+        isVisibleOnConfirmation = true,
     )
 }

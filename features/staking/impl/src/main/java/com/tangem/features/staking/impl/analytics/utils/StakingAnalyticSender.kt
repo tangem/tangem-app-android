@@ -55,6 +55,7 @@ internal class StakingAnalyticSender(
                     StakingStep.Amount -> StakeScreenSource.Amount
                     StakingStep.Confirmation -> StakeScreenSource.Confirmation
                     StakingStep.Validators,
+                    StakingStep.RestakeValidator,
                     StakingStep.RewardsValidators,
                     -> StakeScreenSource.Validators
                 },

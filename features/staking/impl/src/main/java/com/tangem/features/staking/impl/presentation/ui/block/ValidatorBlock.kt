@@ -22,6 +22,7 @@ import com.tangem.utils.extensions.orZero
 @Composable
 internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClickable: Boolean, onClick: () -> Unit) {
     val state = validatorState as? StakingStates.ValidatorState.Data ?: return
+    if (!state.isVisibleOnConfirmation) return
 
     Column(
         modifier = Modifier

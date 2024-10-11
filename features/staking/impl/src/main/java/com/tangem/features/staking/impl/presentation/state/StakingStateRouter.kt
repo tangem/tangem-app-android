@@ -28,10 +28,9 @@ internal class StakingStateRouter(
                 StakingActionCommonType.Exit,
                 StakingActionCommonType.Pending.Rewards,
                 -> showConfirmation()
-                StakingActionCommonType.Pending.Restake -> {
-                    //todo showRestakeValidators()
-                }
+                StakingActionCommonType.Pending.Restake -> showRestakeValidators()
             }
+            StakingStep.RestakeValidator,
             StakingStep.RewardsValidators,
             StakingStep.Validators,
             StakingStep.Amount,
@@ -44,6 +43,7 @@ internal class StakingStateRouter(
         val uiState = stateController.uiState.value
         when (uiState.currentStep) {
             StakingStep.InitialInfo -> onBackClick()
+            StakingStep.RestakeValidator,
             StakingStep.RewardsValidators,
             StakingStep.Amount,
             -> showInitial()
@@ -79,6 +79,10 @@ internal class StakingStateRouter(
             StakingAnalyticsEvents.AmountScreenOpened(stateController.value.cryptoCurrencySymbol),
         )
         stateController.update { it.copy(currentStep = StakingStep.Amount) }
+    }
+
+    private fun showRestakeValidators() {
+        stateController.update { it.copy(currentStep = StakingStep.RestakeValidator) }
     }
 
     private fun showConfirmation() {

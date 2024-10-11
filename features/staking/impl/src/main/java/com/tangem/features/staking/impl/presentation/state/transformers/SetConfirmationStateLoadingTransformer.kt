@@ -10,10 +10,11 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.FeeState
+import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardSchedule
 import com.tangem.utils.transformer.Transformer
-import kotlinx.collections.immutable.persistentListOf
 
 internal class SetConfirmationStateLoadingTransformer(
     private val yield: Yield,
@@ -25,19 +26,11 @@ internal class SetConfirmationStateLoadingTransformer(
         val possibleConfirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
 
         return prevState.copy(
-            confirmationState = StakingStates.ConfirmationState.Data(
+            confirmationState = possibleConfirmationState?.copy(
                 isPrimaryButtonEnabled = false,
-                innerState = InnerConfirmationStakingState.ASSENT,
                 feeState = FeeState.Loading,
-                notifications = persistentListOf(),
                 footerText = getFooter(prevState),
-                transactionDoneState = TransactionDoneState.Empty,
-                pendingAction = possibleConfirmationState?.pendingAction,
-                pendingActions = possibleConfirmationState?.pendingActions,
-                isApprovalNeeded = false,
-                reduceAmountBy = null,
-                possiblePendingTransaction = null,
-            ),
+            ) ?: prevState.confirmationState,
         )
     }
 
