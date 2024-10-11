@@ -16,14 +16,15 @@ class CreateApprovalTransactionUseCase(
     suspend operator fun invoke(
         cryptoCurrency: CryptoCurrency.Token,
         userWalletId: UserWalletId,
-        amount: BigDecimal,
+        amount: BigDecimal?,
         fee: Fee,
         contractAddress: String,
         spenderAddress: String,
         hash: String? = null,
     ) = Either.catch {
         transactionRepository.createApprovalTransaction(
-            amount = amount.convertToSdkAmount(cryptoCurrency),
+            amount = BigDecimal.ZERO.convertToSdkAmount(cryptoCurrency),
+            approvalAmount = amount?.convertToSdkAmount(cryptoCurrency),
             contractAddress = contractAddress,
             spenderAddress = spenderAddress,
             userWalletId = userWalletId,
