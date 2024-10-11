@@ -44,7 +44,7 @@ internal class SetConfirmationStateLoadingTransformer(
     private fun getFooter(state: StakingUiState): TextReference {
         val amountState = state.amountState as? AmountState.Data
 
-        val isEnterAction = state.actionType == StakingActionCommonType.ENTER
+        val isEnterAction = state.actionType == StakingActionCommonType.Enter
 
         val amountDecimal = amountState?.amountTextField?.fiatAmount?.value
         val amountValue = BigDecimalFormatter.formatFiatAmount(

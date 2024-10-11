@@ -117,11 +117,9 @@ internal class StakingAnalyticSender(
         val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
 
         return when (value.actionType) {
-            StakingActionCommonType.ENTER -> StakingActionType.STAKE
-            StakingActionCommonType.EXIT -> StakingActionType.UNSTAKE
-            StakingActionCommonType.PENDING_REWARDS,
-            StakingActionCommonType.PENDING_OTHER,
-            -> confirmationState?.pendingAction?.type ?: StakingActionType.UNKNOWN
+            StakingActionCommonType.Enter -> StakingActionType.STAKE
+            StakingActionCommonType.Exit -> StakingActionType.UNSTAKE
+            is StakingActionCommonType.Pending -> confirmationState?.pendingAction?.type ?: StakingActionType.UNKNOWN
         }
     }
 }

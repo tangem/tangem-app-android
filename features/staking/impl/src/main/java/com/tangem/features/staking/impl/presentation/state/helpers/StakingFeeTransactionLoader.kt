@@ -64,7 +64,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         val validatorAddress = validatorState.chosenValidator.address
 
         val approval = stakingApproval as? StakingApproval.Needed
-        if (approval != null && state.actionType == StakingActionCommonType.ENTER) {
+        if (approval != null && state.actionType == StakingActionCommonType.Enter) {
             val allowance = getAllowanceUseCase(
                 userWalletId = userWallet.walletId,
                 cryptoCurrency = cryptoCurrencyStatus.currency,

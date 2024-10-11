@@ -120,17 +120,15 @@ internal class SetButtonsStateTransformer(
                 resourceReference(R.string.common_close)
             } else {
                 when (actionType) {
-                    StakingActionCommonType.ENTER -> {
+                    StakingActionCommonType.Enter -> {
                         if (confirmationState.isApprovalNeeded) {
                             resourceReference(R.string.give_permission_title)
                         } else {
                             resourceReference(R.string.common_stake)
                         }
                     }
-                    StakingActionCommonType.EXIT -> resourceReference(R.string.common_unstake)
-                    StakingActionCommonType.PENDING_OTHER,
-                    StakingActionCommonType.PENDING_REWARDS,
-                    -> confirmationState.pendingAction?.type.getPendingActionTitle()
+                    StakingActionCommonType.Exit -> resourceReference(R.string.common_unstake)
+                    is StakingActionCommonType.Pending -> confirmationState.pendingAction?.type.getPendingActionTitle()
                 }
             }
         } else {
@@ -162,7 +160,7 @@ internal class SetButtonsStateTransformer(
             if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
                 clickIntents.onNextClick()
             } else {
-                val isEnterAction = actionType == StakingActionCommonType.ENTER
+                val isEnterAction = actionType == StakingActionCommonType.Enter
                 val isApproveNeeded = confirmationState.isApprovalNeeded
 
                 if (isEnterAction && isApproveNeeded) {

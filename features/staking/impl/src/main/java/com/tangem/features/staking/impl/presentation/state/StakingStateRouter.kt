@@ -23,11 +23,14 @@ internal class StakingStateRouter(
     fun onNextClick() {
         when (stateController.value.currentStep) {
             StakingStep.InitialInfo -> when (stateController.value.actionType) {
-                StakingActionCommonType.ENTER -> showAmount()
-                StakingActionCommonType.PENDING_OTHER,
-                StakingActionCommonType.EXIT,
+                StakingActionCommonType.Enter -> showAmount()
+                StakingActionCommonType.Pending.Other,
+                StakingActionCommonType.Exit,
+                StakingActionCommonType.Pending.Rewards,
                 -> showConfirmation()
-                StakingActionCommonType.PENDING_REWARDS -> showRewardsValidators()
+                StakingActionCommonType.Pending.Restake -> {
+                    //todo showRestakeValidators()
+                }
             }
             StakingStep.RewardsValidators,
             StakingStep.Validators,
@@ -41,16 +44,17 @@ internal class StakingStateRouter(
         val uiState = stateController.uiState.value
         when (uiState.currentStep) {
             StakingStep.InitialInfo -> onBackClick()
-            StakingStep.Amount -> showInitial()
+            StakingStep.RewardsValidators,
+            StakingStep.Amount,
+            -> showInitial()
             StakingStep.Confirmation -> {
-                if (uiState.actionType != StakingActionCommonType.ENTER) {
+                if (uiState.actionType != StakingActionCommonType.Enter) {
                     showInitial()
                 } else {
                     showAmount()
                 }
             }
             StakingStep.Validators -> showConfirmation()
-            StakingStep.RewardsValidators -> showInitial()
         }
     }
 

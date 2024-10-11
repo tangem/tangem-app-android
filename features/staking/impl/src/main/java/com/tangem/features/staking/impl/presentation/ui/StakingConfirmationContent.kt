@@ -42,7 +42,7 @@ internal fun StakingConfirmationContent(
     type: StakingActionCommonType,
 ) {
     if (state !is StakingStates.ConfirmationState.Data) return
-    val isEnterAction = type == StakingActionCommonType.ENTER
+    val isEnterAction = type == StakingActionCommonType.Enter
     val showValidatorBlock = isEnterAction || state.pendingAction?.type == StakingActionType.VOTE_LOCKED
     val isTransactionSent = state.innerState == InnerConfirmationStakingState.COMPLETED
     val isTransactionInProgress = state.notifications.any { it is StakingNotification.Warning.TransactionInProgress }
@@ -92,7 +92,7 @@ private fun Preview_StakingConfirmationContent() {
                 state = ConfirmationStatePreviewData.assentStakingState,
                 validatorState = ValidatorStatePreviewData.validatorState,
                 clickIntents = StakingClickIntentsStub,
-                type = StakingActionCommonType.ENTER,
+                type = StakingActionCommonType.Enter,
             )
         }
     }

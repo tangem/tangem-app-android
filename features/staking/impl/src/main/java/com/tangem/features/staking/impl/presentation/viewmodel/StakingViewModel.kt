@@ -427,7 +427,7 @@ internal class StakingViewModel @Inject constructor(
                     ),
                 )
             }
-            onNextClick(StakingActionCommonType.ENTER)
+            onNextClick(StakingActionCommonType.Enter)
         }
     }
 
@@ -487,7 +487,10 @@ internal class StakingViewModel @Inject constructor(
                     token = value.cryptoCurrencySymbol,
                 ),
             )
-            onNextClick(actionTypeToOverwrite = StakingActionCommonType.PENDING_REWARDS)
+            stateController.update {
+                value.copy(actionType = StakingActionCommonType.Pending.Rewards)
+            }
+            stakingStateRouter.showRewardsValidators()
         }
     }
 
@@ -511,7 +514,7 @@ internal class StakingViewModel @Inject constructor(
                             ),
                         )
                         onNextClick(
-                            actionTypeToOverwrite = StakingActionCommonType.PENDING_OTHER,
+                            actionTypeToOverwrite = StakingActionCommonType.Pending.Other,
                             pendingAction = action,
                             balanceState = activeStake,
                         )

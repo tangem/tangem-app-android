@@ -19,9 +19,9 @@ internal class ActionTypeActiveStakeTransformer(
             activeStake = activeStake,
         )
         val actionType = if (activeStake.pendingActions.isEmpty() || isTronStakedBalance) {
-            StakingActionCommonType.EXIT
+            StakingActionCommonType.Exit
         } else {
-            StakingActionCommonType.PENDING_OTHER
+            StakingActionCommonType.Pending.Other
         }
 
         return prevState.copy(actionType = actionType)
