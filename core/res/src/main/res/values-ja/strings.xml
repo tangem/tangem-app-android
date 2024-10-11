@@ -49,7 +49,7 @@
   <string name="card_settings_action_sheet_reset">リセット</string>
   <string name="card_settings_action_sheet_title">本当に実行しますか?</string>
   <string name="card_settings_change_access_code">アクセスコードの変更</string>
-  <string name="card_settings_change_access_code_footer">アクセスコードは、このカードのみで変更されます</string>
+  <string name="card_settings_change_access_code_footer">アクセスコードは、このカードまたはリングによってのみ変更されます</string>
   <string name="card_settings_completed_reset_alert_message">選択したウォレットのすべてのTangemデバイスが、工場出荷時の設定にリセットされました。これで、新しいウォレットを作成できます。</string>
   <string name="card_settings_completed_reset_alert_title">リセット完了</string>
   <string name="card_settings_continue_reset_alert_message">このウォレットの次のデバイスをリセットしますか?</string>
@@ -210,7 +210,7 @@
   <string name="details_manage_security_access_code">アクセスコード</string>
   <string name="details_manage_security_access_code_description">カードをスキャンする前に、正しいアクセスコードを送信する必要があります。</string>
   <string name="details_manage_security_long_tap">長くタップ</string>
-  <string name="details_manage_security_long_tap_description">このメカニズムは、カードまたはリングに対する近接攻撃から保護します。コマンドの受信と実行の間に遅延を強制します。 </string>
+  <string name="details_manage_security_long_tap_description">このメカニズムは、カードまたはリングに対する近接攻撃から保護します。コマンドの受信と実行の間に遅延を強制します。</string>
   <string name="details_manage_security_passcode">パスコード</string>
   <string name="details_manage_security_passcode_description">カードの状態の変更を伴うコマンドを実行する前に、パスコードを入力する必要があります。</string>
   <string name="details_referral_title">紹介プログラム</string>

@@ -213,7 +213,7 @@
   <string name="details_manage_security_access_code">Zugangscode</string>
   <string name="details_manage_security_access_code_description">Du musst den richtigen Zugangscode eingeben, bevor du die Karte oder Ring scannst.</string>
   <string name="details_manage_security_long_tap">Langes Tippen</string>
-  <string name="details_manage_security_long_tap_description">Dieser Mechanismus schützt vor Annäherungsangriffen auf eine Karte oder Ring. Es wird eine Verzögerung zwischen dem Empfang und der Ausführung eines Befehls erzwungen. Nach der ersten signierten Transaktion wird dieses Telefon mit der Karte oder Ring verknüpft und die Transaktionen werden sofort signiert</string>
+  <string name="details_manage_security_long_tap_description">Dieser Mechanismus schützt vor Annäherungsangriffen auf eine Karte oder Ring. Es wird eine Verzögerung zwischen dem Empfang und der Ausführung eines Befehls erzwungen. Nach der ersten signierten Transaktion wird dieses Telefon mit der Karte oder Ring verknüpft und die Transaktionen werden sofort signiert.</string>
   <string name="details_manage_security_passcode">Passcode</string>
   <string name="details_manage_security_passcode_description">Bevor du einen Befehl ausführst, der eine Änderung des Kartenstatus zur Folge hat, musst du den Passcode eingeben.</string>
   <string name="details_referral_title">Empfehlungsprogramm</string>
@@ -912,7 +912,7 @@
   <string name="warning_access_denied_message">Verwende %s oder scanne eine Karte oder Ring, um den Zugriff auf deine Wallet freizuschalten.</string>
   <string name="warning_approval_in_progress_message">Das Genehmigungsverfahren ist derzeit im Gange und wird in Kürze abgeschlossen sein</string>
   <string name="warning_approval_in_progress_title">Genehmigung läuft</string>
-  <string name="warning_backup_errors_message">Es scheint, dass die Aktivierung der Karte oder des Rings nicht korrekt abgeschlossen wurde. Dies kann an einem Problem mit dem NFC-Modul deines Gerätes oder an einem falschen Tippen der Karte oder Ring auf dein Gerät liegen. Bitte wende dich  an unser Support-Team, um Unterstützung zu erhalten.</string>
+  <string name="warning_backup_errors_message">Es scheint, dass die Aktivierung der Karte oder des Rings nicht korrekt abgeschlossen wurde. Dies kann an einem Problem mit dem NFC-Modul deines Gerätes oder an einem falschen Tippen der Karte oder Ring auf dein Gerät liegen. Bitte wende dich an unser Support-Team, um Unterstützung zu erhalten.</string>
   <string name="warning_backup_errors_title">Aktivierungsfehler</string>
   <string name="warning_beacon_chain_retirement_content">Laut den Entwicklern des BNB-Netzes wird die Unterstützung für den BEP-2-Standard im Juni 2024 enden. Um den Verlust von Vermögenswerten mit diesem Standard zu vermeiden, konvertiere bitte in den BEP-20 Standard. Nutze gerne unseren Swap-Service, um sie auf das BNB Smart Chain Netzwerk zu übertragen.</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain wird abgeschaltet</string>
@@ -925,7 +925,7 @@
   <string name="warning_button_refresh">Aktualisieren</string>
   <string name="warning_demo_mode_message">Du befindest sich derzeit im Demo-Modus</string>
   <string name="warning_demo_mode_title">Demo-Modus aktiv</string>
-  <string name="warning_developer_card_message">Die Karte oder Ring, die du gescannt hast, ist eine Entwicklerkarte. Verwenden  diese nicht zur Erstellung Ihrer Wallet.</string>
+  <string name="warning_developer_card_message">Die Karte, die du gescannt hast, ist eine Entwicklerkarte. Verwenden  diese nicht zur Erstellung Ihrer Wallet.</string>
   <string name="warning_developer_card_title">Nicht für Benutzer!</string>
   <string name="warning_existential_deposit_message">%1$s Netzwerk erfordert eine Mindesteinlage. Wenn dein Konto unter %2$s fällt, wird es deaktiviert und alle verbleibenden Guthaben werden vernichtet.</string>
   <string name="warning_existential_deposit_title">Netzwerk erfordert eine Mindesteinzahlung</string>
@@ -952,7 +952,7 @@
   <string name="warning_hedera_missing_token_association_message_brief">Dieses Token muss mit deinem Hedera-Konto verknüpft sein, bevor du ihn erhalten kannst.</string>
   <string name="warning_hedera_missing_token_association_title">Verknüpfe deinen Token</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">Nicht genug %s. Lade dein Hedera-Konto auf, um dieses Token zuzuordnen</string>
-  <string name="warning_low_signatures_message">Auf dieser Karte oder Ring oder Ring sind nur noch %s Unterschriften übrig. Du musst dein gesamtes Guthaben abheben.</string>
+  <string name="warning_low_signatures_message">Auf dieser Karte oder Ring sind nur noch %s Unterschriften übrig. Du musst dein gesamtes Guthaben abheben.</string>
   <string name="warning_low_signatures_title">Geringe Anzahl von Unterschriften</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Token in verschiedenen Netzwerken können unterschiedliche Adressen haben. Überprüfe bei der Überweisung noch einmal, ob deine Adresse mit der des Netzwerks übereinstimmt.</string>
   <string name="warning_matic_migration_message">MATIC wird auf POL migriert. Es gibt jedoch keine Frist, und MATIC wird noch nicht abgeschafft. Du kannst MATIC-Token weiterhin verwenden oder sie über eien Exchange gegen POL tauschen.</string>
@@ -980,7 +980,7 @@
   <string name="warning_solana_rent_fee_message">Das Solana-Netzwerk erhebt alle 2 Tage eine Miete von %1$s. Konten, die sich die Miete nicht leisten können, werden aus dem Netzwerk gelöscht. Hinterlege deinem Konto mit mehr als %2$s, um es kostenlos zu nutzen.</string>
   <string name="warning_some_networks_unreachable_message">Einige Netzwerke sind derzeit nicht erreichbar. Bitte versuche es später erneut.</string>
   <string name="warning_some_networks_unreachable_title">Einige Netzwerke sind nicht erreichbar</string>
-  <string name="warning_testnet_card_message">Dies ist eine Testnet-Karte oder Ring. Sie kann keine Transaktionen verarbeiten und sollte nur zu Test- und Entwicklungszwecken verwendet werden.</string>
+  <string name="warning_testnet_card_message">Dies ist eine Testnet-Karte. Sie kann keine Transaktionen verarbeiten und sollte nur zu Test- und Entwicklungszwecken verwendet werden.</string>
   <string name="warning_testnet_card_title">Nur für Testzwecke</string>
   <string name="welcome_interrupted_backup_alert_discard">Verwerfen</string>
   <string name="welcome_interrupted_backup_alert_message">Du hast eine unterbrochene Sicherung. Möchtest du diese fortsetzen?</string>
