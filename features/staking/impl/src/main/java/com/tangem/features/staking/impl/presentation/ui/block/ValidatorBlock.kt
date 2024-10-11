@@ -20,14 +20,14 @@ import com.tangem.features.staking.impl.presentation.ui.ValidatorImagePlaceholde
 import com.tangem.utils.extensions.orZero
 
 @Composable
-internal fun ValidatorBlock(validatorState: ValidatorState, onClick: () -> Unit) {
+internal fun ValidatorBlock(validatorState: ValidatorState, isClickable: Boolean, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .clickable(
-                enabled = validatorState.isClickable,
+                enabled = validatorState.isClickable && isClickable,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
                 onClick = onClick,
