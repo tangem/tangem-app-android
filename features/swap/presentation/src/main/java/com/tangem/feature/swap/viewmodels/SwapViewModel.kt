@@ -126,6 +126,8 @@ internal class SwapViewModel @Inject constructor(
     private val fromTokenBalanceJobHolder = JobHolder()
     private val toTokenBalanceJobHolder = JobHolder()
 
+    private var isAmountChangedByUser: Boolean = false
+
     val currentScreen: SwapNavScreen
         get() = swapRouter.currentScreen
 
@@ -446,11 +448,22 @@ internal class SwapViewModel @Inject constructor(
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
                 // logic for always choose best if already selected provider
-                bestQuotesProvider ?: currentSelected
+                if (isAmountChangedByUser) {
+                    isAmountChangedByUser = false
+                    bestQuotesProvider ?: currentSelected
+                } else {
+                    currentSelected
+                }
             } else {
                 val recommendedProvider = successLoadedData.keys.firstOrNull { it.isRecommended }
                 triggerPromoProviderEvent(recommendedProvider, bestQuotesProvider)
-                recommendedProvider ?: bestQuotesProvider ?: consideredProviders.keys.first()
+
+                if (isAmountChangedByUser) {
+                    isAmountChangedByUser = false
+                    recommendedProvider ?: bestQuotesProvider ?: consideredProviders.keys.first()
+                } else {
+                    recommendedProvider ?: consideredProviders.keys.first()
+                }
             }
         } else {
             state.keys.first()
@@ -737,6 +750,11 @@ internal class SwapViewModel @Inject constructor(
                     )
                 }
             }
+
+            if (dataState.fromCryptoCurrency != null && dataState.tokensDataState != null) {
+                isAmountChangedByUser = true
+            }
+
             dataState = dataState.copy(
                 fromCryptoCurrency = fromToken,
                 toCryptoCurrency = toToken,
@@ -790,6 +808,8 @@ internal class SwapViewModel @Inject constructor(
         val newToToken = dataState.fromCryptoCurrency
 
         if (newFromToken != null && newToToken != null) {
+            isAmountChangedByUser = true
+
             dataState = dataState.copy(
                 fromCryptoCurrency = newFromToken,
                 toCryptoCurrency = newToToken,
@@ -821,10 +841,16 @@ internal class SwapViewModel @Inject constructor(
             val decimals = fromToken.currency.decimals
             val cutValue = cutAmountWithDecimals(decimals, value)
             lastAmount.value = cutValue
-            uiState =
-                stateBuilder.updateSwapAmount(uiState, inputNumberFormatter.formatWithThousands(cutValue, decimals))
+            uiState = stateBuilder.updateSwapAmount(
+                uiState = uiState,
+                amount = inputNumberFormatter.formatWithThousands(cutValue, decimals),
+            )
 
             if (toToken != null) {
+                if (toToken.value.amount != null) {
+                    isAmountChangedByUser = true
+                }
+
                 amountDebouncer.debounce(viewModelScope, DEBOUNCE_AMOUNT_DELAY) {
                     startLoadingQuotes(
                         fromToken = fromToken,

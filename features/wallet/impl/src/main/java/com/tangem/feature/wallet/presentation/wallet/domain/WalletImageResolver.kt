@@ -5,18 +5,21 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.feature.wallet.impl.R
+import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
 
 /**
  * Wallet image resolver
  *
+ * @property walletsRepository wallets repository
+ *
 * [REDACTED_AUTHOR]
  */
-internal object WalletImageResolver {
-
-    private const val WALLET_WITHOUT_BACKUP_COUNT = 1
-    private const val WALLET_WITH_ONE_BACKUP_COUNT = 2
-    private const val WALLET_WITH_TWO_BACKUPS_COUNT = 3
+internal class WalletImageResolver @Inject constructor(
+    private val walletsRepository: WalletsRepository,
+) {
 
     /** Get a specified wallet [userWallet] image */
     @Suppress("CyclomaticComplexMethod")
@@ -36,6 +39,7 @@ internal object WalletImageResolver {
 
         return when {
             cardTypesResolver.isDevKit() -> R.drawable.ill_dev_120_106
+            userWallet.isRing() -> userWallet.resolveWalletWithRing()
             cobrandImage != null -> userWallet.resolveWallet2Cobrand(image = cobrandImage)
             cardTypesResolver.isWallet2() -> userWallet.resolveWallet2()
             cardTypesResolver.isShibaWallet() -> userWallet.resolveShibaWallet()
@@ -46,6 +50,18 @@ internal object WalletImageResolver {
             cardTypesResolver.isTangemNote() -> noteImage?.imageResId
             else -> null
         }
+    }
+
+    private fun UserWallet.isRing(): Boolean {
+        return scanResponse.cardTypesResolver.isRing() ||
+            runBlocking { walletsRepository.isWalletWithRing(userWalletId = this@isRing.walletId) }
+    }
+
+    private fun UserWallet.resolveWalletWithRing(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_card_with_ring_120_106,
+            twoBackupResId = R.drawable.ill_card2_with_ring_120_106,
+        )
     }
 
     private fun UserWallet.resolveWallet2Cobrand(image: Wallet2CobrandImage): Int? {
@@ -89,5 +105,11 @@ internal object WalletImageResolver {
         val count = getCardsCount()
 
         return if (count != null) resolve(count) else null
+    }
+
+    private companion object {
+        const val WALLET_WITHOUT_BACKUP_COUNT = 1
+        const val WALLET_WITH_ONE_BACKUP_COUNT = 2
+        const val WALLET_WITH_TWO_BACKUPS_COUNT = 3
     }
 }
