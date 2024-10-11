@@ -29,8 +29,9 @@ internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (t
     null -> TextReference.EMPTY
 }
 
-internal fun isSolanaWithdraw(networkId: String, pendingActions: ImmutableList<PendingAction>?): Boolean {
-    val isSolana = isSolana(networkId)
-    val isWithdraw = pendingActions?.all { it.type == StakingActionType.WITHDRAW } == true
-    return isSolana && isWithdraw && !pendingActions.isNullOrEmpty()
+internal fun isComposePendingActions(networkId: String, pendingActions: ImmutableList<PendingAction>?): Boolean {
+    return when {
+        isSolana(networkId) -> pendingActions?.any { it.type == StakingActionType.WITHDRAW } == true
+        else -> false
+    }
 }

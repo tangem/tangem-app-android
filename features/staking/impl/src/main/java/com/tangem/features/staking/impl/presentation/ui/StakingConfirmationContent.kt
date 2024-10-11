@@ -26,6 +26,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
+import com.tangem.features.staking.impl.presentation.state.previewdata.ValidatorStatePreviewData
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.ui.block.NotificationsBlock
 import com.tangem.features.staking.impl.presentation.ui.block.StakingFeeBlock
@@ -36,6 +37,7 @@ import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickInten
 internal fun StakingConfirmationContent(
     amountState: AmountState,
     state: StakingStates.ConfirmationState,
+    validatorState: StakingStates.ValidatorState,
     clickIntents: StakingClickIntents,
     type: StakingActionCommonType,
 ) {
@@ -69,7 +71,7 @@ internal fun StakingConfirmationContent(
         )
         if (showValidatorBlock) {
             ValidatorBlock(
-                validatorState = state.validatorState,
+                validatorState = validatorState,
                 isClickable = !isTransactionInProgress,
                 onClick = clickIntents::openValidators,
             )
@@ -88,6 +90,7 @@ private fun Preview_StakingConfirmationContent() {
             StakingConfirmationContent(
                 amountState = AmountStatePreviewData.amountState,
                 state = ConfirmationStatePreviewData.assentStakingState,
+                validatorState = ValidatorStatePreviewData.validatorState,
                 clickIntents = StakingClickIntentsStub,
                 type = StakingActionCommonType.ENTER,
             )

@@ -63,7 +63,7 @@ import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.*
 import com.tangem.features.staking.impl.presentation.state.transformers.approval.*
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
-import com.tangem.features.staking.impl.presentation.state.utils.isSolanaWithdraw
+import com.tangem.features.staking.impl.presentation.state.utils.isComposePendingActions
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
@@ -269,10 +269,6 @@ internal class StakingViewModel @Inject constructor(
         }
     }
 
-    override fun onActionClick() {
-        handleOnNextConfirmationClick()
-    }
-
     override fun getFee(pendingAction: PendingAction?, pendingActions: ImmutableList<PendingAction>?) {
         stateController.update(
             SetConfirmationStateLoadingTransformer(
@@ -326,7 +322,7 @@ internal class StakingViewModel @Inject constructor(
         }.saveIn(feeJobHolder)
     }
 
-    private fun handleOnNextConfirmationClick() {
+    override fun onActionClick() {
         if (isAssentState()) {
             viewModelScope.launch {
                 stakingAnalyticSender.sendTransactionStakingClickedAnalytics(value)
@@ -415,7 +411,6 @@ internal class StakingViewModel @Inject constructor(
         onAmountValueChange("") // reset amount state
 
         // TODO refactor in https://tangem.atlassian.net/browse/AND-7801
-        val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
         val filteredValidator = yield.validators.filter { it.preferred }
         if (filteredValidator.isEmpty()) {
             stateController.updateEvent(
@@ -424,13 +419,12 @@ internal class StakingViewModel @Inject constructor(
         } else {
             stateController.update {
                 value.copy(
-                    confirmationState = confirmationState?.copy(
-                        validatorState = ValidatorState.Content(
-                            isClickable = true,
-                            chosenValidator = filteredValidator[0],
-                            availableValidators = filteredValidator,
-                        ),
-                    ) as StakingStates.ConfirmationState,
+                    validatorState = StakingStates.ValidatorState.Data(
+                        isClickable = true,
+                        chosenValidator = filteredValidator[0],
+                        availableValidators = filteredValidator,
+                        isPrimaryButtonEnabled = true,
+                    ),
                 )
             }
             onNextClick(StakingActionCommonType.ENTER)
@@ -498,7 +492,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onActiveStake(activeStake: BalanceState) {
-        val isAllWithdrawActions = isSolanaWithdraw(
+        val isAllWithdrawActions = isComposePendingActions(
             cryptoCurrencyStatus.currency.network.id.value,
             activeStake.pendingActions,
         )
@@ -775,7 +769,7 @@ internal class StakingViewModel @Inject constructor(
             val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrElse { error("CardInfo must be not null") }
             val amountState = uiState.value.amountState as? AmountState.Data
             val confirmationState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
-            val validatorState = confirmationState?.validatorState as? ValidatorState.Content
+            val validatorState = uiState.value.validatorState as? StakingStates.ValidatorState.Data
             val feeState = confirmationState?.feeState as? FeeState.Content
 
             val validator = validatorState?.chosenValidator

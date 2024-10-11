@@ -33,10 +33,10 @@ internal class StakingAnalyticSender(
 
     fun confirmationScreen(value: StakingUiState) {
         val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
-        val validatorState = confirmationState?.validatorState as? ValidatorState.Content
+        val validatorState = value.validatorState as? StakingStates.ValidatorState.Data
         val validatorName = validatorState?.chosenValidator?.name ?: return
 
-        if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) return
+        if (confirmationState?.innerState == InnerConfirmationStakingState.COMPLETED) return
 
         analyticsEventHandler.send(
             StakingAnalyticsEvents.ConfirmationScreenOpened(
@@ -78,8 +78,7 @@ internal class StakingAnalyticSender(
     }
 
     fun sendTransactionStakingAnalytics(value: StakingUiState) {
-        val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
-        val validatorState = confirmationState?.validatorState as? ValidatorState.Content
+        val validatorState = value.validatorState as? StakingStates.ValidatorState.Data
         val validatorName = validatorState?.chosenValidator?.name ?: return
 
         analyticsEventHandler.send(
@@ -102,8 +101,7 @@ internal class StakingAnalyticSender(
     }
 
     fun sendTransactionStakingClickedAnalytics(value: StakingUiState) {
-        val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
-        val validatorState = confirmationState?.validatorState as? ValidatorState.Content
+        val validatorState = value.validatorState as? StakingStates.ValidatorState.Data
         val validatorName = validatorState?.chosenValidator?.name ?: return
 
         analyticsEventHandler.send(

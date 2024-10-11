@@ -219,7 +219,6 @@ internal class SetInitialDataStateTransformer(
             isPrimaryButtonEnabled = false,
             innerState = InnerConfirmationStakingState.ASSENT,
             feeState = FeeState.Loading,
-            validatorState = ValidatorState.Loading,
             notifications = persistentListOf(),
             footerText = TextReference.EMPTY,
             transactionDoneState = TransactionDoneState.Empty,

@@ -20,7 +20,6 @@ internal class SetConfirmationStateCompletedTransformer(
             return copy(
                 isPrimaryButtonEnabled = true,
                 innerState = InnerConfirmationStakingState.COMPLETED,
-                validatorState = validatorState.copySealed(isClickable = false),
                 footerText = TextReference.EMPTY,
                 notifications = persistentListOf(),
                 transactionDoneState = TransactionDoneState.Content(

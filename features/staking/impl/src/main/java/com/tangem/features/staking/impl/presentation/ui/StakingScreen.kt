@@ -172,17 +172,14 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                 StakingStep.Confirmation -> StakingConfirmationContent(
                     amountState = uiState.amountState,
                     state = uiState.confirmationState,
+                    validatorState = uiState.validatorState,
                     clickIntents = uiState.clickIntents,
                     type = uiState.actionType,
                 )
-                StakingStep.Validators -> {
-                    val confirmState = uiState.confirmationState
-                    if (confirmState !is StakingStates.ConfirmationState.Data) return@AnimatedContent
-                    StakingValidatorListContent(
-                        state = confirmState.validatorState,
-                        clickIntents = uiState.clickIntents,
-                    )
-                }
+                StakingStep.Validators -> StakingValidatorListContent(
+                    state = uiState.validatorState,
+                    clickIntents = uiState.clickIntents,
+                )
             }
         }
     }

@@ -3,7 +3,6 @@ package com.tangem.features.staking.impl.presentation.state.transformers.validat
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
-import com.tangem.features.staking.impl.presentation.state.ValidatorState
 import com.tangem.utils.transformer.Transformer
 
 internal class ValidatorSelectChangeTransformer(
@@ -11,20 +10,18 @@ internal class ValidatorSelectChangeTransformer(
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
-        val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data ?: return prevState
         selectedValidator ?: return prevState
-        val validatorState = (confirmationState.validatorState as? ValidatorState.Content)?.copy(
+        val validatorState = (prevState.validatorState as? StakingStates.ValidatorState.Data)?.copy(
             chosenValidator = selectedValidator,
-        ) ?: ValidatorState.Content(
+        ) ?: StakingStates.ValidatorState.Data(
             isClickable = false,
             availableValidators = emptyList(),
             chosenValidator = selectedValidator,
+            isPrimaryButtonEnabled = true,
         )
 
         return prevState.copy(
-            confirmationState = confirmationState.copy(
-                validatorState = validatorState,
-            ),
+            validatorState = validatorState,
         )
     }
 }

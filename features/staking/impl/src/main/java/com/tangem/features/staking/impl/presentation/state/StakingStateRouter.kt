@@ -54,12 +54,16 @@ internal class StakingStateRouter(
         }
     }
 
+    fun showValidators() {
+        stateController.update { it.copy(currentStep = StakingStep.Validators) }
+    }
+
     private fun showInitial() {
         analyticSender.initialInfoScreen(stateController.value)
         stateController.update { it.copy(currentStep = StakingStep.InitialInfo) }
     }
 
-    private fun showRewardsValidators() {
+    fun showRewardsValidators() {
         analyticsEventsHandler.send(
             StakingAnalyticsEvents.RewardScreenOpened(stateController.value.cryptoCurrencySymbol),
         )
@@ -71,10 +75,6 @@ internal class StakingStateRouter(
             StakingAnalyticsEvents.AmountScreenOpened(stateController.value.cryptoCurrencySymbol),
         )
         stateController.update { it.copy(currentStep = StakingStep.Amount) }
-    }
-
-    fun showValidators() {
-        stateController.update { it.copy(currentStep = StakingStep.Validators) }
     }
 
     private fun showConfirmation() {

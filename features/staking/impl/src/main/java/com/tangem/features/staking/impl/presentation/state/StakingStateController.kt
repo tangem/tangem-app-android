@@ -45,6 +45,12 @@ internal class StakingStateController @Inject constructor(
         mutableUiState.update(function = titleTransformer::transform)
     }
 
+    fun updateAll(vararg transformer: Transformer<StakingUiState>) {
+        transformer.forEach { mutableUiState.update(function = it::transform) }
+        mutableUiState.update(function = buttonsTransformer::transform)
+        mutableUiState.update(function = titleTransformer::transform)
+    }
+
     fun clear() {
         mutableUiState.update { getInitialState() }
         mutableUiState.update(function = buttonsTransformer::transform)
@@ -72,6 +78,7 @@ internal class StakingStateController @Inject constructor(
             currentStep = StakingStep.InitialInfo,
             initialInfoState = StakingStates.InitialInfoState.Empty(),
             amountState = AmountState.Empty(),
+            validatorState = StakingStates.ValidatorState.Empty(),
             rewardsValidatorsState = StakingStates.RewardsValidatorsState.Empty(),
             confirmationState = StakingStates.ConfirmationState.Empty(),
             isBalanceHidden = false,

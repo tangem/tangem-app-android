@@ -38,7 +38,6 @@ internal class SetConfirmationStateAssentTransformer(
                     appCurrency = appCurrencyProvider(),
                     isFeeApproximate = false,
                 ),
-                validatorState = validatorState.copySealed(isClickable = true),
                 pendingAction = action,
                 pendingActions = actions,
                 isPrimaryButtonEnabled = true,
