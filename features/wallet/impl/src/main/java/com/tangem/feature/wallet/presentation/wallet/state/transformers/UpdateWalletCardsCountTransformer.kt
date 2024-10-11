@@ -10,6 +10,7 @@ import timber.log.Timber
 
 internal class UpdateWalletCardsCountTransformer(
     private val userWallet: UserWallet,
+    private val walletImageResolver: WalletImageResolver,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     override fun transform(prevState: WalletState): WalletState {
@@ -37,7 +38,7 @@ internal class UpdateWalletCardsCountTransformer(
         return when (this) {
             is WalletCardState.Content -> copy(
                 additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = userWallet),
-                imageResId = WalletImageResolver.resolve(userWallet = userWallet),
+                imageResId = walletImageResolver.resolve(userWallet = userWallet),
                 cardCount = userWallet.getCardsCount(),
             )
             else -> this
