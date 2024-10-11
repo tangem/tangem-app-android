@@ -22,6 +22,7 @@ internal object SetApprovalInProgressTransformer : Transformer<StakingUiState> {
 
         val updatedConfirmationState = state?.copy(
             notifications = notifications.toPersistentList(),
+            isPrimaryButtonEnabled = false,
         ) ?: prevState.confirmationState
 
         return prevState.copy(
