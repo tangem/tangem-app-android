@@ -3,6 +3,7 @@ package com.tangem.features.send.impl.presentation.state
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -164,14 +165,14 @@ internal class SendStateFactory(
         )
     }
 
-    fun getSendNotificationState(notifications: ImmutableList<SendNotification>): SendUiState {
+    fun getSendNotificationState(notifications: ImmutableList<NotificationUM>): SendUiState {
         val state = currentStateProvider()
         val sendState = state.sendState ?: return state
         val reducedBy = sendState.reduceAmountBy.takeIf {
             notifications.none {
-                it is SendNotification.Error.ExistentialDeposit ||
-                    it is SendNotification.Error.TransactionLimitError ||
-                    it is SendNotification.Warning.HighFeeError
+                it is NotificationUM.Error.ExistentialDeposit ||
+                    it is NotificationUM.Error.TransactionLimitError ||
+                    it is NotificationUM.Warning.HighFeeError
             }
         }
         return state.copy(
@@ -199,10 +200,10 @@ internal class SendStateFactory(
     private fun isPrimaryButtonEnabled(
         state: SendUiState,
         isSending: Boolean,
-        notifications: ImmutableList<SendNotification>,
+        notifications: ImmutableList<NotificationUM>,
     ): Boolean {
         val feeState = state.getFeeState(stateRouterProvider().isEditState) ?: return false
-        val hasErrorNotifications = notifications.any { it is SendNotification.Error }
+        val hasErrorNotifications = notifications.any { it is NotificationUM.Error }
         return !hasErrorNotifications && !isSending && feeState.feeSelectorState is FeeSelectorState.Content
     }
     //endregion
