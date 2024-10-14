@@ -25,6 +25,8 @@ internal class BigDecimalCryptoFormatTest {
             ).defaultAmount()
         }
 
+        Truth.assertThat(Locale.getDefault().toString()).isEqualTo("als;kdjf")
+
         Truth.assertThat(formatted)
             .isEqualTo("0.12345679".addSymbolWithSpaceLeft(symbol))
     }
