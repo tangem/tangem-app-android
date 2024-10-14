@@ -9,7 +9,7 @@ data class AlertTransactionErrorUM(
     val code: String,
     val cause: String?,
     val causeTextReference: TextReference? = null,
-    override val onConfirmClick: (() -> Unit)? = null,
+    override val onConfirmClick: () -> Unit,
 ) : AlertUM {
     override val title: TextReference = resourceReference(id = R.string.send_alert_transaction_failed_title)
     override val message: TextReference = resourceReference(
