@@ -16,8 +16,9 @@ import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionSt
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
-import com.tangem.domain.transaction.usecase.SendMultipleTransactionUseCase
+import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvents
 import com.tangem.features.staking.impl.presentation.state.*
@@ -40,7 +41,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
     private val getStakingTransactionUseCase: GetStakingTransactionUseCase,
     private val getConstructedStakingTransactionUseCase: GetConstructedStakingTransactionUseCase,
-    private val sendMultipleTransactionUseCase: SendMultipleTransactionUseCase,
+    private val sendTransactionUseCase: SendTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val submitHashUseCase: SubmitHashUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
@@ -67,6 +68,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
             ?: error("No confirmation state")
         val fee = (confirmationState.feeState as? FeeState.Content)?.fee
             ?: error("No fee provided")
+        val amountState = state.amountState as? AmountState.Data ?: error("No amount state")
 
         val stakingTransactions = getStakingTransactions(
             state = state,
@@ -77,6 +79,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         val fullTransactionsData = getConstructedTransactions(
             stakingTransactions = stakingTransactions,
             fee = fee,
+            amount = amountState.amountTextField.cryptoAmount.value.orZero(),
             onConstructError = onConstructError,
         )
 
@@ -131,6 +134,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private suspend fun getConstructedTransactions(
         stakingTransactions: List<StakingTransaction>?,
         fee: Fee,
+        amount: BigDecimal,
         onConstructError: (StakingError) -> Unit,
     ) = coroutineScope {
         stakingTransactions
@@ -142,6 +146,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                     getConstructedStakingTransactionUseCase(
                         networkId = cryptoCurrencyStatus.currency.network.id.value,
                         fee = fee,
+                        amount = amount.convertToSdkAmount(cryptoCurrencyStatus.currency),
                         transactionId = transaction.id,
                     ).fold(
                         ifRight = { (constructedTransaction, transactionData) ->
@@ -188,7 +193,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 amount = amount,
                 address = defaultAddress,
                 validatorAddress = validatorAddress,
-                token = yield.token,
+                token = yield.getCurrentToken(cryptoCurrencyStatus.currency.id.rawCurrencyId),
                 passthrough = action?.passthrough,
                 type = action?.type,
             ),
@@ -210,7 +215,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         onSendSuccess: (txUrl: String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
     ) {
-        sendMultipleTransactionUseCase(
+        sendTransactionUseCase(
             txsData = fullTransactionsData.map { it.tangemTransaction },
             userWallet = userWallet,
             network = cryptoCurrencyStatus.currency.network,
@@ -287,13 +292,17 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private fun composeStakeTransaction(confirmationState: StakingStates.ConfirmationState.Data): PendingTransaction {
         val state = stateController.value
 
+        val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
+        val token = yield.getCurrentToken(cryptoCurrencyStatus.currency.id.rawCurrencyId)
+
         return PendingTransaction(
             groupId = UUID.randomUUID().toString(),
+            token = token,
             type = BalanceType.STAKED,
             amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO,
             rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
             validator = (confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator,
-            balancesId = (cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data)?.getBalancesUniqueId() ?: 0,
+            balancesId = yieldBalance?.getBalancesUniqueId() ?: 0,
         )
     }
 
