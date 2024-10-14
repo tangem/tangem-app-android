@@ -1,12 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import android.content.res.Configuration
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -26,9 +25,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,7 +55,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 
-// private const val HALF_OF_ITEM_WIDTH = 0.5
+private const val HALF_OF_ITEM_WIDTH = 0.5
 
 /**
  * Wallet card
@@ -116,32 +117,31 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
                 bottom.linkTo(anchor = parent.bottom, margin = contentVerticalMargin)
 
                 if (additionalText != null) {
-                    width = Dimension.wrapContent
-// [REDACTED_TODO_COMMENT]
-                    // width = if (state.imageResId != null) {
-                    //     end.linkTo(imageRef.start)
-                    //     Dimension.fillToConstraints
-                    // } else {
-                    //     Dimension.wrapContent
-                    // }
+                    width = if (state.imageResId != null) {
+                        end.linkTo(imageRef.start)
+                        Dimension.fillToConstraints
+                    } else {
+                        Dimension.wrapContent
+                    }
                 }
             },
         )
-// [REDACTED_TODO_COMMENT]
+
         // If balance has a large width then image must be hidden
-        // val hasSpaceForImage by remember(key1 = balanceWidth, key2 = itemSize.width) {
-        //     mutableStateOf(value = balanceWidth < itemSize.width * HALF_OF_ITEM_WIDTH)
-        // }
-        // if (hasSpaceForImage) {
-        //     Image(
-        //         id = state.imageResId,
-        //         modifier = Modifier.constrainAs(imageRef) {
-        //             end.linkTo(parent.end)
-        //             bottom.linkTo(parent.bottom)
-        //             height = Dimension.fillToConstraints
-        //         },
-        //     )
-        // }
+        val hasSpaceForImage by remember(key1 = balanceWidth, key2 = itemSize.width) {
+            mutableStateOf(value = balanceWidth < itemSize.width * HALF_OF_ITEM_WIDTH)
+        }
+
+        if (hasSpaceForImage) {
+            Image(
+                id = state.imageResId,
+                modifier = Modifier.constrainAs(imageRef) {
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                    height = Dimension.fillToConstraints
+                },
+            )
+        }
     }
 }
 
@@ -370,19 +370,19 @@ private fun LockedContent(modifier: Modifier = Modifier) {
     )
 }
 
-// @Composable
-// private fun Image(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
-//     AnimatedVisibility(visible = id != null, modifier = modifier) {
-//         val imageRes = id ?: return@AnimatedVisibility
-//
-//         Image(
-//             painter = painterResource(id = imageRes),
-//             contentDescription = null,
-//             modifier = Modifier.width(width = TangemTheme.dimens.size120),
-//             contentScale = ContentScale.FillWidth,
-//         )
-//     }
-// }
+@Composable
+private fun Image(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
+    AnimatedVisibility(visible = id != null, modifier = modifier) {
+        val imageRes = id ?: return@AnimatedVisibility
+
+        Image(
+            painter = painterResource(id = imageRes),
+            contentDescription = null,
+            modifier = Modifier.width(width = TangemTheme.dimens.size120),
+            contentScale = ContentScale.FillWidth,
+        )
+    }
+}
 
 // region Preview
 
