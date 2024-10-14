@@ -34,15 +34,15 @@
   <string name="balance_hidden_do_not_show_button">No mostrar de nuevo</string>
   <string name="balance_hidden_got_it_button">Entendido</string>
   <string name="balance_hidden_title">Los saldos están ocultos</string>
-  <string name="biometric_lockout_permanent_warning_description">Por favor, escanee la tarjeta</string>
-  <string name="biometric_lockout_warning_description">Por favor, inténtelo de nuevo en 30 segundos o escanee la tarjeta</string>
+  <string name="biometric_lockout_permanent_warning_description">Por favor, escanee la tarjeta/anillo</string>
+  <string name="biometric_lockout_warning_description">Por favor, inténtelo de nuevo en 30 segundos o escanee la tarjeta/anillo</string>
   <string name="biometric_lockout_warning_title">Demasiados intentos</string>
   <string name="biometric_unavailable_warning">Ha desactivado la autenticación biométrica en su teléfono y no podrá guardar billeteras en la aplicación. Para guardar billeteras, active la función de autenticación biométrica en los ajustes de su teléfono.</string>
   <string name="button_start_backup_process">Iniciar proceso de backup</string>
   <string name="buy_token_description">Utilice una tarjeta bancaria u otros métodos de pago</string>
   <plurals name="card_label_card_count">
     <item quantity="one">%d tarjeta</item>
-    <item quantity="other">%d tarjetas </item>
+    <item quantity="other">%d tarjetas</item>
   </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Desactive esta opción si no quiere que esta tarjeta se use para reiniciar códigos de acceso en otras tarjetas de esta billetera. Tenga en cuenta que esto también evitará que reinicie el código de acceso en esta tarjeta.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Permite usar esta tarjeta para reiniciar el código de acceso en otras tarjetas de esta billetera</string>
@@ -50,7 +50,7 @@
   <string name="card_settings_action_sheet_reset">Reiniciar</string>
   <string name="card_settings_action_sheet_title">¿Está seguro de que quiere hacer esto?</string>
   <string name="card_settings_change_access_code">Cambiar código de acceso</string>
-  <string name="card_settings_change_access_code_footer">El código de acceso se cambiará solo en esta tarjeta</string>
+  <string name="card_settings_change_access_code_footer">El código de acceso se cambiará solo en esta tarjeta o este anillo</string>
   <string name="card_settings_completed_reset_alert_message">Todas las tarjetas de la billetera seleccionada se han restablecido a la configuración de fábrica. Ahora puedes crear una nueva billetera.</string>
   <string name="card_settings_completed_reset_alert_title">Reinicio completado</string>
   <string name="card_settings_continue_reset_alert_message">¿Quiere restablecer la siguiente tarjeta en esta billetera?</string>
@@ -59,7 +59,7 @@
   <string name="card_settings_interrupted_reset_alert_title">No ha reseteado todas sus tarjetas</string>
   <string name="card_settings_reset_card_to_factory">Restablecer a ajustes de fábrica</string>
   <string name="card_settings_security_mode">Modo de seguridad</string>
-  <string name="card_settings_title">Ajustes de la tarjeta</string>
+  <string name="card_settings_title">Ajustes del dispositivo</string>
   <string name="cardano_coin_will_be_send_with_token_description">Además de la tarifa de red, la red Cardano cobra %1$s ADA al realizar transacciones con el %2$s token</string>
   <string name="cardano_coin_will_be_send_with_token_title">Requisitos de transacción de Cardano</string>
   <string name="cardano_insufficient_balance_to_send_token_description">Para realizar una %1$s transacción, deba depositar algo de ADA para cubrir la tarifa de red y el valor mínimo de ADA (se recomiendan 5 ADA)</string>
@@ -129,6 +129,7 @@
   <string name="common_now">Ahora</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Tarjeta principal</string>
+  <string name="common_origin_ring">Anillo primario</string>
   <string name="common_passphrase">Frase de contraseña</string>
   <string name="common_paste">Pegar</string>
   <string name="common_privacy_policy">Política de privacidad</string>
@@ -188,7 +189,7 @@
   <string name="custom_token_invalid_derivation_path">La ruta de derivación que ha ingresado no es válida</string>
   <string name="custom_token_name_input_placeholder">Por ejemplo USD coin</string>
   <string name="custom_token_name_input_title">Nombre</string>
-  <string name="custom_token_network_input_not_selected">No elegido</string>
+  <string name="custom_token_network_input_not_selected">No elegida</string>
   <string name="custom_token_network_input_title">Red</string>
   <string name="custom_token_network_selector_title">Red de tokens</string>
   <string name="custom_token_subtitle">Puede agregar manualmente un token que no sea compatible de forma nativa con Tangem</string>
@@ -210,7 +211,7 @@
   <string name="details_referral_title">Programa de referidos</string>
   <string name="details_row_description_flip_to_hide">Gire la pantalla de su dispositivo hacia abajo para ocultar y mostrar rápidamente los saldos</string>
   <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
-  <string name="details_row_title_cid">ID de la tarjeta</string>
+  <string name="details_row_title_cid">ID del dispositivo</string>
   <string name="details_row_title_contact_to_support">Contactar con el equipo de soporte</string>
   <string name="details_row_title_create_backup">Vincular más tarjetas</string>
   <string name="details_row_title_currency">Moneda de la aplicación</string>
@@ -301,11 +302,12 @@
   <string name="initial_message_change_access_code_body">Toque para cambiar la contraseña</string>
   <string name="initial_message_change_passcode_body">Toque para cambiar la contraseña</string>
   <string name="initial_message_create_wallet_body">Para crear la billetera, toque la tarjeta como se muestra arriba y no la retire hasta el final de la operación</string>
+  <string name="initial_message_create_wallet_body_ring">Para crear la billetera, ponga el anillo como se muestra arriba y manténgala hasta que termine la operación.</string>
   <string name="initial_message_reset_backup_card_header">Toque la tarjeta no. %s de la billetera</string>
   <string name="initial_message_scan_header">Coloque para escanear</string>
   <string name="initial_message_sign_header">Toque para firmar</string>
   <string name="initial_message_tap_header">Coloque la tarjeta</string>
-  <string name="key_invalidated_warning_description">Ha actualizado la biometría, escanee su tarjeta para entrar</string>
+  <string name="key_invalidated_warning_description">Ha actualizado la biometría, escanee su tarjeta o anillo para entrar</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Su saldo debe ser mayor que el valor de la tarifa para hacer una transferencia</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Saldo insuficiente</string>
   <string name="koinos_insufficient_mana_to_send_koin_description">No tiene suficiente Mana para esta transacción. Por favor, espere hasta que el Mana se recargue. Su saldo de Mana es %1$s/%2$s</string>
@@ -430,11 +432,11 @@
   <string name="markets_tooltip_message">Tire hacia arriba o toque la barra de búsqueda para agregar tokens directamente desde el mercado</string>
   <string name="markets_tooltip_title">Agregar tokens</string>
   <string name="nfc_error_unavailable">NFC no está disponible en su dispositivo</string>
-  <string name="onboarding_access_code_feature_1_description">Deba configurar un único código de acceso para proteger todas sus tarjetas</string>
+  <string name="onboarding_access_code_feature_1_description">Deba configurar un único código de acceso para proteger todss sus dispositivos.</string>
   <string name="onboarding_access_code_feature_1_title">Proteger</string>
   <string name="onboarding_access_code_feature_2_description">Puede configurar un código de acceso individual en cada tarjeta más tarde</string>
   <string name="onboarding_access_code_feature_2_title">Personalizar</string>
-  <string name="onboarding_access_code_feature_3_description">El código de acceso se puede recuperar con una tarjeta vinculada. No guarde todas las tarjetas en un mismo lugar.</string>
+  <string name="onboarding_access_code_feature_3_description">El código de acceso se puede recuperar con una tarjeta o un anillo vinculada(o). No guarde todas las tarjetas en un mismo lugar.</string>
   <string name="onboarding_access_code_feature_3_title">Restaurar</string>
   <string name="onboarding_access_code_hint">Elige cualquier palabra, frase o número que quieras como su código de acceso</string>
   <string name="onboarding_access_code_intro_title">Crear un código de acceso</string>
@@ -448,10 +450,12 @@
   <string name="onboarding_alert_message_not_max_backup_cards_added">Ha agregado una tarjeta de backup. Cuando el proceso de backup finalice, no podrá añadir más tarjetas de backup. Si tiene otra tarjeta, agréguela al backup. ¿Quiere continuar el proceso de backup?</string>
   <string name="onboarding_backup_exit_warning">El proceso de backup está parcialmente completo. No puede salir ahora.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">La frase de contraseña es una característica de seguridad avanzada utilizada por las billeteras criptográficas. Agrega una palabra o frase adicional de su elección a su frase de recuperación ya existente para desbloquear un conjunto completamente nuevo de direcciones.</string>
-  <string name="onboarding_button_add_backup_card">Agregar una tarjeta de backup</string>
+  <string name="onboarding_button_add_backup_card">Agregar una tarjeta o un anillo de backup</string>
+  <string name="onboarding_button_backup_card">Escanee la tarjeta</string>
   <string name="onboarding_button_backup_card_format">Escanee la tarjeta no. %d</string>
   <string name="onboarding_button_backup_now">Hacer backup ahora</string>
   <string name="onboarding_button_backup_origin">Escanee la tarjeta principal</string>
+  <string name="onboarding_button_backup_ring">Escanee el anillo</string>
   <string name="onboarding_button_continue_wallet">Continuar a mi billetera</string>
   <string name="onboarding_button_finalize_backup">Finalizar el backup</string>
   <string name="onboarding_button_receive_crypto">Recibir cripto</string>
@@ -462,7 +466,7 @@
   <string name="onboarding_create_wallet_button_create_wallet">Crear una billetera</string>
   <string name="onboarding_create_wallet_header">Crear una billetera</string>
   <string name="onboarding_create_wallet_options_button_options">Otras opciones</string>
-  <string name="onboarding_create_wallet_options_message">Sus claves se generarán de forma segura dentro de la tarjeta. No hay seed phrase, lo que significa que nadie puede exportarla ni robarla.</string>
+  <string name="onboarding_create_wallet_options_message">Sus claves se generarán de forma segura dentro del chip. No hay seed phrase, lo que significa que nadie puede exportarla ni robarla.</string>
   <string name="onboarding_create_wallet_options_title">Generar claves de forma privada</string>
   <string name="onboarding_done_body">Su tarjeta está activada y lista para usar</string>
   <string name="onboarding_done_header">¡Éxito!</string>
@@ -494,13 +498,16 @@
   <string name="onboarding_subtitle_no_backup_cards">Para iniciar el proceso de backup, agregue hasta dos tarjetas de backup.</string>
   <string name="onboarding_subtitle_one_backup_card">Puede agregar una tarjeta más o finalizar el proceso de backup</string>
   <string name="onboarding_subtitle_scan_backup_card_format">Prepare su tarjeta de backup con el no.%s</string>
-  <string name="onboarding_subtitle_scan_primary">Escanee la tarjeta principal para iniciar el proceso de backup.</string>
+  <string name="onboarding_subtitle_scan_primary">Escanee la tarjeta principal o el anillo para iniciar el proceso de backup.</string>
   <string name="onboarding_subtitle_scan_primary_card_format">Prepare la tarjeta principal con el número %s</string>
+  <string name="onboarding_subtitle_scan_ring">Prepare el anillo y presione el botón de escaneo a continuación</string>
   <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Su tarjeta billetera está configurada y lista para usar.</string>
   <string name="onboarding_subtitle_two_backup_cards">Número máximo de tarjetas añadido. Finalice el proceso de backup.</string>
   <string name="onboarding_title">Activando tarjeta</string>
+  <string name="onboarding_title_backup_card">Tarjeta de backup</string>
   <string name="onboarding_title_backup_card_format">Tarjeta de backup no.%d</string>
-  <string name="onboarding_title_no_backup_cards">Ningunas tarjetas de backup</string>
+  <string name="onboarding_title_backup_ring">Anillo de backup</string>
+  <string name="onboarding_title_no_backup_cards">Ningunos dispositivos de backup</string>
   <string name="onboarding_title_notifications">Notificaciones</string>
   <string name="onboarding_title_one_backup_card">Una tarjeta de backup agregada</string>
   <string name="onboarding_title_scan_origin_card">Prepare su tarjeta</string>
@@ -656,7 +663,7 @@
   <string name="send_transaction_success">La transacción se firmó con éxito y se envió al nodo blockchain. El saldo de la billetera se actualizará después de un tiempo.</string>
   <string name="send_tron_account_activation_error">%1$s  es un activo en la red Tron. Para calcular la tarifa y realizar una transacción, deba depositar algo de Tron (TRX) en su cuenta.</string>
   <string name="sent_transaction_sent_title">Transacción enviada</string>
-  <string name="settings_card_settings_footer">Escanee la tarjeta que quiere configurar</string>
+  <string name="settings_card_settings_footer">Escanee la tarjeta/anillo que quiere configurar</string>
   <string name="settings_forget_wallet">Olvidar la billetera</string>
   <string name="settings_forget_wallet_footer">Esto eliminará la wallet de la aplicación. La wallet en sí puede\nañadirse de nuevo.</string>
   <string name="settings_wallet_name_title">Nombre</string>
@@ -752,7 +759,7 @@
   <string name="staking_your_stakes">Sus stakes</string>
   <string name="story_awe_description">Almacene sus activos crypto de forma segura manteniendo las claves privadas contenidas en su tarjeta</string>
   <string name="story_awe_title">Billetera de hardware revolucionaria</string>
-  <string name="story_backup_description">Hasta 3 tarjetas físicas por billetera</string>
+  <string name="story_backup_description">Hasta 3 tarjetas físicas o anillos por billetera</string>
   <string name="story_backup_title">Backup ultra seguro</string>
   <string name="story_currencies_description">Una billetera de hardware para su Bitcoin, Ethereum y muchas más monedas simultáneamente – todo en una sola tarjeta</string>
   <string name="story_currencies_title">Miles de monedas</string>
@@ -823,13 +830,13 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">Esta acción es irreversible. No tendrá acceso la billetera antigua.</string>
   <string name="twins_scan_twin_with_number">Toque la tarjeta gemela con el número %s y no la retira hasta el final de la operación</string>
-  <string name="unlock_wallet_description_full">Use %s o escanee una tarjeta para tener acceso a su billetera</string>
+  <string name="unlock_wallet_description_full">Use %s o escanee una tarjeta/anillo para tener acceso a su billetera</string>
   <string name="user_push_notification_agreement_argument_one">Manténgase actualizado con las últimas funciones y noticias</string>
   <string name="user_push_notification_agreement_argument_two">Sea el primero en enterarte de nuevas promociones</string>
   <string name="user_push_notification_agreement_header">¿Quiere utilizar\nnotificaciones push?</string>
   <string name="user_wallet_list_add_button">Agregar una nueva billetera</string>
   <string name="user_wallet_list_delete_prompt">¿Está seguro(a) de que quieres eliminar esta billetera?</string>
-  <string name="user_wallet_list_error_unable_to_unlock">Ha ocurrido un error, por favor escanee su tarjeta para iniciar sesión</string>
+  <string name="user_wallet_list_error_unable_to_unlock">Ha ocurrido un error, por favor escanee su tarjeta o anillo para iniciar sesión</string>
   <string name="user_wallet_list_error_wallet_already_saved">Esta billetera ya se ha guardado, puede agregar otro</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">La billetera con el nombre %s ya existe</string>
   <string name="user_wallet_list_rename_popup_placeholder">Nombre de la billetera</string>
@@ -837,7 +844,7 @@
   <string name="user_wallet_list_unlock_all">Desbloquear todo</string>
   <string name="user_wallet_list_unlock_all_with">Desbloquear todo con %s</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">La blockchain está Inaccesible. Inténtelo más tarde</string>
-  <string name="wallet_balance_missing_derivation">Escanee la tarjeta</string>
+  <string name="wallet_balance_missing_derivation">Escanee la tarjeta o el anillo</string>
   <string name="wallet_connect_alert_sign_message">Solicitud para firmar un mensaje.\n\n%s</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s, solicitando\nfirmar transacción BNB.\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">Orden de intercambio por %1$s\nPrecio: %2$s\nCantidad a recibir: %3$s\nCantidad a pagar: %4$s</string>
@@ -851,7 +858,7 @@
   <string name="wallet_connect_error_unsupported_blockchains">La solicitud de sesión contiene blockchains no compatibles para la conexión WalletConnect. Blockchains no compatibles:\n</string>
   <string name="wallet_connect_error_unsupported_dapp">La conexión con esta dApp no se puede establecer debido a su implementación técnica.</string>
   <string name="wallet_connect_error_with_framework_message">Hemos encontrado un error desconocido. Mensaje de error: %s. Si el problema persiste, no duda en contactar con nuestro soporte</string>
-  <string name="wallet_connect_error_wrong_card_selected">Tarjeta incorrecta seleccionada en Tangem App</string>
+  <string name="wallet_connect_error_wrong_card_selected">Tarjeta/anillo incorrecta (o) seleccionada en Tangem App</string>
   <string name="wallet_connect_failed_to_build_tx">Error al crear la transacción a partir de los datos de la dApp. Código: %s</string>
   <string name="wallet_connect_generic_error_with_code">Hemos encontrado un error desconocido. Mensaje de error: %d. Si el problema persiste, contacte con nuestro soporte</string>
   <string name="wallet_connect_no_sessions_message">No hay sesiones abiertas de WalletConnect</string>
@@ -876,7 +883,7 @@
   <string name="wallet_notification_no_internet">Sin conexión a internet</string>
   <string name="wallet_settings_title">Ajusta de la wallet</string>
   <string name="wallet_title">Tangem</string>
-  <string name="warning_access_denied_message">Use %s o escanee una tarjeta para desbloquear el acceso a su billetera</string>
+  <string name="warning_access_denied_message">Use %s o escanee una tarjeta/anillo para desbloquear el acceso a su billetera</string>
   <string name="warning_approval_in_progress_message">El proceso de obtención de permisos está actualmente en marcha y se completará pronto.</string>
   <string name="warning_approval_in_progress_title">Aprobación en curso</string>
   <string name="warning_backup_errors_message">Parece que la activación de la tarjeta no ha ido correctamente. Esto puede deberse a un problema con el módulo NFC de su dispositivo o a una mala conexión de la tarjeta de su dispositivo. Comuníquese con nuestro equipo de soporte para obtener ayuda.</string>
@@ -925,8 +932,8 @@
   <string name="warning_matic_migration_message">Actualmente, MATIC está migrando a POL. Sin embargo, no se ha fijado ninguna fecha límite y MATIC aún no está obsoleto. Puede seguir usando el token MATIC de forma segura o utilizar intercambios para cambiarlo por POL.</string>
   <string name="warning_matic_migration_title">Migración de MATIC a POL</string>
   <plurals name="warning_missing_derivation_message">
-    <item quantity="one">Use su tarjeta para obtener una dirección para la red</item>
-    <item quantity="other">Use su tarjeta para obtener direcciónes para la red</item>
+    <item quantity="one">Use su tarjeta o anillo para obtener una dirección para la red</item>
+    <item quantity="other">Use su tarjeta o anillo para obtener direcciónes para la red</item>
   </plurals>
   <string name="warning_missing_derivation_title">Faltan algunas direcciones</string>
   <string name="warning_network_unreachable_message">La red no está disponible actualmente. Por favor, inténtalo de nuevo más tarde.</string>
@@ -953,7 +960,7 @@
   <string name="welcome_interrupted_backup_alert_message">Tiene un backup interrumpido. ¿Quiere reanudarlo?</string>
   <string name="welcome_interrupted_backup_alert_resume">Sí, reanudar</string>
   <string name="welcome_interrupted_backup_discard_discard">Descartar</string>
-  <string name="welcome_interrupted_backup_discard_message">Si descarta el backup ahora, tendrá que restablecer las tarjetas a los ajustes de fábrica para empezar de nuevo</string>
+  <string name="welcome_interrupted_backup_discard_message">Si descarta el backup ahora, tendrá que restablecer los dispositivos a los ajustes de fábrica para empezar de nuevo</string>
   <string name="welcome_interrupted_backup_discard_resume">Reanudar backup</string>
   <string name="welcome_interrupted_backup_discard_title">Esta es una acción irreversible</string>
   <string name="welcome_unlock">Iniciar sesión con %s</string>
