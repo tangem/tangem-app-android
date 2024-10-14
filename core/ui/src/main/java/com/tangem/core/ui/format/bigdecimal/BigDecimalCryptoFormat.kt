@@ -70,7 +70,7 @@ fun BigDecimalCryptoFormat.defaultAmount() = BigDecimalFormat { value ->
 
     formatter.format(value)
         .replaceFiatSymbolWithCrypto(
-            fiatCurrencySymbol = usdCurrency.symbol,
+            fiatCurrencySymbol = usdCurrency.getSymbol(locale),
             cryptoCurrencySymbol = symbol,
         )
 }
@@ -96,7 +96,7 @@ fun BigDecimalCryptoFormat.shorted() = BigDecimalFormat { value ->
 
     formatter.format(value)
         .replaceFiatSymbolWithCrypto(
-            fiatCurrencySymbol = usdCurrency.symbol,
+            fiatCurrencySymbol = usdCurrency.getSymbol(locale),
             cryptoCurrencySymbol = symbol,
         )
 }
@@ -115,7 +115,7 @@ fun BigDecimalCryptoFormat.uncapped() = BigDecimalFormat { value ->
 
     formatter.format(value)
         .replaceFiatSymbolWithCrypto(
-            fiatCurrencySymbol = usdCurrency.symbol,
+            fiatCurrencySymbol = usdCurrency.getSymbol(locale),
             cryptoCurrencySymbol = symbol,
         )
 }
@@ -140,7 +140,7 @@ fun BigDecimalCryptoFormat.fee(canBeLower: Boolean = false) = BigDecimalFormat {
                 formatter
                     .format(CRYPTO_FEE_FORMAT_THRESHOLD)
                     .replaceFiatSymbolWithCrypto(
-                        fiatCurrencySymbol = usdCurrency.symbol,
+                        fiatCurrencySymbol = usdCurrency.getSymbol(locale),
                         cryptoCurrencySymbol = symbol,
                         addStartSpace = true,
                     ),
@@ -154,7 +154,7 @@ fun BigDecimalCryptoFormat.fee(canBeLower: Boolean = false) = BigDecimalFormat {
             append(
                 formatter.format(value)
                     .replaceFiatSymbolWithCrypto(
-                        fiatCurrencySymbol = usdCurrency.symbol,
+                        fiatCurrencySymbol = usdCurrency.getSymbol(locale),
                         cryptoCurrencySymbol = symbol,
                         addStartSpace = canBeLower,
                     ),
