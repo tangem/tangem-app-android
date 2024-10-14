@@ -1,21 +1,18 @@
 package com.tangem.data.feedback
 
-import android.content.Context
-import android.content.pm.PackageInfo
 import android.os.Build
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.navigation.email.EmailSender
 import com.tangem.data.feedback.converters.BlockchainInfoConverter
 import com.tangem.data.feedback.converters.CardInfoConverter
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
-import com.tangem.domain.feedback.models.BlockchainErrorInfo
-import com.tangem.domain.feedback.models.BlockchainInfo
-import com.tangem.domain.feedback.models.PhoneInfo
-import com.tangem.domain.feedback.models.UserWalletsInfo
+import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.utils.version.AppVersionProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
@@ -27,7 +24,8 @@ import java.io.File
  * @property appLogsStore           app logs store
  * @property userWalletsListManager user wallets list manager
  * @property walletManagersStore    wallet managers store
- * @property context                context for getting app version
+ * @property emailSender            email sender
+ * @property appVersionProvider     app version provider
  *
 [REDACTED_AUTHOR]
  */
@@ -35,7 +33,8 @@ internal class DefaultFeedbackRepository(
     private val appLogsStore: AppLogsStore,
     private val userWalletsListManager: UserWalletsListManager,
     private val walletManagersStore: WalletManagersStore,
-    private val context: Context,
+    private val emailSender: EmailSender,
+    private val appVersionProvider: AppVersionProvider,
 ) : FeedbackRepository {
 
     private val blockchainsErrors = MutableStateFlow<Map<UserWalletId, BlockchainErrorInfo>>(emptyMap())
@@ -73,7 +72,7 @@ internal class DefaultFeedbackRepository(
         return PhoneInfo(
             phoneModel = Build.MODEL,
             osVersion = Build.VERSION.SDK_INT.toString(),
-            appVersion = getAppVersion(),
+            appVersion = appVersionProvider.versionName,
         )
     }
 
@@ -95,14 +94,14 @@ internal class DefaultFeedbackRepository(
 
     override fun getLogFile(): File? = appLogsStore.getFile()
 
-    private fun getAppVersion(): String {
-        return runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }
-            .fold(
-                onSuccess = PackageInfo::versionName,
-                onFailure = {
-                    Timber.e(it)
-                    "x.y.z"
-                },
-            )
+    override fun sendEmail(feedbackEmail: FeedbackEmail) {
+        emailSender.send(
+            EmailSender.Email(
+                address = feedbackEmail.address,
+                subject = feedbackEmail.subject,
+                message = feedbackEmail.message,
+                attachment = feedbackEmail.file,
+            ),
+        )
     }
 }
