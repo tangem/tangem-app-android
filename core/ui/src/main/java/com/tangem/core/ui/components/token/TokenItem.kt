@@ -17,11 +17,13 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Constraints
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.token.internal.*
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
@@ -122,7 +124,7 @@ fun TokenItem(
         )
 
         TokenCryptoAmount(
-            state = state.cryptoAmountState,
+            state = state.subtitle2State,
             isBalanceHidden = isBalanceHidden,
             modifier = Modifier.layoutId(layoutId = LayoutId.CRYPTO_AMOUNT),
         )
@@ -461,7 +463,7 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
                 text = "3213123123321312312312312312 $",
                 hasStaked = true,
             ),
-            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,4123123213123123123123123123 MATIC"),
+            subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "5,4123123213123123123123123123 MATIC"),
             subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                 price = "312 USD",
                 priceChangePercent = "42.0%",
@@ -500,14 +502,33 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
             titleState = TokenItemState.TitleState.Content(text = "Polygon"),
-            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "3 172,14 $"),
+            subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "3 172,14 $"),
         ),
         TokenItemState.Content(
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
             titleState = TokenItemState.TitleState.Content(text = "Polygon"),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = false),
-            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
+            subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "5,412 MATIC"),
+            subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
+                price = "312 USD",
+                priceChangePercent = "2.0%",
+                type = PriceChangeType.UP,
+            ),
+            onItemClick = {},
+            onItemLongClick = {},
+        ),
+        TokenItemState.Content(
+            id = UUID.randomUUID().toString(),
+            iconState = tokenIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = false),
+            subtitle2State = TokenItemState.Subtitle2State.LabelContent(
+                auditLabelUM = AuditLabelUM(
+                    text = TextReference.Str(value = "Trusted"),
+                    type = AuditLabelUM.Type.Permit,
+                ),
+            ),
             subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                 price = "312 USD",
                 priceChangePercent = "2.0%",
@@ -573,7 +594,7 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
                 iconState = coinIconState,
                 titleState = TokenItemState.TitleState.Content(text = "Polygon", hasPending = true),
                 fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = true),
-                cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
+                subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "5,412 MATIC"),
                 subtitleState = TokenItemState.SubtitleState.Unknown,
                 onItemClick = {},
                 onItemLongClick = {},

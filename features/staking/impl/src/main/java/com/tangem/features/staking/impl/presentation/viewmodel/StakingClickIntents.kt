@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.viewmodel
 
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -50,6 +51,8 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun onActiveStakeAnalytic()
 
     fun showApprovalBottomSheet()
+
+    fun onApproveTypeChange(approveType: ApproveType)
 
     fun onApprovalClick()
 

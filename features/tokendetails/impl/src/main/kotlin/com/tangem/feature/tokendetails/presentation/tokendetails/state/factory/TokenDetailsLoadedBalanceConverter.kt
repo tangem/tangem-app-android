@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
@@ -39,6 +40,7 @@ internal class TokenDetailsLoadedBalanceConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
     private val pendingBalancesProvider: Provider<List<BalanceItem>>,
+    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
@@ -59,7 +61,6 @@ internal class TokenDetailsLoadedBalanceConverter(
     private fun convertError(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(
-            isStakingBlockShown = false,
             tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(
                 actionButtons = state.tokenBalanceBlockState.actionButtons,
                 balanceSegmentedButtonConfig = state.tokenBalanceBlockState.balanceSegmentedButtonConfig,
@@ -139,16 +140,23 @@ internal class TokenDetailsLoadedBalanceConverter(
         }
     }
 
-    private fun getYieldBalance(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM {
+    private fun getYieldBalance(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM? {
         val yieldBalance = status.value.yieldBalance as? YieldBalance.Data
         val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance()
 
         val stakingEntryInfo = stakingEntryInfoProvider.invoke()
+        val stakingAvailability = stakingAvailabilityProvider.invoke()
         val iconState = state.tokenInfoBlockState.iconState
         val pendingBalances = pendingBalancesProvider.invoke()
         val fiatRate = status.value.fiatRate
 
         return when {
+            stakingAvailability == StakingAvailability.TemporaryUnavailable -> {
+                StakingBlockUM.TemporaryUnavailable
+            }
+            stakingAvailability == StakingAvailability.Unavailable -> {
+                null
+            }
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null && pendingBalances.isEmpty() -> {
                 getStakeAvailableState(stakingEntryInfo, iconState)
             }
@@ -164,7 +172,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                 )
             }
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo == null -> {
-                StakingBlockUM.Error(iconState = iconState)
+                null
             }
             else -> {
                 val stakingRewardAmount = yieldBalance?.getRewardStakingBalance()?.let { fiatRate?.multiply(it) }
