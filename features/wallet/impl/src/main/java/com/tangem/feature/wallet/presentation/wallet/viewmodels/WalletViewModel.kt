@@ -16,6 +16,7 @@ import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -67,6 +68,7 @@ internal class WalletViewModel @Inject constructor(
     private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val marketsFeatureToggles: MarketsFeatureToggles,
+    private val walletImageResolver: WalletImageResolver,
     analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
@@ -267,7 +269,12 @@ internal class WalletViewModel @Inject constructor(
                     coroutineScope = viewModelScope,
                 )
 
-                stateHolder.update(transformer = UpdateWalletCardsCountTransformer(action.selectedWallet))
+                stateHolder.update(
+                    transformer = UpdateWalletCardsCountTransformer(
+                        userWallet = action.selectedWallet,
+                        walletImageResolver = walletImageResolver,
+                    ),
+                )
             }
             is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
                 stateHolder.update(transformer = RenameWalletTransformer(action.selectedWalletId, action.name))
@@ -290,6 +297,7 @@ internal class WalletViewModel @Inject constructor(
                 selectedWalletIndex = action.selectedWalletIndex,
                 wallets = action.wallets,
                 clickIntents = clickIntents,
+                walletImageResolver = walletImageResolver,
             ),
         )
 
@@ -322,6 +330,7 @@ internal class WalletViewModel @Inject constructor(
                 prevWalletId = action.prevWalletId,
                 newUserWallet = action.selectedWallet,
                 clickIntents = clickIntents,
+                walletImageResolver = walletImageResolver,
             ),
         )
     }
@@ -337,6 +346,7 @@ internal class WalletViewModel @Inject constructor(
             AddWalletTransformer(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
+                walletImageResolver = walletImageResolver,
             ),
         )
 
@@ -386,6 +396,7 @@ internal class WalletViewModel @Inject constructor(
             transformer = UnlockWalletTransformer(
                 unlockedWallets = action.unlockedWallets,
                 clickIntents = clickIntents,
+                walletImageResolver = walletImageResolver,
             ),
         )
 
