@@ -89,6 +89,7 @@ internal class ManageTokensListManager @Inject constructor(
                 actionsFlow = actionsFlow,
                 coroutineScope = this,
             ),
+            loadUserTokensFromRemote = userWalletId != null && source == ManageTokensSource.ONBOARDING,
         )
 
         batchFlow.state
