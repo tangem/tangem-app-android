@@ -14,6 +14,7 @@ data class TokenMarketInfo(
     val metrics: Metrics?,
     val links: Links?,
     val pricePerformance: PricePerformance?,
+    val exchangesAmount: Int?,
 ) {
     data class Network(
         val networkId: String,

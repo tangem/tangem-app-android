@@ -1,10 +1,9 @@
 package com.tangem.features.send.impl.presentation.viewmodel
 
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
-import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import java.math.BigDecimal
 
@@ -25,7 +24,7 @@ internal interface SendClickIntents : AmountScreenClickIntents {
 
     fun onFailedTxEmailClick(errorMessage: String)
 
-    fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency)
+    fun onTokenDetailsClick(currency: CryptoCurrency)
 
     // region Recipient
     fun onRecipientAddressValueChange(value: String, type: EnterAddressSource? = null)
@@ -58,13 +57,14 @@ internal interface SendClickIntents : AmountScreenClickIntents {
 
     fun onShareClick()
 
-    fun onAmountReduceClick(
-        reduceAmountBy: BigDecimal? = null,
-        reduceAmountByDiff: BigDecimal? = reduceAmountBy,
-        reduceAmountTo: BigDecimal? = null,
-        clazz: Class<out SendNotification>,
+    fun onAmountReduceByClick(
+        reduceAmountBy: BigDecimal,
+        reduceAmountByDiff: BigDecimal,
+        notification: Class<out NotificationUM>,
     )
 
-    fun onNotificationCancel(clazz: Class<out SendNotification>)
+    fun onAmountReduceToClick(reduceAmountTo: BigDecimal, notification: Class<out NotificationUM>)
+
+    fun onNotificationCancel(clazz: Class<out NotificationUM>)
     // endregion
 }
