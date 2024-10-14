@@ -54,6 +54,7 @@ data class YieldBalanceItem(
 
 data class BalanceItem(
     val groupId: String,
+    val token: Token,
     val type: BalanceType,
     val amount: BigDecimal,
     val rawCurrencyId: String?,
