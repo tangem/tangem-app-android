@@ -12,7 +12,6 @@ import com.tangem.core.ui.utils.formatWithThousands
 import timber.log.Timber
 import java.text.DecimalFormat
 import java.text.NumberFormat
-import java.util.Currency
 import java.util.Locale
 
 class AmountVisualTransformation(
