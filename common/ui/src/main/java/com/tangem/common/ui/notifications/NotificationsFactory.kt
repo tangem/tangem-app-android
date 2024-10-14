@@ -21,7 +21,7 @@ import java.math.BigDecimal
 object NotificationsFactory {
 
     fun MutableList<NotificationUM>.addFeeUnreachableNotification(
-        feeError: GetFeeError,
+        feeError: GetFeeError?,
         tokenName: String,
         onReload: () -> Unit,
     ) {
