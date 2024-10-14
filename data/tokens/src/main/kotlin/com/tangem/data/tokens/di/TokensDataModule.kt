@@ -95,29 +95,6 @@ internal object TokensDataModule {
 
     @Provides
     @Singleton
-    fun providesTokensListRepository(
-        tangemTechApi: TangemTechApi,
-        dispatchers: CoroutineDispatcherProvider,
-        quotesRepository: QuotesRepository,
-    ): TokensListRepository {
-        return DefaultTokensListRepository(
-            tangemTechApi = tangemTechApi,
-            dispatchers = dispatchers,
-            quotesRepository = quotesRepository,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideCardNetworksRepository(
-        userWalletsStore: UserWalletsStore,
-        dispatchers: CoroutineDispatcherProvider,
-    ): NetworksCompatibilityRepository {
-        return DefaultNetworksCompatibilityRepository(userWalletsStore = userWalletsStore, dispatchers = dispatchers)
-    }
-
-    @Provides
-    @Singleton
     fun provideCurrencyChecksRepository(walletManagersFacade: WalletManagersFacade): CurrencyChecksRepository {
         return DefaultCurrencyChecksRepository(walletManagersFacade = walletManagersFacade)
     }

@@ -20,9 +20,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.block.information.InformationBlock
+import com.tangem.core.ui.components.bottomFade
 import com.tangem.core.ui.components.fields.SimpleTextField
 import com.tangem.core.ui.components.isOpened
 import com.tangem.core.ui.components.keyboardAsState
@@ -60,18 +62,24 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
             .fillMaxSize()
             .background(color = TangemTheme.colors.background.secondary),
     ) {
-        val scrollState = rememberScrollState()
-
-        Column(
+        Box(
             modifier = Modifier
-                .verticalScroll(scrollState)
                 .fillMaxSize()
-                .padding(bottom = TangemTheme.dimens.spacing76),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+                .bottomFade(),
         ) {
-            AddCustomTokenDescription()
-            FormContent(model)
+            val scrollState = rememberScrollState()
+
+            Column(
+                modifier = Modifier
+                    .verticalScroll(scrollState)
+                    .fillMaxSize()
+                    .padding(bottom = 128.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+            ) {
+                AddCustomTokenDescription()
+                FormContent(model)
+            }
         }
 
         PrimaryButton(
