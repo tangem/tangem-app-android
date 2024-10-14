@@ -169,6 +169,7 @@ private fun handleWalletAction(action: Action) {
         is OnboardingWalletAction.FinishOnboarding -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
             navigateToWalletScreen()
+            store.dispatch(BackupAction.DiscardBackup)
         }
         is OnboardingWalletAction.ResumeBackup -> {
             val newAction = when (val backupState = backupService.currentState) {
