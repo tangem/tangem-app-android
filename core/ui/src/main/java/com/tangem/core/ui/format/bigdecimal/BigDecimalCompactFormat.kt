@@ -95,7 +95,7 @@ private fun formatCompactAmount(
 ): String {
     if (threeDigitsMethod) {
         val scaledAmount = amount.setScale(0, RoundingMode.HALF_UP)
-        val digitsCount = scaledAmount.longValueExact().toString().count()
+        val digitsCount = scaledAmount.toString().count()
         val digitsToFormat = 6 - when (digitsCount % 3) {
             0 -> 0
             1 -> 2
@@ -113,7 +113,7 @@ private fun formatCompactAmount(
         return formatter.format(scaledAmount)
     } else {
         val scaledAmount = amount.setScale(0, RoundingMode.HALF_UP)
-        val digitsCount = scaledAmount.longValueExact().toString().count()
+        val digitsCount = scaledAmount.toString().count()
         val digitsToFormat = 5 - when (digitsCount % 3) {
             0 -> 0
             1 -> 2
