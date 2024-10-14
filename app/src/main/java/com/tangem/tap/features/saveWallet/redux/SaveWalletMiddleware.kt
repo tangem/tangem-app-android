@@ -16,6 +16,7 @@ import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -44,7 +45,11 @@ internal class SaveWalletMiddleware {
             is SaveWalletAction.AllowToUseBiometrics -> allowToUseBiometrics(state)
             is SaveWalletAction.EnrollBiometrics.Enroll -> enrollBiometrics()
             is SaveWalletAction.Dismiss -> dismiss(state)
-            is SaveWalletAction.SaveWalletAfterBackup -> saveWalletAfterBackup(state, action.hasBackupError)
+            is SaveWalletAction.SaveWalletAfterBackup -> saveWalletAfterBackup(
+                state = state,
+                hasBackupError = action.hasBackupError,
+                shouldNavigateToWallet = action.shouldNavigateToWallet,
+            )
             is SaveWalletAction.AllowToUseBiometrics.Success,
             is SaveWalletAction.AllowToUseBiometrics.Error,
             is SaveWalletAction.ProvideBackupInfo,
@@ -55,7 +60,11 @@ internal class SaveWalletMiddleware {
         }
     }
 
-    private fun saveWalletAfterBackup(state: SaveWalletState, hasBackupError: Boolean) {
+    private fun saveWalletAfterBackup(
+        state: SaveWalletState,
+        hasBackupError: Boolean,
+        shouldNavigateToWallet: Boolean,
+    ) {
         scope.launch {
             val backupInfo = state.backupInfo ?: error("Backup info is null")
 
@@ -77,8 +86,13 @@ internal class SaveWalletMiddleware {
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to save user wallet")
                 }
-                .doOnSuccess { mainScope.launch { store.onUserWalletSelected(userWallet) } }
-                .doOnResult { navigateToWallet() }
+                .doOnSuccess {
+                    mainScope.launch { store.onUserWalletSelected(userWallet) }
+                    if (!shouldNavigateToWallet) {
+                        store.dispatch(OnboardingWalletAction.WalletSaved(userWallet.walletId))
+                    }
+                }
+                .doOnResult { if (shouldNavigateToWallet) navigateToWallet() }
         }
     }
 
