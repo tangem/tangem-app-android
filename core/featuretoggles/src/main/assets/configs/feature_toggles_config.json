@@ -4,14 +4,6 @@
         "version": "undefined"
     },
     {
-        "name": "LOCAL_USER_LOGS_ENABLED",
-        "version": "5.14.0"
-    },
-    {
-        "name": "GENERATE_XPUB_ENABLED",
-        "version": "5.12.0"
-    },
-    {
         "name": "WC_SOLANA_TX_SIGN_ENABLED",
         "version": "undefined"
     },
@@ -20,23 +12,15 @@
         "version": "5.15.0"
     },
     {
-        "name": "DETAILS_REDESIGN_ENABLED",
-        "version": "5.13.0"
-    },
-    {
-        "name": "PUSH_NOTIFICATIONS_ENABLED",
-        "version": "5.13.0"
-    },
-    {
         "name": "MARKETS_ENABLED",
         "version": "5.15.0"
     },
     {
-        "name": "NEW_MANAGE_TOKENS",
-        "version": "5.15.0"
+        "name": "IS_ETHEREUM_EIP_1559_ENABLED",
+        "version": "5.17.0"
     },
     {
-        "name": "IS_ETHEREUM_EIP_1559_ENABLED",
+        "name": "MIGRATE_USER_COUNTRY_CODE_ENABLED",
         "version": "5.17.0"
     }
 ]
