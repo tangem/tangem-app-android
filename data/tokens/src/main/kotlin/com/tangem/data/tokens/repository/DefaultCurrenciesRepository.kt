@@ -87,6 +87,26 @@ internal class DefaultCurrenciesRepository(
         storeAndPushTokens(userWalletId, response)
     }
 
+    override suspend fun saveNewCurrenciesList(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        val savedResponse = requireNotNull(
+            value = getSavedUserTokensResponseSync(key = userWalletId),
+            lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
+        )
+        val newCoins = createCoinsForNewTokenList(
+            userWalletId = userWalletId,
+            newTokens = currencies.filterIsInstance<CryptoCurrency.Token>(),
+        )
+        val newCurrencies = (newCoins + currencies).distinct()
+        val updatedResponse = savedResponse.copy(
+            tokens = newCurrencies.map(userTokensResponseFactory::createResponseToken),
+        )
+        storeAndPushTokens(
+            userWalletId = userWalletId,
+            response = updatedResponse,
+        )
+        fetchExchangeableUserMarketCoinsByIds(userWalletId, updatedResponse)
+    }
+
     override suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         return withContext(dispatchers.io) {
             val savedCurrencies = requireNotNull(
@@ -123,6 +143,19 @@ internal class DefaultCurrenciesRepository(
             )
             fetchExchangeableUserMarketCoinsByIds(userWalletId, updatedResponse)
         }
+    }
+
+    private suspend fun createCoinsForNewTokenList(
+        userWalletId: UserWalletId,
+        newTokens: List<CryptoCurrency.Token>,
+    ): List<CryptoCurrency.Coin> {
+        return newTokens.mapNotNull {
+            cryptoCurrencyFactory.createCoin(
+                blockchain = getBlockchain(networkId = it.network.id),
+                extraDerivationPath = it.network.derivationPath.value,
+                scanResponse = getUserWallet(userWalletId).scanResponse,
+            )
+        }.distinct()
     }
 
     private suspend fun createCoinsForNewTokens(
