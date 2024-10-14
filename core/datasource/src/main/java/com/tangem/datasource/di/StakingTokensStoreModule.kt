@@ -1,6 +1,5 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.local.datastore.RuntimeDataStore
 import com.tangem.datasource.local.token.DefaultStakingYieldsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import dagger.Module
@@ -16,6 +15,6 @@ internal object StakingTokensStoreModule {
     @Provides
     @Singleton
     fun provideStakingTokensStore(): StakingYieldsStore {
-        return DefaultStakingYieldsStore(dataStore = RuntimeDataStore())
+        return DefaultStakingYieldsStore()
     }
 }

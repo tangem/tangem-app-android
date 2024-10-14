@@ -12,8 +12,8 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.card.BackendId
 import com.tangem.domain.card.repository.DerivationsRepository
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -21,6 +21,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.domain.sdk.TangemSdkManager
+import com.tangem.tap.domain.tasks.UserWalletIdPreflightReadFilter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -47,7 +48,7 @@ internal class DefaultDerivationsRepository(
                 getNetwork(
                     blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null,
                     extraDerivationPath = null,
-                    derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                    scanResponse = userWallet.scanResponse,
                 )
             },
         )
@@ -73,17 +74,17 @@ internal class DefaultDerivationsRepository(
 
     override suspend fun hasMissedDerivations(
         userWalletId: UserWalletId,
-        networksWithDerivationPath: Map<Network.ID, String?>,
+        networksWithDerivationPath: Map<BackendId, String?>,
     ): Boolean {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
 
         val derivations = MissedDerivationsFinder(scanResponse = userWallet.scanResponse)
             .findByNetworks(
-                networksWithDerivationPath.mapNotNull { (networkId, extraDerivationPath) ->
+                networksWithDerivationPath.mapNotNull { (backendId, extraDerivationPath) ->
                     getNetwork(
-                        blockchain = Blockchain.fromNetworkId(networkId.value) ?: return@mapNotNull null,
+                        blockchain = Blockchain.fromNetworkId(backendId) ?: return@mapNotNull null,
                         extraDerivationPath = extraDerivationPath,
-                        derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                        scanResponse = userWallet.scanResponse,
                     )
                 },
             )
@@ -92,15 +93,20 @@ internal class DefaultDerivationsRepository(
     }
 
     override suspend fun derivePublicKeys(userWalletId: UserWalletId, derivations: Derivations): DerivedKeys {
-        tangemSdkManager.derivePublicKeys(cardId = null, derivations = derivations)
-            .doOnSuccess { response ->
-                updatePublicKeys(userWalletId = userWalletId, keys = response.entries)
-                    .doOnSuccess {
-                        validateDerivations(scanResponse = it.scanResponse, derivations = derivations)
-                        return response.entries
-                    }
-                    .doOnFailure { throw it }
-            }
+// [REDACTED_TODO_COMMENT]
+        val preflightReadFilter = UserWalletIdPreflightReadFilter(userWalletId)
+        tangemSdkManager.derivePublicKeys(
+            cardId = null,
+            derivations = derivations,
+            preflightReadFilter = preflightReadFilter,
+        ).doOnSuccess { response ->
+            updatePublicKeys(userWalletId = userWalletId, keys = response.entries)
+                .doOnSuccess {
+                    validateDerivations(scanResponse = it.scanResponse, derivations = derivations)
+                    return response.entries
+                }
+                .doOnFailure { throw it }
+        }
             .doOnFailure { throw it }
 
         error("This code should never be reached")

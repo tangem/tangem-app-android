@@ -239,16 +239,22 @@ class WalletConnectSdkHelper {
     private suspend fun signTransaction(data: WcTransactionData, cardId: String?): String? {
         val dataToSign = EthereumUtils.buildTransactionToSign(
             transactionData = data.transaction,
-            nonce = null,
             blockchain = data.walletManager.wallet.blockchain,
-        ) ?: return null
+        )
 
         val command = SignHashCommand(
             hash = dataToSign.hash,
             walletPublicKey = data.walletManager.wallet.publicKey.seedKey,
             derivationPath = data.walletManager.wallet.publicKey.derivationPath,
         )
-        return when (val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message(), cardId = cardId)) {
+        return when (
+            val result = tangemSdkManager.runTaskAsync(
+                runnable = command,
+                initialMessage = Message(),
+                cardId = cardId,
+                preflightReadFilter = null,
+            )
+        ) {
             is CompletionResult.Success -> {
                 val hash = EthereumUtils.prepareTransactionToSend(
                     signature = result.data.signature,
@@ -291,7 +297,14 @@ class WalletConnectSdkHelper {
             walletPublicKey = wallet.publicKey.seedKey,
             derivationPath = wallet.publicKey.derivationPath,
         )
-        return when (val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message(), cardId = cardId)) {
+        return when (
+            val result = tangemSdkManager.runTaskAsync(
+                runnable = command,
+                initialMessage = Message(),
+                cardId = cardId,
+                preflightReadFilter = null,
+            )
+        ) {
             is CompletionResult.Success -> {
                 val key = wallet.publicKey.blockchainKey.toDecompressedPublicKey()
                 getBnbResultString(
@@ -385,7 +398,13 @@ class WalletConnectSdkHelper {
             walletPublicKey = wallet.publicKey.seedKey,
             derivationPath = wallet.publicKey.derivationPath,
         )
-        return when (val result = tangemSdkManager.runTaskAsync(command, cardId)) {
+        return when (
+            val result = tangemSdkManager.runTaskAsync(
+                runnable = command,
+                cardId = cardId,
+                preflightReadFilter = null,
+            )
+        ) {
             is CompletionResult.Success -> {
                 val signedHash = result.data.signature
 
@@ -420,7 +439,13 @@ class WalletConnectSdkHelper {
             walletPublicKey = wallet.publicKey.seedKey,
             derivationPath = wallet.publicKey.derivationPath,
         )
-        return when (val result = tangemSdkManager.runTaskAsync(command, cardId)) {
+        return when (
+            val result = tangemSdkManager.runTaskAsync(
+                runnable = command,
+                cardId = cardId,
+                preflightReadFilter = null,
+            )
+        ) {
             is CompletionResult.Success -> {
                 val signedHash = result.data.signature
 

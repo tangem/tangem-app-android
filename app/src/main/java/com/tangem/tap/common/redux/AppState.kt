@@ -10,8 +10,6 @@ import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectMiddleware
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
-import com.tangem.tap.features.disclaimer.redux.DisclaimerMiddleware
-import com.tangem.tap.features.disclaimer.redux.DisclaimerState
 import com.tangem.tap.features.home.redux.HomeMiddleware
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteMiddleware
@@ -25,7 +23,6 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWallet
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.saveWallet.redux.SaveWalletMiddleware
 import com.tangem.tap.features.saveWallet.redux.SaveWalletState
-import com.tangem.tap.features.tokens.legacy.redux.TokensState
 import com.tangem.tap.features.wallet.redux.middlewares.TradeCryptoMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeState
@@ -43,8 +40,6 @@ data class AppState(
     val onboardingOtherCardsState: OnboardingOtherCardsState = OnboardingOtherCardsState(),
     val twinCardsState: TwinCardsState = TwinCardsState(),
     val detailsState: DetailsState = DetailsState(),
-    val disclaimerState: DisclaimerState = DisclaimerState(),
-    val tokensState: TokensState = TokensState(),
     val walletConnectState: WalletConnectState = WalletConnectState(),
     val welcomeState: WelcomeState = WelcomeState(),
     val saveWalletState: SaveWalletState = SaveWalletState(),
@@ -75,7 +70,6 @@ data class AppState(
                 OnboardingOtherCardsMiddleware.handler,
                 TwinCardsMiddleware.handler,
                 DetailsMiddleware().detailsMiddleware,
-                DisclaimerMiddleware().disclaimerMiddleware,
                 WalletConnectMiddleware().walletConnectMiddleware,
                 BackupMiddleware().backupMiddleware,
                 WelcomeMiddleware().middleware,
