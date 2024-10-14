@@ -4,6 +4,7 @@ import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.LOWER_SIGN
 import java.math.BigDecimal
 import java.util.Currency
+import java.util.Locale
 
 object BigDecimalFormatConstants {
 
@@ -15,5 +16,5 @@ object BigDecimalFormatConstants {
 
     val CRYPTO_FEE_FORMAT_THRESHOLD = BigDecimal("0.000001")
 
-    val usdCurrency: Currency by lazy { Currency.getInstance("USD") }
+    val usdCurrency: Currency by lazy { Currency.getInstance(Locale.US) }
 }

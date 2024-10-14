@@ -169,7 +169,7 @@ private fun BigDecimal.isMoreThanThreshold() = this > FORMAT_THRESHOLD
 
 private fun BigDecimal.lessThanFeeCryptoThreshold() = this > BigDecimal.ZERO && this < CRYPTO_FEE_FORMAT_THRESHOLD
 
-private val usdCurrency = Currency.getInstance("USD")
+private val usdCurrency = Currency.getInstance(Locale.US)
 
 // Replaces fiat currency symbol with crypto currency symbol
 // with respect to the position of the symbol and whitespace
