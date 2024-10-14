@@ -8,7 +8,7 @@ import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 
-internal class CardCryptoCurrenciesFactory(private val demoConfig: DemoConfig) {
+class CardCryptoCurrenciesFactory(private val demoConfig: DemoConfig) {
 
     private val cryptoCurrencyFactory = CryptoCurrencyFactory()
 
