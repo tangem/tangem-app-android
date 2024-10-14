@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
@@ -12,9 +13,12 @@ import timber.log.Timber
 internal class UnlockWalletTransformer(
     private val unlockedWallets: List<UserWallet>,
     private val clickIntents: WalletClickIntents,
+    private val walletImageResolver: WalletImageResolver,
 ) : WalletScreenStateTransformer {
 
-    private val walletLoadingStateFactory by lazy { WalletLoadingStateFactory(clickIntents = clickIntents) }
+    private val walletLoadingStateFactory by lazy {
+        WalletLoadingStateFactory(clickIntents = clickIntents, walletImageResolver = walletImageResolver)
+    }
 
     override fun transform(prevState: WalletScreenState): WalletScreenState {
         return prevState.copy(

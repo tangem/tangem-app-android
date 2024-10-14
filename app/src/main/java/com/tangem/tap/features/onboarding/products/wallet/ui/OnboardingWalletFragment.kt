@@ -537,7 +537,7 @@ class OnboardingWalletFragment :
             val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
             getString(
                 R.string.onboarding_subtitle_scan_backup_card_format,
-                state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
+                cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
             )
         }
 
