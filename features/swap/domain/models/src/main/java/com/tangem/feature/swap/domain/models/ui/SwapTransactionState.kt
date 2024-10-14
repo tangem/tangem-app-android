@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain.models.ui
 
-import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.feature.swap.domain.models.ExpressDataError
 import java.math.BigDecimal
 
 sealed class SwapTransactionState {
@@ -15,17 +16,13 @@ sealed class SwapTransactionState {
         val timestamp: Long,
     ) : SwapTransactionState()
 
-    data object UserCancelled : SwapTransactionState()
-
-    data object BlockchainError : SwapTransactionState()
-
-    data object TangemSdkError : SwapTransactionState()
-
-    data object NetworkError : SwapTransactionState()
-
-    data object UnknownError : SwapTransactionState()
-
-    data class ExpressError(val dataError: DataError) : SwapTransactionState()
-
     data object DemoMode : SwapTransactionState()
+
+    sealed class Error : SwapTransactionState() {
+        data class TransactionError(val error: SendTransactionError?) : Error()
+
+        data class ExpressError(val error: ExpressDataError) : Error()
+
+        data object UnknownError : Error()
+    }
 }

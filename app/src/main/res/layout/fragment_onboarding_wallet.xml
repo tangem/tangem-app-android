@@ -258,6 +258,13 @@
             android:layout_height="match_parent"
             android:visibility="gone" />
 
+        <include
+            android:id="@+id/onboarding_manage_tokens_container"
+            layout="@layout/layout_onboarding_manage_tokens"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <include
