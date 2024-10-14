@@ -143,7 +143,7 @@ private fun addFiatCurrencySymbolToStringAmount(
     locale: Locale = Locale.getDefault(),
 ): String {
     val sampleAmount = BigDecimal.TEN
-    val currency = getCurrencyByCode(fiatCurrencyCode)
+    val currency = getJavaCurrencyByCode(fiatCurrencyCode)
 
     val formatter = NumberFormat.getCurrencyInstance(locale).apply {
         maximumFractionDigits = 0

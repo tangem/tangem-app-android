@@ -5,7 +5,6 @@ import com.tangem.utils.StringsSigns.TILDE_SIGN
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.NumberFormat
-import java.util.Currency
 import java.util.Locale
 
 open class BigDecimalFiatFormat(
@@ -36,7 +35,7 @@ fun BigDecimalFormatScope.fiat(
  * Formats fiat amount with default precision.
  */
 fun BigDecimalFiatFormat.defaultAmount(): BigDecimalFormat = BigDecimalFormat { value ->
-    val formatterCurrency = getCurrencyByCode(fiatCurrencyCode)
+    val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
 
     val formatter = NumberFormat.getCurrencyInstance(locale).apply {
         currency = formatterCurrency
@@ -79,7 +78,7 @@ fun BigDecimalFiatFormat.approximateAmount(): BigDecimalFormat = BigDecimalForma
  * Formats fiat amount with extended precision.
  */
 fun BigDecimalFiatFormat.uncapped(): BigDecimalFormat = BigDecimalFormat { value ->
-    val formatterCurrency = getCurrencyByCode(fiatCurrencyCode)
+    val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
 
     val digits = if (value.isLessThanThreshold()) {
         FIAT_MARKET_EXTENDED_DIGITS
@@ -103,7 +102,7 @@ fun BigDecimalFiatFormat.uncapped(): BigDecimalFormat = BigDecimalFormat { value
  * @see getFiatPriceAmountWithScale
  */
 fun BigDecimalFiatFormat.price(): BigDecimalFormat = BigDecimalFormat { value ->
-    val formatterCurrency = getCurrencyByCode(fiatCurrencyCode)
+    val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
 
     val (priceAmount, finalScale) = getFiatPriceAmountWithScale(value = value)
 
@@ -121,18 +120,6 @@ fun BigDecimalFiatFormat.price(): BigDecimalFormat = BigDecimalFormat { value ->
 // == Helpers ==
 
 private fun BigDecimal.isLessThanThreshold() = this > BigDecimal.ZERO && this < FIAT_FORMAT_THRESHOLD
-
-internal fun getCurrencyByCode(code: String): Currency {
-    return runCatching { Currency.getInstance(code) }
-        .getOrElse { e ->
-            // Currency code is not valid ISO 4217 code
-            if (e is IllegalArgumentException) {
-                BigDecimalFormatConstants.usdCurrency
-            } else {
-                throw e
-            }
-        }
-}
 
 private fun getFiatPriceAmountWithScale(value: BigDecimal): Pair<BigDecimal, Int> {
     return if (value < BigDecimal.ONE) {

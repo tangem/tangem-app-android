@@ -6,6 +6,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CURRENCY_SPACE
+import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.utils.defaultFormat
 import com.tangem.core.ui.utils.formatWithThousands
 import timber.log.Timber
@@ -50,18 +51,6 @@ class AmountVisualTransformation(
         )
     }
 
-    private fun getCurrency(code: String): Currency {
-        return runCatching { Currency.getInstance(code) }
-            .getOrElse { e ->
-                // Currency code is not valid ISO 4217 code
-                if (e is IllegalArgumentException) {
-                    BigDecimalFormatConstants.usdCurrency
-                } else {
-                    throw e
-                }
-            }
-    }
-
     private fun formatFiatEditableAmount(
         fiatAmount: String?,
         fiatCurrencyCode: String,
@@ -70,7 +59,7 @@ class AmountVisualTransformation(
     ): String {
         if (fiatAmount == null) return BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 
-        val formatterCurrency = getCurrency(fiatCurrencyCode)
+        val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
         val numberFormatter = NumberFormat.getCurrencyInstance(locale).apply {
             currency = formatterCurrency
         }
