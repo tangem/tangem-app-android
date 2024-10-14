@@ -7,6 +7,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
@@ -42,6 +45,8 @@ internal class DetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val appStateHolder: ReduxStateHolder,
+    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -94,7 +99,9 @@ internal class DetailsModel @Inject constructor(
             val scanResponse = getSelectedWalletSyncUseCase().getOrNull()?.scanResponse
                 ?: error("Selected wallet is null")
 
-            appStateHolder.dispatch(LegacyAction.SendEmailSupport(scanResponse))
+            val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
+
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(cardInfo = cardInfo))
         }
     }
 

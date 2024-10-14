@@ -6,18 +6,21 @@ import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
+import com.tangem.feature.swap.models.states.events.SwapEvent
 
-data class SwapStateHolder(
+internal data class SwapStateHolder(
     val sendCardData: SwapCardState,
     val receiveCardData: SwapCardState,
     val blockchainId: String, // not the same as networkId, its local id in app
     val warnings: List<SwapWarning> = emptyList(),
-    val alert: SwapWarning.GenericWarning? = null,
+    val event: StateEvent<SwapEvent> = consumedEvent(),
     val changeCardsButtonState: ChangeCardsButtonState = ChangeCardsButtonState.ENABLED,
     val providerState: ProviderState,
 
@@ -110,7 +113,6 @@ sealed interface SwapWarning {
     data class GenericWarning(
         val title: TextReference? = null,
         val message: TextReference? = null,
-        val type: GenericWarningType = GenericWarningType.OTHER,
         val onClick: () -> Unit,
     ) : SwapWarning
 
@@ -131,10 +133,6 @@ sealed interface SwapWarning {
 
         data class InsufficientBalanceToTransferToken(override val notificationConfig: NotificationConfig) : Cardano
     }
-}
-
-enum class GenericWarningType {
-    NETWORK, OTHER
 }
 
 enum class ChangeCardsButtonState {

@@ -5,8 +5,6 @@ import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.feedback.FeedbackManager
-import com.tangem.tap.common.feedback.ProxyFeedbackManager
 import com.tangem.tap.common.finisher.AndroidAppFinisher
 import com.tangem.tap.common.settings.IntentSettingsManager
 import com.tangem.tap.common.share.IntentShareManager
@@ -29,10 +27,6 @@ internal object UtilsModule {
     @Provides
     @Singleton
     fun provideUrlOpener(): UrlOpener = CustomTabsUrlOpener()
-
-    @Provides
-    @Singleton
-    fun provideFeedbackManager(): FeedbackManager = ProxyFeedbackManager()
 
     @Provides
     @Singleton
