@@ -18,7 +18,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
  *
  * @property clickIntents click intents
  */
-internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIntents) {
+internal class WalletLoadingStateFactory(
+    private val clickIntents: WalletClickIntents,
+    private val walletImageResolver: WalletImageResolver,
+) {
 
     fun create(userWallet: UserWallet): WalletState {
         return userWallet.createStateByWalletType(
@@ -80,7 +83,7 @@ internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIn
             id = walletId,
             title = name,
             additionalInfo = if (isMultiCurrency) WalletAdditionalInfoFactory.resolve(wallet = this) else null,
-            imageResId = WalletImageResolver.resolve(userWallet = this),
+            imageResId = walletImageResolver.resolve(userWallet = this),
             onRenameClick = clickIntents::onRenameBeforeConfirmationClick,
             onDeleteClick = clickIntents::onDeleteBeforeConfirmationClick,
         )
