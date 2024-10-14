@@ -8,7 +8,11 @@ class GetManagedTokensUseCase(
     private val repository: ManageTokensRepository,
 ) {
 
-    operator fun invoke(context: ManageTokensListBatchingContext, batchSize: Int = 40): ManageTokensListBatchFlow {
-        return repository.getTokenListBatchFlow(context, batchSize)
+    operator fun invoke(
+        context: ManageTokensListBatchingContext,
+        loadUserTokensFromRemote: Boolean,
+        batchSize: Int = 40,
+    ): ManageTokensListBatchFlow {
+        return repository.getTokenListBatchFlow(context, loadUserTokensFromRemote, batchSize)
     }
 }
