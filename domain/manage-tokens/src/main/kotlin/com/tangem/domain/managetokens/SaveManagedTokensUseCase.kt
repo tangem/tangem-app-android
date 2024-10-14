@@ -26,21 +26,36 @@ class SaveManagedTokensUseCase(
         currenciesToRemove: Map<ManagedCryptoCurrency.Token, Set<Network>>,
     ): Either<Throwable, Unit> {
         return Either.catch {
-            // TODO: Currently order is matter. [REDACTED_JIRA]
-            removeCurrencies(userWalletId, currenciesToRemove)
-            addCurrencies(userWalletId, currenciesToAdd)
+            val removingCurrencies = currenciesToRemove.mapToCryptoCurrencies(userWalletId)
+            val addingCurrencies = currenciesToAdd.mapToCryptoCurrencies(userWalletId)
+            derivationsRepository.derivePublicKeysByNetworks(
+                userWalletId = userWalletId,
+                networks = currenciesToAdd.values.flatten(),
+            )
+            val newCurrenciesList = currenciesRepository
+                .getMultiCurrencyWalletCurrenciesSync(userWalletId)
+                .filterNot(removingCurrencies::contains)
+                .toMutableList()
+                .also { it.addAll(addingCurrencies) }
+            currenciesRepository.saveNewCurrenciesList(userWalletId, newCurrenciesList)
+
+            val existingCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+            removeCurrenciesFromWalletManager(
+                userWalletId = userWalletId,
+                currencies = removingCurrencies.filterNot(existingCurrencies::contains),
+            )
+            refreshUpdatedNetworks(
+                userWalletId = userWalletId,
+                existingCurrencies = existingCurrencies,
+                currenciesToAdd = addingCurrencies,
+            )
         }
     }
 
-    private suspend fun removeCurrencies(
+    private suspend fun removeCurrenciesFromWalletManager(
         userWalletId: UserWalletId,
-        currenciesToRemove: Map<ManagedCryptoCurrency.Token, Set<Network>>,
+        currencies: List<CryptoCurrency>,
     ) {
-        if (currenciesToRemove.isEmpty()) return
-
-        val currencies = currenciesToRemove.mapToCryptoCurrencies(userWalletId)
-        currenciesRepository.removeCurrencies(userWalletId = userWalletId, currencies = currencies)
-
         walletManagersFacade.remove(
             userWalletId = userWalletId,
             networks = currencies
@@ -51,26 +66,6 @@ class SaveManagedTokensUseCase(
         walletManagersFacade.removeTokens(
             userWalletId = userWalletId,
             tokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
-        )
-    }
-
-    private suspend fun addCurrencies(
-        userWalletId: UserWalletId,
-        currenciesToAdd: Map<ManagedCryptoCurrency.Token, Set<Network>>,
-    ) {
-        if (currenciesToAdd.isEmpty()) return
-
-        val existingCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
-        val currencies = currenciesToAdd.mapToCryptoCurrencies(userWalletId)
-        derivationsRepository.derivePublicKeysByNetworks(
-            userWalletId = userWalletId,
-            networks = currenciesToAdd.values.flatten(),
-        )
-        currenciesRepository.addCurrencies(userWalletId, currencies)
-        refreshUpdatedNetworks(
-            userWalletId = userWalletId,
-            existingCurrencies = existingCurrencies,
-            currenciesToAdd = currencies,
         )
     }
 
