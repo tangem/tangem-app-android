@@ -21,7 +21,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.block.information.InformationBlock
+import com.tangem.core.ui.components.bottomFade
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.ChainRowUM
@@ -46,11 +48,11 @@ internal fun CustomTokenSelectorContent(model: CustomTokenSelectorUM, modifier: 
     val lastIndex = model.items.lastIndex
 
     LazyColumn(
-        modifier = modifier.background(
-            color = TangemTheme.colors.background.secondary,
-        ),
+        modifier = modifier
+            .background(color = TangemTheme.colors.background.secondary)
+            .bottomFade(),
         contentPadding = PaddingValues(
-            bottom = TangemTheme.dimens.spacing16 + bottomBarHeight,
+            bottom = 96.dp + bottomBarHeight,
         ),
     ) {
         item {
