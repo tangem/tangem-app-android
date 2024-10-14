@@ -65,7 +65,7 @@ internal class TokenDetailsFragment : ComposeFragment() {
             val cryptoCurrency: CryptoCurrency = arguments
                 ?.getBundle(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
                 ?.unbundle(CryptoCurrency.serializer())
-                ?: error("Token Details screen can't open without `CryptoCurrency`")
+                ?: error("Token Details screen can't be opened without `CryptoCurrency`")
 
             val param = cryptoCurrency.toParam() ?: return
 

@@ -8,15 +8,17 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
-import com.tangem.utils.extensions.orZero
+import com.tangem.features.staking.impl.presentation.state.utils.getRewardSchedule
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
 
 internal class SetConfirmationStateLoadingTransformer(
     private val yield: Yield,
     private val appCurrency: AppCurrency,
+    private val cryptoCurrency: CryptoCurrency,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
@@ -38,7 +40,7 @@ internal class SetConfirmationStateLoadingTransformer(
                     availableValidators = filteredValidators,
                 ),
                 notifications = persistentListOf(),
-                footerText = getFooter(prevState, chosenValidator),
+                footerText = getFooter(prevState),
                 transactionDoneState = TransactionDoneState.Empty,
                 pendingAction = possibleConfirmationState?.pendingAction,
                 pendingActions = possibleConfirmationState?.pendingActions,
@@ -49,30 +51,25 @@ internal class SetConfirmationStateLoadingTransformer(
         )
     }
 
-    private fun getFooter(state: StakingUiState, validator: Yield.Validator): TextReference {
+    private fun getFooter(state: StakingUiState): TextReference {
         val amountState = state.amountState as? AmountState.Data
 
         val isEnterAction = state.actionType == StakingActionCommonType.ENTER
 
-        val apr = validator.apr.orZero()
         val amountDecimal = amountState?.amountTextField?.fiatAmount?.value
-        val potentialReward = amountDecimal?.multiply(apr)
-
         val amountValue = BigDecimalFormatter.formatFiatAmount(
             fiatAmount = amountDecimal,
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
         )
-        val potentialRewardValue = BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = potentialReward,
-            fiatCurrencyCode = appCurrency.code,
-            fiatCurrencySymbol = appCurrency.symbol,
-            withApproximateSign = true,
+        val rewardSchedule = getRewardSchedule(
+            yield.metadata.rewardSchedule,
+            cryptoCurrency.network.id.value,
         )
-        return if (isEnterAction && amountDecimal != null && potentialReward != null) {
+        return if (isEnterAction && amountDecimal != null && rewardSchedule != null) {
             resourceReference(
                 id = R.string.staking_summary_description_text,
-                formatArgs = wrappedList(amountValue, potentialRewardValue),
+                formatArgs = wrappedList(amountValue, rewardSchedule),
             )
         } else {
             TextReference.EMPTY
