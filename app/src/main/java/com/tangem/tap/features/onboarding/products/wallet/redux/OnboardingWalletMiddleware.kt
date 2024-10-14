@@ -177,6 +177,8 @@ private fun handleWalletAction(action: Action) {
             } else {
                 handleFinishOnboardind(scanResponse)
             }
+
+            store.dispatch(BackupAction.DiscardBackup)
         }
         is OnboardingWalletAction.ResumeBackup -> {
             val newAction = when (val backupState = backupService.currentState) {
