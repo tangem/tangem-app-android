@@ -254,6 +254,7 @@
   <string name="express_exchange_status_exchanging">交換中</string>
   <string name="express_exchange_status_exchanging_active">交換中...</string>
   <string name="express_exchange_status_failed">失敗しました</string>
+  <string name="express_exchange_status_paused">停止中</string>
   <string name="express_exchange_status_received">入金済み</string>
   <string name="express_exchange_status_receiving">入金待ち</string>
   <string name="express_exchange_status_receiving_active">入金待ち...</string>
@@ -585,7 +586,7 @@
   <string name="reset_card_with_backup_to_factory_message">工場出荷時設定にリセットすると、選択したカードやリングからウォレットが完全に削除されます。現在のウォレットを復元したり、カードやリングを使用してアクセスコードを復元することはできません。</string>
   <string name="reset_card_without_backup_to_factory_message">工場出荷時の状態にリセットすると、選択したカードやリングからウォレットが完全に削除され、アプリから削除されます。現在のウォレットを復元することはできません。</string>
   <string name="ring_promo_text">Tangem Ringユーザーは、11/15日までChangelly経由でスワップを3回手数料ゼロで行えます！</string>
-  <string name="ring_promo_title">今すぐ手数料0%でスワップしましょう！</string>
+  <string name="ring_promo_title">今すぐ手数料0%%でスワップしましょう！</string>
   <string name="russian_bank_card_warning_subtitle">他の国の銀行カードと、ロシア連邦外での居住許可証または登録をお持ちですか?</string>
   <string name="russian_bank_card_warning_title">ロシアの銀行カードは現在ご利用いただけません</string>
   <string name="save_user_wallet_agreement_access_description">アプリにログインして、カードまたはリングをスキャンせずに残高を確認できます</string>
@@ -725,6 +726,7 @@
   <string name="staking_notification_network_error_text">ネットワークの状態により、現在ステーキングはご利用いただけません。しばらくしてからもう一度お試しください。</string>
   <string name="staking_notification_new_validator_funds_transfer">新しいバリデーターで%1$sネットワークにステーキングすると、以前にステーキングされた資金はすべてこのバリデーターに自動的に転送されます。</string>
   <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
+  <string name="staking_notification_restake_text">再ステーキングを使うと、ステーキングを解除することなく、あるバリデータから別のバリデータに資金を移動できます。</string>
   <string name="staking_notification_unlock_text">資金をステーキングから引き出すには、ロックを解除してください。ロック解除には%sかかります。</string>
   <string name="staking_notification_unstake_cosmos_text">資金は、21日間のロック解除期間後に使用可能になります。報酬は、ロック解除後の資金とともに引き出されます。</string>
   <string name="staking_notification_unstake_text">%sのステーキング解除期間後、資金はすぐ利用可能となります。</string>
@@ -743,6 +745,7 @@
   <string name="staking_reward_schedule_day">毎日</string>
   <string name="staking_reward_schedule_each">%sごと</string>
   <string name="staking_reward_schedule_each_day">毎日</string>
+  <string name="staking_reward_schedule_each_days">%sごと</string>
   <string name="staking_reward_schedule_epoch">エポック毎</string>
   <string name="staking_reward_schedule_era">時代毎</string>
   <string name="staking_reward_schedule_hour">毎時間</string>
@@ -751,7 +754,6 @@
   <string name="staking_rewards">報酬</string>
   <string name="staking_stake_locked">ステーキングはロックされています</string>
   <string name="staking_stake_more">もっとステーキングする</string>
-  <string name="staking_summary_description_text">%1$sをステーキングし、毎%2$s報酬を受け取ります</string>
   <string name="staking_tap_to_unlock">タップしてロック解除</string>
   <string name="staking_tap_to_unlock_or_vote">タップしてロック解除もしくは投票</string>
   <string name="staking_tap_to_withdraw">タップして引き出す</string>

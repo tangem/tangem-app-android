@@ -70,7 +70,7 @@ internal class YieldBalancesConverter(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
         val rewards = yieldBalance?.balance?.items
-            ?.filter { it.type == BalanceType.REWARDS }
+            ?.filter { it.type == BalanceType.REWARDS && !it.amount.isZero() }
 
         val isActionable = rewards?.all { it.pendingActions.isNotEmpty() } == true
         val isRewardsClaimable = rewards?.isNotEmpty() == true
