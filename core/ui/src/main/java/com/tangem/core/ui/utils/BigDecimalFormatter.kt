@@ -28,31 +28,6 @@ object BigDecimalFormatter {
     private val usdCurrency = Currency.getInstance("USD")
 
     @Deprecated("Use BigDecimal.format")
-    fun formatCryptoAmount(
-        cryptoAmount: BigDecimal?,
-        cryptoCurrency: String,
-        decimals: Int,
-        locale: Locale = Locale.getDefault(),
-    ): String {
-        if (cryptoAmount == null) return EMPTY_BALANCE_SIGN
-
-        val formatter = NumberFormat.getNumberInstance(locale).apply {
-            maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
-            minimumFractionDigits = 2
-            isGroupingUsed = true
-            roundingMode = RoundingMode.HALF_UP
-        }
-
-        return formatter.format(cryptoAmount).let {
-            if (cryptoCurrency.isEmpty()) {
-                it
-            } else {
-                it + "\u2009$cryptoCurrency"
-            }
-        }
-    }
-
-    @Deprecated("Use BigDecimal.format")
     fun formatCryptoAmountShorted(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: String,
@@ -148,15 +123,6 @@ object BigDecimalFormatter {
         } else {
             amountFormatted + "\u2009$cryptoCurrency"
         }
-    }
-
-    @Deprecated("Use BigDecimal.format")
-    fun formatCryptoAmount(
-        cryptoAmount: BigDecimal?,
-        cryptoCurrency: CryptoCurrency,
-        locale: Locale = Locale.getDefault(),
-    ): String {
-        return formatCryptoAmount(cryptoAmount, cryptoCurrency.symbol, cryptoCurrency.decimals, locale)
     }
 
     @Deprecated("Use BigDecimal.format")

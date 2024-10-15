@@ -6,6 +6,8 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -126,11 +128,7 @@ internal class SetInitialDataStateTransformer(
             id = R.string.staking_details_available,
             startText = TextReference.Res(R.string.staking_details_available),
             endText = TextReference.Str(
-                value = BigDecimalFormatter.formatCryptoAmount(
-                    cryptoAmount = cryptoCurrencyStatus.value.amount,
-                    cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-                    decimals = cryptoCurrencyStatus.currency.decimals,
-                ),
+                value = cryptoCurrencyStatus.value.amount.format { crypto(cryptoCurrencyStatus.currency) },
             ),
             isEndTextHideable = true,
         )
@@ -156,11 +154,7 @@ internal class SetInitialDataStateTransformer(
         val minimumCryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum ?: return null
         if (!isPolkadot(cryptoCurrencyStatus.currency.network.id.value)) return null
 
-        val formattedAmount = BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = minimumCryptoAmount,
-            cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-            decimals = cryptoCurrencyStatus.currency.decimals,
-        )
+        val formattedAmount = minimumCryptoAmount.format { crypto(cryptoCurrencyStatus.currency) }
 
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_minimum_requirement,

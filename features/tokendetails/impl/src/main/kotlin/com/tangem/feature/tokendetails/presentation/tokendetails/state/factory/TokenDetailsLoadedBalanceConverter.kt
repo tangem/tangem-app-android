@@ -10,6 +10,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.StakingAvailability
@@ -243,7 +245,7 @@ internal class TokenDetailsLoadedBalanceConverter(
             cryptoAmount = stakingCryptoAmount,
             fiatAmount = stakingFiatAmount,
             cryptoValue = stringReference(
-                BigDecimalFormatter.formatCryptoAmount(stakingCryptoAmount, symbol, decimals),
+                stakingCryptoAmount.format { crypto(symbol = symbol, decimals = decimals) },
             ),
             fiatValue = stringReference(
                 BigDecimalFormatter.formatFiatAmount(
@@ -315,7 +317,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         val amount = status.value.amount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
         val totalAmount = amount.getBalance(selectedBalanceType, stakingCryptoAmount)
 
-        return BigDecimalFormatter.formatCryptoAmount(totalAmount, status.currency.symbol, status.currency.decimals)
+        return totalAmount.format { crypto(status.currency) }
     }
 
     private fun getRewardText(status: CryptoCurrencyStatus, stakingRewardAmount: BigDecimal?): TextReference {

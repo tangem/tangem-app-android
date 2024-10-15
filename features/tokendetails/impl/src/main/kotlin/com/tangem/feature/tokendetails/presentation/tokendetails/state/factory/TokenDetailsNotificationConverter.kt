@@ -4,6 +4,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
@@ -78,11 +80,9 @@ internal class TokenDetailsNotificationConverter(
             CryptoCurrencyWarning.SomeNetworksUnreachable -> NetworksUnreachable
             is CryptoCurrencyWarning.SomeNetworksNoAccount -> NetworksNoAccount(
                 network = warning.amountCurrency.name,
-                amount = BigDecimalFormatter.formatCryptoAmount(
-                    cryptoAmount = warning.amountToCreateAccount,
-                    cryptoCurrency = "",
-                    decimals = warning.amountCurrency.decimals,
-                ),
+                amount = warning.amountToCreateAccount.format {
+                    crypto(symbol = "", decimals = warning.amountCurrency.decimals)
+                },
                 symbol = warning.amountCurrency.symbol,
             )
             is CryptoCurrencyWarning.TopUpWithoutReserve -> TopUpWithoutReserve
@@ -105,11 +105,7 @@ internal class TokenDetailsNotificationConverter(
             )
             is HederaWarnings.AssociateWarningWithFee -> HederaAssociateWarning(
                 currency = warning.currency,
-                fee = BigDecimalFormatter.formatCryptoAmount(
-                    cryptoAmount = warning.fee,
-                    cryptoCurrency = "",
-                    decimals = warning.feeCurrencyDecimals,
-                ),
+                fee = warning.fee.format { crypto(symbol = "", decimals = warning.feeCurrencyDecimals) },
                 feeCurrencySymbol = warning.feeCurrencySymbol,
                 onAssociateClick = clickIntents::onAssociateClick,
             )
