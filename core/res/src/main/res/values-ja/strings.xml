@@ -210,7 +210,7 @@
   <string name="details_manage_security_access_code">アクセスコード</string>
   <string name="details_manage_security_access_code_description">カードをスキャンする前に、正しいアクセスコードを送信する必要があります。</string>
   <string name="details_manage_security_long_tap">長くタップ</string>
-  <string name="details_manage_security_long_tap_description">このメカニズムは、カードまたはリングに対する近接攻撃から保護します。コマンドの受信と実行の間に遅延を強制します。 </string>
+  <string name="details_manage_security_long_tap_description">このメカニズムは、カードまたはリングに対する近接攻撃から保護します。コマンドの受信と実行の間に遅延を強制します。</string>
   <string name="details_manage_security_passcode">パスコード</string>
   <string name="details_manage_security_passcode_description">カードの状態の変更を伴うコマンドを実行する前に、パスコードを入力する必要があります。</string>
   <string name="details_referral_title">紹介プログラム</string>
@@ -585,7 +585,7 @@
   <string name="reset_card_with_backup_to_factory_message">工場出荷時設定にリセットすると、選択したカードやリングからウォレットが完全に削除されます。現在のウォレットを復元したり、カードやリングを使用してアクセスコードを復元することはできません。</string>
   <string name="reset_card_without_backup_to_factory_message">工場出荷時の状態にリセットすると、選択したカードやリングからウォレットが完全に削除され、アプリから削除されます。現在のウォレットを復元することはできません。</string>
   <string name="ring_promo_text">Tangem Ringユーザーは、11/15日までChangelly経由でスワップを3回手数料ゼロで行えます！</string>
-  <string name="ring_promo_title">今すぐ手数料0%でスワップしましょう！</string>
+  <string name="ring_promo_title">今すぐ手数料0%%でスワップしましょう！</string>
   <string name="russian_bank_card_warning_subtitle">他の国の銀行カードと、ロシア連邦外での居住許可証または登録をお持ちですか?</string>
   <string name="russian_bank_card_warning_title">ロシアの銀行カードは現在ご利用いただけません</string>
   <string name="save_user_wallet_agreement_access_description">アプリにログインして、カードまたはリングをスキャンせずに残高を確認できます</string>
