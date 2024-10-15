@@ -66,6 +66,7 @@ internal class DefaultTransactionRepository(
 
     override suspend fun createApprovalTransaction(
         amount: Amount,
+        approvalAmount: Amount?,
         fee: Fee,
         contractAddress: String,
         spenderAddress: String,
@@ -83,7 +84,7 @@ internal class DefaultTransactionRepository(
 
         val approvalData = approver.getApproveData(
             spenderAddress = spenderAddress,
-            value = amount,
+            value = approvalAmount,
         )
 
         val extras = createTransactionDataExtras(
@@ -146,7 +147,7 @@ internal class DefaultTransactionRepository(
 
     override suspend fun sendTransaction(
         txData: TransactionData,
-        signer: CommonSigner,
+        signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
     ) = withContext(coroutineDispatcherProvider.io) {
@@ -161,7 +162,7 @@ internal class DefaultTransactionRepository(
 
     override suspend fun sendMultipleTransactions(
         txsData: List<TransactionData>,
-        signer: CommonSigner,
+        signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
     ) = withContext(coroutineDispatcherProvider.io) {

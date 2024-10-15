@@ -17,6 +17,7 @@ dependencies {
 
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.settings)
+    implementation(projects.domain.wallets.models)
 
     implementation(deps.androidx.datastore)
 

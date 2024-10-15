@@ -26,6 +26,8 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
 
+    implementation(projects.libs.blockchainSdk)
+
     implementation(projects.domain.card)
     implementation(projects.domain.models)
 }

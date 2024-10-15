@@ -72,6 +72,8 @@ sealed class GlobalAction : Action {
         val walletPublicKey: ByteArray,
     ) : GlobalAction()
 
+    data class IsSignWithRing(val isSignWithRing: Boolean) : GlobalAction()
+
     data class SetConfigManager(val environmentConfigStorage: EnvironmentConfigStorage) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
