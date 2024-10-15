@@ -534,9 +534,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     }
 
     private fun onListedOnClick(exchangesCount: Int) {
-        showBottomSheet(content = ExchangesBottomSheetContent.Loading(exchangesCount))
-
         modelScope.launch {
+            showBottomSheet(content = ExchangesBottomSheetContent.Loading(exchangesCount))
+
+            // Delay to show the bottom sheet
+            delay(timeMillis = 800L)
+
             val maybeExchanges = getTokenExchangesUseCase(tokenId = params.token.id)
 
             updateExchangeBSContent(maybeExchanges = maybeExchanges, exchangesCount = exchangesCount)
