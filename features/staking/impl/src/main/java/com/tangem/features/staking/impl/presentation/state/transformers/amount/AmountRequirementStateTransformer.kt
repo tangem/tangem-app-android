@@ -102,7 +102,7 @@ internal class AmountRequirementStateTransformer(
     private fun isIntegerOnlyError(amountState: AmountState.Data, actionType: StakingActionCommonType): Boolean {
         val cryptoAmountValue = amountState.amountTextField.cryptoAmount.value ?: return false
 
-        val isEnter = actionType == StakingActionCommonType.ENTER
+        val isEnter = actionType == StakingActionCommonType.Enter
         val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
 
         val isIntegerOnly = cryptoAmountValue.isZero() || cryptoAmountValue.remainder(BigDecimal.ONE).isZero()
