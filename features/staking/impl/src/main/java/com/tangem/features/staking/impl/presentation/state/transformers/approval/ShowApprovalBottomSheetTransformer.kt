@@ -12,7 +12,6 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.FeeState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
-import com.tangem.features.staking.impl.presentation.state.ValidatorState
 import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
 
@@ -28,7 +27,7 @@ internal class ShowApprovalBottomSheetTransformer(
 
         val amountState = prevState.amountState as? AmountState.Data ?: return prevState
         val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data ?: return prevState
-        val validatorState = confirmationState.validatorState as? ValidatorState.Content ?: return prevState
+        val validatorState = prevState.validatorState as? StakingStates.ValidatorState.Data ?: return prevState
         val feeState = confirmationState.feeState as? FeeState.Content ?: return prevState
         val fee = feeState.fee ?: return prevState
 
