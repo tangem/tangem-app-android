@@ -25,7 +25,6 @@ import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
@@ -33,7 +32,6 @@ import java.math.BigDecimal
 internal class SetInitialDataStateTransformer(
     private val clickIntents: StakingClickIntents,
     private val yield: Yield,
-    private val isApprovalNeeded: Boolean,
     private val isAnyTokenStaked: Boolean,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
@@ -76,7 +74,7 @@ internal class SetInitialDataStateTransformer(
             currentStep = StakingStep.InitialInfo,
             initialInfoState = createInitialInfoState(),
             amountState = createInitialAmountState(),
-            confirmationState = createInitialConfirmationState(),
+            confirmationState = StakingStates.ConfirmationState.Empty(),
             rewardsValidatorsState = rewardsValidatorStateConverter.convert(Unit),
             bottomSheetConfig = null,
         )
@@ -87,7 +85,7 @@ internal class SetInitialDataStateTransformer(
         return StakingStates.InitialInfoState.Data(
             isPrimaryButtonEnabled = !cryptoCurrencyStatusProvider().value.amount.isNullOrZero(),
             showBanner = !isAnyTokenStaked && yieldBalance == InnerYieldBalanceState.Empty,
-            aprRange = getAprRange(yield.validators),
+            aprRange = getAprRange(yield.preferredValidators),
             infoItems = getInfoItems(),
             onInfoClick = clickIntents::onInfoClick,
             yieldBalance = yieldBalance,
@@ -113,7 +111,7 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createAnnualPercentageRateItem(): RoundedListWithDividersItemData {
-        val validators = yield.validators
+        val validators = yield.preferredValidators
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_annual_percentage_rate,
             startText = TextReference.Res(R.string.staking_details_annual_percentage_rate),
@@ -212,23 +210,6 @@ internal class SetInitialDataStateTransformer(
 
     private fun createInitialAmountState(): AmountState {
         return amountStateConverter.convert("")
-    }
-
-    private fun createInitialConfirmationState(): StakingStates.ConfirmationState {
-        return StakingStates.ConfirmationState.Data(
-            isPrimaryButtonEnabled = false,
-            innerState = InnerConfirmationStakingState.ASSENT,
-            feeState = FeeState.Loading,
-            validatorState = ValidatorState.Loading,
-            notifications = persistentListOf(),
-            footerText = TextReference.EMPTY,
-            transactionDoneState = TransactionDoneState.Empty,
-            pendingAction = null,
-            pendingActions = null,
-            isApprovalNeeded = isApprovalNeeded,
-            reduceAmountBy = null,
-            possiblePendingTransaction = null,
-        )
     }
 
     private fun getAprRange(validators: List<Yield.Validator>): TextReference {

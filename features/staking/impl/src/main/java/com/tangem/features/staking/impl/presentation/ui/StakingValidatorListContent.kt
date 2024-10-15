@@ -28,8 +28,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.ValidatorState
-import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
+import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.previewdata.ValidatorStatePreviewData
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.extensions.orZero
@@ -39,7 +39,7 @@ import com.tangem.utils.extensions.orZero
  */
 @Composable
 internal fun StakingValidatorListContent(
-    state: ValidatorState,
+    state: StakingStates.ValidatorState,
     clickIntents: StakingClickIntents,
     modifier: Modifier = Modifier,
 ) {
@@ -51,7 +51,7 @@ internal fun StakingValidatorListContent(
             .background(TangemTheme.colors.background.secondary)
             .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
-        if (state is ValidatorState.Content) {
+        if (state is StakingStates.ValidatorState.Data) {
             val validators = state.availableValidators
             items(
                 count = validators.size,
@@ -131,7 +131,7 @@ private fun RowScope.ValidatorLabel(isStrategicPartner: Boolean) {
 @Composable
 private fun StakingValidatorListContent_Preview(
     @PreviewParameter(StakingValidatorListContentPreviewProvider::class)
-    data: ValidatorState,
+    data: StakingStates.ValidatorState,
 ) {
     TangemThemePreview {
         StakingValidatorListContent(
@@ -141,8 +141,8 @@ private fun StakingValidatorListContent_Preview(
     }
 }
 
-private class StakingValidatorListContentPreviewProvider : PreviewParameterProvider<ValidatorState> {
-    override val values: Sequence<ValidatorState>
-        get() = sequenceOf(ConfirmationStatePreviewData.assentStakingState.validatorState)
+private class StakingValidatorListContentPreviewProvider : PreviewParameterProvider<StakingStates.ValidatorState> {
+    override val values: Sequence<StakingStates.ValidatorState>
+        get() = sequenceOf(ValidatorStatePreviewData.validatorState)
 }
 // endregion
