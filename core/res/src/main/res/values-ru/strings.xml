@@ -261,6 +261,7 @@
   <string name="express_exchange_status_exchanging">Обмен</string>
   <string name="express_exchange_status_exchanging_active">Обмен...</string>
   <string name="express_exchange_status_failed">Неудачно</string>
+  <string name="express_exchange_status_paused">Приостановлен</string>
   <string name="express_exchange_status_received">Депозит получен</string>
   <string name="express_exchange_status_receiving">Ожидание депозита</string>
   <string name="express_exchange_status_receiving_active">Ожидаем пополнения...</string>
@@ -752,6 +753,7 @@
   <string name="staking_notification_network_error_text">Стейкинг временно недоступен из-за проблем в сети. Пожалуйста, попробуйте позже.</string>
   <string name="staking_notification_new_validator_funds_transfer">Стейкинг в сети %1$s с новым валидатором автоматически переведет ваши текущие застейканные средства на него.</string>
   <string name="staking_notification_restake_rewards_text">Реинвестируйте свои заработанные награды в вашу застейканную сумму, увеличивая потенциальный доход</string>
+  <string name="staking_notification_restake_text">Рестейк позволяет вам переместить средства из одного валидатора в другого без необходимости выхода из стейкинга.</string>
   <string name="staking_notification_unlock_text">Разблокируйте свои средства, чтобы вывести их из стейкинга. Разблокировка займёт %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Ваши средства будут доступны для использования после 21-дневного периода отзыва. Награда будет выведена вместе с вашими выводими средствами.</string>
   <string name="staking_notification_unstake_text">Ваши средства будут доступны после %s периода отзыва.</string>
@@ -767,7 +769,9 @@
   <string name="staking_reward_claiming_manual">Вручную</string>
   <string name="staking_reward_schedule_block">За блок</string>
   <string name="staking_reward_schedule_day">Ежедневно</string>
+  <string name="staking_reward_schedule_each">Каждый %s</string>
   <string name="staking_reward_schedule_each_day">Каждый день</string>
+  <string name="staking_reward_schedule_each_days">Каждые %s дня</string>
   <string name="staking_reward_schedule_epoch">За эпоху</string>
   <string name="staking_reward_schedule_era">За эру</string>
   <string name="staking_reward_schedule_hour">Ежечасно</string>
@@ -776,7 +780,6 @@
   <string name="staking_rewards">Вознаграждения</string>
   <string name="staking_stake_locked">Стейкинг закрыт</string>
   <string name="staking_stake_more">Застейкать еще</string>
-  <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать %2$s ежегодно</string>
   <string name="staking_tap_to_unlock">Нажмите для разблокировки</string>
   <string name="staking_tap_to_unlock_or_vote">Нажмите для разблокировки</string>
   <string name="staking_tap_to_withdraw">Нажмите для вывода</string>
