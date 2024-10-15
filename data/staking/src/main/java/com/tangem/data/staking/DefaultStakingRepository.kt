@@ -126,7 +126,7 @@ internal class DefaultStakingRepository(
                     val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)
                         .getOrThrow()
 
-                    stakingYieldsStore.store(stakingTokensWithYields.data.filter { it.isAvailable })
+                    stakingYieldsStore.store(stakingTokensWithYields.data.filter { it.isAvailable ?: false })
                 },
             )
         }
@@ -579,9 +579,10 @@ internal class DefaultStakingRepository(
     }
 
     private fun getEnabledYields(): List<Yield> {
-        return stakingYieldsStore
-            .get()
-            .map { yieldConverter.convert(it) }
+        return yieldConverter.convertListIgnoreErrors(
+            input = stakingYieldsStore.get(),
+            onError = { Timber.e("Error converting enabled yields list: $it") },
+        )
     }
 
     private fun getBalanceRequestData(address: String, integrationId: String): YieldBalanceRequestBody {
