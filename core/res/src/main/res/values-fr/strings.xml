@@ -729,7 +729,9 @@
   <string name="staking_reward_claiming_manual">Manuel</string>
   <string name="staking_reward_schedule_block">Bloquer</string>
   <string name="staking_reward_schedule_day">Jour</string>
+  <string name="staking_reward_schedule_each">Chaque %s</string>
   <string name="staking_reward_schedule_each_day">Chaque jour</string>
+  <string name="staking_reward_schedule_each_days">Chaque %s</string>
   <string name="staking_reward_schedule_epoch">Époque</string>
   <string name="staking_reward_schedule_era">Ère</string>
   <string name="staking_reward_schedule_hour">Heure</string>
@@ -738,7 +740,6 @@
   <string name="staking_rewards">Récompenses</string>
   <string name="staking_stake_locked">Stake verrouillé</string>
   <string name="staking_stake_more">Staker plus</string>
-  <string name="staking_summary_description_text">Vous stakez %1$s et recevrez %2$s par an</string>
   <string name="staking_tap_to_unlock">Appuyez pour déverrouiller</string>
   <string name="staking_tap_to_withdraw">Appuyez pour retirer</string>
   <string name="staking_title_stake">Stake %s</string>
