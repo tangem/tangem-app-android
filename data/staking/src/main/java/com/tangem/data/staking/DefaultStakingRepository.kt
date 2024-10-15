@@ -151,7 +151,7 @@ internal class DefaultStakingRepository(
             val yield = getYield(cryptoCurrencyId, symbol)
 
             StakingEntryInfo(
-                apr = requireNotNull(yield.validators.maxByOrNull { it.apr.orZero() }?.apr),
+                apr = requireNotNull(yield.preferredValidators.maxByOrNull { it.apr.orZero() }?.apr),
                 rewardSchedule = yield.metadata.rewardSchedule,
                 tokenSymbol = yield.token.symbol,
             )
@@ -207,23 +207,21 @@ internal class DefaultStakingRepository(
     ): StakingAction {
         return withContext(dispatchers.io) {
             val response = when (params.actionCommonType) {
-                StakingActionCommonType.ENTER -> stakeKitApi.createEnterAction(
+                StakingActionCommonType.Enter -> stakeKitApi.createEnterAction(
                     createActionRequestBody(
                         userWalletId,
                         network,
                         params,
                     ),
                 )
-                StakingActionCommonType.EXIT -> stakeKitApi.createExitAction(
+                StakingActionCommonType.Exit -> stakeKitApi.createExitAction(
                     createActionRequestBody(
                         userWalletId,
                         network,
                         params,
                     ),
                 )
-                StakingActionCommonType.PENDING_OTHER,
-                StakingActionCommonType.PENDING_REWARDS,
-                -> stakeKitApi.createPendingAction(
+                is StakingActionCommonType.Pending -> stakeKitApi.createPendingAction(
                     createPendingActionRequestBody(params),
                 )
             }
@@ -239,23 +237,21 @@ internal class DefaultStakingRepository(
     ): StakingGasEstimate {
         return withContext(dispatchers.io) {
             val gasEstimateDTO = when (params.actionCommonType) {
-                StakingActionCommonType.ENTER -> stakeKitApi.estimateGasOnEnter(
+                StakingActionCommonType.Enter -> stakeKitApi.estimateGasOnEnter(
                     createActionRequestBody(
                         userWalletId,
                         network,
                         params,
                     ),
                 )
-                StakingActionCommonType.EXIT -> stakeKitApi.estimateGasOnExit(
+                StakingActionCommonType.Exit -> stakeKitApi.estimateGasOnExit(
                     createActionRequestBody(
                         userWalletId,
                         network,
                         params,
                     ),
                 )
-                StakingActionCommonType.PENDING_REWARDS,
-                StakingActionCommonType.PENDING_OTHER,
-                -> stakeKitApi.estimateGasOnPending(
+                is StakingActionCommonType.Pending -> stakeKitApi.estimateGasOnPending(
                     createPendingActionRequestBody(params),
                 )
             }
