@@ -2,10 +2,10 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.shorted
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
@@ -123,11 +123,7 @@ internal class TokenDetailsNotificationConverter(
     }
 
     private fun formatMana(amount: BigDecimal): String {
-        return BigDecimalFormatter.formatCryptoAmountShorted(
-            cryptoAmount = amount,
-            cryptoCurrency = "",
-            decimals = Blockchain.Koinos.decimals(),
-        )
+        return amount.format { crypto("", Blockchain.Koinos.decimals()).shorted() }
     }
 
     // workaround for networks that users have misunderstanding
