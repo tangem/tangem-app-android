@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.common.transaction.TransactionSendResult
+import com.tangem.blockchain.common.transaction.TransactionsSendResult
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import kotlin.random.Random
@@ -38,6 +39,11 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
             is CompletionResult.Failure -> Result.fromTangemSdkError(signerResponse.error)
         }
     }
+
+    override suspend fun sendMultiple(
+        transactionDataList: List<TransactionData>,
+        signer: TransactionSigner,
+    ): Result<TransactionsSendResult> = Result.Failure(Exception(ID).toBlockchainSdkError())
 
     private fun getDataToSign(): ByteArray {
         val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
