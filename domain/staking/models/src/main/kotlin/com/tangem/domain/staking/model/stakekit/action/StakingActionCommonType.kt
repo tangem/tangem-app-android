@@ -1,8 +1,12 @@
 package com.tangem.domain.staking.model.stakekit.action
 
-enum class StakingActionCommonType {
-    ENTER,
-    EXIT,
-    PENDING_REWARDS,
-    PENDING_OTHER,
+sealed class StakingActionCommonType {
+
+    data object Enter : StakingActionCommonType()
+    data object Exit : StakingActionCommonType()
+    sealed class Pending : StakingActionCommonType() {
+        data object Restake : Pending()
+        data object Rewards : Pending()
+        data object Other : Pending()
+    }
 }
