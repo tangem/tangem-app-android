@@ -262,6 +262,7 @@
   <string name="express_exchange_status_exchanging">Обмін</string>
   <string name="express_exchange_status_exchanging_active">Обмін...</string>
   <string name="express_exchange_status_failed">Не вдалося</string>
+  <string name="express_exchange_status_paused">Призупинено</string>
   <string name="express_exchange_status_received">Депозит отримано</string>
   <string name="express_exchange_status_receiving">Очікуємо на депозит</string>
   <string name="express_exchange_status_receiving_active">Очікуємо на депозит...</string>
@@ -766,6 +767,7 @@
   <string name="staking_reward_schedule_day">День</string>
   <string name="staking_reward_schedule_each">Кожен %s</string>
   <string name="staking_reward_schedule_each_day">Щодня</string>
+  <string name="staking_reward_schedule_each_days">Кожен %s</string>
   <string name="staking_reward_schedule_epoch">Епоха</string>
   <string name="staking_reward_schedule_era">Ера</string>
   <string name="staking_reward_schedule_hour">Година</string>
@@ -774,7 +776,6 @@
   <string name="staking_rewards">Винагороди</string>
   <string name="staking_stake_locked">Стейкінг закрито</string>
   <string name="staking_stake_more">Застейкати більше</string>
-  <string name="staking_summary_description_text">Ви стейкаєте %1$s і будете отримувати %2$s щороку</string>
   <string name="staking_tap_to_unlock">Натисніть, щоб розблокувати</string>
   <string name="staking_tap_to_unlock_or_vote">Натисніть, щоб розблокувати або проголосувати</string>
   <string name="staking_tap_to_withdraw">Натисніть, щоб вивести кошти</string>
