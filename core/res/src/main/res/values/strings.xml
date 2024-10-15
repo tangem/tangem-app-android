@@ -257,6 +257,7 @@
   <string name="express_exchange_status_exchanging">Exchanging</string>
   <string name="express_exchange_status_exchanging_active">Exchanging...</string>
   <string name="express_exchange_status_failed">Failed</string>
+  <string name="express_exchange_status_paused">Paused</string>
   <string name="express_exchange_status_received">Deposit received</string>
   <string name="express_exchange_status_receiving">Awaiting deposit</string>
   <string name="express_exchange_status_receiving_active">Awaiting deposit...</string>
@@ -307,7 +308,7 @@
   <string name="give_permission_unlimited">Unlimited</string>
   <string name="home_button_order">Order Tangem</string>
   <string name="home_button_scan">Scan Tangem</string>
-  <string name="information_generated_with_ai">This information was generated with AI.\nTap here, If you find any errors.</string>
+  <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_create_wallet_body">To create the wallet tap the card as shown above and do not remove until the end of the operation</string>
@@ -735,6 +736,7 @@
   <string name="staking_notification_network_error_text">Staking is currently unavailable due to network conditions. Please try again later.</string>
   <string name="staking_notification_new_validator_funds_transfer">Staking in the %1$s network with a new validator will automatically transfer all previously staked funds to this validator</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
+  <string name="staking_notification_restake_text">Restake lets you move your funds from one validator to another without the need to unstake</string>
   <string name="staking_notification_unlock_text">Unlock your money to withdraw it from staking process. Unlocking takes %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Your funds will be available for use after the 21-day unbonding period. Reward will be withdrawn along with your unstaking funds.</string>
   <string name="staking_notification_unstake_text">Your funds will be available for use after the %s unbonding period.</string>
@@ -753,6 +755,7 @@
   <string name="staking_reward_schedule_day">Daily</string>
   <string name="staking_reward_schedule_each">Each %s</string>
   <string name="staking_reward_schedule_each_day">Each day</string>
+  <string name="staking_reward_schedule_each_days">Each %s days</string>
   <string name="staking_reward_schedule_epoch">Per Epoch</string>
   <string name="staking_reward_schedule_era">Per Era</string>
   <string name="staking_reward_schedule_hour">Hourly</string>
