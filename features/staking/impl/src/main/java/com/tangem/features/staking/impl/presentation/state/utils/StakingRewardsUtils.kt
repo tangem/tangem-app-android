@@ -40,9 +40,10 @@ internal fun getRewardScheduleText(
         )
         Yield.Metadata.RewardSchedule.BLOCK,
         Yield.Metadata.RewardSchedule.EPOCH,
-        Yield.Metadata.RewardSchedule.ERA -> getCustomRewardSchedule(
+        Yield.Metadata.RewardSchedule.ERA,
+        -> getCustomRewardSchedule(
             networkId = networkId,
-            decapitalize = decapitalize
+            decapitalize = decapitalize,
         )
         else -> null
     }

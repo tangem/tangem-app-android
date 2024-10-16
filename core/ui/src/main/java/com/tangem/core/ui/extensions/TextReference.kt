@@ -30,7 +30,7 @@ sealed interface TextReference {
      * @property id            resource id
      * @property formatArgs    arguments. Impossible to use [kotlinx.collections.immutable.ImmutableList] because
      *                         [Any] is unstable.
-     * @property decapitalize  true if need to decapitalize this resource
+     * @property decapitalize  whether resolved reference should be decapitalized
      */
     data class Res(
         @StringRes val id: Int,
@@ -84,8 +84,8 @@ sealed interface TextReference {
  *
  * @param id The resource ID of the string.
  * @param formatArgs A list of format arguments to be applied to the string resource.
- * @param decapitalize true if need to decapitalize this resource
- * @return A [TextReference] representing the string resource with format arguments.
+ * @param decapitalize Whether resolved reference should be decapitalized
+ * @return [TextReference] representing the string resource with format arguments.
  */
 fun resourceReference(
     @StringRes id: Int,
