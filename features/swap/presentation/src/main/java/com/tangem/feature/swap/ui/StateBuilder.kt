@@ -22,12 +22,12 @@ import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
-import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.models.states.events.SwapEvent
 import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.feature.swap.utils.getExpressErrorMessage
 import com.tangem.feature.swap.utils.getExpressErrorTitle
 import com.tangem.feature.swap.viewmodels.SwapProcessDataState
