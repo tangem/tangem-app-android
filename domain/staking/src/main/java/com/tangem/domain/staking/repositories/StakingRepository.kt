@@ -7,6 +7,7 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
@@ -33,6 +34,12 @@ interface StakingRepository {
     suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield
 
     fun getStakingAvailability(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): StakingAvailability
+
+    suspend fun getActions(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+        networkType: NetworkType,
+    ): List<StakingAction>
 
     suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,

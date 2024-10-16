@@ -1,7 +1,7 @@
 package com.tangem.data.staking.converters.action
 
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
-import com.tangem.datasource.api.stakekit.models.response.EnterActionResponse
+import com.tangem.datasource.api.stakekit.models.response.ActionDTO
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.utils.converter.Converter
 
@@ -9,9 +9,9 @@ class EnterActionResponseConverter(
     private val actionStatusConverter: ActionStatusConverter,
     private val stakingActionTypeConverter: StakingActionTypeConverter,
     private val transactionConverter: StakingTransactionConverter,
-) : Converter<EnterActionResponse, StakingAction> {
+) : Converter<ActionDTO, StakingAction> {
 
-    override fun convert(value: EnterActionResponse): StakingAction {
+    override fun convert(value: ActionDTO): StakingAction {
         return StakingAction(
             id = value.id,
             integrationId = value.integrationId,

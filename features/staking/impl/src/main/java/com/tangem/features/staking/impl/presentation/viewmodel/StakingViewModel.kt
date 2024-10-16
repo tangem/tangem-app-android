@@ -25,6 +25,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.staking.GetActionsUseCase
 import com.tangem.domain.staking.InvalidatePendingTransactionsUseCase
 import com.tangem.domain.staking.IsAnyTokenStakedUseCase
 import com.tangem.domain.staking.IsApproveNeededUseCase
@@ -108,6 +109,7 @@ internal class StakingViewModel @Inject constructor(
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val getActionsUseCase: GetActionsUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
@@ -826,6 +828,15 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private fun subscribeOnStepChanges() {
+        viewModelScope.launch {
+            val list = getActionsUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrencyStatus.currency,
+                networkType = yield.token.network,
+            )
+            Timber.e(list.toString())
+        }
+
         uiState
             .distinctUntilChangedBy { it.currentStep }
             .onEach {

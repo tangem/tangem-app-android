@@ -26,6 +26,7 @@ import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConv
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.*
+import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.tron.TronStakeKitTransaction
 import com.tangem.datasource.local.token.StakingBalanceStore
@@ -35,10 +36,7 @@ import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.stakekit.NetworkType
-import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalanceList
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
@@ -108,6 +106,7 @@ internal class DefaultStakingRepository(
     )
 
     private val tronStakeKitTransactionAdapter by lazy { moshi.adapter(TronStakeKitTransaction::class.java) }
+    private val networkTypeAdapter by lazy { moshi.adapter(NetworkTypeDTO::class.java) }
 
     override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = with(cryptoCurrencyId) {
         rawNetworkId.plus(rawCurrencyId)
@@ -144,6 +143,28 @@ internal class DefaultStakingRepository(
 
             prefetchedYield ?: error("Staking is unavailable")
         }
+    }
+
+    override suspend fun getActions(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+        networkType: NetworkType,
+    ): List<StakingAction> {
+        return withContext(dispatchers.io) {
+            val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network).orEmpty()
+
+            val networkTypeDto = networkTypeConverter.convertBack(networkType)
+            val networkTypeString = networkTypeDto.extractJsonName()
+
+            enterActionResponseConverter.convertListIgnoreErrors(
+                input = stakeKitApi.getActions(walletAddress = address, network = networkTypeString).getOrThrow().data,
+                onError = { Timber.e("Error converting staking actions list: $it") },
+            )
+        }
+    }
+
+    private fun NetworkTypeDTO.extractJsonName(): String {
+        return networkTypeAdapter.toJson(this).replace("\"", "")
     }
 
     override suspend fun getEntryInfo(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingEntryInfo {

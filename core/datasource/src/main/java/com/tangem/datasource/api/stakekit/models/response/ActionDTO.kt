@@ -9,7 +9,7 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
-data class EnterActionResponse(
+data class ActionDTO(
     @Json(name = "id")
     val id: String,
     @Json(name = "integrationId")
