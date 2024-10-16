@@ -1,10 +1,9 @@
 package com.tangem.feature.swap.domain.models.ui
 
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.utils.toFormattedCurrencyString
 import java.math.BigDecimal
 
-class AmountFormatter {
+interface AmountFormatter {
 
     /**
      * Use to convert crypto amount [SwapAmount] to UI representation
@@ -13,9 +12,7 @@ class AmountFormatter {
      * @param currency currency symbol
      * @return formatted [String]
      */
-    fun formatSwapAmountToUI(swapAmount: SwapAmount, currency: String): String {
-        return swapAmount.value.toFormattedCurrencyString(swapAmount.decimals, currency)
-    }
+    fun formatSwapAmountToUI(swapAmount: SwapAmount, currency: String): String
 
     /**
      * Use to convert ONLY crypto amount [BigDecimal] to UI representation
@@ -25,7 +22,5 @@ class AmountFormatter {
      * @param currency
      * @return formatted [String]
      */
-    fun formatBigDecimalAmountToUI(amount: BigDecimal, decimals: Int, currency: String? = null): String {
-        return amount.toFormattedCurrencyString(decimals, currency)
-    }
+    fun formatBigDecimalAmountToUI(amount: BigDecimal, decimals: Int, currency: String? = null): String
 }

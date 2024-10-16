@@ -205,6 +205,11 @@ internal fun String.replaceFiatSymbolWithCrypto(
         when {
             str.endsWith(fiatCurrencySymbol) -> {
                 val withoutSymbol = str.dropLast(fiatCurrencySymbol.length)
+
+                if (cryptoCurrencySymbol.isBlank()) {
+                    return withoutSymbol
+                }
+
                 val last = withoutSymbol.lastOrNull() ?: return cryptoCurrencySymbol
 
                 append(withoutSymbol)
@@ -220,11 +225,15 @@ internal fun String.replaceFiatSymbolWithCrypto(
                     append(CURRENCY_SPACE)
                 }
 
-                append(cryptoCurrencySymbol)
-
                 val withoutSymbol = str.drop(fiatCurrencySymbol.length)
                 val first = withoutSymbol.firstOrNull()
                     ?: return cryptoCurrencySymbol
+
+                if (cryptoCurrencySymbol.isBlank()) {
+                    return withoutSymbol
+                }
+
+                append(cryptoCurrencySymbol)
 
                 if (first.isNotWhitespace()) {
                     append(CURRENCY_SPACE)

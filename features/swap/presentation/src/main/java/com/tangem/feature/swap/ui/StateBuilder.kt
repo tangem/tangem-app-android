@@ -10,6 +10,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.uncapped
@@ -1547,8 +1548,12 @@ internal class StateBuilder(
             toTokenInfo.cryptoCurrencyStatus.currency.decimals,
         )
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
-        val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
-        val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
+        val rateString = buildString {
+            append(BigDecimal.ONE.format { crypto(symbol = fromCurrencySymbol, decimals = 0).anyDecimals() })
+            append(" ≈ ")
+            append(rate.format { crypto(toTokenInfo.cryptoCurrencyStatus.currency) })
+        }
+        // val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
         val badge = if (isRecommended) {
             ProviderState.AdditionalBadge.Recommended
         } else if (isNeedBestRateBadge && isBestRate) {
