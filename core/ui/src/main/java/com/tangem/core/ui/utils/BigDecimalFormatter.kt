@@ -172,26 +172,6 @@ object BigDecimalFormatter {
         }
     }
 
-    @Deprecated("Use BigDecimal.format")
-    fun formatPercent(
-        percent: BigDecimal,
-        useAbsoluteValue: Boolean,
-        locale: Locale = Locale.getDefault(),
-        maxFractionDigits: Int = 2,
-        minFractionDigits: Int = 2,
-    ): String {
-        val formatter = NumberFormat.getPercentInstance(locale).apply {
-            maximumFractionDigits = maxFractionDigits
-            minimumFractionDigits = minFractionDigits
-            roundingMode = RoundingMode.HALF_UP
-        }
-        val value = if (useAbsoluteValue) percent.abs() else percent
-
-        return formatter.format(value)
-    }
-
-    fun formatWithSymbol(amount: String, symbol: String) = "$amount\u2009$symbol"
-
     private fun getCurrency(code: String): Currency {
         return runCatching { Currency.getInstance(code) }
             .getOrElse { e ->

@@ -8,8 +8,8 @@ import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -212,14 +212,8 @@ internal class SetInitialDataStateTransformer(
         val minApr = aprValues.min()
         val maxApr = aprValues.max()
 
-        val formattedMinApr = BigDecimalFormatter.formatPercent(
-            percent = minApr,
-            useAbsoluteValue = true,
-        ).remove("%")
-        val formattedMaxApr = BigDecimalFormatter.formatPercent(
-            percent = maxApr,
-            useAbsoluteValue = true,
-        )
+        val formattedMinApr = minApr.format { percent() }.remove("%")
+        val formattedMaxApr = maxApr.format { percent() }
 
         if (maxApr - minApr < EQUALITY_THRESHOLD) {
             return stringReference("$formattedMinApr%")

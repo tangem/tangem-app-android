@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.StakingAvailability
@@ -217,10 +218,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         stakingEntryInfo: StakingEntryInfo,
         iconState: IconState,
     ): StakingBlockUM.StakeAvailable {
-        val apr = BigDecimalFormatter.formatPercent(
-            percent = stakingEntryInfo.apr,
-            useAbsoluteValue = true,
-        )
+        val apr = stakingEntryInfo.apr.format { percent() }
         return StakingBlockUM.StakeAvailable(
             titleText = resourceReference(
                 id = R.string.token_details_staking_block_title,
@@ -277,10 +275,7 @@ internal class TokenDetailsLoadedBalanceConverter(
     private fun formatPriceChange(status: CryptoCurrencyStatus.Value): String {
         val priceChange = status.priceChange ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
-        return BigDecimalFormatter.formatPercent(
-            percent = priceChange,
-            useAbsoluteValue = true,
-        )
+        return priceChange.format { percent() }
     }
 
     private fun formatPrice(status: CryptoCurrencyStatus.Value, appCurrency: AppCurrency): String {
