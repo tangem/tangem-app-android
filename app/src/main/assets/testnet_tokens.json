@@ -748,6 +748,16 @@
                     "networkId": "core/test"
                 }
             ]
+        },
+        {
+            "id": "casper-network",
+            "name": "Casper",
+            "symbol": "CSPR",
+            "networks": [
+                {
+                    "networkId": "casper-network/test"
+                }
+            ]
         }
     ]
 }
