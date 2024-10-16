@@ -172,8 +172,12 @@ fun TextReference.resolveReference(): String {
                 .map { if (it is TextReference) it.resolveReference() else it }
                 .toTypedArray()
 
-            stringResource(id = id, *args).also {
-                if (decapitalize) it.replaceFirstChar { char -> char.lowercase() }
+            val resolvedReference = stringResource(id = id, *args)
+
+            if (decapitalize) {
+                resolvedReference.replaceFirstChar { char -> char.lowercase() }
+            } else {
+                resolvedReference
             }
         }
         is TextReference.PluralRes -> pluralStringResource(id, count, *formatArgs.toTypedArray())
