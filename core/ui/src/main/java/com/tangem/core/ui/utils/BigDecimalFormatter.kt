@@ -17,53 +17,12 @@ object BigDecimalFormatter {
     private const val CAN_BE_LOWER_SIGN = LOWER_SIGN
 
     private val FIAT_FORMAT_THRESHOLD = BigDecimal("0.01")
-    private val CRYPTO_FEE_FORMAT_THRESHOLD = BigDecimal("0.000001")
 
     private const val FIAT_MARKET_DEFAULT_DIGITS = 2
     private const val FIAT_MARKET_EXTENDED_DIGITS = 6
     private const val FRACTIONAL_PART_LENGTH_AFTER_LEADING_ZEROES = 4
 
     private val usdCurrency = Currency.getInstance("USD")
-
-    @Deprecated("Use BigDecimal.format")
-    fun formatCryptoFeeAmount(
-        cryptoAmount: BigDecimal?,
-        cryptoCurrency: String,
-        decimals: Int,
-        canBeLower: Boolean = false,
-        locale: Locale = Locale.getDefault(),
-    ): String {
-        if (cryptoAmount == null) return EMPTY_BALANCE_SIGN
-
-        val formatter = NumberFormat.getNumberInstance(locale).apply {
-            maximumFractionDigits = decimals.coerceAtMost(maximumValue = 6)
-            minimumFractionDigits = 2
-            isGroupingUsed = true
-            roundingMode = RoundingMode.HALF_UP
-        }
-
-        val amountFormatted = if (cryptoAmount.checkCryptoThreshold()) {
-            buildString {
-                append(CAN_BE_LOWER_SIGN)
-                append(
-                    formatter.format(CRYPTO_FEE_FORMAT_THRESHOLD),
-                )
-            }
-        } else {
-            buildString {
-                if (canBeLower) {
-                    append(CAN_BE_LOWER_SIGN)
-                }
-                append(formatter.format(cryptoAmount))
-            }
-        }
-
-        return if (cryptoCurrency.isEmpty()) {
-            amountFormatted
-        } else {
-            amountFormatted + "\u2009$cryptoCurrency"
-        }
-    }
 
     @Deprecated("Use BigDecimal.format")
     fun formatFiatAmount(
@@ -185,6 +144,4 @@ object BigDecimalFormatter {
     }
 
     private fun BigDecimal.checkFiatThreshold() = this > BigDecimal.ZERO && this < FIAT_FORMAT_THRESHOLD
-
-    private fun BigDecimal.checkCryptoThreshold() = this > BigDecimal.ZERO && this < CRYPTO_FEE_FORMAT_THRESHOLD
 }
