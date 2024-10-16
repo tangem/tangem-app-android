@@ -12,6 +12,7 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.uncapped
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -471,10 +472,8 @@ internal class StateBuilder(
         domainWarning: Warning.ExistentialDepositWarning,
     ): SwapWarning {
         val fromCurrency = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency
-        val deposit = BigDecimalFormatter.formatCryptoAmountUncapped(
-            cryptoAmount = domainWarning.existentialDeposit,
-            cryptoCurrency = fromCurrency,
-        )
+        val deposit = domainWarning.existentialDeposit.format { crypto(fromCurrency).uncapped() }
+
         return SwapWarning.GeneralError(
             NotificationConfig(
                 title = resourceReference(R.string.send_notification_existential_deposit_title),

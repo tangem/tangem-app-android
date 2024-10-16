@@ -121,6 +121,26 @@ fun BigDecimalCryptoFormat.uncapped() = BigDecimalFormat { value ->
 }
 
 /**
+ * Format for displaying crypto amounts with a fixed number of decimals.
+ */
+fun BigDecimalCryptoFormat.anyDecimals(maxDecimals: Int = decimals, minDecimals: Int = decimals) =
+    BigDecimalFormat { value ->
+        val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+            currency = usdCurrency
+            maximumFractionDigits = maxDecimals
+            minimumFractionDigits = minDecimals
+            isGroupingUsed = true
+            roundingMode = RoundingMode.HALF_UP
+        }
+
+        formatter.format(value)
+            .replaceFiatSymbolWithCrypto(
+                fiatCurrencySymbol = usdCurrency.getSymbol(locale),
+                cryptoCurrencySymbol = symbol,
+            )
+    }
+
+/**
  * Format for displaying fees.
  * If the fee is less than the threshold, it will be displayed as a fixed value "<0.000001 BTC", "<BTC 0.000001".
  */

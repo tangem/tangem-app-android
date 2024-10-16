@@ -1,6 +1,5 @@
 package com.tangem.core.ui.utils
 
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.LOWER_SIGN
 import com.tangem.utils.StringsSigns.TILDE_SIGN
@@ -25,30 +24,6 @@ object BigDecimalFormatter {
     private const val FRACTIONAL_PART_LENGTH_AFTER_LEADING_ZEROES = 4
 
     private val usdCurrency = Currency.getInstance("USD")
-
-    @Deprecated("Use BigDecimal.format")
-    fun formatCryptoAmountUncapped(
-        cryptoAmount: BigDecimal?,
-        cryptoCurrency: CryptoCurrency,
-        locale: Locale = Locale.getDefault(),
-    ): String {
-        if (cryptoAmount == null) return EMPTY_BALANCE_SIGN
-
-        val formatter = NumberFormat.getNumberInstance(locale).apply {
-            maximumFractionDigits = cryptoCurrency.decimals
-            minimumFractionDigits = 2
-            isGroupingUsed = true
-            roundingMode = RoundingMode.HALF_UP
-        }
-
-        return formatter.format(cryptoAmount).let {
-            if (cryptoCurrency.symbol.isEmpty()) {
-                it
-            } else {
-                it + "\u2009${cryptoCurrency.symbol}"
-            }
-        }
-    }
 
     @Deprecated("Use BigDecimal.format")
     fun formatCryptoFeeAmount(
