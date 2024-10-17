@@ -119,14 +119,14 @@
   <string name="common_generate_addresses">Adressen abrufen</string>
   <string name="common_go_to_provider">Zum Anbieter gehen</string>
   <string name="common_go_to_token">Zum Token</string>
-  <string name="common_hour">Stunde</string>
+  <string name="common_hour">stunde</string>
   <string name="common_import">Importieren</string>
   <string name="common_in_progress">In Arbeit</string>
   <string name="common_later">Später</string>
   <string name="common_left">%1$s übrig</string>
   <string name="common_locked">Gesperrt</string>
   <string name="common_main_network">Hauptnetz</string>
-  <string name="common_month">Monat</string>
+  <string name="common_month">monat</string>
   <string name="common_network_fee_title">Netzgebühr</string>
   <string name="common_network_fee_warning_content">Der überwiesene Betrag wird um %1$s (%2$s) gekürzt, um die gewählte Gebührenhöhe zu decken.</string>
   <string name="common_next">Weiter</string>
@@ -176,7 +176,7 @@
   <string name="common_unknown_error">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
   <string name="common_unreachable">Nicht erreichbar</string>
   <string name="common_unstake">staking beenden</string>
-  <string name="common_week">Woche</string>
+  <string name="common_week">woche</string>
   <string name="common_yes">Ja</string>
   <string name="contract_address_copied_message">Vertragsadresse kopiert!</string>
   <string name="currency_subtitle_expanded">Verfügbare Netzwerke</string>
@@ -428,7 +428,6 @@
   <string name="markets_token_details_liquidity_description">Die Änderung der Liquidität, die dem Token während des angegebenen Zeitraums zur Verfügung steht</string>
   <string name="markets_token_details_liquidity_full">Liquidität</string>
   <string name="markets_token_details_liquidity_index">Liquiditätsindex</string>
-  <string name="markets_token_details_liquidity_index_description">Leer</string>
   <string name="markets_token_details_listed_on">Gelistet auf</string>
   <string name="markets_token_details_low">Niedrig</string>
   <string name="markets_token_details_market_capitalization">MarketCap</string>
