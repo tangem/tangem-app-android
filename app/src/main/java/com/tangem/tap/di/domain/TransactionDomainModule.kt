@@ -44,21 +44,6 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
-    fun provideSendMultipleTransactionUseCase(
-        cardSdkConfigRepository: CardSdkConfigRepository,
-        transactionRepository: TransactionRepository,
-        walletManagersFacade: WalletManagersFacade,
-    ): SendMultipleTransactionUseCase {
-        return SendMultipleTransactionUseCase(
-            demoConfig = DemoConfig(),
-            cardSdkConfigRepository = cardSdkConfigRepository,
-            transactionRepository = transactionRepository,
-            walletManagersFacade = walletManagersFacade,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideAssociateAssetUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
         walletManagersFacade: WalletManagersFacade,

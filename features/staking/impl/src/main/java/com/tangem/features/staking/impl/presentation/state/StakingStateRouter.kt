@@ -23,12 +23,14 @@ internal class StakingStateRouter(
     fun onNextClick() {
         when (stateController.value.currentStep) {
             StakingStep.InitialInfo -> when (stateController.value.actionType) {
-                StakingActionCommonType.ENTER -> showAmount()
-                StakingActionCommonType.PENDING_OTHER,
-                StakingActionCommonType.EXIT,
+                StakingActionCommonType.Enter -> showAmount()
+                StakingActionCommonType.Pending.Other,
+                StakingActionCommonType.Exit,
+                StakingActionCommonType.Pending.Rewards,
                 -> showConfirmation()
-                StakingActionCommonType.PENDING_REWARDS -> showRewardsValidators()
+                StakingActionCommonType.Pending.Restake -> showRestakeValidators()
             }
+            StakingStep.RestakeValidator,
             StakingStep.RewardsValidators,
             StakingStep.Validators,
             StakingStep.Amount,
@@ -41,17 +43,23 @@ internal class StakingStateRouter(
         val uiState = stateController.uiState.value
         when (uiState.currentStep) {
             StakingStep.InitialInfo -> onBackClick()
-            StakingStep.Amount -> showInitial()
+            StakingStep.RestakeValidator,
+            StakingStep.RewardsValidators,
+            StakingStep.Amount,
+            -> showInitial()
             StakingStep.Confirmation -> {
-                if (uiState.actionType != StakingActionCommonType.ENTER) {
+                if (uiState.actionType != StakingActionCommonType.Enter) {
                     showInitial()
                 } else {
                     showAmount()
                 }
             }
             StakingStep.Validators -> showConfirmation()
-            StakingStep.RewardsValidators -> showInitial()
         }
+    }
+
+    fun showValidators() {
+        stateController.update { it.copy(currentStep = StakingStep.Validators) }
     }
 
     private fun showInitial() {
@@ -59,7 +67,7 @@ internal class StakingStateRouter(
         stateController.update { it.copy(currentStep = StakingStep.InitialInfo) }
     }
 
-    private fun showRewardsValidators() {
+    fun showRewardsValidators() {
         analyticsEventsHandler.send(
             StakingAnalyticsEvents.RewardScreenOpened(stateController.value.cryptoCurrencySymbol),
         )
@@ -73,8 +81,8 @@ internal class StakingStateRouter(
         stateController.update { it.copy(currentStep = StakingStep.Amount) }
     }
 
-    fun showValidators() {
-        stateController.update { it.copy(currentStep = StakingStep.Validators) }
+    private fun showRestakeValidators() {
+        stateController.update { it.copy(currentStep = StakingStep.RestakeValidator) }
     }
 
     private fun showConfirmation() {
