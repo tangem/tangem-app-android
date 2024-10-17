@@ -4,7 +4,7 @@ import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.Express
 import com.tangem.datasource.api.common.config.StakeKit
 import com.tangem.datasource.api.common.config.TangemTech
-import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.version.AppVersionProvider
@@ -21,11 +21,11 @@ internal object ApiConfigsModule {
     @Provides
     @IntoSet
     fun provideExpressConfig(
-        configManager: ConfigManager,
+        environmentConfigStorage: EnvironmentConfigStorage,
         expressAuthProvider: ExpressAuthProvider,
         appVersionProvider: AppVersionProvider,
     ): ApiConfig {
-        return Express(configManager, expressAuthProvider, appVersionProvider)
+        return Express(environmentConfigStorage, expressAuthProvider, appVersionProvider)
     }
 
     @Provides

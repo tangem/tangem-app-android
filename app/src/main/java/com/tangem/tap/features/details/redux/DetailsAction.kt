@@ -1,7 +1,6 @@
 package com.tangem.tap.features.details.redux
 
 import androidx.lifecycle.LifecycleCoroutineScope
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
@@ -13,15 +12,6 @@ sealed class DetailsAction : Action {
         val scanResponse: ScanResponse,
         val shouldSaveUserWallets: Boolean,
     ) : DetailsAction()
-
-    data object ScanAndSaveUserWallet : DetailsAction() {
-
-        data object Success : DetailsAction()
-
-        data class Error(val error: TextReference?) : DetailsAction()
-    }
-
-    data object DismissError : DetailsAction()
 
     sealed class AppSettings : DetailsAction() {
         data class SwitchPrivacySetting(

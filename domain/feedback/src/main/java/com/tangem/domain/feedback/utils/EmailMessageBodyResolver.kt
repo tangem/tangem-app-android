@@ -23,12 +23,9 @@ internal class EmailMessageBodyResolver(
             is FeedbackEmailType.RateCanBeBetter -> addCardAndPhoneInfo(type.cardInfo)
             is FeedbackEmailType.ScanningProblem -> addScanningProblemBody()
             is FeedbackEmailType.TransactionSendingProblem -> addTransactionSendingProblemBody(type.cardInfo)
-            is FeedbackEmailType.StakingProblem -> addStakingProblemBody(
-                type.cardInfo,
-                type.validatorName,
-                type.transactionTypes,
-                type.unsignedTransactions,
-            )
+            is FeedbackEmailType.StakingProblem -> addStakingProblemBody(type)
+            is FeedbackEmailType.SwapProblem -> addSwapProblemBody(type)
+            is FeedbackEmailType.CurrencyDescriptionError -> addTokenInfo(type)
         }
 
         return build()
@@ -78,16 +75,11 @@ internal class EmailMessageBodyResolver(
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
     }
 
-    private suspend fun FeedbackDataBuilder.addStakingProblemBody(
-        cardInfo: CardInfo,
-        validatorName: String?,
-        transactionTypes: List<String>,
-        unsignedTransactions: List<String?>,
-    ) {
-        addCardInfo(cardInfo)
+    private suspend fun FeedbackDataBuilder.addStakingProblemBody(type: FeedbackEmailType.StakingProblem) {
+        addCardInfo(type.cardInfo)
         addDelimiter()
 
-        val userWalletId = requireNotNull(cardInfo.userWalletId) { "UserWalletId must be not null" }
+        val userWalletId = requireNotNull(type.cardInfo.userWalletId) { "UserWalletId must be not null" }
         val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
         val blockchainInfo = blockchainError?.let {
             feedbackRepository.getBlockchainInfo(
@@ -102,7 +94,36 @@ internal class EmailMessageBodyResolver(
             addDelimiter()
         }
 
-        addStakingInfo(validatorName, transactionTypes, unsignedTransactions)
+        addStakingInfo(
+            validatorName = type.validatorName,
+            transactionTypes = type.transactionTypes,
+            unsignedTransactions = type.unsignedTransactions,
+        )
+        addDelimiter()
+
+        addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
+    }
+
+    private suspend fun FeedbackDataBuilder.addSwapProblemBody(type: FeedbackEmailType.SwapProblem) {
+        addCardInfo(type.cardInfo)
+        addDelimiter()
+
+        val userWalletId = requireNotNull(type.cardInfo.userWalletId) { "UserWalletId must be not null" }
+        val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
+        val blockchainInfo = blockchainError?.let {
+            feedbackRepository.getBlockchainInfo(
+                userWalletId = userWalletId,
+                blockchainId = blockchainError.blockchainId,
+                derivationPath = blockchainError.derivationPath,
+            )
+        }
+
+        if (blockchainInfo != null) {
+            addBlockchainError(blockchainInfo, blockchainError)
+            addDelimiter()
+        }
+
+        addSwapInfo(providerName = type.providerName, txId = type.txId)
         addDelimiter()
 
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
@@ -112,5 +133,9 @@ internal class EmailMessageBodyResolver(
         addCardInfo(cardInfo)
         addDelimiter()
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
+    }
+
+    private fun FeedbackDataBuilder.addTokenInfo(type: FeedbackEmailType.CurrencyDescriptionError) {
+        addTokenShortInfo(id = type.currencyId, name = type.currencyName)
     }
 }

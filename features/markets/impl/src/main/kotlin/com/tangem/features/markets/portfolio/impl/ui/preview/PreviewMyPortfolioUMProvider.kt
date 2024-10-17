@@ -51,7 +51,7 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
             iconState = CurrencyIconState.Locked,
             titleState = TokenItemState.TitleState.Content(text = "My wallet"),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "486,65 \$"),
-            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "733,71097 MATIC"),
+            subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "733,71097 MATIC"),
             subtitleState = TokenItemState.SubtitleState.TextContent(value = "XRP Ledger token"),
             onItemClick = {},
             onItemLongClick = {},
@@ -63,6 +63,6 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
             onQuickActionLongClick = {},
         ),
         isBalanceHidden = false,
-        walletId = UserWalletId("walletId"),
+        walletId = UserWalletId(""),
     )
 }

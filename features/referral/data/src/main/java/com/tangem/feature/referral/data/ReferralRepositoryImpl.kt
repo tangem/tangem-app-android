@@ -9,7 +9,6 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.StartReferralBody
 import com.tangem.datasource.demo.DemoModeDatasource
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.referral.converters.ReferralConverter
@@ -68,7 +67,6 @@ internal class ReferralRepositoryImpl @Inject constructor(
 
     override suspend fun getCryptoCurrency(userWalletId: UserWalletId, tokenData: TokenData): CryptoCurrency? {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("Wallet $userWalletId not found")
-        val derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider
 
         val blockchain = Blockchain.fromNetworkId(tokenData.networkId)
             ?: error("Blockchain ${tokenData.networkId} not found")
@@ -89,13 +87,13 @@ internal class ReferralRepositoryImpl @Inject constructor(
                 sdkToken = sdkToken,
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                derivationStyleProvider = derivationStyleProvider,
+                scanResponse = userWallet.scanResponse,
             )
         } else {
             cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                derivationStyleProvider = derivationStyleProvider,
+                scanResponse = userWallet.scanResponse,
             )
         }
     }

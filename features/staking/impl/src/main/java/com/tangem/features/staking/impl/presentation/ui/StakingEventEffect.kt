@@ -62,6 +62,7 @@ internal fun StakingAlert(state: AlertUM, onDismiss: () -> Unit) {
                 onDismiss()
             },
         )
+
         dismissButton = DialogButtonUM(
             title = stringResource(id = R.string.common_cancel),
             onClick = onDismiss,

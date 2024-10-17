@@ -1,16 +1,30 @@
 package com.tangem.data.settings
 
+import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.GeoResponse
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.models.UserCountry
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
+import java.util.Locale
 
 internal class DefaultSettingsRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val appLogsStore: AppLogsStore,
+    private val tangemTechApi: TangemTechApi,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : SettingsRepository {
+
+    private val userCountryFlow = MutableStateFlow<UserCountry?>(value = null)
 
     override suspend fun shouldShowSaveUserWalletScreen(): Boolean {
         return appPreferencesStore.getSyncOrDefault(
@@ -98,5 +112,39 @@ internal class DefaultSettingsRepository(
 
     override suspend fun setMarketsTooltipShown(value: Boolean) {
         appPreferencesStore.store(key = PreferencesKeys.SHOULD_SHOW_MARKETS_TOOLTIP_KEY, value = !value)
+    }
+
+    override suspend fun getUserCountryCodeSync(): UserCountry? {
+        // If user country code is already set, return it
+        val countryCode = userCountryFlow.value
+        if (countryCode != null) return countryCode
+
+        coroutineScope {
+            launch { fetchUserCountryCode() }
+        }
+
+        return null
+    }
+
+    override suspend fun fetchUserCountryCode() {
+        Timber.i("Start fetching user country code")
+
+        withContext(dispatchers.io) {
+            val country = runCatching { tangemTechApi.getUserCountryCode() }
+                .fold(
+                    onSuccess = GeoResponse::code,
+                    onFailure = { Locale.getDefault().country },
+                )
+                .lowercase()
+
+            val code = when (country) {
+                UserCountry.Russia.code -> UserCountry.Russia
+                else -> UserCountry.Other(code = country)
+            }
+
+            Timber.i("User code country is $code")
+
+            userCountryFlow.value = code
+        }
     }
 }

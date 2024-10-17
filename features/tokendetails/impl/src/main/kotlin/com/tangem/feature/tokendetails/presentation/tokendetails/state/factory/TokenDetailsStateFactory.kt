@@ -17,10 +17,11 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.staking.GetStakingAvailabilityUseCase
+import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.BalanceItem
-import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -40,7 +41,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.t
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
-import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toImmutableList
@@ -52,14 +52,16 @@ internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
+    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val pendingBalancesProvider: Provider<List<BalanceItem>>,
     private val clickIntents: TokenDetailsClickIntents,
-    private val featureToggles: TokenDetailsFeatureToggles,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
     stakingFeatureToggles: StakingFeatureToggles,
+    getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
+    getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     symbol: String,
     decimals: Int,
 ) {
@@ -67,8 +69,9 @@ internal class TokenDetailsStateFactory(
     private val skeletonStateConverter by lazy {
         TokenDetailsSkeletonStateConverter(
             clickIntents = clickIntents,
-            featureToggles = featureToggles,
             networkHasDerivationUseCase = networkHasDerivationUseCase,
+            getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
+            getStakingAvailabilityUseCase = getStakingAvailabilityUseCase,
             getUserWalletUseCase = getUserWalletUseCase,
             userWalletId = userWalletId,
         )
@@ -83,6 +86,7 @@ internal class TokenDetailsStateFactory(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
             stakingEntryInfoProvider = stakingEntryInfoProvider,
+            stakingAvailabilityProvider = stakingAvailabilityProvider,
             pendingBalancesProvider = pendingBalancesProvider,
             symbol = symbol,
             decimals = decimals,
@@ -117,13 +121,6 @@ internal class TokenDetailsStateFactory(
     private val refreshStateConverter by lazy {
         TokenDetailsRefreshStateConverter(
             currentStateProvider = currentStateProvider,
-        )
-    }
-
-    private val stakingStateConverter by lazy {
-        TokenStakingStateConverter(
-            currentStateProvider = currentStateProvider,
-            clickIntents = clickIntents,
         )
     }
 
@@ -236,18 +233,6 @@ internal class TokenDetailsStateFactory(
                     onConfirmClick = clickIntents::onDismissDialog,
                 ),
             ),
-        )
-    }
-
-    fun getStateWithUpdatedStakingAvailability(stakingAvailability: StakingAvailability): TokenDetailsState {
-        return currentStateProvider().copy(
-            isStakingBlockShown = stakingAvailability != StakingAvailability.Unavailable,
-        )
-    }
-
-    fun getStateWithStaking(stakingEither: Either<StakingError, StakingEntryInfo>): TokenDetailsState {
-        return currentStateProvider().copy(
-            stakingBlocksState = stakingStateConverter.convert(stakingEither),
         )
     }
 
@@ -393,10 +378,9 @@ internal class TokenDetailsStateFactory(
         isSupported: Boolean,
     ): TokenDetailsAppBarMenuConfig? {
         if (cardTypesResolver.isSingleWalletWithToken()) return null
-        val showGenerateExtendedKey = featureToggles.isGenerateXPubEnabled() && isSupported
         return copy(
             items = buildList {
-                if (showGenerateExtendedKey && hasDerivations) {
+                if (isSupported && hasDerivations) {
                     TokenDetailsAppBarMenuConfig.MenuItem(
                         title = resourceReference(R.string.token_details_generate_xpub),
                         textColorProvider = { TangemTheme.colors.text.primary1 },

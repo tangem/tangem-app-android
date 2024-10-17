@@ -18,6 +18,7 @@ internal fun CurrencyItemUM.toggleExpanded(
     return when (this) {
         is CurrencyItemUM.Custom,
         is CurrencyItemUM.Loading,
+        is CurrencyItemUM.SearchNothingFound,
         -> this
         is CurrencyItemUM.Basic -> {
             val isExpanded = networks !is NetworksUM.Expanded
@@ -41,6 +42,7 @@ internal fun CurrencyItemUM.update(currency: ManagedCryptoCurrency): CurrencyIte
     return when (this) {
         is CurrencyItemUM.Custom,
         is CurrencyItemUM.Loading,
+        is CurrencyItemUM.SearchNothingFound,
         -> this
         is CurrencyItemUM.Basic -> {
             if (currency !is ManagedCryptoCurrency.Token) {

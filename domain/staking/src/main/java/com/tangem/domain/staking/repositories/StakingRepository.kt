@@ -1,5 +1,6 @@
 package com.tangem.domain.staking.repositories
 
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.core.lce.LceFlow
@@ -23,7 +24,7 @@ interface StakingRepository {
 
     fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String
 
-    fun isStakingSupported(integrationKey: String): Boolean
+    fun getSupportedIntegrationId(cryptoCurrencyId: CryptoCurrency.ID): String?
 
     suspend fun fetchEnabledYields(refresh: Boolean)
 
@@ -31,7 +32,7 @@ interface StakingRepository {
 
     suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield
 
-    suspend fun getStakingAvailability(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): StakingAvailability
+    fun getStakingAvailability(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): StakingAvailability
 
     suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
@@ -71,6 +72,7 @@ interface StakingRepository {
     suspend fun constructTransaction(
         networkId: String,
         fee: Fee,
+        amount: Amount,
         transactionId: String,
     ): Pair<StakingTransaction, TransactionData.Compiled>
 

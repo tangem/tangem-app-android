@@ -5,8 +5,6 @@ import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
-import com.tangem.domain.transaction.usecase.*
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.*
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -60,11 +58,9 @@ internal class SwapDomainModule {
     @Provides
     @Singleton
     fun provideInitialToCurrencyResolver(
-        getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         swapTransactionRepository: SwapTransactionRepository,
     ): InitialToCurrencyResolver {
         return DefaultInitialToCurrencyResolver(
-            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             swapTransactionRepository = swapTransactionRepository,
         )
     }

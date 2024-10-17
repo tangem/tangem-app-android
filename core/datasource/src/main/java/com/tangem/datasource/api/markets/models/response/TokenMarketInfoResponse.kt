@@ -30,6 +30,8 @@ data class TokenMarketInfoResponse(
     val links: Links?,
     @Json(name = "price_performance")
     val pricePerformance: PricePerformance?,
+    @Json(name = "exchanges_amount")
+    val exchangesAmount: Int?,
 ) {
 
     @JsonClass(generateAdapter = true)
