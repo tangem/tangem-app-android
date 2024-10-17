@@ -15,39 +15,40 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.ValidatorState
+import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.ui.ValidatorImagePlaceholder
 import com.tangem.utils.extensions.orZero
 
 @Composable
-internal fun ValidatorBlock(validatorState: ValidatorState, onClick: () -> Unit) {
+internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClickable: Boolean, onClick: () -> Unit) {
+    val state = validatorState as? StakingStates.ValidatorState.Data ?: return
+    if (!state.isVisibleOnConfirmation) return
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .clickable(
-                enabled = validatorState.isClickable,
+                enabled = state.isClickable && isClickable,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
                 onClick = onClick,
             ),
     ) {
-        if (validatorState is ValidatorState.Content) {
-            InputRowImageInfo(
-                title = resourceReference(R.string.staking_validator),
-                subtitle = stringReference(validatorState.chosenValidator.name),
-                infoTitle = annotatedReference {
-                    append(resourceReference(R.string.staking_details_apr).resolveReference())
-                    appendSpace()
-                    appendColored(
-                        text = BigDecimalFormatter.formatPercent(validatorState.chosenValidator.apr.orZero(), true),
-                        color = TangemTheme.colors.text.accent,
-                    )
-                },
-                imageUrl = validatorState.chosenValidator.image.orEmpty(),
-                onImageError = { ValidatorImagePlaceholder() },
-            )
-        }
+        InputRowImageInfo(
+            title = resourceReference(R.string.staking_validator),
+            subtitle = stringReference(state.chosenValidator.name),
+            infoTitle = annotatedReference {
+                append(resourceReference(R.string.staking_details_apr).resolveReference())
+                appendSpace()
+                appendColored(
+                    text = BigDecimalFormatter.formatPercent(state.chosenValidator.apr.orZero(), true),
+                    color = TangemTheme.colors.text.accent,
+                )
+            },
+            imageUrl = state.chosenValidator.image.orEmpty(),
+            onImageError = { ValidatorImagePlaceholder() },
+        )
     }
 }
