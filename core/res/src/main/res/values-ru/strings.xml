@@ -125,6 +125,7 @@
   <string name="common_generate_addresses">Получить ваши адреса</string>
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
+  <string name="common_hour">час</string>
   <string name="common_import">Импортировать</string>
   <string name="common_in_progress">В процессе</string>
   <string name="common_later">Позже</string>
@@ -181,6 +182,7 @@
   <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Завершить стейкинг</string>
+  <string name="common_week">неделю</string>
   <string name="common_yes">Да</string>
   <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
   <string name="currency_subtitle_expanded">Доступные сети</string>
@@ -772,6 +774,7 @@
   <string name="staking_reward_schedule_each">Каждый %s</string>
   <string name="staking_reward_schedule_each_day">Каждый день</string>
   <string name="staking_reward_schedule_each_days">Каждые %s дня</string>
+  <string name="staking_reward_schedule_each_plural">Каждые</string>
   <string name="staking_reward_schedule_epoch">За эпоху</string>
   <string name="staking_reward_schedule_era">За эру</string>
   <string name="staking_reward_schedule_hour">Ежечасно</string>
@@ -780,6 +783,7 @@
   <string name="staking_rewards">Вознаграждения</string>
   <string name="staking_stake_locked">Стейкинг закрыт</string>
   <string name="staking_stake_more">Застейкать еще</string>
+  <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать награду %2$s</string>
   <string name="staking_tap_to_unlock">Нажмите для разблокировки</string>
   <string name="staking_tap_to_unlock_or_vote">Нажмите для разблокировки</string>
   <string name="staking_tap_to_withdraw">Нажмите для вывода</string>
