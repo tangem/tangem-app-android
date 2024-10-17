@@ -5,17 +5,20 @@ import com.tangem.blockchainsdk.compatibility.l2BlockchainsCoinIds
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.currency.getBlockchain
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.data.managetokens.utils.ManagedCryptoCurrencyFactory
+import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
-import com.tangem.datasource.local.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.canHandleBlockchain
@@ -23,7 +26,7 @@ import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -48,23 +51,27 @@ internal class DefaultManageTokensRepository(
 ) : ManageTokensRepository {
 
     private val managedCryptoCurrencyFactory = ManagedCryptoCurrencyFactory()
+    private val userTokensResponseFactory = UserTokensResponseFactory()
+    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(DemoConfig())
 
     // region getTokenListBatchFlow
     override fun getTokenListBatchFlow(
         context: ManageTokensListBatchingContext,
+        loadUserTokensFromRemote: Boolean,
         batchSize: Int,
     ): ManageTokensListBatchFlow {
         return BatchListSource(
             fetchDispatcher = dispatchers.io,
             context = context,
             generateNewKey = { it.size.inc() },
-            batchFetcher = createFetcher(batchSize),
+            batchFetcher = createFetcher(batchSize, loadUserTokensFromRemote),
             updateFetcher = manageTokensUpdateFetcher,
         ).toBatchFlow()
     }
 
     private fun createFetcher(
         batchSize: Int,
+        loadUserTokensFromRemote: Boolean,
     ): LimitOffsetBatchFetcher<ManageTokensListConfig, List<ManagedCryptoCurrency>> = LimitOffsetBatchFetcher(
         prefetchDistance = batchSize,
         batchSize = batchSize,
@@ -74,7 +81,12 @@ internal class DefaultManageTokensRepository(
             if (userWallet?.scanResponse?.card?.isTestCard == true) {
                 fetchTestnetCurrencies(userWallet, request)
             } else {
-                fetchCurrencies(userWallet, request, isFirstBatchFetching)
+                fetchCurrencies(
+                    userWallet = userWallet,
+                    request = request,
+                    isFirstBatchFetching = isFirstBatchFetching,
+                    loadUserTokensFromRemote = loadUserTokensFromRemote,
+                )
             }
         },
     )
@@ -84,6 +96,7 @@ internal class DefaultManageTokensRepository(
         userWallet: UserWallet?,
         request: Request<ManageTokensListConfig>,
         isFirstBatchFetching: Boolean,
+        loadUserTokensFromRemote: Boolean,
     ): BatchFetchResult.Success<List<ManagedCryptoCurrency>> {
         val supportedBlockchains = getSupportedBlockchains(userWallet)
 
@@ -110,7 +123,15 @@ internal class DefaultManageTokensRepository(
             coins = coinsResponse.coins.filterNot { l2BlockchainsCoinIds.contains(it.id) },
         )
 
-        val tokensResponse = request.params.userWalletId?.let { getSavedUserTokensResponseSync(it) }
+        val tokensResponse = request.params.userWalletId?.let { userWalletId ->
+            if (loadUserTokensFromRemote && userWallet != null) {
+                safeApiCall({ tangemTechApi.getUserTokens(userWalletId.stringValue).bind() }) {
+                    createDefaultUserTokensResponse(userWallet)
+                }
+            } else {
+                getSavedUserTokensResponseSync(userWalletId)
+            }
+        }
         val items = if (isFirstBatchFetching &&
             tokensResponse != null &&
             userWallet != null &&
@@ -119,13 +140,13 @@ internal class DefaultManageTokensRepository(
             managedCryptoCurrencyFactory.createWithCustomTokens(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
-                derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                scanResponse = userWallet.scanResponse,
             )
         } else {
             managedCryptoCurrencyFactory.create(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
-                derivationStyleProvider = userWallet?.scanResponse?.derivationStyleProvider,
+                scanResponse = userWallet?.scanResponse,
             )
         }
 
@@ -155,7 +176,7 @@ internal class DefaultManageTokensRepository(
                 testnetTokensConfig
             },
             tokensResponse = getSavedUserTokensResponseSync(userWallet.walletId),
-            derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+            scanResponse = userWallet.scanResponse,
         )
 
         return BatchFetchResult.Success(
@@ -164,6 +185,13 @@ internal class DefaultManageTokensRepository(
             last = true,
         )
     }
+
+    private fun createDefaultUserTokensResponse(userWallet: UserWallet) =
+        userTokensResponseFactory.createUserTokensResponse(
+            currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
+            isGroupedByNetwork = false,
+            isSortedByBalance = false,
+        )
 
     private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
