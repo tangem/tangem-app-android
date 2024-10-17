@@ -47,6 +47,8 @@ internal class MockCurrenciesRepository(
         isTokensSortedByBalanceAfterSortingApply = isSortedByBalance
     }
 
+    override suspend fun saveNewCurrenciesList(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
+
     override suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
 
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) {
@@ -104,11 +106,6 @@ internal class MockCurrenciesRepository(
         require(token.id == id)
 
         return token
-    }
-
-    override fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
-        /* no-op */
-        return emptyFlow()
     }
 
     override suspend fun getNetworkCoin(
