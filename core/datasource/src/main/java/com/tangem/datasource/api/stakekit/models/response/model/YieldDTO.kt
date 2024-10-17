@@ -9,31 +9,31 @@ data class YieldDTO(
     @Json(name = "id")
     val id: String,
     @Json(name = "token")
-    val token: TokenDTO,
+    val token: TokenDTO?,
     @Json(name = "tokens")
-    val tokens: List<TokenDTO>,
+    val tokens: List<TokenDTO>?,
     @Json(name = "args")
-    val args: ArgsDTO,
+    val args: ArgsDTO?,
     @Json(name = "status")
-    val status: StatusDTO,
+    val status: StatusDTO?,
     @Json(name = "apy")
-    val apy: BigDecimal,
+    val apy: BigDecimal?,
     @Json(name = "rewardRate")
-    val rewardRate: Double,
+    val rewardRate: Double?,
     @Json(name = "rewardType")
-    val rewardType: RewardTypeDTO,
+    val rewardType: RewardTypeDTO?,
     @Json(name = "metadata")
-    val metadata: MetadataDTO,
+    val metadata: MetadataDTO?,
     @Json(name = "validators")
-    val validators: List<ValidatorDTO>,
+    val validators: List<ValidatorDTO>?,
     @Json(name = "isAvailable")
-    val isAvailable: Boolean,
+    val isAvailable: Boolean?,
 ) {
 
     @JsonClass(generateAdapter = true)
     data class StatusDTO(
         @Json(name = "enter")
-        val enter: Boolean,
+        val enter: Boolean?,
         @Json(name = "exit")
         val exit: Boolean?,
     )
@@ -41,21 +41,21 @@ data class YieldDTO(
     @JsonClass(generateAdapter = true)
     data class ArgsDTO(
         @Json(name = "enter")
-        val enter: Enter,
+        val enter: Enter?,
         @Json(name = "exit")
         val exit: Enter?,
     ) {
         @JsonClass(generateAdapter = true)
         data class Enter(
             @Json(name = "addresses")
-            val addresses: Addresses,
+            val addresses: Addresses?,
             @Json(name = "args")
-            val args: Map<String, AddressArgumentDTO>,
+            val args: Map<String, AddressArgumentDTO>?,
         ) {
             @JsonClass(generateAdapter = true)
             data class Addresses(
                 @Json(name = "address")
-                val address: AddressArgumentDTO,
+                val address: AddressArgumentDTO?,
                 @Json(name = "additionalAddresses")
                 val additionalAddresses: Map<String, AddressArgumentDTO>? = null,
             )
@@ -65,7 +65,7 @@ data class YieldDTO(
     @JsonClass(generateAdapter = true)
     data class ValidatorDTO(
         @Json(name = "address")
-        val address: String,
+        val address: String?,
         @Json(name = "status")
         val status: ValidatorStatusDTO,
         @Json(name = "name")
@@ -106,51 +106,51 @@ data class YieldDTO(
     @JsonClass(generateAdapter = true)
     data class MetadataDTO(
         @Json(name = "name")
-        val name: String,
+        val name: String?,
         @Json(name = "logoURI")
-        val logoUri: String,
+        val logoUri: String?,
         @Json(name = "description")
-        val description: String,
+        val description: String?,
         @Json(name = "documentation")
         val documentation: String?,
         @Json(name = "gasFeeToken")
-        val gasFeeTokenDTO: TokenDTO,
+        val gasFeeTokenDTO: TokenDTO?,
         @Json(name = "token")
-        val tokenDTO: TokenDTO,
+        val tokenDTO: TokenDTO?,
         @Json(name = "tokens")
-        val tokensDTO: List<TokenDTO>,
+        val tokensDTO: List<TokenDTO>?,
         @Json(name = "type")
-        val type: String,
+        val type: String?,
         @Json(name = "rewardSchedule")
-        val rewardSchedule: RewardScheduleDTO,
+        val rewardSchedule: RewardScheduleDTO?,
         @Json(name = "cooldownPeriod")
         val cooldownPeriod: PeriodDTO?,
         @Json(name = "warmupPeriod")
-        val warmupPeriod: PeriodDTO,
+        val warmupPeriod: PeriodDTO?,
         @Json(name = "rewardClaiming")
-        val rewardClaiming: RewardClaimingDTO,
+        val rewardClaiming: RewardClaimingDTO?,
         @Json(name = "defaultValidator")
         val defaultValidator: String?,
         @Json(name = "minimumStake")
         val minimumStake: Int?,
         @Json(name = "supportsMultipleValidators")
-        val supportsMultipleValidators: Boolean,
+        val supportsMultipleValidators: Boolean?,
         @Json(name = "revshare")
-        val revshare: EnabledDTO,
+        val revshare: EnabledDTO?,
         @Json(name = "fee")
-        val fee: EnabledDTO,
+        val fee: EnabledDTO?,
     ) {
 
         @JsonClass(generateAdapter = true)
         data class PeriodDTO(
             @Json(name = "days")
-            val days: Int,
+            val days: Int?,
         )
 
         @JsonClass(generateAdapter = true)
         data class EnabledDTO(
             @Json(name = "enabled")
-            val enabled: Boolean,
+            val enabled: Boolean?,
         )
 
         enum class RewardScheduleDTO {
