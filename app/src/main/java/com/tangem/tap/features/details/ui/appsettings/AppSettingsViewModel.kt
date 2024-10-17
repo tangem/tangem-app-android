@@ -11,7 +11,6 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchNavigationAction
@@ -45,7 +44,6 @@ internal class AppSettingsViewModel @Inject constructor(
     private val appThemeModeRepository: AppThemeModeRepository,
     private val settingsRepository: SettingsRepository,
     private val appSettingsItemsAnalyticsSender: AppSettingsItemsAnalyticsSender,
-    private val detailsFeatureToggles: DetailsFeatureToggles,
 ) : ViewModel(),
     StoreSubscriber<DetailsState>,
     DefaultLifecycleObserver {
@@ -62,9 +60,7 @@ internal class AppSettingsViewModel @Inject constructor(
 
     init {
         bootstrapAppCurrencyUpdates()
-        if (detailsFeatureToggles.isRedesignEnabled) {
-            bootstrapBiometricsUpdates()
-        }
+        bootstrapBiometricsUpdates()
 
         subscribeToStoreChanges()
         sendItemsAnalytics()

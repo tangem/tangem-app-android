@@ -5,19 +5,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import com.tangem.common.ui.alerts.models.AlertUM
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.features.send.impl.R
-import com.tangem.features.send.impl.presentation.state.SendAlertState
 import com.tangem.features.send.impl.presentation.state.SendEvent
 
 @Composable
 internal fun SendEventEffect(event: StateEvent<SendEvent>, snackbarHostState: SnackbarHostState) {
     val resources = LocalContext.current.resources
-    var alertConfig by remember { mutableStateOf<SendAlertState?>(value = null) }
+    var alertConfig by remember { mutableStateOf<AlertUM?>(value = null) }
 
     val keyboardController = LocalSoftwareKeyboardController.current
     LaunchedEffect(key1 = alertConfig) {
@@ -44,7 +44,7 @@ internal fun SendEventEffect(event: StateEvent<SendEvent>, snackbarHostState: Sn
 }
 
 @Composable
-internal fun SendAlert(state: SendAlertState, onDismiss: () -> Unit) {
+internal fun SendAlert(state: AlertUM, onDismiss: () -> Unit) {
     val confirmButton: DialogButtonUM
     val dismissButton: DialogButtonUM?
 
