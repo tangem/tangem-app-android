@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 plugins {
     alias(deps.plugins.kotlin.android) apply false
     alias(deps.plugins.kotlin.jvm) apply false
@@ -18,6 +20,16 @@ val clean by tasks.registering {
 interface Injected {
     @get:Inject
     val fs: FileSystemOperations
+}
+
+// Test Logging
+subprojects {
+    tasks.withType<Test> {
+        testLogging {
+            exceptionFormat = TestExceptionFormat.FULL
+            showStandardStreams = true
+        }
+    }
 }
 
 val assembleInternalQA by tasks.registering {
