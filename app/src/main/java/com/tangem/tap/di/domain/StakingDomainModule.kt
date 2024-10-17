@@ -1,10 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.staking.*
-import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakingPendingTransactionRepository
-import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
+import com.tangem.domain.staking.repositories.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -55,10 +52,12 @@ internal object StakingDomainModule {
     @Singleton
     fun provideGetActionsUseCase(
         stakingRepository: StakingRepository,
+        stakingActionRepository: StakingActionRepository,
         stakingErrorResolver: StakingErrorResolver,
-    ): GetActionsUseCase {
-        return GetActionsUseCase(
+    ): FetchActionsUseCase {
+        return FetchActionsUseCase(
             stakingRepository = stakingRepository,
+            stakingActionRepository = stakingActionRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }

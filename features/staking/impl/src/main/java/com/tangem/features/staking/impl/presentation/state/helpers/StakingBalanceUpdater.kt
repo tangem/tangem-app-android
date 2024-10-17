@@ -1,6 +1,8 @@
 package com.tangem.features.staking.impl.presentation.state.helpers
 
 import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
+import com.tangem.domain.staking.FetchActionsUseCase
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -20,16 +22,21 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
     private val stakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
+    private val fetchActionsUseCase: FetchActionsUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    @Assisted private val yield: Yield,
 ) {
     fun scheduleUpdates() {
         coroutineScope.launch {
             listOf(
                 // we should update network to find pending tx after 1 sec
                 async {
-                    fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrencyStatus.currency.network))
+                    fetchPendingTransactionsUseCase(
+                        userWalletId = userWallet.walletId,
+                        networks = setOf(cryptoCurrencyStatus.currency.network),
+                    )
                 },
                 // we should update tx history and network for new balances
                 async {
@@ -40,6 +47,9 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                 },
                 async {
                     updateNetworkStatuses()
+                },
+                async {
+                    updateActions()
                 },
             ).awaitAll()
         }
@@ -91,9 +101,21 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         }
     }
 
+    private suspend fun updateActions() {
+        fetchActionsUseCase(
+            userWalletId = userWallet.walletId,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+            networkType = yield.token.network,
+        )
+    }
+
     @AssistedFactory
     interface Factory {
-        fun create(cryptoCurrencyStatus: CryptoCurrencyStatus, userWallet: UserWallet): StakingBalanceUpdater
+        fun create(
+            cryptoCurrencyStatus: CryptoCurrencyStatus,
+            userWallet: UserWallet,
+            yield: Yield,
+        ): StakingBalanceUpdater
     }
 
     private companion object {

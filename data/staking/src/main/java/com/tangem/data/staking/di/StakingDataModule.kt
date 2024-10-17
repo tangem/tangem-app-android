@@ -2,6 +2,7 @@ package com.tangem.data.staking.di
 
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.staking.*
 import com.tangem.data.staking.DefaultStakingErrorResolver
 import com.tangem.data.staking.DefaultStakingPendingTransactionRepository
 import com.tangem.data.staking.DefaultStakingRepository
@@ -11,12 +12,10 @@ import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
-import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakingPendingTransactionRepository
-import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
+import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
@@ -75,6 +74,14 @@ internal object StakingDataModule {
     @Singleton
     fun provideStakingPendingTransactionRepository(): StakingPendingTransactionRepository {
         return DefaultStakingPendingTransactionRepository()
+    }
+
+    @Provides
+    @Singleton
+    fun provideStakingActionRepository(stakingActionsStore: StakingActionsStore): StakingActionRepository {
+        return DefaultStakingActionRepository(
+            stakingActionsStore = stakingActionsStore,
+        )
     }
 
     @Provides
