@@ -287,6 +287,7 @@
   <string name="feedback_subject_support">Comentarios</string>
   <string name="feedback_subject_support_tangem">Comentarios en Tangem</string>
   <string name="feedback_subject_tx_failed">No se puede completar una transacción</string>
+  <string name="feedback_token_description_error">Error de descripción de moneda</string>
   <string name="give_permission_current_transaction">Esta transacción</string>
   <string name="give_permission_fee_footer">La red cobrará una tarifa de aprobación de token para verificar que está autorizando el uso de su token para el swap.</string>
   <string name="give_permission_policy_type_footer">Especifique el límite aprobado para el token seleccionado.</string>
@@ -390,6 +391,7 @@
   <string name="markets_token_details_circulating_supply">Suministro circulante</string>
   <string name="markets_token_details_circulating_supply_description">El número total de monedas que están disponibles para el comercio y que circulan en el mercado.</string>
   <string name="markets_token_details_circulating_supply_full">Suministro circulante</string>
+  <string name="markets_token_details_empty_exchanges">No se encontraron intercambios</string>
   <string name="markets_token_details_experienced_buyers">Compradores experimentados</string>
   <string name="markets_token_details_experienced_buyers_description">Compradores netos con el requisito adicional de tener al menos 100 transacciones salientes</string>
   <string name="markets_token_details_experienced_buyers_full">Compradores experimentados</string>
@@ -407,6 +409,7 @@
   <string name="markets_token_details_liquidity_description">El cambio en la cantidad de liquidez disponible para el token durante el período de tiempo especificado</string>
   <string name="markets_token_details_liquidity_full">Liquidez</string>
   <string name="markets_token_details_liquidity_index">Índice de liquidez</string>
+  <string name="markets_token_details_listed_on">Listado en</string>
   <string name="markets_token_details_low">Bajo</string>
   <string name="markets_token_details_market_capitalization">Capital. de mercado</string>
   <string name="markets_token_details_market_capitalization_description">El valor total de una criptomoneda calculado multiplicando su precio por la cantidad de monedas en circulación</string>
@@ -477,12 +480,12 @@
   <string name="onboarding_navbar_title_creating_backup">Creando un backup</string>
   <string name="onboarding_seed_button_read_more">Leer más sobre seed phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
-    <item quantity="one">Vacío</item>
+    <item quantity="one"></item>
     <item quantity="other">Escriba estas %d palabras en el orden que se indica a continuación y guárdelas en un lugar seguro y secreto.</item>
   </plurals>
   <string name="onboarding_seed_generate_title">Su seed phrase</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one">Vacío</item>
+    <item quantity="one"></item>
     <item quantity="other">%d palabras</item>
   </plurals>
   <string name="onboarding_seed_import_message">Para importar su billetera, ingrese su seed phrase en el campo de abajo</string>
