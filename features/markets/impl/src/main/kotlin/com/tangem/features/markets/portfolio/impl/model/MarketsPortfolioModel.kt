@@ -195,7 +195,7 @@ internal class MarketsPortfolioModel @Inject constructor(
             hasMissedDerivationsUseCase.invoke(
                 userWalletId = selectedWalletId,
                 networksWithDerivationPath = addToPortfolioData.addedNetworks[selectedWalletId].orEmpty()
-                    .associate { Network.ID(it.networkId) to null },
+                    .associate { it.networkId to null },
             )
         } else {
             false

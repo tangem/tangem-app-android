@@ -77,7 +77,7 @@ internal object WalletPreviewData {
                 showCustomBadge = false,
             ),
             titleState = TokenItemState.TitleState.Content(text = "Polygon"),
-            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "3 172,14 $"),
+            subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "3 172,14 $"),
         )
     }
 

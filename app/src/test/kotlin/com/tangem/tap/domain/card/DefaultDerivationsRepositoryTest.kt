@@ -53,7 +53,7 @@ internal class DefaultDerivationsRepositoryTest {
             .onFailure { Truth.assertThat(it).isInstanceOf(IllegalStateException::class.java) }
 
         coVerify(exactly = 1) { userWalletsStore.getSyncOrNull(defaultUserWalletId) }
-        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any()) }
+        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
         coVerify(inverse = true) { userWalletsStore.update(defaultUserWalletId, any()) }
     }
 
@@ -67,7 +67,7 @@ internal class DefaultDerivationsRepositoryTest {
             .onFailure { error("Should returns success") }
 
         coVerify(exactly = 1) { userWalletsStore.getSyncOrNull(defaultUserWalletId) }
-        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any()) }
+        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
         coVerify(inverse = true) { userWalletsStore.update(defaultUserWalletId, any()) }
     }
 
@@ -84,7 +84,7 @@ internal class DefaultDerivationsRepositoryTest {
             .onFailure { error("Should returns success") }
 
         coVerify(exactly = 1) { userWalletsStore.getSyncOrNull(defaultUserWalletId) }
-        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any()) }
+        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
         coVerify(inverse = true) { userWalletsStore.update(defaultUserWalletId, any()) }
     }
 
@@ -110,7 +110,7 @@ internal class DefaultDerivationsRepositoryTest {
             .onFailure { error("Should returns success") }
 
         coVerify(exactly = 1) { userWalletsStore.getSyncOrNull(defaultUserWalletId) }
-        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any()) }
+        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
         coVerify(inverse = true) { userWalletsStore.update(defaultUserWalletId, any()) }
     }
 
@@ -120,7 +120,7 @@ internal class DefaultDerivationsRepositoryTest {
             scanResponse = ScanResponseMockFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
         )
         coEvery { userWalletsStore.getSyncOrNull(defaultUserWalletId) } returns userWallet
-        coEvery { tangemSdkManager.derivePublicKeys(null, any()) } throws ScanCardException.UserCancelled
+        coEvery { tangemSdkManager.derivePublicKeys(null, any(), any()) } throws ScanCardException.UserCancelled
 
         runCatching {
             repository.derivePublicKeys(
@@ -132,7 +132,7 @@ internal class DefaultDerivationsRepositoryTest {
             .onFailure { Truth.assertThat(it).isInstanceOf(ScanCardException.UserCancelled::class.java) }
 
         coVerify(exactly = 1) { userWalletsStore.getSyncOrNull(defaultUserWalletId) }
-        coVerify(exactly = 1) { tangemSdkManager.derivePublicKeys(null, any()) }
+        coVerify(exactly = 1) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
         coVerify(inverse = true) { userWalletsStore.update(defaultUserWalletId, any()) }
     }
 
@@ -143,7 +143,7 @@ internal class DefaultDerivationsRepositoryTest {
             scanResponse = ScanResponseMockFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
         )
         coEvery { userWalletsStore.getSyncOrNull(defaultUserWalletId) } returns userWallet
-        coEvery { tangemSdkManager.derivePublicKeys(null, any()) } returns CompletionResult.Success(
+        coEvery { tangemSdkManager.derivePublicKeys(null, any(), any()) } returns CompletionResult.Success(
             DerivationTaskResponse(DerivedKeysMocks.ethereumDerivedKeys),
         )
         coEvery { userWalletsStore.update(defaultUserWalletId, any()) } returns CompletionResult.Success(userWallet)
@@ -155,10 +155,10 @@ internal class DefaultDerivationsRepositoryTest {
             )
         }
             .onSuccess { Truth.assertThat(it) }
-            .onFailure { error("Should returns success") }
+            .onFailure { error("Should returns success but $it") }
 
         coVerify(exactly = 1) { userWalletsStore.getSyncOrNull(defaultUserWalletId) }
-        coVerify(exactly = 1) { tangemSdkManager.derivePublicKeys(null, any()) }
+        coVerify(exactly = 1) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
         coVerify(exactly = 1) { userWalletsStore.update(defaultUserWalletId, any()) }
     }
 }
