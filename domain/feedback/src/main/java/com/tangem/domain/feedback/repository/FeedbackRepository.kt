@@ -26,4 +26,6 @@ interface FeedbackRepository {
     fun getBlockchainErrorInfo(userWalletId: UserWalletId): BlockchainErrorInfo?
 
     fun getLogFile(): File?
+
+    fun sendEmail(feedbackEmail: FeedbackEmail)
 }
