@@ -22,7 +22,6 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.onUserWalletSelected
-import com.tangem.tap.features.details.redux.ResetCardDialog
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
 import com.tangem.tap.features.details.ui.common.utils.getResetToFactoryDescription
 import com.tangem.tap.store

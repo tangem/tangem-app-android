@@ -128,6 +128,16 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "internet-computer" -> Blockchain.InternetComputer
         "sui" -> Blockchain.Sui
         "sui/test" -> Blockchain.SuiTestnet
+        "energy-web-chain" -> Blockchain.EnergyWebChain
+        "energy-web-chain/test" -> Blockchain.EnergyWebChainTestnet
+        "energy-web-x" -> Blockchain.EnergyWebX
+        "energy-web-x/test" -> Blockchain.EnergyWebXTestnet
+        "add_later" -> Blockchain.Casper
+        "add_later_test" -> Blockchain.CasperTestnet
+        "core" -> Blockchain.Core
+        "core/test" -> Blockchain.CoreTestnet
+        "casper-network" -> Blockchain.Casper
+        "casper-network/test" -> Blockchain.CasperTestnet
         else -> null
     }
 }
@@ -257,6 +267,14 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.InternetComputer -> "internet-computer"
         Blockchain.Sui -> "sui"
         Blockchain.SuiTestnet -> "sui/test"
+        Blockchain.EnergyWebChain -> "energy-web-chain"
+        Blockchain.EnergyWebChainTestnet -> "energy-web-chain/test"
+        Blockchain.EnergyWebX -> "energy-web-x"
+        Blockchain.EnergyWebXTestnet -> "energy-web-x/test"
+        Blockchain.Casper -> "casper-network"
+        Blockchain.CasperTestnet -> "casper-network/test"
+        Blockchain.Core -> "core"
+        Blockchain.CoreTestnet -> "core/test"
     }
 }
 
@@ -342,7 +360,20 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Sei, Blockchain.SeiTestnet -> "sei-network"
         Blockchain.InternetComputer -> "internet-computer"
         Blockchain.Sui, Blockchain.SuiTestnet -> "sui"
+        Blockchain.EnergyWebChain, Blockchain.EnergyWebChainTestnet -> "energy-web-token"
+        Blockchain.EnergyWebX, Blockchain.EnergyWebXTestnet -> "energy-web-token"
+        Blockchain.Casper, Blockchain.CasperTestnet -> "casper-network"
+        Blockchain.Core, Blockchain.CoreTestnet -> "coredaoorg"
     }
+}
+
+/**
+ * New CoinId to existing coin "id" field.
+ * To support both old and new coin id.
+ */
+fun Blockchain.toMigratedCointId(): String = when (this) {
+    Blockchain.Polygon, Blockchain.PolygonTestnet -> "polygon-ecosystem-token"
+    else -> toCoinId()
 }
 
 fun Blockchain.isSupportedInApp(): Boolean {
@@ -356,6 +387,7 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
         Blockchain.Near, Blockchain.NearTestnet -> 0.00182.toBigDecimal()
         Blockchain.Aptos, Blockchain.AptosTestnet,
         Blockchain.Filecoin,
+        Blockchain.Casper, Blockchain.CasperTestnet,
         -> BigDecimal.ZERO
         else -> null
     }
@@ -368,6 +400,7 @@ fun Blockchain.minimalAmount(): BigDecimal {
 private const val NODL = "NODL"
 private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 
+// no need to add testnets
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Nexa,

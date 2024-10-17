@@ -11,6 +11,8 @@ import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
+import com.tangem.datasource.api.onramp.MockedOnrampApi
+import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApiV2
@@ -92,6 +94,29 @@ internal object NetworkModule {
                 )
             },
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnrampApi(
+        // @NetworkMoshi moshi: Moshi,
+        // @ApplicationContext context: Context,
+        // apiConfigsManager: ApiConfigsManager,
+        // appLogsStore: AppLogsStore,
+    ): OnrampApi {
+// [REDACTED_TODO_COMMENT]
+        return MockedOnrampApi()
+        // return createApi(
+        //     id = ApiConfig.ID.Express,
+        //     moshi = moshi,
+        //     context = context,
+        //     apiConfigsManager = apiConfigsManager,
+        //     clientBuilder = {
+        //         addInterceptor(
+        //             NetworkLogsSaveInterceptor(appLogsStore),
+        //         )
+        //     },
+        // )
     }
 
     @Provides

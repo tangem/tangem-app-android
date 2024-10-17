@@ -143,9 +143,6 @@ class DetailsScreenTest : BaseTestCase() {
                 }
             }
             ComposeScreen.onComposeScreen<WalletSettingsTestScreen>(composeTestRule) {
-                step("Assert Link more cards button does not exist") {
-                    linkMoreCardsButton.assertIsNotDisplayed()
-                }
                 step("Assert Card Settings button is visible") {
                     cardSettingsButton.assertIsDisplayed()
                 }

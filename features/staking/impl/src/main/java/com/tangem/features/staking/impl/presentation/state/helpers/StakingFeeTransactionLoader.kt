@@ -12,6 +12,7 @@ import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -21,8 +22,7 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.ValidatorState
-import com.tangem.features.staking.impl.presentation.state.utils.isSolanaWithdraw
+import com.tangem.features.staking.impl.presentation.state.utils.isComposePendingActions
 import com.tangem.utils.extensions.orZero
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -47,8 +47,6 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
 ) {
 
     suspend fun getFee(
-        pendingAction: PendingAction?,
-        pendingActions: ImmutableList<PendingAction>?,
         onStakingFee: (Fee) -> Unit,
         onStakingFeeError: (StakingError) -> Unit,
         onApprovalFee: (TransactionFee) -> Unit,
@@ -56,17 +54,20 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
     ) {
         val state = stateController.value
         val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
-            ?: error("No confirmation state")
-        val validatorState = confirmationState.validatorState as? ValidatorState.Content
+            ?: error("Illegal state")
+        val validatorState = state.validatorState as? StakingStates.ValidatorState.Data
             ?: error("No validator provided")
 
         val amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
             ?: error("No amount provided")
 
+        val pendingAction = confirmationState.pendingAction
+        val pendingActions = confirmationState.pendingActions
+
         val validatorAddress = validatorState.chosenValidator.address
 
         val approval = stakingApproval as? StakingApproval.Needed
-        if (approval != null) {
+        if (approval != null && state.actionType == StakingActionCommonType.Enter) {
             val allowance = getAllowanceUseCase(
                 userWalletId = userWallet.walletId,
                 cryptoCurrency = cryptoCurrencyStatus.currency,
@@ -113,7 +114,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         val sourceAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
             ?: error("No available address")
 
-        val gasEstimate = if (isSolanaWithdraw(cryptoCurrencyStatus.currency.network.id.value, pendingActions)) {
+        val gasEstimate = if (isComposePendingActions(cryptoCurrencyStatus.currency.network.id.value, pendingActions)) {
             val result = coroutineScope {
                 pendingActions?.map { action ->
                     async {
@@ -182,7 +183,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
             amount = amount,
             address = sourceAddress,
             validatorAddress = validatorAddress,
-            token = yield.token,
+            token = yield.getCurrentToken(cryptoCurrencyStatus.currency.id.rawCurrencyId),
             passthrough = action?.passthrough,
             type = action?.type,
         ),

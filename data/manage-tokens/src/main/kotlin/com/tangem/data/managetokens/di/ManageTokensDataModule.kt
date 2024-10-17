@@ -4,8 +4,8 @@ import com.tangem.data.managetokens.DefaultCustomTokensRepository
 import com.tangem.data.managetokens.DefaultManageTokensRepository
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository

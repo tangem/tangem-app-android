@@ -40,4 +40,11 @@ interface MarketsTokenRepository {
         token: TokenMarketParams,
         network: TokenMarketInfo.Network,
     ): CryptoCurrency?
+
+    /**
+     * Get token exchanges
+     *
+     * @param tokenId token id
+     */
+    suspend fun getTokenExchanges(tokenId: String): List<TokenMarketExchange>
 }

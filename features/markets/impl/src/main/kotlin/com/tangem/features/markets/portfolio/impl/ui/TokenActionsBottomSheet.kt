@@ -7,13 +7,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SimpleSettingsRow
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetTitle
-import com.tangem.core.ui.components.rows.CornersToRound
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -43,15 +42,13 @@ private fun Content(content: TokenActionsBSContentUM) {
             ),
     ) {
         content.actions.forEachIndexed { index, action ->
-            val cornersToRound = when (index) {
-                0 -> CornersToRound.TOP_2
-                content.actions.lastIndex -> CornersToRound.BOTTOM_2
-                else -> CornersToRound.ZERO
-            }
-
             Box(
                 modifier = Modifier
-                    .clip(cornersToRound.getShape())
+                    .roundedShapeItemDecoration(
+                        currentIndex = index,
+                        lastIndex = content.actions.lastIndex,
+                        addDefaultPadding = false,
+                    )
                     .background(TangemTheme.colors.background.action),
             ) {
                 SimpleSettingsRow(

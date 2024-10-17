@@ -4,7 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.datasource.config.models.Config
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.scan.CardDTO
@@ -55,15 +55,9 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
         is GlobalAction.RestoreAppCurrency -> {
             restoreAppCurrency()
         }
-        is GlobalAction.SendEmail -> {
-            store.state.globalState.feedbackManager?.sendEmail(
-                feedbackData = action.feedbackData,
-                scanResponse = action.scanResponse,
-            )
-        }
         is GlobalAction.ExchangeManager.Init -> {
             val appStateSafe = appState() ?: return
-            val config = appStateSafe.globalState.configManager?.config ?: return
+            val config = appStateSafe.globalState.environmentConfigStorage?.getConfigSync() ?: return
 
             scope.launch {
                 val scanResponseProvider: () -> ScanResponse? = {
@@ -92,21 +86,24 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             scope.launch { exchangeManager.update() }
         }
         is GlobalAction.FetchUserCountry -> {
-            scope.launch {
-// [REDACTED_TODO_COMMENT]
-                runCatching { store.state.featureRepositoryProvider.homeRepository.getUserCountryCode() }
-                    .onSuccess {
-                        store.dispatchOnMain(
-                            GlobalAction.FetchUserCountry.Success(countryCode = it.code.lowercase()),
-                        )
-                    }
-                    .onFailure {
-                        store.dispatchOnMain(
-                            GlobalAction.FetchUserCountry.Success(
-                                countryCode = Locale.getDefault().country.lowercase(),
-                            ),
-                        )
-                    }
+            val homeFeatureToggles = store.inject(DaggerGraphState::homeFeatureToggles)
+
+            if (!homeFeatureToggles.isMigrateUserCountryCodeEnabled) {
+                scope.launch {
+                    runCatching { store.state.featureRepositoryProvider.homeRepository.getUserCountryCode() }
+                        .onSuccess {
+                            store.dispatchOnMain(
+                                GlobalAction.FetchUserCountry.Success(countryCode = it.code.lowercase()),
+                            )
+                        }
+                        .onFailure {
+                            store.dispatchOnMain(
+                                GlobalAction.FetchUserCountry.Success(
+                                    countryCode = Locale.getDefault().country.lowercase(),
+                                ),
+                            )
+                        }
+                }
             }
         }
     }
@@ -143,21 +140,24 @@ private fun restoreAppCurrency() {
     }
 }
 
-private fun makeSellExchangeService(config: Config): ExchangeService {
+private fun makeSellExchangeService(environmentConfig: EnvironmentConfig): ExchangeService {
     return MoonPayService(
-        apiKey = config.moonPayApiKey,
-        secretKey = config.moonPayApiSecretKey,
+        apiKey = environmentConfig.moonPayApiKey,
+        secretKey = environmentConfig.moonPayApiSecretKey,
         logEnabled = LogConfig.network.moonPayService,
     )
 }
 
-private fun makeBuyExchangeService(config: Config): ExchangeService {
+private fun makeBuyExchangeService(environmentConfig: EnvironmentConfig): ExchangeService {
     return BuyExchangeService(
-        mercuryoService = makeMercuryoExchangeService(config),
+        mercuryoService = makeMercuryoExchangeService(environmentConfig),
     )
 }
 
-private fun makeMercuryoExchangeService(config: Config): MercuryoService {
-    val mercuryoEnvironment = MercuryoEnvironment.prod(config.mercuryoWidgetId, config.mercuryoSecret)
+private fun makeMercuryoExchangeService(environmentConfig: EnvironmentConfig): MercuryoService {
+    val mercuryoEnvironment = MercuryoEnvironment.prod(
+        environmentConfig.mercuryoWidgetId,
+        environmentConfig.mercuryoSecret,
+    )
     return MercuryoService(mercuryoEnvironment)
 }
