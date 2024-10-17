@@ -31,9 +31,10 @@ dependencies {
 
     // region Core modules
     implementation(projects.core.datasource)
+    implementation(projects.core.navigation)
+    implementation(projects.core.utils)
     // endregion
 
-    implementation(projects.core.utils)
 
     implementation(projects.domain.feedback)
     implementation(projects.domain.legacy)
