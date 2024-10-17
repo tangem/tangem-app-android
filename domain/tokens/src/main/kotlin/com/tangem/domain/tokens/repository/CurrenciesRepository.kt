@@ -1,7 +1,6 @@
 package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
@@ -129,17 +128,6 @@ interface CurrenciesRepository {
      * ID provided.
      */
     fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
-
-    /**
-     * Retrieves updates of the list of cryptocurrencies within a multi-currency wallet.
-     *
-     * Loads remote cryptocurrencies if they have expired.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @return A [LceFlow] emitting the set of cryptocurrencies associated with the user wallet. May emit an
-     * [DataError.UserWalletError.WrongUserWallet] if single-currency user wallet ID provided.
-     */
-    fun getMultiCurrencyWalletCurrenciesUpdatesLce(userWalletId: UserWalletId): LceFlow<Throwable, List<CryptoCurrency>>
 
     /**
      * Retrieves the list of cryptocurrencies within a multi-currency wallet.
