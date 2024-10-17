@@ -35,6 +35,14 @@ interface CurrenciesRepository {
     )
 
     /**
+     * Saves the given list of cryptocurrencies for a specific multi-currency user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param currencies The list of cryptocurrencies to be saved.
+     */
+    suspend fun saveNewCurrenciesList(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
+
+    /**
      * Add currencies to a specific user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
@@ -203,8 +211,6 @@ interface CurrenciesRepository {
      * ID provided.
      */
     fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean>
-
-    fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
 
     /**
      * Determines whether the currency sending is blocked by network pending transaction

@@ -16,10 +16,10 @@ import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
-import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.impl.R
+import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
@@ -80,25 +80,26 @@ internal class ManageTokensListManager @Inject constructor(
         .distinctUntilChanged()
     val uiItems: Flow<ImmutableList<CurrencyItemUM>> = uiManager.items
 
-    suspend fun launchPagination(params: ManageTokensComponent.Params) = coroutineScope {
+    suspend fun launchPagination(source: ManageTokensSource, userWalletId: UserWalletId?) = coroutineScope {
         scope = this
-        source = params.source
+        this@ManageTokensListManager.source = source
 
         val batchFlow = getManagedTokensUseCase(
             context = ManageTokensListBatchingContext(
                 actionsFlow = actionsFlow,
                 coroutineScope = this,
             ),
+            loadUserTokensFromRemote = userWalletId != null && source == ManageTokensSource.ONBOARDING,
         )
 
         batchFlow.state
-            .onEach { state -> updateState(state, params.userWalletId) }
+            .onEach { state -> updateState(state, userWalletId) }
             .flowOn(dispatchers.default)
             .launchIn(scope = this)
             .saveIn(jobHolder)
 
         // Initial load
-        reload(params.userWalletId)
+        reload(userWalletId)
     }
 
     suspend fun reload(userWalletId: UserWalletId?) {
@@ -119,7 +120,7 @@ internal class ManageTokensListManager @Inject constructor(
     }
 
     suspend fun search(userWalletId: UserWalletId?, query: String) {
-        state.value = ManageTokensListState()
+        state.value = ManageTokensListState(searchQuery = query)
         actionsFlow.emit(
             BatchAction.Reload(
                 requestParams = ManageTokensListConfig(
@@ -138,6 +139,28 @@ internal class ManageTokensListManager @Inject constructor(
             state.copy(
                 status = batchListState.status,
             )
+        }
+
+        // Search nothing found
+        if (
+            state.value.searchQuery.isNullOrEmpty().not() &&
+            batchListState.status is PaginationStatus.EndOfPagination &&
+            batchListState.data.isEmpty()
+        ) {
+            state.update { state ->
+                state.copy(
+                    userWalletId = userWalletId,
+                    currencyBatches = emptyList(),
+                    uiBatches = listOf(
+                        Batch(
+                            key = Int.MAX_VALUE,
+                            data = listOf(CurrencyItemUM.SearchNothingFound),
+                        ),
+                    ),
+                )
+            }
+
+            return
         }
 
         state.update { state ->
