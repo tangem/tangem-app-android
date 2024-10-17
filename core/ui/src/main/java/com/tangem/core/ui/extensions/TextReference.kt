@@ -11,6 +11,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.AnnotatedString.Builder
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.decapitalize
 import org.intellij.markdown.MarkdownElementTypes
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -26,11 +27,16 @@ sealed interface TextReference {
     /**
      * Text resource id
      *
-     * @property id         resource id
-     * @property formatArgs arguments. Impossible to use [kotlinx.collections.immutable.ImmutableList] because [Any] is
-     *                      unstable.
+     * @property id            resource id
+     * @property formatArgs    arguments. Impossible to use [kotlinx.collections.immutable.ImmutableList] because
+     *                         [Any] is unstable.
+     * @property decapitalize  whether resolved reference should be decapitalized
      */
-    data class Res(@StringRes val id: Int, val formatArgs: WrappedList<Any> = WrappedList(emptyList())) : TextReference
+    data class Res(
+        @StringRes val id: Int,
+        val formatArgs: WrappedList<Any> = WrappedList(emptyList()),
+        val decapitalize: Boolean = false,
+    ) : TextReference
 
     /**
      * Plural resource id
@@ -78,10 +84,15 @@ sealed interface TextReference {
  *
  * @param id The resource ID of the string.
  * @param formatArgs A list of format arguments to be applied to the string resource.
- * @return A [TextReference] representing the string resource with format arguments.
+ * @param decapitalize Whether resolved reference should be decapitalized
+ * @return [TextReference] representing the string resource with format arguments.
  */
-fun resourceReference(@StringRes id: Int, formatArgs: WrappedList<Any> = WrappedList(emptyList())): TextReference {
-    return TextReference.Res(id, formatArgs)
+fun resourceReference(
+    @StringRes id: Int,
+    formatArgs: WrappedList<Any> = WrappedList(emptyList()),
+    decapitalize: Boolean = false,
+): TextReference {
+    return TextReference.Res(id, formatArgs, decapitalize)
 }
 
 /**
@@ -161,7 +172,13 @@ fun TextReference.resolveReference(): String {
                 .map { if (it is TextReference) it.resolveReference() else it }
                 .toTypedArray()
 
-            stringResource(id = id, *args)
+            val resolvedReference = stringResource(id = id, *args)
+
+            if (decapitalize) {
+                resolvedReference.replaceFirstChar { char -> char.lowercase() }
+            } else {
+                resolvedReference
+            }
         }
         is TextReference.PluralRes -> pluralStringResource(id, count, *formatArgs.toTypedArray())
         is TextReference.Str -> value
