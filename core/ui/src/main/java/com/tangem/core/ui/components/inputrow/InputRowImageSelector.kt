@@ -24,9 +24,10 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.annotatedReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import java.math.BigDecimal
 
 /**
@@ -98,7 +99,7 @@ private fun InputRowImageSelectorPreview(
                         append(" ")
                         withStyle(style = SpanStyle(color = TangemTheme.colors.text.accent)) {
                             append(
-                                BigDecimalFormatter.formatPercent(BigDecimal.ZERO, true),
+                                BigDecimal.ZERO.format { percent() },
                             )
                         }
                     },

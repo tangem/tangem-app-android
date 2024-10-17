@@ -12,8 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.ui.ValidatorImagePlaceholder
@@ -43,7 +44,7 @@ internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClic
                 append(resourceReference(R.string.staking_details_apr).resolveReference())
                 appendSpace()
                 appendColored(
-                    text = BigDecimalFormatter.formatPercent(state.chosenValidator.apr.orZero(), true),
+                    text = state.chosenValidator.apr.orZero().format { percent() },
                     color = TangemTheme.colors.text.accent,
                 )
             },

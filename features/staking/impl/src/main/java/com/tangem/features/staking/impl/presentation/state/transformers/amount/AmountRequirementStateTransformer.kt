@@ -7,7 +7,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.staking.model.stakekit.AddressArgument
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -55,11 +56,9 @@ internal class AmountRequirementStateTransformer(
             isRequirementError -> resourceReference(
                 R.string.staking_amount_requirement_error,
                 wrappedList(
-                    BigDecimalFormatter.formatCryptoAmount(
-                        amountRequirements.minimum,
-                        cryptoCurrencyStatus.currency.symbol,
-                        cryptoCurrencyStatus.currency.decimals,
-                    ),
+                    amountRequirements.minimum.format {
+                        crypto(cryptoCurrencyStatus.currency)
+                    },
                 ),
             )
             isIntegerOnlyError -> resourceReference(

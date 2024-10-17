@@ -3,6 +3,8 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
@@ -80,17 +82,11 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             activeStatus = transaction.status?.status,
                             notification = notifications,
                             toCryptoCurrency = toCryptoCurrency,
-                            toCryptoAmount = BigDecimalFormatter.formatCryptoAmount(
-                                cryptoAmount = toAmount,
-                                cryptoCurrency = toCryptoCurrency,
-                            ),
+                            toCryptoAmount = toAmount.format { crypto(toCryptoCurrency) },
                             toFiatAmount = getFiatAmount(toFiatAmount),
                             toCurrencyIcon = iconStateConverter.convert(toCryptoCurrency),
                             fromCryptoCurrency = fromCryptoCurrency,
-                            fromCryptoAmount = BigDecimalFormatter.formatCryptoAmount(
-                                cryptoAmount = fromAmount,
-                                cryptoCurrency = fromCryptoCurrency,
-                            ),
+                            fromCryptoAmount = fromAmount.format { crypto(fromCryptoCurrency) },
                             fromFiatAmount = getFiatAmount(fromFiatAmount),
                             fromCurrencyIcon = iconStateConverter.convert(fromCryptoCurrency),
                             showProviderLink = showProviderLink,
