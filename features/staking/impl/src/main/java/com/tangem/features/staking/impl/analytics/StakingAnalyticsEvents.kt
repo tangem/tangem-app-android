@@ -154,7 +154,7 @@ internal sealed class StakingAnalyticsEvents(
         event = "Errors",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
-            AnalyticsParam.ERROR_DESCRIPTION to errorType,
+            "ErrorType" to errorType,
         ),
     )
 
