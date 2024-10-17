@@ -1,9 +1,9 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
-import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.crypto.Sha256SignatureVerifier
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,9 +17,9 @@ internal object SecurityModule {
     @Provides
     @Singleton
     fun provideDataSignatureVerifier(
-        configManager: ConfigManager,
+        environmentConfigStorage: EnvironmentConfigStorage,
         apiConfigsManager: ApiConfigsManager,
     ): DataSignatureVerifier {
-        return Sha256SignatureVerifier(configManager, apiConfigsManager)
+        return Sha256SignatureVerifier(environmentConfigStorage, apiConfigsManager)
     }
 }

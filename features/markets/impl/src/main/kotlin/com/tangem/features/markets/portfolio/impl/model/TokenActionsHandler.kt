@@ -151,6 +151,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
             AppRoute.Swap(
                 currency = cryptoCurrencyData.status.currency,
                 userWalletId = cryptoCurrencyData.userWallet.walletId,
+                isInitialReverseOrder = true,
             ),
         )
     }

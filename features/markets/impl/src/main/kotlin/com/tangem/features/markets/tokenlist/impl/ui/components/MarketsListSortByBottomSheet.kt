@@ -8,13 +8,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.inputrow.InputRowChecked
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
-import com.tangem.core.ui.components.rows.CornersToRound
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -43,15 +42,13 @@ private fun Content(content: SortByBottomSheetContentUM) {
             ),
     ) {
         SortByTypeUM.entries.forEachIndexed { index, type ->
-            val cornersToRound = when (index) {
-                0 -> CornersToRound.TOP_2
-                SortByTypeUM.entries.lastIndex -> CornersToRound.BOTTOM_2
-                else -> CornersToRound.ZERO
-            }
-
             DividerContainer(
                 modifier = Modifier
-                    .clip(cornersToRound.getShape())
+                    .roundedShapeItemDecoration(
+                        currentIndex = index,
+                        lastIndex = SortByTypeUM.entries.lastIndex,
+                        addDefaultPadding = false,
+                    )
                     .background(TangemTheme.colors.background.action)
                     .clickable { content.onOptionClicked(type) },
                 showDivider = index != SortByTypeUM.entries.lastIndex,

@@ -213,7 +213,7 @@
   <string name="details_manage_security_access_code">Access code</string>
   <string name="details_manage_security_access_code_description">You will have to submit the correct access code before scanning the card</string>
   <string name="details_manage_security_long_tap">Long Tap</string>
-  <string name="details_manage_security_long_tap_description">This mechanism protects against proximity attacks on a card or ring. It will enforce a delay between reception and execution of a command. </string>
+  <string name="details_manage_security_long_tap_description">This mechanism protects against proximity attacks on a card or ring. It will enforce a delay between reception and execution of a command.</string>
   <string name="details_manage_security_passcode">Passcode</string>
   <string name="details_manage_security_passcode_description">Before executing any command entailing a change of the card state, you will have to enter the passcode.</string>
   <string name="details_referral_title">Referral program</string>
@@ -257,6 +257,7 @@
   <string name="express_exchange_status_exchanging">Exchanging</string>
   <string name="express_exchange_status_exchanging_active">Exchanging...</string>
   <string name="express_exchange_status_failed">Failed</string>
+  <string name="express_exchange_status_paused">Paused</string>
   <string name="express_exchange_status_received">Deposit received</string>
   <string name="express_exchange_status_receiving">Awaiting deposit</string>
   <string name="express_exchange_status_receiving_active">Awaiting deposit...</string>
@@ -307,7 +308,7 @@
   <string name="give_permission_unlimited">Unlimited</string>
   <string name="home_button_order">Order Tangem</string>
   <string name="home_button_scan">Scan Tangem</string>
-  <string name="information_generated_with_ai">This information was generated with AI</string>
+  <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_create_wallet_body">To create the wallet tap the card as shown above and do not remove until the end of the operation</string>
@@ -337,7 +338,7 @@
   <string name="manage_tokens_list_header_title">Coin market cap</string>
   <string name="manage_tokens_network_selector_native_subtitle">Blockchain the cryptocurrency was initially created</string>
   <string name="manage_tokens_network_selector_native_title">Native network</string>
-  <string name="manage_tokens_network_selector_non_native_info">Using non-native networks for tokens enables cross-blockchain interoperability, allowing assets to be utilized in diverse decentralized applications and smart contracts across platforms. However, this often involves a custodian or smart contract to hold the original asset securely, introducing centralization and counterparty risk.</string>
+  <string name="manage_tokens_network_selector_non_native_info">Using non-native networks for tokens enables cross-blockchain interoperability, allowing assets to be utilized in diverse decentralized applications and smart contracts across platforms. However, this often involves a custodian or smart contract to hold the original asset securely, introducing centralization and counterparty risk.</string>
   <string name="manage_tokens_network_selector_non_native_subtitle">Not original or primary blockchain the token is hosted</string>
   <string name="manage_tokens_network_selector_non_native_title">Non-native networks</string>
   <string name="manage_tokens_network_selector_title">Choose networks</string>
@@ -458,7 +459,7 @@
   <string name="onboarding_access_code_feature_1_title">Protect</string>
   <string name="onboarding_access_code_feature_2_description">Set an individual access code for each card or ring later.</string>
   <string name="onboarding_access_code_feature_2_title">Personalize</string>
-  <string name="onboarding_access_code_feature_3_description">Restore the access code with a linked card or ring. Don`t keep all your devices in one place.</string>
+  <string name="onboarding_access_code_feature_3_description">Restore the access code with a linked card or ring. Don\'t keep all your devices in one place.</string>
   <string name="onboarding_access_code_feature_3_title">Restore</string>
   <string name="onboarding_access_code_hint">Choose any word, phrase, or number you want as your access code</string>
   <string name="onboarding_access_code_intro_title">Create Access Code</string>
@@ -469,7 +470,7 @@
   <string name="onboarding_activation_error_message">Please repeat the operation. The card will be reset to factory settings.</string>
   <string name="onboarding_activation_error_title">Activation error</string>
   <string name="onboarding_add_tokens">Add tokens</string>
-  <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card or ring. When backup process is finished you can\'t add more backup devices. If you have one more card or ring, add it to backup. Do you like to continue the backup process?</string>
+  <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card or ring. When backup process is finished you can\'t add more backup devices. If you have one more card or ring, add it to the backup. Would you like to continue the backup process?</string>
   <string name="onboarding_backup_exit_warning">The backup process is partly complete. You can\'t exit it now.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">The passphrase is an advanced security feature that crypto wallets use. It adds an extra word or phrase of your own choosing to your already existing recovery phrase to unlock a brand-new set of addresses.</string>
   <string name="onboarding_button_add_backup_card">Add a card or ring</string>
@@ -705,7 +706,7 @@
   <string name="staking_details_market_rating">Market rating</string>
   <string name="staking_details_metrics_block_header">Metrics</string>
   <string name="staking_details_minimum_requirement">Minimum Requirement</string>
-  <string name="staking_details_no_rewards_to_claim">No rewards</string>
+  <string name="staking_details_no_rewards_to_claim">No rewards available</string>
   <string name="staking_details_reward_claiming">Reward claiming</string>
   <string name="staking_details_reward_claiming_info">Method of receiving staking rewards.\nIt can be either automatic, where the reward is credited to your address, or manual, where you need to withdraw the reward by creating a transaction to receive it.</string>
   <string name="staking_details_reward_schedule">Reward schedule</string>
@@ -735,6 +736,7 @@
   <string name="staking_notification_network_error_text">Staking is currently unavailable due to network conditions. Please try again later.</string>
   <string name="staking_notification_new_validator_funds_transfer">Staking in the %1$s network with a new validator will automatically transfer all previously staked funds to this validator</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
+  <string name="staking_notification_restake_text">Restake lets you move your funds from one validator to another without the need to unstake</string>
   <string name="staking_notification_unlock_text">Unlock your money to withdraw it from staking process. Unlocking takes %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Your funds will be available for use after the 21-day unbonding period. Reward will be withdrawn along with your unstaking funds.</string>
   <string name="staking_notification_unstake_text">Your funds will be available for use after the %s unbonding period.</string>
@@ -753,6 +755,8 @@
   <string name="staking_reward_schedule_day">Daily</string>
   <string name="staking_reward_schedule_each">Each %s</string>
   <string name="staking_reward_schedule_each_day">Each day</string>
+  <string name="staking_reward_schedule_each_days">Each %s days</string>
+  <string name="staking_reward_schedule_each_plural">Each</string>
   <string name="staking_reward_schedule_epoch">Per Epoch</string>
   <string name="staking_reward_schedule_era">Per Era</string>
   <string name="staking_reward_schedule_hour">Hourly</string>
@@ -761,7 +765,7 @@
   <string name="staking_rewards">Rewards</string>
   <string name="staking_stake_locked">Stake locked</string>
   <string name="staking_stake_more">Stake more</string>
-  <string name="staking_summary_description_text">You stake %1$s and will be receiving your reward each %2$s</string>
+  <string name="staking_summary_description_text">You stake %1$s and will be receiving your reward %2$s</string>
   <string name="staking_tap_to_unlock">Tap to unlock</string>
   <string name="staking_tap_to_unlock_or_vote">Tap to unlock or vote</string>
   <string name="staking_tap_to_withdraw">Tap to withdraw</string>
@@ -785,7 +789,7 @@
   <string name="story_awe_title">Revolutionary Hardware Wallet</string>
   <string name="story_backup_description">Up to 3 physical cards or rings to one wallet</string>
   <string name="story_backup_title">Ultra Secure Backup</string>
-  <string name="story_currencies_description">A hardware wallet for your Bitcoin, Ethereum and many more currencies simultaneously – all in one card or ring</string>
+  <string name="story_currencies_description">A hardware wallet for your Bitcoin, Ethereum and many more currencies simultaneously — all in one card or ring</string>
   <string name="story_currencies_title">Thousands of Currencies</string>
   <string name="story_finish_description">Use it on the go, anywhere, anytime. No wires or batteries. Just tap the card or ring to your phone when you need your crypto.</string>
   <string name="story_finish_title">The Wallet for Everyone</string>
@@ -955,7 +959,7 @@
   <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
   <string name="warning_low_signatures_title">Low signature count</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Tokens on different networks can have different addresses. Double-check that your address matches the network when you transfer funds.</string>
-  <string name="warning_matic_migration_message">MATIC is being migrated to POL. However there is no deadline set and MATIC isn\'t being deprecated yet. You can safely continue using MATIC token or use exchanges to swap it for POL.</string>
+  <string name="warning_matic_migration_message">MATIC is being migrated to POL. However, there is no deadline set and MATIC isn\'t being deprecated yet. You can safely continue using MATIC token or swap it for POL.</string>
   <string name="warning_matic_migration_title">MATIC to POL Migration</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="one">Use your card or ring to get an address for %d network</item>

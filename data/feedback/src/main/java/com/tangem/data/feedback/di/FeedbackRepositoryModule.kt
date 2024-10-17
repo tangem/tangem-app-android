@@ -1,15 +1,15 @@
 package com.tangem.data.feedback.di
 
-import android.content.Context
+import com.tangem.core.navigation.email.EmailSender
 import com.tangem.data.feedback.DefaultFeedbackRepository
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.utils.version.AppVersionProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -23,13 +23,15 @@ internal object FeedbackRepositoryModule {
         appLogsStore: AppLogsStore,
         userWalletsListManager: UserWalletsListManager,
         walletManagersStore: WalletManagersStore,
-        @ApplicationContext context: Context,
+        emailSender: EmailSender,
+        appVersionProvider: AppVersionProvider,
     ): FeedbackRepository {
         return DefaultFeedbackRepository(
             appLogsStore = appLogsStore,
             userWalletsListManager = userWalletsListManager,
             walletManagersStore = walletManagersStore,
-            context = context,
+            emailSender = emailSender,
+            appVersionProvider = appVersionProvider,
         )
     }
 }

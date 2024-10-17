@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
@@ -24,9 +25,9 @@ import java.math.BigDecimal
 
 class MockStakingRepository : StakingRepository {
 
-    override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = ""
+    override fun getSupportedIntegrationId(cryptoCurrencyId: CryptoCurrency.ID): String? = null
 
-    override fun isStakingSupported(currencyId: String): Boolean = true
+    override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = ""
 
     override suspend fun fetchEnabledYields(refresh: Boolean) {
         /* no-op */
@@ -112,7 +113,7 @@ class MockStakingRepository : StakingRepository {
         isAvailable = false,
     )
 
-    override suspend fun getStakingAvailability(
+    override fun getStakingAvailability(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): StakingAvailability = StakingAvailability.Unavailable
@@ -217,6 +218,7 @@ class MockStakingRepository : StakingRepository {
     override suspend fun constructTransaction(
         networkId: String,
         fee: Fee,
+        amount: Amount,
         transactionId: String,
     ): Pair<StakingTransaction, TransactionData.Compiled> = StakingTransaction(
         id = "id",
