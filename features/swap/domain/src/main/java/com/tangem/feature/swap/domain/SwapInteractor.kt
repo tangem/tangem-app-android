@@ -79,9 +79,10 @@ interface SwapInteractor {
      */
     fun getTokenBalance(token: CryptoCurrencyStatus): SwapAmount
 
-    suspend fun selectInitialCurrencyToSwap(
+    suspend fun getInitialCurrencyToSwap(
         initialCryptoCurrency: CryptoCurrency,
         state: TokensDataStateExpress,
+        isReverseFromTo: Boolean,
     ): CryptoCurrencyStatus?
 
     fun getNativeToken(networkId: String): CryptoCurrency
