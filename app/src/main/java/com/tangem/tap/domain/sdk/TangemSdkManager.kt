@@ -17,6 +17,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
+import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 
@@ -59,6 +60,7 @@ interface TangemSdkManager {
     suspend fun derivePublicKeys(
         cardId: String?,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
+        preflightReadFilter: PreflightReadFilter?,
     ): CompletionResult<DerivationTaskResponse>
 
     suspend fun deriveExtendedPublicKey(
@@ -99,6 +101,7 @@ interface TangemSdkManager {
     )
     suspend fun <T> runTaskAsync(
         runnable: CardSessionRunnable<T>,
+        preflightReadFilter: PreflightReadFilter?,
         cardId: String? = null,
         initialMessage: Message? = null,
         accessCode: String? = null,
