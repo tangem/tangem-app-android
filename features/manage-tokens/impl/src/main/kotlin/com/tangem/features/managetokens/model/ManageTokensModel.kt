@@ -75,7 +75,7 @@ internal class ManageTokensModel @Inject constructor(
         observeSearchQueryChanges()
 
         modelScope.launch {
-            manageTokensListManager.launchPagination(params)
+            manageTokensListManager.launchPagination(source = params.source, userWalletId = params.userWalletId)
         }
     }
 
@@ -159,12 +159,7 @@ internal class ManageTokensModel @Inject constructor(
                 }
             }
             .sample(periodMillis = 1_000)
-            .onEach { query ->
-                manageTokensListManager.search(
-                    userWalletId = params.userWalletId,
-                    query = query,
-                )
-            }
+            .onEach { query -> manageTokensListManager.search(userWalletId = params.userWalletId, query = query) }
             .launchIn(modelScope)
     }
 
@@ -235,10 +230,12 @@ internal class ManageTokensModel @Inject constructor(
                         },
                     )
                 }
-                is PaginationStatus.EndOfPagination -> state.copySealed(
-                    isInitialBatchLoading = false,
-                    isNextBatchLoading = false,
-                )
+                is PaginationStatus.EndOfPagination -> {
+                    state.copySealed(
+                        isInitialBatchLoading = false,
+                        isNextBatchLoading = false,
+                    )
+                }
             }
         }
     }
@@ -270,10 +267,7 @@ internal class ManageTokensModel @Inject constructor(
         if (state.isInitialBatchLoading || state.isNextBatchLoading) return false
 
         modelScope.launch {
-            manageTokensListManager.loadMore(
-                userWalletId = params.userWalletId,
-                query = state.search.query,
-            )
+            manageTokensListManager.loadMore(userWalletId = params.userWalletId, query = state.search.query)
         }
 
         return true

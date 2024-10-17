@@ -66,6 +66,7 @@ internal class DefaultTransactionRepository(
 
     override suspend fun createApprovalTransaction(
         amount: Amount,
+        approvalAmount: Amount?,
         fee: Fee,
         contractAddress: String,
         spenderAddress: String,
@@ -83,7 +84,7 @@ internal class DefaultTransactionRepository(
 
         val approvalData = approver.getApproveData(
             spenderAddress = spenderAddress,
-            value = amount,
+            value = approvalAmount,
         )
 
         val extras = createTransactionDataExtras(
