@@ -287,6 +287,7 @@
   <string name="feedback_subject_support">Commentaires</string>
   <string name="feedback_subject_support_tangem">Commentaires sur Tangem</string>
   <string name="feedback_subject_tx_failed">Impossible d\'effectuer une transaction</string>
+  <string name="feedback_token_description_error">Erreur de description de la pièce</string>
   <string name="give_permission_current_transaction">Cette transaction</string>
   <string name="give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="give_permission_policy_type_footer">Spécifiez la limite approuvée pour le jeton sélectionné</string>
@@ -390,6 +391,7 @@
   <string name="markets_token_details_circulating_supply">Approvisionnement en circulation</string>
   <string name="markets_token_details_circulating_supply_description">Le nombre total de pièces disponibles pour le trading et en circulation sur le marché</string>
   <string name="markets_token_details_circulating_supply_full">Approvisionnement en circulation</string>
+  <string name="markets_token_details_empty_exchanges">Aucun échange trouvé</string>
   <string name="markets_token_details_experienced_buyers">Acheteurs expérimentés</string>
   <string name="markets_token_details_experienced_buyers_description">Acheteurs nets avec l\'exigence supplémentaire d\'avoir au moins 100 transactions sortantes</string>
   <string name="markets_token_details_experienced_buyers_full">Acheteurs expérimentés</string>
@@ -407,6 +409,7 @@
   <string name="markets_token_details_liquidity_description">Le changement dans la quantité de liquidité disponible pour le jeton pendant la période spécifiée</string>
   <string name="markets_token_details_liquidity_full">Liquidité</string>
   <string name="markets_token_details_liquidity_index">Indice de liquidité</string>
+  <string name="markets_token_details_listed_on">Listé sur</string>
   <string name="markets_token_details_low">Faible</string>
   <string name="markets_token_details_market_capitalization">Cap. boursière</string>
   <string name="markets_token_details_market_capitalization_description">La valeur d\'une crypto-monnaie est calculée en multipliant son prix par le nombre de pièces en circulation</string>
@@ -477,12 +480,12 @@
   <string name="onboarding_navbar_title_creating_backup">Sauvegarde en cours</string>
   <string name="onboarding_seed_button_read_more">En savoir plus sur les seed phrases</string>
   <plurals name="onboarding_seed_generate_message_words_count">
-    <item quantity="one">Vide</item>
+    <item quantity="one"></item>
     <item quantity="other">Écrivez ces %d mots dans l\'ordre indiqué ci-dessous et conservez-les dans un endroit sûr et secret.</item>
   </plurals>
   <string name="onboarding_seed_generate_title">Votre seed phrase</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one">Vide</item>
+    <item quantity="one"></item>
     <item quantity="other">%d mots</item>
   </plurals>
   <string name="onboarding_seed_import_message">Pour importer votre portefeuille, entrez votre seed phrase dans le champ ci-dessous</string>
