@@ -1,9 +1,8 @@
 package com.tangem.features.send.impl.presentation.state.previewdata
 
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
-import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import java.math.BigDecimal
@@ -24,11 +23,12 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onFailedTxEmailClick(errorMessage: String) {}
 
-    override fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency) {}
+    override fun onTokenDetailsClick(currency: CryptoCurrency) {}
 
     override fun onAmountValueChange(value: String) {}
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {}
+
     override fun onAmountNext() {}
 
     override fun onMaxValueClick() {}
@@ -61,13 +61,13 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onShareClick() {}
 
-    override fun onAmountReduceClick(
-        reduceAmountBy: BigDecimal?,
-        reduceAmountByDiff: BigDecimal?,
-        reduceAmountTo: BigDecimal?,
-        clazz: Class<out SendNotification>,
-    ) {
-    }
+    override fun onAmountReduceByClick(
+        reduceAmountBy: BigDecimal,
+        reduceAmountByDiff: BigDecimal,
+        notification: Class<out NotificationUM>,
+    ) {}
 
-    override fun onNotificationCancel(clazz: Class<out SendNotification>) {}
+    override fun onAmountReduceToClick(reduceAmountTo: BigDecimal, notification: Class<out NotificationUM>) {}
+
+    override fun onNotificationCancel(clazz: Class<out NotificationUM>) {}
 }
