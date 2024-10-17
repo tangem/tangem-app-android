@@ -1,6 +1,7 @@
 package com.tangem.domain.staking
 
 import arrow.core.Either
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.staking.model.stakekit.StakingError
@@ -16,9 +17,10 @@ class GetConstructedStakingTransactionUseCase(
     suspend operator fun invoke(
         networkId: String,
         fee: Fee,
+        amount: Amount,
         transactionId: String,
     ): Either<StakingError, Pair<StakingTransaction, TransactionData.Compiled>> = Either.catch {
-        stakingRepository.constructTransaction(networkId, fee, transactionId)
+        stakingRepository.constructTransaction(networkId, fee, amount, transactionId)
     }.mapLeft {
         stakingErrorResolver.resolve(it)
     }
