@@ -18,6 +18,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
+import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.sdk.mocks.MockProvider
@@ -72,6 +73,7 @@ class MockTangemSdkManager(
     override suspend fun derivePublicKeys(
         cardId: String?,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
+        preflightReadFilter: PreflightReadFilter?,
     ): CompletionResult<DerivationTaskResponse> {
         return MockProvider.getDerivationTaskResponse()
     }
@@ -135,6 +137,7 @@ class MockTangemSdkManager(
 
     override suspend fun <T> runTaskAsync(
         runnable: CardSessionRunnable<T>,
+        preflightReadFilter: PreflightReadFilter?,
         cardId: String?,
         initialMessage: Message?,
         accessCode: String?,
