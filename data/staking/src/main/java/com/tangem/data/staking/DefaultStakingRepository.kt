@@ -4,12 +4,14 @@ import android.util.Base64
 import arrow.core.getOrElse
 import arrow.core.raise.catch
 import com.squareup.moshi.Moshi
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.blockchainsdk.utils.toMigratedCointId
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toCompressedPublicKey
 import com.tangem.data.common.cache.CacheRegistry
@@ -56,6 +58,7 @@ import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultStakingRepository(
@@ -110,8 +113,8 @@ internal class DefaultStakingRepository(
         rawNetworkId.plus(rawCurrencyId)
     }
 
-    override fun isStakingSupported(integrationKey: String): Boolean {
-        return integrationIdMap.containsKey(integrationKey)
+    override fun getSupportedIntegrationId(cryptoCurrencyId: CryptoCurrency.ID): String? {
+        return integrationIdMap.getOrDefault(getIntegrationKey(cryptoCurrencyId), null)
     }
 
     override suspend fun fetchEnabledYields(refresh: Boolean) {
@@ -120,10 +123,10 @@ internal class DefaultStakingRepository(
                 key = YIELDS_STORE_KEY,
                 skipCache = refresh,
                 block = {
-                    val stakingTokensWithYields = stakeKitApi.getMultipleYields(preferredValidatorsOnly = false)
+                    val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)
                         .getOrThrow()
 
-                    stakingYieldsStore.store(stakingTokensWithYields.data)
+                    stakingYieldsStore.store(stakingTokensWithYields.data.filter { it.isAvailable })
                 },
             )
         }
@@ -131,11 +134,10 @@ internal class DefaultStakingRepository(
 
     override suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield {
         return withContext(dispatchers.io) {
-            val yields = getEnabledYields() ?: error("No yields found")
             val rawCurrencyId = cryptoCurrencyId.rawCurrencyId ?: error("Staking custom tokens is not available")
 
             val prefetchedYield = findPrefetchedYield(
-                yields = yields,
+                yields = getEnabledYields(),
                 currencyId = rawCurrencyId,
                 symbol = symbol,
             )
@@ -156,7 +158,7 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun getStakingAvailability(
+    override fun getStakingAvailability(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): StakingAvailability {
@@ -164,21 +166,22 @@ internal class DefaultStakingRepository(
 
         val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: return StakingAvailability.Unavailable
 
-        return withContext(dispatchers.io) {
-            val yields = getEnabledYields() ?: return@withContext StakingAvailability.Unavailable
+        val isSupportedInMobileApp = getSupportedIntegrationId(cryptoCurrency.id).isNullOrEmpty().not()
 
-            val prefetchedYield = findPrefetchedYield(yields, rawCurrencyId, cryptoCurrency.symbol)
-            val isSupported = isStakingSupported(getIntegrationKey(cryptoCurrency.id))
+        val prefetchedYield = findPrefetchedYield(
+            yields = getEnabledYields(),
+            currencyId = rawCurrencyId,
+            symbol = cryptoCurrency.symbol,
+        )
 
-            when {
-                prefetchedYield != null && isSupported -> {
-                    StakingAvailability.Available(prefetchedYield.id)
-                }
-                prefetchedYield == null && isSupported -> {
-                    StakingAvailability.TemporaryDisabled
-                }
-                else -> StakingAvailability.Unavailable
+        return when {
+            prefetchedYield != null && isSupportedInMobileApp -> {
+                StakingAvailability.Available(prefetchedYield.id)
             }
+            prefetchedYield == null && isSupportedInMobileApp -> {
+                StakingAvailability.TemporaryUnavailable
+            }
+            else -> StakingAvailability.Unavailable
         }
     }
 
@@ -264,6 +267,7 @@ internal class DefaultStakingRepository(
     override suspend fun constructTransaction(
         networkId: String,
         fee: Fee,
+        amount: Amount,
         transactionId: String,
     ): Pair<StakingTransaction, TransactionData.Compiled> {
         return withContext(dispatchers.io) {
@@ -277,6 +281,7 @@ internal class DefaultStakingRepository(
             val transactionData = TransactionData.Compiled(
                 value = getTransactionDataType(networkId, unsignedTransaction),
                 fee = fee,
+                amount = amount,
                 status = TransactionStatus.Unconfirmed,
             )
 
@@ -300,7 +305,10 @@ internal class DefaultStakingRepository(
 
                 if (integrationId == null || address.isNullOrBlank()) {
                     cacheRegistry.invalidate(getYieldBalancesKey(userWalletId))
-                    error("IntegrationId or address is null")
+                    Timber.w(
+                        "IntegrationId or address is null fetching ${cryptoCurrency.name} staking balance",
+                    )
+                    return@invokeOnExpire
                 }
 
                 val requestBody = getBalanceRequestData(address, integrationId)
@@ -335,8 +343,13 @@ internal class DefaultStakingRepository(
                 val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)]
                     ?: error("Could not get integrationId")
                 stakingBalanceStore.get(userWalletId, address, integrationId)
+                    .distinctUntilChanged()
                     .collectLatest {
-                        send(yieldBalanceConverter.convert(it))
+                        if (it != null) {
+                            send(yieldBalanceConverter.convert(it))
+                        } else {
+                            error("No yield balance available for currency ${cryptoCurrency.id.value}")
+                        }
                     }
             }
 
@@ -384,12 +397,13 @@ internal class DefaultStakingRepository(
                 key = getYieldBalancesKey(userWalletId),
                 skipCache = refresh,
                 block = {
+                    val yields = getEnabledYields()
                     val availableCurrencies = cryptoCurrencies
                         .mapNotNull { currency ->
                             val addresses = walletManagersFacade.getAddresses(userWalletId, currency.network)
                             val integrationId = integrationIdMap[getIntegrationKey(currency.id)]
 
-                            if (integrationId != null) {
+                            if (integrationId != null && yields.any { it.id == integrationId }) {
                                 addresses to integrationId
                             } else {
                                 null
@@ -537,9 +551,9 @@ internal class DefaultStakingRepository(
 
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval {
         return when (getIntegrationKey(cryptoCurrency.id)) {
-            Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() -> {
-                StakingApproval.Needed(ETHEREUM_POLYGON_APPROVE_SPENDER)
-            }
+            Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId(),
+            Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCointId(),
+            -> StakingApproval.Needed(ETHEREUM_POLYGON_APPROVE_SPENDER)
             else -> StakingApproval.Empty
         }
     }
@@ -563,12 +577,15 @@ internal class DefaultStakingRepository(
     }
 
     private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {
-        return yields.find { it.token.coinGeckoId == currencyId && it.token.symbol == symbol }
+        return yields.find { yield ->
+            yield.tokens.any { it.coinGeckoId == currencyId && it.symbol == symbol }
+        }
     }
 
-    private suspend fun getEnabledYields(): List<Yield>? {
-        val yields = stakingYieldsStore.getSyncOrNull() ?: return null
-        return yields.map { yieldConverter.convert(it) }
+    private fun getEnabledYields(): List<Yield> {
+        return stakingYieldsStore
+            .get()
+            .map { yieldConverter.convert(it) }
     }
 
     private fun getBalanceRequestData(address: String, integrationId: String): YieldBalanceRequestBody {
@@ -621,6 +638,7 @@ internal class DefaultStakingRepository(
             Blockchain.Solana.run { id + toCoinId() } to SOLANA_INTEGRATION_ID,
             Blockchain.Cosmos.run { id + toCoinId() } to COSMOS_INTEGRATION_ID,
             Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
+            Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCointId() to ETHEREUM_POLYGON_INTEGRATION_ID,
             // Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
             // Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
             // Blockchain.Polkadot.run { id + toCoinId() } to POLKADOT_INTEGRATION_ID,

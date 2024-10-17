@@ -2,6 +2,7 @@ package com.tangem.domain.card.repository
 
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.card.BackendId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
@@ -26,6 +27,6 @@ interface DerivationsRepository {
     /** Check if user [userWalletId] has missed derivations using map of [Network.ID] with extraDerivationPath */
     suspend fun hasMissedDerivations(
         userWalletId: UserWalletId,
-        networksWithDerivationPath: Map<Network.ID, String?>,
+        networksWithDerivationPath: Map<BackendId, String?>,
     ): Boolean
 }

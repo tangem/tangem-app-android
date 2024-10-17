@@ -1,7 +1,6 @@
 package com.tangem.tap.common.analytics.events
 
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.tap.features.details.ui.details.SocialNetwork
 
 /**
 [REDACTED_AUTHOR]
@@ -14,20 +13,8 @@ sealed class Settings(
 ) : AnalyticsEvent(category, event, params, error) {
 
     class ScreenOpened : Settings(event = "Settings Screen Opened")
-    class ButtonChat : Settings(event = "Button - Chat")
-    class ButtonSendFeedback : Settings(event = "Button - Send Feedback")
     class ButtonStartWalletConnectSession : Settings(event = "Button - Start Wallet Connect Session")
     class ButtonStopWalletConnectSession : Settings(event = "Button - Stop Wallet Connect Session")
-    class ButtonCardSettings : Settings(event = "Button - Card Settings")
-    class ButtonAppSettings : Settings(event = "Button - App Settings")
-    class ButtonCreateBackup : Settings(event = "Button - Create Backup")
-    class ButtonWalletConnect : Settings(event = "Button - Wallet Connect")
-    object ScanNewCard : Settings(event = "Button - Scan New Card")
-
-    class ButtonSocialNetwork(network: SocialNetwork) : Settings(
-        event = "Button - Social Network",
-        params = mapOf("Network" to network.id),
-    )
 
     sealed class CardSettings(
         event: String,
@@ -62,8 +49,6 @@ sealed class Settings(
             params = mapOf("Mode" to mode.value),
             error = error,
         )
-
-        class AccessCodeRecoveryButton : CardSettings("Button - Access Code Recovery")
 
         class AccessCodeRecoveryChanged(status: AnalyticsParam.AccessCodeRecoveryStatus) : CardSettings(
             event = "Access Code Recovery Changed",
