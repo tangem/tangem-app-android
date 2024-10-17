@@ -39,7 +39,7 @@ internal class YieldBalancesConverter(
             } else {
                 null
             }
-
+            val (type, isActionable) = getRewardBlockType()
             InnerYieldBalanceState.Data(
                 rewardsCrypto = BigDecimalFormatter.formatCryptoAmount(
                     cryptoAmount = cryptoRewardsValue,
@@ -50,7 +50,8 @@ internal class YieldBalancesConverter(
                     fiatCurrencyCode = appCurrency.code,
                     fiatCurrencySymbol = appCurrency.symbol,
                 ),
-                rewardBlockType = getRewardBlockType(),
+                rewardBlockType = type,
+                isActionable = isActionable,
                 balance = balanceToShowItems.mapBalances(),
             )
         } else {
@@ -65,20 +66,21 @@ internal class YieldBalancesConverter(
         .sortedBy { it.type.order }
         .toPersistentList()
 
-    private fun getRewardBlockType(): RewardBlockType {
+    private fun getRewardBlockType(): Pair<RewardBlockType, Boolean> {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
-        val isRewardsClaimable = yieldBalance?.balance?.items
-            ?.filter { it.type == BalanceType.REWARDS }
-            ?.any { it.pendingActions.isNotEmpty() }
-            ?: false
+        val rewards = yieldBalance?.balance?.items
+            ?.filter { it.type == BalanceType.REWARDS && !it.amount.isZero() }
+
+        val isActionable = rewards?.all { it.pendingActions.isNotEmpty() } == true
+        val isRewardsClaimable = rewards?.isNotEmpty() == true
 
         val isSolana = isSolana(cryptoCurrencyStatus.currency.network.id.value)
 
         return when {
-            isSolana -> RewardBlockType.RewardUnavailable
-            isRewardsClaimable -> RewardBlockType.Rewards
-            else -> RewardBlockType.NoRewards
+            isSolana -> RewardBlockType.RewardUnavailable to false
+            isRewardsClaimable -> RewardBlockType.Rewards to isActionable
+            else -> RewardBlockType.NoRewards to false
         }
     }
 }
