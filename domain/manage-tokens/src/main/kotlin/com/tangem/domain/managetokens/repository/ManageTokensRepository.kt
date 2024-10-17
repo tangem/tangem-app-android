@@ -9,7 +9,11 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 interface ManageTokensRepository {
 
-    fun getTokenListBatchFlow(context: ManageTokensListBatchingContext, batchSize: Int): ManageTokensListBatchFlow
+    fun getTokenListBatchFlow(
+        context: ManageTokensListBatchingContext,
+        loadUserTokensFromRemote: Boolean,
+        batchSize: Int,
+    ): ManageTokensListBatchFlow
 
     suspend fun hasLinkedTokens(
         userWalletId: UserWalletId,
