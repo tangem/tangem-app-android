@@ -23,8 +23,9 @@ dependencies {
     implementation(projects.core.analytics)
 
     /* Project - Domain */
-    implementation(projects.domain.manageTokens)
     implementation(projects.domain.card)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.manageTokens)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
@@ -49,4 +50,5 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.decompose.ext.compose)
     implementation(deps.timber)
+    implementation(deps.reKotlin) // need for legacy onboarding
 }

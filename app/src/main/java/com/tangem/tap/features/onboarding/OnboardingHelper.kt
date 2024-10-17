@@ -1,22 +1,30 @@
 package com.tangem.tap.features.onboarding
 
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
-
+import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.redux.AppDialog
+import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
+import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
 import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -75,6 +83,56 @@ object OnboardingHelper {
         }
     }
 
+    fun saveWallet(
+        scanResponse: ScanResponse,
+        accessCode: String? = null,
+        backupCardsIds: List<String>? = null,
+        hasBackupError: Boolean = false,
+    ) {
+        Analytics.setContext(scanResponse)
+        scope.launch {
+            val settingsRepository = store.inject(DaggerGraphState::settingsRepository)
+            when {
+                // When should save user wallets, then save card without navigate to save wallet screen
+                store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
+                    store.dispatchWithMain(
+                        SaveWalletAction.ProvideBackupInfo(
+                            scanResponse = scanResponse,
+                            accessCode = accessCode,
+                            backupCardsIds = backupCardsIds?.toSet(),
+                        ),
+                    )
+
+                    store.dispatchWithMain(
+                        SaveWalletAction.SaveWalletAfterBackup(
+                            hasBackupError = hasBackupError,
+                            shouldNavigateToWallet = false,
+                        ),
+                    )
+                }
+                // When should not save user wallets but device has biometry and save wallet screen has not been shown,
+                // then open save wallet screen
+                tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen() -> {
+                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
+
+                    delay(timeMillis = 1_200)
+
+                    store.dispatchOnMain(
+                        SaveWalletAction.ProvideBackupInfo(
+                            scanResponse = scanResponse,
+                            accessCode = accessCode,
+                            backupCardsIds = backupCardsIds?.toSet(),
+                        ),
+                    )
+                }
+                // If device has no biometry and save wallet screen has been shown, then go through old scenario
+                else -> {
+                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
+                }
+            }
+        }
+    }
+
     fun trySaveWalletAndNavigateToWalletScreen(
         scanResponse: ScanResponse,
         accessCode: String? = null,
@@ -96,7 +154,12 @@ object OnboardingHelper {
                         ),
                     )
 
-                    store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup(hasBackupError))
+                    store.dispatchWithMain(
+                        SaveWalletAction.SaveWalletAfterBackup(
+                            hasBackupError = hasBackupError,
+                            shouldNavigateToWallet = true,
+                        ),
+                    )
                 }
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
                 // then open save wallet screen
@@ -138,6 +201,39 @@ object OnboardingHelper {
         }
     }
 
+    fun handleTopUpAction(walletManager: WalletManager, scanResponse: ScanResponse, globalState: GlobalState) {
+        val blockchain = walletManager.wallet.blockchain
+        val cryptoCurrency = CryptoCurrencyFactory().createCoin(
+            blockchain = blockchain,
+            extraDerivationPath = null,
+            scanResponse = scanResponse,
+        ) ?: return
+
+        val topUpUrl = walletManager.getTopUpUrl(cryptoCurrency) ?: return
+
+        val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
+        Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
+
+        scope.launch {
+            val homeFeatureToggles = store.inject(DaggerGraphState::homeFeatureToggles)
+
+            val isRussia = if (homeFeatureToggles.isMigrateUserCountryCodeEnabled) {
+                val getUserCountryCodeUseCase = store.inject(DaggerGraphState::getUserCountryUseCase)
+
+                getUserCountryCodeUseCase().isRight { it is UserCountry.Russia }
+            } else {
+                globalState.userCountryCode == RUSSIA_COUNTRY_CODE
+            }
+
+            if (isRussia) {
+                val dialogData = AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl)
+                store.dispatchDialogShow(AppDialog.RussianCardholdersWarningDialog(dialogData))
+            } else {
+                store.dispatchOpenUrl(topUpUrl)
+            }
+        }
+    }
+
     private suspend fun proceedWithScanResponse(
         scanResponse: ScanResponse,
         backupCardsIds: List<String>?,
@@ -160,6 +256,7 @@ object OnboardingHelper {
             }
             .doOnSuccess {
                 mainScope.launch { store.onUserWalletSelected(userWallet) }
+                store.dispatch(OnboardingWalletAction.WalletSaved(userWallet.walletId))
             }
     }
 }

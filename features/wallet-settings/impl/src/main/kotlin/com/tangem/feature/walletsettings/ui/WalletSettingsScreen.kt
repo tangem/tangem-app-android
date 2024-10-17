@@ -145,6 +145,7 @@ private fun ItemsBlock(model: WalletSettingsItemUM.WithItems, modifier: Modifier
 private fun TextBlock(model: WalletSettingsItemUM.WithText, modifier: Modifier = Modifier) {
     BlockCard(
         modifier = modifier.fillMaxWidth(),
+        enabled = model.isEnabled,
         onClick = model.onClick,
     ) {
         Column(
