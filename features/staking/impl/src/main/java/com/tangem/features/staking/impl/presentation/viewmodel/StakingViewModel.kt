@@ -11,6 +11,8 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.haptic.TangemHapticEffect
@@ -18,9 +20,9 @@ import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.feedback.FeedbackManager
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.staking.InvalidatePendingTransactionsUseCase
@@ -51,23 +53,24 @@ import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
+import com.tangem.features.staking.impl.presentation.state.events.StakingAlertUM
+import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
 import com.tangem.features.staking.impl.presentation.state.events.StakingEventFactory
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingBalanceUpdater
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingFeeTransactionLoader
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingTransactionSender
 import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.*
-import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetApprovalBottomSheetInProgressTransformer
-import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetApprovalInProgressTransformer
-import com.tangem.features.staking.impl.presentation.state.transformers.approval.SetConfirmationStateAssentApprovalTransformer
-import com.tangem.features.staking.impl.presentation.state.transformers.approval.ShowApprovalBottomSheetTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.approval.*
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
-import com.tangem.features.staking.impl.presentation.state.utils.isSolanaWithdraw
+import com.tangem.features.staking.impl.presentation.state.utils.isSingleAction
+import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstakeAction
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -92,7 +95,6 @@ internal class StakingViewModel @Inject constructor(
     private val getAllowanceUseCase: GetAllowanceUseCase,
     private val isApproveNeededUseCase: IsApproveNeededUseCase,
     private val vibratorHapticManager: VibratorHapticManager,
-    private val feedbackManager: FeedbackManager,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
@@ -105,6 +107,7 @@ internal class StakingViewModel @Inject constructor(
     private val stakingFeeTransactionLoader: StakingFeeTransactionLoader.Factory,
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
@@ -184,6 +187,7 @@ internal class StakingViewModel @Inject constructor(
 
     private var stakingApproval: StakingApproval = StakingApproval.Empty
     private var isAmountSubtractAvailable: Boolean = false
+    private var isAnyTokenStaked: Boolean = false
     private val allowanceTaskScheduler = SingleTaskScheduler<BigDecimal>()
 
     private val transactionsInProgress: CopyOnWriteArrayList<StakingTransaction> = CopyOnWriteArrayList()
@@ -209,73 +213,31 @@ internal class StakingViewModel @Inject constructor(
         stakingStateRouter.onBackClick()
     }
 
-    override fun onNextClick(
-        actionTypeToOverwrite: StakingActionCommonType?,
-        pendingAction: PendingAction?,
-        pendingActions: ImmutableList<PendingAction>?,
-        balanceState: BalanceState?,
-    ) {
-        if (actionTypeToOverwrite != null) {
-            stateController.update(SetActionToExecuteTransformer(actionTypeToOverwrite, pendingAction, pendingActions))
-        }
+    override fun onNextClick(balanceState: BalanceState?) {
         stakingStateRouter.onNextClick()
-        when {
-            isInitState() -> {
-                stateController.update(SetConfirmationStateResetAssentTransformer)
-                stateController.update(SetConfirmationStateLoadingTransformer(yield, appCurrency))
-                if (balanceState != null) {
-                    stateController.update(SetPossiblePendingTransactionTransformer(balanceState, cryptoCurrencyStatus))
-                }
-
-                stateController.update(
-                    transformer = SetInitialDataStateTransformer(
-                        clickIntents = this@StakingViewModel,
-                        yield = yield,
-                        isAnyTokenStaked = true,
-                        isApprovalNeeded = stakingApproval is StakingApproval.Needed,
-                        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-                        userWalletProvider = Provider { userWallet },
-                        appCurrencyProvider = Provider { appCurrency },
-                        balancesToShowProvider = Provider { balancesToShow },
-                    ),
-                )
-                onRefreshSwipe(isRefreshing = false)
-            }
-            isAssentState() -> {
-                getFee(pendingAction, pendingActions)
-                if (balanceState != null) {
-                    stateController.update(SetPossiblePendingTransactionTransformer(balanceState, cryptoCurrencyStatus))
-                }
-                val amountState = value.amountState as? AmountState.Data
-                if (amountState?.amountTextField?.isWarning == true) {
-                    stateController.update(
-                        AmountRoundToIntegerTransformer(
-                            cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        ),
-                    )
-                }
-            }
+        if (balanceState != null && (isInitState() || isAssentState())) {
+            stateController.update(
+                SetPossiblePendingTransactionTransformer(yield, balanceState, cryptoCurrencyStatus),
+            )
         }
     }
 
-    override fun onActionClick() {
-        handleOnNextConfirmationClick()
-    }
-
-    override fun getFee(pendingAction: PendingAction?, pendingActions: ImmutableList<PendingAction>?) {
-        stateController.update(SetConfirmationStateLoadingTransformer(yield, appCurrency))
+    override fun getFee() {
+        stateController.update(
+            SetConfirmationStateLoadingTransformer(
+                yield = yield,
+                appCurrency = appCurrency,
+                cryptoCurrency = cryptoCurrencyStatus.currency,
+            ),
+        )
         viewModelScope.launch {
             feeLoader.getFee(
-                pendingAction = pendingAction,
-                pendingActions = pendingActions,
                 onStakingFee = { gasEstimate ->
                     stateController.update(
                         SetConfirmationStateAssentTransformer(
                             appCurrencyProvider = Provider { appCurrency },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = gasEstimate,
-                            action = pendingAction,
-                            actions = pendingActions,
                         ),
                     )
                     updateNotifications()
@@ -309,7 +271,7 @@ internal class StakingViewModel @Inject constructor(
         }.saveIn(feeJobHolder)
     }
 
-    private fun handleOnNextConfirmationClick() {
+    override fun onActionClick() {
         if (isAssentState()) {
             viewModelScope.launch {
                 stakingAnalyticSender.sendTransactionStakingClickedAnalytics(value)
@@ -347,10 +309,16 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onPrevClick() {
         if (value.currentStep == StakingStep.Confirmation) {
-            when ((value.confirmationState as? StakingStates.ConfirmationState.Data)?.innerState) {
+            val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
+            when (confirmationState?.innerState) {
                 InnerConfirmationStakingState.ASSENT -> {
-                    stateController.update(SetConfirmationStateResetAssentTransformer)
-                    stakingStateRouter.onPrevClick()
+                    val isApprovalInProgress = confirmationState.notifications.any {
+                        it is StakingNotification.Warning.TransactionInProgress
+                    }
+                    if (!isApprovalInProgress) {
+                        stakingStateRouter.onPrevClick()
+                        stateController.update(SetConfirmationStateResetAssentTransformer)
+                    }
                 }
                 null,
                 InnerConfirmationStakingState.IN_PROGRESS,
@@ -389,24 +357,24 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onEnterClick() {
-        onAmountValueChange("") // reset amount state
-
-        // TODO refactor in [REDACTED_JIRA]
-        val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
-        val filteredValidator = yield.validators.filter { it.preferred }
-        stateController.update {
-            value.copy(
-                confirmationState = confirmationState?.copy(
-                    validatorState = ValidatorState.Content(
-                        isClickable = true,
-                        chosenValidator = filteredValidator[0],
-                        availableValidators = filteredValidator,
-                    ),
-                ) as StakingStates.ConfirmationState,
+        if (yield.preferredValidators.isEmpty()) {
+            stateController.updateEvent(
+                StakingEvent.ShowAlert(StakingAlertUM.NoAvailableValidators),
             )
+        } else {
+            stateController.updateAll(
+                SetConfirmationStateInitTransformer(
+                    isEnter = true,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    stakingApproval = stakingApproval,
+                ),
+                ValidatorSelectChangeTransformer(
+                    selectedValidator = null,
+                    yield = yield,
+                ),
+            )
+            onNextClick()
         }
-
-        onNextClick(StakingActionCommonType.ENTER)
     }
 
     override fun onAmountValueChange(value: String) {
@@ -446,7 +414,12 @@ internal class StakingViewModel @Inject constructor(
                 validator.name,
             ),
         )
-        stateController.update(ValidatorSelectChangeTransformer(validator))
+        stateController.update(
+            ValidatorSelectChangeTransformer(
+                selectedValidator = validator,
+                yield = yield,
+            ),
+        )
     }
 
     override fun openRewardsValidators() {
@@ -465,49 +438,37 @@ internal class StakingViewModel @Inject constructor(
                     token = value.cryptoCurrencySymbol,
                 ),
             )
-            onNextClick(actionTypeToOverwrite = StakingActionCommonType.PENDING_REWARDS)
+            stateController.update {
+                value.copy(actionType = StakingActionCommonType.Pending.Rewards)
+            }
+            stakingStateRouter.showRewardsValidators()
         }
     }
 
     override fun onActiveStake(activeStake: BalanceState) {
-        val isAllWithdrawActions = isSolanaWithdraw(
-            cryptoCurrencyStatus.currency.network.id.value,
-            activeStake.pendingActions,
-        )
-        val isMultiplePendingActions = activeStake.pendingActions.size > 1
-        if (isMultiplePendingActions && !isAllWithdrawActions) {
+        val networkId = cryptoCurrencyStatus.currency.network.id.value
+        if (isSingleAction(networkId, activeStake)) {
+            prepareForConfirmation(
+                pendingActions = activeStake.pendingActions,
+                validator = activeStake.validator,
+                amountValue = activeStake.cryptoValue,
+            )
+            onNextClick(balanceState = activeStake)
+        } else {
             stateController.update(
                 ShowActionSelectorBottomSheetTransformer(
-                    pendingActions = activeStake.pendingActions,
+                    pendingActions = withStubUnstakeAction(networkId, activeStake),
                     onActionSelect = { action ->
-                        stateController.update(ValidatorSelectChangeTransformer(activeStake.validator))
-                        stateController.update(
-                            AmountChangeStateTransformer(
-                                cryptoCurrencyStatus,
-                                activeStake.cryptoValue,
-                                yield,
-                            ),
-                        )
-                        onNextClick(
-                            actionTypeToOverwrite = StakingActionCommonType.PENDING_OTHER,
+                        prepareForConfirmation(
                             pendingAction = action,
-                            balanceState = activeStake,
+                            validator = activeStake.validator,
+                            amountValue = activeStake.cryptoValue,
                         )
                         stateController.update(DismissBottomSheetStateTransformer)
+                        onNextClick(balanceState = activeStake)
                     },
                     onDismiss = { stateController.update(DismissBottomSheetStateTransformer) },
                 ),
-            )
-        } else {
-            stateController.update(ActionTypeActiveStakeTransformer(cryptoCurrencyStatus, activeStake))
-            stateController.update(ValidatorSelectChangeTransformer(activeStake.validator))
-            stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, activeStake.cryptoValue, yield))
-
-            onNextClick(
-                actionTypeToOverwrite = null,
-                pendingAction = activeStake.pendingActions.firstOrNull(),
-                pendingActions = activeStake.pendingActions.takeIf { isAllWithdrawActions },
-                balanceState = activeStake,
             )
         }
     }
@@ -533,6 +494,10 @@ internal class StakingViewModel @Inject constructor(
         )
     }
 
+    override fun onApproveTypeChange(approveType: ApproveType) {
+        stateController.update(SetApprovalBottomSheetTypeChangeTransformer(approveType))
+    }
+
     override fun onApprovalClick() {
         viewModelScope.launch {
             stateController.update(
@@ -544,15 +509,17 @@ internal class StakingViewModel @Inject constructor(
             val tokenCryptoCurrency =
                 cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: error("No token currency")
             val amountValue = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
-                ?: error("No amount provided")
 
             val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
                 ?: error("No confirmation state")
             val fee = (confirmationState.feeState as? FeeState.Content)?.fee ?: error("No fee provided")
             val approval = stakingApproval as? StakingApproval.Needed ?: error("No staking approve spender address")
 
+            val approvalBottomSheetConfig = value.bottomSheetConfig?.content as? GiveTxPermissionBottomSheetConfig
+            val isLimitedApproval = approvalBottomSheetConfig?.data?.approveType == ApproveType.LIMITED
+
             val approvalTransaction = createApprovalTransactionUseCase(
-                amount = amountValue,
+                amount = amountValue.takeIf { isLimitedApproval },
                 contractAddress = tokenCryptoCurrency.contractAddress,
                 spenderAddress = approval.spenderAddress,
                 fee = fee,
@@ -598,7 +565,7 @@ internal class StakingViewModel @Inject constructor(
                     stakingAnalyticSender.sendTransactionApprovalAnalytics(tokenCryptoCurrency)
                     stateController.update(SetApprovalInProgressTransformer)
                     stateController.update(DismissBottomSheetStateTransformer)
-                    awaitForAllowance(confirmationState.pendingAction)
+                    awaitForAllowance()
                 },
             )
         }.saveIn(approvalJobHolder)
@@ -684,7 +651,7 @@ internal class StakingViewModel @Inject constructor(
         stateController.update(DismissStakingNotificationsStateTransformer(notification))
     }
 
-    private fun awaitForAllowance(pendingAction: PendingAction?) {
+    private fun awaitForAllowance() {
         val approval = stakingApproval as? StakingApproval.Needed ?: return
         allowanceTaskScheduler.scheduleTask(
             scope = viewModelScope,
@@ -703,7 +670,7 @@ internal class StakingViewModel @Inject constructor(
                     val amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
                         ?: error("No amount provided")
                     if (allowance >= amount) {
-                        getFee(pendingAction = pendingAction, pendingActions = null)
+                        getFee()
                         allowanceTaskScheduler.cancelTask()
                     }
                 },
@@ -741,7 +708,7 @@ internal class StakingViewModel @Inject constructor(
             val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrElse { error("CardInfo must be not null") }
             val amountState = uiState.value.amountState as? AmountState.Data
             val confirmationState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
-            val validatorState = confirmationState?.validatorState as? ValidatorState.Content
+            val validatorState = uiState.value.validatorState as? StakingStates.ValidatorState.Data
             val feeState = confirmationState?.feeState as? FeeState.Content
 
             val validator = validatorState?.chosenValidator
@@ -766,7 +733,7 @@ internal class StakingViewModel @Inject constructor(
                 unsignedTransactions = transactionsInProgress.map { it.unsignedTransaction },
             )
 
-            feedbackManager.sendEmail(email)
+            sendFeedbackEmailUseCase(email)
         }
     }
 
@@ -781,6 +748,10 @@ internal class StakingViewModel @Inject constructor(
 
     private fun setupApprovalNeeded() {
         stakingApproval = isApproveNeededUseCase(cryptoCurrencyStatus.currency).getOrElse { StakingApproval.Empty }
+    }
+
+    private suspend fun setupIsAnyTokenStaked() {
+        isAnyTokenStaked = isAnyTokenStakedUseCase(userWalletId).getOrNull() ?: false
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -815,23 +786,11 @@ internal class StakingViewModel @Inject constructor(
                         feeCryptoCurrencyStatus =
                             getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
                         cryptoCurrencyStatus = status
-                        val isAnyTokenStaked = isAnyTokenStakedUseCase(userWalletId).getOrNull() ?: false
 
                         setupApprovalNeeded()
+                        setupIsAnyTokenStaked()
                         checkIfSubtractAvailable()
-
-                        stateController.update(
-                            transformer = SetInitialDataStateTransformer(
-                                clickIntents = this@StakingViewModel,
-                                yield = yield,
-                                isAnyTokenStaked = isAnyTokenStaked,
-                                isApprovalNeeded = stakingApproval is StakingApproval.Needed,
-                                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-                                userWalletProvider = Provider { userWallet },
-                                appCurrencyProvider = Provider { appCurrency },
-                                balancesToShowProvider = Provider { balancesToShow },
-                            ),
-                        )
+                        subscribeOnStepChanges()
                     },
                     ifLeft = { error ->
                         Timber.e(error.toString())
@@ -864,6 +823,69 @@ internal class StakingViewModel @Inject constructor(
             }
             .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
+    }
+
+    private fun subscribeOnStepChanges() {
+        uiState
+            .distinctUntilChangedBy { it.currentStep }
+            .onEach {
+                when {
+                    isInitState() -> {
+                        stateController.updateAll(
+                            SetInitialDataStateTransformer(
+                                clickIntents = this@StakingViewModel,
+                                yield = yield,
+                                isAnyTokenStaked = isAnyTokenStaked,
+                                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                                userWalletProvider = Provider { userWallet },
+                                appCurrencyProvider = Provider { appCurrency },
+                                balancesToShowProvider = Provider { balancesToShow },
+                            ),
+                            SetConfirmationStateEmptyTransformer,
+                        )
+                        onRefreshSwipe(isRefreshing = false)
+                    }
+                    isAssentState() -> {
+                        getFee()
+                        val amountState = value.amountState as? AmountState.Data
+                        if (amountState?.amountTextField?.isWarning == true) {
+                            stateController.update(
+                                AmountRoundToIntegerTransformer(
+                                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                                ),
+                            )
+                        }
+                    }
+                }
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(viewModelScope)
+    }
+
+    private fun prepareForConfirmation(
+        pendingActions: ImmutableList<PendingAction> = persistentListOf(),
+        pendingAction: PendingAction? = pendingActions.firstOrNull(),
+        validator: Yield.Validator?,
+        amountValue: String,
+    ) {
+        stateController.updateAll(
+            SetConfirmationStateInitTransformer(
+                isEnter = false,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                stakingApproval = stakingApproval,
+                pendingActions = pendingActions,
+                pendingAction = pendingAction,
+            ),
+            ValidatorSelectChangeTransformer(
+                selectedValidator = validator,
+                yield = yield,
+            ),
+            AmountChangeStateTransformer(
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                value = amountValue,
+                yield = yield,
+            ),
+        )
     }
 
     private fun isAssentState(): Boolean {
