@@ -11,7 +11,6 @@ import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.inject
-import com.tangem.tap.common.extensions.isPositive
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getOrLoadCardArtworkUrl
@@ -20,6 +19,7 @@ import com.tangem.tap.domain.model.hasPendingTransactions
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
+import com.tangem.utils.extensions.isPositive
 import timber.log.Timber
 import java.math.BigDecimal
 

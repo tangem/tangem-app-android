@@ -289,12 +289,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
-        return GetCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideIsCryptoCurrencyCoinCouldHideUseCase(
         currenciesRepository: CurrenciesRepository,
     ): IsCryptoCurrencyCoinCouldHideUseCase {
@@ -311,68 +305,6 @@ internal object TokensDomainModule {
         return UpdateDelayedNetworkStatusUseCase(
             networksRepository = networksRepository,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideHasMissedAddressesCryptoCurrenciesUseCase(
-        currenciesRepository: CurrenciesRepository,
-    ): GetMissedAddressesCryptoCurrenciesUseCase {
-        return GetMissedAddressesCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetGlobalTokenListUseCase(tokensListRepository: TokensListRepository): GetGlobalTokenListUseCase {
-        return GetGlobalTokenListUseCase(repository = tokensListRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideCheckTokenCompatibilityUseCase(
-        networksCompatibilityRepository: NetworksCompatibilityRepository,
-    ): CheckCurrencyCompatibilityUseCase {
-        return CheckCurrencyCompatibilityUseCase(networksCompatibilityRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideNeedHardenedDerivationUseCase(
-        networksCompatibilityRepository: NetworksCompatibilityRepository,
-    ): RequiresHardenedDerivationOnlyUseCase {
-        return RequiresHardenedDerivationOnlyUseCase(networksCompatibilityRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideFindTokenByContractAddressUseCase(
-        tokensListRepository: TokensListRepository,
-    ): FindTokenByContractAddressUseCase {
-        return FindTokenByContractAddressUseCase(repository = tokensListRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideValidateContractAddressUseCase(
-        tokensListRepository: TokensListRepository,
-    ): ValidateContractAddressUseCase {
-        return ValidateContractAddressUseCase(tokensListRepository = tokensListRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideAreTokensSupportedByNetworkUseCase(
-        repository: NetworksCompatibilityRepository,
-    ): AreTokensSupportedByNetworkUseCase {
-        return AreTokensSupportedByNetworkUseCase(repository = repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetNetworksSupportedByWallet(
-        repository: NetworksCompatibilityRepository,
-    ): GetNetworksSupportedByWallet {
-        return GetNetworksSupportedByWallet(repository = repository)
     }
 
     @Provides
