@@ -8,12 +8,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SmallButtonShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
@@ -76,10 +78,26 @@ private fun Title() {
 private fun AddButton(state: AddButtonState, onClick: () -> Unit) {
     when (state) {
         AddButtonState.Loading -> {
-            SmallButtonShimmer(
-                modifier = Modifier.size(width = TangemTheme.dimens.size63, height = TangemTheme.dimens.size18),
-                shape = RoundedCornerShape(TangemTheme.dimens.radius3),
-            )
+            Box {
+                SmallButtonShimmer(
+                    modifier = Modifier.width(width = TangemTheme.dimens.size63),
+                    shape = RoundedCornerShape(TangemTheme.dimens.radius3),
+                    withIcon = true,
+                )
+
+                Box(
+                    Modifier
+                        .matchParentSize()
+                        .background(TangemTheme.colors.background.action),
+                )
+
+                RectangleShimmer(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(width = TangemTheme.dimens.size63, height = TangemTheme.dimens.size18),
+                    radius = TangemTheme.dimens.radius3,
+                )
+            }
         }
         AddButtonState.Available,
         AddButtonState.Unavailable,
