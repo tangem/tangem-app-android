@@ -706,7 +706,7 @@
   <string name="staking_details_market_rating">Market rating</string>
   <string name="staking_details_metrics_block_header">Metrics</string>
   <string name="staking_details_minimum_requirement">Minimum Requirement</string>
-  <string name="staking_details_no_rewards_to_claim">No rewards</string>
+  <string name="staking_details_no_rewards_to_claim">No rewards available</string>
   <string name="staking_details_reward_claiming">Reward claiming</string>
   <string name="staking_details_reward_claiming_info">Method of receiving staking rewards.\nIt can be either automatic, where the reward is credited to your address, or manual, where you need to withdraw the reward by creating a transaction to receive it.</string>
   <string name="staking_details_reward_schedule">Reward schedule</string>
