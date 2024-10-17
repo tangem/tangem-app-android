@@ -97,6 +97,10 @@
     <item quantity="one">%d jour</item>
     <item quantity="other">%d jours </item>
   </plurals>
+  <plurals name="common_days_no_param">
+    <item quantity="one">jour</item>
+    <item quantity="other">jours</item>
+  </plurals>
   <string name="common_delete">Supprimer</string>
   <string name="common_disabled">Désactivé</string>
   <string name="common_done">Exécuté</string>
@@ -115,12 +119,14 @@
   <string name="common_generate_addresses">Obtenir des adresses</string>
   <string name="common_go_to_provider">Aller au fournisseur</string>
   <string name="common_go_to_token">Aller au jeton</string>
+  <string name="common_hour">heure</string>
   <string name="common_import">Importez</string>
   <string name="common_in_progress">En cours</string>
   <string name="common_later">Plus tard</string>
   <string name="common_left">Il reste %1$s</string>
   <string name="common_locked">Verrouillé</string>
   <string name="common_main_network">Réseau principal</string>
+  <string name="common_month">mois</string>
   <string name="common_network_fee_title">Commissions du réseau</string>
   <string name="common_network_fee_warning_content">Le montant envoyé sera réduit de %1$s(%2$s) pour couvrir le niveau de frais sélectionné</string>
   <string name="common_next">Suivant</string>
@@ -144,6 +150,7 @@
   <string name="common_save_changes">Sauvegarder les modifications</string>
   <string name="common_search">Rechercher</string>
   <string name="common_search_tokens">Rechercher des jetons</string>
+  <string name="common_second_no_param">sec</string>
   <string name="common_seed_phrase">Seed phrase</string>
   <string name="common_select_action">Sélectionnez une action</string>
   <string name="common_sell">Vendre</string>
@@ -169,6 +176,7 @@
   <string name="common_unknown_error">Il y avait une erreur. Veuillez réessayer.</string>
   <string name="common_unreachable">Inaccessible</string>
   <string name="common_unstake">Unstakez</string>
+  <string name="common_week">semaine</string>
   <string name="common_yes">Oui</string>
   <string name="contract_address_copied_message">Adresse du contrat copiée !</string>
   <string name="currency_subtitle_expanded">Réseaux disponibles</string>
@@ -249,6 +257,7 @@
   <string name="express_exchange_status_exchanging">En cours d\'échange</string>
   <string name="express_exchange_status_exchanging_active">En cours d\'échange</string>
   <string name="express_exchange_status_failed">Échoué</string>
+  <string name="express_exchange_status_paused">En pause</string>
   <string name="express_exchange_status_received">Dépôt reçu</string>
   <string name="express_exchange_status_receiving">En attente du dépôt</string>
   <string name="express_exchange_status_receiving_active">En attente du dépôt</string>
@@ -348,6 +357,7 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">Le portefeuille ne prend pas en charge plus d\'un réseau</string>
   <string name="markets_add_to_my_portfolio_description">Pour acheter, échanger ou recevoir cet actif, ajoutez-le à votre portefeuille</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est plus pris en charge dans le portefeuille</string>
+  <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Cet actif n\'est pas disponible pour ce portefeuille</string>
   <string name="markets_add_to_portfolio_button">Ajouter au portfolio</string>
   <string name="markets_add_token">Ajoutez un jeton</string>
   <string name="markets_available_networks">Réseaux disponibles</string>
@@ -380,6 +390,10 @@
   <string name="markets_sort_by_top_losers_title">Top Perdants</string>
   <string name="markets_sort_by_trending_title">Tendances</string>
   <string name="markets_token_details_about_token_title">À propos de %s</string>
+  <plurals name="markets_token_details_amount_exchanges">
+    <item quantity="one">échange</item>
+    <item quantity="other">échanges</item>
+  </plurals>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="one">Basé sur %d évaluation</item>
     <item quantity="other">Basé sur %d évaluations</item>
@@ -392,6 +406,11 @@
   <string name="markets_token_details_circulating_supply_description">Le nombre total de pièces disponibles pour le trading et en circulation sur le marché</string>
   <string name="markets_token_details_circulating_supply_full">Approvisionnement en circulation</string>
   <string name="markets_token_details_empty_exchanges">Aucun échange trouvé</string>
+  <string name="markets_token_details_exchange">Échange</string>
+  <string name="markets_token_details_exchange_trust_score_caution">Précaution</string>
+  <string name="markets_token_details_exchange_trust_score_risky">Risqué</string>
+  <string name="markets_token_details_exchange_trust_score_trusted">Fiable</string>
+  <string name="markets_token_details_exchanges_title">Échanges</string>
   <string name="markets_token_details_experienced_buyers">Acheteurs expérimentés</string>
   <string name="markets_token_details_experienced_buyers_description">Acheteurs nets avec l\'exigence supplémentaire d\'avoir au moins 100 transactions sortantes</string>
   <string name="markets_token_details_experienced_buyers_full">Acheteurs expérimentés</string>
@@ -432,6 +451,7 @@
   <string name="markets_token_details_trading_volume">Volume des échanges (24h)</string>
   <string name="markets_token_details_trading_volume_24h_description">Le montant total d\'une crypto-monnaie qui a été échangé au cours des dernières 24 heures, indiquant le niveau d\'activité et de liquidité du marché</string>
   <string name="markets_token_details_trading_volume_full">Volume des échanges (24h)</string>
+  <string name="markets_token_details_volume">Volume</string>
   <string name="markets_tooltip_message">Tirez vers le haut ou appuyez sur la barre de recherche pour ajouter des jetons directement depuis le marché</string>
   <string name="markets_tooltip_title">Ajouter des jetons</string>
   <string name="nfc_error_unavailable">NFC n\'est pas disponible sur votre appareil</string>
@@ -716,6 +736,7 @@
   <string name="staking_notification_network_error_text">L\'option de staking n\'est actuellement pas disponible en raison des conditions du réseau. Veuillez réessayer plus tard.</string>
   <string name="staking_notification_new_validator_funds_transfer">Le staking dans le réseau %1$s avec un nouveau validateur transférera automatiquement tous les fonds précédemment stakés vers ce validateur</string>
   <string name="staking_notification_restake_rewards_text">Réinvestissez vos récompenses gagnées dans le montant que vous avez staké, augmentant ainsi vos gains potentiels.</string>
+  <string name="staking_notification_restake_text">L\'option de restaker vous permet de déplacer vos fonds d\'un validateur à un autre sans avoir besoin de les déstaker.</string>
   <string name="staking_notification_unlock_text">Débloquez votre argent pour le retirer du processus de staking. Le déverrouillage prend %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Vos fonds seront disponibles à l\'utilisation après la période de déblocage de 21 jours. La récompense sera retirée en même temps que vos fonds de déblocage.</string>
   <string name="staking_notification_unstake_text">Vos fonds seront disponibles pour utilisation après la période de désengagement %s.</string>
@@ -735,6 +756,7 @@
   <string name="staking_reward_schedule_each">Chaque %s</string>
   <string name="staking_reward_schedule_each_day">Chaque jour</string>
   <string name="staking_reward_schedule_each_days">Chaque %s</string>
+  <string name="staking_reward_schedule_each_plural">Chaque</string>
   <string name="staking_reward_schedule_epoch">Époque</string>
   <string name="staking_reward_schedule_era">Ère</string>
   <string name="staking_reward_schedule_hour">Heure</string>
@@ -743,7 +765,9 @@
   <string name="staking_rewards">Récompenses</string>
   <string name="staking_stake_locked">Stake verrouillé</string>
   <string name="staking_stake_more">Staker plus</string>
+  <string name="staking_summary_description_text">Vous stakez %1$s et recevrez %2$s</string>
   <string name="staking_tap_to_unlock">Appuyez pour déverrouiller</string>
+  <string name="staking_tap_to_unlock_or_vote">Appuyez pour déverrouiller ou voter</string>
   <string name="staking_tap_to_withdraw">Appuyez pour retirer</string>
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">déstaker %s</string>
@@ -822,6 +846,7 @@
   <string name="transaction_history_operation">Opération</string>
   <string name="transaction_history_transaction_from_address">de : %s</string>
   <string name="transaction_history_transaction_to_address">à : %s</string>
+  <string name="transaction_history_transaction_validator">validateur : %s</string>
   <string name="try_to_load_data_again_button_title">Réessayez</string>
   <string name="twin_error_same_card">Vous avez scanné la même carte. Pour créer un portefeuille jumeau, vous devez scanner la carte portant le numéro %d</string>
   <string name="twin_error_wrong_twin">Vous avez scanné une mauvaise carte jumelle. S\'il vous plaît, essayez-en un autre</string>
