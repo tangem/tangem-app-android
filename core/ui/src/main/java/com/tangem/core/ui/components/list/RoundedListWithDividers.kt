@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.rows.CornersToRound
 import com.tangem.core.ui.components.rows.RoundableCornersRow
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
@@ -63,7 +62,8 @@ fun LazyListScope.roundedListWithDividersItems(
         InitialInfoContentRow(
             startText = row.startText.resolveReference(),
             endText = row.endText.orMaskWithStars(hideEndText && row.isEndTextHideable).resolveReference(),
-            cornersToRound = getCornersToRound(index, rows.size),
+            currentIndex = index,
+            lastIndex = rows.lastIndex,
             iconClick = row.iconClick,
             endTextColor = if (row.isEndTextHighlighted) {
                 TangemTheme.colors.text.accent
@@ -85,7 +85,8 @@ fun LazyListScope.roundedListWithDividersItems(
 private fun InitialInfoContentRow(
     startText: String,
     endText: String,
-    cornersToRound: CornersToRound,
+    currentIndex: Int,
+    lastIndex: Int,
     showDivider: Boolean,
     endTextColor: Color = TangemTheme.colors.text.tertiary,
     iconClick: (() -> Unit)? = null,
@@ -98,7 +99,8 @@ private fun InitialInfoContentRow(
             endText = endText,
             endTextColor = endTextColor,
             endTextStyle = TangemTheme.typography.body2,
-            cornersToRound = cornersToRound,
+            currentIndex = currentIndex,
+            lastIndex = lastIndex,
             iconResId = R.drawable.ic_information_24,
             iconClick = iconClick,
         )
@@ -119,14 +121,6 @@ fun RoundedListDivider(modifier: Modifier = Modifier) {
             .height(TangemTheme.dimens.size0_5)
             .background(TangemTheme.colors.stroke.primary),
     )
-}
-
-private fun getCornersToRound(currentIndex: Int, listSize: Int): CornersToRound {
-    return when (currentIndex) {
-        0 -> CornersToRound.TOP_2
-        listSize - 1 -> CornersToRound.BOTTOM_2
-        else -> CornersToRound.ZERO
-    }
 }
 
 data class RoundedListWithDividersItemData(
