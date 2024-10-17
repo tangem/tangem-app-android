@@ -35,7 +35,6 @@ internal class SetConfirmationStateAssentApprovalTransformer(
                     appCurrency = appCurrencyProvider(),
                     isFeeApproximate = false,
                 ),
-                validatorState = validatorState.copySealed(isClickable = true),
                 isPrimaryButtonEnabled = true,
                 isApprovalNeeded = true,
             )

@@ -63,4 +63,10 @@ object MarketsDomainModule {
             networksRepository = networksRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideGetTokenExchangesUseCase(marketsTokenRepository: MarketsTokenRepository): GetTokenExchangesUseCase {
+        return GetTokenExchangesUseCase(marketsTokenRepository = marketsTokenRepository)
+    }
 }

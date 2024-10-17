@@ -1,6 +1,5 @@
 package com.tangem.blockchainsdk.di
 
-import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.DefaultBlockchainSDKFactory
@@ -13,7 +12,7 @@ import com.tangem.blockchainsdk.store.DefaultRuntimeStore
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.asset.loader.AssetLoader
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -29,15 +28,14 @@ internal object BlockchainSDKFactoryModule {
     @Provides
     @Singleton
     fun provideBlockchainSDKFactory(
-        assetLoader: AssetLoader,
         blockchainProvidersResponseLoader: BlockchainProvidersResponseLoader,
+        environmentConfigStorage: EnvironmentConfigStorage,
         walletManagerFactoryCreator: WalletManagerFactoryCreator,
         dispatchers: CoroutineDispatcherProvider,
     ): BlockchainSDKFactory {
         return DefaultBlockchainSDKFactory(
-            assetLoader = assetLoader,
             blockchainProvidersResponseLoader = blockchainProvidersResponseLoader,
-            configStore = DefaultRuntimeStore(defaultValue = BlockchainSdkConfig()),
+            environmentConfigStorage = environmentConfigStorage,
             blockchainProviderTypesStore = DefaultRuntimeStore(defaultValue = emptyMap()),
             walletManagerFactoryCreator = walletManagerFactoryCreator,
             dispatchers = dispatchers,
