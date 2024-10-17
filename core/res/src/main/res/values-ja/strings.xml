@@ -49,7 +49,7 @@
   <string name="card_settings_action_sheet_reset">リセット</string>
   <string name="card_settings_action_sheet_title">本当に実行しますか?</string>
   <string name="card_settings_change_access_code">アクセスコードの変更</string>
-  <string name="card_settings_change_access_code_footer">アクセスコードは、このカードのみで変更されます</string>
+  <string name="card_settings_change_access_code_footer">アクセスコードは、このカードまたはリングによってのみ変更されます</string>
   <string name="card_settings_completed_reset_alert_message">選択したウォレットのすべてのTangemデバイスが、工場出荷時の設定にリセットされました。これで、新しいウォレットを作成できます。</string>
   <string name="card_settings_completed_reset_alert_title">リセット完了</string>
   <string name="card_settings_continue_reset_alert_message">このウォレットの次のデバイスをリセットしますか?</string>
@@ -58,7 +58,7 @@
   <string name="card_settings_interrupted_reset_alert_title">すべてのTangemデバイスのリセットが完了していません</string>
   <string name="card_settings_reset_card_to_factory">工場出荷時の設定にリセット</string>
   <string name="card_settings_security_mode">セキュリティ・モード</string>
-  <string name="card_settings_title">カード設定</string>
+  <string name="card_settings_title">デバイス設定</string>
   <string name="cardano_coin_will_be_send_with_token_description">ネットワーク手数料に加えて、Cardanoネットワークは%2$sトークンで取引する際に%1$s ADAを請求します。</string>
   <string name="cardano_coin_will_be_send_with_token_title">Cardanoの取引要件</string>
   <string name="cardano_insufficient_balance_to_send_token_description">%1$s 取引を行うには、いくらかのADAを入金し、ネットワーク手数料と最小ADA (5ADAを推奨) をカバーする必要があります。</string>
@@ -216,7 +216,7 @@
   <string name="details_referral_title">紹介プログラム</string>
   <string name="details_row_description_flip_to_hide">デバイスの画面を下に向けると、残高をすばやく非表示にしたり表示したりできます。</string>
   <string name="details_row_subtitle_signed_hashes_format">%sハッシュ</string>
-  <string name="details_row_title_cid">カードID</string>
+  <string name="details_row_title_cid">デバイスID</string>
   <string name="details_row_title_contact_to_support">サポートへのお問い合わせ</string>
   <string name="details_row_title_create_backup">他のカードをリンクする</string>
   <string name="details_row_title_currency">アプリ通貨</string>
@@ -254,6 +254,7 @@
   <string name="express_exchange_status_exchanging">交換中</string>
   <string name="express_exchange_status_exchanging_active">交換中...</string>
   <string name="express_exchange_status_failed">失敗しました</string>
+  <string name="express_exchange_status_paused">停止中</string>
   <string name="express_exchange_status_received">入金済み</string>
   <string name="express_exchange_status_receiving">入金待ち</string>
   <string name="express_exchange_status_receiving_active">入金待ち...</string>
@@ -304,7 +305,7 @@
   <string name="give_permission_unlimited">無制限</string>
   <string name="home_button_order">Tangemを注文</string>
   <string name="home_button_scan">Tangemをスキャン</string>
-  <string name="information_generated_with_ai">この情報はAIによって生成されました</string>
+  <string name="information_generated_with_ai">この情報はAIで生成されました。 \nエラーが見つかった場合は、ここをタップしてください。</string>
   <string name="initial_message_change_access_code_body">アクセスコードを変更するには、上図のようにカードまたはリングをタップし、操作が終了するまで取り外さないでください。</string>
   <string name="initial_message_change_passcode_body">パスコードを変更するには、上記のようにカードをタップし、操作が終了するまで取り外さないでください。</string>
   <string name="initial_message_create_wallet_body">ウォレットを作成するには、上記のようにカードをタップし、操作が終了するまで取り外さないでください。</string>
@@ -452,7 +453,7 @@
   <string name="onboarding_access_code_feature_1_title">保護する</string>
   <string name="onboarding_access_code_feature_2_description">後で各カードおよびリングに個別のアクセスコードを設定できます。</string>
   <string name="onboarding_access_code_feature_2_title">パーソナライズする</string>
-  <string name="onboarding_access_code_feature_3_description">アクセスコードはリンクされたカードおよびリング1つで復元できます。すべてのデバイスを1か所に保管しないでください。</string>
+  <string name="onboarding_access_code_feature_3_description">アクセスコードは、リンクされたカードおよびリング1つで復元できます。すべてのデバイスを1か所に保管しないでください。</string>
   <string name="onboarding_access_code_feature_3_title">復元する</string>
   <string name="onboarding_access_code_hint">アクセスコードとして任意の単語、フレーズ、または数字を選択してください</string>
   <string name="onboarding_access_code_intro_title">アクセスコードの作成</string>
@@ -482,7 +483,7 @@
   <string name="onboarding_create_wallet_button_create_wallet">ウォレットを作成する</string>
   <string name="onboarding_create_wallet_header">ウォレットを作成する</string>
   <string name="onboarding_create_wallet_options_button_options">その他のオプション</string>
-  <string name="onboarding_create_wallet_options_message">秘密鍵はカードまたはリング内で安全に生成されます。シードフレーズは存在しないので、誰もエクスポートしたり盗んだりすることはできません。</string>
+  <string name="onboarding_create_wallet_options_message">秘密鍵はチップ内で安全に生成されます。シードフレーズは存在しないので、誰もエクスポートしたり盗んだりすることはできません。</string>
   <string name="onboarding_create_wallet_options_title">秘密鍵を非公開で生成する</string>
   <string name="onboarding_done_body">カードは有効化され、使用可能になりました</string>
   <string name="onboarding_done_header">成功！</string>
@@ -521,7 +522,7 @@
   <string name="onboarding_title_backup_card">バックアップカード</string>
   <string name="onboarding_title_backup_card_format">バックアップカード # %d</string>
   <string name="onboarding_title_backup_ring">バックアップリング</string>
-  <string name="onboarding_title_no_backup_cards">バックアップカードまたはリングなし</string>
+  <string name="onboarding_title_no_backup_cards">バックアップデバイスなし</string>
   <string name="onboarding_title_notifications">通知</string>
   <string name="onboarding_title_one_backup_card">バックアップデバイスが1つ追加されました</string>
   <string name="onboarding_title_scan_origin_card">カードを準備してください</string>
@@ -695,7 +696,7 @@
   <string name="staking_details_market_rating">市場評価</string>
   <string name="staking_details_metrics_block_header">指標</string>
   <string name="staking_details_minimum_requirement">最低要件</string>
-  <string name="staking_details_no_rewards_to_claim">報酬なし</string>
+  <string name="staking_details_no_rewards_to_claim">報酬はありません</string>
   <string name="staking_details_reward_claiming">請求中の報酬</string>
   <string name="staking_details_reward_claiming_info">ステーキング報酬の受け取り方法。\n自動であなたのアドレスに報酬が入金される方法と、手動で取引を生成して報酬を引き出す方法があります。</string>
   <string name="staking_details_reward_schedule">報酬スケジュール</string>
@@ -725,6 +726,7 @@
   <string name="staking_notification_network_error_text">ネットワークの状態により、現在ステーキングはご利用いただけません。しばらくしてからもう一度お試しください。</string>
   <string name="staking_notification_new_validator_funds_transfer">新しいバリデーターで%1$sネットワークにステーキングすると、以前にステーキングされた資金はすべてこのバリデーターに自動的に転送されます。</string>
   <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
+  <string name="staking_notification_restake_text">再ステーキングを使うと、ステーキングを解除することなく、あるバリデータから別のバリデータに資金を移動できます。</string>
   <string name="staking_notification_unlock_text">資金をステーキングから引き出すには、ロックを解除してください。ロック解除には%sかかります。</string>
   <string name="staking_notification_unstake_cosmos_text">資金は、21日間のロック解除期間後に使用可能になります。報酬は、ロック解除後の資金とともに引き出されます。</string>
   <string name="staking_notification_unstake_text">%sのステーキング解除期間後、資金はすぐ利用可能となります。</string>
@@ -743,6 +745,8 @@
   <string name="staking_reward_schedule_day">毎日</string>
   <string name="staking_reward_schedule_each">%sごと</string>
   <string name="staking_reward_schedule_each_day">毎日</string>
+  <string name="staking_reward_schedule_each_days">%s日ごと</string>
+  <string name="staking_reward_schedule_each_plural">毎%1$s</string>
   <string name="staking_reward_schedule_epoch">エポック毎</string>
   <string name="staking_reward_schedule_era">時代毎</string>
   <string name="staking_reward_schedule_hour">毎時間</string>
@@ -751,7 +755,7 @@
   <string name="staking_rewards">報酬</string>
   <string name="staking_stake_locked">ステーキングはロックされています</string>
   <string name="staking_stake_more">もっとステーキングする</string>
-  <string name="staking_summary_description_text">%1$sをステーキングし、毎%2$s報酬を受け取ります</string>
+  <string name="staking_summary_description_text">%1$sをステーキングし、報酬%2$sを受け取ります</string>
   <string name="staking_tap_to_unlock">タップしてロック解除</string>
   <string name="staking_tap_to_unlock_or_vote">タップしてロック解除もしくは投票</string>
   <string name="staking_tap_to_withdraw">タップして引き出す</string>
@@ -944,7 +948,7 @@
   <string name="warning_low_signatures_message">このカードには%sの署名のみが残っています。資金をすべて引き出す必要があります。</string>
   <string name="warning_low_signatures_title">署名数が少ないです</string>
   <string name="warning_manage_tokens_legacy_derivation_message">異なるネットワーク上のトークンは、異なるアドレスを持つ場合があります。資金を送金する際には、アドレスがネットワークと一致していることを再確認してください。</string>
-  <string name="warning_matic_migration_message">MATICはPOLに移行中です。ただし、期限は設定されておらず、MATICはまだ廃止されていません。MATICトークンを引き続き安全に使用することも、取引所でPOLに交換することもできます。</string>
+  <string name="warning_matic_migration_message">MATICはPOLに移行中です。ただし、期限は設定されておらず、MATICはまだ廃止されていません。MATICトークンを引き続き安全に使用することも、POLに交換することもできます。</string>
   <string name="warning_matic_migration_title">MATICからPOLへの移行</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="other">%d ネットワークのアドレスを取得するために、カードまたはリングを利用してください</item>
