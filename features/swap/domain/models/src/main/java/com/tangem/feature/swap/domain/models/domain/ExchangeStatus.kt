@@ -24,4 +24,5 @@ enum class ExchangeStatus {
     Cancelled,
     TxFailed,
     Unknown,
+    Paused,
 }
