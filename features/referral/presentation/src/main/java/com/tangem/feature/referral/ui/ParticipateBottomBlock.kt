@@ -26,7 +26,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.core.content.ContextCompat.startActivity
 import com.tangem.core.ui.components.PrimaryButtonIconStart
-import com.tangem.core.ui.components.rows.CornersToRound
 import com.tangem.core.ui.components.rows.RoundableCornersRow
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -69,21 +68,35 @@ internal fun ParticipateBottomBlock(
     }
 }
 
+private const val INITIAL_VISIBLE_AWARDS_MAX_COUNT = 3
+
 @Composable
 private fun CounterAndAwards(purchasedWalletCount: Int, expectedAwards: ExpectedAwards?) {
+    val isExpanded = remember { mutableStateOf(false) }
+
+    val overallItemsCount = calculateOverallItemsCount(
+        expectedAwards = expectedAwards,
+        isExpanded = isExpanded,
+    )
+
     Column {
-        Counter(purchasedWalletCount, expectedAwards)
+        Counter(
+            purchasedWalletCount = purchasedWalletCount,
+            overallItemsLastIndex = overallItemsCount - 1,
+        )
 
         if (expectedAwards != null) {
-            Awards(expectedAwards)
+            Awards(
+                expectedAwards = expectedAwards,
+                overallItemsLastIndex = overallItemsCount - 1,
+                isExpanded = isExpanded,
+            )
         }
     }
 }
 
 @Composable
-private fun Counter(purchasedWalletCount: Int, expectedAwards: ExpectedAwards?) {
-    val isExpectedAwardsPresent = expectedAwards != null
-
+private fun Counter(purchasedWalletCount: Int, overallItemsLastIndex: Int) {
     RoundableCornersRow(
         startText = stringResource(id = R.string.referral_friends_bought_title),
         startTextColor = TangemTheme.colors.text.tertiary,
@@ -95,20 +108,14 @@ private fun Counter(purchasedWalletCount: Int, expectedAwards: ExpectedAwards?) 
         ),
         endTextColor = TangemTheme.colors.text.primary1,
         endTextStyle = TangemTheme.typography.body2,
-        cornersToRound = if (isExpectedAwardsPresent) {
-            CornersToRound.TOP_2
-        } else {
-            CornersToRound.ALL_4
-        },
+        currentIndex = 0,
+        lastIndex = overallItemsLastIndex,
     )
 }
 
 @Suppress("MagicNumber")
 @Composable
-private fun Awards(expectedAwards: ExpectedAwards) {
-    val elementsCountToShowInLessMode = 3
-    val isExpanded = remember { mutableStateOf(false) }
-
+private fun Awards(expectedAwards: ExpectedAwards, overallItemsLastIndex: Int, isExpanded: MutableState<Boolean>) {
     HorizontalDivider(
         thickness = TangemTheme.dimens.size0_5,
         color = TangemTheme.colors.stroke.primary,
@@ -132,13 +139,14 @@ private fun Awards(expectedAwards: ExpectedAwards) {
         },
         endTextColor = TangemTheme.colors.text.tertiary,
         endTextStyle = TangemTheme.typography.body2,
-        cornersToRound = CornersToRound.ZERO,
+        currentIndex = 1,
+        lastIndex = overallItemsLastIndex,
     )
 
-    val initialItems = expectedAwards.expectedAwards.take(elementsCountToShowInLessMode)
-    val extraItems = expectedAwards.expectedAwards.drop(elementsCountToShowInLessMode)
+    val initialVisibleAwards = expectedAwards.expectedAwards.take(INITIAL_VISIBLE_AWARDS_MAX_COUNT)
+    val initialHiddenAwards = expectedAwards.expectedAwards.drop(INITIAL_VISIBLE_AWARDS_MAX_COUNT)
 
-    initialItems.forEachIndexed { index, expectedAward ->
+    initialVisibleAwards.forEachIndexed { index, expectedAward ->
         RoundableCornersRow(
             startText = expectedAward.paymentDate,
             startTextColor = TangemTheme.colors.text.primary1,
@@ -146,11 +154,8 @@ private fun Awards(expectedAwards: ExpectedAwards) {
             endText = expectedAward.amount,
             endTextColor = TangemTheme.colors.text.primary1,
             endTextStyle = TangemTheme.typography.subtitle2,
-            cornersToRound = if (index == initialItems.size - 1 && extraItems.isEmpty()) {
-                CornersToRound.BOTTOM_2
-            } else {
-                CornersToRound.ZERO
-            },
+            currentIndex = index + 2,
+            lastIndex = overallItemsLastIndex,
         )
     }
 
@@ -159,10 +164,14 @@ private fun Awards(expectedAwards: ExpectedAwards) {
         enter = fadeIn() + expandVertically(),
         exit = shrinkVertically() + fadeOut(),
     ) {
-        ExtraItems(extraItems = extraItems)
+        ExtraItems(
+            extraItems = initialHiddenAwards,
+            overallItemsLastIndex = overallItemsLastIndex,
+            startIndex = initialVisibleAwards.size + 2,
+        )
     }
 
-    if (expectedAwards.expectedAwards.size > elementsCountToShowInLessMode) {
+    if (initialHiddenAwards.isNotEmpty()) {
         LessMoreButton(isExpanded = isExpanded)
     }
 }
@@ -217,9 +226,9 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
 }
 
 @Composable
-private fun ExtraItems(extraItems: List<ExpectedAward>) {
+private fun ExtraItems(extraItems: List<ExpectedAward>, overallItemsLastIndex: Int, startIndex: Int) {
     Column {
-        extraItems.forEach { expectedAward ->
+        extraItems.forEachIndexed { index, expectedAward ->
             RoundableCornersRow(
                 startText = expectedAward.paymentDate,
                 startTextColor = TangemTheme.colors.text.primary1,
@@ -227,7 +236,8 @@ private fun ExtraItems(extraItems: List<ExpectedAward>) {
                 endText = expectedAward.amount,
                 endTextColor = TangemTheme.colors.text.primary1,
                 endTextStyle = TangemTheme.typography.subtitle2,
-                cornersToRound = CornersToRound.ZERO,
+                currentIndex = index + startIndex,
+                lastIndex = overallItemsLastIndex,
             )
         }
     }
@@ -313,6 +323,22 @@ private fun AdditionalButtons(
             modifier = Modifier.weight(1f),
         )
     }
+}
+
+private fun calculateOverallItemsCount(expectedAwards: ExpectedAwards?, isExpanded: MutableState<Boolean>): Int {
+    val totalItems = expectedAwards?.expectedAwards?.size ?: 0
+    val initialItemsCount = minOf(totalItems, INITIAL_VISIBLE_AWARDS_MAX_COUNT)
+    val extraItemsCount = maxOf(0, totalItems - INITIAL_VISIBLE_AWARDS_MAX_COUNT)
+
+    val awardItems = when {
+        expectedAwards == null -> 0
+        extraItemsCount == 0 -> 1 + initialItemsCount
+        isExpanded.value -> 1 + initialItemsCount + extraItemsCount + 1
+        else -> 1 + initialItemsCount + 1
+    }
+
+    val counterItems = 1
+    return counterItems + awardItems
 }
 
 private fun Context.shareText(text: String) {
