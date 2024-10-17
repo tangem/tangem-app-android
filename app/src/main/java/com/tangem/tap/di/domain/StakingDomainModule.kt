@@ -50,13 +50,25 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetActionsUseCase(
+    fun provideFetchActionsUseCase(
         stakingRepository: StakingRepository,
         stakingActionRepository: StakingActionRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): FetchActionsUseCase {
         return FetchActionsUseCase(
             stakingRepository = stakingRepository,
+            stakingActionRepository = stakingActionRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetActionsUseCase(
+        stakingActionRepository: StakingActionRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): GetActionsUseCase {
+        return GetActionsUseCase(
             stakingActionRepository = stakingActionRepository,
             stakingErrorResolver = stakingErrorResolver,
         )

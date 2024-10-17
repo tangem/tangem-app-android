@@ -57,7 +57,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
 ) {
 
     private val balanceUpdater: StakingBalanceUpdater
-        get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet)
+        get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet, yield)
 
     suspend fun constructAndSendTransactions(
         onConstructSuccess: (List<StakingTransaction>) -> Unit,

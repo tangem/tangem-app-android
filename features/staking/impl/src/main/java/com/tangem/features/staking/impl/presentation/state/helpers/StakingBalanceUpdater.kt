@@ -64,6 +64,9 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                 async {
                     updateNetworkStatuses(delay = 0)
                 },
+                async {
+                    updateActions()
+                },
             ).awaitAll()
         }
     }

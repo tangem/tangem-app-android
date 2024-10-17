@@ -17,7 +17,7 @@ class GetActionsUseCase(
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
-    suspend operator fun invoke(
+    operator fun invoke(
         userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
     ): Either<StakingError, Flow<List<StakingAction>>> {
