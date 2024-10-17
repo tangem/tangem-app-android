@@ -1,10 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.state.model.ManageTokensButtonConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
@@ -26,7 +24,6 @@ internal class SetTokenListTransformer(
                 prevState.copy(
                     walletCardState = prevState.walletCardState.toLoadedState(),
                     tokensListState = prevState.tokensListState.toLoadedState(),
-                    manageTokensButtonConfig = createManageTokensButtonConfig(),
                 )
             }
             is WalletState.MultiCurrency.Locked -> {
@@ -57,13 +54,5 @@ internal class SetTokenListTransformer(
             appCurrency = appCurrency,
             clickIntents = clickIntents,
         ).convert(value = this)
-    }
-
-    private fun createManageTokensButtonConfig(): ManageTokensButtonConfig? {
-        return if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
-            null
-        } else {
-            ManageTokensButtonConfig(clickIntents::onManageTokensClick)
-        }
     }
 }
