@@ -21,7 +21,10 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.Artwork
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.getDrawableCompat
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.domain.twins.TwinsCardWidget
@@ -35,6 +38,7 @@ import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
 import com.tangem.tap.store
 import com.tangem.utils.Provider
+import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutOnboardingContainerTopBinding
 import dagger.hilt.android.AndroidEntryPoint
