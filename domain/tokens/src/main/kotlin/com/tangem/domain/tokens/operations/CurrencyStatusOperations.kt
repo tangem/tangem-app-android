@@ -57,9 +57,20 @@ internal class CurrencyStatusOperations(
 
         val hasCurrentNetworkTransactions = status.pendingTransactions.isNotEmpty()
         val currentTransactions = status.pendingTransactions.getOrElse(currency.id, ::emptySet)
-        val isCurrentAddressStaking =
-            (yieldBalance as? YieldBalance.Data)?.address == status.address.defaultAddress.value
-        val currentYieldBalance = yieldBalance.takeIf { isCurrentAddressStaking }
+        val yieldBalanceData = yieldBalance as? YieldBalance.Data
+        val isCurrentAddressStaking = yieldBalanceData?.address == status.address.defaultAddress.value
+        val filteredTokenBalances = yieldBalanceData?.balance?.items?.filter {
+            it.token.coinGeckoId == currency.id.rawCurrencyId
+        }
+        val currentYieldBalance = if (isCurrentAddressStaking && filteredTokenBalances?.isNotEmpty() == true) {
+            yieldBalanceData.copy(
+                balance = yieldBalanceData.balance.copy(
+                    items = filteredTokenBalances,
+                ),
+            )
+        } else {
+            null
+        }
         return when {
             ignoreQuote -> CryptoCurrencyStatus.NoQuote(
                 amount = amount,
