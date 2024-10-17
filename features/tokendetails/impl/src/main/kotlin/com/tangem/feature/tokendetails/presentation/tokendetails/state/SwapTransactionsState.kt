@@ -35,7 +35,7 @@ internal data class SwapTransactionsState(
 )
 
 @Immutable
-internal class ExchangeStatusState(
+internal data class ExchangeStatusState(
     val status: ExchangeStatus,
     val text: TextReference,
     val isActive: Boolean,
