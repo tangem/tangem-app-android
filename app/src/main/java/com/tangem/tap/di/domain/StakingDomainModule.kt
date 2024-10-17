@@ -206,4 +206,10 @@ internal object StakingDomainModule {
             stakingErrorResolver = stakingErrorResolver,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideGetStakingIntegrationIdUseCase(stakingRepository: StakingRepository): GetStakingIntegrationIdUseCase {
+        return GetStakingIntegrationIdUseCase(stakingRepository)
+    }
 }
