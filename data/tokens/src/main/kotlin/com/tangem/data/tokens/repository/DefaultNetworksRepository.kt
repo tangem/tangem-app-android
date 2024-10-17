@@ -1,6 +1,5 @@
 package com.tangem.data.tokens.repository
 
-import arrow.core.raise.catch
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchainsdk.utils.fromNetworkId
@@ -15,8 +14,6 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.core.lce.LceFlow
-import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
@@ -28,7 +25,10 @@ import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import timber.log.Timber
 
 @Suppress("LongParameterList")
@@ -46,10 +46,6 @@ internal class DefaultNetworksRepository(
     private val responseCurrenciesFactory by lazy { ResponseCryptoCurrenciesFactory() }
     private val networkStatusFactory by lazy { NetworkStatusFactory() }
 
-    private val isNetworkStatusesFetching = MutableStateFlow(
-        value = emptyMap<UserWalletId, Boolean>(),
-    )
-
     override fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
         networks: Set<Network>,
@@ -60,24 +56,6 @@ internal class DefaultNetworksRepository(
 
         withContext(dispatchers.io) {
             fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh = false)
-        }
-    }
-
-    override fun getNetworkStatusesUpdatesLce(
-        userWalletId: UserWalletId,
-        networks: Set<Network>,
-    ): LceFlow<Throwable, Set<NetworkStatus>> = lceFlow {
-        combine(
-            networksStatusesStore.get(userWalletId),
-            isNetworkStatusesFetching.map { it.getOrElse(userWalletId) { false } },
-        ) { statuses, isFetching ->
-            send(statuses, isStillLoading = isFetching || networks.size != statuses.size)
-        }.launchIn(scope = this + dispatchers.io)
-
-        withContext(dispatchers.io) {
-            catch({ fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh = false) }) {
-                raise(it)
-            }
         }
     }
 
@@ -123,67 +101,13 @@ internal class DefaultNetworksRepository(
         }
     }
 
-    override suspend fun getNetworkAddress(
-        userWalletId: UserWalletId,
-        currency: CryptoCurrency,
-    ): CryptoCurrencyAddress = withContext(dispatchers.io) {
-        CryptoCurrencyAddress(
-            cryptoCurrency = currency,
-            address = walletManagersFacade.getAddresses(userWalletId, currency.network)
-                .firstOrNull { it.type == AddressType.Default }
-                ?.value.orEmpty(),
-        )
-    }
-
-    override fun getNetworkAddressFlow(
-        userWalletId: UserWalletId,
-        currency: CryptoCurrency,
-    ): Flow<CryptoCurrencyAddress> = channelFlow {
-        launch(dispatchers.io) {
-            send(getNetworkAddress(userWalletId, currency))
-        }
-    }
-
-    override suspend fun getNetworkAddresses(userWalletId: UserWalletId): List<CryptoCurrencyAddress> =
-        withContext(dispatchers.io) {
-            // Get list of currencies matching [network]
-            val currencies = getCurrencies(userWalletId)
-
-            // There is no currencies matching given [networks] in [userWalletId]
-            if (currencies.toList().isEmpty()) return@withContext emptyList()
-
-            currencies.toList().map { currency ->
-                CryptoCurrencyAddress(
-                    cryptoCurrency = currency,
-                    address = walletManagersFacade.getAddresses(userWalletId, currency.network)
-                        .firstOrNull { it.type == AddressType.Default }
-                        ?.value.orEmpty(),
-                )
-            }
-        }
-
-    override fun getNetworkAddressesFlow(
-        userWalletId: UserWalletId,
-        network: Network,
-    ): Flow<List<CryptoCurrencyAddress>> = channelFlow {
-        launch(dispatchers.io) {
-            send(getNetworkAddresses(userWalletId, network))
-        }
-    }
-
-    override fun getNetworkAddressesFlow(userWalletId: UserWalletId): Flow<List<CryptoCurrencyAddress>> = channelFlow {
-        launch(dispatchers.io) {
-            send(getNetworkAddresses(userWalletId))
-        }
-    }
-
     private suspend fun fetchNetworksStatusesIfCacheExpired(
         userWalletId: UserWalletId,
         networks: Set<Network>,
         refresh: Boolean,
     ) = coroutineScope {
         if (refresh) {
-            val statusesToRefresh = networks.map { NetworkStatus(it, NetworkStatus.Loading) }
+            val statusesToRefresh = networks.map { NetworkStatus(it, NetworkStatus.Refreshing) }
             networksStatusesStore.storeAll(userWalletId, statusesToRefresh)
         }
 
@@ -230,8 +154,6 @@ internal class DefaultNetworksRepository(
         network: Network,
         currencies: Sequence<CryptoCurrency>,
     ) {
-        networksStatusesStore.store(userWalletId, NetworkStatus(network, NetworkStatus.Loading))
-
         val result = walletManagersFacade.update(
             userWalletId = userWalletId,
             network = network,
