@@ -2,6 +2,7 @@ package com.tangem.features.send.impl.presentation.state.fee
 
 import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -17,10 +18,9 @@ internal sealed class FeeSelectorState {
 
     data object Loading : FeeSelectorState()
 
-    sealed class Error : FeeSelectorState() {
-        data object NetworkError : Error()
-        data class TronAccountActivationError(val tokenName: String) : Error()
-    }
+    data class Error(
+        val error: GetFeeError?,
+    ) : FeeSelectorState()
 }
 
 enum class FeeType {

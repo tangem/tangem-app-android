@@ -38,7 +38,6 @@ internal class WalletLoadingStateFactory(
             warnings = persistentListOf(),
             bottomSheetConfig = null,
             tokensListState = WalletTokensListState.ContentState.Loading,
-            manageTokensButtonConfig = ManageTokensButtonConfig(clickIntents::onManageTokensClick),
         )
     }
 

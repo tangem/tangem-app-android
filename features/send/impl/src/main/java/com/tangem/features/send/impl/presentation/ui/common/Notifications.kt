@@ -5,14 +5,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.Modifier
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.impl.presentation.state.SendNotification
 import kotlinx.collections.immutable.ImmutableList
 
 @OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.notifications(
-    notifications: ImmutableList<SendNotification>,
+    notifications: ImmutableList<NotificationUM>,
     modifier: Modifier = Modifier,
     hasPaddingAbove: Boolean = false,
     isClickDisabled: Boolean = false,
@@ -33,17 +33,18 @@ internal fun LazyListScope.notifications(
                     .padding(top = topPadding)
                     .animateItemPlacement(),
                 containerColor = when (item) {
-                    is SendNotification.Error.ExceedsBalance,
-                    is SendNotification.Warning.NetworkFeeUnreachable,
-                    is SendNotification.Warning.HighFeeError,
+                    is NotificationUM.Error.TokenExceedsBalance,
+                    is NotificationUM.Warning.NetworkFeeUnreachable,
+                    is NotificationUM.Warning.HighFeeError,
                     -> TangemTheme.colors.background.action
                     else -> TangemTheme.colors.button.disabled
                 },
                 iconTint = when (item) {
-                    is SendNotification.Error.ExceedsBalance,
-                    is SendNotification.Warning,
+                    is NotificationUM.Error.TokenExceedsBalance,
+                    is NotificationUM.Warning,
                     -> null
-                    is SendNotification.Error -> TangemTheme.colors.icon.warning
+                    is NotificationUM.Error -> TangemTheme.colors.icon.warning
+                    is NotificationUM.Info -> null
                 },
                 isEnabled = !isClickDisabled,
             )
