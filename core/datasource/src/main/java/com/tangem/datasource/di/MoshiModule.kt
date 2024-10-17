@@ -4,11 +4,11 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.datasource.api.common.adapter.*
 import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
 import com.tangem.datasource.api.common.adapter.DateTimeAdapter
 import com.tangem.datasource.api.common.adapter.LocalDateAdapter
-import com.tangem.datasource.config.models.ProviderModel
+import com.tangem.datasource.api.common.adapter.addStakeKitEnumFallbackAdapters
+import com.tangem.datasource.local.config.providers.models.ProviderModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

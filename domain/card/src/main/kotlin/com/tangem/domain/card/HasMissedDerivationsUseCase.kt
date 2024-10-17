@@ -9,6 +9,9 @@ import com.tangem.domain.wallets.models.UserWalletId
  *
 * [REDACTED_AUTHOR]
  */
+
+typealias BackendId = String
+
 class HasMissedDerivationsUseCase(
     private val derivationsRepository: DerivationsRepository,
 ) {
@@ -16,7 +19,7 @@ class HasMissedDerivationsUseCase(
     /** Check if user [userWalletId] has missed derivations using map of [Network.ID] with extraDerivationPath */
     suspend operator fun invoke(
         userWalletId: UserWalletId,
-        networksWithDerivationPath: Map<Network.ID, String?>,
+        networksWithDerivationPath: Map<BackendId, String?>,
     ): Boolean {
         return derivationsRepository.hasMissedDerivations(userWalletId, networksWithDerivationPath)
     }

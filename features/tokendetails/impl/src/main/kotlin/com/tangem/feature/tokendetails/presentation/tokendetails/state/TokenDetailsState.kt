@@ -17,7 +17,7 @@ internal data class TokenDetailsState(
     val tokenInfoBlockState: TokenInfoBlockState,
     val tokenBalanceBlockState: TokenDetailsBalanceBlockState,
     val marketPriceBlockState: MarketPriceBlockState,
-    val stakingBlocksState: StakingBlockUM,
+    val stakingBlocksState: StakingBlockUM?,
     val notifications: ImmutableList<TokenDetailsNotification>,
     val pendingTxs: PersistentList<TransactionState>,
     val swapTxs: PersistentList<SwapTransactionsState>,
@@ -27,6 +27,5 @@ internal data class TokenDetailsState(
     val bottomSheetConfig: TangemBottomSheetConfig?,
     val isBalanceHidden: Boolean,
     val isMarketPriceAvailable: Boolean,
-    val isStakingBlockShown: Boolean,
     val event: StateEvent<TextReference>,
 )

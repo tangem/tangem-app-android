@@ -6,29 +6,33 @@ import androidx.lifecycle.*
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
-import com.tangem.domain.redux.LegacyAction
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.ValidateAddressError
 import com.tangem.domain.transaction.usecase.*
@@ -47,7 +51,6 @@ import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.analytics.SendScreenSource
 import com.tangem.features.send.impl.presentation.analytics.utils.SendScreenAnalyticSender
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
-import com.tangem.features.send.impl.presentation.errors.FeeErrorStateMapper
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactory
 import com.tangem.features.send.impl.presentation.state.confirm.SendNotificationFactory
@@ -56,6 +59,7 @@ import com.tangem.features.send.impl.presentation.state.recipient.RecipientSendF
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import com.tangem.utils.extensions.stripZeroPlainString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -83,7 +87,6 @@ internal class SendViewModel @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
-    private val reduxStateHolder: ReduxStateHolder,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -97,9 +100,12 @@ internal class SendViewModel @Inject constructor(
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
     private val isUtxoConsolidationAvailableUseCase: IsUtxoConsolidationAvailableUseCase,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
+    private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
+    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     validateTransactionUseCase: ValidateTransactionUseCase,
-    currencyChecksRepository: CurrencyChecksRepository,
+    getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     savedStateHandle: SavedStateHandle,
@@ -123,8 +129,6 @@ internal class SendViewModel @Inject constructor(
     private var innerRouter: InnerSendRouter by Delegates.notNull()
     var stateRouter: StateRouter by Delegates.notNull()
         private set
-
-    private val feeErrorHandler = FeeErrorStateMapper()
 
     private val stateFactory = SendStateFactory(
         clickIntents = this,
@@ -174,18 +178,18 @@ internal class SendViewModel @Inject constructor(
     )
 
     private val sendNotificationFactory = SendNotificationFactory(
+        analyticsEventHandler = analyticsEventHandler,
+        validateTransactionUseCase = validateTransactionUseCase,
+        getCurrencyCheckUseCase = getCurrencyCheckUseCase,
+        getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         currentStateProvider = Provider { uiState.value },
-        userWalletProvider = Provider { userWallet },
         stateRouterProvider = Provider { stateRouter },
         isSubtractAvailableProvider = Provider { isAmountSubtractAvailable },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        currencyChecksRepository = currencyChecksRepository,
         clickIntents = this,
-        analyticsEventHandler = analyticsEventHandler,
-        getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
-        validateTransactionUseCase = validateTransactionUseCase,
+        userWalletId = userWalletId,
     )
 
     private val sendScreenAnalyticSender by lazy(LazyThreadSafetyMode.NONE) {
@@ -524,21 +528,34 @@ internal class SendViewModel @Inject constructor(
         } else {
             null
         }
-        reduxStateHolder.dispatch(
-            LegacyAction.SendEmailTransactionFailed(
-                cryptoCurrency = cryptoCurrency,
-                userWalletId = userWalletId,
-                amount = receivingAmount,
-                fee = feeValue,
-                destinationAddress = recipient,
+
+        val amount = receivingAmount?.convertToSdkAmount(cryptoCurrency)
+
+        saveBlockchainErrorUseCase(
+            error = BlockchainErrorInfo(
                 errorMessage = errorMessage,
-                scanResponse = userWallet.scanResponse,
+                blockchainId = cryptoCurrency.network.id.value,
+                derivationPath = cryptoCurrency.network.derivationPath.value,
+                destinationAddress = recipient.orEmpty(),
+                tokenSymbol = if (amount?.type is AmountType.Token) {
+                    amount.currencySymbol
+                } else {
+                    ""
+                },
+                amount = amount?.value?.stripZeroPlainString() ?: "unknown",
+                fee = feeValue?.convertToSdkAmount(cryptoCurrency)
+                    ?.value?.stripZeroPlainString() ?: "unknown",
             ),
         )
+
+        val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrNull() ?: return
+
+        viewModelScope.launch {
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
+        }
     }
 
-    override fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency) =
-        innerRouter.openTokenDetails(userWalletId, currency)
+    override fun onTokenDetailsClick(currency: CryptoCurrency) = innerRouter.openTokenDetails(userWalletId, currency)
 
     private fun onFeeNext(): Boolean {
         val feeState = uiState.value.getFeeState(stateRouter.isEditState)
@@ -730,7 +747,7 @@ internal class SendViewModel @Inject constructor(
     private fun onFeeLoadFailed(isShowStatus: Boolean, loadFeeError: GetFeeError?) {
         if (isShowStatus) {
             uiState.value = feeStateFactory.onFeeOnErrorState(
-                feeErrorHandler.getFeeError(loadFeeError, cryptoCurrency.name),
+                loadFeeError,
             )
         }
     }
@@ -814,26 +831,27 @@ internal class SendViewModel @Inject constructor(
         analyticsEventHandler.send(SendAnalyticEvents.ShareButtonClicked)
     }
 
-    override fun onAmountReduceClick(
-        reduceAmountBy: BigDecimal?,
-        reduceAmountByDiff: BigDecimal?,
-        reduceAmountTo: BigDecimal?,
-        clazz: Class<out SendNotification>,
-    ) {
-        uiState.value = when {
-            reduceAmountBy != null && reduceAmountByDiff != null -> amountStateFactory.getOnAmountReduceByState(
-                reduceAmountBy = reduceAmountBy,
-                reduceAmountByDiff = reduceAmountByDiff,
-            )
-            reduceAmountTo != null -> amountStateFactory.getOnAmountReduceToState(reduceAmountTo)
-            else -> return
-        }
-
-        uiState.value = sendNotificationFactory.dismissNotificationState(clazz)
+    override fun onAmountReduceToClick(reduceAmountTo: BigDecimal, notification: Class<out NotificationUM>) {
+        uiState.value = amountStateFactory.getOnAmountReduceToState(reduceAmountTo)
+        uiState.value = sendNotificationFactory.dismissNotificationState(notification)
         updateNotifications()
     }
 
-    override fun onNotificationCancel(clazz: Class<out SendNotification>) {
+    override fun onAmountReduceByClick(
+        reduceAmountBy: BigDecimal,
+        reduceAmountByDiff: BigDecimal,
+        notification: Class<out NotificationUM>,
+    ) {
+        uiState.value = amountStateFactory.getOnAmountReduceByState(
+            reduceAmountBy = reduceAmountBy,
+            reduceAmountByDiff = reduceAmountByDiff,
+        )
+
+        uiState.value = sendNotificationFactory.dismissNotificationState(notification)
+        updateNotifications()
+    }
+
+    override fun onNotificationCancel(clazz: Class<out NotificationUM>) {
         uiState.value = sendNotificationFactory.dismissNotificationState(clazz = clazz, isIgnored = true)
     }
 
@@ -972,7 +990,7 @@ internal class SendViewModel @Inject constructor(
     private fun onCheckFeeUpdate() {
         val sendState = uiState.value.sendState ?: return
         val isSuccess = sendState.isSuccess
-        val noErrorNotifications = sendState.notifications.none { it is SendNotification.Error }
+        val noErrorNotifications = sendState.notifications.none { it is NotificationUM.Error }
 
         if (!isSuccess && noErrorNotifications) {
             viewModelScope.launch {

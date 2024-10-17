@@ -22,6 +22,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
+import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
@@ -42,6 +43,7 @@ internal fun StakingConfirmationContent(
     val isEnterAction = type == StakingActionCommonType.ENTER
     val showValidatorBlock = isEnterAction || state.pendingAction?.type == StakingActionType.VOTE_LOCKED
     val isTransactionSent = state.innerState == InnerConfirmationStakingState.COMPLETED
+    val isTransactionInProgress = state.notifications.any { it is StakingNotification.Warning.TransactionInProgress }
     Column(
         modifier = Modifier
             .background(TangemTheme.colors.background.secondary)
@@ -61,12 +63,16 @@ internal fun StakingConfirmationContent(
         }
         AmountBlock(
             amountState = amountState,
-            isClickDisabled = !isEnterAction || isTransactionSent,
+            isClickDisabled = !isEnterAction || isTransactionSent || isTransactionInProgress,
             isEditingDisabled = !isEnterAction && state.innerState != InnerConfirmationStakingState.COMPLETED,
             onClick = clickIntents::onPrevClick,
         )
         if (showValidatorBlock) {
-            ValidatorBlock(validatorState = state.validatorState, onClick = clickIntents::openValidators)
+            ValidatorBlock(
+                validatorState = state.validatorState,
+                isClickable = !isTransactionInProgress,
+                onClick = clickIntents::openValidators,
+            )
         }
         StakingFeeBlock(feeState = state.feeState, isTransactionSent = isTransactionSent)
         NotificationsBlock(notifications = state.notifications)
