@@ -391,7 +391,6 @@ private inline fun BaseScaffoldWithMarkets(
             sheetContainerColor = backgroundColor.value,
             scaffoldState = scaffoldState,
             sheetPeekHeight = peekHeight,
-            sheetShadowElevation = 8.dp,
             sheetShape = TangemTheme.shapes.bottomSheetLarge,
             sheetContent = {
                 // hide bottom sheet when back pressed
