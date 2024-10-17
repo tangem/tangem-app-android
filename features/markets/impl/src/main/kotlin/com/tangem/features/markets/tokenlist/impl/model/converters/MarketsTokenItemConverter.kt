@@ -5,6 +5,9 @@ import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.sorted
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.format.bigdecimal.compact
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
@@ -71,12 +74,14 @@ internal class MarketsTokenItemConverter(
     private fun TokenMarket.getMarketCap(): String? {
         val value = marketCap?.takeIf { marketCap != BigDecimal.ZERO } ?: return null
 
-        return BigDecimalFormatter.formatCompactFiatAmount(
-            amount = value,
-            fiatCurrencyCode = appCurrency.code,
-            fiatCurrencySymbol = appCurrency.symbol,
-            threeDigitsMethod = true,
-        )
+        return value.format {
+            fiat(
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
+            ).compact(
+                threeDigitsMethod = true,
+            )
+        }
     }
 
     private fun TokenMarket.getCurrentPrice(prev: TokenMarket? = null): MarketsListItemUM.Price {
