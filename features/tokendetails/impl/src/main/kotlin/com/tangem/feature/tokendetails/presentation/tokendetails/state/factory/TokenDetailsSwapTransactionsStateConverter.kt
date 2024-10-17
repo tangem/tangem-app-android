@@ -3,6 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
@@ -189,6 +190,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         val isFailed = status == ExchangeStatus.Failed
         val isSending = status == ExchangeStatus.Sending
         val isRefunded = status == ExchangeStatus.Refunded
+        val isPaused = status == ExchangeStatus.Paused
 
         val isWaitingDone = !isWaiting
         val isConfirmingDone = !isConfirming && isWaitingDone
@@ -212,6 +214,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             hasFailed = hasFailed,
                             isVerifying = isVerifying,
                             isFailed = isFailed,
+                            isPaused = isPaused,
                         ),
                     )
                     add(
@@ -276,10 +279,17 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         hasFailed: Boolean,
         isVerifying: Boolean = false,
         isFailed: Boolean = false,
+        isPaused: Boolean,
     ) = when {
         isVerifying -> ExchangeStatusState(
             status = ExchangeStatus.Verifying,
             text = TextReference.Res(R.string.express_exchange_status_verifying),
+            isActive = true,
+            isDone = false,
+        )
+        isPaused -> ExchangeStatusState(
+            status = ExchangeStatus.Paused,
+            text = resourceReference(id = R.string.express_exchange_status_paused),
             isActive = true,
             isDone = false,
         )
