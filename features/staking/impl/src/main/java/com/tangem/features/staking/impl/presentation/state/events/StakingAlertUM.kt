@@ -26,4 +26,11 @@ internal sealed class StakingAlertUM : AlertUM {
         override val message: TextReference = resourceReference(R.string.generic_error_code, wrappedList(code))
         override val confirmButtonText: TextReference = resourceReference(id = R.string.common_support)
     }
+
+    data object NoAvailableValidators : StakingAlertUM() {
+        override val title = resourceReference(R.string.common_error)
+        override val message = resourceReference(R.string.staking_no_validators_error_message)
+        override val confirmButtonText = resourceReference(R.string.common_ok)
+        override val onConfirmClick = null
+    }
 }
