@@ -70,6 +70,7 @@ class InvalidatePendingTransactionsUseCase(
                             validatorAddress = pendingTransaction.validator?.address,
                             date = null,
                             pendingActions = emptyList(),
+                            token = pendingTransaction.token,
                             isPending = true,
                         )
 

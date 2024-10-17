@@ -9,7 +9,6 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.core.serialization.SerializedBigDecimal
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -19,6 +18,7 @@ import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
+import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.lib.crypto.BlockchainUtils.isPolkadot
 import com.tangem.utils.Provider
@@ -102,20 +102,18 @@ internal class SetInitialDataStateTransformer(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
 
         return listOfNotNull(
-            createAnnualPercentageRateItem(yield.validators),
+            createAnnualPercentageRateItem(),
             createAvailableItem(cryptoCurrencyStatus),
-            createUnbondingPeriodItem(yield.metadata.cooldownPeriod?.days),
-            createMinimumRequirementItem(
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-                minimumCryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum,
-            ),
-            createRewardClaimingItem(yield.metadata.rewardClaiming),
-            createWarmupPeriodItem(yield.metadata.warmupPeriod.days),
-            createRewardScheduleItem(yield.metadata.rewardSchedule),
+            createUnbondingPeriodItem(),
+            createMinimumRequirementItem(cryptoCurrencyStatus),
+            createRewardClaimingItem(),
+            createWarmupPeriodItem(),
+            createRewardScheduleItem(),
         ).toPersistentList()
     }
 
-    private fun createAnnualPercentageRateItem(validators: List<Yield.Validator>): RoundedListWithDividersItemData {
+    private fun createAnnualPercentageRateItem(): RoundedListWithDividersItemData {
+        val validators = yield.validators
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_annual_percentage_rate,
             startText = TextReference.Res(R.string.staking_details_annual_percentage_rate),
@@ -140,8 +138,8 @@ internal class SetInitialDataStateTransformer(
         )
     }
 
-    private fun createUnbondingPeriodItem(cooldownPeriodDays: Int?): RoundedListWithDividersItemData? {
-        cooldownPeriodDays ?: return null
+    private fun createUnbondingPeriodItem(): RoundedListWithDividersItemData? {
+        val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days ?: return null
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_unbonding_period,
             startText = TextReference.Res(R.string.staking_details_unbonding_period),
@@ -156,9 +154,8 @@ internal class SetInitialDataStateTransformer(
 
     private fun createMinimumRequirementItem(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        minimumCryptoAmount: SerializedBigDecimal?,
     ): RoundedListWithDividersItemData? {
-        if (minimumCryptoAmount == null) return null
+        val minimumCryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum ?: return null
         if (!isPolkadot(cryptoCurrencyStatus.currency.network.id.value)) return null
 
         val formattedAmount = BigDecimalFormatter.formatCryptoAmount(
@@ -174,9 +171,8 @@ internal class SetInitialDataStateTransformer(
         )
     }
 
-    private fun createRewardClaimingItem(
-        rewardClaiming: Yield.Metadata.RewardClaiming,
-    ): RoundedListWithDividersItemData? {
+    private fun createRewardClaimingItem(): RoundedListWithDividersItemData? {
+        val rewardClaiming = yield.metadata.rewardClaiming
         val endTextId = rewardClaimingResources[rewardClaiming] ?: return null
 
         return RoundedListWithDividersItemData(
@@ -187,7 +183,8 @@ internal class SetInitialDataStateTransformer(
         )
     }
 
-    private fun createWarmupPeriodItem(warmupPeriodDays: Int): RoundedListWithDividersItemData? {
+    private fun createWarmupPeriodItem(): RoundedListWithDividersItemData? {
+        val warmupPeriodDays = yield.metadata.warmupPeriod.days
         if (warmupPeriodDays == 0) return null
 
         return RoundedListWithDividersItemData(
@@ -202,10 +199,12 @@ internal class SetInitialDataStateTransformer(
         )
     }
 
-    private fun createRewardScheduleItem(
-        rewardSchedule: Yield.Metadata.RewardSchedule,
-    ): RoundedListWithDividersItemData? {
-        val endTextReference = getRewardScheduleText(rewardSchedule) ?: return null
+    private fun createRewardScheduleItem(): RoundedListWithDividersItemData? {
+        val endTextReference = getRewardScheduleText(
+            rewardSchedule = yield.metadata.rewardSchedule,
+            networkId = cryptoCurrencyStatusProvider().currency.network.id.value,
+            decapitalize = false,
+        ) ?: return null
 
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_reward_schedule,
@@ -255,19 +254,6 @@ internal class SetInitialDataStateTransformer(
             return stringReference("$formattedMinApr%")
         }
         return resourceReference(R.string.common_range, wrappedList(formattedMinApr, formattedMaxApr))
-    }
-
-    private fun getRewardScheduleText(rewardSchedule: Yield.Metadata.RewardSchedule): TextReference? {
-        return when (rewardSchedule) {
-            Yield.Metadata.RewardSchedule.BLOCK -> resourceReference(R.string.staking_reward_schedule_block)
-            Yield.Metadata.RewardSchedule.WEEK -> resourceReference(R.string.staking_reward_schedule_week)
-            Yield.Metadata.RewardSchedule.HOUR -> resourceReference(R.string.staking_reward_schedule_hour)
-            Yield.Metadata.RewardSchedule.DAY -> resourceReference(R.string.staking_reward_schedule_each_day)
-            Yield.Metadata.RewardSchedule.MONTH -> resourceReference(R.string.staking_reward_schedule_month)
-            Yield.Metadata.RewardSchedule.ERA -> resourceReference(R.string.staking_reward_schedule_era)
-            Yield.Metadata.RewardSchedule.EPOCH -> resourceReference(R.string.staking_reward_schedule_epoch)
-            Yield.Metadata.RewardSchedule.UNKNOWN -> null
-        }
     }
 
     private companion object {
