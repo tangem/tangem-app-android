@@ -101,10 +101,6 @@ internal class DefaultStakingRepository(
     private val yieldBalanceConverter = YieldBalanceConverter()
     private val yieldBalanceListConverter = YieldBalanceListConverter(yieldBalanceConverter)
 
-    private val isYieldBalanceFetching = MutableStateFlow(
-        value = emptyMap<UserWalletId, Boolean>(),
-    )
-
     private val tronStakeKitTransactionAdapter by lazy { moshi.adapter(TronStakeKitTransaction::class.java) }
 
     override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = with(cryptoCurrencyId) {
@@ -384,79 +380,48 @@ internal class DefaultStakingRepository(
     ) = withContext(dispatchers.io) {
         if (!stakingFeatureToggle.isStakingEnabled) return@withContext
 
-        try {
-            cacheRegistry.invokeOnExpire(
-                key = getYieldBalancesKey(userWalletId),
-                skipCache = refresh,
-                block = {
-                    isYieldBalanceFetching.update {
-                        it + (userWalletId to true)
-                    }
+        cacheRegistry.invokeOnExpire(
+            key = getYieldBalancesKey(userWalletId),
+            skipCache = refresh,
+            block = {
+                val yields = getEnabledYields().ifEmpty {
+                    Timber.i("No enabled yields for $userWalletId")
+                    stakingBalanceStore.store(userWalletId, emptySet())
 
-                    val yields = getEnabledYields().ifEmpty {
-                        Timber.i("No enabled yields for $userWalletId")
+                    return@invokeOnExpire
+                }
+                val availableCurrencies = cryptoCurrencies
+                    .mapNotNull { currency ->
+                        val addresses = walletManagersFacade.getAddresses(userWalletId, currency.network)
+                        val integrationId = integrationIdMap[getIntegrationKey(currency.id)]
+
+                        if (integrationId != null && yields.any { it.id == integrationId }) {
+                            addresses to integrationId
+                        } else {
+                            null
+                        }
+                    }
+                    .flatMap { (addresses, integrationId) ->
+                        addresses.map { address -> address to integrationId }
+                    }
+                    .map { getBalanceRequestData(it.first.value, it.second) }
+                    .ifEmpty {
+                        Timber.i("No yield balances available for $userWalletId")
                         stakingBalanceStore.store(userWalletId, emptySet())
 
                         return@invokeOnExpire
                     }
-                    val availableCurrencies = cryptoCurrencies
-                        .mapNotNull { currency ->
-                            val addresses = walletManagersFacade.getAddresses(userWalletId, currency.network)
-                            val integrationId = integrationIdMap[getIntegrationKey(currency.id)]
 
-                            if (integrationId != null && yields.any { it.id == integrationId }) {
-                                addresses to integrationId
-                            } else {
-                                null
-                            }
-                        }
-                        .flatMap { (addresses, integrationId) ->
-                            addresses.map { address -> address to integrationId }
-                        }
-                        .map { getBalanceRequestData(it.first.value, it.second) }
-                        .ifEmpty {
-                            Timber.i("No yield balances available for $userWalletId")
-                            stakingBalanceStore.store(userWalletId, emptySet())
+                val result = stakeKitApi
+                    .getMultipleYieldBalances(availableCurrencies)
+                    .getOrThrow()
 
-                            return@invokeOnExpire
-                        }
-
-                    val result = stakeKitApi
-                        .getMultipleYieldBalances(availableCurrencies)
-                        .getOrThrow()
-
-                    stakingBalanceStore.store(userWalletId, result)
-                },
-            )
-        } finally {
-            isYieldBalanceFetching.update {
-                it - userWalletId
-            }
-        }
+                stakingBalanceStore.store(userWalletId, result)
+            },
+        )
     }
 
-    override fun getMultiYieldBalanceFlow(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): Flow<YieldBalanceList> = channelFlow {
-        if (!stakingFeatureToggle.isStakingEnabled) {
-            send(YieldBalanceList.Empty)
-        } else {
-            launch(dispatchers.io) {
-                stakingBalanceStore.get(userWalletId)
-                    .collectLatest { send(yieldBalanceListConverter.convert(it)) }
-            }
-
-            withContext(dispatchers.io) {
-                fetchMultiYieldBalance(
-                    userWalletId,
-                    cryptoCurrencies,
-                )
-            }
-        }
-    }.cancellable()
-
-    override fun getMultiYieldBalance(
+    override fun getMultiYieldBalanceUpdates(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> = channelFlow {
