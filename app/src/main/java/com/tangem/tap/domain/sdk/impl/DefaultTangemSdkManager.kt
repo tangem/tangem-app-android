@@ -29,6 +29,7 @@ import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.pins.SetUserCodeCommand
+import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.derivationsFinder
@@ -157,6 +158,7 @@ class DefaultTangemSdkManager(
                 Message(resources.getString(R.string.initial_message_create_wallet_body))
             },
             iconScanRes = if (scanResponse.cardTypesResolver.isRing()) R.drawable.img_hand_scan_ring else null,
+            preflightReadFilter = null,
         )
             .doOnResult { tangemSdk.config.setupForProduct(ProductType.ANY) }
     }
@@ -195,6 +197,7 @@ class DefaultTangemSdkManager(
             } else {
                 Message(resources.getString(R.string.initial_message_create_wallet_body))
             },
+            preflightReadFilter = null,
         )
             .doOnResult { tangemSdk.config.setupForProduct(ProductType.ANY) }
     }
@@ -210,8 +213,13 @@ class DefaultTangemSdkManager(
     override suspend fun derivePublicKeys(
         cardId: String?,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
+        preflightReadFilter: PreflightReadFilter?,
     ): CompletionResult<DerivationTaskResponse> {
-        return runTaskAsyncReturnOnMain(DeriveMultipleWalletPublicKeysTask(derivations), cardId)
+        return runTaskAsyncReturnOnMain(
+            runnable = DeriveMultipleWalletPublicKeysTask(derivations),
+            cardId = cardId,
+            preflightReadFilter = preflightReadFilter,
+        )
     }
 
     override suspend fun deriveExtendedPublicKey(
@@ -317,13 +325,21 @@ class DefaultTangemSdkManager(
 
     override suspend fun <T> runTaskAsync(
         runnable: CardSessionRunnable<T>,
+        preflightReadFilter: PreflightReadFilter?,
         cardId: String?,
         initialMessage: Message?,
         accessCode: String?,
         @DrawableRes iconScanRes: Int?,
     ): CompletionResult<T> = withContext(Dispatchers.Main) {
         suspendCancellableCoroutine { continuation ->
-            tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage, accessCode, iconScanRes) { result ->
+            tangemSdk.startSessionWithRunnable(
+                runnable = runnable,
+                cardId = cardId,
+                initialMessage = initialMessage,
+                accessCode = accessCode,
+                preflightReadFilter = preflightReadFilter,
+                iconScanRes = iconScanRes,
+            ) { result ->
                 if (continuation.isActive) continuation.resume(result)
             }
         }
@@ -333,8 +349,14 @@ class DefaultTangemSdkManager(
         runnable: CardSessionRunnable<T>,
         cardId: String? = null,
         initialMessage: Message? = null,
+        preflightReadFilter: PreflightReadFilter? = null,
     ): CompletionResult<T> {
-        val result = runTaskAsync(runnable, cardId, initialMessage)
+        val result = runTaskAsync(
+            runnable = runnable,
+            cardId = cardId,
+            initialMessage = initialMessage,
+            preflightReadFilter = preflightReadFilter,
+        )
         return withContext(Dispatchers.Main) { result }
     }
 
@@ -386,6 +408,7 @@ class DefaultTangemSdkManager(
             runnable = CreateFirstTwinWalletTask(cardId),
             cardId = cardId,
             initialMessage = initialMessage,
+            preflightReadFilter = null,
         )
     }
 
@@ -404,7 +427,7 @@ class DefaultTangemSdkManager(
             preparingMessage = preparingMessage,
             creatingWalletMessage = creatingWalletMessage,
         )
-        return runTaskAsync(task, null, initialMessage)
+        return runTaskAsync(runnable = task, cardId = null, initialMessage = initialMessage, preflightReadFilter = null)
     }
 
     override fun changeProductType(isRing: Boolean) {
@@ -427,6 +450,7 @@ class DefaultTangemSdkManager(
             runnable = FinalizeTwinTask(secondCardPublicKey, issuerKeyPair),
             cardId = cardId,
             initialMessage = initialMessage,
+            preflightReadFilter = null,
         )
     }
 
