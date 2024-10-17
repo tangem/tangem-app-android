@@ -125,6 +125,7 @@
   <string name="common_generate_addresses">Получить ваши адреса</string>
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
+  <string name="common_hour">час</string>
   <string name="common_import">Импортировать</string>
   <string name="common_in_progress">В процессе</string>
   <string name="common_later">Позже</string>
@@ -181,6 +182,7 @@
   <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Завершить стейкинг</string>
+  <string name="common_week">неделю</string>
   <string name="common_yes">Да</string>
   <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
   <string name="currency_subtitle_expanded">Доступные сети</string>
@@ -261,6 +263,7 @@
   <string name="express_exchange_status_exchanging">Обмен</string>
   <string name="express_exchange_status_exchanging_active">Обмен...</string>
   <string name="express_exchange_status_failed">Неудачно</string>
+  <string name="express_exchange_status_paused">Приостановлен</string>
   <string name="express_exchange_status_received">Депозит получен</string>
   <string name="express_exchange_status_receiving">Ожидание депозита</string>
   <string name="express_exchange_status_receiving_active">Ожидаем пополнения...</string>
@@ -311,7 +314,7 @@
   <string name="give_permission_unlimited">Безлимитно</string>
   <string name="home_button_order">Купить</string>
   <string name="home_button_scan">Сканировать</string>
-  <string name="information_generated_with_ai">Информация сгенерирована ИИ</string>
+  <string name="information_generated_with_ai">Эта информация была сгенерирована ИИ.\nНажмите здесь, если обнаружили ошибку.</string>
   <string name="initial_message_change_access_code_body">Чтобы изменить код доступа, приложите карту или кольцо как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_change_passcode_body">Чтобы изменить пароль, приложите карту как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_create_wallet_body">Чтобы создать кошелек, приложите карту как показано выше и не убирайте до окончания операции</string>
@@ -608,7 +611,7 @@
   </plurals>
   <string name="reset_card_to_factory_button_title">Сбросить карту</string>
   <string name="reset_card_to_factory_condition_1">Я понимаю, что после выполнения этого действия у меня больше не будет доступа к текущему кошельку</string>
-  <string name="reset_card_to_factory_condition_2">Я понимаю, что не смогу этой картой восстановить пароль на остальных картах этого кошелька, если я его забуду</string>
+  <string name="reset_card_to_factory_condition_2">Я понимаю, что не смогу использовать эту карту для восстановления кода доступа на других картах текущего кошелька</string>
   <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек или использовать данную карту или кольцо для восстановления кода доступа.</string>
   <string name="reset_card_without_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек.</string>
   <string name="ring_promo_text">Владельцам колец — 3 обмена без комиссии на Changelly до 15.11!</string>
@@ -626,7 +629,7 @@
   <string name="save_user_wallet_agreement_notice">Обратите внимание, что для совершения транзакции с вашими средствами по-прежнему потребуется ваша карта или кольцо</string>
   <string name="scan_card_settings_button">Сканировать</string>
   <string name="scan_card_settings_message">Отсканируйте карту или кольцо, чтобы изменить ее настройки. Изменения затронут только ту карту или кольцо, которые вы отсканировали, и не повлияют на другие устройства, привязанные к вашему кошельку.</string>
-  <string name="scan_card_settings_title">Приготовьте свой Tangem</string>
+  <string name="scan_card_settings_title">Приготовьте свой Tangem!</string>
   <string name="send_additional_field_already_included">Уже содержится во введенном адресе</string>
   <string name="send_alert_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
   <string name="send_alert_fee_too_low_text">Вы указали комиссию ниже рекомендуемой, это может привести к задержке исполнения вашей транзакции. Продолжить?</string>
@@ -702,7 +705,7 @@
   <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
   <string name="send_tron_account_activation_error">%1$s — это монета в сети Tron. Чтобы рассчитать комиссию и совершить транзакцию, вам необходимо внести немного Tron (TRX) на свой адрес.</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
-  <string name="settings_card_settings_footer">Подготовьтесь к сканированию кольцо или карту, которую вы хотите настроить.</string>
+  <string name="settings_card_settings_footer">Подготовьтесь к сканированию кольца или карты, которую вы хотите настроить.</string>
   <string name="settings_forget_wallet">Забыть кошелек</string>
   <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
   <string name="settings_wallet_name_title">Имя</string>
@@ -752,6 +755,7 @@
   <string name="staking_notification_network_error_text">Стейкинг временно недоступен из-за проблем в сети. Пожалуйста, попробуйте позже.</string>
   <string name="staking_notification_new_validator_funds_transfer">Стейкинг в сети %1$s с новым валидатором автоматически переведет ваши текущие застейканные средства на него.</string>
   <string name="staking_notification_restake_rewards_text">Реинвестируйте свои заработанные награды в вашу застейканную сумму, увеличивая потенциальный доход</string>
+  <string name="staking_notification_restake_text">Рестейк позволяет вам переместить средства из одного валидатора в другого без необходимости выхода из стейкинга.</string>
   <string name="staking_notification_unlock_text">Разблокируйте свои средства, чтобы вывести их из стейкинга. Разблокировка займёт %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Ваши средства будут доступны для использования после 21-дневного периода отзыва. Награда будет выведена вместе с вашими выводими средствами.</string>
   <string name="staking_notification_unstake_text">Ваши средства будут доступны после %s периода отзыва.</string>
@@ -767,7 +771,10 @@
   <string name="staking_reward_claiming_manual">Вручную</string>
   <string name="staking_reward_schedule_block">За блок</string>
   <string name="staking_reward_schedule_day">Ежедневно</string>
+  <string name="staking_reward_schedule_each">Каждый %s</string>
   <string name="staking_reward_schedule_each_day">Каждый день</string>
+  <string name="staking_reward_schedule_each_days">Каждые %s дня</string>
+  <string name="staking_reward_schedule_each_plural">Каждые</string>
   <string name="staking_reward_schedule_epoch">За эпоху</string>
   <string name="staking_reward_schedule_era">За эру</string>
   <string name="staking_reward_schedule_hour">Ежечасно</string>
@@ -776,7 +783,7 @@
   <string name="staking_rewards">Вознаграждения</string>
   <string name="staking_stake_locked">Стейкинг закрыт</string>
   <string name="staking_stake_more">Застейкать еще</string>
-  <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать %2$s ежегодно</string>
+  <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать награду %2$s</string>
   <string name="staking_tap_to_unlock">Нажмите для разблокировки</string>
   <string name="staking_tap_to_unlock_or_vote">Нажмите для разблокировки</string>
   <string name="staking_tap_to_withdraw">Нажмите для вывода</string>
@@ -960,7 +967,7 @@
   <string name="warning_express_too_maximum_amount_title">Сумма для обмена должна быть не более %s</string>
   <string name="warning_express_too_minimal_amount_title">Сумма для обмена должна быть не менее %s</string>
   <string name="warning_express_wrong_amount_description">Пожалуйста, измените сумму для обмена</string>
-  <string name="warning_failed_to_verify_card_message">Возможно, данная карта - образец или подделка</string>
+  <string name="warning_failed_to_verify_card_message">Возможно, данная карта является образцом или подделкой</string>
   <string name="warning_failed_to_verify_card_title">Ошибка проверки подлинности</string>
   <string name="warning_hedera_missing_token_association_button_title">Ассоциировать</string>
   <string name="warning_hedera_missing_token_association_message">Этот токен должен быть ассоциирован с вашей учетной записью Hedera, прежде чем вы сможете его принять. Стоимость ассоциации ~%1$s %2$s </string>
@@ -970,7 +977,7 @@
   <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
   <string name="warning_low_signatures_title">Малое количество подписей</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токены на разных сетях могут иметь разные адреса. Пожалуйста, убедитесь при переводе средств, что ваш адрес соответствует сети.</string>
-  <string name="warning_matic_migration_message">Токен MATIC мигрирует на POL. Однако крайний срок не установлен, и MATIC пока не устарел. Вы можете спокойно продолжать использовать токен MATIC или воспользоваться биржами, чтобы обменять его на POL.</string>
+  <string name="warning_matic_migration_message">Токен MATIC мигрирует на POL. Однако крайний срок не установлен, и MATIC пока не устарел. Вы можете спокойно продолжать использовать токен MATIC или обменять его на POL.</string>
   <string name="warning_matic_migration_title">Миграция MATIC в POL</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="one">Используйте вашу карту или кольцо, чтобы получить адрес для %d сети</item>
