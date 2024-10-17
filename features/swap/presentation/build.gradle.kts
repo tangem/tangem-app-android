@@ -24,6 +24,7 @@ dependencies {
     implementation(projects.core.decompose) // For Route supertype
 
     /** Domain modules **/
+    implementation(projects.domain.models)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)
@@ -31,13 +32,17 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
+    implementation(projects.domain.staking)
+    implementation(projects.domain.feedback)
+
+    /** Feature modules */
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
-    implementation(projects.domain.staking)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
