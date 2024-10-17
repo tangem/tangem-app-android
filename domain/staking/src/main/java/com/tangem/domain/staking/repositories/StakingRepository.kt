@@ -49,12 +49,7 @@ interface StakingRepository {
         refresh: Boolean = false,
     )
 
-    fun getMultiYieldBalanceFlow(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): Flow<YieldBalanceList>
-
-    fun getMultiYieldBalance(
+    fun getMultiYieldBalanceUpdates(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList>
