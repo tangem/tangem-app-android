@@ -236,6 +236,8 @@ include(":domain:markets")
 include(":domain:markets:models")
 include(":domain:manage-tokens")
 include(":domain:manage-tokens:models")
+include(":domain:onramp")
+include(":domain:onramp:models")
 // endregion Domain modules
 
 // region Data modules
@@ -259,4 +261,5 @@ include(":data:staking")
 include(":data:wallet-connect")
 include(":data:markets")
 include(":data:manage-tokens")
+include(":data:onramp")
 // endregion Data modules

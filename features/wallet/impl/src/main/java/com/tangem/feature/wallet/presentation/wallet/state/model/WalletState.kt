@@ -20,7 +20,6 @@ internal sealed interface WalletState : WalletStateHolder {
     sealed class MultiCurrency : WalletState {
 
         abstract val tokensListState: WalletTokensListState
-        abstract val manageTokensButtonConfig: ManageTokensButtonConfig?
 
         data class Content(
             override val pullToRefreshConfig: PullToRefreshConfig,
@@ -28,7 +27,6 @@ internal sealed interface WalletState : WalletStateHolder {
             override val warnings: ImmutableList<WalletNotification>,
             override val bottomSheetConfig: TangemBottomSheetConfig?,
             override val tokensListState: WalletTokensListState,
-            override val manageTokensButtonConfig: ManageTokensButtonConfig?,
         ) : MultiCurrency()
 
         data class Locked(
@@ -43,7 +41,6 @@ internal sealed interface WalletState : WalletStateHolder {
             ) {
 
             override val tokensListState = WalletTokensListState.ContentState.Locked
-            override val manageTokensButtonConfig = null
         }
     }
 

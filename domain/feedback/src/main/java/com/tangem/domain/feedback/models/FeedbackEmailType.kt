@@ -30,4 +30,20 @@ sealed interface FeedbackEmailType {
         val transactionTypes: List<String>,
         val unsignedTransactions: List<String?>,
     ) : FeedbackEmailType
+
+    data class SwapProblem(
+        override val cardInfo: CardInfo,
+        val providerName: String,
+        val txId: String,
+    ) : FeedbackEmailType
+
+    /**
+     * Error in currency description
+     *
+     * @property currencyId   currency id
+     * @property currencyName currency name
+     */
+    data class CurrencyDescriptionError(val currencyId: String, val currencyName: String) : FeedbackEmailType {
+        override val cardInfo: CardInfo? = null
+    }
 }

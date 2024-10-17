@@ -6,7 +6,7 @@ import com.tangem.blockchainsdk.BlockchainProviderTypes
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
 import com.tangem.blockchainsdk.utils.createPrivateProviderType
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.datasource.config.models.ProviderModel
+import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.utils.converter.Converter
 import timber.log.Timber
 

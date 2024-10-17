@@ -22,7 +22,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionType
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
@@ -31,7 +30,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.converters.SwapCurrencyConverter
-import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
@@ -227,7 +226,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             ),
         ).getOrElse {
             Timber.e(it, "Failed to create approveTransaction")
-            return SwapTransactionState.UnknownError
+            return SwapTransactionState.Error.UnknownError
         }
 
         val result = sendTransactionUseCase(
@@ -243,16 +242,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     timestamp = System.currentTimeMillis(),
                 )
             },
-            ifLeft = {
-                when (it) {
-                    SendTransactionError.UserCancelledError -> SwapTransactionState.UserCancelled
-                    is SendTransactionError.BlockchainSdkError -> SwapTransactionState.BlockchainError
-                    is SendTransactionError.TangemSdkError -> SwapTransactionState.TangemSdkError
-                    is SendTransactionError.NetworkError -> SwapTransactionState.NetworkError
-                    is SendTransactionError.DemoCardError -> SwapTransactionState.DemoMode
-                    else -> SwapTransactionState.UnknownError
-                }
-            },
+            ifLeft = { SwapTransactionState.Error.TransactionError(it) },
         )
     }
 
@@ -592,7 +582,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             """.trimIndent(),
         )
 
-        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return SwapTransactionState.UnknownError
         val cardId = userWallet.scanResponse.card.cardId
         if (isDemoCardUseCase(cardId)) return SwapTransactionState.DemoMode
 
@@ -694,12 +683,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             hash = dataToSign,
         ).getOrElse {
             Timber.e(it, "Failed to create swap dex tx data")
-            return SwapTransactionState.UnknownError
+            return SwapTransactionState.Error.UnknownError
         }
 
         val result = sendTransactionUseCase(
             txData = txData,
-            userWallet = getUserWalletUseCase(userWalletId).getOrElse { return SwapTransactionState.UnknownError },
+            userWallet = userWallet,
             network = currencyToSendStatus.currency.network,
         )
         return result.fold(
@@ -739,7 +728,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     timestamp = System.currentTimeMillis(),
                 )
             },
-            ifLeft = { handleSendTxError(it) },
+            ifLeft = { SwapTransactionState.Error.TransactionError(it) },
         )
     }
 
@@ -774,14 +763,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value.orEmpty(),
             refundAddress = currencyToSend.value.networkAddress?.defaultAddress?.value,
             refundExtraId = null, // currently always null
-        ).getOrElse { return SwapTransactionState.ExpressError(it) }
+        ).getOrElse { return SwapTransactionState.Error.ExpressError(it) }
 
         val exchangeDataCex =
-            exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.UnknownError
+            exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.Error.UnknownError
 
         val cardId = userWallet.scanResponse.card.cardId
 
-        if (isDemoCardUseCase(cardId)) return SwapTransactionState.UnknownError
+        if (isDemoCardUseCase(cardId)) return SwapTransactionState.Error.UnknownError
 
         val txData = createTransactionUseCase(
             amount = amount.value.convertToSdkAmount(currencyToSend.currency),
@@ -795,11 +784,11 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             network = currencyToSend.currency.network,
         ).getOrElse {
             Timber.e(it, "Failed to create swap CEX tx data")
-            return SwapTransactionState.UnknownError
+            return SwapTransactionState.Error.UnknownError
         }
 
         if (txData.extras == null && exchangeDataCex.txExtraId != null) {
-            return SwapTransactionState.UnknownError
+            return SwapTransactionState.Error.UnknownError
         }
 
         val result = sendTransactionUseCase(
@@ -810,9 +799,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
         val derivationPath = currencyToSend.currency.network.derivationPath.value
         return result.fold(
-            ifLeft = {
-                handleSendTxError(it)
-            },
+            ifLeft = { SwapTransactionState.Error.TransactionError(it) },
             ifRight = { txHash ->
                 repository.exchangeSent(
                     txId = exchangeDataCex.txId,
@@ -855,17 +842,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 )
             },
         )
-    }
-
-    private fun handleSendTxError(txError: SendTransactionError?): SwapTransactionState {
-        return when (txError) {
-            SendTransactionError.UserCancelledError -> SwapTransactionState.UserCancelled
-            is SendTransactionError.BlockchainSdkError -> SwapTransactionState.BlockchainError
-            is SendTransactionError.TangemSdkError -> SwapTransactionState.TangemSdkError
-            is SendTransactionError.NetworkError -> SwapTransactionState.NetworkError
-            is SendTransactionError.DemoCardError -> SwapTransactionState.DemoMode
-            else -> SwapTransactionState.UnknownError
-        }
     }
 
     @Suppress("LongMethod")
@@ -1061,6 +1037,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 Blockchain.Cyber,
                 Blockchain.CyberTestnet,
                 Blockchain.InternetComputer,
+                Blockchain.EnergyWebChain,
+                Blockchain.EnergyWebChainTestnet,
+                Blockchain.EnergyWebX,
+                Blockchain.EnergyWebXTestnet,
+                Blockchain.Casper,
+                Blockchain.CasperTestnet,
+                Blockchain.Core,
+                Blockchain.CoreTestnet,
                 -> Fee.Common(feeAmount)
                 // endregion
             }
@@ -1109,13 +1093,15 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return SwapAmount(token.value.amount ?: BigDecimal.ZERO, token.currency.decimals)
     }
 
-    override suspend fun selectInitialCurrencyToSwap(
+    override suspend fun getInitialCurrencyToSwap(
         initialCryptoCurrency: CryptoCurrency,
         state: TokensDataStateExpress,
+        isReverseFromTo: Boolean,
     ): CryptoCurrencyStatus? {
-        return initialToCurrencyResolver.tryGetFromCache(initialCryptoCurrency, state)
-            ?: initialToCurrencyResolver.tryGetWithMaxAmount(state)
-            ?: state.toGroup.available.firstOrNull()?.currencyStatus
+        val group = state.getGroupWithReverse(isReverseFromTo)
+        return initialToCurrencyResolver.tryGetFromCache(userWallet, initialCryptoCurrency, state, isReverseFromTo)
+            ?: initialToCurrencyResolver.tryGetWithMaxAmount(state, isReverseFromTo)
+            ?: group.available.firstOrNull()?.currencyStatus
     }
 
     override fun getNativeToken(networkId: String): CryptoCurrency {
@@ -1224,7 +1210,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     @Suppress("LongMethod")
     private suspend fun getQuotesState(
         provider: SwapProvider,
-        quoteDataModel: Either<DataError, QuoteModel>,
+        quoteDataModel: Either<ExpressDataError, QuoteModel>,
         amount: SwapAmount,
         fromToken: CryptoCurrencyStatus,
         toToken: CryptoCurrencyStatus,
@@ -1303,7 +1289,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     fromToken = fromToken,
                     amount = amount,
                     includeFeeInAmount = includeFeeInAmount,
-                    dataError = error,
+                    expressDataError = error,
                 )
             },
         )
@@ -1313,7 +1299,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         fromToken: CryptoCurrencyStatus,
         amount: SwapAmount,
         includeFeeInAmount: IncludeFeeInAmount,
-        dataError: DataError,
+        expressDataError: ExpressDataError,
     ): SwapState.SwapError {
         val rates = getQuotes(fromToken.currency.id)
         val fromTokenSwapInfo = TokenSwapInfo(
@@ -1322,7 +1308,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 ?: BigDecimal.ZERO,
             cryptoCurrencyStatus = fromToken,
         )
-        return SwapState.SwapError(fromTokenSwapInfo, dataError, includeFeeInAmount)
+        return SwapState.SwapError(fromTokenSwapInfo, expressDataError, includeFeeInAmount)
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -1669,7 +1655,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     fromToken = fromTokenStatus,
                     amount = swapAmount,
                     includeFeeInAmount = IncludeFeeInAmount.Excluded,
-                    dataError = DataError.UnknownError,
+                    expressDataError = ExpressDataError.UnknownError,
                 )
             }
         }

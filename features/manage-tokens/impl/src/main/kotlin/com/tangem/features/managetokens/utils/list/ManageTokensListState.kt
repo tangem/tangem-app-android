@@ -17,6 +17,7 @@ internal data class ManageTokensListState(
     val uiBatches: List<Batch<Int, List<CurrencyItemUM>>> = mutableListOf(),
     val currencyBatches: List<Batch<Int, List<ManagedCryptoCurrency>>> = mutableListOf(),
     val canEditItems: Boolean = true,
+    val searchQuery: String? = null,
 ) {
 
     fun batchIndexByCurrencyId(currencyId: ManagedCryptoCurrency.ID): Int {

@@ -30,11 +30,12 @@ internal class ItemsBuilder @Inject constructor(
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
         isManageTokensAvailable: Boolean,
+        isRenameWalletAvailable: Boolean,
         forgetWallet: () -> Unit,
         renameWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf(
-        buildNameItem(userWalletName, renameWallet),
+        buildNameItem(userWalletName, isRenameWalletAvailable, renameWallet),
         buildCardItem(
             userWalletId = userWalletId,
             isLinkMoreCardsAvailable = isLinkMoreCardsAvailable,
@@ -45,12 +46,14 @@ internal class ItemsBuilder @Inject constructor(
         buildForgetItem(forgetWallet),
     )
 
-    private fun buildNameItem(walletName: String, renameWallet: () -> Unit) = WalletSettingsItemUM.WithText(
-        id = "wallet_name",
-        title = resourceReference(id = R.string.settings_wallet_name_title),
-        text = stringReference(walletName),
-        onClick = renameWallet,
-    )
+    private fun buildNameItem(walletName: String, isRenameWalletAvailable: Boolean, renameWallet: () -> Unit) =
+        WalletSettingsItemUM.WithText(
+            id = "wallet_name",
+            title = resourceReference(id = R.string.settings_wallet_name_title),
+            text = stringReference(walletName),
+            isEnabled = isRenameWalletAvailable,
+            onClick = renameWallet,
+        )
 
     private fun buildCardItem(
         userWalletId: UserWalletId,

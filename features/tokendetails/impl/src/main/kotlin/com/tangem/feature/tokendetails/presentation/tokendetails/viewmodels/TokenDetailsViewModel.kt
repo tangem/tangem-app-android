@@ -35,6 +35,7 @@ import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.GetStakingPendingTransactionsUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
+import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
@@ -73,7 +74,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
-import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -127,7 +127,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
     getUserWalletUseCase: GetUserWalletUseCase,
-    tokenDetailsFeatureToggles: TokenDetailsFeatureToggles,
+    getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
     private val appRouter: AppRouter,
@@ -135,12 +135,12 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.USER_WALLET_ID_KEY)
         ?.unbundle(UserWalletId.serializer())
-        ?: error("This screen can't open without `UserWalletId`")
+        ?: error("This screen can't be opened without `UserWalletId`")
 
     private val cryptoCurrency: CryptoCurrency =
         savedStateHandle.get<Bundle>(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
             ?.unbundle(CryptoCurrency.serializer())
-            ?: error("This screen can't open without `CryptoCurrency`")
+            ?: error("This screen can't be opened without `CryptoCurrency`")
 
     private val userWallet: UserWallet
 
@@ -156,22 +156,25 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var stakingEntryInfo: StakingEntryInfo? = null
+    private var stakingAvailability: StakingAvailability = StakingAvailability.Unavailable
     private var swapTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<SwapTransactionsState>>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         stakingEntryInfoProvider = Provider { stakingEntryInfo },
+        stakingAvailabilityProvider = Provider { stakingAvailability },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         pendingBalancesProvider = Provider { stakingPendingBalances },
         clickIntents = this,
-        symbol = cryptoCurrency.symbol,
-        decimals = cryptoCurrency.decimals,
-        featureToggles = tokenDetailsFeatureToggles,
-        stakingFeatureToggles = stakingFeatureToggles,
-        userWalletId = userWalletId,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
+        userWalletId = userWalletId,
+        stakingFeatureToggles = stakingFeatureToggles,
+        getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
+        getStakingAvailabilityUseCase = getStakingAvailabilityUseCase,
+        symbol = cryptoCurrency.symbol,
+        decimals = cryptoCurrency.decimals,
     )
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -398,12 +401,13 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateStakingInfo() {
         viewModelScope.launch {
-            val stakingAvailability = getStakingAvailabilityUseCase(
+            val availability = getStakingAvailabilityUseCase(
                 userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,
             ).getOrElse { StakingAvailability.Unavailable }
 
-            internalUiState.value = stateFactory.getStateWithUpdatedStakingAvailability(stakingAvailability)
+            stakingAvailability = availability
+
             if (stakingAvailability is StakingAvailability.Available) {
                 val stakingInfo = getStakingEntryInfoUseCase(
                     cryptoCurrencyId = cryptoCurrency.id,

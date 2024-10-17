@@ -24,5 +24,8 @@ internal sealed interface SaveWalletAction : Action {
         data object Cancel : SaveWalletAction
     }
 
-    data class SaveWalletAfterBackup(val hasBackupError: Boolean) : SaveWalletAction
+    data class SaveWalletAfterBackup(
+        val hasBackupError: Boolean,
+        val shouldNavigateToWallet: Boolean,
+    ) : SaveWalletAction
 }
