@@ -145,18 +145,7 @@ class MockStakingRepository : StakingRepository {
         /* no-op */
     }
 
-    override fun getMultiYieldBalanceFlow(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): Flow<YieldBalanceList> = channelFlow {
-        send(
-            YieldBalanceList.Data(
-                balances = listOf(YieldBalance.Error),
-            ),
-        )
-    }
-
-    override fun getMultiYieldBalance(
+    override fun getMultiYieldBalanceUpdates(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> = flowOf()
