@@ -49,7 +49,7 @@
   <string name="card_settings_action_sheet_reset">リセット</string>
   <string name="card_settings_action_sheet_title">本当に実行しますか?</string>
   <string name="card_settings_change_access_code">アクセスコードの変更</string>
-  <string name="card_settings_change_access_code_footer">アクセスコードは、このカードのみで変更されます</string>
+  <string name="card_settings_change_access_code_footer">アクセスコードは、このカードまたはリングによってのみ変更されます</string>
   <string name="card_settings_completed_reset_alert_message">選択したウォレットのすべてのTangemデバイスが、工場出荷時の設定にリセットされました。これで、新しいウォレットを作成できます。</string>
   <string name="card_settings_completed_reset_alert_title">リセット完了</string>
   <string name="card_settings_continue_reset_alert_message">このウォレットの次のデバイスをリセットしますか?</string>
