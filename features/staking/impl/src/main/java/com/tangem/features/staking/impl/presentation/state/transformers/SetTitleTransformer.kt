@@ -20,7 +20,9 @@ internal object SetTitleTransformer : Transformer<StakingUiState> {
 
         val title = when (currentStep) {
             StakingStep.Amount -> resourceReference(R.string.send_amount_label)
-            StakingStep.Validators -> resourceReference(R.string.staking_validators)
+            StakingStep.RestakeValidator,
+            StakingStep.Validators,
+            -> resourceReference(R.string.staking_validators)
             StakingStep.RewardsValidators -> resourceReference(R.string.common_claim_rewards)
             StakingStep.InitialInfo -> resourceReference(
                 R.string.staking_title_stake,
@@ -29,11 +31,11 @@ internal object SetTitleTransformer : Transformer<StakingUiState> {
 
             StakingStep.Confirmation -> {
                 when (actionType) {
-                    StakingActionCommonType.ENTER -> resourceReference(
+                    StakingActionCommonType.Enter -> resourceReference(
                         R.string.staking_title_stake,
                         wrappedList(prevState.cryptoCurrencyName),
                     )
-                    StakingActionCommonType.EXIT -> resourceReference(
+                    StakingActionCommonType.Exit -> resourceReference(
                         R.string.staking_title_unstake,
                         wrappedList(prevState.cryptoCurrencyName),
                     )
@@ -51,7 +53,7 @@ internal object SetTitleTransformer : Transformer<StakingUiState> {
             }
         }
 
-        val subtitle = if (currentStep == StakingStep.Confirmation && actionType == StakingActionCommonType.ENTER) {
+        val subtitle = if (currentStep == StakingStep.Confirmation && actionType == StakingActionCommonType.Enter) {
             stringReference(prevState.walletName)
         } else {
             null
