@@ -65,7 +65,7 @@ internal class AddStakingNotificationsTransformer(
         val feeValue = feeState?.fee?.amount?.value.orZero()
         val reduceAmountBy = confirmationState.reduceAmountBy.orZero()
 
-        val isEnterAction = prevState.actionType == StakingActionCommonType.ENTER
+        val isEnterAction = prevState.actionType == StakingActionCommonType.Enter
         val isFeeCoverage = checkFeeCoverage(
             amountValue = amountValue,
             feeValue = feeValue,
@@ -93,12 +93,7 @@ internal class AddStakingNotificationsTransformer(
                 prevState = prevState,
                 feeError = feeError,
                 sendingAmount = sendingAmount,
-                onReload = {
-                    prevState.clickIntents.getFee(
-                        confirmationState.pendingAction,
-                        confirmationState.pendingActions,
-                    )
-                },
+                onReload = prevState.clickIntents::getFee,
                 feeValue = feeValue,
             )
             // warnings
@@ -119,7 +114,8 @@ internal class AddStakingNotificationsTransformer(
                 isPrimaryButtonEnabled = notifications.none {
                     it is StakingNotification.Error ||
                         it is NotificationUM.Error ||
-                        it is NotificationUM.Warning.NetworkFeeUnreachable
+                        it is NotificationUM.Warning.NetworkFeeUnreachable ||
+                        it is StakingNotification.Warning.TransactionInProgress
                 },
             ),
         )
@@ -136,13 +132,11 @@ internal class AddStakingNotificationsTransformer(
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val network = cryptoCurrency.network
 
-        if (feeError != null) {
-            addFeeUnreachableNotification(
-                feeError = feeError,
-                tokenName = cryptoCurrencyStatusProvider().currency.name,
-                onReload = onReload,
-            )
-        }
+        addFeeUnreachableNotification(
+            feeError = feeError,
+            tokenName = cryptoCurrencyStatusProvider().currency.name,
+            onReload = onReload,
+        )
         addStakeExceedBalanceNotification(
             feeAmount = feeValue,
             sendingAmount = sendingAmount,
@@ -229,7 +223,7 @@ internal class AddStakingNotificationsTransformer(
 
         val showNotification = sendingAmount + feeAmount > balance
         if (showNotification) {
-            val notification = if (actionType == StakingActionCommonType.ENTER) {
+            val notification = if (actionType == StakingActionCommonType.Enter) {
                 NotificationUM.Error.TotalExceedsBalance
             } else {
                 with(cryptoCurrencyStatus.currency) {
@@ -250,9 +244,9 @@ internal class AddStakingNotificationsTransformer(
 
     private fun MutableList<NotificationUM>.addInfoNotifications(prevState: StakingUiState) {
         when (prevState.actionType) {
-            StakingActionCommonType.EXIT -> addExitInfoNotifications()
-            StakingActionCommonType.ENTER -> addEnterInfoNotifications()
-            else -> addPendingInfoNotifications(prevState)
+            StakingActionCommonType.Enter -> addEnterInfoNotifications()
+            StakingActionCommonType.Exit -> addExitInfoNotifications()
+            is StakingActionCommonType.Pending -> addPendingInfoNotifications(prevState)
         }
     }
 
@@ -312,6 +306,10 @@ internal class AddStakingNotificationsTransformer(
             StakingActionType.VOTE_LOCKED -> {
                 resourceReference(R.string.staking_revote) to
                     resourceReference(R.string.staking_notifications_revote_tron_text)
+            }
+            StakingActionType.RESTAKE -> {
+                resourceReference(R.string.staking_restake) to
+                    resourceReference(R.string.staking_notification_restake_text)
             }
             else -> null to null
         }
