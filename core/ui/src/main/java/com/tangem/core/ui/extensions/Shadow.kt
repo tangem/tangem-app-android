@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 
-@Suppress("LongMethod")
 fun Modifier.softLayerShadow(
     radius: Dp = 8.dp,
     color: Color = Color.Black.copy(alpha = .23f),
@@ -21,26 +20,20 @@ fun Modifier.softLayerShadow(
     isAlphaContentClip: Boolean = false,
 ): Modifier = this.drawWithCache {
     val radiusPx = radius.toPx()
-    val isRadiusValid = radiusPx > 0.0F
+    require(radiusPx > 0.0F)
     val paint = Paint().apply {
-        this.color = if (isRadiusValid) {
-            Color.Transparent
-        } else {
-            color
-        }
+        this.color = color
 
         asFrameworkPaint().apply {
             isDither = true
             isAntiAlias = true
 
-            if (isRadiusValid) {
-                setShadowLayer(
-                    radiusPx,
-                    offset.x.toPx(),
-                    offset.y.toPx(),
-                    color.toArgb(),
-                )
-            }
+            setShadowLayer(
+                radiusPx,
+                offset.x.toPx(),
+                offset.y.toPx(),
+                color.toArgb(),
+            )
         }
     }
     val shapeOutline = shape.createOutline(
@@ -55,13 +48,6 @@ fun Modifier.softLayerShadow(
     val drawShadowBlock: DrawScope.() -> Unit = {
         drawIntoCanvas { canvas ->
             canvas.withSave {
-                if (isRadiusValid.not()) {
-                    canvas.translate(
-                        dx = offset.x.toPx(),
-                        dy = offset.y.toPx(),
-                    )
-                }
-
                 if (spread.value != 0.0F) {
                     canvas.scale(
                         sx = spreadScale(

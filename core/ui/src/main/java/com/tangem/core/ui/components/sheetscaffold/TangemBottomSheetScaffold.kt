@@ -266,7 +266,7 @@ private fun StandardBottomSheet(
             .softLayerShadow(
                 radius = 8.dp,
                 color = Color.Black.copy(
-                    alpha = if(isSystemInDarkTheme()) .16f else .08f
+                    alpha = if (isSystemInDarkTheme()) .16f else .08f
                 ),
                 shape = shape,
                 offset = DpOffset(x = 0.dp, y = (-4).dp),
@@ -278,7 +278,6 @@ private fun StandardBottomSheet(
         content()
     }
 }
-
 
 @Composable
 private fun BottomSheetScaffoldLayout(
@@ -309,7 +308,7 @@ private fun BottomSheetScaffoldLayout(
         ),
     ) {
             (topBarMeasurables, bodyMeasurables, bottomSheetMeasurables, snackbarHostMeasurables),
-            constraints, 
+            constraints,
         ->
         val layoutWidth = constraints.maxWidth
         val layoutHeight = constraints.maxHeight
