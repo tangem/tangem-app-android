@@ -4,6 +4,10 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.common.DerivationStyleProvider
+import com.tangem.domain.common.extensions.canHandleToken
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.Network
 import timber.log.Timber
 
@@ -11,26 +15,11 @@ fun getBlockchain(networkId: Network.ID): Blockchain {
     return Blockchain.fromId(networkId.value)
 }
 
-fun getNetwork(networkId: Network.ID, derivationPath: Network.DerivationPath): Network {
-    val blockchain = getBlockchain(networkId)
-
-    return Network(
-        id = networkId,
-        backendId = blockchain.toNetworkId(),
-        name = blockchain.getNetworkName(),
-        isTestnet = blockchain.isTestnet(),
-        derivationPath = derivationPath,
-        currencySymbol = blockchain.currency,
-        standardType = getNetworkStandardType(blockchain),
-        hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
-        canHandleTokens = blockchain.canHandleTokens(),
-    )
-}
-
 fun getNetwork(
     blockchain: Blockchain,
     extraDerivationPath: String?,
     derivationStyleProvider: DerivationStyleProvider?,
+    canHandleTokens: Boolean,
 ): Network? {
     if (blockchain == Blockchain.Unknown) {
         Timber.e("Unable to convert Unknown blockchain to the domain network model")
@@ -42,11 +31,44 @@ fun getNetwork(
         backendId = blockchain.toNetworkId(),
         name = blockchain.getNetworkName(),
         isTestnet = blockchain.isTestnet(),
-        derivationPath = getNetworkDerivationPath(blockchain, extraDerivationPath, derivationStyleProvider),
+        derivationPath = getNetworkDerivationPath(
+            blockchain = blockchain,
+            extraDerivationPath = extraDerivationPath,
+            cardDerivationStyleProvider = derivationStyleProvider,
+        ),
         currencySymbol = blockchain.currency,
         standardType = getNetworkStandardType(blockchain),
         hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
-        canHandleTokens = blockchain.canHandleTokens(),
+        canHandleTokens = canHandleTokens,
+    )
+}
+
+fun getNetwork(networkId: Network.ID, derivationPath: Network.DerivationPath, scanResponse: ScanResponse): Network? {
+    val blockchain = getBlockchain(networkId)
+    if (blockchain == Blockchain.Unknown) {
+        Timber.e("Unable to convert Unknown blockchain to the domain network model")
+        return null
+    }
+
+    return Network(
+        id = networkId,
+        backendId = blockchain.toNetworkId(),
+        name = blockchain.getNetworkName(),
+        isTestnet = blockchain.isTestnet(),
+        derivationPath = derivationPath,
+        currencySymbol = blockchain.currency,
+        standardType = getNetworkStandardType(blockchain),
+        hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
+        canHandleTokens = scanResponse.card.canHandleToken(blockchain, scanResponse.cardTypesResolver),
+    )
+}
+
+fun getNetwork(blockchain: Blockchain, extraDerivationPath: String?, scanResponse: ScanResponse): Network? {
+    return getNetwork(
+        blockchain = blockchain,
+        extraDerivationPath = extraDerivationPath,
+        derivationStyleProvider = scanResponse.derivationStyleProvider,
+        canHandleTokens = scanResponse.card.canHandleToken(blockchain, scanResponse.cardTypesResolver),
     )
 }
 

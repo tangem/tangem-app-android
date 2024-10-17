@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.components.BottomFade
-import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -293,25 +292,6 @@ private fun BaseScaffold(
                 event = state.event,
                 modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing16),
             )
-        },
-        floatingActionButton = {
-            val manageTokensButtonConfig by rememberUpdatedState(
-                newValue = (state.wallets[state.selectedWalletIndex] as? WalletState.MultiCurrency)
-                    ?.manageTokensButtonConfig,
-            )
-
-            AnimatedVisibility(
-                visible = manageTokensButtonConfig != null,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                val config = manageTokensButtonConfig ?: return@AnimatedVisibility
-
-                ManageTokensButton(
-                    modifier = Modifier.navigationBarsPadding(),
-                    onClick = config.onClick,
-                )
-            }
         },
         floatingActionButtonPosition = FabPosition.Center,
         containerColor = TangemTheme.colors.background.secondary,
@@ -757,17 +737,6 @@ private fun WalletSnackbarHost(
             TangemSnackbar(data)
         }
     }
-}
-
-@Composable
-private fun ManageTokensButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    PrimaryButton(
-        text = stringResource(id = R.string.main_manage_tokens),
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens.spacing16),
-    )
 }
 
 internal fun LazyListScope.organizeTokens(state: WalletState, itemModifier: Modifier) {

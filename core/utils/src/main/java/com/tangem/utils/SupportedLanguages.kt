@@ -11,6 +11,7 @@ object SupportedLanguages {
     const val JAPANESE = "ja"
     const val UKRAINIAN = "uk"
     const val CHINESE = "uk"
+    const val SPANISH = "es"
 
     val supportedLangugeCodes = listOf(
         ENGLISH,
@@ -21,6 +22,7 @@ object SupportedLanguages {
         JAPANESE,
         UKRAINIAN,
         CHINESE,
+        SPANISH,
     )
 
     fun getCurrentSupportedLanguageCode(): String {

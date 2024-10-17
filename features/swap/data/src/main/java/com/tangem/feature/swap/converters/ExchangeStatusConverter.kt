@@ -9,7 +9,7 @@ internal class ExchangeStatusConverter : Converter<ExchangeStatusResponse, Excha
     override fun convert(value: ExchangeStatusResponse): ExchangeStatusModel {
         return ExchangeStatusModel(
             providerId = value.providerId,
-            status = ExchangeStatus.values().firstOrNull {
+            status = ExchangeStatus.entries.firstOrNull {
                 it.name.lowercase() == value.status.name.lowercase()
             },
             txId = value.externalTxId,

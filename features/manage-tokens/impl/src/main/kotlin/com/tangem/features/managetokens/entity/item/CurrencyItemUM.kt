@@ -48,4 +48,11 @@ internal sealed class CurrencyItemUM {
         override val symbol: String = "loading"
         override val icon: CurrencyIconState = CurrencyIconState.Loading
     }
+
+    data object SearchNothingFound : CurrencyItemUM() {
+        override val id: ManagedCryptoCurrency.ID = ManagedCryptoCurrency.ID(value = "not found text")
+        override val name: String = "content not found"
+        override val symbol: String = "content not found"
+        override val icon: CurrencyIconState = CurrencyIconState.Loading
+    }
 }

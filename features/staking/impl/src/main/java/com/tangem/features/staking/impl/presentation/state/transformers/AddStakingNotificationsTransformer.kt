@@ -119,7 +119,8 @@ internal class AddStakingNotificationsTransformer(
                 isPrimaryButtonEnabled = notifications.none {
                     it is StakingNotification.Error ||
                         it is NotificationUM.Error ||
-                        it is NotificationUM.Warning.NetworkFeeUnreachable
+                        it is NotificationUM.Warning.NetworkFeeUnreachable ||
+                        it is StakingNotification.Warning.TransactionInProgress
                 },
             ),
         )
@@ -136,13 +137,11 @@ internal class AddStakingNotificationsTransformer(
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val network = cryptoCurrency.network
 
-        if (feeError != null) {
-            addFeeUnreachableNotification(
-                feeError = feeError,
-                tokenName = cryptoCurrencyStatusProvider().currency.name,
-                onReload = onReload,
-            )
-        }
+        addFeeUnreachableNotification(
+            feeError = feeError,
+            tokenName = cryptoCurrencyStatusProvider().currency.name,
+            onReload = onReload,
+        )
         addStakeExceedBalanceNotification(
             feeAmount = feeValue,
             sendingAmount = sendingAmount,

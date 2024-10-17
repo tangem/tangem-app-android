@@ -102,7 +102,8 @@ private class PortfolioTokenUMProvider : CollectionPreviewParameterProvider<Port
         tokenUM.copy(
             tokenItemState = tokenUM.tokenItemState.copy(
                 fiatAmountState = contentFiatAmount.copy(text = DASH_SIGN),
-                cryptoAmountState = tokenUM.tokenItemState.cryptoAmountState.copy(text = DASH_SIGN),
+                subtitle2State = (tokenUM.tokenItemState.subtitle2State as TokenItemState.Subtitle2State.TextContent)
+                    .copy(text = DASH_SIGN),
             ),
         ),
         tokenUM.copy(isBalanceHidden = true),
