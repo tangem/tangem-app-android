@@ -24,24 +24,10 @@ internal object CardDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetBiometricsStatusUseCase(
-        cardSdkConfigRepository: CardSdkConfigRepository,
-    ): GetBiometricsStatusUseCase {
-        return GetBiometricsStatusUseCase(cardSdkConfigRepository = cardSdkConfigRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideSetAccessCodeRequestPolicyUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
     ): SetAccessCodeRequestPolicyUseCase {
         return SetAccessCodeRequestPolicyUseCase(cardSdkConfigRepository = cardSdkConfigRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideWasWalletAlreadySignedHashesConfirmedUseCase(cardRepository: CardRepository): WasCardScannedUseCase {
-        return WasCardScannedUseCase(cardRepository = cardRepository)
     }
 
     @Provides
