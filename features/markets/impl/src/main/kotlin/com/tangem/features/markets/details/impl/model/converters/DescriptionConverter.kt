@@ -12,7 +12,8 @@ import com.tangem.utils.converter.Converter
 
 @Stable
 internal class DescriptionConverter(
-    val onReadModeClicked: (InfoBottomSheetContent) -> Unit,
+    private val onReadModeClicked: (InfoBottomSheetContent) -> Unit,
+    private val onGeneratedAINotificationClick: () -> Unit,
 ) : Converter<TokenMarketInfo, MarketsTokenDetailsUM.Description?> {
 
     override fun convert(value: TokenMarketInfo): MarketsTokenDetailsUM.Description? {
@@ -32,7 +33,9 @@ internal class DescriptionConverter(
                                 ),
                             ),
                             body = stringReference(value.fullDescription ?: ""),
-                            showGeneratedAINotification = true,
+                            generatedAINotificationUM = InfoBottomSheetContent.GeneratedAINotificationUM(
+                                onClick = onGeneratedAINotificationClick,
+                            ),
                         ),
                     )
                 },
