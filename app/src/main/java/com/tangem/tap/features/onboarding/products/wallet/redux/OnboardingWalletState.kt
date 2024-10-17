@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import com.tangem.common.card.Card
 import com.tangem.domain.redux.StateDialog
+import com.tangem.domain.wallets.models.UserWalletId
 import org.rekotlin.StateType
 
 /**
@@ -15,18 +16,20 @@ data class OnboardingWalletState(
     val backupState: BackupState = BackupState(),
     val walletImages: WalletImages = WalletImages(),
     val showConfetti: Boolean = false,
+    val isRingOnboarding: Boolean = false,
+    val userWalletId: UserWalletId? = null,
 ) : StateType {
 
     @Suppress("MagicNumber")
     fun getMaxProgress(): Int {
-        val baseProgress = 6
+        val baseProgress = 7
         return getWallet2Progress() + baseProgress
     }
 
     @Suppress("ComplexMethod", "MagicNumber")
     fun getProgressStep(): Int {
         val progressByStep = when (step) {
-            OnboardingWalletStep.CreateWallet -> 1
+            OnboardingWalletStep.CreateWallet, OnboardingWalletStep.None -> 1
             OnboardingWalletStep.Backup -> {
                 when (backupState.backupStep) {
                     null -> 2
@@ -37,11 +40,11 @@ data class OnboardingWalletState(
                     BackupStep.ReenterAccessCode -> 4
                     BackupStep.SetAccessCode -> 4
                     BackupStep.WritePrimaryCard, is BackupStep.WriteBackupCard -> 5
-                    BackupStep.Finished -> getMaxProgress()
+                    BackupStep.Finished -> 6
                 }
             }
+            OnboardingWalletStep.ManageTokens -> 6
             OnboardingWalletStep.Done -> getMaxProgress()
-            else -> 1
         }
 
         return getWallet2Progress() + progressByStep
@@ -61,7 +64,7 @@ data class OnboardingWallet2State(
 )
 
 enum class OnboardingWalletStep {
-    None, CreateWallet, Backup, Done
+    None, CreateWallet, Backup, ManageTokens, Done
 }
 
 data class BackupState(
@@ -81,8 +84,13 @@ data class BackupState(
     val isInterruptedBackup: Boolean = false,
     val showBtnLoading: Boolean = false,
     val hasBackupError: Boolean = false,
+    val startedSource: BackupStartedSource = BackupStartedSource.Onboarding,
     val hasRing: Boolean = false,
 )
+
+enum class BackupStartedSource {
+    Onboarding, CreateBackup
+}
 
 enum class AccessCodeError {
     CodeTooShort, CodesDoNotMatch
