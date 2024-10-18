@@ -308,7 +308,7 @@
   <string name="give_permission_unlimited">Unbegrenzt</string>
   <string name="home_button_order">Karte oder Ring bestellen</string>
   <string name="home_button_scan">Karte oder Ring scannen</string>
-  <string name="information_generated_with_ai">Diese Informationen wurden mithilfe von KI generiert. \n Tippe hier, wenn Du Fehler finden.</string>
+  <string name="information_generated_with_ai">Diese Informationen wurden mithilfe von KI generiert.\n Tippe hier, wenn Du Fehler finden.</string>
   <string name="initial_message_change_access_code_body">Um den Zugangscode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
   <string name="initial_message_change_passcode_body">Um den Passcode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
   <string name="initial_message_create_wallet_body">Um die Wallet zu erstellen, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
@@ -391,8 +391,8 @@
   <string name="markets_sort_by_trending_title">Beliebt</string>
   <string name="markets_token_details_about_token_title">Über %s</string>
   <plurals name="markets_token_details_amount_exchanges">
-    <item quantity="one">%d Börse</item>
-    <item quantity="other">%d Börsen</item>
+    <item quantity="one">%d börse</item>
+    <item quantity="other">%d börsen</item>
   </plurals>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="one">Bewertung, basierend auf %d</item>
