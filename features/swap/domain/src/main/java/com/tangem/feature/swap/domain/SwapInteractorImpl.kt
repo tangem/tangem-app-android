@@ -71,6 +71,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val estimateFeeUseCase: EstimateFeeUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val amountFormatter: AmountFormatter,
     @Assisted private val userWalletId: UserWalletId,
 ) : SwapInteractor {
 
@@ -79,7 +80,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     }
 
     private val swapCurrencyConverter = SwapCurrencyConverter()
-    private val amountFormatter = AmountFormatter()
     private val hundredPercent = BigInteger("100")
 
     private val userWallet
