@@ -82,10 +82,13 @@
   <string name="common_buy_currency">%1$sへ移動</string>
   <string name="common_camera_denied_alert_message">カメラへのアクセスを許可していません。プライバシー設定を調整してください。</string>
   <string name="common_cancel">キャンセル</string>
+  <string name="common_change">変更</string>
   <string name="common_choose_action">アクションを選択</string>
   <string name="common_claim">請求</string>
   <string name="common_claim_rewards">報酬を受け取る</string>
   <string name="common_close">閉じる</string>
+  <string name="common_close">閉じる</string>
+  <string name="common_confirm">確認</string>
   <string name="common_continue">続ける</string>
   <string name="common_copy">コピー</string>
   <string name="common_copy_address">アドレスをコピー</string>
@@ -542,6 +545,9 @@
   <string name="onboarding_wallet_info_title_fourth">アクセスコードの復元</string>
   <string name="onboarding_wallet_info_title_second">同一のカード</string>
   <string name="onboarding_wallet_info_title_third">アクセスコード</string>
+  <string name="onramp_residency_bottomsheet_country_not_supported">この国では当社のサービスはご利用いただけません</string>
+  <string name="onramp_residency_bottomsheet_country_subtitle">変更または確認</string>
+  <string name="onramp_residency_bottomsheet_title">あなたの住居は次のように識別されています</string>
   <string name="organize_tokens_group">グループ</string>
   <string name="organize_tokens_sort_by_balance">残高順</string>
   <string name="organize_tokens_title">トークンを整理する</string>
@@ -746,7 +752,7 @@
   <string name="staking_reward_schedule_each">%sごと</string>
   <string name="staking_reward_schedule_each_day">毎日</string>
   <string name="staking_reward_schedule_each_days">%s日ごと</string>
-  <string name="staking_reward_schedule_each_plural">毎%1$s</string>
+  <string name="staking_reward_schedule_each_plural">毎</string>
   <string name="staking_reward_schedule_epoch">エポック毎</string>
   <string name="staking_reward_schedule_era">時代毎</string>
   <string name="staking_reward_schedule_hour">毎時間</string>
@@ -872,6 +878,7 @@
   <string name="wallet_connect_create_tx_message">%1$sの取引を作成するリクエスト\n%2$s\n\n金額: %3$s\n手数料: %4$s\n合計: %5$s\n残高: %6$s</string>
   <string name="wallet_connect_create_tx_not_enough_funds">取引を送信できません。資金が足りません。</string>
   <string name="wallet_connect_error_failed_to_connect">WalletConnect セッションを確立できませんでした。しばらくしてからもう一度お試しください。</string>
+  <string name="wallet_connect_error_missing_blockchains">すべてのトークンがリストには追加されませんでした。まず追加してから、もう一度お試しください。不足しているトークン: \n</string>
   <string name="wallet_connect_error_sing_failed">メッセージの署名に失敗しました。\nもう一度お試しください。</string>
   <string name="wallet_connect_error_timeout">WalletConnectセッションの確立に失敗しました：タイムアウトエラー。しばらくしてもう一度お試しください。</string>
   <string name="wallet_connect_error_unsupported_blockchains">セッションリクエストには、WalletConnect接続でサポートされていないブロックチェーンが含まれています。サポートされていないブロックチェーン: \n</string>
