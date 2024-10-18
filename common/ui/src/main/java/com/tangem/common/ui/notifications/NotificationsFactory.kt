@@ -6,7 +6,9 @@ import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.extensions.networkIconResId
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.uncapped
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -65,10 +67,9 @@ object NotificationsFactory {
         if (!isAccountFunded && reserveAmount != null && reserveAmount > sendingAmount) {
             add(
                 NotificationUM.Error.ReserveAmount(
-                    BigDecimalFormatter.formatCryptoAmount(
-                        cryptoAmount = sendingAmount,
-                        cryptoCurrency = cryptoCurrency,
-                    ),
+                    sendingAmount.format {
+                        crypto(cryptoCurrency)
+                    },
                 ),
             )
         }
@@ -87,10 +88,7 @@ object NotificationsFactory {
                 NotificationUM.Error.TransactionLimitError(
                     cryptoCurrency = cryptoCurrency.name,
                     utxoLimit = utxoLimit.maxLimit.toPlainString(),
-                    amountLimit = BigDecimalFormatter.formatCryptoAmount(
-                        cryptoAmount = utxoLimit.maxAmount,
-                        cryptoCurrency = cryptoCurrency,
-                    ),
+                    amountLimit = utxoLimit.maxAmount.format { crypto(cryptoCurrency) },
                     onConfirmClick = {
                         onReduceClick(
                             utxoLimit.maxAmount,
@@ -124,10 +122,7 @@ object NotificationsFactory {
         if (existentialDeposit != null && diff >= BigDecimal.ZERO && existentialDeposit > diff) {
             add(
                 NotificationUM.Error.ExistentialDeposit(
-                    deposit = BigDecimalFormatter.formatCryptoAmountUncapped(
-                        cryptoAmount = existentialDeposit,
-                        cryptoCurrency = cryptoCurrency,
-                    ),
+                    deposit = existentialDeposit.format { crypto(cryptoCurrency).uncapped() },
                     onConfirmClick = {
                         onReduceClick(
                             existentialDeposit,
@@ -155,10 +150,7 @@ object NotificationsFactory {
         if (isFeeCoverage) {
             add(
                 NotificationUM.Warning.FeeCoverageNotification(
-                    cryptoAmount = BigDecimalFormatter.formatCryptoAmountUncapped(
-                        cryptoAmount = cryptoDiff,
-                        cryptoCurrency = cryptoCurrency,
-                    ),
+                    cryptoAmount = cryptoDiff.format { crypto(cryptoCurrency).uncapped() },
                     fiatAmount = getFiatString(
                         value = cryptoDiff,
                         rate = fiatRate,
