@@ -39,7 +39,7 @@ dependencies {
 
     /** Core modules */
     implementation(projects.core.datasource)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.toggles)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.navigation)
