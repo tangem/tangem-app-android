@@ -1,6 +1,8 @@
 package com.tangem.features.onramp
 
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.toggle.feature.FeatureTogglesManager
+import com.tangem.features.onramp.DefaultOnrampFeatureToggles
+import com.tangem.features.onramp.OnrampFeatureToggles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
