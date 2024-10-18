@@ -308,7 +308,7 @@
   <string name="give_permission_unlimited">Ilimitado</string>
   <string name="home_button_order">Ordenar </string>
   <string name="home_button_scan">Escanee</string>
-  <string name="information_generated_with_ai">Esta información fue generada con IA</string>
+  <string name="information_generated_with_ai">Esta información fue generada con IA.\nPulse aquí si encuentra algún error.</string>
   <string name="initial_message_change_access_code_body">Toque para cambiar la contraseña</string>
   <string name="initial_message_change_passcode_body">Toque para cambiar la contraseña</string>
   <string name="initial_message_create_wallet_body">Para crear la billetera, toque la tarjeta como se muestra arriba y no la retire hasta el final de la operación</string>
@@ -391,8 +391,8 @@
   <string name="markets_sort_by_trending_title">Tendencias</string>
   <string name="markets_token_details_about_token_title">Acerca de %s</string>
   <plurals name="markets_token_details_amount_exchanges">
-    <item quantity="one">intercambio</item>
-    <item quantity="other">intercambios</item>
+    <item quantity="one">%d intercambio</item>
+    <item quantity="other">%d intercambios</item>
   </plurals>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="one">Basado en %d evaluación </item>
@@ -882,6 +882,7 @@
   <string name="wallet_connect_create_tx_message">Solicitud para crear una transacción para %1$s\n%2$s\n\nMontante: %3$s\nComisión: %4$s\nTotal: %5$s\nSaldo: %6$s</string>
   <string name="wallet_connect_create_tx_not_enough_funds">No se puede completar la transacción. Fondos insuficientes.</string>
   <string name="wallet_connect_error_failed_to_connect">Error al establecer la sesión de WalletConnect. Por favor, inténtelo más tarde.</string>
+  <string name="wallet_connect_error_missing_blockchains">No todos los tokens se han agregado a su lista. Añádelos primero y vuelve a intentarlo. Tokens faltantes :\n</string>
   <string name="wallet_connect_error_sing_failed">Error al firmar el mensaje.\nPor favor, inténtalo de nuevo</string>
   <string name="wallet_connect_error_timeout">Error al establecer la sesión de WalletConnect: error de tiempo de espera. Por favor, inténtelo más tarde.</string>
   <string name="wallet_connect_error_unsupported_blockchains">La solicitud de sesión contiene blockchains no compatibles para la conexión WalletConnect. Blockchains no compatibles:\n</string>
