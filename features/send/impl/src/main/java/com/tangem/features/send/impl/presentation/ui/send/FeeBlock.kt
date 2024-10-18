@@ -18,6 +18,9 @@ import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fee
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -62,12 +65,12 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isClickDisabled: Boolean, o
                 titleRes = title,
                 iconRes = icon,
                 preDot = stringReference(
-                    BigDecimalFormatter.formatCryptoFeeAmount(
-                        cryptoAmount = feeAmount?.value,
-                        cryptoCurrency = feeAmount?.currencySymbol.orEmpty(),
-                        decimals = feeAmount?.decimals ?: 0,
-                        canBeLower = feeState.isFeeApproximate,
-                    ),
+                    feeAmount?.value.format {
+                        crypto(
+                            symbol = feeAmount?.currencySymbol.orEmpty(),
+                            decimals = feeAmount?.decimals ?: 0,
+                        ).fee(canBeLower = feeState.isFeeApproximate)
+                    },
                 ),
                 postDot = if (feeState.isFeeConvertibleToFiat) {
                     getFiatReference(feeAmount?.value, feeState.rate, feeState.appCurrency)

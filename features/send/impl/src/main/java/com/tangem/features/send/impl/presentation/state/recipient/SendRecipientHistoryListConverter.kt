@@ -4,6 +4,8 @@ import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
@@ -17,7 +19,6 @@ import com.tangem.features.send.impl.presentation.state.recipient.utils.RECENT_K
 import com.tangem.features.send.impl.presentation.state.recipient.utils.emptyListState
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.toFormattedCurrencyString
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 
@@ -76,10 +77,7 @@ internal class SendRecipientHistoryListConverter(
     }
 
     private fun TxHistoryItem.getAmount(cryptoCurrency: CryptoCurrency): String {
-        return amount.toFormattedCurrencyString(
-            currency = cryptoCurrency.symbol,
-            decimals = cryptoCurrency.decimals,
-        )
+        return amount.format { crypto(cryptoCurrency) }
     }
 
     private fun TxHistoryItem.extractTimestamp(): TextReference {

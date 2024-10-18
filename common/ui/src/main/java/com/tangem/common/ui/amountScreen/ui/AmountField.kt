@@ -24,6 +24,8 @@ import com.tangem.core.ui.components.fields.AmountTextField
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.rememberDecimalFormat
@@ -92,11 +94,7 @@ private fun AmountSecondary(amountField: AmountFieldModel, appCurrencyCode: Stri
             ),
     ) {
         val text = if (amountField.isFiatValue) {
-            BigDecimalFormatter.formatCryptoAmount(
-                cryptoAmount = secondaryAmount.value,
-                cryptoCurrency = secondaryAmount.currencySymbol,
-                decimals = secondaryAmount.decimals,
-            )
+            secondaryAmount.value.format { crypto(secondaryAmount.currencySymbol, secondaryAmount.decimals) }
         } else {
             BigDecimalFormatter.formatFiatAmount(
                 fiatAmount = secondaryAmount.value,
