@@ -1,6 +1,6 @@
 package com.tangem.features.onramp
 
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.toggle.feature.FeatureTogglesManager
 
 internal class DefaultOnrampFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
