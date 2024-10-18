@@ -83,10 +83,12 @@
   <string name="common_buy_currency">Go to %1$s</string>
   <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
   <string name="common_cancel">Cancel</string>
+  <string name="common_change">Change</string>
   <string name="common_choose_action">Choose action</string>
   <string name="common_claim">Claim</string>
   <string name="common_claim_rewards">Claim rewards</string>
   <string name="common_close">Close</string>
+  <string name="common_confirm">Confirm</string>
   <string name="common_continue">Continue</string>
   <string name="common_copy">Copy</string>
   <string name="common_copy_address">Copy address</string>
@@ -550,6 +552,9 @@
   <string name="onboarding_wallet_info_title_fourth">Access code restore</string>
   <string name="onboarding_wallet_info_title_second">Identical cards</string>
   <string name="onboarding_wallet_info_title_third">Access code</string>
+  <string name="onramp_residency_bottomsheet_country_not_supported">Our services are not available in this country</string>
+  <string name="onramp_residency_bottomsheet_country_subtitle">Change or confirm it</string>
+  <string name="onramp_residency_bottomsheet_title">Your residence has been identified as</string>
   <string name="organize_tokens_group">Group</string>
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
