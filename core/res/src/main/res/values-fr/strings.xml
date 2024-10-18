@@ -308,7 +308,7 @@
   <string name="give_permission_unlimited">Illimité</string>
   <string name="home_button_order">Commandez</string>
   <string name="home_button_scan">Scannez</string>
-  <string name="information_generated_with_ai">Ces informations ont été générées avec l\'IA</string>
+  <string name="information_generated_with_ai">Ces informations ont été générées avec l\'IA.\nAppuyez ici si vous trouvez des erreurs.</string>
   <string name="initial_message_change_access_code_body">Touchez, pour modifier le code d\'accès</string>
   <string name="initial_message_change_passcode_body">Touchez, pour modifier le mot de passe</string>
   <string name="initial_message_create_wallet_body">Pour créer le portefeuille, appuyez sur la carte comme indiqué ci-dessus et ne la retirez pas jusqu\'à la fin de l\'opération</string>
@@ -391,8 +391,8 @@
   <string name="markets_sort_by_trending_title">Tendances</string>
   <string name="markets_token_details_about_token_title">À propos de %s</string>
   <plurals name="markets_token_details_amount_exchanges">
-    <item quantity="one">échange</item>
-    <item quantity="other">échanges</item>
+    <item quantity="one">%d échange</item>
+    <item quantity="other">%d échanges</item>
   </plurals>
   <plurals name="markets_token_details_based_on_ratings">
     <item quantity="one">Basé sur %d évaluation</item>
@@ -882,6 +882,7 @@
   <string name="wallet_connect_create_tx_message">Demande de création d\'une transaction pour %1$s\n%2$s\n\nMontant : %3$s\nFrais : %4$s\nTotal : %5$s\nSolde : %6$s</string>
   <string name="wallet_connect_create_tx_not_enough_funds">Impossible d\'effectuer la transaction. Fonds insuffisants.</string>
   <string name="wallet_connect_error_failed_to_connect">Échec de l\'établissement de la session WalletConnect. Veuillez réessayer plus tard.</string>
+  <string name="wallet_connect_error_missing_blockchains">Tous les jetons n\'ont pas été ajoutés à votre liste. Veuillez d\'abord les ajouter et essayez à nouveau. Jetons manquants :\n</string>
   <string name="wallet_connect_error_sing_failed">Échec de la signature du message. Veuillez réessayer</string>
   <string name="wallet_connect_error_timeout">Échec de l\'établissement de la session WalletConnect : erreur de délai d\'attente. Veuillez réessayer plus tard.</string>
   <string name="wallet_connect_error_unsupported_blockchains">La demande de session contient des blockchains non prises en charge pour la connexion WalletConnect. Blockchains non prises en charge :\n</string>
