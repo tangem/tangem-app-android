@@ -21,7 +21,7 @@ dependencies {
     /** Project - Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.toggles)
     implementation(projects.core.navigation)
 
     /** Project - Common */
