@@ -89,6 +89,7 @@
   <string name="common_claim">Получить</string>
   <string name="common_claim_rewards">Вывести награду</string>
   <string name="common_close">Закрыть</string>
+  <string name="common_confirm">Подтвердить</string>
   <string name="common_continue">Продолжить</string>
   <string name="common_copy">Копировать</string>
   <string name="common_copy_address">Скопировать адрес</string>
@@ -518,7 +519,7 @@
   </plurals>
   <string name="onboarding_seed_generate_title">Ваша seed-фраза</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one">%d слово</item>
+    <item quantity="one"></item>
     <item quantity="few">%d слова</item>
     <item quantity="many">%d слов</item>
     <item quantity="other">%d слов</item>
