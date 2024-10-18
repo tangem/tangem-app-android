@@ -54,7 +54,7 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.deepLinks)
     implementation(projects.core.deepLinks.global)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.toggles)
     implementation(projects.core.decompose)
     implementation(projects.common.ui)
 
