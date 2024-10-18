@@ -3,6 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.extensions.capitalize
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.VisaCurrency
@@ -25,11 +27,7 @@ internal class VisaTxHistoryItemStateConverter(
 
         return TransactionState.Content(
             txHash = value.id,
-            amount = BigDecimalFormatter.formatCryptoAmount(
-                cryptoAmount = value.amount,
-                cryptoCurrency = visaCurrency.symbol,
-                decimals = visaCurrency.decimals,
-            ),
+            amount = value.amount.format { crypto(visaCurrency.symbol, visaCurrency.decimals) },
             // Show tx fiat amount instead of tx time
             time = BigDecimalFormatter.formatFiatAmount(
                 fiatAmount = value.fiatAmount,
