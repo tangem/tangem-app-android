@@ -19,8 +19,8 @@ import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.Artwork
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
@@ -641,6 +641,8 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                         )
                     }
                 } else {
+                    delay(HIDE_PROGRESS_DELAY)
+
                     readCard { newScanResponse ->
                         scanResponse = newScanResponse
                         userWallet = createUserWallet(newScanResponse, backupState)

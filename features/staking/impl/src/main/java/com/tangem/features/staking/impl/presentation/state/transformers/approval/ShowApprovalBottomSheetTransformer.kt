@@ -52,7 +52,7 @@ internal class ShowApprovalBottomSheetTransformer(
                     data = GiveTxPermissionState.ReadyForRequest(
                         currency = cryptoCurrency.symbol,
                         amount = amountState.amountTextField.value,
-                        approveType = ApproveType.LIMITED,
+                        approveType = ApproveType.UNLIMITED,
                         walletAddress = walletAddress,
                         spenderAddress = validatorAddress,
                         fee = resourceReference(
