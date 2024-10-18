@@ -17,6 +17,8 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -172,12 +174,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 fiatCurrencySymbol = currentAppCurrency.value.symbol,
             ),
             dateTimeText = resourceReference(R.string.common_today),
-            priceChangePercentText = params.token.tokenQuotes.h24Percent?.let {
-                BigDecimalFormatter.formatPercent(
-                    percent = it,
-                    useAbsoluteValue = true,
-                )
-            },
+            priceChangePercentText = params.token.tokenQuotes.h24Percent?.format { percent() },
             priceChangeType = params.token.tokenQuotes.h24Percent.percentChangeType(),
             iconUrl = params.token.imageUrl,
             chartState = MarketsTokenDetailsUM.ChartState(
@@ -472,12 +469,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             )
         } ?: currentQuotes.value.getPercentByInterval(currentState.selectedInterval)
 
-        val percentText = percent?.let {
-            BigDecimalFormatter.formatPercent(
-                percent = it,
-                useAbsoluteValue = true,
-            )
-        } ?: ""
+        val percentText = percent?.format { percent() } ?: ""
 
         state.update { stateToUpdate ->
             stateToUpdate.copy(
