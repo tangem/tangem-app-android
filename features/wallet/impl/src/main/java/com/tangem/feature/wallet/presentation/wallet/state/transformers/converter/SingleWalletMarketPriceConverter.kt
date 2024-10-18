@@ -4,6 +4,8 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -57,7 +59,7 @@ internal class SingleWalletMarketPriceConverter(
     private fun formatPriceChange(status: CryptoCurrencyStatus.Value): String {
         val priceChange = status.priceChange ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
-        return BigDecimalFormatter.formatPercent(percent = priceChange, useAbsoluteValue = true)
+        return priceChange.format { percent() }
     }
 
     private fun getPriceChangeType(status: CryptoCurrencyStatus.Value): PriceChangeType {
