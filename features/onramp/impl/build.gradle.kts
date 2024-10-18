@@ -17,7 +17,7 @@ dependencies {
     /** Project - Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.toggles)
 
     /** DI */
     implementation(deps.hilt.android)

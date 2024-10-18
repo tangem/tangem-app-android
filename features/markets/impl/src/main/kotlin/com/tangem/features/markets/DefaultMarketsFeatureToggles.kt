@@ -1,6 +1,6 @@
 package com.tangem.features.markets
 
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.toggle.feature.FeatureTogglesManager
 
 internal class DefaultMarketsFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,

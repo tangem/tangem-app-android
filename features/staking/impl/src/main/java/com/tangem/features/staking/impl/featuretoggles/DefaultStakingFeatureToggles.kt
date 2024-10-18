@@ -1,6 +1,6 @@
 package com.tangem.features.staking.impl.featuretoggles
 
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.toggle.feature.FeatureTogglesManager
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 
 /**

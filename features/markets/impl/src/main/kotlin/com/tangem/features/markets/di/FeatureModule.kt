@@ -1,6 +1,6 @@
 package com.tangem.features.markets.di
 
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.toggle.feature.FeatureTogglesManager
 import com.tangem.features.markets.DefaultMarketsFeatureToggles
 import com.tangem.features.markets.MarketsFeatureToggles
 import dagger.Module
