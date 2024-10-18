@@ -16,6 +16,7 @@ import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
@@ -69,6 +70,7 @@ internal class WalletViewModel @Inject constructor(
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val marketsFeatureToggles: MarketsFeatureToggles,
     private val walletImageResolver: WalletImageResolver,
+    private val tokenListStore: MultiWalletTokenListStore,
     analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
@@ -110,6 +112,8 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+
+        tokenListStore.clear()
         stateHolder.clear()
         walletScreenContentLoader.cancelAll()
     }
@@ -280,7 +284,7 @@ internal class WalletViewModel @Inject constructor(
                 stateHolder.update(transformer = RenameWalletTransformer(action.selectedWalletId, action.name))
             }
             is WalletsUpdateActionResolver.Action.Unknown -> {
-                Timber.w("Unable to perfom action: $action")
+                Timber.w("Unable to perform action: $action")
             }
         }
     }
@@ -318,6 +322,7 @@ internal class WalletViewModel @Inject constructor(
 
     private fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
         walletScreenContentLoader.cancel(action.prevWalletId)
+        tokenListStore.remove(action.prevWalletId)
 
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
@@ -357,6 +362,7 @@ internal class WalletViewModel @Inject constructor(
 
     private suspend fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
         walletScreenContentLoader.cancel(action.deletedWalletId)
+        tokenListStore.remove(action.deletedWalletId)
 
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
