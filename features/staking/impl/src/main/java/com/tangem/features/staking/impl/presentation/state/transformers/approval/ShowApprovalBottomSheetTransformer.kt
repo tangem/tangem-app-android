@@ -5,6 +5,8 @@ import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -33,11 +35,9 @@ internal class ShowApprovalBottomSheetTransformer(
 
         val walletAddress = cryptoCurrencyValue.networkAddress?.defaultAddress?.value.orEmpty()
         val validatorAddress = validatorState.chosenValidator.address
-        val feeCryptoValue = BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = fee.amount.value,
-            cryptoCurrency = fee.amount.currencySymbol,
-            decimals = fee.amount.decimals,
-        )
+        val feeCryptoValue = fee.amount.value.format {
+            crypto(fee.amount.currencySymbol, fee.amount.decimals)
+        }
         val feeFiatValue = BigDecimalFormatter.formatFiatAmount(
             fiatAmount = feeCryptoCurrencyStatus?.value?.fiatRate?.multiply(fee.amount.value),
             fiatCurrencyCode = appCurrencyProvider().code,

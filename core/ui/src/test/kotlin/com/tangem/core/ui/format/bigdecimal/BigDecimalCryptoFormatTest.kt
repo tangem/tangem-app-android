@@ -370,4 +370,38 @@ internal class BigDecimalCryptoFormatTest {
         Truth.assertThat(formatted)
             .isEqualTo("0.13".addSymbolWithSpaceLeft(symbol))
     }
+
+    // === anyDecimals() ===
+
+    @Test
+    fun `anyDecimals smoke`() {
+        val testValue = BigDecimal("0.123412341234")
+
+        val formatted = testValue.format {
+            crypto(
+                symbol = symbol,
+                decimals = 5,
+                locale = testLocale,
+            ).anyDecimals()
+        }
+
+        Truth.assertThat(formatted)
+            .isEqualTo("0.12341".addSymbolWithSpaceLeft(symbol))
+    }
+
+    @Test
+    fun `anyDecimals zero`() {
+        val testValue = BigDecimal("0.123412341234")
+
+        val formatted = testValue.format {
+            crypto(
+                symbol = symbol,
+                decimals = 0,
+                locale = testLocale,
+            ).anyDecimals()
+        }
+
+        Truth.assertThat(formatted)
+            .isEqualTo("0".addSymbolWithSpaceLeft(symbol))
+    }
 }
