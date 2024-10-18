@@ -6,7 +6,9 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.shorted
 import java.math.BigDecimal
 
 sealed class NotificationUM(val config: NotificationConfig) {
@@ -267,8 +269,8 @@ sealed class NotificationUM(val config: NotificationConfig) {
             subtitle = resourceReference(
                 R.string.koinos_insufficient_mana_to_send_koin_description,
                 formatArgs = wrappedList(
-                    BigDecimalFormatter.formatCryptoAmountShorted(mana, "", Blockchain.Koinos.decimals()),
-                    BigDecimalFormatter.formatCryptoAmountShorted(maxMana, "", Blockchain.Koinos.decimals()),
+                    mana.format { crypto("", Blockchain.Koinos.decimals()).shorted() },
+                    maxMana.format { crypto("", Blockchain.Koinos.decimals()).shorted() },
                 ),
             ),
         )
@@ -286,11 +288,9 @@ sealed class NotificationUM(val config: NotificationConfig) {
             subtitle = resourceReference(
                 R.string.koinos_mana_exceeds_koin_balance_description,
                 formatArgs = wrappedList(
-                    BigDecimalFormatter.formatCryptoAmount(
-                        availableKoinForTransfer,
-                        Blockchain.Koinos.currency,
-                        Blockchain.Koinos.decimals(),
-                    ),
+                    availableKoinForTransfer.format {
+                        crypto(Blockchain.Koinos.currency, Blockchain.Koinos.decimals())
+                    },
                 ),
             ),
             buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
