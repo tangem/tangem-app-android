@@ -42,7 +42,8 @@ class InvalidatePendingTransactionsUseCase(
         newBalancesId: Int,
         pendingData: List<Pair<PendingTransaction, BalanceItem>>,
     ): Pair<List<BalanceItem>, List<PendingTransaction>> {
-        val balances = realData.associateBy { BalanceIdentity(it.groupId, it.type, it.amount, it.date) }
+        val balances = realData.groupBy { BalanceIdentity(it.groupId, it.type, it.amount, it.date) }
+            .mapValues { it.value.toMutableList() }
             .toMutableMap()
 
         val transactionsToRemove = mutableListOf<PendingTransaction>()
@@ -56,28 +57,34 @@ class InvalidatePendingTransactionsUseCase(
                     transactionsToRemove.add(pendingTransaction)
                 }
                 balances.containsKey(key) -> {
-                    balances[key] = balanceItem
+                    val removed = balances[key]?.removeIf { !it.isPending } ?: false
+                    if (removed) {
+                        balances[key]?.add(balanceItem)
+                    }
                 }
                 else -> {
                     val groupId = UUID.randomUUID().toString()
                     val now = DateTime.now()
+
                     balances[BalanceIdentity(groupId, BalanceType.STAKED, pendingTransaction.amount, now)] =
-                        BalanceItem(
-                            groupId = groupId,
-                            type = pendingTransaction.type,
-                            amount = pendingTransaction.amount,
-                            rawCurrencyId = pendingTransaction.rawCurrencyId,
-                            validatorAddress = pendingTransaction.validator?.address,
-                            date = null,
-                            pendingActions = emptyList(),
-                            token = pendingTransaction.token,
-                            isPending = true,
+                        mutableListOf(
+                            BalanceItem(
+                                groupId = groupId,
+                                type = pendingTransaction.type,
+                                amount = pendingTransaction.amount,
+                                rawCurrencyId = pendingTransaction.rawCurrencyId,
+                                validatorAddress = pendingTransaction.validator?.address,
+                                date = null,
+                                pendingActions = emptyList(),
+                                token = pendingTransaction.token,
+                                isPending = true,
+                            ),
                         )
 
                     balances.entries.find {
                         it.key.type == BalanceType.STAKED &&
                             it.key.amount == pendingTransaction.amount &&
-                            !it.value.isPending
+                            !it.value.any { it.isPending }
                     }
                         ?.key
                         ?.let { balances.remove(it) }
@@ -85,7 +92,7 @@ class InvalidatePendingTransactionsUseCase(
             }
         }
 
-        return balances.values.toList() to transactionsToRemove
+        return balances.values.flatten() to transactionsToRemove
     }
 
     private data class BalanceIdentity(
