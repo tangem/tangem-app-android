@@ -14,18 +14,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.SpacerW8
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
+import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingAvailableBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingLoadingBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingTemporaryUnavailableBlock
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.IconState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.CurrencyIcon
 import com.tangem.features.tokendetails.impl.R
@@ -39,32 +36,6 @@ import com.tangem.features.tokendetails.impl.R
  */
 @Composable
 internal fun TokenStakingBlock(state: StakingBlockUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
-    AnimatedContent(
-        targetState = state,
-        contentAlignment = Alignment.CenterStart,
-        label = "Staking block animation",
-    ) {
-        when (it) {
-            is StakingBlockUM.TemporaryUnavailable -> StakingTemporaryUnavailableBlock(modifier)
-            is StakingBlockUM.Loading -> StakingLoading(
-                iconState = it.iconState,
-                modifier = modifier,
-            )
-            is StakingBlockUM.Staked -> StakingBalanceBlock(
-                state = it,
-                isBalanceHidden = isBalanceHidden,
-                modifier = modifier,
-            )
-            is StakingBlockUM.StakeAvailable -> StakingAvailableContent(
-                state = it,
-                modifier = modifier,
-            )
-        }
-    }
-}
-
-@Composable
-private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(
@@ -73,6 +44,31 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
             )
             .fillMaxWidth()
             .padding(all = TangemTheme.dimens.spacing12),
+    ) {
+        AnimatedContent(
+            targetState = state,
+            contentAlignment = Alignment.CenterStart,
+            label = "Staking block animation",
+        ) {
+            when (it) {
+                is StakingBlockUM.TemporaryUnavailable -> StakingTemporaryUnavailableBlock()
+                is StakingBlockUM.Loading -> StakingLoading()
+                is StakingBlockUM.Staked -> StakingBalanceBlock(
+                    state = it,
+                    isBalanceHidden = isBalanceHidden,
+                )
+                is StakingBlockUM.StakeAvailable -> StakingAvailableContent(
+                    state = it,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
     ) {
         Row {
             val (alpha, colorFilter) = remember(state.iconState.isGrayscale) {
@@ -115,52 +111,30 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
 }
 
 @Composable
-private fun StakingLoading(iconState: IconState, modifier: Modifier = Modifier) {
+private fun StakingLoading(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier
-            .background(
-                color = TangemTheme.colors.background.primary,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
-            )
-            .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size72)
-            .padding(all = TangemTheme.dimens.spacing12),
-
+        modifier = modifier.fillMaxWidth(),
     ) {
         Row {
-            val (alpha, colorFilter) = remember(iconState.isGrayscale) {
-                getGreyScaleColorFilter(iconState.isGrayscale)
-            }
-            CurrencyIcon(
-                modifier = Modifier
-                    .size(TangemTheme.dimens.size20)
-                    .clip(TangemTheme.shapes.roundedCorners8)
-                    .align(Alignment.CenterVertically),
-                icon = iconState,
-                alpha = alpha,
-                colorFilter = colorFilter,
-            )
-            SpacerW8()
             Column {
                 RectangleShimmer(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(TangemTheme.dimens.size20),
                 )
-                Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
+                Spacer(modifier = Modifier.size(TangemTheme.dimens.size8))
                 RectangleShimmer(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(TangemTheme.dimens.size20),
+                        .height(TangemTheme.dimens.size36),
                 )
                 Spacer(modifier = Modifier.size(TangemTheme.dimens.size8))
             }
         }
-        SecondaryButton(
-            modifier = Modifier.fillMaxWidth(),
-            showProgress = true,
-            text = TextReference.EMPTY.resolveReference(),
-            onClick = { /* no-op */ },
+        RectangleShimmer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(TangemTheme.dimens.size48),
         )
     }
 }
@@ -186,6 +160,7 @@ private class StakingBlockStateProvider : CollectionPreviewParameterProvider<Sta
         stakingLoadingBlock,
         stakingAvailableBlock,
         stakingTemporaryUnavailableBlock,
+        stakingBalanceBlock,
     ),
 )
 // endregion Preview
