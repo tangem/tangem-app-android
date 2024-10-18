@@ -11,6 +11,8 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
@@ -24,7 +26,6 @@ import com.tangem.domain.transaction.error.SendTransactionError.Companion.USER_C
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.sdk.extensions.localizedDescriptionRes
-import com.tangem.utils.toFormattedString
 
 class SendTransactionUseCase(
     private val demoConfig: DemoConfig,
@@ -120,7 +121,7 @@ class SendTransactionUseCase(
             is BlockchainSdkError.WrappedTangemError -> parseWrappedError(error)
             is BlockchainSdkError.CreateAccountUnderfunded -> {
                 val minAmount = error.minReserve
-                val minValue = minAmount.value?.toFormattedString(minAmount.decimals).orEmpty()
+                val minValue = minAmount.value?.format { simple(minAmount.decimals) }.orEmpty()
                 SendTransactionError.CreateAccountUnderfunded(minValue)
             }
             else -> {
