@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.domain.models
 
-import com.tangem.utils.toFormattedString
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -14,10 +13,6 @@ data class SwapAmount(
             return SwapAmount(BigDecimal.ZERO, 0)
         }
     }
-}
-
-fun SwapAmount.formatToUIRepresentation(): String {
-    return value.toFormattedString(decimals = decimals)
 }
 
 fun createFromAmountWithoutOffset(amountWithoutOffset: String, decimals: Int): SwapAmount {
