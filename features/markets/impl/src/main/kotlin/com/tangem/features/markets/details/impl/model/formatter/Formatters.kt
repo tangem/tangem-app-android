@@ -2,6 +2,8 @@ package com.tangem.features.markets.details.impl.model.formatter
 
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PriceChangeInterval
@@ -28,12 +30,7 @@ internal fun TokenQuotes.getFormattedPercentByInterval(interval: PriceChangeInte
         PriceChangeInterval.ALL_TIME -> allTimeChangePercent
     }
 
-    return percent?.let {
-        BigDecimalFormatter.formatPercent(
-            percent = it,
-            useAbsoluteValue = true,
-        )
-    } ?: ""
+    return percent?.format { percent() } ?: ""
 }
 
 internal fun TokenQuotes.getPercentByInterval(interval: PriceChangeInterval): BigDecimal? {
