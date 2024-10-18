@@ -8,6 +8,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.format.bigdecimal.compact
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
@@ -149,9 +150,6 @@ internal class MarketsTokenItemConverter(
             TrendInterval.M1 -> tokenQuotesShort.monthChangePercent
         }
 
-        return BigDecimalFormatter.formatPercent(
-            percent = percent,
-            useAbsoluteValue = true,
-        )
+        return percent.format { percent() }
     }
 }
