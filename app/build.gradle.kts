@@ -81,7 +81,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.toggles)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.datasource)

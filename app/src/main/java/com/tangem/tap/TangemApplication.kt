@@ -17,7 +17,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.toggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.connection.NetworkConnectionManager
