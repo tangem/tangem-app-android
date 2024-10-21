@@ -297,11 +297,10 @@
   <string name="feedback_subject_tx_failed">取引を送信できません</string>
   <string name="feedback_token_description_error">コインの説明エラー</string>
   <string name="give_permission_current_transaction">取引</string>
-  <string name="give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="give_permission_policy_type_footer">選択したトークンの承認制限を指定します</string>
   <string name="give_permission_rows_amount">金額%s</string>
   <string name="give_permission_staking_footer">承認機能は、別のアドレスに特定の量のトークンを使用する許可を与えるために必要です。設計上スマートコントラクトは、承認しない限りトークンにアクセスできません。トークンを「ロック解除」すると、StakeKitスマート コントラクトがトークンを使用する権限が与えられます。ネットワークのマイナーは、このアクションをブロックチェーンに記録するためにガス料金（あなたが支払う）を受け取ります。承認後、トークンをステーキングできます。</string>
-  <string name="give_permission_staking_subtitle">続行するには、StakeKitスマートコントラクトが%sを使用することを許可する必要があります</string>
+  <string name="give_permission_staking_subtitle">続行するには、Polygonスマートコントラクトが%sを使用することを許可する必要があります</string>
   <string name="give_permission_swap_subtitle" formatted="false">続行するには、%1sスマートコントラクトに%2sを使用する権限を付与してください</string>
   <string name="give_permission_title">許可を与える</string>
   <string name="give_permission_unlimited">無制限</string>
@@ -770,6 +769,7 @@
   <string name="staking_unbonding">ステーキング解約中</string>
   <string name="staking_unlocked_locked">ロック解除</string>
   <string name="staking_unlocking">ロック解除中</string>
+  <string name="staking_unstake_amount_validation_error">金額がステーキング残高を超えています</string>
   <string name="staking_unstaked">ステーキングされていない</string>
   <string name="staking_unstaking">ステーキング解除</string>
   <string name="staking_unstaking_item_name">ステーキング解除中の資産%s</string>
@@ -791,6 +791,7 @@
   <string name="story_meet_title">Tangemのご紹介</string>
   <string name="story_web3_description">100種類以上の分散型サービスで、NFTの交換・購入や、借入・預金を行うことができます。</string>
   <string name="story_web3_title">Web3.0対応</string>
+  <string name="swap_give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="swap_promo_text">より多くのトークンをより良いレートで、ウォレット内にて直接交換します。</string>
   <string name="swap_promo_title">新しいスワッププロバイダーが利用可能になりました！</string>
   <string name="swapping_alert_cex_description">この金額には以下が含まれます：\n- サービスプロバイダーの手数料\n- 取引所からユーザーのアドレスに%s を送り返すためのネットワーク手数料。</string>
