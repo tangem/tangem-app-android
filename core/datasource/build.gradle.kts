@@ -50,7 +50,6 @@ dependencies {
     implementation(deps.okHttp.prettyLogging)
     implementation(deps.retrofit)
     implementation(deps.retrofit.moshi)
-    implementation(deps.reactive.network)
 
     /** Time */
     implementation(deps.jodatime)
