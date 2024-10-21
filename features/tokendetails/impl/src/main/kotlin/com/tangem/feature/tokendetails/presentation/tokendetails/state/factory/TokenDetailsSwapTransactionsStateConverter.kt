@@ -25,6 +25,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import timber.log.Timber
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -115,7 +116,10 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         refundToken: CryptoCurrency?,
         isRefundTerminalStatus: Boolean,
     ): SwapTransactionsState {
-        if (statusModel == null || tx.activeStatus == statusModel.status) return tx
+        if (statusModel == null || tx.activeStatus == statusModel.status) {
+            Timber.e("UpdateTxStatus isn't required. Current status isn't changed")
+            return tx
+        }
         val hasFailed = tx.hasFailed || statusModel.status == ExchangeStatus.Failed
         val notifications = getNotification(statusModel.status, statusModel.txExternalUrl, refundToken)
         val showProviderLink = getShowProviderLink(notifications, statusModel)
@@ -217,13 +221,15 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             isPaused = isPaused,
                         ),
                     )
-                    add(
-                        sendStep(
-                            isSending = isSending,
-                            isSendingDone = isSendingDone,
-                            isRefunded = isRefunded,
-                        ),
-                    )
+                    if (!isPaused) {
+                        add(
+                            sendStep(
+                                isSending = isSending,
+                                isSendingDone = isSendingDone,
+                                isRefunded = isRefunded,
+                            ),
+                        )
+                    }
                 }
             }
         }.toPersistentList()
