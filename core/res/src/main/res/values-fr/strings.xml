@@ -83,10 +83,12 @@
   <string name="common_buy_currency">Aller à %1$s</string>
   <string name="common_camera_denied_alert_message">Vous n\'avez pas octroyé l\'accès à votre caméra, veuillez modifier vos paramètres de confidentialité</string>
   <string name="common_cancel">Annuler</string>
+  <string name="common_change">Changez</string>
   <string name="common_choose_action">Choisissez une action</string>
   <string name="common_claim">Réclamer</string>
   <string name="common_claim_rewards">Réclamez des récompenses</string>
   <string name="common_close">Fermer</string>
+  <string name="common_confirm">Confirmez</string>
   <string name="common_continue">Continuer</string>
   <string name="common_copy">Copier</string>
   <string name="common_copy_address">Copier l\'adresse</string>
@@ -298,11 +300,10 @@
   <string name="feedback_subject_tx_failed">Impossible d\'effectuer une transaction</string>
   <string name="feedback_token_description_error">Erreur de description de la pièce</string>
   <string name="give_permission_current_transaction">Cette transaction</string>
-  <string name="give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="give_permission_policy_type_footer">Spécifiez la limite approuvée pour le jeton sélectionné</string>
   <string name="give_permission_rows_amount">Montant %s</string>
   <string name="give_permission_staking_footer">La fonction Approuver est nécessaire pour accorder la permission à une autre adresse d\'utiliser une quantité spécifique de vos jetons. De par leur conception, les contrats intelligents ne peuvent pas accéder à vos jetons sans votre approbation. En « déverrouillant » vos jetons, vous autorisez le contrat intelligent StakeKit à les utiliser. Les mineurs du réseau reçoivent des frais de gaz (payés par vous) pour enregistrer cette action sur la blockchain. Vous pouvez staker votre jeton après avoir donné votre approbation.</string>
-  <string name="give_permission_staking_subtitle">Pour continuer, vous devez autoriser le contrat intelligent StakeKit à utiliser votre %s</string>
+  <string name="give_permission_staking_subtitle">Pour continuer, vous devez autoriser le contrat intelligent Polygon à utiliser votre %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">Pour continuer, accordez aux smart contracts de %1s l\'autorisation d\'utiliser votre %2s</string>
   <string name="give_permission_title">Donner l\'autorisation</string>
   <string name="give_permission_unlimited">Illimité</string>
@@ -550,6 +551,9 @@
   <string name="onboarding_wallet_info_title_fourth">Restauration du code d\'accès</string>
   <string name="onboarding_wallet_info_title_second">Cartes identiques</string>
   <string name="onboarding_wallet_info_title_third">Code d\'accès</string>
+  <string name="onramp_residency_bottomsheet_country_not_supported">Nos services ne sont pas disponibles dans ce pays</string>
+  <string name="onramp_residency_bottomsheet_country_subtitle">Modifiez-le ou confirmez-le</string>
+  <string name="onramp_residency_bottomsheet_title">Votre résidence a été identifiée comme</string>
   <string name="organize_tokens_group">Grouper</string>
   <string name="organize_tokens_sort_by_balance">Par solde</string>
   <string name="organize_tokens_title">Organiser les jetons</string>
@@ -796,6 +800,7 @@
   <string name="story_meet_title">Découvrez Tangem</string>
   <string name="story_web3_description">Échangez, achetez des NFT, faites des prêts et des dépôts dans plus de 100 services décentralisés différents</string>
   <string name="story_web3_title">Compatible avec Web 3.0</string>
+  <string name="swap_give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="swap_promo_text">Échangez plus de jetons à de meilleurs taux directement dans votre portefeuille.</string>
   <string name="swap_promo_title">Nouveau fournisseur d\'échange disponible !</string>
   <string name="swapping_alert_cex_description">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %s depuis l\'échange vers l\'adresse de l\'utilisateur.</string>
