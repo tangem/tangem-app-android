@@ -20,7 +20,7 @@
   <string name="app_settings_enable_biometrics_description">Gehe zu den Einstellungen, um die biometrische Authentifizierung in der Tangem-App zu aktivieren</string>
   <string name="app_settings_enable_biometrics_title">Biometrische Authentifizierung aktivieren</string>
   <string name="app_settings_off_saved_access_code_alert_message">Dadurch werden alle gespeicherten Zugangscodes für die Wallet gelöscht. Jede weitere Operation mit der Wallet erfordert die Übermittlung des Zugangscodes.</string>
-  <string name="app_settings_off_saved_wallet_alert_message">Durch das Entfernen der gespeicherten Karte oder Ring werden alle gespeicherten Wallets und deren Zugangscodes aus der App gelöscht.</string>
+  <string name="app_settings_off_saved_wallet_alert_message">Durch das Entfernen der gespeicherten Geräte werden alle gespeicherten Wallets und deren Zugangscodes aus der App gelöscht.</string>
   <string name="app_settings_saved_access_codes">Zugangscode speichern</string>
   <string name="app_settings_saved_access_codes_footer">Bei Interaktionen mit deiner Karte oder Ring wird anstelle des Zugangscodes eine biometrische Authentifizierung abgefragt.</string>
   <string name="app_settings_saved_wallet">Behalte die Wallet in der App</string>
@@ -41,8 +41,8 @@
   <string name="button_start_backup_process">Backup-Prozess starten</string>
   <string name="buy_token_description">Verwende eine Bankkarte oder eine andere Zahlungsmethode</string>
   <plurals name="card_label_card_count">
-    <item quantity="one">%d Karte oder Ring</item>
-    <item quantity="other">%d Karten oder Ringe</item>
+    <item quantity="one">%d Gerät</item>
+    <item quantity="other">%d Geräte</item>
   </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Deaktiviere diese Option, wenn du nicht möchtest, dass diese Karte oder Ring zum Zurücksetzen von Zugangscodes auf anderen Karten oder Ringe in dieser Wallets verwendet wird. Bitte beachte, dass du dann auch den Zugangscode auf dieser Karte oder Ring nicht zurücksetzen kannst.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Ermöglicht die Verwendung dieser Karte oder Ring zum Zurücksetzen des Zugangscodes auf anderen Karten oder Ringe in dieser Brieftasche</string>
@@ -51,15 +51,15 @@
   <string name="card_settings_action_sheet_title">Möchtest du das wirklich tun?</string>
   <string name="card_settings_change_access_code">Zugangscode ändern</string>
   <string name="card_settings_change_access_code_footer">Der Zugangscode wird nur auf dieser Karte oder Ring geändert</string>
-  <string name="card_settings_completed_reset_alert_message">Alle Karten oder Ringe der ausgewählten Wallet wurden auf die Werkseinstellungen zurückgesetzt. Du kannst nun eine neue Wallet aufsetzen.</string>
+  <string name="card_settings_completed_reset_alert_message">Alle Tangem Geräte der ausgewählten Wallet wurden auf die Werkseinstellungen zurückgesetzt. Du kannst nun eine neue Wallet aufsetzen.</string>
   <string name="card_settings_completed_reset_alert_title">Komplett zurücksetzen</string>
-  <string name="card_settings_continue_reset_alert_message">Möchtest du die nächste Karte oder Ring in dieser Wallet zurücksetzen?</string>
+  <string name="card_settings_continue_reset_alert_message">Möchtest du die nächsten geräte in dieser Wallet zurücksetzen?</string>
   <string name="card_settings_continue_reset_alert_title">Karte oder Ring zurücksetzen</string>
-  <string name="card_settings_interrupted_reset_alert_message">Wir empfehlen dir, den Zurücksetzungsprozess für alle Karten oder Ringe in dieser Wallet abzuschließen</string>
-  <string name="card_settings_interrupted_reset_alert_title">Du hast nicht alle deine Karten oder Ringe zurückgesetzt</string>
+  <string name="card_settings_interrupted_reset_alert_message">Wir empfehlen dir, den Zurücksetzungsprozess für aller Geräte in dieser Wallet abzuschließen</string>
+  <string name="card_settings_interrupted_reset_alert_title">Du hast nicht alle deine Geräte zurückgesetzt</string>
   <string name="card_settings_reset_card_to_factory">Auf Werkseinstellungen zurücksetzen</string>
   <string name="card_settings_security_mode">Sicherheitsmodus</string>
-  <string name="card_settings_title">Karten oder Ring-Einstellungen</string>
+  <string name="card_settings_title">Geräteeinstellungen</string>
   <string name="cardano_coin_will_be_send_with_token_description">Zusätzlich zu den Netzwerkgebühren erhebt das Cardano-Netzwerk %1$s ADA bei Transaktionen mit dem Token %2$s </string>
   <string name="cardano_coin_will_be_send_with_token_title">Cardano-Transaktionsanforderungen</string>
   <string name="cardano_insufficient_balance_to_send_token_description">Um eine %1$s Transaktion durchzuführen, musst du einen gewissen ADA-Betrag einzahlen, um die Netzwerkgebühr und den ADA-Mindestwert zu decken (5 ADA werden empfohlen).</string>
@@ -219,7 +219,7 @@
   <string name="details_referral_title">Empfehlungsprogramm</string>
   <string name="details_row_description_flip_to_hide">Flippe den Bildschirm deines Geräts nach unten, um Salden schnell ein- und auszublenden</string>
   <string name="details_row_subtitle_signed_hashes_format">%s Hasch</string>
-  <string name="details_row_title_cid">Karten- oder Ring-ID</string>
+  <string name="details_row_title_cid">Geräte-ID</string>
   <string name="details_row_title_contact_to_support">Kontakt zum Support</string>
   <string name="details_row_title_create_backup">Weitere Karten oder Ringe verknüpfen</string>
   <string name="details_row_title_currency">App Währung</string>
@@ -298,11 +298,10 @@
   <string name="feedback_subject_tx_failed">Eine Transaktion kann nicht gesendet werden</string>
   <string name="feedback_token_description_error">Fehler in der Coinbeschreibung</string>
   <string name="give_permission_current_transaction">Nur diese</string>
-  <string name="give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Sie die Verwendung Ihres Tokens für den Swap genehmigen.</string>
   <string name="give_permission_policy_type_footer">Gib das Genehmigungslimit für das ausgewählte Token an</string>
   <string name="give_permission_rows_amount">Betrag %s</string>
   <string name="give_permission_staking_footer">Die Genehmigungsfunktion ist erforderlich, um einer anderen Adresse die Berechtigung zur Verwendung einer bestimmten Menge Ihrer Token zu erteilen. Standardmäßig können Smart Contracts nicht auf deine Token zugreifen, es sei denn, du stimmen zu. Indem du deine Token \"freischaltest\", autorisierst du den StakeKit Smart Contract, sie zu verwenden. Die Miner des Netzwerks erhalten eine Gasgebühr (von dir bezahlt), um diese Aktion in der Blockchain aufzuzeichnen. Du kannst deine Token einsetzen, nachdem du die Genehmigung erteilt hast.</string>
-  <string name="give_permission_staking_subtitle">Um fortzufahren, musst du StakeKit Smart Contract erlauben, deine %s zu verwenden</string>
+  <string name="give_permission_staking_subtitle">Um fortzufahren, musst du Polygon Smart Contract erlauben, deine %s zu verwenden</string>
   <string name="give_permission_swap_subtitle" formatted="false">Um fortzufahren, erteile %1s Smart Contracts die Berechtigung, dein zu %2s verwenden.</string>
   <string name="give_permission_title">Erlaubnis erteilen</string>
   <string name="give_permission_unlimited">Unbegrenzt</string>
@@ -455,11 +454,11 @@
   <string name="markets_tooltip_message">Rufe dies auf oder tippe auf die Suchleiste, um Token direkt vom Markt hinzuzufügen</string>
   <string name="markets_tooltip_title">Token hinzufügen</string>
   <string name="nfc_error_unavailable">NFC ist auf deinem Gerät nicht verfügbar</string>
-  <string name="onboarding_access_code_feature_1_description">Du musst einen einzigen Zugangscode einrichten, um alle deine Karten oder Ringe zu schützen</string>
+  <string name="onboarding_access_code_feature_1_description">Du musst einen einzigen Zugangscode einrichten, um alle deine Geräte zu schützen</string>
   <string name="onboarding_access_code_feature_1_title">Schützen</string>
   <string name="onboarding_access_code_feature_2_description">Du kannst später auf jeder Karte oder Ring einen individuellen Zugangscode einrichten</string>
   <string name="onboarding_access_code_feature_2_title">Personalisieren</string>
-  <string name="onboarding_access_code_feature_3_description">Stelle den Zugangscode mit einer verknüpften Karte oder einem Ring wieder her. Bewahre nicht alle Deine Geräte an einem Ort auf.</string>
+  <string name="onboarding_access_code_feature_3_description">Stelle den Zugangscode mit einem verknüpften Gerät wieder her. Bewahre nicht alle Deine Geräte an einem Ort auf.</string>
   <string name="onboarding_access_code_feature_3_title">Wiederherstellen</string>
   <string name="onboarding_access_code_hint">Wähle ein beliebiges Wort, eine Phrase oder eine Zahl als Zugangscode</string>
   <string name="onboarding_access_code_intro_title">Zugangscode erstellen</string>
@@ -525,16 +524,16 @@
   <string name="onboarding_subtitle_scan_primary_card_format">Bereite die primäre Karte oder Ring mit der Nummer %s vor.</string>
   <string name="onboarding_subtitle_scan_ring">Bereite den Ring vor und drücke unten die Scan-Taste</string>
   <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Deine Tangem-Karte oder Ring ist konfiguriert und einsatzbereit.</string>
-  <string name="onboarding_subtitle_two_backup_cards">Maximale Anzahl an Karten oder Ringe hinzugefügt. Schließe den Sicherungsvorgang ab.</string>
+  <string name="onboarding_subtitle_two_backup_cards">Maximale Anzahl an Geräten hinzugefügt. Schließe den Sicherungsvorgang ab.</string>
   <string name="onboarding_title">Karte oder Ring aktivieren</string>
   <string name="onboarding_title_backup_card">Sicherungs-Karte oder Ring</string>
   <string name="onboarding_title_backup_card_format">Sicherungskarte oder Ring Nr. %d</string>
   <string name="onboarding_title_backup_ring">Sicherungs-Ring</string>
-  <string name="onboarding_title_no_backup_cards">Keine Sicherungskarten oder Sicherungsring</string>
+  <string name="onboarding_title_no_backup_cards">Keine Sicherungsgeräte</string>
   <string name="onboarding_title_notifications">Benachrichtigungen</string>
-  <string name="onboarding_title_one_backup_card">Eine Backup-Karte oder Ring hinzugefügt</string>
+  <string name="onboarding_title_one_backup_card">Eine Backupgerät hinzugefügt</string>
   <string name="onboarding_title_scan_origin_card">Bereite deine Karte oder Ring vor</string>
-  <string name="onboarding_title_two_backup_cards">Zwei Backup-Karten oder Ring hinzugefügt</string>
+  <string name="onboarding_title_two_backup_cards">Zweis Backupgerät hinzugefügt</string>
   <string name="onboarding_top_up_body">Um zu beginnen, lade einfach die wallet mit einem beliebigen Betrag auf</string>
   <string name="onboarding_top_up_body_no_account_error">Um zu beginnen, lade die Wallet einfach mit mehr als %1$s %2$s auf.</string>
   <string name="onboarding_top_up_button_but_crypto">Krypto kaufen</string>
@@ -609,7 +608,7 @@
   <string name="save_user_wallet_agreement_header_biometrics">Möchtest du Biometrie nutzen?</string>
   <string name="save_user_wallet_agreement_notice">Beachte, dass für Transaktionen mit deinem Guthaben weiterhin deine Karte oder Ring erforderlich ist</string>
   <string name="scan_card_settings_button">Karte oder Ring scannen</string>
-  <string name="scan_card_settings_message">Scanne die Karte oder Ring, um ihre Einstellungen zu ändern. Die Änderungen wirken sich nur auf die von dir gescannte Karte oder Ring aus und haben keine Auswirkungen auf andere mit deiner Wallet verknüpften Karten oder Ringe.</string>
+  <string name="scan_card_settings_message">Scanne die Karte oder Ring, um ihre Einstellungen zu ändern. Die Änderungen wirken sich nur auf die von dir gescannte Karte oder Ring aus und haben keine Auswirkungen auf andere mit deiner Wallet verknüpften Geräte.</string>
   <string name="scan_card_settings_title">Halte deine Karte oder Ring bereit!</string>
   <string name="send_additional_field_already_included">Bereits in der eingegebenen Adresse enthalten</string>
   <string name="send_alert_fee_too_high_text">Der Provisionsbetrag ist %s mal der empfohlene Betrag. Stelle sicher, dass die benutzerdefinierten Einstellungen korrekt sind.</string>
@@ -794,6 +793,7 @@
   <string name="story_meet_title">Lerne Tangem kennen</string>
   <string name="story_web3_description">Tausche, kaufen Sie NFTs, vergebe Kredite und tätige Einlagen bei mehr als 100 verschiedenen dezentralen Diensten</string>
   <string name="story_web3_title">Web 3.0-kompatibel</string>
+  <string name="swap_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Sie die Verwendung Ihres Tokens für den Swap genehmigen.</string>
   <string name="swap_promo_text">Tausche mehr Token zu besseren Kursen direkt in deiner Brieftasche.</string>
   <string name="swap_promo_title">Neuer Swap-Anbieter verfügbar!</string>
   <string name="swapping_alert_cex_description">Der Betrag umfasst:\n- Gebühr des Dienstanbieters\n- Netzgebühr für die Rücksendung von %s von der Vermittlungsstelle an die Adresse des Nutzers.</string>
@@ -880,6 +880,7 @@
   <string name="wallet_connect_create_tx_message">Antrag auf Erstellung einer Transaktion für %1$s\n%2$s\n\nBetrag: %3$s\nGebühr: %4$s\nGesamt: %5$s\nSaldo: %6$s</string>
   <string name="wallet_connect_create_tx_not_enough_funds">Die Transaktion kann nicht gesendet werden. Nicht genügend Guthaben.</string>
   <string name="wallet_connect_error_failed_to_connect">WalletConnect Sitzung konnte nicht aufgebaut werden. Bitte versuche es später noch einmal.</string>
+  <string name="wallet_connect_error_missing_blockchains">Nicht alle Token wurden zu Deiner Liste hinzugefügt. Bitte füge sie zuerst hinzu und versuche es erneut. Fehlende Token: \n</string>
   <string name="wallet_connect_error_sing_failed">Nachricht konnte nicht signiert werden.\nBitte, versuche es erneut</string>
   <string name="wallet_connect_error_timeout">WalletConnect-Sitzung konnte nicht aufgebaut werden: Timeout-Fehler. Bitte versuche es später noch einmal.</string>
   <string name="wallet_connect_error_unsupported_blockchains">Sitzungsanfrage enthält nicht unterstützte Blockchains für WalletConnect-Verbindung. Nicht unterstützte Blockchains:\n</string>
@@ -987,7 +988,7 @@
   <string name="welcome_interrupted_backup_alert_message">Du hast eine unterbrochene Sicherung. Möchtest du diese fortsetzen?</string>
   <string name="welcome_interrupted_backup_alert_resume">Ja, fortsetzen</string>
   <string name="welcome_interrupted_backup_discard_discard">Verwerfen</string>
-  <string name="welcome_interrupted_backup_discard_message">Wenn du das Backup jetzt abbrichst, musst du die Karten oder Ringe auf die Werkseinstellungen zurücksetzen, um von vorne zu beginnen</string>
+  <string name="welcome_interrupted_backup_discard_message">Wenn du das Backup jetzt abbrichst, musst du die Geräte auf die Werkseinstellungen zurücksetzen, um von vorne zu beginnen</string>
   <string name="welcome_interrupted_backup_discard_resume">Sicherung fortsetzen</string>
   <string name="welcome_interrupted_backup_discard_title">Dies ist eine unwiderrufliche Aktion</string>
   <string name="welcome_unlock">Anmelden mit %s</string>
