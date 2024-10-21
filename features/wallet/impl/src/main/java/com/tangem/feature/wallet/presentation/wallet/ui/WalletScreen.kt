@@ -181,11 +181,7 @@ private fun WalletContent(
             contentPadding = contentPadding,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            item(
-                // !!! Type of the key should be saveable via Bundle on Android !!!
-                key = state.wallets.map { it.walletCardState.id.stringValue },
-                contentType = state.wallets.map { it.walletCardState.id },
-            ) {
+            item(key = "WalletsList" + state.selectedWalletIndex, contentType = "WalletsList") {
                 WalletsList(
                     lazyListState = walletsListState,
                     wallets = state.wallets.map(WalletState::walletCardState).toImmutableList(),
