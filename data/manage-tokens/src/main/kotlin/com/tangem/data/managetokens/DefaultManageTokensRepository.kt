@@ -99,6 +99,7 @@ internal class DefaultManageTokensRepository(
         loadUserTokensFromRemote: Boolean,
     ): BatchFetchResult.Success<List<ManagedCryptoCurrency>> {
         val supportedBlockchains = getSupportedBlockchains(userWallet)
+        val query = request.params.searchText.takeUnless(String?::isNullOrBlank)
 
         val call = suspend {
             tangemTechApi.getCoins(
@@ -107,7 +108,7 @@ internal class DefaultManageTokensRepository(
                     transform = Blockchain::toNetworkId,
                 ),
                 active = true,
-                searchText = request.params.searchText,
+                searchText = query,
                 offset = request.offset * request.limit,
                 limit = request.limit,
             ).getOrThrow()
@@ -135,7 +136,7 @@ internal class DefaultManageTokensRepository(
         val items = if (isFirstBatchFetching &&
             tokensResponse != null &&
             userWallet != null &&
-            request.params.searchText.isNullOrBlank()
+            query == null
         ) {
             managedCryptoCurrencyFactory.createWithCustomTokens(
                 coinsResponse = updatedCoinsResponse,
