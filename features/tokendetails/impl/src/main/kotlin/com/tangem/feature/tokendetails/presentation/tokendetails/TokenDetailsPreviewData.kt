@@ -155,7 +155,7 @@ internal object TokenDetailsPreviewData {
         onStakeClicked = {},
     )
 
-    val stakedBlock = StakingBlockUM.Staked(
+    val stakingBalanceBlock = StakingBlockUM.Staked(
         cryptoValue = stringReference("5 SOL"),
         fiatValue = stringReference("456.34 $"),
         rewardValue = resourceReference(R.string.staking_details_no_rewards_to_claim, wrappedList("0.43 $")),
@@ -351,6 +351,6 @@ internal object TokenDetailsPreviewData {
                 value = PagingData.from(txHistoryItems),
             ),
         ),
-        stakingBlocksState = stakedBlock,
+        stakingBlocksState = stakingBalanceBlock,
     )
 }
