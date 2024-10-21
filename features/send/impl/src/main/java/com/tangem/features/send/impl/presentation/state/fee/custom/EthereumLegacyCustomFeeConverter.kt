@@ -12,6 +12,7 @@ import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.impl.presentation.state.fee.checkExceedBalance
 import com.tangem.features.send.impl.presentation.state.fee.custom.EthereumCustomFeeConverter.Companion.ETHEREUM_GAS_UNIT
 import com.tangem.features.send.impl.presentation.state.fee.custom.EthereumCustomFeeConverter.Companion.FEE_AMOUNT
 import com.tangem.features.send.impl.presentation.state.fee.custom.EthereumCustomFeeConverter.Companion.GAS_DECIMALS
@@ -76,13 +77,10 @@ internal class EthereumLegacyCustomFeeConverter(
             when (index) {
                 FEE_AMOUNT -> setOnAmountChange(value, index)
                 GAS_PRICE -> setOnGasPriceChange(value, index)
+                GAS_LIMIT -> setOnGasLimitChange(value, index)
                 else -> set(index, this[index].copy(value = value))
             }
         }.toImmutableList()
-    }
-
-    private fun MutableList<SendTextField.CustomFee>.setEmpty(index: Int) {
-        set(index, this[index].copy(value = ""))
     }
 
     private fun MutableList<SendTextField.CustomFee>.setOnAmountChange(value: String, index: Int) {
@@ -130,6 +128,47 @@ internal class EthereumLegacyCustomFeeConverter(
                 ),
             )
             set(index, this[index].copy(value = value))
+        }
+    }
+
+    private fun MutableList<SendTextField.CustomFee>.setOnGasLimitChange(value: String, index: Int) {
+        if (value.isBlank()) {
+            setEmpty(FEE_AMOUNT)
+            setEmpty(GAS_LIMIT)
+        } else {
+            val newGasLimit = value.parseToBigDecimal(this[GAS_LIMIT].decimals)
+            val gasPrice = this[GAS_PRICE].value.parseToBigDecimal(this[GAS_PRICE].decimals)
+                .movePointLeft(this[GAS_PRICE].decimals) // from GWEI to ETH
+
+            val newFeeAmount = newGasLimit * gasPrice
+
+            set(
+                index = FEE_AMOUNT,
+                element = this[FEE_AMOUNT].copy(
+                    value = newFeeAmount.parseBigDecimal(this[FEE_AMOUNT].decimals),
+                    label = getFiatReference(
+                        rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate,
+                        value = newFeeAmount,
+                        appCurrency = appCurrencyProvider(),
+                    ),
+                ),
+            )
+
+            val isNotExceedBalance = checkExceedBalance(
+                feeBalance = feeCryptoCurrencyStatusProvider()?.value?.amount,
+                feeAmount = newFeeAmount,
+            )
+
+            set(
+                index = index,
+                element = this[index].copy(
+                    value = value,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = if (!isNotExceedBalance) ImeAction.None else ImeAction.Done,
+                        keyboardType = KeyboardType.Number,
+                    ),
+                ),
+            )
         }
     }
 
