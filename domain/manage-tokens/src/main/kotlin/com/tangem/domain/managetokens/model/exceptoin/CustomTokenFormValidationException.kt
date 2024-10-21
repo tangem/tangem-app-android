@@ -4,8 +4,6 @@ sealed class CustomTokenFormValidationException {
 
     sealed class ContractAddress : CustomTokenFormValidationException() {
 
-        data object Empty : ContractAddress()
-
         data object Invalid : ContractAddress()
     }
 
