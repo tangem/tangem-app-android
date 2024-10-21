@@ -11,7 +11,9 @@ sealed class AddCustomTokenForm {
 
     sealed class Validated : AddCustomTokenForm() {
 
-        data class ContractAddress(
+        data object Empty : Validated()
+
+        data class ContractAddressOnly(
             val contractAddress: String,
         ) : Validated()
 
