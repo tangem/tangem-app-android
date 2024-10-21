@@ -304,11 +304,10 @@
   <string name="feedback_subject_tx_failed">Не вдається відправити транзакцію</string>
   <string name="feedback_token_description_error">Помилка в описі монети</string>
   <string name="give_permission_current_transaction">Транзакція</string>
-  <string name="give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="give_permission_policy_type_footer">Вкажіть ліміт доступу для обраного токена</string>
   <string name="give_permission_rows_amount">Кількість %s</string>
   <string name="give_permission_staking_footer">Функція підтвердження необхідна для надання дозволу іншій адресі на використання певної кількості ваших токенів. За задумом, смарт-контракти не можуть отримати доступ до ваших токенів без вашого схвалення. \"Розблоковуючи\" свої токени, ви дозволяєте смарт-контракту StakeKit використовувати їх. Майнери мережі отримують плату за газ (сплачену вами), щоб зафіксувати цю дію в блокчейні. Ви зможете застейкати свій токен після того, як дасте дозвіл.</string>
-  <string name="give_permission_staking_subtitle">Щоб продовжити, вам потрібно дозволити смарт-контракту StakeKit використовувати ваш %s</string>
+  <string name="give_permission_staking_subtitle">Щоб продовжити, вам потрібно дозволити смарт-контракту Polygon використовувати ваш %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">Щоб продовжити, вам потрібно дозволити смарт-контракту %1s використовувати ваш %2s</string>
   <string name="give_permission_title">Надати дозвіл</string>
   <string name="give_permission_unlimited">Необмежено</string>
@@ -816,6 +815,7 @@
   <string name="story_meet_title">Зустрічайте Tangem</string>
   <string name="story_web3_description">Обмінюйте, купуйте NFT, отримуйте позики та робіть депозити у понад 100 різних децентралізованих сервісах</string>
   <string name="story_web3_title">Web 3.0 сумісність</string>
+  <string name="swap_give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="swap_promo_text">Обмінюйте більше токенів за вигіднішим курсом прямо у своєму гаманці.</string>
   <string name="swap_promo_title">З\'явився новий провайдер обмінів!</string>
   <string name="swapping_alert_cex_description">Сума включає: \n• комісію постачальника послуг\n• комісію мережі за відправлення %s з біржі назад на адресу користувача.</string>
