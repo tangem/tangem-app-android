@@ -3,8 +3,11 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -38,9 +41,13 @@ import com.tangem.features.tokendetails.impl.R
 internal fun TokenStakingBlock(state: StakingBlockUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(
-                color = TangemTheme.colors.background.primary,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .background(TangemTheme.colors.background.primary)
+            .clickable(
+                enabled = state is StakingBlockUM.Staked,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(),
+                onClick = { (state as? StakingBlockUM.Staked)?.onStakeClicked?.invoke() },
             )
             .fillMaxWidth()
             .padding(all = TangemTheme.dimens.spacing12),
