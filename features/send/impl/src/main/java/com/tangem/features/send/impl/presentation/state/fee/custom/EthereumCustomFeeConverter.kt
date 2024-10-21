@@ -129,3 +129,7 @@ internal class EthereumCustomFeeConverter(
         const val FEE_AMOUNT = 0
     }
 }
+
+internal fun MutableList<SendTextField.CustomFee>.setEmpty(index: Int) {
+    set(index, this[index].copy(value = ""))
+}
