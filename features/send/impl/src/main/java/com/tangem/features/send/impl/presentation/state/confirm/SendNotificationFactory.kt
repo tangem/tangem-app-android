@@ -93,7 +93,7 @@ internal class SendNotificationFactory constructor(
             val currencyCheck = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
-                amount = amountValue,
+                amount = sendingAmount,
                 fee = feeValue,
             )
             buildList {
