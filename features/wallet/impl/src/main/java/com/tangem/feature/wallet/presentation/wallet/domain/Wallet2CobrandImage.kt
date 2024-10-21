@@ -88,7 +88,7 @@ internal enum class Wallet2CobrandImage(
     Kaspa2(
         cards2ResId = R.drawable.ill_kaspa2_card2_120_106,
         cards3ResId = R.drawable.ill_kaspa2_card3_120_106,
-        batchIds = setOf("AF25"),
+        batchIds = setOf("AF25", "AF61", "AF72"),
     ),
 
     KaspaReseller(
