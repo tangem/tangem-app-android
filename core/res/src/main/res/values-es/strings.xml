@@ -83,10 +83,12 @@
   <string name="common_buy_currency">Ir a %1$s</string>
   <string name="common_camera_denied_alert_message">No ha otorgado acceso a su cámara, cambie su configuración de privacidad</string>
   <string name="common_cancel">Cancelar</string>
+  <string name="common_change">Cambie</string>
   <string name="common_choose_action">Elige una acción</string>
   <string name="common_claim">Reclamar</string>
   <string name="common_claim_rewards">Reclame recompensas</string>
   <string name="common_close">Cerrar</string>
+  <string name="common_confirm">confirme</string>
   <string name="common_continue">Continuar</string>
   <string name="common_copy">Copiar</string>
   <string name="common_copy_address">Copiar la dirección</string>
@@ -148,7 +150,7 @@
   <string name="common_rename">Renombrar</string>
   <string name="common_save">Guarde</string>
   <string name="common_save_changes">Guardar cambios</string>
-  <string name="common_search">Buscar en el mercado</string>
+  <string name="common_search">Buscar</string>
   <string name="common_search_tokens">Buscar tokens</string>
   <string name="common_second_no_param">sec</string>
   <string name="common_seed_phrase">Seed phrase</string>
@@ -298,11 +300,10 @@
   <string name="feedback_subject_tx_failed">No se puede completar una transacción</string>
   <string name="feedback_token_description_error">Error de descripción de moneda</string>
   <string name="give_permission_current_transaction">Esta transacción</string>
-  <string name="give_permission_fee_footer">La red cobrará una tarifa de aprobación de token para verificar que está autorizando el uso de su token para el swap.</string>
   <string name="give_permission_policy_type_footer">Especifique el límite aprobado para el token seleccionado.</string>
   <string name="give_permission_rows_amount">Montante %s</string>
   <string name="give_permission_staking_footer">La función Aprobar es necesaria para otorgar permiso a otra dirección para usar una cantidad específica de sus tokens. Por diseño, los contratos inteligentes no pueden acceder a sus tokens sin su aprobación. Al \"desbloquear\" sus tokens, autoriza al contrato inteligente de StakeKit a usarlos. Los mineros de la red reciben una tarifa de gas (pagada por usted) por registrar esta acción en la cadena de bloques. Puede apostar su token después de dar su aprobación.</string>
-  <string name="give_permission_staking_subtitle">Para continuar, debe autorizar el contrato inteligente de StakeKit para utilizar su %s</string>
+  <string name="give_permission_staking_subtitle">Para continuar, debe autorizar el contrato inteligente de Polygon para utilizar su %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">Para continuar, de autorización a los smart contracts de %1s para usar su %2s</string>
   <string name="give_permission_title">Dar autorización</string>
   <string name="give_permission_unlimited">Ilimitado</string>
@@ -550,6 +551,9 @@
   <string name="onboarding_wallet_info_title_fourth">Restaurar código de acceso</string>
   <string name="onboarding_wallet_info_title_second">Tarjetas idénticas</string>
   <string name="onboarding_wallet_info_title_third">Código de acceso</string>
+  <string name="onramp_residency_bottomsheet_country_not_supported">Nuestros servicios no están disponibles en este país</string>
+  <string name="onramp_residency_bottomsheet_country_subtitle">Cámbielo o confírmelo</string>
+  <string name="onramp_residency_bottomsheet_title">Su residencia ha sido identificada como</string>
   <string name="organize_tokens_group">Agrupar</string>
   <string name="organize_tokens_sort_by_balance">Por saldo</string>
   <string name="organize_tokens_title">Organizar tokens</string>
@@ -796,6 +800,7 @@
   <string name="story_meet_title">Descubra Tangem</string>
   <string name="story_web3_description">Intercambie, compre NFT, haga préstamos y depósitos en más de 100 servicios descentralizados diferentes</string>
   <string name="story_web3_title">Compatible con Web 3.0</string>
+  <string name="swap_give_permission_fee_footer">La red cobrará una tarifa de aprobación de token para verificar que está autorizando el uso de su token para el swap.</string>
   <string name="swap_promo_text">Intercambie más tokens a mejores tasas directamente en su billetera.</string>
   <string name="swap_promo_title">¡Nuevo proveedor de intercambio disponible!</string>
   <string name="swapping_alert_cex_description">El monto incluye:\n• Tarifas del proveedor de servicios\n• Tarifas de red por enviar %s desde el intercambio a la dirección del usuario.</string>
