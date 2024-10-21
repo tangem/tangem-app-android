@@ -64,6 +64,9 @@ enum class ExchangeStatus {
     @Json(name = "tx-failed")
     TxFailed,
 
+    @Json(name = "paused")
+    Paused,
+
     @Json(name = "unknown")
     Unknown,
 }
