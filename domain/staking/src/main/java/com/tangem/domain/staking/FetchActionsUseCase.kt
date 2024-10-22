@@ -3,6 +3,7 @@ package com.tangem.domain.staking
 import arrow.core.Either
 import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.StakingError
+import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.staking.repositories.StakingActionRepository
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -22,6 +23,7 @@ class FetchActionsUseCase(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
         networkType: NetworkType,
+        stakingActionStatus: StakingActionStatus,
     ): Either<StakingError, Unit> {
         return Either
             .catch {
@@ -29,6 +31,7 @@ class FetchActionsUseCase(
                     userWalletId = userWalletId,
                     cryptoCurrency = cryptoCurrency,
                     networkType = networkType,
+                    stakingActionStatus = stakingActionStatus,
                 )
 
                 stakingActionRepository.store(userWalletId, cryptoCurrency.id, actions)

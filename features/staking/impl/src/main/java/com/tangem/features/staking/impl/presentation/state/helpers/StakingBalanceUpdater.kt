@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.presentation.state.helpers
 import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
 import com.tangem.domain.staking.FetchActionsUseCase
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -49,7 +50,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                     updateNetworkStatuses()
                 },
                 async {
-                    updateActions()
+                    updateProcessingActions()
                 },
             ).awaitAll()
         }
@@ -65,7 +66,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                     updateNetworkStatuses(delay = 0)
                 },
                 async {
-                    updateActions()
+                    updateProcessingActions()
                 },
             ).awaitAll()
         }
@@ -104,11 +105,12 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         }
     }
 
-    private suspend fun updateActions() {
+    private suspend fun updateProcessingActions() {
         fetchActionsUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrencyStatus.currency,
             networkType = yield.token.network,
+            stakingActionStatus = StakingActionStatus.PROCESSING,
         )
     }
 

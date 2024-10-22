@@ -12,6 +12,7 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
+import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
@@ -39,6 +40,7 @@ interface StakingRepository {
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
         networkType: NetworkType,
+        stakingActionStatus: StakingActionStatus,
     ): List<StakingAction>
 
     suspend fun fetchSingleYieldBalance(

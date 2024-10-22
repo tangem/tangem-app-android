@@ -40,6 +40,7 @@ interface StakeKitApi {
     suspend fun getActions(
         @Query("walletAddress") walletAddress: String,
         @Query("network") network: String,
+        @Query("status") status: String,
         @Query("sort") sort: String = "createdAtDesc",
         @Query("limit") limit: Int = 50,
     ): ApiResponse<GetActionsResponse>
