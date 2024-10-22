@@ -518,7 +518,7 @@
   </plurals>
   <string name="onboarding_seed_generate_title">Ваша seed-фраза</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one"></item>
+    <item quantity="one">%d </item>
     <item quantity="few">%d слова</item>
     <item quantity="many">%d слов</item>
     <item quantity="other">%d слов</item>
@@ -729,7 +729,7 @@
   <string name="staking_details_reward_claiming">Способ вознаграждения</string>
   <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Оно может зачисляться автоматически на ваш адрес или вручную, когда вознаграждение нужно вывести, создав транзакцию на её получение.</string>
   <string name="staking_details_reward_schedule">Период вознагражения</string>
-  <string name="staking_details_reward_schedule_info">Это период, определяющий, когда участники стейкинга получат свои вознаграждения.</string>
+  <string name="staking_details_reward_schedule_info">Это график, который определяет, когда участники стейкинга получают свои награды. Время распределения наград может немного варьироваться в зависимости от валидатора и нагрузки сети.</string>
   <string name="staking_details_rewards_to_claim">Вознаграждение для получения: %s</string>
   <string name="staking_details_title">Стейкинг %s</string>
   <string name="staking_details_unbonding_period">Период отзыва</string>
