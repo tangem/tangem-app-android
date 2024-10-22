@@ -85,10 +85,12 @@
   <string name="common_buy_currency">Перейдіть до %1$s</string>
   <string name="common_camera_denied_alert_message">Ви не надали доступ до камери, будь ласка, змініть налаштування конфіденційності</string>
   <string name="common_cancel">Скасувати</string>
+  <string name="common_change">Змінити</string>
   <string name="common_choose_action">Виберіть дію</string>
   <string name="common_claim">Отримати</string>
   <string name="common_claim_rewards">Отримати винагороди</string>
   <string name="common_close">Закрити</string>
+  <string name="common_confirm">Підтвердити</string>
   <string name="common_continue">Продовжити</string>
   <string name="common_copy">Копіювати</string>
   <string name="common_copy_address">Скопіювати адресу</string>
@@ -304,11 +306,10 @@
   <string name="feedback_subject_tx_failed">Не вдається відправити транзакцію</string>
   <string name="feedback_token_description_error">Помилка в описі монети</string>
   <string name="give_permission_current_transaction">Транзакція</string>
-  <string name="give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="give_permission_policy_type_footer">Вкажіть ліміт доступу для обраного токена</string>
   <string name="give_permission_rows_amount">Кількість %s</string>
   <string name="give_permission_staking_footer">Функція підтвердження необхідна для надання дозволу іншій адресі на використання певної кількості ваших токенів. За задумом, смарт-контракти не можуть отримати доступ до ваших токенів без вашого схвалення. \"Розблоковуючи\" свої токени, ви дозволяєте смарт-контракту StakeKit використовувати їх. Майнери мережі отримують плату за газ (сплачену вами), щоб зафіксувати цю дію в блокчейні. Ви зможете застейкати свій токен після того, як дасте дозвіл.</string>
-  <string name="give_permission_staking_subtitle">Щоб продовжити, вам потрібно дозволити смарт-контракту StakeKit використовувати ваш %s</string>
+  <string name="give_permission_staking_subtitle">Щоб продовжити, вам потрібно дозволити смарт-контракту Polygon використовувати ваш %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">Щоб продовжити, вам потрібно дозволити смарт-контракту %1s використовувати ваш %2s</string>
   <string name="give_permission_title">Надати дозвіл</string>
   <string name="give_permission_unlimited">Необмежено</string>
@@ -344,7 +345,7 @@
   <string name="manage_tokens_list_header_title">Ринкова капіталізація</string>
   <string name="manage_tokens_network_selector_native_subtitle">Спочатку був створений блокчейн криптовалюти</string>
   <string name="manage_tokens_network_selector_native_title">Основна мережа</string>
-  <string name="manage_tokens_network_selector_non_native_info">Використання неосновних мереж для токенів дозволяє забезпечити крос-блокчейн інтероперабельність, що дає змогу використовувати активи в різноманітних децентралізованих додатках та смарт-контрактах на різних платформах. Однак це часто вимагає наявності кастодіана або смарт-контракту для безпечного зберігання оригінального активу, що вводить централізацію та ризик контрагента.</string>
+  <string name="manage_tokens_network_selector_non_native_info">Використання нерідних мереж для токенів забезпечує сумісність між блокчейнами, дозволяючи використовувати активи в різноманітних децентралізованих програмах і смарт-контрактах на різних платформах. Однак для цього часто використовується зберігач або смарт-контракт для надійного зберігання оригінального активу, вводячи централізацію та ризик контрагента.</string>
   <string name="manage_tokens_network_selector_non_native_subtitle">Не оригінальний або первинний блокчейн, на якому розміщено токен</string>
   <string name="manage_tokens_network_selector_non_native_title">Неосновні мережі</string>
   <string name="manage_tokens_network_selector_title">Оберіть мережі</string>
@@ -519,7 +520,7 @@
   </plurals>
   <string name="onboarding_seed_generate_title">Ваша seed-фраза</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one"></item>
+    <item quantity="one">%d слово</item>
     <item quantity="few">%d слова</item>
     <item quantity="many">%d слів</item>
     <item quantity="other">%d слів</item>
@@ -566,6 +567,9 @@
   <string name="onboarding_wallet_info_title_fourth">Відновлення коду доступу</string>
   <string name="onboarding_wallet_info_title_second">Ідентичні картки</string>
   <string name="onboarding_wallet_info_title_third">Код доступу</string>
+  <string name="onramp_residency_bottomsheet_country_not_supported">Наші сервіси недоступні в цій країні</string>
+  <string name="onramp_residency_bottomsheet_country_subtitle">Змінити або підтвердити</string>
+  <string name="onramp_residency_bottomsheet_title">Ваше місце проживання визначено як</string>
   <string name="organize_tokens_group">Групами</string>
   <string name="organize_tokens_sort_by_balance">За балансом</string>
   <string name="organize_tokens_title">Сортування токенів</string>
@@ -730,13 +734,14 @@
   <string name="staking_details_reward_claiming">Отримати винагороду</string>
   <string name="staking_details_reward_claiming_info">Метод отримання винагород за стейкінг.\nВін може зараховуватися автоматично на вашу адресу або вручну, коли винагороду треба вивести, створивши транзакцію на її отримання.</string>
   <string name="staking_details_reward_schedule">Розклад винагород</string>
-  <string name="staking_details_reward_schedule_info">Це період, який визначає, коли учасники стейкінгу отримують свої винагороди.</string>
+  <string name="staking_details_reward_schedule_info">Це графік, який визначає, коли учасники стейкінгу отримують свої винагороди. Час розподілу винагород може дещо відрізнятися залежно від валідатора та навантаження на мережу.</string>
   <string name="staking_details_rewards_to_claim">Нагороди для отримання: %s</string>
   <string name="staking_details_title">Стейкінг %s</string>
   <string name="staking_details_unbonding_period">Період розблокування</string>
   <string name="staking_details_unbonding_period_info">Період, який ви повинні чекати після запиту на виведення коштів зі стейкінгу, перш ніж токени стануть доступними.</string>
   <string name="staking_details_warmup_period">Період блокування</string>
   <string name="staking_details_warmup_period_info">Відведений час для активації участі в стейкінгу.</string>
+  <string name="staking_give_permission_fee_footer">Комісія мережі за схвалення токену, щоб верифікувати, що саме ви даєте дозвіл на використання вашого токена для стейкінгу.</string>
   <string name="staking_legal">Використовуючи функцію стейкінгу, ви погоджуєтесь з %1$s та %2$s</string>
   <string name="staking_locked">Заблоковано</string>
   <string name="staking_migrate">Перемістити</string>
@@ -795,6 +800,7 @@
   <string name="staking_unbonding">Розблокування</string>
   <string name="staking_unlocked_locked">Розблокувати</string>
   <string name="staking_unlocking">Розблокування</string>
+  <string name="staking_unstake_amount_validation_error">Сума перевищує баланс стейкінгу</string>
   <string name="staking_unstaked">Вивід зі стейкінгу</string>
   <string name="staking_unstaking">Зняти зі стейкінгу</string>
   <string name="staking_unstaking_item_name">Виведення зі стейкінгу %s</string>
@@ -816,6 +822,7 @@
   <string name="story_meet_title">Зустрічайте Tangem</string>
   <string name="story_web3_description">Обмінюйте, купуйте NFT, отримуйте позики та робіть депозити у понад 100 різних децентралізованих сервісах</string>
   <string name="story_web3_title">Web 3.0 сумісність</string>
+  <string name="swap_give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="swap_promo_text">Обмінюйте більше токенів за вигіднішим курсом прямо у своєму гаманці.</string>
   <string name="swap_promo_title">З\'явився новий провайдер обмінів!</string>
   <string name="swapping_alert_cex_description">Сума включає: \n• комісію постачальника послуг\n• комісію мережі за відправлення %s з біржі назад на адресу користувача.</string>
@@ -902,6 +909,7 @@
   <string name="wallet_connect_create_tx_message">Запит на створення транзакції для %1$s\n%2$s\n\nСума: %3$s\nКомісія: %4$s\nВсього: %5$s\nБаланс: %6$s</string>
   <string name="wallet_connect_create_tx_not_enough_funds">Неможливо відправити транзакцію. Недостатньо коштів.</string>
   <string name="wallet_connect_error_failed_to_connect">Не вдалося встановити сеанс WalletConnect. Будь ласка, спробуйте пізніше.</string>
+  <string name="wallet_connect_error_missing_blockchains">Не всі токени додано до вашого списку. Будь ласка, додайте їх спочатку і спробуйте ще раз. Відсутні токени:\n</string>
   <string name="wallet_connect_error_sing_failed">Не вдалося підписати повідомлення.\nБудь ласка, спробуйте ще раз</string>
   <string name="wallet_connect_error_timeout">Не вдалося створити сеанс WalletConnect за відведений час. Будь ласка, спробуйте пізніше.</string>
   <string name="wallet_connect_error_unsupported_blockchains">Запит на підключення сеансу WalletConnect містить непідтримувані блокчейни. Непідтримувані блокчейни:\n</string>
