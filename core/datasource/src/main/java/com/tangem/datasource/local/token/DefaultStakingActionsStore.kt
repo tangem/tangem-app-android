@@ -15,7 +15,7 @@ internal class DefaultStakingActionsStore(
     private val mutex = Mutex()
 
     override fun get(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID): Flow<List<StakingAction>> {
-        return dataStore.get(userWalletId.stringValue)
+        return dataStore.get(composeKey(userWalletId, cryptoCurrencyId))
     }
 
     override suspend fun store(
@@ -24,7 +24,11 @@ internal class DefaultStakingActionsStore(
         items: List<StakingAction>,
     ) {
         mutex.withLock {
-            dataStore.store(userWalletId.stringValue, items)
+            dataStore.store(composeKey(userWalletId, cryptoCurrencyId), items)
         }
+    }
+
+    private fun composeKey(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID) : String {
+        return userWalletId.stringValue + cryptoCurrencyId.value
     }
 }
