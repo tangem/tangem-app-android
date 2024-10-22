@@ -33,11 +33,17 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.BottomFade
+import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.TangemSwitch
+import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
+import com.tangem.core.ui.components.buttons.common.TangemButton
+import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.SearchBar
@@ -122,6 +128,7 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
                         .fillMaxWidth(),
                     isVisible = state.hasChanges,
                     showProgress = state.isSavingInProgress,
+                    showIcon = state.needToAddDerivations,
                     onClick = state.saveChanges,
                 )
             }
@@ -158,6 +165,7 @@ private fun ManageTokensTopBar(topBar: ManageTokensTopBarUM?, search: SearchBarU
 private fun SaveChangesButton(
     isVisible: Boolean,
     showProgress: Boolean,
+    showIcon: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -168,10 +176,17 @@ private fun SaveChangesButton(
         exit = fadeOut(),
         label = "save_button_visibility",
     ) {
-        PrimaryButtonIconEnd(
+        TangemButton(
             text = stringResource(id = R.string.common_save),
-            iconResId = R.drawable.ic_tangem_24,
+            icon = if (showIcon) {
+                TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
+            } else {
+                TangemButtonIconPosition.None
+            },
             showProgress = showProgress,
+            colors = TangemButtonsDefaults.primaryButtonColors,
+            enabled = true,
+            animateContentChange = true,
             onClick = onClick,
         )
     }
@@ -472,6 +487,7 @@ private class PreviewManageTokensComponentProvider : PreviewParameterProvider<Ma
         get() = sequenceOf(
             PreviewManageTokensComponent(
                 isLoading = true,
+                showTangemIcon = true,
                 params = ManageTokensComponent.Params(
                     source = ManageTokensSource.ONBOARDING,
                     userWalletId = UserWalletId("wallet_id"),
@@ -479,10 +495,12 @@ private class PreviewManageTokensComponentProvider : PreviewParameterProvider<Ma
             ),
             PreviewManageTokensComponent(
                 isLoading = false,
+                showTangemIcon = true,
                 params = ManageTokensComponent.Params(source = ManageTokensSource.ONBOARDING, userWalletId = null),
             ),
             PreviewManageTokensComponent(
                 isLoading = false,
+                showTangemIcon = false,
                 params = ManageTokensComponent.Params(
                     source = ManageTokensSource.ONBOARDING,
                     userWalletId = UserWalletId("wallet_id"),
