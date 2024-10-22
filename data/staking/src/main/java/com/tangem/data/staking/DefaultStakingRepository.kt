@@ -409,6 +409,8 @@ internal class DefaultStakingRepository(
                         Timber.i("No yield balances available for $userWalletId")
                         stakingBalanceStore.store(userWalletId, emptySet())
 
+                        cacheRegistry.invalidate(getYieldBalancesKey(userWalletId))
+
                         return@invokeOnExpire
                     }
 
