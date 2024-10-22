@@ -131,13 +131,14 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             derivePublicKeysUseCase(
                 userWalletId = userWallet.walletId,
                 currencies = missedAddressCurrencies,
-            ).onLeft {
-                Timber.e(it, "Failed to derive public keys")
-                return@launch
-            }
-
-            // Refresh must be set to true to ensure that yield balances are updated
-            fetchTokenListUseCase(userWallet.walletId, mode = RefreshMode.SKIP_CURRENCIES)
+            ).fold(
+                ifLeft = { Timber.e(it, "Failed to derive public keys") },
+                ifRight = {
+                    fetchTokenListUseCase(userWallet.walletId, mode = RefreshMode.SKIP_CURRENCIES).onLeft {
+                        Timber.e("Unable to refresh token list: $it")
+                    }
+                },
+            )
         }
     }
 
