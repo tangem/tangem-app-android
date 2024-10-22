@@ -711,6 +711,7 @@
   <string name="staking_details_unbonding_period_info">ステーキングから資金の引き出しを要求した後、トークンが利用可能になるまでの待機期間。</string>
   <string name="staking_details_warmup_period">ウォームアップ期間</string>
   <string name="staking_details_warmup_period_info">ステーキングへの参加を有効にするために割り当てられた時間。</string>
+  <string name="staking_give_permission_fee_footer">ネットワークは、ステーキングのためにトークンの使用を承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="staking_legal">ステーキング機能を使用すると、プロバイダーの%1$sと%2$sに同意したことになります</string>
   <string name="staking_locked">ロック中</string>
   <string name="staking_migrate">移行</string>

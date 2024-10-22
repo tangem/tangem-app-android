@@ -714,13 +714,14 @@
   <string name="staking_details_reward_claiming">Reclamo de recompensa</string>
   <string name="staking_details_reward_claiming_info">Método para recibir recompensas por apuesta.\nPuede ser automático, donde la recompensa se acredita en tu dirección, o manual, donde debes retirar la recompensa creando una transacción para recibirla.</string>
   <string name="staking_details_reward_schedule">Calendario de recompensas</string>
-  <string name="staking_details_reward_schedule_info">Este es un cronograma que determina cuándo los participantes reciben sus recompensas.</string>
+  <string name="staking_details_reward_schedule_info">Este es un cronograma que determina cuándo los participantes reciben sus recompensas. La duración de la distribución de recompensas puede variar ligeramente según el validador y la carga de la red.</string>
   <string name="staking_details_rewards_to_claim">Recompensas para reclamar: %s</string>
   <string name="staking_details_title">Staking %s</string>
   <string name="staking_details_unbonding_period">Periodo de disociación</string>
   <string name="staking_details_unbonding_period_info">El período que debes esperar después de solicitar el retiro de fondos del staking antes de que los tokens estén disponibles.</string>
   <string name="staking_details_warmup_period">Periodo de calentamiento</string>
   <string name="staking_details_warmup_period_info">El tiempo permitido para activar la participación en la apuesta.</string>
+  <string name="staking_give_permission_fee_footer">La red cobrará una tarifa de aprobación de token para verificar que usted está autorizando el uso de su token para el staking.</string>
   <string name="staking_legal">Al utilizar la función de staking, usted acepta %1$s y  %2$s del proveedor</string>
   <string name="staking_locked">Bloqueado</string>
   <string name="staking_migrate">Migrar</string>
@@ -779,6 +780,7 @@
   <string name="staking_unbonding">Desunión</string>
   <string name="staking_unlocked_locked">Desbloquear</string>
   <string name="staking_unlocking">Desbloqueando</string>
+  <string name="staking_unstake_amount_validation_error">El monto excede el saldo apostado</string>
   <string name="staking_unstaked">Sin staking</string>
   <string name="staking_unstaking">Unstaking</string>
   <string name="staking_unstaking_item_name">Detenando el staking de activos %s</string>
