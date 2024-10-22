@@ -714,13 +714,14 @@
   <string name="staking_details_reward_claiming">Réclamation de récompense</string>
   <string name="staking_details_reward_claiming_info">Méthode de réception des récompenses de staking.\nElle peut être automatique, où la récompense est créditée sur votre adresse, ou manuelle, où vous devez retirer la récompense en créant une transaction pour la recevoir.</string>
   <string name="staking_details_reward_schedule">Calendrier de récompenses</string>
-  <string name="staking_details_reward_schedule_info">Il s\'agit d\'un calendrier qui détermine le moment où les participants au staking reçoivent leurs récompenses.</string>
+  <string name="staking_details_reward_schedule_info">Il s\'agit d\'un calendrier qui détermine le moment où les participants au staking reçoivent leurs récompenses. La durée de distribution des récompenses peut varier légèrement en fonction du validateur et de la charge du réseau.</string>
   <string name="staking_details_rewards_to_claim">Récompenses à réclamer: %s</string>
   <string name="staking_details_title">Staking %s</string>
   <string name="staking_details_unbonding_period">Période de dissociation</string>
   <string name="staking_details_unbonding_period_info">La période que vous devez attendre après avoir demandé le retrait des fonds du staking avant que les jetons ne soient disponibles.</string>
   <string name="staking_details_warmup_period">Période d\'échauffement</string>
   <string name="staking_details_warmup_period_info">Le temps imparti pour activer la participation au staking.</string>
+  <string name="staking_give_permission_fee_footer">Le réseau facturera des frais d’approbation de jeton pour vérifier que vous autorisez l’utilisation de votre jeton pour le jalonnement.</string>
   <string name="staking_legal">En utilisant la fonctionnalité de staking, vous acceptez les  %1$s et %2$s du fournisseur</string>
   <string name="staking_locked">Bloqué</string>
   <string name="staking_migrate">Migrer</string>
@@ -779,6 +780,7 @@
   <string name="staking_unbonding">Dissociation</string>
   <string name="staking_unlocked_locked">Débloquer</string>
   <string name="staking_unlocking">Déverrouillage</string>
+  <string name="staking_unstake_amount_validation_error">Le montant dépasse le solde misé</string>
   <string name="staking_unstaked">Non-staké</string>
   <string name="staking_unstaking">Unstaking</string>
   <string name="staking_unstaking_item_name">En train de destaker les actifs %s</string>
