@@ -75,8 +75,11 @@ internal class CustomCurrencyValidator @Inject constructor(
                 is AddCustomTokenForm.Validated.All -> {
                     findOrCreateCurrency(userWalletId, networkId, derivationPath, validatedForm)
                 }
-                is AddCustomTokenForm.Validated.ContractAddress -> {
+                is AddCustomTokenForm.Validated.ContractAddressOnly -> {
                     findToken(userWalletId, networkId, derivationPath, validatedForm)
+                }
+                is AddCustomTokenForm.Validated.Empty -> {
+                    createCoin(userWalletId, networkId, derivationPath)
                 }
             }
         }.saveInAndJoin(validateFormJobHolder)
@@ -132,7 +135,7 @@ internal class CustomCurrencyValidator @Inject constructor(
         userWalletId: UserWalletId,
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
-        validatedForm: AddCustomTokenForm.Validated.ContractAddress,
+        validatedForm: AddCustomTokenForm.Validated.ContractAddressOnly,
     ) {
         updateStatus(Status.SearchingToken)
 
