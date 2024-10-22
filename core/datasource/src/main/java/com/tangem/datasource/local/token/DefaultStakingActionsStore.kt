@@ -28,7 +28,7 @@ internal class DefaultStakingActionsStore(
         }
     }
 
-    private fun composeKey(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID) : String {
+    private fun composeKey(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID): String {
         return userWalletId.stringValue + cryptoCurrencyId.value
     }
 }

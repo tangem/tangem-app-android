@@ -1,24 +1,20 @@
 package com.tangem.domain.staking
 
+import android.util.Log
 import arrow.core.Either
 import com.tangem.domain.staking.model.stakekit.BalanceItem
+import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
-import com.tangem.domain.staking.repositories.StakingActionRepository
 import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
-import java.math.BigDecimal
+import java.util.UUID
 
 class InvalidatePendingTransactionsUseCase(
-    private val stakingActionRepository: StakingActionRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
     operator fun invoke(
-        userWalletId: UserWalletId,
-        cryptoCurrencyId: CryptoCurrency.ID,
         balanceItems: List<BalanceItem>,
         processingActions: List<StakingAction>,
     ): Either<StakingError, List<BalanceItem>> {
@@ -37,22 +33,24 @@ class InvalidatePendingTransactionsUseCase(
         realBalances: List<BalanceItem>,
         processingActions: List<StakingAction>,
     ): List<BalanceItem> {
-        val balances = realBalances
-            .associateBy { BalanceIdentity(it.groupId, it.amount) }
-            .toMutableMap()
+        val balances = realBalances.toMutableList()
+
+        Log.e("mergeBalancesAndProcessingActions", processingActions.toString())
 
         processingActions.forEach { action ->
-            // TODO staking
-            val key = BalanceIdentity(action.id, action.amount)
 
             when (action.type) {
                 StakingActionType.STAKE, StakingActionType.VOTE, StakingActionType.VOTE_LOCKED -> {
+                    processEnterAction(balances, action)
                 }
                 StakingActionType.WITHDRAW -> {
+                    modifyByStatus(balances, action, BalanceType.UNSTAKED)
                 }
                 StakingActionType.UNLOCK_LOCKED -> {
+                    modifyByStatus(balances, action, BalanceType.LOCKED)
                 }
                 StakingActionType.UNSTAKE -> {
+                    modifyByStatus(balances, action, BalanceType.STAKED)
                 }
                 else -> {
                     // intentionally do nothing
@@ -60,11 +58,32 @@ class InvalidatePendingTransactionsUseCase(
             }
         }
 
-        return balances.values.toList()
+        return balances
     }
 
-    private data class BalanceIdentity(
-        val groupId: String,
-        val amount: BigDecimal,
-    )
+    private fun processEnterAction(balances: MutableList<BalanceItem>, action: StakingAction) {
+        balances.add(
+            BalanceItem(
+                groupId = UUID.randomUUID().toString(),
+                token = balances[0].token,
+                type = BalanceType.STAKED,
+                amount = action.amount,
+                rawCurrencyId = null,
+                validatorAddress = action.validatorAddress ?: action.validatorAddresses?.get(0) ?: "",
+                date = null,
+                pendingActions = emptyList(),
+                isPending = true,
+            ),
+        )
+    }
+
+    private fun modifyByStatus(balances: MutableList<BalanceItem>, action: StakingAction, type: BalanceType) {
+        val index = balances.indexOfFirst {
+            !it.isPending && it.amount == action.amount && it.type == type
+        }
+
+        if (index != -1) {
+            balances[index] = balances[index].copy(isPending = true)
+        }
+    }
 }
