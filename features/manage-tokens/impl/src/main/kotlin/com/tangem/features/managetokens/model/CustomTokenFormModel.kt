@@ -61,15 +61,9 @@ internal class CustomTokenFormModel @Inject constructor(
 
         if (params.network.canHandleTokens) {
             observeTokenFormUpdates()
-        } else {
-            modelScope.launch {
-                customCurrencyValidator.createCoin(
-                    userWalletId = params.userWalletId,
-                    networkId = params.network.id,
-                    derivationPath = getDerivationPath(),
-                )
-            }
         }
+
+        createCoin()
     }
 
     private fun getInitialState(): CustomTokenFormUM {
@@ -112,6 +106,7 @@ internal class CustomTokenFormModel @Inject constructor(
             }
             .distinctUntilChanged()
             .sample(periodMillis = 1_000)
+            .drop(count = 1) // Skip initial state
             .onEach { formValues ->
                 customCurrencyValidator.validateForm(
                     userWalletId = params.userWalletId,
@@ -149,6 +144,14 @@ internal class CustomTokenFormModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun createCoin() = modelScope.launch {
+        customCurrencyValidator.createCoin(
+            userWalletId = params.userWalletId,
+            networkId = params.network.id,
+            derivationPath = getDerivationPath(),
+        )
     }
 
     private fun updateStateWithCurrency(
