@@ -233,11 +233,6 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onNextClick(balanceState: BalanceState?) {
         stakingStateRouter.onNextClick()
-        if (balanceState != null && (isInitState() || isAssentState())) {
-            stateController.update(
-                SetPossiblePendingTransactionTransformer(yield, balanceState, cryptoCurrencyStatus),
-            )
-        }
     }
 
     override fun getFee() {

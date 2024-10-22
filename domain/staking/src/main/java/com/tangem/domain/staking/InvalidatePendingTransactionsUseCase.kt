@@ -1,6 +1,5 @@
 package com.tangem.domain.staking
 
-import android.util.Log
 import arrow.core.Either
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.StakingError

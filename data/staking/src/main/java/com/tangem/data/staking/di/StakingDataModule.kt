@@ -4,7 +4,6 @@ import com.squareup.moshi.Moshi
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.staking.*
 import com.tangem.data.staking.DefaultStakingErrorResolver
-import com.tangem.data.staking.DefaultStakingPendingTransactionRepository
 import com.tangem.data.staking.DefaultStakingRepository
 import com.tangem.data.staking.DefaultStakingTransactionHashRepository
 import com.tangem.data.staking.converters.error.StakeKitErrorConverter
@@ -68,12 +67,6 @@ internal object StakingDataModule {
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideStakingPendingTransactionRepository(): StakingPendingTransactionRepository {
-        return DefaultStakingPendingTransactionRepository()
     }
 
     @Provides

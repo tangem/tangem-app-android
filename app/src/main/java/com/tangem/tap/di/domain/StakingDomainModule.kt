@@ -148,36 +148,12 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideSavePendingTransactionUseCase(
-        stakingPendingTransactionRepository: StakingPendingTransactionRepository,
-        stakingErrorResolver: StakingErrorResolver,
-    ): SavePendingTransactionUseCase {
-        return SavePendingTransactionUseCase(
-            stakingPendingTransactionRepository = stakingPendingTransactionRepository,
-            stakingErrorResolver = stakingErrorResolver,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideInvalidatePendingTransactionsUseCase(
         stakingActionRepository: StakingActionRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): InvalidatePendingTransactionsUseCase {
         return InvalidatePendingTransactionsUseCase(
             stakingActionRepository = stakingActionRepository,
-            stakingErrorResolver = stakingErrorResolver,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetPendingTransactionsUseCase(
-        stakingPendingTransactionRepository: StakingPendingTransactionRepository,
-        stakingErrorResolver: StakingErrorResolver,
-    ): GetStakingPendingTransactionsUseCase {
-        return GetStakingPendingTransactionsUseCase(
-            stakingPendingTransactionRepository = stakingPendingTransactionRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
