@@ -660,7 +660,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 // All cardIds may already be activated if the backup was skipped before.
                 if (notActivatedCardIds.isEmpty()) {
                     delay(1000)
-                    store.dispatch(BackupAction.BackupFinished(userWallet?.walletId))
+                    store.dispatchWithMain(BackupAction.BackupFinished(userWallet?.walletId))
                     return@launch
                 }
 
@@ -669,7 +669,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 store.state.globalState.onboardingState.onboardingManager?.finishActivation(notActivatedCardIds)
                 handleFinishBackup(requireNotNull(scanResponse))
                 delay(1000)
-                store.dispatch(BackupAction.BackupFinished(userWalletId = userWallet?.walletId))
+                store.dispatchWithMain(BackupAction.BackupFinished(userWalletId = userWallet?.walletId))
             }
         }
 
