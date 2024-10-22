@@ -130,7 +130,7 @@ private fun ApprovalBottomSheetInfo(data: GiveTxPermissionState.ReadyForRequest)
     }
     SpacerH16()
     FooterContainer(
-        footer = stringResource(id = R.string.give_permission_fee_footer),
+        footer = data.footerText.resolveReference(),
         modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         FeeItem(fee = data.fee)
@@ -321,6 +321,7 @@ private val previewData = GiveTxPermissionBottomSheetConfig(
         onChangeApproveType = { ApproveType.LIMITED },
         subtitle = resourceReference(R.string.give_permission_staking_subtitle, wrappedList("1")),
         dialogText = resourceReference(R.string.give_permission_staking_footer),
+        footerText = resourceReference(R.string.swap_give_permission_fee_footer),
     ),
     onCancel = {},
 )
