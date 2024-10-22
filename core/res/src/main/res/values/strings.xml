@@ -300,11 +300,10 @@
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
   <string name="feedback_token_description_error">Coin description error</string>
   <string name="give_permission_current_transaction">Transaction</string>
-  <string name="give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="give_permission_policy_type_footer">Specify the approve limit for the selected token</string>
   <string name="give_permission_rows_amount">Amount %s</string>
   <string name="give_permission_staking_footer">The Approve function is needed to grant permission to another address to use a specific amount of your tokens. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the StakeKit smart contract to use them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can stake your token after giving approval.</string>
-  <string name="give_permission_staking_subtitle">To continue you need to allow StakeKit smart contract to use your %s</string>
+  <string name="give_permission_staking_subtitle">To continue you need to allow Polygon smart contract to use your %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">To continue, grant %1s smart contracts permission to use your %2s</string>
   <string name="give_permission_title">Give Permission</string>
   <string name="give_permission_unlimited">Unlimited</string>
@@ -507,7 +506,7 @@
   </plurals>
   <string name="onboarding_seed_generate_title">Your seed phrase</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one"></item>
+    <item quantity="one">%d word</item>
     <item quantity="other">%d words</item>
   </plurals>
   <string name="onboarding_seed_import_message">To import your wallet, enter your seed phrase in the field below</string>
@@ -722,6 +721,7 @@
   <string name="staking_details_unbonding_period_info">The period you must wait after requesting to withdraw funds from staking before the tokens become available.</string>
   <string name="staking_details_warmup_period">Warmup period</string>
   <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
+  <string name="staking_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the staking.</string>
   <string name="staking_legal">By using staking functionality, you agree with provider’s %1$s and %2$s</string>
   <string name="staking_locked">Locked</string>
   <string name="staking_migrate">Migrate</string>
@@ -780,6 +780,7 @@
   <string name="staking_unbonding">Unbonding</string>
   <string name="staking_unlocked_locked">Unlock</string>
   <string name="staking_unlocking">Unlocking</string>
+  <string name="staking_unstake_amount_validation_error">Amount exceeds staked balance</string>
   <string name="staking_unstaked">Unstaked</string>
   <string name="staking_unstaking">Unstaking</string>
   <string name="staking_unstaking_item_name">Unstaking assets %s</string>
@@ -801,6 +802,7 @@
   <string name="story_meet_title">Meet Tangem</string>
   <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
   <string name="story_web3_title">Web 3.0 Compatible</string>
+  <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
