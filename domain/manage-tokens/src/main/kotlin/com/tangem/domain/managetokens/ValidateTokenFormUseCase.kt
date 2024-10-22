@@ -16,12 +16,19 @@ class ValidateTokenFormUseCase(
         networkId: Network.ID,
         formValues: AddCustomTokenForm.Raw,
     ): EitherNel<CustomTokenFormValidationException, AddCustomTokenForm.Validated> = either {
-        if (formValues.name.isBlank() && formValues.symbol.isBlank() && formValues.decimals.isBlank()) {
-            val contractAddress = withError({ nonEmptyListOf(it) }) {
-                ensureIsContractAddressValid(formValues.contractAddress, networkId)
-            }
+        if (formValues.name.isBlank() &&
+            formValues.symbol.isBlank() &&
+            formValues.decimals.isBlank()
+        ) {
+            if (formValues.contractAddress.isBlank()) {
+                AddCustomTokenForm.Validated.Empty
+            } else {
+                val contractAddress = withError({ nonEmptyListOf(it) }) {
+                    ensureIsContractAddressValid(formValues.contractAddress, networkId)
+                }
 
-            AddCustomTokenForm.Validated.ContractAddress(contractAddress)
+                AddCustomTokenForm.Validated.ContractAddressOnly(contractAddress)
+            }
         } else {
             zipOrAccumulate(
                 { ensureIsContractAddressValid(formValues.contractAddress, networkId) },
@@ -43,10 +50,6 @@ class ValidateTokenFormUseCase(
         contractAddress: String,
         networkId: Network.ID,
     ): String {
-        ensure(contractAddress.isNotBlank()) {
-            CustomTokenFormValidationException.ContractAddress.Empty
-        }
-
         val isValid = catch({ repository.validateContractAddress(contractAddress, networkId) }) {
             raise(CustomTokenFormValidationException.DataError(it))
         }
