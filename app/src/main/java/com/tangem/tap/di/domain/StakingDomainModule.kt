@@ -161,11 +161,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideInvalidatePendingTransactionsUseCase(
-        stakingPendingTransactionRepository: StakingPendingTransactionRepository,
+        stakingActionRepository: StakingActionRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): InvalidatePendingTransactionsUseCase {
         return InvalidatePendingTransactionsUseCase(
-            stakingPendingTransactionRepository = stakingPendingTransactionRepository,
+            stakingActionRepository = stakingActionRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }

@@ -295,7 +295,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private fun composeStakeTransaction(): PendingTransaction {
         val state = stateController.value
 
-        val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
         val token = yield.getCurrentToken(cryptoCurrencyStatus.currency.id.rawCurrencyId)
 
         return PendingTransaction(
@@ -305,7 +304,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
             amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO,
             rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
             validator = (state.validatorState as? StakingStates.ValidatorState.Data)?.chosenValidator,
-            balancesId = yieldBalance?.getBalancesUniqueId() ?: 0,
         )
     }
 

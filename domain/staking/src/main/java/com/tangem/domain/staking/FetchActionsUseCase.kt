@@ -31,7 +31,7 @@ class FetchActionsUseCase(
                     networkType = networkType,
                 )
 
-                stakingActionRepository.storeActions(userWalletId, cryptoCurrency.id, actions)
+                stakingActionRepository.store(userWalletId, cryptoCurrency.id, actions)
             }
             .mapLeft { stakingErrorResolver.resolve(it) }
     }

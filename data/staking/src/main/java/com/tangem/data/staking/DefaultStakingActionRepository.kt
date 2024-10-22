@@ -11,7 +11,7 @@ internal class DefaultStakingActionRepository(
     private val stakingActionsStore: StakingActionsStore,
 ) : StakingActionRepository {
 
-    override suspend fun storeActions(
+    override suspend fun store(
         userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
         actions: List<StakingAction>,

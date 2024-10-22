@@ -141,8 +141,9 @@ internal class StakingViewModel @Inject constructor(
             val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
             return invalidatePendingTransactionsUseCase(
                 userWalletId = userWallet.walletId,
+                cryptoCurrencyId = cryptoCurrencyId,
                 balanceItems = yieldBalance?.balance?.items ?: emptyList(),
-                balancesId = yieldBalance?.getBalancesUniqueId() ?: 0,
+                processingActions = emptyList(), // TODO staking
             ).getOrElse { emptyList() }
         }
 
@@ -208,6 +209,15 @@ internal class StakingViewModel @Inject constructor(
             userWalletId = userWalletId,
             cryptoCurrencyId = cryptoCurrencyId,
         )
+            .conflate()
+            .distinctUntilChanged()
+            .onEach {
+                it.fold(ifLeft = {}, ifRight = {
+                    Timber.e(it.toString())
+                },)
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(viewModelScope)
     }
 
     override fun onCleared() {
