@@ -15,6 +15,7 @@ sealed class GiveTxPermissionState {
     data class ReadyForRequest(
         val subtitle: TextReference,
         val dialogText: TextReference,
+        val footerText: TextReference,
         val currency: String,
         val amount: String,
         val walletAddress: String,
