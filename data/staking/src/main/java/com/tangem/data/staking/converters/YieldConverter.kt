@@ -17,37 +17,37 @@ class YieldConverter(
 
     override fun convert(value: YieldDTO): Yield {
         return Yield(
-            id = value.id,
-            token = tokenConverter.convert(value.token),
-            tokens = value.tokens.map { tokenConverter.convert(it) },
-            args = convertArgs(value.args),
-            status = convertStatus(value.status),
-            apy = value.apy,
-            rewardRate = value.rewardRate,
-            rewardType = convertRewardType(value.rewardType),
-            metadata = convertMetadata(value.metadata),
-            validators = value.validators
+            id = value.id.asMandatory("id"),
+            token = tokenConverter.convert(value.token.asMandatory("token")),
+            tokens = value.tokens.asMandatory("tokens").map { tokenConverter.convert(it) },
+            args = convertArgs(value.args.asMandatory("args")),
+            status = convertStatus(value.status.asMandatory("status")),
+            apy = value.apy.asMandatory("apy"),
+            rewardRate = value.rewardRate.asMandatory("rewardRate"),
+            rewardType = convertRewardType(value.rewardType.asMandatory("rewardType")),
+            metadata = convertMetadata(value.metadata.asMandatory("metadata")),
+            validators = value.validators.asMandatory("validators")
                 .asSequence()
                 .filter { it.status == ValidatorStatusDTO.ACTIVE }
                 .map { convertValidator(it) }
                 .sortedByDescending { it.isStrategicPartner }
                 .sortedByDescending { it.apr }
                 .toImmutableList(),
-            isAvailable = value.isAvailable,
+            isAvailable = value.isAvailable.asMandatory("isAvailable"),
         )
     }
 
     private fun convertArgs(argsDTO: YieldDTO.ArgsDTO): Yield.Args {
         return Yield.Args(
-            enter = convertEnter(argsDTO.enter),
+            enter = convertEnter(argsDTO.enter.asMandatory("enter")),
             exit = argsDTO.exit?.let { convertEnter(it) },
         )
     }
 
     private fun convertEnter(enterDTO: YieldDTO.ArgsDTO.Enter): Yield.Args.Enter {
         return Yield.Args.Enter(
-            addresses = convertAddresses(enterDTO.addresses),
-            args = enterDTO.args
+            addresses = convertAddresses(enterDTO.addresses.asMandatory("addresses")),
+            args = enterDTO.args.asMandatory("args")
                 .mapKeys { convertArgType(it.key) }
                 .mapValues { convertAddressArgument(it.value) },
         )
@@ -55,7 +55,7 @@ class YieldConverter(
 
     private fun convertAddresses(addressesDTO: YieldDTO.ArgsDTO.Enter.Addresses): Yield.Args.Enter.Addresses {
         return Yield.Args.Enter.Addresses(
-            address = convertAddressArgument(addressesDTO.address),
+            address = convertAddressArgument(addressesDTO.address.asMandatory("address")),
             additionalAddresses = addressesDTO.additionalAddresses
                 ?.mapKeys { convertArgType(it.key) }
                 ?.mapValues { convertAddressArgument(it.value) },
@@ -73,48 +73,51 @@ class YieldConverter(
 
     private fun convertStatus(statusDTO: YieldDTO.StatusDTO): Yield.Status {
         return Yield.Status(
-            enter = statusDTO.enter,
+            enter = statusDTO.enter.asMandatory("enter"),
             exit = statusDTO.exit,
         )
     }
 
     private fun convertMetadata(metadataDTO: YieldDTO.MetadataDTO): Yield.Metadata {
         return Yield.Metadata(
-            name = metadataDTO.name,
-            logoUri = metadataDTO.logoUri,
-            description = metadataDTO.description,
+            name = metadataDTO.name.asMandatory("name"),
+            logoUri = metadataDTO.logoUri.asMandatory("logoUri"),
+            description = metadataDTO.description.asMandatory("description"),
             documentation = metadataDTO.documentation,
-            gasFeeToken = tokenConverter.convert(metadataDTO.gasFeeTokenDTO),
-            token = tokenConverter.convert(metadataDTO.tokenDTO),
-            tokens = metadataDTO.tokensDTO.map { tokenConverter.convert(it) },
-            type = metadataDTO.type,
-            rewardSchedule = convertRewardSchedule(metadataDTO.rewardSchedule),
+            gasFeeToken = tokenConverter.convert(metadataDTO.gasFeeTokenDTO.asMandatory("gasFeeTokenDTO")),
+            token = tokenConverter.convert(metadataDTO.tokenDTO.asMandatory("tokenDTO")),
+            tokens = metadataDTO.tokensDTO.asMandatory("tokensDTO").map { tokenConverter.convert(it) },
+            type = metadataDTO.type.asMandatory("type"),
+            rewardSchedule = convertRewardSchedule(metadataDTO.rewardSchedule.asMandatory("rewardSchedule")),
             cooldownPeriod = metadataDTO.cooldownPeriod?.let { convertPeriod(it) },
-            warmupPeriod = convertPeriod(metadataDTO.warmupPeriod),
-            rewardClaiming = convertRewardClaiming(metadataDTO.rewardClaiming),
+            warmupPeriod = convertPeriod(metadataDTO.warmupPeriod.asMandatory("warmupPeriod")),
+            rewardClaiming = convertRewardClaiming(metadataDTO.rewardClaiming.asMandatory("rewardClaiming")),
             defaultValidator = metadataDTO.defaultValidator,
             minimumStake = metadataDTO.minimumStake,
-            supportsMultipleValidators = metadataDTO.supportsMultipleValidators,
-            revshare = convertEnabled(metadataDTO.revshare),
-            fee = convertEnabled(metadataDTO.fee),
+            supportsMultipleValidators = metadataDTO.supportsMultipleValidators.asMandatory(
+                "supportsMultipleValidators",
+            ),
+            revshare = convertEnabled(metadataDTO.revshare.asMandatory("revshare")),
+            fee = convertEnabled(metadataDTO.fee.asMandatory("fee")),
         )
     }
 
     private fun convertPeriod(periodDTO: YieldDTO.MetadataDTO.PeriodDTO): Yield.Metadata.Period {
         return Yield.Metadata.Period(
-            days = periodDTO.days,
+            days = periodDTO.days.asMandatory("days"),
         )
     }
 
     private fun convertEnabled(enabledDTO: YieldDTO.MetadataDTO.EnabledDTO): Yield.Metadata.Enabled {
         return Yield.Metadata.Enabled(
-            enabled = enabledDTO.enabled,
+            enabled = enabledDTO.enabled.asMandatory("enabled"),
         )
     }
 
     private fun convertValidator(validatorDTO: YieldDTO.ValidatorDTO): Yield.Validator {
+        val address = validatorDTO.address.asMandatory("address")
         return Yield.Validator(
-            address = validatorDTO.address,
+            address = address,
             status = convertValidatorStatus(validatorDTO.status),
             name = validatorDTO.name,
             image = validatorDTO.image,
@@ -124,7 +127,7 @@ class YieldConverter(
             stakedBalance = validatorDTO.stakedBalance,
             votingPower = validatorDTO.votingPower,
             preferred = validatorDTO.preferred,
-            isStrategicPartner = isStrategicPartner(validatorDTO.address),
+            isStrategicPartner = isStrategicPartner(address),
         )
     }
 
