@@ -98,6 +98,12 @@ suspend inline fun <reified T> AppPreferencesStore.storeObjectList(key: Preferen
     edit { it[key] = adapter.toJson(value) }
 }
 
+/** Store set of data [value] by string [key] */
+suspend inline fun <reified T> AppPreferencesStore.storeObjectSet(key: Preferences.Key<String>, value: Set<T>) {
+    val adapter = moshi.adapter<Set<T>>(Types.newParameterizedType(Set::class.java, T::class.java))
+    edit { it[key] = adapter.toJson(value) }
+}
+
 /** Get flow of list of data [T] by string [key]. If data is not found, it returns `null` */
 inline fun <reified T> AppPreferencesStore.getObjectList(key: Preferences.Key<String>): Flow<List<T>?> {
     val adapter = moshi.adapter<List<T>>(Types.newParameterizedType(List::class.java, T::class.java))
