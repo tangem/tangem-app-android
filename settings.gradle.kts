@@ -198,6 +198,9 @@ include(":features:wallet-settings:impl")
 
 include(":features:markets:api")
 include(":features:markets:impl")
+
+include(":features:onramp:api")
+include(":features:onramp:impl")
 // endregion Feature modules
 
 // region Domain modules
