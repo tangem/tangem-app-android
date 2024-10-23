@@ -3,13 +3,10 @@ package com.tangem.features.staking.impl.presentation.viewmodel
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
-import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
@@ -17,12 +14,7 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onBackClick()
 
-    fun onNextClick(
-        actionTypeToOverwrite: StakingActionCommonType? = null,
-        pendingAction: PendingAction? = null,
-        pendingActions: ImmutableList<PendingAction>? = null,
-        balanceState: BalanceState? = null,
-    )
+    fun onNextClick(balanceState: BalanceState? = null)
 
     fun onActionClick()
 
@@ -36,9 +28,9 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onEnterClick()
 
-    fun getFee(pendingAction: PendingAction?, pendingActions: ImmutableList<PendingAction>?)
+    fun getFee()
 
-    override fun onAmountNext() = onNextClick(actionTypeToOverwrite = null)
+    override fun onAmountNext() = onNextClick()
 
     fun openValidators()
 
