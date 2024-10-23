@@ -85,6 +85,7 @@
   <string name="common_buy_currency">Перейти на %1$s</string>
   <string name="common_camera_denied_alert_message">Вы не предоставили доступ к камере, пожалуйста, измените настройки конфиденциальности.</string>
   <string name="common_cancel">Отмена</string>
+  <string name="common_change">Изменить</string>
   <string name="common_choose_action">Выберите действие</string>
   <string name="common_claim">Получить</string>
   <string name="common_claim_rewards">Вывести награду</string>
@@ -518,7 +519,7 @@
   </plurals>
   <string name="onboarding_seed_generate_title">Ваша seed-фраза</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one">%d </item>
+    <item quantity="one"></item>
     <item quantity="few">%d слова</item>
     <item quantity="many">%d слов</item>
     <item quantity="other">%d слов</item>
