@@ -3,7 +3,6 @@ package com.tangem.domain.staking.repositories
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
@@ -50,15 +49,10 @@ interface StakingRepository {
         refresh: Boolean = false,
     )
 
-    fun getMultiYieldBalanceFlow(
+    fun getMultiYieldBalanceUpdates(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList>
-
-    fun getMultiYieldBalanceLce(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): LceFlow<Throwable, YieldBalanceList>
 
     suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,
