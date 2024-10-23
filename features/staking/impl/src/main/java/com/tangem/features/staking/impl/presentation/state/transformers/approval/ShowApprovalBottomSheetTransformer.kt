@@ -51,7 +51,7 @@ internal class ShowApprovalBottomSheetTransformer(
                     data = GiveTxPermissionState.ReadyForRequest(
                         currency = cryptoCurrency.symbol,
                         amount = amountState.amountTextField.value,
-                        approveType = ApproveType.LIMITED,
+                        approveType = ApproveType.UNLIMITED,
                         walletAddress = walletAddress,
                         spenderAddress = validatorAddress,
                         fee = resourceReference(
@@ -71,6 +71,7 @@ internal class ShowApprovalBottomSheetTransformer(
                             formatArgs = wrappedList(cryptoCurrency.symbol),
                         ),
                         dialogText = resourceReference(R.string.give_permission_staking_footer),
+                        footerText = resourceReference(R.string.staking_give_permission_fee_footer),
                         onChangeApproveType = prevState.clickIntents::onApproveTypeChange,
                     ),
                     onCancel = onDismiss,
