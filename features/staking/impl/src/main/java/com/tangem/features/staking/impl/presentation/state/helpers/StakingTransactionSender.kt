@@ -21,9 +21,12 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvents
-import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.FeeState
+import com.tangem.features.staking.impl.presentation.state.StakingStateController
+import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
-import com.tangem.features.staking.impl.presentation.state.utils.isSolanaWithdraw
+import com.tangem.features.staking.impl.presentation.state.utils.isComposePendingActions
 import com.tangem.utils.extensions.orZero
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -99,7 +102,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     }
 
     private fun composePendingTransaction(confirmationState: StakingStates.ConfirmationState.Data): PendingTransaction {
-        return confirmationState.possiblePendingTransaction ?: composeStakeTransaction(confirmationState)
+        return confirmationState.possiblePendingTransaction ?: composeStakeTransaction()
     }
 
     private suspend fun getStakingTransactions(
@@ -107,11 +110,11 @@ internal class StakingTransactionSender @AssistedInject constructor(
         confirmationState: StakingStates.ConfirmationState.Data,
         onConstructError: (StakingError) -> Unit,
     ) = coroutineScope {
-        val isAllWithdrawAction = isSolanaWithdraw(
+        val isComposePendingActions = isComposePendingActions(
             cryptoCurrencyStatus.currency.network.id.value,
             confirmationState.pendingActions,
         )
-        if (isAllWithdrawAction) {
+        if (isComposePendingActions) {
             confirmationState.pendingActions?.map { action ->
                 async {
                     getStakingTransaction(
@@ -172,7 +175,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         action: PendingAction? = confirmationState.pendingAction,
         onConstructError: (StakingError) -> Unit,
     ): List<StakingTransaction> {
-        val validatorState = confirmationState.validatorState as? ValidatorState.Content
+        val validatorState = state.validatorState as? StakingStates.ValidatorState.Data
             ?: error("No validator provided")
         val fee = (confirmationState.feeState as? FeeState.Content)?.fee
             ?: error("No fee provided")
@@ -278,7 +281,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private fun getAmount(amountState: AmountState.Data, fee: Fee, reduceAmountBy: BigDecimal?): BigDecimal {
         val amountValue = amountState.amountTextField.cryptoAmount.value ?: error("No amount value")
         val feeValue = fee.amount.value ?: error("No fee value")
-        val isEnterAction = stateController.value.actionType == StakingActionCommonType.ENTER
+        val isEnterAction = stateController.value.actionType == StakingActionCommonType.Enter
 
         return checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable && isEnterAction,
@@ -289,7 +292,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         )
     }
 
-    private fun composeStakeTransaction(confirmationState: StakingStates.ConfirmationState.Data): PendingTransaction {
+    private fun composeStakeTransaction(): PendingTransaction {
         val state = stateController.value
 
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
@@ -301,7 +304,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
             type = BalanceType.STAKED,
             amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO,
             rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
-            validator = (confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator,
+            validator = (state.validatorState as? StakingStates.ValidatorState.Data)?.chosenValidator,
             balancesId = yieldBalance?.getBalancesUniqueId() ?: 0,
         )
     }
