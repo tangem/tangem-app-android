@@ -3,11 +3,10 @@ package com.tangem.features.markets.details.impl.ui.components
 import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -17,9 +16,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEach
-import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
@@ -57,44 +53,37 @@ internal fun ExchangesBottomSheet(config: TangemBottomSheetConfig) {
         addBottomInsets = false,
         title = { Title(textResId = it.titleResId, onBackClick = config.onDismissRequest) },
         content = { content ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(state = rememberScrollState()),
-            ) {
-                Subtitle(
-                    subtitleRes = content.subtitleResId,
-                    volumeReference = content.volumeReference,
-                    modifier = Modifier.padding(
-                        start = TangemTheme.dimens.spacing16,
-                        top = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing16,
-                        bottom = TangemTheme.dimens.spacing8,
-                    ),
-                )
-
-                when (content) {
-                    is ExchangesBottomSheetContent.Content,
-                    is ExchangesBottomSheetContent.Loading,
-                    -> {
-                        content.exchangeItems.fastForEach { item ->
-                            key(item.id) {
-                                TokenItem(state = item, isBalanceHidden = false)
-                            }
-                        }
-                    }
-                    is ExchangesBottomSheetContent.Error -> {
-                        Error(
-                            content = content,
-                            modifier = Modifier
-                                .align(alignment = Alignment.CenterHorizontally)
-                                .padding(horizontal = 16.dp)
-                                .weight(1f),
+            Box {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = bottomBarHeight),
+                ) {
+                    item(key = "subtitle") {
+                        Subtitle(
+                            subtitleRes = content.subtitleResId,
+                            volumeReference = content.volumeReference,
+                            modifier = Modifier.padding(
+                                start = TangemTheme.dimens.spacing16,
+                                top = TangemTheme.dimens.spacing12,
+                                end = TangemTheme.dimens.spacing16,
+                                bottom = TangemTheme.dimens.spacing8,
+                            ),
                         )
                     }
+
+                    items(
+                        items = content.exchangeItems,
+                        key = TokenItemState::id,
+                        itemContent = { TokenItem(state = it, isBalanceHidden = false) },
+                    )
                 }
 
-                SpacerH(bottomBarHeight)
+                if (content is ExchangesBottomSheetContent.Error) {
+                    Error(
+                        content = content,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                }
             }
         },
     )

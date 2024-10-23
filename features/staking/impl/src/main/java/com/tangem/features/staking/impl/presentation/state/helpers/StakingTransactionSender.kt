@@ -87,7 +87,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         )
 
         if (fullTransactionsData.isNullOrEmpty()) {
-            onConstructError(StakingError.UnknownError)
+            onConstructError(StakingError.UnknownError())
             return
         }
 
@@ -202,9 +202,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
             ),
         ).getOrElse {
             analyticsEventHandler.send(
-                StakingAnalyticsEvents.StakingError(
-                    token = state.cryptoCurrencyName,
-                    errorType = it.javaClass.simpleName,
+                StakingAnalyticsEvents.StakekitError(
+                    token = state.cryptoCurrencySymbol,
+                    stakeKitError = it,
                 ),
             )
             onConstructError(it)
@@ -260,9 +260,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 )
                     .onLeft { error ->
                         analyticsEventHandler.send(
-                            StakingAnalyticsEvents.StakingError(
-                                token = stateController.value.cryptoCurrencyName,
-                                errorType = error.javaClass.simpleName,
+                            StakingAnalyticsEvents.StakekitError(
+                                token = stateController.value.cryptoCurrencySymbol,
+                                stakeKitError = error,
                             ),
                         )
                         saveUnsubmittedHashUseCase.invoke(

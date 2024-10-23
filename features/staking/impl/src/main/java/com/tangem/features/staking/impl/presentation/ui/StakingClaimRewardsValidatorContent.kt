@@ -55,6 +55,7 @@ internal fun StakingClaimRewardsValidatorContent(
                         .roundedShapeItemDecoration(index, state.rewards.lastIndex, false)
                         .background(TangemTheme.colors.background.action)
                         .clickable(
+                            enabled = item.pendingActions.isNotEmpty(),
                             onClick = {
                                 clickIntents.onActiveStake(item)
                             },
