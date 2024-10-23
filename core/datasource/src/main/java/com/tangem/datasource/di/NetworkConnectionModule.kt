@@ -1,10 +1,12 @@
 package com.tangem.datasource.di
 
+import android.content.Context
+import com.tangem.datasource.connection.AndroidNetworkConnectionManager
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.datasource.connection.RealInternetConnectionManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -14,7 +16,7 @@ internal class NetworkConnectionModule {
 
     @Provides
     @Singleton
-    fun provideNetworkConnectionManager(): NetworkConnectionManager {
-        return RealInternetConnectionManager()
+    fun provideNetworkConnectionManager(@ApplicationContext applicationContext: Context): NetworkConnectionManager {
+        return AndroidNetworkConnectionManager(applicationContext = applicationContext)
     }
 }
