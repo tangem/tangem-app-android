@@ -1,8 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -34,6 +37,12 @@ internal fun MultiCurrencyContentItem(
                 state = state.state,
                 isBalanceHidden = isBalanceHidden,
                 modifier = modifierWithBackground,
+            )
+        }
+        is TokensListItemState.SearchBar -> {
+            SearchBar(
+                state = state.searchBarUM,
+                modifier = modifierWithBackground.padding(all = 12.dp),
             )
         }
     }
