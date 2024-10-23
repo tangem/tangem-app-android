@@ -12,8 +12,9 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
@@ -41,10 +42,7 @@ internal fun StakingClaimRewardsValidatorContent(
                         annotatedReference {
                             appendSpace()
                             appendColored(
-                                text = BigDecimalFormatter.formatPercent(
-                                    percent = item.validator?.apr.orZero(),
-                                    useAbsoluteValue = true,
-                                ),
+                                text = item.validator?.apr.orZero().format { percent() },
                                 color = TangemTheme.colors.text.accent,
                             )
                         },
