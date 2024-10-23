@@ -7,11 +7,9 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.promo.PromoBanner
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.settings.ShouldShowRingPromoUseCase
-import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.repository.PromoRepository
 import com.tangem.domain.wallets.models.UserWallet
@@ -30,7 +28,7 @@ import kotlin.collections.count
 @Suppress("LongParameterList")
 @ViewModelScoped
 internal class GetMultiWalletWarningsFactory @Inject constructor(
-    private val getTokenListUseCase: GetTokenListUseCase,
+    private val tokenListStore: MultiWalletTokenListStore,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val shouldShowRingPromoUseCase: ShouldShowRingPromoUseCase,
@@ -44,7 +42,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
         val promoFlow = flow { emit(promoRepository.getRingPromoBanner()) }
         return combine(
-            flow = getTokenListUseCase.launch(userWallet.walletId),
+            flow = tokenListStore.getOrThrow(userWallet.walletId),
             flow2 = isReadyToShowRateAppUseCase(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId),
             flow4 = shouldShowRingPromoUseCase(userWalletId = userWallet.walletId),
@@ -129,6 +127,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         clickIntents: WalletClickIntents,
     ) {
         val currencies = maybeTokenList.getMissingAddressCurrencies()
+            .ifEmpty { return }
 
         addIf(
             element = WalletNotification.Informational.MissingAddresses(
@@ -144,13 +143,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private fun Lce<TokenListError, TokenList>.getMissingAddressCurrencies(): List<CryptoCurrency> {
         val tokenList = getOrNull(isPartialContentAccepted = false) ?: return emptyList()
 
-        val currencies = when (tokenList) {
-            is TokenList.GroupedByNetwork -> tokenList.groups.flatMap(NetworkGroup::currencies)
-            is TokenList.Ungrouped -> tokenList.currencies
-            is TokenList.Empty -> emptyList()
-        }
-
-        return currencies
+        return tokenList
+            .flattenCurrencies()
             .filter { it.value is CryptoCurrencyStatus.MissedDerivation }
             .map(CryptoCurrencyStatus::currency)
     }
@@ -182,13 +176,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private fun Lce<TokenListError, TokenList>.hasUnreachableNetworks(): Boolean {
         val tokenList = getOrNull(isPartialContentAccepted = false) ?: return false
 
-        val currencies = when (tokenList) {
-            is TokenList.GroupedByNetwork -> tokenList.groups.flatMap(NetworkGroup::currencies)
-            is TokenList.Ungrouped -> tokenList.currencies
-            is TokenList.Empty -> emptyList()
-        }
-
-        return currencies.any { it.value is CryptoCurrencyStatus.Unreachable }
+        return tokenList.flattenCurrencies().any { it.value is CryptoCurrencyStatus.Unreachable }
     }
 
     private fun MutableList<WalletNotification>.addRateTheAppNotification(
