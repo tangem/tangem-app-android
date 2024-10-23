@@ -24,7 +24,7 @@ fun FiatIcon(
     size: Dp,
     isGrayscale: Boolean,
     modifier: Modifier = Modifier,
-    @DrawableRes fallbackResId: Int = R.drawable.ic_shape_circle,
+    @DrawableRes fallbackResId: Int = R.drawable.ic_shape_circle_40,
 ) {
     val iconData: Any = if (url.isNullOrBlank()) fallbackResId else url
     val alpha = if (isGrayscale) GRAY_SCALE_ALPHA else 1f
