@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,7 +34,7 @@ import kotlinx.coroutines.delay
  */
 @Composable
 internal fun ListedOnBlock(state: ListedOnUM, modifier: Modifier = Modifier) {
-    Box {
+    Box(modifier = modifier) {
         InformationBlock(
             title = {
                 Text(
@@ -44,9 +45,11 @@ internal fun ListedOnBlock(state: ListedOnUM, modifier: Modifier = Modifier) {
                     overflow = TextOverflow.Ellipsis,
                 )
             },
-            modifier = modifier.clickable(enabled = state is ListedOnUM.Content) {
-                (state as? ListedOnUM.Content)?.onClick?.invoke()
-            },
+            modifier = Modifier
+                .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
+                .clickable(enabled = state is ListedOnUM.Content) {
+                    (state as? ListedOnUM.Content)?.onClick?.invoke()
+                },
         ) {
             Description(
                 state = state,
