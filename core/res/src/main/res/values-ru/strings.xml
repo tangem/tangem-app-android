@@ -85,10 +85,12 @@
   <string name="common_buy_currency">Перейти на %1$s</string>
   <string name="common_camera_denied_alert_message">Вы не предоставили доступ к камере, пожалуйста, измените настройки конфиденциальности.</string>
   <string name="common_cancel">Отмена</string>
+  <string name="common_change">Изменить</string>
   <string name="common_choose_action">Выберите действие</string>
   <string name="common_claim">Получить</string>
   <string name="common_claim_rewards">Вывести награду</string>
   <string name="common_close">Закрыть</string>
+  <string name="common_confirm">Подтвердить</string>
   <string name="common_continue">Продолжить</string>
   <string name="common_copy">Копировать</string>
   <string name="common_copy_address">Скопировать адрес</string>
@@ -125,6 +127,7 @@
   <string name="common_generate_addresses">Получить ваши адреса</string>
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
+  <string name="common_hour">час</string>
   <string name="common_import">Импортировать</string>
   <string name="common_in_progress">В процессе</string>
   <string name="common_later">Позже</string>
@@ -181,6 +184,7 @@
   <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Завершить стейкинг</string>
+  <string name="common_week">неделю</string>
   <string name="common_yes">Да</string>
   <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
   <string name="currency_subtitle_expanded">Доступные сети</string>
@@ -261,6 +265,7 @@
   <string name="express_exchange_status_exchanging">Обмен</string>
   <string name="express_exchange_status_exchanging_active">Обмен...</string>
   <string name="express_exchange_status_failed">Неудачно</string>
+  <string name="express_exchange_status_paused">Приостановлен</string>
   <string name="express_exchange_status_received">Депозит получен</string>
   <string name="express_exchange_status_receiving">Ожидание депозита</string>
   <string name="express_exchange_status_receiving_active">Ожидаем пополнения...</string>
@@ -301,11 +306,10 @@
   <string name="feedback_subject_tx_failed">Не могу отправить транзакцию</string>
   <string name="feedback_token_description_error">Ошибка в описании монеты</string>
   <string name="give_permission_current_transaction">Транзакция</string>
-  <string name="give_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
   <string name="give_permission_policy_type_footer">Укажите лимит доступа к выбранному токену</string>
   <string name="give_permission_rows_amount">Количество %s</string>
   <string name="give_permission_staking_footer">Функция подтверждения необходима для предоставления другому адресу разрешения на использование определенного количества ваших токенов.По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту StakeKit разрешение использовать ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете осуществить стейкинг токена.</string>
-  <string name="give_permission_staking_subtitle">Чтобы продолжить, вам необходимо разрешить смарт контракту StakeKit использовать ваш %s</string>
+  <string name="give_permission_staking_subtitle">Чтобы продолжить, вам необходимо разрешить смарт контракту Polygon использовать ваш %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">Чтобы продолжить, вам нужно разрешить смарт-контракту %1s использовать ваш %2s</string>
   <string name="give_permission_title">Дать разрешение</string>
   <string name="give_permission_unlimited">Безлимитно</string>
@@ -515,7 +519,7 @@
   </plurals>
   <string name="onboarding_seed_generate_title">Ваша seed-фраза</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one">%d слово</item>
+    <item quantity="one"></item>
     <item quantity="few">%d слова</item>
     <item quantity="many">%d слов</item>
     <item quantity="other">%d слов</item>
@@ -726,13 +730,14 @@
   <string name="staking_details_reward_claiming">Способ вознаграждения</string>
   <string name="staking_details_reward_claiming_info">Способ получения вознаграждений за стейкинг. Оно может зачисляться автоматически на ваш адрес или вручную, когда вознаграждение нужно вывести, создав транзакцию на её получение.</string>
   <string name="staking_details_reward_schedule">Период вознагражения</string>
-  <string name="staking_details_reward_schedule_info">Это период, определяющий, когда участники стейкинга получат свои вознаграждения.</string>
+  <string name="staking_details_reward_schedule_info">Это график, который определяет, когда участники стейкинга получают свои награды. Время распределения наград может немного варьироваться в зависимости от валидатора и нагрузки сети.</string>
   <string name="staking_details_rewards_to_claim">Вознаграждение для получения: %s</string>
   <string name="staking_details_title">Стейкинг %s</string>
   <string name="staking_details_unbonding_period">Период отзыва</string>
   <string name="staking_details_unbonding_period_info">Период, который необходимо подождать после запроса на вывод средств из стейкинга, прежде чем токены станут доступны.</string>
   <string name="staking_details_warmup_period">Период прогрева</string>
   <string name="staking_details_warmup_period_info">Время, необходимое для начала процесса стейкинга и активации процесса начисления наград</string>
+  <string name="staking_give_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для стейкинга.</string>
   <string name="staking_legal">Пользуясь стейкинг сервисом, вы соглашаетесь с %1$s и %2$s</string>
   <string name="staking_locked">Заблокировано</string>
   <string name="staking_migrate">Переместить</string>
@@ -752,6 +757,7 @@
   <string name="staking_notification_network_error_text">Стейкинг временно недоступен из-за проблем в сети. Пожалуйста, попробуйте позже.</string>
   <string name="staking_notification_new_validator_funds_transfer">Стейкинг в сети %1$s с новым валидатором автоматически переведет ваши текущие застейканные средства на него.</string>
   <string name="staking_notification_restake_rewards_text">Реинвестируйте свои заработанные награды в вашу застейканную сумму, увеличивая потенциальный доход</string>
+  <string name="staking_notification_restake_text">Рестейк позволяет вам переместить средства из одного валидатора в другого без необходимости выхода из стейкинга.</string>
   <string name="staking_notification_unlock_text">Разблокируйте свои средства, чтобы вывести их из стейкинга. Разблокировка займёт %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Ваши средства будут доступны для использования после 21-дневного периода отзыва. Награда будет выведена вместе с вашими выводими средствами.</string>
   <string name="staking_notification_unstake_text">Ваши средства будут доступны после %s периода отзыва.</string>
@@ -767,7 +773,10 @@
   <string name="staking_reward_claiming_manual">Вручную</string>
   <string name="staking_reward_schedule_block">За блок</string>
   <string name="staking_reward_schedule_day">Ежедневно</string>
+  <string name="staking_reward_schedule_each">Каждый %s</string>
   <string name="staking_reward_schedule_each_day">Каждый день</string>
+  <string name="staking_reward_schedule_each_days">Каждые %s дня</string>
+  <string name="staking_reward_schedule_each_plural">Каждые</string>
   <string name="staking_reward_schedule_epoch">За эпоху</string>
   <string name="staking_reward_schedule_era">За эру</string>
   <string name="staking_reward_schedule_hour">Ежечасно</string>
@@ -776,7 +785,7 @@
   <string name="staking_rewards">Вознаграждения</string>
   <string name="staking_stake_locked">Стейкинг закрыт</string>
   <string name="staking_stake_more">Застейкать еще</string>
-  <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать %2$s ежегодно</string>
+  <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать награду %2$s</string>
   <string name="staking_tap_to_unlock">Нажмите для разблокировки</string>
   <string name="staking_tap_to_unlock_or_vote">Нажмите для разблокировки</string>
   <string name="staking_tap_to_withdraw">Нажмите для вывода</string>
@@ -786,6 +795,7 @@
   <string name="staking_unbonding">Отзыв</string>
   <string name="staking_unlocked_locked">Разблокировать</string>
   <string name="staking_unlocking">Разблокировка</string>
+  <string name="staking_unstake_amount_validation_error">Сумма превышает застейканный баланс</string>
   <string name="staking_unstaked">Вывод из стейкинга</string>
   <string name="staking_unstaking">Завершение стейкинга</string>
   <string name="staking_unstaking_item_name">Завершение стейкинга %s</string>
@@ -807,6 +817,7 @@
   <string name="story_meet_title">Встречайте Tangem</string>
   <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и делайте вклады в более чем 100 различных децентрализованных сервисах</string>
   <string name="story_web3_title">Поддержка Web 3.0</string>
+  <string name="swap_give_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
   <string name="swap_promo_text">Обменивайте больше токенов по лучшим курсам прямо в вашем кошельке.</string>
   <string name="swap_promo_title">Новый провайдер обмена!</string>
   <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя.</string>
