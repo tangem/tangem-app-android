@@ -23,11 +23,7 @@ internal class TokenListSortingOperations(
         sortByBalance: Boolean = tokenList.sortedBy == TokenList.SortType.BALANCE,
         isAnyTokenLoading: Boolean = tokenList.totalFiatBalance is TotalFiatBalance.Loading,
     ) : this(
-        currencies = when (tokenList) {
-            is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { it.currencies }
-            is TokenList.Ungrouped -> tokenList.currencies
-            is TokenList.Empty -> emptyList()
-        },
+        currencies = tokenList.flattenCurrencies(),
         isAnyTokenLoading = isAnyTokenLoading,
         sortByBalance = sortByBalance,
     )
