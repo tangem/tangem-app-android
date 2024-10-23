@@ -4,8 +4,6 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.domain.core.lce.LceFlow
-import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
@@ -20,6 +18,7 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.flowOf
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
@@ -146,27 +145,10 @@ class MockStakingRepository : StakingRepository {
         /* no-op */
     }
 
-    override fun getMultiYieldBalanceFlow(
+    override fun getMultiYieldBalanceUpdates(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
-    ): Flow<YieldBalanceList> = channelFlow {
-        send(
-            YieldBalanceList.Data(
-                balances = listOf(YieldBalance.Error),
-            ),
-        )
-    }
-
-    override fun getMultiYieldBalanceLce(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): LceFlow<Throwable, YieldBalanceList> = lceFlow {
-        send(
-            YieldBalanceList.Data(
-                balances = listOf(YieldBalance.Error),
-            ),
-        )
-    }
+    ): Flow<YieldBalanceList> = flowOf()
 
     override suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,
