@@ -4,7 +4,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
-import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -12,14 +11,16 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import kotlinx.coroutines.CoroutineScope
 
 @Suppress("LongParameterList")
 internal class MultiWalletTokenListSubscriber(
     private val userWallet: UserWallet,
-    private val getTokenListUseCase: GetTokenListUseCase,
+    private val tokenListStore: MultiWalletTokenListStore,
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     stateHolder: WalletStateController,
     clickIntents: WalletClickIntents,
@@ -37,8 +38,10 @@ internal class MultiWalletTokenListSubscriber(
     runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
 ) {
 
-    override fun tokenListFlow(): LceFlow<TokenListError, TokenList> {
-        return getTokenListUseCase.launch(userWallet.walletId)
+    override fun tokenListFlow(coroutineScope: CoroutineScope): LceFlow<TokenListError, TokenList> {
+        tokenListStore.addIfNot(userWallet.walletId, coroutineScope)
+
+        return tokenListStore.getOrThrow(userWallet.walletId)
     }
 
     override suspend fun onTokenListReceived(maybeTokenList: Lce<TokenListError, TokenList>) {
