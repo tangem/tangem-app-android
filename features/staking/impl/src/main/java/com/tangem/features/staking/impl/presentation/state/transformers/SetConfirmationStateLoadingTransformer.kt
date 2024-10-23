@@ -13,7 +13,6 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
 import com.tangem.utils.transformer.Transformer
-import kotlinx.collections.immutable.persistentListOf
 
 internal class SetConfirmationStateLoadingTransformer(
     private val yield: Yield,
@@ -22,39 +21,21 @@ internal class SetConfirmationStateLoadingTransformer(
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
-        val filteredValidators = yield.validators.filter {
-            it.preferred
-        }
         val possibleConfirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
-        val possibleValidatorState = possibleConfirmationState?.validatorState as? ValidatorState.Content
-        val chosenValidator = possibleValidatorState?.chosenValidator ?: filteredValidators[0]
 
         return prevState.copy(
-            confirmationState = StakingStates.ConfirmationState.Data(
+            confirmationState = possibleConfirmationState?.copy(
                 isPrimaryButtonEnabled = false,
-                innerState = InnerConfirmationStakingState.ASSENT,
                 feeState = FeeState.Loading,
-                validatorState = ValidatorState.Content(
-                    isClickable = true,
-                    chosenValidator = chosenValidator,
-                    availableValidators = filteredValidators,
-                ),
-                notifications = persistentListOf(),
                 footerText = getFooter(prevState),
-                transactionDoneState = TransactionDoneState.Empty,
-                pendingAction = possibleConfirmationState?.pendingAction,
-                pendingActions = possibleConfirmationState?.pendingActions,
-                isApprovalNeeded = false,
-                reduceAmountBy = null,
-                possiblePendingTransaction = null,
-            ),
+            ) ?: prevState.confirmationState,
         )
     }
 
     private fun getFooter(state: StakingUiState): TextReference {
         val amountState = state.amountState as? AmountState.Data
 
-        val isEnterAction = state.actionType == StakingActionCommonType.ENTER
+        val isEnterAction = state.actionType == StakingActionCommonType.Enter
 
         val amountDecimal = amountState?.amountTextField?.fiatAmount?.value
         val amountValue = BigDecimalFormatter.formatFiatAmount(
