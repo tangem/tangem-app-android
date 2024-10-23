@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.update
 
 internal class PreviewManageTokensComponent(
     private val isLoading: Boolean,
+    private val showTangemIcon: Boolean,
     params: ManageTokensComponent.Params,
 ) : ManageTokensComponent {
 
@@ -65,6 +66,7 @@ internal class PreviewManageTokensComponent(
             loadMore = { false },
             saveChanges = {},
             isSavingInProgress = false,
+            needToAddDerivations = showTangemIcon,
         ),
     )
 
