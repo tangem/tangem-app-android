@@ -41,11 +41,12 @@ import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.components.list.roundedListWithDividersItems
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.features.staking.impl.R
@@ -311,10 +312,7 @@ private fun BalanceState.getAprText() = combinedReference(
     annotatedReference {
         appendSpace()
         appendColored(
-            text = BigDecimalFormatter.formatPercent(
-                percent = validator?.apr.orZero(),
-                useAbsoluteValue = true,
-            ),
+            text = validator?.apr.orZero().format { percent() },
             color = TangemTheme.colors.text.accent,
         )
     },
