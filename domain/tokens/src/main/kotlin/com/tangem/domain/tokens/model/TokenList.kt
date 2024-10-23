@@ -54,4 +54,13 @@ sealed class TokenList {
     enum class SortType {
         NONE, BALANCE,
     }
+
+    /** Get flatten list of cryptocurrency status [CryptoCurrencyStatus] */
+    fun flattenCurrencies(): List<CryptoCurrencyStatus> {
+        return when (this) {
+            is GroupedByNetwork -> groups.flatMap(NetworkGroup::currencies)
+            is Ungrouped -> currencies
+            is Empty -> emptyList()
+        }
+    }
 }
