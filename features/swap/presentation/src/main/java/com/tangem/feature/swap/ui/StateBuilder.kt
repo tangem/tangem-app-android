@@ -1192,6 +1192,7 @@ internal class StateBuilder(
                         formatArgs = wrappedList(providerName, permissionDataState.currency),
                     ),
                     dialogText = resourceReference(R.string.swapping_approve_information_text),
+                    footerText = resourceReference(R.string.swap_give_permission_fee_footer),
                 )
             }
         }
