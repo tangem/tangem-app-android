@@ -40,38 +40,39 @@ class FetchTokenListUseCase(
      * network statuses, and quotes for associated tokens.
      *
      * @param userWalletId The ID of the user's wallet.
-     * @param refresh Indicates whether to force a refresh of the token list data.
+     * @param mode The refresh mode to control the fetching process.
      * @return An [Either] representing success (Right) or an error (Left) in fetching the token list.
      */
-    suspend operator fun invoke(userWalletId: UserWalletId, refresh: Boolean = false): Either<TokenListError, Unit> {
-        return either {
-            val currencies = fetchCurrencies(userWalletId, refresh)
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        mode: RefreshMode = RefreshMode.NONE,
+    ): Either<TokenListError, Unit> = either {
+        val currencies = fetchCurrencies(userWalletId, refresh = mode.refreshCurrencies)
 
-            coroutineScope {
-                val fetchStatuses = async {
-                    fetchNetworksStatuses(
-                        userWalletId,
-                        currencies.mapTo(hashSetOf()) { it.network },
-                        refresh,
-                    )
-                }
-                val fetchQuotes = async {
-                    fetchQuotes(
-                        currencies.mapTo(hashSetOf()) { it.id },
-                        refresh,
-                    )
-                }
-
-                val yieldBalances = async {
-                    fetchYieldBalances(
-                        userWalletId = userWalletId,
-                        currencies = currencies,
-                        refresh = refresh,
-                    )
-                }
-
-                awaitAll(fetchStatuses, fetchQuotes, yieldBalances)
+        coroutineScope {
+            val fetchStatuses = async {
+                fetchNetworksStatuses(
+                    userWalletId,
+                    currencies.mapTo(hashSetOf()) { it.network },
+                    refresh = mode.refreshNetworksStatuses,
+                )
             }
+            val fetchQuotes = async {
+                fetchQuotes(
+                    currencies.mapTo(hashSetOf()) { it.id },
+                    refresh = mode.refreshQuotes,
+                )
+            }
+
+            val yieldBalances = async {
+                fetchYieldBalances(
+                    userWalletId = userWalletId,
+                    currencies = currencies,
+                    refresh = mode.refreshYieldBalances,
+                )
+            }
+
+            awaitAll(fetchStatuses, fetchQuotes, yieldBalances)
         }
     }
 
@@ -119,5 +120,34 @@ class FetchTokenListUseCase(
             block = { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies, refresh) },
             catch = { /* Ignore error */ },
         )
+    }
+
+    /**
+     * Represents the refresh modes available for fetching token list information.
+     */
+    enum class RefreshMode(
+        internal val refreshCurrencies: Boolean,
+        internal val refreshNetworksStatuses: Boolean,
+        internal val refreshQuotes: Boolean,
+        internal val refreshYieldBalances: Boolean,
+    ) {
+        NONE(
+            refreshCurrencies = false,
+            refreshNetworksStatuses = false,
+            refreshQuotes = false,
+            refreshYieldBalances = false,
+        ),
+        FULL(
+            refreshCurrencies = true,
+            refreshNetworksStatuses = true,
+            refreshQuotes = true,
+            refreshYieldBalances = true,
+        ),
+        SKIP_CURRENCIES(
+            refreshCurrencies = false,
+            refreshNetworksStatuses = true,
+            refreshQuotes = true,
+            refreshYieldBalances = true,
+        ),
     }
 }
