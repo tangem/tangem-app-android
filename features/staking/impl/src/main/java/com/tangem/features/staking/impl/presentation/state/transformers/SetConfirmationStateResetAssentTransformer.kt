@@ -13,7 +13,6 @@ internal object SetConfirmationStateResetAssentTransformer : Transformer<Staking
                 confirmationState.copy(
                     isPrimaryButtonEnabled = true,
                     innerState = InnerConfirmationStakingState.ASSENT,
-                    validatorState = confirmationState.validatorState.copySealed(isClickable = true),
                 )
             } else {
                 confirmationState
