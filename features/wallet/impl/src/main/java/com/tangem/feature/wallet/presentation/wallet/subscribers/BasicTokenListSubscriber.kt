@@ -41,11 +41,11 @@ internal abstract class BasicTokenListSubscriber(
     private val sendAnalyticsJobHolder = JobHolder()
     private val onTokenListReceivedJobHolder = JobHolder()
 
-    protected abstract fun tokenListFlow(): LceFlow<TokenListError, TokenList>
+    protected abstract fun tokenListFlow(coroutineScope: CoroutineScope): LceFlow<TokenListError, TokenList>
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
         return combine(
-            flow = tokenListFlow()
+            flow = tokenListFlow(coroutineScope)
                 .onEach { maybeTokenList ->
                     coroutineScope.launch {
                         sendTokenListAnalytics(maybeTokenList)

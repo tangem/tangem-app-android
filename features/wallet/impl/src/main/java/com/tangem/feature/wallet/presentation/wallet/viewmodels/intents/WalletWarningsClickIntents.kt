@@ -13,6 +13,7 @@ import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.FetchTokenListUseCase
+import com.tangem.domain.tokens.FetchTokenListUseCase.RefreshMode
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
@@ -124,18 +125,20 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(Basic.CardWasScanned(AnalyticsParam.ScreensSources.Main))
         analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped)
 
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             val userWallet = getSelectedUserWallet() ?: return@launch
 
             derivePublicKeysUseCase(
                 userWalletId = userWallet.walletId,
                 currencies = missedAddressCurrencies,
+            ).fold(
+                ifLeft = { Timber.e(it, "Failed to derive public keys") },
+                ifRight = {
+                    fetchTokenListUseCase(userWallet.walletId, mode = RefreshMode.SKIP_CURRENCIES).onLeft {
+                        Timber.e("Unable to refresh token list: $it")
+                    }
+                },
             )
-                .onRight {
-                    // Refresh must be set to true to ensure that yield balances are updated
-                    fetchTokenListUseCase(userWalletId = userWallet.walletId, refresh = true)
-                }
-                .onLeft { Timber.e("Failed to derive public keys: $it") }
         }
     }
 
