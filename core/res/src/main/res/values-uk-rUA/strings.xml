@@ -520,7 +520,7 @@
   </plurals>
   <string name="onboarding_seed_generate_title">Ваша seed-фраза</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one">%d слово</item>
+    <item quantity="one"></item>
     <item quantity="few">%d слова</item>
     <item quantity="many">%d слів</item>
     <item quantity="other">%d слів</item>
