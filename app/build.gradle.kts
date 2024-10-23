@@ -22,6 +22,9 @@ android {
         resources.excludes.add("META-INF/LICENSE.md")
         resources.excludes.add("META-INF/NOTICE.md")
     }
+    androidResources {
+        generateLocaleConfig = true
+    }
 }
 
 configurations.all {
@@ -143,6 +146,8 @@ dependencies {
     implementation(projects.features.walletSettings.impl)
     implementation(projects.features.markets.api)
     implementation(projects.features.markets.impl)
+    implementation(projects.features.onramp.api)
+    implementation(projects.features.onramp.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
