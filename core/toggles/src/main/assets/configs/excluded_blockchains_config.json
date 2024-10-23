@@ -1,10 +1,10 @@
 [
     {
-        "mainnet_id": "",
-        "excluded_till": "undefined"
+        "name": "",
+        "version": "undefined"
     },
     {
-        "mainnet_id": "NEXA",
-        "excluded_till": "undefined"
+        "name": "NEXA",
+        "version": "undefined"
     }
 ]
