@@ -16,23 +16,45 @@ private data object StakingRewardSchedule {
     val SOLANA_SCHEDULE = 2 to 3
 }
 
-internal fun getRewardSchedule(schedule: Yield.Metadata.RewardSchedule, networkId: String): TextReference? =
-    when (schedule) {
+internal fun getRewardScheduleText(
+    rewardSchedule: Yield.Metadata.RewardSchedule,
+    networkId: String,
+    decapitalize: Boolean,
+): TextReference? {
+    return when (rewardSchedule) {
+        Yield.Metadata.RewardSchedule.WEEK -> resourceReference(
+            id = R.string.staking_reward_schedule_week,
+            decapitalize = decapitalize,
+        )
+        Yield.Metadata.RewardSchedule.HOUR -> resourceReference(
+            id = R.string.staking_reward_schedule_hour,
+            decapitalize = decapitalize,
+        )
+        Yield.Metadata.RewardSchedule.DAY -> resourceReference(
+            id = R.string.staking_reward_schedule_day,
+            decapitalize = decapitalize,
+        )
+        Yield.Metadata.RewardSchedule.MONTH -> resourceReference(
+            id = R.string.staking_reward_schedule_month,
+            decapitalize = decapitalize,
+        )
         Yield.Metadata.RewardSchedule.BLOCK,
         Yield.Metadata.RewardSchedule.EPOCH,
         Yield.Metadata.RewardSchedule.ERA,
-        -> getCustomRewardSchedule(networkId)
-        Yield.Metadata.RewardSchedule.WEEK -> resourceReference(R.string.common_week)
-        Yield.Metadata.RewardSchedule.HOUR -> resourceReference(R.string.common_hour)
-        Yield.Metadata.RewardSchedule.DAY -> pluralReference(R.plurals.common_days_no_param, count = 1)
-        Yield.Metadata.RewardSchedule.MONTH -> resourceReference(R.string.common_month)
-        Yield.Metadata.RewardSchedule.UNKNOWN -> null
+        -> getCustomRewardSchedule(
+            networkId = networkId,
+            decapitalize = decapitalize,
+        )
+        else -> null
     }
+}
 
-private fun getCustomRewardSchedule(networkId: String): TextReference? {
+private fun getCustomRewardSchedule(networkId: String, decapitalize: Boolean = false): TextReference? {
     return when {
         isSolana(networkId) -> {
             combinedReference(
+                resourceReference(id = R.string.staking_reward_schedule_each_plural, decapitalize = decapitalize),
+                stringReference(NON_BREAKING_SPACE.toString()),
                 stringReference("${SOLANA_SCHEDULE.first}$MINUS${SOLANA_SCHEDULE.second}$NON_BREAKING_SPACE"),
                 pluralReference(
                     id = R.plurals.common_days_no_param,
@@ -42,11 +64,13 @@ private fun getCustomRewardSchedule(networkId: String): TextReference? {
         }
         isCosmos(networkId) -> {
             combinedReference(
+                resourceReference(id = R.string.staking_reward_schedule_each_plural, decapitalize = decapitalize),
+                stringReference(NON_BREAKING_SPACE.toString()),
                 stringReference("${COSMOS_SCHEDULE.first}$MINUS${COSMOS_SCHEDULE.second}$NON_BREAKING_SPACE"),
                 resourceReference(R.string.common_second_no_param),
             )
         }
-        isTron(networkId) -> pluralReference(R.plurals.common_days_no_param, count = 1)
+        isTron(networkId) -> resourceReference(id = R.string.staking_reward_schedule_day, decapitalize = decapitalize)
         else -> null
     }
 }

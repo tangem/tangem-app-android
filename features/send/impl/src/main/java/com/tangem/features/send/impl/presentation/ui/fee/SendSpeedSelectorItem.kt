@@ -16,6 +16,9 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fee
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseToBigDecimal
@@ -53,12 +56,12 @@ internal fun SendSpeedSelectorItem(
                 onSelect = onSelect,
                 modifier = modifier,
                 preDot = stringReference(
-                    BigDecimalFormatter.formatCryptoFeeAmount(
-                        cryptoAmount = amount?.value,
-                        cryptoCurrency = amount?.currencySymbol.orEmpty(),
-                        decimals = amount?.decimals ?: 0,
-                        canBeLower = state.isFeeApproximate,
-                    ),
+                    amount?.value.format {
+                        crypto(
+                            symbol = amount?.currencySymbol.orEmpty(),
+                            decimals = amount?.decimals ?: 0,
+                        ).fee(canBeLower = state.isFeeApproximate)
+                    },
                 ),
                 postDot = if (state.isFeeConvertibleToFiat) {
                     getFiatReference(amount?.value, state.rate, state.appCurrency)

@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.ContentMessage
 import com.tangem.domain.card.DerivePublicKeysUseCase
+import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -43,6 +44,7 @@ internal class CustomTokenFormModel @Inject constructor(
     private val customCurrencyValidator: CustomCurrencyValidator,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
+    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val messageSender: UiMessageSender,
     private val customTokenFormManager: CustomCurrencyFormBuilder,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -61,15 +63,9 @@ internal class CustomTokenFormModel @Inject constructor(
 
         if (params.network.canHandleTokens) {
             observeTokenFormUpdates()
-        } else {
-            modelScope.launch {
-                customCurrencyValidator.createCoin(
-                    userWalletId = params.userWalletId,
-                    networkId = params.network.id,
-                    derivationPath = getDerivationPath(),
-                )
-            }
         }
+
+        createCoin()
     }
 
     private fun getInitialState(): CustomTokenFormUM {
@@ -112,6 +108,7 @@ internal class CustomTokenFormModel @Inject constructor(
             }
             .distinctUntilChanged()
             .sample(periodMillis = 1_000)
+            .drop(count = 1) // Skip initial state
             .onEach { formValues ->
                 customCurrencyValidator.validateForm(
                     userWalletId = params.userWalletId,
@@ -151,12 +148,25 @@ internal class CustomTokenFormModel @Inject constructor(
         }
     }
 
+    private fun createCoin() = modelScope.launch {
+        customCurrencyValidator.createCoin(
+            userWalletId = params.userWalletId,
+            networkId = params.network.id,
+            derivationPath = getDerivationPath(),
+        )
+    }
+
     private fun updateStateWithCurrency(
         currency: CryptoCurrency,
         fillForm: Boolean,
         isAlreadyAdded: Boolean,
         isCustom: Boolean,
-    ) {
+    ) = modelScope.launch {
+        val needToAddDerivation = hasMissedDerivationsUseCase(
+            userWalletId = params.userWalletId,
+            networksWithDerivationPath = mapOf(currency.network.backendId to getDerivationPath().value),
+        )
+
         state.update { state ->
             var updatedState = state
                 .updateWithProgress(
@@ -166,6 +176,7 @@ internal class CustomTokenFormModel @Inject constructor(
                     clearNotifications = true,
                     clearFieldErrors = true,
                     disableSecondaryFields = !isCustom,
+                    needToAddDerivation = needToAddDerivation,
                 )
 
             if (fillForm) {

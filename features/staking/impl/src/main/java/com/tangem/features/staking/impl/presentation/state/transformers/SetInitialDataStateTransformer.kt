@@ -6,8 +6,10 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -18,7 +20,7 @@ import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
-import com.tangem.features.staking.impl.presentation.state.utils.getRewardSchedule
+import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.lib.crypto.BlockchainUtils.isPolkadot
 import com.tangem.utils.Provider
@@ -126,11 +128,7 @@ internal class SetInitialDataStateTransformer(
             id = R.string.staking_details_available,
             startText = TextReference.Res(R.string.staking_details_available),
             endText = TextReference.Str(
-                value = BigDecimalFormatter.formatCryptoAmount(
-                    cryptoAmount = cryptoCurrencyStatus.value.amount,
-                    cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-                    decimals = cryptoCurrencyStatus.currency.decimals,
-                ),
+                value = cryptoCurrencyStatus.value.amount.format { crypto(cryptoCurrencyStatus.currency) },
             ),
             isEndTextHideable = true,
         )
@@ -156,11 +154,7 @@ internal class SetInitialDataStateTransformer(
         val minimumCryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum ?: return null
         if (!isPolkadot(cryptoCurrencyStatus.currency.network.id.value)) return null
 
-        val formattedAmount = BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = minimumCryptoAmount,
-            cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-            decimals = cryptoCurrencyStatus.currency.decimals,
-        )
+        val formattedAmount = minimumCryptoAmount.format { crypto(cryptoCurrencyStatus.currency) }
 
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_minimum_requirement,
@@ -198,7 +192,11 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createRewardScheduleItem(): RoundedListWithDividersItemData? {
-        val endTextReference = getRewardScheduleText() ?: return null
+        val endTextReference = getRewardScheduleText(
+            rewardSchedule = yield.metadata.rewardSchedule,
+            networkId = cryptoCurrencyStatusProvider().currency.network.id.value,
+            decapitalize = false,
+        ) ?: return null
 
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_reward_schedule,
@@ -213,36 +211,20 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun getAprRange(validators: List<Yield.Validator>): TextReference {
-        val aprValues = validators.mapNotNull { it.apr }
+        val aprValues = validators
+            .filter { it.preferred }
+            .mapNotNull { it.apr }
 
         val minApr = aprValues.min()
         val maxApr = aprValues.max()
 
-        val formattedMinApr = BigDecimalFormatter.formatPercent(
-            percent = minApr,
-            useAbsoluteValue = true,
-        ).remove("%")
-        val formattedMaxApr = BigDecimalFormatter.formatPercent(
-            percent = maxApr,
-            useAbsoluteValue = true,
-        )
+        val formattedMinApr = minApr.format { percent() }.remove("%")
+        val formattedMaxApr = maxApr.format { percent() }
 
         if (maxApr - minApr < EQUALITY_THRESHOLD) {
             return stringReference("$formattedMinApr%")
         }
         return resourceReference(R.string.common_range, wrappedList(formattedMinApr, formattedMaxApr))
-    }
-
-    private fun getRewardScheduleText(): TextReference? {
-        val rewardSchedule = getRewardSchedule(
-            yield.metadata.rewardSchedule,
-            cryptoCurrencyStatusProvider().currency.network.id.value,
-        ) ?: return null
-
-        return resourceReference(
-            R.string.staking_reward_schedule_each,
-            wrappedList(rewardSchedule),
-        )
     }
 
     private companion object {

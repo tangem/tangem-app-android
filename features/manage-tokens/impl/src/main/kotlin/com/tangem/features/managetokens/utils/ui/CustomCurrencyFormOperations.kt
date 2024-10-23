@@ -27,6 +27,7 @@ internal fun CustomTokenFormUM.updateWithProgress(
     showProgress: Boolean,
     isWasFilled: Boolean = this.tokenForm?.wasFilled ?: false,
     canAddToken: Boolean = this.canAddToken,
+    needToAddDerivation: Boolean = false,
     clearNotifications: Boolean = false,
     clearFieldErrors: Boolean = false,
     disableSecondaryFields: Boolean = false,
@@ -34,6 +35,7 @@ internal fun CustomTokenFormUM.updateWithProgress(
     return copy(
         isValidating = showProgress,
         canAddToken = canAddToken,
+        needToAddDerivation = needToAddDerivation,
         notifications = if (clearNotifications) persistentListOf() else notifications,
     ).updateTokenForm {
         val updatedFields = fields.mapValues { (key, field) ->
@@ -94,9 +96,6 @@ internal fun CustomTokenFormUM.updateWithContractAddressException(
         val updatedFields = fields.mutate {
             it[Field.CONTRACT_ADDRESS] = it.getValue(Field.CONTRACT_ADDRESS).copy(
                 error = when (exception) {
-                    CustomTokenFormValidationException.ContractAddress.Empty -> {
-                        null // Should not display this error
-                    }
                     CustomTokenFormValidationException.ContractAddress.Invalid -> {
                         resourceReference(R.string.custom_token_creation_error_invalid_contract_address)
                     }

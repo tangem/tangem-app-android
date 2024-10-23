@@ -169,14 +169,15 @@ internal class DefaultSwapRepository(
         return withContext(coroutineDispatcher.io) {
             either {
                 catch(
-                    {
+                    block = {
                         exchangeStatusConverter.convert(
                             tangemExpressApi
                                 .getExchangeStatus(txId)
                                 .getOrThrow(),
                         )
                     },
-                    {
+                    catch = {
+                        Timber.e("getExchangeStatus error: $it")
                         raise(UnknownError(it.message))
                     },
                 )

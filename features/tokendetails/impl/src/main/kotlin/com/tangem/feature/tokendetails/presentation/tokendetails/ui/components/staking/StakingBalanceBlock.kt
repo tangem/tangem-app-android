@@ -1,18 +1,12 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,7 +17,7 @@ import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakedBlock
+import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.StringsSigns
@@ -36,16 +30,7 @@ internal fun StakingBalanceBlock(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.primary)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(),
-                onClick = state.onStakeClicked,
-            )
-            .padding(TangemTheme.dimens.spacing12),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
@@ -108,6 +93,6 @@ private fun StakingBalanceBlock_Preview(
 
 private class StakingBalanceBlockPreviewProvider : PreviewParameterProvider<StakingBlockUM.Staked> {
     override val values: Sequence<StakingBlockUM.Staked>
-        get() = sequenceOf(stakedBlock)
+        get() = sequenceOf(stakingBalanceBlock)
 }
 // endregion

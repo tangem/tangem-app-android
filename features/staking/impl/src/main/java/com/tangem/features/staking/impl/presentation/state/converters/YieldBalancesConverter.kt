@@ -1,6 +1,8 @@
 package com.tangem.features.staking.impl.presentation.state.converters
 
 import com.tangem.common.extensions.isZero
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.*
@@ -41,10 +43,7 @@ internal class YieldBalancesConverter(
             }
             val (type, isActionable) = getRewardBlockType()
             InnerYieldBalanceState.Data(
-                rewardsCrypto = BigDecimalFormatter.formatCryptoAmount(
-                    cryptoAmount = cryptoRewardsValue,
-                    cryptoCurrency = cryptoCurrency,
-                ),
+                rewardsCrypto = cryptoRewardsValue.format { crypto(cryptoCurrency) },
                 rewardsFiat = BigDecimalFormatter.formatFiatAmount(
                     fiatAmount = fiatRewardsValue,
                     fiatCurrencyCode = appCurrency.code,
@@ -70,9 +69,9 @@ internal class YieldBalancesConverter(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
         val rewards = yieldBalance?.balance?.items
-            ?.filter { it.type == BalanceType.REWARDS }
+            ?.filter { it.type == BalanceType.REWARDS && !it.amount.isZero() }
 
-        val isActionable = rewards?.all { it.pendingActions.isNotEmpty() } == true
+        val isActionable = rewards?.any { it.pendingActions.isNotEmpty() } == true
         val isRewardsClaimable = rewards?.isNotEmpty() == true
 
         val isSolana = isSolana(cryptoCurrencyStatus.currency.network.id.value)

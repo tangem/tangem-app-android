@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.wallet.impl.R
@@ -42,6 +43,11 @@ internal sealed class WalletTokensListState {
     sealed class TokensListItemState {
 
         abstract val id: Any
+
+        data class SearchBar(
+            override val id: Any = "search_bar",
+            val searchBarUM: SearchBarUM,
+        ) : TokensListItemState()
 
         data class NetworkGroupTitle(override val id: Int, val name: TextReference) : TokensListItemState()
 
