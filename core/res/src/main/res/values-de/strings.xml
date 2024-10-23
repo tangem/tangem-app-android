@@ -83,10 +83,12 @@
   <string name="common_buy_currency">Gehe zu %1$s</string>
   <string name="common_camera_denied_alert_message">D hast keinen Zugang zur Kamera erteilt, bitte passe deine Datenschutzeinstellungen an</string>
   <string name="common_cancel">Abbrechen</string>
+  <string name="common_change">Ändern</string>
   <string name="common_choose_action">Aktion wählen</string>
   <string name="common_claim">Beanspruchen</string>
   <string name="common_claim_rewards">Stakingbelohnungen beanstpruchen</string>
   <string name="common_close">Schließen</string>
+  <string name="common_confirm">Bestätigen</string>
   <string name="common_continue">Weiter</string>
   <string name="common_copy">Kopieren</string>
   <string name="common_copy_address">Adresse kopieren</string>
@@ -549,6 +551,9 @@
   <string name="onboarding_wallet_info_title_fourth">Zugangscode wiederherstellen</string>
   <string name="onboarding_wallet_info_title_second">Identische Karten oder Ring</string>
   <string name="onboarding_wallet_info_title_third">Zugangscode</string>
+  <string name="onramp_residency_bottomsheet_country_not_supported">Unsere Dienstleistungen sind in diesem Land nicht verfügbar</string>
+  <string name="onramp_residency_bottomsheet_country_subtitle">Änder oder bestätige bitte</string>
+  <string name="onramp_residency_bottomsheet_title">Dein Wohnsitz wurde identifiziert als</string>
   <string name="organize_tokens_group">Gruppe erstellen</string>
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
@@ -716,6 +721,7 @@
   <string name="staking_details_unbonding_period_info">Der Zeitraum, den du nach der Beantragung der Abhebung von Geldern aus dem Staking warten musst, bevor die Token verfügbar werden.</string>
   <string name="staking_details_warmup_period">Aufwärmphase</string>
   <string name="staking_details_warmup_period_info">Die zugewiesene Zeit für die Aktivierung der Teilnahme am Staking.</string>
+  <string name="staking_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Du die Verwendung Deines Tokens für das Staking genehmigst.</string>
   <string name="staking_legal">Indem Du die Staking-Funktionalität nutzt, stimmst Du den %1$s und %2$s des Anbieters zu.</string>
   <string name="staking_locked">Gesperrt</string>
   <string name="staking_migrate">Migrieren</string>
@@ -755,6 +761,7 @@
   <string name="staking_reward_schedule_each">Alle %s</string>
   <string name="staking_reward_schedule_each_day">Täglich</string>
   <string name="staking_reward_schedule_each_days">Alle %s</string>
+  <string name="staking_reward_schedule_each_plural">Jeder</string>
   <string name="staking_reward_schedule_epoch">Pro Epoche</string>
   <string name="staking_reward_schedule_era">Pro Ära</string>
   <string name="staking_reward_schedule_hour">Stündlich</string>
@@ -763,6 +770,7 @@
   <string name="staking_rewards">Belohnungen</string>
   <string name="staking_stake_locked">Stake gesperrt</string>
   <string name="staking_stake_more">Mehr staken</string>
+  <string name="staking_summary_description_text">Du setzt %1$s ein und ethältst Deine Belohnung %2$s</string>
   <string name="staking_tap_to_unlock">Zum Entsperren antippen</string>
   <string name="staking_tap_to_unlock_or_vote">Tippe zum Entsperren oder Abstimmen</string>
   <string name="staking_tap_to_withdraw">Zum abheben antippen</string>
@@ -772,6 +780,7 @@
   <string name="staking_unbonding">Lösen der Bindungen</string>
   <string name="staking_unlocked_locked">Gelocktes unlocken</string>
   <string name="staking_unlocking">Entsperren</string>
+  <string name="staking_unstake_amount_validation_error">Der Betrag übersteigt das eingesetzte Guthaben</string>
   <string name="staking_unstaked">Unstaken</string>
   <string name="staking_unstaking">Staking beenden</string>
   <string name="staking_unstaking_item_name">Unstake Assets %s</string>
