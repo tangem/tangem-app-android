@@ -8,7 +8,6 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -99,15 +98,14 @@ internal abstract class BasicTokenListSubscriber(
     private suspend fun startCheck(maybeTokenList: Lce<TokenListError, TokenList>) {
         // Run Polkadot account health check
         maybeTokenList.getOrNull()?.let { tokenList ->
-            val cryptoCurrencies = when (tokenList) {
-                is TokenList.GroupedByNetwork -> tokenList.groups.flatMap(NetworkGroup::currencies)
-                is TokenList.Ungrouped -> tokenList.currencies
-                is TokenList.Empty -> emptyList()
-            }
-
-            cryptoCurrencies.forEach {
-                runPolkadotAccountHealthCheckUseCase(userWallet.walletId, it.currency.network)
-            }
+            tokenList
+                .flattenCurrencies()
+                .forEach {
+                    runPolkadotAccountHealthCheckUseCase(
+                        userWalletId = userWallet.walletId,
+                        network = it.currency.network,
+                    )
+                }
         }
     }
 
