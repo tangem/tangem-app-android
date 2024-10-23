@@ -14,7 +14,7 @@ internal class StakeKitErrorConverter(
     @Suppress("CyclomaticComplexMethod", "LongMethod")
     override fun convert(value: String): StakingError {
         return try {
-            val stakeKitErrorResponse = jsonAdapter.fromJson(value) ?: return StakingError.UnknownError
+            val stakeKitErrorResponse = jsonAdapter.fromJson(value) ?: return StakingError.UnknownError(value)
 
             if (stakeKitErrorResponse.type == AccessDeniedErrorTypeDTO.GEO_LOCATION) {
                 StakingError.UnavailableDueToGeolocationError(
@@ -106,10 +106,10 @@ internal class StakeKitErrorConverter(
                     StakingError.GRTStakingDisabledError
                 StakeKitErrorMessageDTO.GRT_STAKING_DISABLED_LEDGER_LIVE_ERROR ->
                     StakingError.GRTStakingDisabledLedgerLiveError
-                else -> StakingError.UnknownError
+                else -> StakingError.UnknownError(value)
             }
         } catch (e: Exception) {
-            StakingError.UnknownError
+            StakingError.UnknownError(value)
         }
     }
 }
