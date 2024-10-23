@@ -1,6 +1,5 @@
 package com.tangem.domain.staking
 
-import android.util.Log
 import arrow.core.Either
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.BalanceType
@@ -35,22 +34,19 @@ class InvalidatePendingTransactionsUseCase(
     ): List<BalanceItem> {
         val balances = realBalances.toMutableList()
 
-        Log.e("mergeBalancesAndProcessingActions", processingActions.toString())
-
         processingActions.forEach { action ->
-
             when (action.type) {
                 StakingActionType.STAKE, StakingActionType.VOTE, StakingActionType.VOTE_LOCKED -> {
                     processEnterAction(balances, action)
                 }
                 StakingActionType.WITHDRAW -> {
-                    modifyByStatus(balances, action, BalanceType.UNSTAKED)
+                    modifyBalancesByStatus(balances, action, BalanceType.UNSTAKED)
                 }
                 StakingActionType.UNLOCK_LOCKED -> {
-                    modifyByStatus(balances, action, BalanceType.LOCKED)
+                    modifyBalancesByStatus(balances, action, BalanceType.LOCKED)
                 }
                 StakingActionType.UNSTAKE -> {
-                    modifyByStatus(balances, action, BalanceType.STAKED)
+                    modifyBalancesByStatus(balances, action, BalanceType.STAKED)
                 }
                 else -> {
                     // intentionally do nothing
@@ -77,7 +73,7 @@ class InvalidatePendingTransactionsUseCase(
         )
     }
 
-    private fun modifyByStatus(balances: MutableList<BalanceItem>, action: StakingAction, type: BalanceType) {
+    private fun modifyBalancesByStatus(balances: MutableList<BalanceItem>, action: StakingAction, type: BalanceType) {
         val index = balances.indexOfFirst {
             !it.isPending && it.amount == action.amount && it.type == type
         }
