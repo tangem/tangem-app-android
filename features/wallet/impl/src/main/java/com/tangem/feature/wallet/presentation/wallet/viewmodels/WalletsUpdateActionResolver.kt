@@ -136,7 +136,9 @@ internal class WalletsUpdateActionResolver @Inject constructor(
                     unlockedWallets = wallets.filterNot(UserWallet::isLocked),
                 )
             }
-            isSelectedWalletCardsCountChanged(state, selectedWallet) -> Action.UpdateWalletCardCount(selectedWallet)
+            isSelectedWalletCardsCountChanged(state, selectedWallet) -> {
+                Action.UpdateWalletCardCount(selectedWallet)
+            }
             else -> Action.Unknown
         }
     }
