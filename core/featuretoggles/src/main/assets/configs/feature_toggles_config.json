@@ -22,5 +22,9 @@
     {
         "name": "MIGRATE_USER_COUNTRY_CODE_ENABLED",
         "version": "5.17.0"
+    },
+    {
+        "name": "ONRAMP_ENABLED",
+        "version": "undefined"
     }
 ]
