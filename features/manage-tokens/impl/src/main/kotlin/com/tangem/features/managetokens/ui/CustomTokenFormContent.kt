@@ -99,6 +99,7 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
             } else {
                 TangemButtonIconPosition.None
             },
+            textStyle = TangemTheme.typography.subtitle1,
             onClick = model.saveToken,
         )
     }
