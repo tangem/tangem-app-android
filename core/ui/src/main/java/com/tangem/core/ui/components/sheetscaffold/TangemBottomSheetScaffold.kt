@@ -2,30 +2,57 @@
 
 package com.tangem.core.ui.components.sheetscaffold
 
+import android.graphics.Bitmap
+import android.graphics.BlurMaskFilter
+import android.renderscript.Allocation
+import android.renderscript.Element
+import android.renderscript.RenderScript
+import android.renderscript.ScriptIntrinsicBlur
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.center
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxOfOrNull
+import androidx.compose.ui.zIndex
+import androidx.core.graphics.withSave
+import androidx.core.graphics.withTranslation
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue.*
+import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.toPx
 import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
 /**
@@ -51,13 +78,6 @@ import kotlin.math.roundToInt
  *   [Dp.Unspecified] for a sheet that spans the entire screen width.
  * @param sheetShape the shape of the bottom sheet
  * @param sheetContainerColor the background color of the bottom sheet
- * @param sheetContentColor the preferred content color provided by the bottom sheet to its
- *   children. Defaults to the matching content color for [sheetContainerColor], or if that is not a
- *   color from the theme, this will keep the same content color set above the bottom sheet.
- * @param sheetTonalElevation when [sheetContainerColor] is [ColorScheme.surface], a translucent
- *   primary color overlay is applied on top of the container. A higher tonal elevation value will
- *   result in a darker color in light theme and lighter color in dark theme. See also: [Surface].
- * @param sheetShadowElevation the shadow elevation of the bottom sheet
  * @param sheetSwipeEnabled whether the sheet swiping is enabled and should react to the user's
  *   input
  * @param topBar top app bar of the screen, typically a [SmallTopAppBar]
@@ -81,10 +101,7 @@ fun TangemBottomSheetScaffold(
     sheetPeekHeight: Dp,
     sheetMaxWidth: Dp = 640.dp,
     sheetShape: Shape = TangemTheme.shapes.bottomSheetLarge,
-    sheetContainerColor: Color = Color.White, // FIXME
-    sheetContentColor: Color = contentColorFor(sheetContainerColor),
-    sheetTonalElevation: Dp = 0.dp,
-    sheetShadowElevation: Dp = 1.dp,
+    sheetContainerColor: Color = Color.White,
     sheetSwipeEnabled: Boolean = true,
     topBar: @Composable (() -> Unit)? = null,
     snackbarHost: @Composable (SnackbarHostState) -> Unit = { SnackbarHost(it) },
@@ -109,9 +126,6 @@ fun TangemBottomSheetScaffold(
                 sheetSwipeEnabled = sheetSwipeEnabled,
                 shape = sheetShape,
                 containerColor = sheetContainerColor,
-                contentColor = sheetContentColor,
-                tonalElevation = sheetTonalElevation,
-                shadowElevation = sheetShadowElevation,
                 content = sheetContent,
             )
         },
@@ -178,9 +192,6 @@ private fun StandardBottomSheet(
     sheetSwipeEnabled: Boolean,
     shape: Shape,
     containerColor: Color,
-    contentColor: Color,
-    tonalElevation: Dp,
-    shadowElevation: Dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -202,7 +213,7 @@ private fun StandardBottomSheet(
             Modifier
         }
 
-    Surface(
+    Column(
         modifier = Modifier
             .widthIn(max = sheetMaxWidth)
             .fillMaxWidth()
@@ -251,16 +262,20 @@ private fun StandardBottomSheet(
                 state = state.anchoredDraggableState,
                 orientation = orientation,
                 enabled = sheetSwipeEnabled,
-            ),
-        shape = shape,
-        color = containerColor,
-        contentColor = contentColor,
-        tonalElevation = tonalElevation,
-        shadowElevation = shadowElevation,
+            )
+            .softLayerShadow(
+                radius = 8.dp,
+                color = Color.Black.copy(
+                    alpha = if (isSystemInDarkTheme()) .16f else .08f
+                ),
+                shape = shape,
+                offset = DpOffset(x = 0.dp, y = (-4).dp),
+                isAlphaContentClip = true
+            )
+            .background(containerColor, shape)
+            .clip(shape),
     ) {
-        Column(Modifier.fillMaxWidth()) {
-            content()
-        }
+        content()
     }
 }
 
@@ -293,7 +308,7 @@ private fun BottomSheetScaffoldLayout(
         ),
     ) {
             (topBarMeasurables, bodyMeasurables, bottomSheetMeasurables, snackbarHostMeasurables),
-            constraints, 
+            constraints,
         ->
         val layoutWidth = constraints.maxWidth
         val layoutHeight = constraints.maxHeight
@@ -321,7 +336,7 @@ private fun BottomSheetScaffoldLayout(
                     PartiallyExpanded -> sheetOffset().roundToInt() - snackbarHeight
                     Expanded,
                     Hidden,
-                    -> layoutHeight - snackbarHeight
+                        -> layoutHeight - snackbarHeight
                 }
 
             // Placement order is important for elevation
