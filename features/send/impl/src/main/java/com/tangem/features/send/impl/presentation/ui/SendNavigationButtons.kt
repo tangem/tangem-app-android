@@ -32,6 +32,9 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fee
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.presentation.state.SendStates
@@ -228,12 +231,14 @@ private fun SendStates.FeeState.getFiatValue() = if (isFeeConvertibleToFiat) {
     )
 } else {
     val amount = fee?.amount
-    BigDecimalFormatter.formatCryptoFeeAmount(
-        cryptoAmount = amount?.value,
-        cryptoCurrency = amount?.currencySymbol.orEmpty(),
-        decimals = amount?.decimals ?: 0,
-        canBeLower = isFeeApproximate,
-    )
+    amount?.value.format {
+        crypto(
+            decimals = amount?.decimals ?: 0,
+            symbol = amount?.currencySymbol.orEmpty(),
+        ).fee(
+            canBeLower = isFeeApproximate,
+        )
+    }
 }
 
 private fun getButtonData(
