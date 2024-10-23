@@ -22,9 +22,11 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
-import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.bottomFade
+import com.tangem.core.ui.components.buttons.common.TangemButton
+import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.fields.SimpleTextField
 import com.tangem.core.ui.components.isOpened
 import com.tangem.core.ui.components.keyboardAsState
@@ -82,14 +84,22 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
             }
         }
 
-        PrimaryButton(
+        TangemButton(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = TangemTheme.dimens.spacing16 + bottomBarHeight)
                 .fillMaxWidth(),
             text = stringResource(id = R.string.custom_token_add_token),
+            colors = TangemButtonsDefaults.primaryButtonColors,
             enabled = model.canAddToken,
             showProgress = model.isValidating,
+            animateContentChange = true,
+            icon = if (model.needToAddDerivation) {
+                TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
+            } else {
+                TangemButtonIconPosition.None
+            },
+            textStyle = TangemTheme.typography.subtitle1,
             onClick = model.saveToken,
         )
     }

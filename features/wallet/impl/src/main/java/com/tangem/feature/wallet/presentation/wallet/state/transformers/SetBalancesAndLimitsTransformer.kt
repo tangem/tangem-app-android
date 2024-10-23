@@ -3,6 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.visa.model.VisaCurrency
@@ -41,11 +43,9 @@ internal class SetBalancesAndLimitsTransformer(
     }
 
     private fun getContentBlockState(visaCurrency: VisaCurrency) = BalancesAndLimitsBlockState.Content(
-        availableBalance = BigDecimalFormatter.formatCryptoAmount(
-            visaCurrency.limits.remainingOtp,
-            visaCurrency.symbol,
-            visaCurrency.decimals,
-        ),
+        availableBalance = visaCurrency.limits.remainingOtp.format {
+            crypto(visaCurrency.symbol, visaCurrency.decimals)
+        },
         limitDays = Days.daysBetween(DateTime.now(), visaCurrency.limits.expirationDate).days.inc(),
         isEnabled = true,
         onClick = clickIntents::onBalancesAndLimitsClick,
@@ -72,11 +72,9 @@ internal class SetBalancesAndLimitsTransformer(
                 imageResId = imageResId,
                 onRenameClick = onRenameClick,
                 onDeleteClick = onDeleteClick,
-                balance = BigDecimalFormatter.formatCryptoAmount(
-                    visaCurrency.balances.available,
-                    visaCurrency.symbol,
-                    visaCurrency.decimals,
-                ),
+                balance = visaCurrency.balances.available.format {
+                    crypto(visaCurrency.symbol, visaCurrency.decimals)
+                },
                 cardCount = userWallet.getCardsCount(),
             )
         }

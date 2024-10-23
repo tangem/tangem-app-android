@@ -1,6 +1,8 @@
 package com.tangem.features.staking.impl.presentation.state.converters
 
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -65,10 +67,9 @@ internal class RewardsValidatorStateConverter(
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val cryptoAmount = stringReference(
-            BigDecimalFormatter.formatCryptoAmount(
-                cryptoAmount = cryptoValue,
-                cryptoCurrency = cryptoCurrency,
-            ),
+            cryptoValue.format {
+                crypto(cryptoCurrency)
+            },
         )
         val fiatAmount = stringReference(
             BigDecimalFormatter.formatFiatAmount(

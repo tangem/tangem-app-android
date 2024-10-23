@@ -88,6 +88,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.Cosmos || blockchain == Blockchain.CosmosTestnet
     }
 
+    fun isBSC(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.BSC || blockchain == Blockchain.BSCTestnet
+    }
+
     data class BlockchainInfo(
         val blockchainId: String,
         val name: String,
