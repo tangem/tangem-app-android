@@ -31,6 +31,7 @@ import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.tokens.*
@@ -72,7 +73,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.math.BigDecimal
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
@@ -130,6 +130,7 @@ internal class StakingViewModel @Inject constructor(
         ?: error("This screen can't be opened without `Yield`")
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
+    private var processingActions: List<StakingAction> = emptyList()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
 
     private var innerRouter: InnerStakingRouter by Delegates.notNull()
@@ -140,10 +141,8 @@ internal class StakingViewModel @Inject constructor(
         get() {
             val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
             return invalidatePendingTransactionsUseCase(
-                userWalletId = userWallet.walletId,
-                cryptoCurrencyId = cryptoCurrencyId,
                 balanceItems = yieldBalance?.balance?.items ?: emptyList(),
-                processingActions = emptyList(), // TODO staking
+                processingActions = processingActions,
             ).getOrElse { emptyList() }
         }
 
@@ -201,23 +200,6 @@ internal class StakingViewModel @Inject constructor(
         subscribeOnSelectedAppCurrency()
         subscribeOnBalanceHiding()
         subscribeOnCurrencyStatusUpdates()
-        subscribeOnActionsUpdates()
-    }
-
-    private fun subscribeOnActionsUpdates() {
-        getActionsUseCase(
-            userWalletId = userWalletId,
-            cryptoCurrencyId = cryptoCurrencyId,
-        )
-            .conflate()
-            .distinctUntilChanged()
-            .onEach {
-                it.fold(ifLeft = {}, ifRight = {
-                    Timber.e(it.toString())
-                },)
-            }
-            .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
     }
 
     override fun onCleared() {
@@ -294,7 +276,6 @@ internal class StakingViewModel @Inject constructor(
                         transactionsInProgress.addAll(constructedTransactions)
                     },
                     onConstructError = { error ->
-                        Timber.e(error.toString())
                         analyticsEventHandler.send(
                             StakingAnalyticsEvents.StakingError(
                                 token = value.cryptoCurrencySymbol,
@@ -310,7 +291,6 @@ internal class StakingViewModel @Inject constructor(
                         stateController.update(SetConfirmationStateCompletedTransformer(txUrl))
                     },
                     onSendError = { error ->
-                        Timber.e(error.toString())
                         analyticsEventHandler.send(StakingAnalyticsEvents.TransactionError(value.cryptoCurrencySymbol))
                         stakingEventFactory.createSendTransactionErrorAlert(error)
                         stateController.update(SetConfirmationStateResetAssentTransformer)
@@ -540,7 +520,6 @@ internal class StakingViewModel @Inject constructor(
                 userWalletId = userWalletId,
             ).fold(
                 ifLeft = { error ->
-                    Timber.e(error.toString())
                     analyticsEventHandler.send(StakingAnalyticsEvents.TransactionError(value.cryptoCurrencySymbol))
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
@@ -562,7 +541,6 @@ internal class StakingViewModel @Inject constructor(
                 network = tokenCryptoCurrency.network,
             ).fold(
                 ifLeft = { error ->
-                    Timber.e(error.toString())
                     analyticsEventHandler.send(StakingAnalyticsEvents.TransactionError(value.cryptoCurrencySymbol))
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
@@ -773,7 +751,6 @@ internal class StakingViewModel @Inject constructor(
                 userWallet = wallet
             },
             ifLeft = {
-                Timber.e(it.toString())
                 stakingEventFactory.createGenericErrorAlert(it.toString())
                 stateController.update(SetConfirmationStateResetAssentTransformer)
             },
@@ -803,10 +780,10 @@ internal class StakingViewModel @Inject constructor(
                         setupApprovalNeeded()
                         setupIsAnyTokenStaked()
                         checkIfSubtractAvailable()
+                        subscribeOnActionsUpdates()
                         subscribeOnStepChanges()
                     },
                     ifLeft = { error ->
-                        Timber.e(error.toString())
                         stakingEventFactory.createGenericErrorAlert(error.toString())
                         stateController.update(SetConfirmationStateResetAssentTransformer)
                     },
@@ -844,18 +821,7 @@ internal class StakingViewModel @Inject constructor(
             .onEach {
                 when {
                     isInitState() -> {
-                        stateController.updateAll(
-                            SetInitialDataStateTransformer(
-                                clickIntents = this@StakingViewModel,
-                                yield = yield,
-                                isAnyTokenStaked = isAnyTokenStaked,
-                                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-                                userWalletProvider = Provider { userWallet },
-                                appCurrencyProvider = Provider { appCurrency },
-                                balancesToShowProvider = Provider { balancesToShow },
-                            ),
-                            SetConfirmationStateEmptyTransformer,
-                        )
+                        updateInitialData()
                         onRefreshSwipe(isRefreshing = false)
                     }
                     isAssentState() -> {
@@ -873,6 +839,40 @@ internal class StakingViewModel @Inject constructor(
             }
             .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
+    }
+
+    private fun subscribeOnActionsUpdates() {
+        getActionsUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrencyId = cryptoCurrencyId,
+        )
+            .conflate()
+            .distinctUntilChanged()
+            .onEach { result ->
+                result.getOrNull()?.let { actions ->
+                    processingActions = actions
+                    if (isInitState()) {
+                        updateInitialData()
+                    }
+                }
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(viewModelScope)
+    }
+
+    private fun updateInitialData() {
+        stateController.updateAll(
+            SetInitialDataStateTransformer(
+                clickIntents = this@StakingViewModel,
+                yield = yield,
+                isAnyTokenStaked = isAnyTokenStaked,
+                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                userWalletProvider = Provider { userWallet },
+                appCurrencyProvider = Provider { appCurrency },
+                balancesToShowProvider = Provider { balancesToShow },
+            ),
+            SetConfirmationStateEmptyTransformer,
+        )
     }
 
     private fun prepareForConfirmation(
