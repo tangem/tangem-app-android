@@ -1,5 +1,6 @@
 package com.tangem.domain.core.lce
 
+import arrow.atomic.AtomicBoolean
 import arrow.core.raise.Raise
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
@@ -34,6 +35,8 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
     private val ifLoading: suspend LceFlowScope<E, C>.(C?) -> Unit,
 ) : Raise<E>, CoroutineScope by producerScope {
 
+    val isLoading: AtomicBoolean = AtomicBoolean(value = true)
+
     /**
      * Sends a error of type [E] within the [ProducerScope] and then closes it for send.
      * All subsequent sends will be ignored.
@@ -46,6 +49,8 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
      * @param r Error to raise.
      */
     override fun raise(r: E): Nothing {
+        isLoading.set(false)
+
         producerScope.trySendBlocking(r.lceError())
         producerScope.close()
 
@@ -66,6 +71,8 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
      * @param isStillLoading A flag indicating whether the content is still loading.
      */
     suspend fun send(content: C, isStillLoading: Boolean = false) {
+        isLoading.set(isStillLoading)
+
         val value = if (isStillLoading) {
             ifLoading(content)
             return
@@ -88,6 +95,8 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
     @OptIn(DelicateCoroutinesApi::class)
     suspend fun send(value: Lce<E, C>) {
         if (producerScope.isClosedForSend) return
+
+        isLoading.set(value.isLoading())
 
         producerScope.send(value)
     }
