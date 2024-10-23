@@ -58,17 +58,11 @@ internal fun WalletsList(
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         flingBehavior = rememberWalletsFlingBehaviour(lazyListState = lazyListState, itemWidth = itemWidth),
     ) {
-        items(
-            items = wallets,
-            key = { it.id.stringValue },
-            contentType = { it.id.stringValue },
-        ) { state ->
+        items(items = wallets, contentType = { it.id.stringValue }) { state ->
             WalletCard(
                 state = state,
                 isBalanceHidden = isBalanceHidden,
-                modifier = Modifier
-                    .animateItemPlacement()
-                    .width(itemWidth),
+                modifier = Modifier.width(itemWidth),
             )
         }
     }
