@@ -70,12 +70,6 @@ internal class MultiWalletTokenListSubscriber(
     }
 
     private fun getCurrenciesIds(tokenList: TokenList): List<CryptoCurrency.ID> {
-        return when (tokenList) {
-            is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { group ->
-                group.currencies.map { it.currency.id }
-            }
-            is TokenList.Ungrouped -> tokenList.currencies.map { it.currency.id }
-            is TokenList.Empty -> emptyList()
-        }
+        return tokenList.flattenCurrencies().map { it.currency.id }
     }
 }
