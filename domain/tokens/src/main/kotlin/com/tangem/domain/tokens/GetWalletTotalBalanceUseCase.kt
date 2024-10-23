@@ -85,9 +85,6 @@ class GetWalletTotalBalanceUseCase(
             stakingRepository = stakingRepository,
         )
 
-        return operations.getCurrenciesStatuses(
-            userWalletId = userWalletId,
-            isSingleCurrencyWalletsAllowed = true,
-        )
+        return operations.getCurrenciesStatuses(userWalletId)
     }
 }
