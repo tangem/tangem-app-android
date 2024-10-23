@@ -18,13 +18,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.ExchangeStatusState
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun ExchangeStatusBlock(
@@ -103,34 +107,34 @@ private fun ExchangeStatusStep(
                 label = "Exchange Step Change Success",
                 modifier = Modifier
                     .size(TangemTheme.dimens.size20),
-            ) {
+            ) { state ->
                 when {
-                    it.status == ExchangeStatus.Cancelled -> ExchangeStep(
-                        iconRes = R.drawable.ic_close_24,
-                        color = TangemTheme.colors.icon.warning,
-                        isDone = false,
-                    )
-                    it.status == ExchangeStatus.Failed -> ExchangeStep(
-                        iconRes = R.drawable.ic_close_24,
-                        color = TangemTheme.colors.icon.warning,
-                        isDone = it.isDone,
-                    )
-                    it.status == ExchangeStatus.Refunded -> ExchangeStep(
-                        iconRes = R.drawable.ic_close_24,
-                        color = TangemTheme.colors.icon.warning,
-                        isDone = it.isDone,
-                    )
-                    it.status == ExchangeStatus.Verifying -> ExchangeStep(
+                    state.status == ExchangeStatus.Cancelled -> {
+                        ExchangeStep(
+                            iconRes = R.drawable.ic_close_24,
+                            color = TangemTheme.colors.icon.warning,
+                            isDone = false,
+                        )
+                    }
+                    state.status == ExchangeStatus.Failed || state.status == ExchangeStatus.Refunded ||
+                        state.status == ExchangeStatus.Paused -> {
+                        ExchangeStep(
+                            iconRes = R.drawable.ic_close_24,
+                            color = TangemTheme.colors.icon.warning,
+                            isDone = state.isDone,
+                        )
+                    }
+                    state.status == ExchangeStatus.Verifying -> ExchangeStep(
                         iconRes = R.drawable.ic_exclamation_24,
                         color = TangemTheme.colors.icon.attention,
-                        isDone = it.isDone,
+                        isDone = state.isDone,
                     )
-                    it.isDone -> ExchangeStep(
+                    state.isDone -> ExchangeStep(
                         iconRes = R.drawable.ic_check_24,
                         color = TangemTheme.colors.icon.primary1,
                         isDone = true,
                     )
-                    it.isActive -> ExchangeStepInProgress()
+                    state.isActive -> ExchangeStepInProgress()
                     else -> ExchangeStepDefault()
                 }
             }
@@ -144,11 +148,14 @@ private fun ExchangeStatusStep(
 
 @Composable
 private fun ExchangeStatusStepText(stepStatus: ExchangeStatusState) {
+    val status = stepStatus.status
+
     val textColor = when {
-        stepStatus.status == ExchangeStatus.Cancelled -> TangemTheme.colors.icon.warning
-        stepStatus.status == ExchangeStatus.Refunded -> TangemTheme.colors.icon.warning
-        stepStatus.status == ExchangeStatus.Failed && !stepStatus.isDone -> TangemTheme.colors.icon.warning
-        stepStatus.status == ExchangeStatus.Verifying && !stepStatus.isDone -> TangemTheme.colors.icon.attention
+        status == ExchangeStatus.Cancelled || status == ExchangeStatus.Refunded || status == ExchangeStatus.Paused -> {
+            TangemTheme.colors.icon.warning
+        }
+        status == ExchangeStatus.Failed && !stepStatus.isDone -> TangemTheme.colors.icon.warning
+        status == ExchangeStatus.Verifying && !stepStatus.isDone -> TangemTheme.colors.icon.attention
         stepStatus.isDone -> TangemTheme.colors.text.primary1
         !stepStatus.isActive -> TangemTheme.colors.text.disabled
         else -> TangemTheme.colors.text.primary1
@@ -222,4 +229,35 @@ private fun ExchangeStepSeparator() {
                 shape = CircleShape,
             ),
     )
+}
+
+@Preview
+@Composable
+private fun Preview_ExchangeStatusBlock() {
+    val base = ExchangeStatusState(
+        status = ExchangeStatus.Failed,
+        text = resourceReference(id = R.string.express_exchange_status_failed),
+        isActive = true,
+        isDone = false,
+    )
+
+    TangemThemePreview {
+        ExchangeStatusBlock(
+            statuses = listOf(
+                base,
+                base.copy(isActive = false, isDone = false),
+                base.copy(isActive = true, isDone = false),
+                base.copy(isActive = true, isDone = true),
+                ExchangeStatusState(
+                    status = ExchangeStatus.Paused,
+                    text = resourceReference(id = R.string.express_exchange_status_paused),
+                    isActive = true,
+                    isDone = false,
+                ),
+            )
+                .toImmutableList(),
+            showLink = false,
+            onClick = {},
+        )
+    }
 }
