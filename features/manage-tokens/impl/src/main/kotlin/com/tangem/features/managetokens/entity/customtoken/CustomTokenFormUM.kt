@@ -14,6 +14,7 @@ internal data class CustomTokenFormUM(
     val notifications: PersistentList<NotificationUM> = persistentListOf(),
     val canAddToken: Boolean = false,
     val isValidating: Boolean = false,
+    val needToAddDerivation: Boolean = false,
     val saveToken: () -> Unit,
 ) {
 
