@@ -10,7 +10,6 @@ import com.tangem.domain.settings.ShouldShowRingPromoUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.repository.PromoRepository
 import com.tangem.domain.wallets.models.UserWallet
@@ -144,13 +143,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private fun Lce<TokenListError, TokenList>.getMissingAddressCurrencies(): List<CryptoCurrency> {
         val tokenList = getOrNull(isPartialContentAccepted = false) ?: return emptyList()
 
-        val currencies = when (tokenList) {
-            is TokenList.GroupedByNetwork -> tokenList.groups.flatMap(NetworkGroup::currencies)
-            is TokenList.Ungrouped -> tokenList.currencies
-            is TokenList.Empty -> emptyList()
-        }
-
-        return currencies
+        return tokenList
+            .flattenCurrencies()
             .filter { it.value is CryptoCurrencyStatus.MissedDerivation }
             .map(CryptoCurrencyStatus::currency)
     }
@@ -182,13 +176,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private fun Lce<TokenListError, TokenList>.hasUnreachableNetworks(): Boolean {
         val tokenList = getOrNull(isPartialContentAccepted = false) ?: return false
 
-        val currencies = when (tokenList) {
-            is TokenList.GroupedByNetwork -> tokenList.groups.flatMap(NetworkGroup::currencies)
-            is TokenList.Ungrouped -> tokenList.currencies
-            is TokenList.Empty -> emptyList()
-        }
-
-        return currencies.any { it.value is CryptoCurrencyStatus.Unreachable }
+        return tokenList.flattenCurrencies().any { it.value is CryptoCurrencyStatus.Unreachable }
     }
 
     private fun MutableList<WalletNotification>.addRateTheAppNotification(
