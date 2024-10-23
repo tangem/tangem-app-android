@@ -2,14 +2,11 @@ package com.tangem.features.staking.impl.presentation.state.stub
 
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
-import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
@@ -17,13 +14,7 @@ internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onBackClick() {}
 
-    override fun onNextClick(
-        actionTypeToOverwrite: StakingActionCommonType?,
-        pendingAction: PendingAction?,
-        pendingActions: ImmutableList<PendingAction>?,
-        balanceState: BalanceState?,
-    ) {
-    }
+    override fun onNextClick(balanceState: BalanceState?) {}
 
     override fun onActionClick() {}
 
@@ -67,8 +58,7 @@ internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onActiveStake(activeStake: BalanceState) {}
 
-    override fun getFee(pendingAction: PendingAction?, pendingActions: ImmutableList<PendingAction>?) {
-    }
+    override fun getFee() {}
 
     override fun onAmountReduceByClick(
         reduceAmountBy: BigDecimal,

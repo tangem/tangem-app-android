@@ -3,7 +3,10 @@ package com.tangem.feature.swap.utils
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.feature.swap.domain.models.ExpressDataError
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.presentation.R
 
 internal fun getExpressErrorMessage(expressDataError: ExpressDataError): TextReference {
@@ -38,4 +41,8 @@ internal fun getExpressErrorTitle(expressDataError: ExpressDataError): TextRefer
         is ExpressDataError.UnknownError -> resourceReference(R.string.common_error)
         else -> resourceReference(R.string.warning_express_refresh_required_title)
     }
+}
+
+internal fun SwapAmount.formatToUIRepresentation(): String {
+    return value.format { simple(decimals = decimals) }
 }
