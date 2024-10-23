@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 
 internal sealed class StakingAnalyticsEvents(
@@ -147,14 +148,18 @@ internal sealed class StakingAnalyticsEvents(
 
     data object ButtonExplore : StakingAnalyticsEvents(event = "Button - Explore")
 
-    data class StakingError(
+    data class StakekitError(
         val token: String,
-        val errorType: String,
+        val stakeKitError: StakingError,
     ) : StakingAnalyticsEvents(
         event = "Errors",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
-            "ErrorType" to errorType,
+            AnalyticsParam.ERROR_TYPE to if (stakeKitError is StakingError.UnknownError) {
+                stakeKitError.message ?: "Unknown"
+            } else {
+                stakeKitError.javaClass.simpleName
+            },
         ),
     )
 

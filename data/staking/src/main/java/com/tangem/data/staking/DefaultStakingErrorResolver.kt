@@ -13,7 +13,7 @@ internal class DefaultStakingErrorResolver(
         return if (throwable is ApiResponseError.HttpException) {
             stakeKitErrorConverter.convert(throwable.errorBody.orEmpty())
         } else {
-            StakingError.UnknownError
+            StakingError.UnknownError()
         }
     }
 }
