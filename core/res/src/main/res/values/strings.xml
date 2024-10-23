@@ -506,7 +506,7 @@
   </plurals>
   <string name="onboarding_seed_generate_title">Your seed phrase</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one">%d word</item>
+    <item quantity="one"></item>
     <item quantity="other">%d words</item>
   </plurals>
   <string name="onboarding_seed_import_message">To import your wallet, enter your seed phrase in the field below</string>
