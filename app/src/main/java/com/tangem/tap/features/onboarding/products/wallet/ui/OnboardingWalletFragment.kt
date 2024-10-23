@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.transition.TransitionManager
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -574,22 +575,28 @@ class OnboardingWalletFragment :
         }
 
         animator.showSuccess {
-            flCardsContainer.hide()
-            imvCardBackground.hide()
-            showConfetti(true)
-            imvSuccess.alpha = 0f
-            imvSuccess.show()
-            imvSuccess.animate()?.alpha(1f)?.duration = 400
+            if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                flCardsContainer.hide()
+                imvCardBackground.hide()
+                showConfetti(true)
+                imvSuccess.alpha = 0f
+                imvSuccess.show()
+                imvSuccess.animate()?.alpha(1f)?.duration = 400
+            }
         }
     }
 
-    internal fun showConfetti(show: Boolean) = with(binding.vConfetti) {
-        lavConfetti.show(show)
+    internal fun showConfetti(show: Boolean) {
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            with(binding.vConfetti) {
+                lavConfetti.show(show)
 
-        if (show) {
-            lavConfetti.playAnimation()
-        } else {
-            lavConfetti.cancelAnimation()
+                if (show) {
+                    lavConfetti.playAnimation()
+                } else {
+                    lavConfetti.cancelAnimation()
+                }
+            }
         }
     }
 
