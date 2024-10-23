@@ -185,6 +185,7 @@ private fun SaveChangesButton(
             },
             showProgress = showProgress,
             colors = TangemButtonsDefaults.primaryButtonColors,
+            textStyle = TangemTheme.typography.subtitle1,
             enabled = true,
             animateContentChange = true,
             onClick = onClick,
