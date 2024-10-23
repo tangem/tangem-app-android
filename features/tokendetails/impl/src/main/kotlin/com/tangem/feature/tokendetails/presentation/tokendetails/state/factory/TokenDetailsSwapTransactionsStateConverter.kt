@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
@@ -26,6 +27,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import timber.log.Timber
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -110,7 +112,10 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         refundToken: CryptoCurrency?,
         isRefundTerminalStatus: Boolean,
     ): SwapTransactionsState {
-        if (statusModel == null || tx.activeStatus == statusModel.status) return tx
+        if (statusModel == null || tx.activeStatus == statusModel.status) {
+            Timber.e("UpdateTxStatus isn't required. Current status isn't changed")
+            return tx
+        }
         val hasFailed = tx.hasFailed || statusModel.status == ExchangeStatus.Failed
         val notifications = getNotification(statusModel.status, statusModel.txExternalUrl, refundToken)
         val showProviderLink = getShowProviderLink(notifications, statusModel)
@@ -185,6 +190,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         val isFailed = status == ExchangeStatus.Failed
         val isSending = status == ExchangeStatus.Sending
         val isRefunded = status == ExchangeStatus.Refunded
+        val isPaused = status == ExchangeStatus.Paused
 
         val isWaitingDone = !isWaiting
         val isConfirmingDone = !isConfirming && isWaitingDone
@@ -208,15 +214,18 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             hasFailed = hasFailed,
                             isVerifying = isVerifying,
                             isFailed = isFailed,
+                            isPaused = isPaused,
                         ),
                     )
-                    add(
-                        sendStep(
-                            isSending = isSending,
-                            isSendingDone = isSendingDone,
-                            isRefunded = isRefunded,
-                        ),
-                    )
+                    if (!isPaused) {
+                        add(
+                            sendStep(
+                                isSending = isSending,
+                                isSendingDone = isSendingDone,
+                                isRefunded = isRefunded,
+                            ),
+                        )
+                    }
                 }
             }
         }.toPersistentList()
@@ -272,10 +281,17 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         hasFailed: Boolean,
         isVerifying: Boolean = false,
         isFailed: Boolean = false,
+        isPaused: Boolean,
     ) = when {
         isVerifying -> ExchangeStatusState(
             status = ExchangeStatus.Verifying,
             text = TextReference.Res(R.string.express_exchange_status_verifying),
+            isActive = true,
+            isDone = false,
+        )
+        isPaused -> ExchangeStatusState(
+            status = ExchangeStatus.Paused,
+            text = resourceReference(id = R.string.express_exchange_status_paused),
             isActive = true,
             isDone = false,
         )

@@ -1,10 +1,10 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state
 
-import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import java.math.BigDecimal
 
-@Stable
+@Immutable
 internal sealed interface StakingBlockUM {
 
     data object TemporaryUnavailable : StakingBlockUM

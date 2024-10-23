@@ -20,7 +20,7 @@ import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
-import com.tangem.features.staking.impl.presentation.state.utils.getRewardSchedule
+import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.lib.crypto.BlockchainUtils.isPolkadot
 import com.tangem.utils.Provider
@@ -192,7 +192,11 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createRewardScheduleItem(): RoundedListWithDividersItemData? {
-        val endTextReference = getRewardScheduleText() ?: return null
+        val endTextReference = getRewardScheduleText(
+            rewardSchedule = yield.metadata.rewardSchedule,
+            networkId = cryptoCurrencyStatusProvider().currency.network.id.value,
+            decapitalize = false,
+        ) ?: return null
 
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_reward_schedule,
@@ -207,7 +211,9 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun getAprRange(validators: List<Yield.Validator>): TextReference {
-        val aprValues = validators.mapNotNull { it.apr }
+        val aprValues = validators
+            .filter { it.preferred }
+            .mapNotNull { it.apr }
 
         val minApr = aprValues.min()
         val maxApr = aprValues.max()
@@ -219,18 +225,6 @@ internal class SetInitialDataStateTransformer(
             return stringReference("$formattedMinApr%")
         }
         return resourceReference(R.string.common_range, wrappedList(formattedMinApr, formattedMaxApr))
-    }
-
-    private fun getRewardScheduleText(): TextReference? {
-        val rewardSchedule = getRewardSchedule(
-            yield.metadata.rewardSchedule,
-            cryptoCurrencyStatusProvider().currency.network.id.value,
-        ) ?: return null
-
-        return resourceReference(
-            R.string.staking_reward_schedule_each,
-            wrappedList(rewardSchedule),
-        )
     }
 
     private companion object {
