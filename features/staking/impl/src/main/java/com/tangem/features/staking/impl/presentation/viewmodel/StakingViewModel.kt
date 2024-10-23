@@ -299,9 +299,9 @@ internal class StakingViewModel @Inject constructor(
                 },
                 onStakingFeeError = { error ->
                     analyticsEventHandler.send(
-                        StakingAnalyticsEvents.StakingError(
+                        StakingAnalyticsEvents.StakekitError(
                             value.cryptoCurrencySymbol,
-                            error.javaClass.simpleName,
+                            error,
                         ),
                     )
                     stateController.update(AddStakingErrorTransformer())
@@ -338,9 +338,9 @@ internal class StakingViewModel @Inject constructor(
                     onConstructError = { error ->
                         Timber.e(error.toString())
                         analyticsEventHandler.send(
-                            StakingAnalyticsEvents.StakingError(
+                            StakingAnalyticsEvents.StakekitError(
                                 token = value.cryptoCurrencySymbol,
-                                errorType = error.javaClass.simpleName,
+                                stakeKitError = error,
                             ),
                         )
                         stakingEventFactory.createStakingErrorAlert(error)
