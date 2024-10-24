@@ -56,7 +56,7 @@ internal fun withStubUnstakeAction(networkId: String, activeStake: BalanceState)
 }
 
 internal fun isTronStakedBalance(networkId: String, pendingAction: PendingAction?): Boolean {
-    return isTron(networkId) && pendingAction?.type == StakingActionType.REVOKE
+    return isTron(networkId) && pendingAction?.type == StakingActionType.REVOTE
 }
 
 internal fun isComposePendingActions(networkId: String, pendingActions: ImmutableList<PendingAction>?): Boolean {
