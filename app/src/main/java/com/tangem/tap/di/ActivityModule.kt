@@ -7,7 +7,6 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
-import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.network.exchangeServices.DefaultRampManager
 import com.tangem.tap.proxy.AppStateHolder
 import dagger.Module

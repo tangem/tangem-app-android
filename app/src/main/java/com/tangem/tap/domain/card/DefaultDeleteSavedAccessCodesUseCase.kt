@@ -6,7 +6,6 @@ import arrow.core.right
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
-import com.tangem.tap.domain.sdk.TangemSdkManager
 
 internal class DefaultDeleteSavedAccessCodesUseCase(
     private val tangemSdkManager: TangemSdkManager,

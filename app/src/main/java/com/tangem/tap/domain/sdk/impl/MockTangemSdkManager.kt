@@ -20,7 +20,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
-import com.tangem.tap.domain.sdk.TangemSdkManager
+import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 

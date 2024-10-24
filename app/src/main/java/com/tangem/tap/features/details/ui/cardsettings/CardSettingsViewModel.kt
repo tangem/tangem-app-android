@@ -24,7 +24,6 @@ import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.domain.extensions.signedHashesCount
-import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
 import com.tangem.tap.features.details.ui.common.utils.*
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
