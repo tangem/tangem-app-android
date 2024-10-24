@@ -5,7 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 
-internal sealed class StakingAnalyticsEvents(
+internal sealed class StakingAnalyticsEvent(
     event: String,
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(
@@ -17,7 +17,7 @@ internal sealed class StakingAnalyticsEvents(
     data class StakingInfoScreenOpened(
         val validatorsCount: Int,
         val token: String,
-    ) : StakingAnalyticsEvents(
+    ) : StakingAnalyticsEvent(
         event = "Staking Info Screen Opened",
         params = mapOf(
             "Validators Count" to validatorsCount.toString(),
@@ -25,14 +25,14 @@ internal sealed class StakingAnalyticsEvents(
         ),
     )
 
-    data class WhatIsStaking(val token: String) : StakingAnalyticsEvents(
+    data class WhatIsStaking(val token: String) : StakingAnalyticsEvent(
         event = "Link - What Is Staking",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
         ),
     )
 
-    data class AmountScreenOpened(val token: String) : StakingAnalyticsEvents(
+    data class AmountScreenOpened(val token: String) : StakingAnalyticsEvent(
         event = "Amount Screen Opened",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
@@ -43,7 +43,7 @@ internal sealed class StakingAnalyticsEvents(
         val token: String,
         val validator: String,
         val action: StakingActionType,
-    ) : StakingAnalyticsEvents(
+    ) : StakingAnalyticsEvent(
         event = "Confirmation Screen Opened",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
@@ -56,7 +56,7 @@ internal sealed class StakingAnalyticsEvents(
         val validator: String,
         val token: String,
         val action: StakingActionType,
-    ) : StakingAnalyticsEvents(
+    ) : StakingAnalyticsEvent(
         event = "Stake In Progress Screen Opened",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
@@ -65,7 +65,7 @@ internal sealed class StakingAnalyticsEvents(
         ),
     )
 
-    data class RewardScreenOpened(val token: String) : StakingAnalyticsEvents(
+    data class RewardScreenOpened(val token: String) : StakingAnalyticsEvent(
         event = "Reward Screen Opened",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
@@ -75,7 +75,7 @@ internal sealed class StakingAnalyticsEvents(
     data class AmountSelectCurrency(
         val token: String,
         val isAppCurrency: Boolean,
-    ) : StakingAnalyticsEvents(
+    ) : StakingAnalyticsEvent(
         event = "Selected Currency",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
@@ -83,7 +83,7 @@ internal sealed class StakingAnalyticsEvents(
         ),
     )
 
-    data class ButtonMax(val token: String) : StakingAnalyticsEvents(
+    data class ButtonMax(val token: String) : StakingAnalyticsEvent(
         event = "Button - Max",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
@@ -93,7 +93,7 @@ internal sealed class StakingAnalyticsEvents(
     data class ButtonCancel(
         val source: StakeScreenSource,
         val token: String,
-    ) : StakingAnalyticsEvents(
+    ) : StakingAnalyticsEvent(
         event = "Button - Cancel",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
@@ -104,7 +104,7 @@ internal sealed class StakingAnalyticsEvents(
     data class ValidatorChosen(
         val token: String,
         val validator: String,
-    ) : StakingAnalyticsEvents(
+    ) : StakingAnalyticsEvent(
         event = "Validator Chosen",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
@@ -115,7 +115,7 @@ internal sealed class StakingAnalyticsEvents(
     data class ButtonValidator(
         val source: StakeScreenSource,
         val token: String,
-    ) : StakingAnalyticsEvents(
+    ) : StakingAnalyticsEvent(
         event = "Button - Validator",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
@@ -125,7 +125,7 @@ internal sealed class StakingAnalyticsEvents(
 
     data class ButtonRewards(
         val token: String,
-    ) : StakingAnalyticsEvents(
+    ) : StakingAnalyticsEvent(
         event = "Button - Rewards",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
@@ -136,7 +136,7 @@ internal sealed class StakingAnalyticsEvents(
         val action: StakingActionType,
         val token: String,
         val validator: String,
-    ) : StakingAnalyticsEvents(
+    ) : StakingAnalyticsEvent(
         event = "Button - ${action.asAnalyticName}",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
@@ -144,28 +144,34 @@ internal sealed class StakingAnalyticsEvents(
         ),
     )
 
-    data object ButtonShare : StakingAnalyticsEvents(event = "Button - Share")
+    data object ButtonShare : StakingAnalyticsEvent(event = "Button - Share")
 
-    data object ButtonExplore : StakingAnalyticsEvents(event = "Button - Explore")
+    data object ButtonExplore : StakingAnalyticsEvent(event = "Button - Explore")
 
-    data class StakekitError(
+    data class StakeKitError(
         val token: String,
-        val stakeKitError: StakingError,
-    ) : StakingAnalyticsEvents(
+        val stakingError: StakingError,
+    ) : StakingAnalyticsEvent(
         event = "Errors",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
-            if (stakeKitError is StakingError.UnknownError) {
-                AnalyticsParam.ERROR_DESCRIPTION to (stakeKitError.message ?: "Unknown")
-            } else {
-                AnalyticsParam.ERROR_TYPE to stakeKitError.javaClass.simpleName
+            when (stakingError) {
+                is StakingError.StakeKitUnknownError -> {
+                    AnalyticsParam.ERROR_DESCRIPTION to (stakingError.jsonString ?: "Unknown")
+                }
+                is StakingError.StakeKitApiError -> {
+                    AnalyticsParam.ERROR_MESSAGE to (stakingError.message ?: "Unknown")
+                }
+                is StakingError.UnknownError -> {
+                    AnalyticsParam.ERROR_MESSAGE to (stakingError.message ?: "Unknown")
+                }
             },
         ),
     )
 
     data class TransactionError(
         val token: String,
-    ) : StakingAnalyticsEvents(
+    ) : StakingAnalyticsEvent(
         event = "Error - Transaction Rejected",
         params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
     )

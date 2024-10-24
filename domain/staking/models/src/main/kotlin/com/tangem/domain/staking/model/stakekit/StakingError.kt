@@ -4,7 +4,7 @@ sealed class StakingError {
 
     // region stakekit errors
 
-    data class StakekitApiError(
+    data class StakeKitApiError(
         val message: String?,
         val code: Int?,
     ) : StakingError()

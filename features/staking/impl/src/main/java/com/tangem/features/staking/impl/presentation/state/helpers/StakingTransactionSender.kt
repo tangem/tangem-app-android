@@ -20,7 +20,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvents
+import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvent
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isSolanaWithdraw
@@ -199,9 +199,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
             ),
         ).getOrElse {
             analyticsEventHandler.send(
-                StakingAnalyticsEvents.StakekitError(
+                StakingAnalyticsEvent.StakeKitError(
                     token = state.cryptoCurrencySymbol,
-                    stakeKitError = it,
+                    stakingError = it,
                 ),
             )
             onConstructError(it)
@@ -257,9 +257,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 )
                     .onLeft { error ->
                         analyticsEventHandler.send(
-                            StakingAnalyticsEvents.StakekitError(
+                            StakingAnalyticsEvent.StakeKitError(
                                 token = stateController.value.cryptoCurrencySymbol,
-                                stakeKitError = error,
+                                stakingError = error,
                             ),
                         )
                         saveUnsubmittedHashUseCase.invoke(

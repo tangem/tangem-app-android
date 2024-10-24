@@ -3,7 +3,7 @@ package com.tangem.features.staking.impl.presentation.state
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvents
+import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvent
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 
 internal class StakingStateRouter(
@@ -61,14 +61,14 @@ internal class StakingStateRouter(
 
     private fun showRewardsValidators() {
         analyticsEventsHandler.send(
-            StakingAnalyticsEvents.RewardScreenOpened(stateController.value.cryptoCurrencySymbol),
+            StakingAnalyticsEvent.RewardScreenOpened(stateController.value.cryptoCurrencySymbol),
         )
         stateController.update { it.copy(currentStep = StakingStep.RewardsValidators) }
     }
 
     private fun showAmount() {
         analyticsEventsHandler.send(
-            StakingAnalyticsEvents.AmountScreenOpened(stateController.value.cryptoCurrencySymbol),
+            StakingAnalyticsEvent.AmountScreenOpened(stateController.value.cryptoCurrencySymbol),
         )
         stateController.update { it.copy(currentStep = StakingStep.Amount) }
     }

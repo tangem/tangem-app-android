@@ -14,7 +14,7 @@ internal class StakeKitErrorConverter(
             val stakeKitErrorResponse = jsonAdapter.fromJson(value)
                 ?: return StakingError.StakeKitUnknownError(value)
 
-            return StakingError.StakekitApiError(
+            return StakingError.StakeKitApiError(
                 message = stakeKitErrorResponse.message,
                 code = stakeKitErrorResponse.code,
             )
