@@ -26,5 +26,9 @@
     {
         "name": "ONRAMP_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "REWRITTEN_ONBOARDING_CODE",
+        "version": "undefined"
     }
 ]
