@@ -1,12 +1,12 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
-import com.tangem.tap.domain.walletconnect2.domain.mapper.mapToTransaction
 import com.tangem.tap.domain.walletconnect2.domain.models.BnbData
 import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
 import com.tangem.tap.features.details.redux.walletconnect.WcEthTransactionType
+import okio.ByteString.Companion.decodeBase64
 
 internal class WcSessionRequestConverter(
     private val blockchainHelper: WcBlockchainHelper,
@@ -115,11 +115,11 @@ internal class WcSessionRequestConverter(
                 )
             }
             is WcRequest.SolanaSignRequest -> {
-                val data = request.data.mapToTransaction()
+                val transaction = request.data.transaction
 
                 WcPreparedRequest.SignTransaction(
                     preparedRequestData = WcGenericTransactionData(
-                        hashToSign = data.getSerializedMessage(),
+                        hashToSign = transaction.prepareSolanaTransaction(),
                         dAppName = sessionRequest.metaName,
                         type = TransactionType.SOLANA_TX,
                     ),
@@ -130,6 +130,16 @@ internal class WcSessionRequestConverter(
             }
             else -> throw WalletConnectError.UnsupportedMethod
         }
+    }
+
+    /**
+     * Input transaction in Base64 string
+     */
+    private fun String.prepareSolanaTransaction(): ByteArray {
+        return this.decodeBase64()
+            ?.toByteArray()
+            ?.drop(SOLANA_SIGNATURE_PLACEHOLDER_LENGTH)
+            ?.toByteArray() ?: ByteArray(0)
     }
 
     private fun getWalletAddress(request: WcRequest): String? {
@@ -155,5 +165,9 @@ internal class WcSessionRequestConverter(
             ?.accounts?.firstOrNull {
                 it.chainId == sessionRequest.chainId && it.walletAddress.lowercase() == walletAddress?.lowercase()
             }?.derivationPath
+    }
+
+    companion object {
+        private const val SOLANA_SIGNATURE_PLACEHOLDER_LENGTH = 65
     }
 }
