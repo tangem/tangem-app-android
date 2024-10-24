@@ -155,10 +155,10 @@ internal sealed class StakingAnalyticsEvents(
         event = "Errors",
         params = mapOf(
             AnalyticsParam.TOKEN_PARAM to token,
-            AnalyticsParam.ERROR_TYPE to if (stakeKitError is StakingError.UnknownError) {
-                stakeKitError.message ?: "Unknown"
+            if (stakeKitError is StakingError.UnknownError) {
+                AnalyticsParam.ERROR_DESCRIPTION to (stakeKitError.message ?: "Unknown")
             } else {
-                stakeKitError.javaClass.simpleName
+                AnalyticsParam.ERROR_TYPE to stakeKitError.javaClass.simpleName
             },
         ),
     )
