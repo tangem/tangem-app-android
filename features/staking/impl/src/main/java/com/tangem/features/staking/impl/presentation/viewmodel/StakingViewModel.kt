@@ -195,6 +195,7 @@ internal class StakingViewModel @Inject constructor(
     private var approvalJobHolder: JobHolder = JobHolder()
     private var feeJobHolder: JobHolder = JobHolder()
     private var sendTransactionJobHolder = JobHolder()
+    private var stepChangesJobHolder = JobHolder()
 
     init {
         subscribeOnSelectedAppCurrency()
@@ -207,6 +208,7 @@ internal class StakingViewModel @Inject constructor(
         approvalJobHolder.cancel()
         feeJobHolder.cancel()
         sendTransactionJobHolder.cancel()
+        stepChangesJobHolder.cancel()
     }
 
     override fun onBackClick() {
@@ -337,7 +339,7 @@ internal class StakingViewModel @Inject constructor(
     override fun onRefreshSwipe(isRefreshing: Boolean) {
         stateController.update(SetInitialLoadingStateTransformer(isRefreshing))
         coroutineScope.launch {
-            balanceUpdater.instantUpdate()
+            balanceUpdater.partialUpdate()
         }.invokeOnCompletion {
             stateController.update(SetInitialLoadingStateTransformer(false))
         }
@@ -772,6 +774,8 @@ internal class StakingViewModel @Inject constructor(
             .onEach { maybeStatus ->
                 maybeStatus.fold(
                     ifRight = { status ->
+                        if (status.value !is CryptoCurrencyStatus.Loaded) return@fold
+
                         if (!isInitialInfoAnalyticSent) {
                             isInitialInfoAnalyticSent = true
                             val balances = status.value.yieldBalance as? YieldBalance.Data
@@ -786,6 +790,8 @@ internal class StakingViewModel @Inject constructor(
                         feeCryptoCurrencyStatus =
                             getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
                         cryptoCurrencyStatus = status
+
+                        Timber.e(cryptoCurrencyStatus.toString())
 
                         setupApprovalNeeded()
                         setupIsAnyTokenStaked()
@@ -826,6 +832,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private fun subscribeOnStepChanges() {
+        stepChangesJobHolder.cancel()
         uiState
             .distinctUntilChangedBy { it.currentStep }
             .onEach {
@@ -843,7 +850,7 @@ internal class StakingViewModel @Inject constructor(
                             ),
                             SetConfirmationStateEmptyTransformer,
                         )
-                        onRefreshSwipe(isRefreshing = false)
+                        balanceUpdater.initialUpdate()
                     }
                     isAssentState() -> {
                         getFee()
@@ -860,6 +867,7 @@ internal class StakingViewModel @Inject constructor(
             }
             .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
+            .saveIn(stepChangesJobHolder)
     }
 
     private fun prepareForConfirmation(
