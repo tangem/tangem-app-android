@@ -520,7 +520,7 @@
   </plurals>
   <string name="onboarding_seed_generate_title">Ваша seed-фраза</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one"></item>
+    <item quantity="one">слово</item>
     <item quantity="few">%d слова</item>
     <item quantity="many">%d слів</item>
     <item quantity="other">%d слів</item>
@@ -741,7 +741,7 @@
   <string name="staking_details_unbonding_period_info">Період, який ви повинні чекати після запиту на виведення коштів зі стейкінгу, перш ніж токени стануть доступними.</string>
   <string name="staking_details_warmup_period">Період блокування</string>
   <string name="staking_details_warmup_period_info">Відведений час для активації участі в стейкінгу.</string>
-  <string name="staking_give_permission_fee_footer">Комісія мережі за схвалення токену, щоб верифікувати, що саме ви даєте дозвіл на використання вашого токена для стейкінгу.</string>
+  <string name="staking_give_permission_fee_footer">Комісія за схвалення токену, щоб верифікувати, що саме ви дозволяєте використання токена для стейкінгу.</string>
   <string name="staking_legal">Використовуючи функцію стейкінгу, ви погоджуєтесь з %1$s та %2$s</string>
   <string name="staking_locked">Заблоковано</string>
   <string name="staking_migrate">Перемістити</string>
