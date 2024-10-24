@@ -14,9 +14,6 @@ data class SolanaTransactionRequest(
 
     @Json(name = "instructions")
     val instructions: List<Instruction>,
-
-    @Json(name = "transaction")
-    val transaction: String,
 ) : WcRequestData {
 
     @JsonClass(generateAdapter = true)
@@ -25,7 +22,7 @@ data class SolanaTransactionRequest(
         val programId: String,
 
         @Json(name = "data")
-        val data: String,
+        val data: List<Byte>,
 
         @Json(name = "keys")
         val keys: List<Key>,
