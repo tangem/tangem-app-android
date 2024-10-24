@@ -66,9 +66,9 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.timber)
     implementation(deps.reKotlin)
+    implementation(projects.common.routing)
 
     /** DI */
     implementation(deps.hilt.android)
-    implementation(project(":common:routing"))
     kapt(deps.hilt.kapt)
 }

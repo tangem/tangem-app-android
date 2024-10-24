@@ -149,6 +149,7 @@ dependencies {
     implementation(projects.features.markets.impl)
     implementation(projects.features.onramp.api)
     implementation(projects.features.onramp.impl)
+    implementation(projects.features.onboardingLegacy)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
