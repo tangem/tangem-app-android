@@ -26,7 +26,6 @@ internal class StakingAnalyticSender(
         analyticsEventHandler.send(
             StakingAnalyticsEvent.StakingInfoScreenOpened(
                 validatorsCount = validatorCount,
-                token = value.cryptoCurrencySymbol,
             ),
         )
     }
@@ -40,7 +39,6 @@ internal class StakingAnalyticSender(
 
         analyticsEventHandler.send(
             StakingAnalyticsEvent.ConfirmationScreenOpened(
-                token = value.cryptoCurrencySymbol,
                 validator = validatorName,
                 action = getStakingActionType(value),
             ),
@@ -58,7 +56,6 @@ internal class StakingAnalyticSender(
                     StakingStep.RewardsValidators,
                     -> StakeScreenSource.Validators
                 },
-                token = value.cryptoCurrencyName,
             ),
         )
     }
@@ -95,7 +92,6 @@ internal class StakingAnalyticSender(
         analyticsEventHandler.send(
             StakingAnalyticsEvent.StakeInProgressScreenOpened(
                 validator = validatorName,
-                token = value.cryptoCurrencySymbol,
                 action = getStakingActionType(value),
             ),
         )
@@ -109,7 +105,6 @@ internal class StakingAnalyticSender(
         analyticsEventHandler.send(
             StakingAnalyticsEvent.ButtonAction(
                 action = getStakingActionType(value),
-                token = value.cryptoCurrencySymbol,
                 validator = validatorName,
             ),
         )

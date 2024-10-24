@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.analytics
 
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 
 class StakingParamsInterceptor(private val tokenSymbol: String) : ParamsInterceptor {
 
@@ -12,7 +13,7 @@ class StakingParamsInterceptor(private val tokenSymbol: String) : ParamsIntercep
     }
 
     override fun intercept(params: MutableMap<String, String>) {
-        params["Token"] = tokenSymbol
+        params[AnalyticsParam.TOKEN_PARAM] = tokenSymbol
     }
 
     companion object {

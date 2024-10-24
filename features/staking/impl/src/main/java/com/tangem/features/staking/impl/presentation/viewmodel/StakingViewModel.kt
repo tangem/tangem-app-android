@@ -303,15 +303,14 @@ internal class StakingViewModel @Inject constructor(
                 onStakingFeeError = { error ->
                     analyticsEventHandler.send(
                         StakingAnalyticsEvent.StakeKitError(
-                            value.cryptoCurrencySymbol,
-                            error,
+                            stakingError = error,
                         ),
                     )
                     stateController.update(AddStakingErrorTransformer())
                     updateNotifications(GetFeeError.UnknownError)
                 },
                 onFeeError = { error ->
-                    analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError(value.cryptoCurrencySymbol))
+                    analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
                     stateController.update(AddStakingErrorTransformer())
                     updateNotifications(error)
                 },
@@ -342,7 +341,6 @@ internal class StakingViewModel @Inject constructor(
                         Timber.e(error.toString())
                         analyticsEventHandler.send(
                             StakingAnalyticsEvent.StakeKitError(
-                                token = value.cryptoCurrencySymbol,
                                 stakingError = error,
                             ),
                         )
@@ -356,7 +354,7 @@ internal class StakingViewModel @Inject constructor(
                     },
                     onSendError = { error ->
                         Timber.e(error.toString())
-                        analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError(value.cryptoCurrencySymbol))
+                        analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
                         stakingEventFactory.createSendTransactionErrorAlert(error)
                         stateController.update(SetConfirmationStateResetAssentTransformer)
                     },
@@ -402,7 +400,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onInitialInfoBannerClick() {
-        analyticsEventHandler.send(StakingAnalyticsEvent.WhatIsStaking(value.cryptoCurrencySymbol))
+        analyticsEventHandler.send(StakingAnalyticsEvent.WhatIsStaking)
         innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
     }
 
@@ -449,13 +447,13 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onMaxValueClick() {
-        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonMax(value.cryptoCurrencySymbol))
+        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonMax)
         stateController.update(AmountMaxValueStateTransformer(cryptoCurrencyStatus, yield))
     }
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {
         analyticsEventHandler.send(
-            StakingAnalyticsEvent.AmountSelectCurrency(value.cryptoCurrencySymbol, isFiat),
+            StakingAnalyticsEvent.AmountSelectCurrency(isFiat),
         )
         stateController.update(AmountCurrencyChangeStateTransformer(cryptoCurrencyStatus, isFiat))
     }
@@ -464,7 +462,6 @@ internal class StakingViewModel @Inject constructor(
         analyticsEventHandler.send(
             StakingAnalyticsEvent.ButtonValidator(
                 source = StakeScreenSource.Confirmation,
-                token = value.cryptoCurrencySymbol,
             ),
         )
         stakingStateRouter.showValidators()
@@ -473,17 +470,14 @@ internal class StakingViewModel @Inject constructor(
     override fun onValidatorSelect(validator: Yield.Validator) {
         analyticsEventHandler.send(
             StakingAnalyticsEvent.ValidatorChosen(
-                value.cryptoCurrencySymbol,
-                validator.name,
+                validator = validator.name,
             ),
         )
         stateController.update(ValidatorSelectChangeTransformer(validator))
     }
 
     override fun openRewardsValidators() {
-        analyticsEventHandler.send(
-            StakingAnalyticsEvent.ButtonRewards(value.cryptoCurrencySymbol),
-        )
+        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonRewards)
         val rewardsValidators =
             stateController.value.rewardsValidatorsState as? StakingStates.RewardsValidatorsState.Data
         val rewards = rewardsValidators?.rewards
@@ -493,7 +487,6 @@ internal class StakingViewModel @Inject constructor(
             analyticsEventHandler.send(
                 StakingAnalyticsEvent.ButtonValidator(
                     source = StakeScreenSource.Info,
-                    token = value.cryptoCurrencySymbol,
                 ),
             )
             onNextClick(actionTypeToOverwrite = StakingActionCommonType.PENDING_REWARDS)
@@ -547,7 +540,6 @@ internal class StakingViewModel @Inject constructor(
         analyticsEventHandler.send(
             StakingAnalyticsEvent.ButtonValidator(
                 source = StakeScreenSource.Info,
-                token = value.cryptoCurrencySymbol,
             ),
         )
     }
@@ -598,7 +590,7 @@ internal class StakingViewModel @Inject constructor(
             ).fold(
                 ifLeft = { error ->
                     Timber.e(error.toString())
-                    analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError(value.cryptoCurrencySymbol))
+                    analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
                             appCurrencyProvider = Provider { appCurrency },
@@ -620,7 +612,7 @@ internal class StakingViewModel @Inject constructor(
             ).fold(
                 ifLeft = { error ->
                     Timber.e(error.toString())
-                    analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError(value.cryptoCurrencySymbol))
+                    analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
                             appCurrencyProvider = Provider { appCurrency },
@@ -845,7 +837,6 @@ internal class StakingViewModel @Inject constructor(
                             analyticsEventHandler.send(
                                 StakingAnalyticsEvent.StakingInfoScreenOpened(
                                     validatorsCount = balances?.getValidatorsCount() ?: 0,
-                                    token = status.currency.symbol,
                                 ),
                             )
                         }

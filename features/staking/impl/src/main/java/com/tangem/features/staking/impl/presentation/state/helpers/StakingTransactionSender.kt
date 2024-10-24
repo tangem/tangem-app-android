@@ -200,7 +200,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
         ).getOrElse {
             analyticsEventHandler.send(
                 StakingAnalyticsEvent.StakeKitError(
-                    token = state.cryptoCurrencySymbol,
                     stakingError = it,
                 ),
             )
@@ -258,7 +257,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
                     .onLeft { error ->
                         analyticsEventHandler.send(
                             StakingAnalyticsEvent.StakeKitError(
-                                token = stateController.value.cryptoCurrencySymbol,
                                 stakingError = error,
                             ),
                         )

@@ -60,16 +60,12 @@ internal class StakingStateRouter(
     }
 
     private fun showRewardsValidators() {
-        analyticsEventsHandler.send(
-            StakingAnalyticsEvent.RewardScreenOpened(stateController.value.cryptoCurrencySymbol),
-        )
+        analyticsEventsHandler.send(StakingAnalyticsEvent.RewardScreenOpened)
         stateController.update { it.copy(currentStep = StakingStep.RewardsValidators) }
     }
 
     private fun showAmount() {
-        analyticsEventsHandler.send(
-            StakingAnalyticsEvent.AmountScreenOpened(stateController.value.cryptoCurrencySymbol),
-        )
+        analyticsEventsHandler.send(StakingAnalyticsEvent.AmountScreenOpened)
         stateController.update { it.copy(currentStep = StakingStep.Amount) }
     }
 
