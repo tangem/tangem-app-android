@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.analytics
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 
 class StakingParamsInterceptor(private val tokenSymbol: String) : ParamsInterceptor {
 

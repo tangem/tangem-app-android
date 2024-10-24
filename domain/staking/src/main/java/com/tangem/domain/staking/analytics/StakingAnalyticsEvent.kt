@@ -1,11 +1,11 @@
-package com.tangem.features.staking.impl.analytics
+package com.tangem.domain.staking.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 
-internal sealed class StakingAnalyticsEvent(
+sealed class StakingAnalyticsEvent(
     event: String,
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(

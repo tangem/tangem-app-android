@@ -3,7 +3,7 @@ package com.tangem.features.staking.impl.presentation.state
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvent
+import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 
 internal class StakingStateRouter(
