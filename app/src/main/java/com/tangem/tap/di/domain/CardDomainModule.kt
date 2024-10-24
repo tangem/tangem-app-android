@@ -9,6 +9,7 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
+import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.card.DefaultDeleteSavedAccessCodesUseCase
 import com.tangem.tap.domain.card.DefaultResetCardUseCase
 import dagger.Module

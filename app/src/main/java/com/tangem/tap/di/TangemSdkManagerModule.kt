@@ -3,6 +3,7 @@ package com.tangem.tap.di
 import android.content.Context
 import com.tangem.domain.card.BuildConfig
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
 import dagger.Module

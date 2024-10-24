@@ -12,6 +12,7 @@ import com.tangem.domain.settings.repositories.PromoSettingsRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.settings.DefaultLegacySettingsRepository
 import dagger.Module
 import dagger.Provides
