@@ -55,7 +55,8 @@ internal class DefaultBlockchainSDKFactory(
             // flow3 = subscribe on feature toggles changes, TODO: [REDACTED_JIRA]
             transform = walletManagerFactoryCreator::create,
         )
-            .stateIn(scope = mainScope, started = SharingStarted.Lazily, initialValue = null)
+            // don't use Lazily because some features (WC) require initialized factory on app started
+            .stateIn(scope = mainScope, started = SharingStarted.Eagerly, initialValue = null)
     }
 
     private fun CoroutineScope.updateBlockchainProviderTypes() {
