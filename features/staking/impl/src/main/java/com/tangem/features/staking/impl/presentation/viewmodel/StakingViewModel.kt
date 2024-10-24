@@ -300,12 +300,7 @@ internal class StakingViewModel @Inject constructor(
                     )
                     updateNotifications()
                 },
-                onStakingFeeError = { error ->
-                    analyticsEventHandler.send(
-                        StakingAnalyticsEvent.StakeKitError(
-                            stakingError = error,
-                        ),
-                    )
+                onStakingFeeError = {
                     stateController.update(AddStakingErrorTransformer())
                     updateNotifications(GetFeeError.UnknownError)
                 },
@@ -338,12 +333,6 @@ internal class StakingViewModel @Inject constructor(
                         transactionsInProgress.addAll(constructedTransactions)
                     },
                     onConstructError = { error ->
-                        Timber.e(error.toString())
-                        analyticsEventHandler.send(
-                            StakingAnalyticsEvent.StakeKitError(
-                                stakingError = error,
-                            ),
-                        )
                         stakingEventFactory.createStakingErrorAlert(error)
                         stateController.update(SetConfirmationStateResetAssentTransformer)
                     },

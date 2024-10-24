@@ -4,7 +4,6 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.model.PendingTransaction
 import com.tangem.domain.staking.model.SubmitHashData
@@ -20,7 +19,6 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvent
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isSolanaWithdraw
@@ -46,7 +44,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private val submitHashUseCase: SubmitHashUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
     private val savePendingTransactionUseCase: SavePendingTransactionUseCase,
-    private val analyticsEventHandler: AnalyticsEventHandler,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val yield: Yield,
@@ -198,11 +195,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 type = action?.type,
             ),
         ).getOrElse {
-            analyticsEventHandler.send(
-                StakingAnalyticsEvent.StakeKitError(
-                    stakingError = it,
-                ),
-            )
             onConstructError(it)
             return emptyList()
         }
@@ -254,12 +246,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                         pendingTransaction = pendingTransaction,
                     ),
                 )
-                    .onLeft { error ->
-                        analyticsEventHandler.send(
-                            StakingAnalyticsEvent.StakeKitError(
-                                stakingError = error,
-                            ),
-                        )
+                    .onLeft {
                         saveUnsubmittedHashUseCase.invoke(
                             transactionId = transaction.id,
                             transactionHash = transactionHash,
