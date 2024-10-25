@@ -791,8 +791,6 @@ internal class StakingViewModel @Inject constructor(
                             getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
                         cryptoCurrencyStatus = status
 
-                        Timber.e(cryptoCurrencyStatus.toString())
-
                         setupApprovalNeeded()
                         setupIsAnyTokenStaked()
                         checkIfSubtractAvailable()
@@ -832,7 +830,6 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private fun subscribeOnStepChanges() {
-        stepChangesJobHolder.cancel()
         uiState
             .distinctUntilChangedBy { it.currentStep }
             .onEach {
