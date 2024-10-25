@@ -8,9 +8,9 @@ import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
@@ -51,7 +51,7 @@ interface ApplicationEntryPoint {
 
     fun getAppStateHolder(): AppStateHolder
 
-    fun getAssetLoader(): AssetLoader
+    fun getIssuersConfigStorage(): IssuersConfigStorage
 
     fun getFeatureTogglesManager(): FeatureTogglesManager
 
