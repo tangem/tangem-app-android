@@ -6,7 +6,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.wallet.CreateWalletResponse
-import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
+import com.tangem.sdk.api.CreateProductWalletTaskResponse
 
 interface MockContent {
 

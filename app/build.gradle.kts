@@ -90,6 +90,7 @@ dependencies {
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.libs.tangemSdkApi)
 
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
@@ -148,6 +149,7 @@ dependencies {
     implementation(projects.features.markets.impl)
     implementation(projects.features.onramp.api)
     implementation(projects.features.onramp.impl)
+    implementation(projects.features.onboardingLegacy)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)

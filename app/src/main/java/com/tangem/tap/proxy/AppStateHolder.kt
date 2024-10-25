@@ -9,7 +9,7 @@ import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.sdk.TangemSdkManager
+import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import org.rekotlin.Action
 import org.rekotlin.Store

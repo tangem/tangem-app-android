@@ -6,6 +6,8 @@ import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.blockchain.common.Blockchain as SdkBlockchain
 import com.tangem.blockchain.common.Token as SdkToken
 
+typealias CryptoCurrencyName = String
+
 sealed interface Currency {
     val blockchain: SdkBlockchain
     val currencySymbol: CryptoCurrencyName

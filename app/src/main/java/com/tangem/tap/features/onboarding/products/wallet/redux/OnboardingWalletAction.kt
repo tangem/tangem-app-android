@@ -6,7 +6,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.common.card.Card
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
-import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
+import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
