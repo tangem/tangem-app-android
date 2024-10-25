@@ -9,7 +9,6 @@ import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
-import com.tangem.domain.staking.model.PendingTransaction
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
@@ -120,7 +119,6 @@ internal sealed class StakingStates {
             val transactionDoneState: TransactionDoneState,
             val isApprovalNeeded: Boolean,
             val reduceAmountBy: BigDecimal?,
-            val possiblePendingTransaction: PendingTransaction?,
         ) : ConfirmationState()
 
         data class Empty(
