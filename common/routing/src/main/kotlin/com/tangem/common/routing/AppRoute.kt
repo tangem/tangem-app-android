@@ -288,4 +288,7 @@ sealed class AppRoute(val path: String) : Route {
             val source: String,
         )
     }
+
+    @Serializable
+    data object Onramp : AppRoute(path = "/onramp")
 }

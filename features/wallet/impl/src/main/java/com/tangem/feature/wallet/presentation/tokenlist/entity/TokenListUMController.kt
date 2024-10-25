@@ -1,8 +1,5 @@
 package com.tangem.feature.wallet.presentation.tokenlist.entity
 
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.TokensListItemState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +19,7 @@ internal class TokenListUMController @Inject constructor() {
 
     private val _state: MutableStateFlow<TokenListUM> = MutableStateFlow(
         value = TokenListUM(
-            items = persistentListOf(createInitialSearchBar()),
+            items = persistentListOf(),
             isBalanceHidden = false,
         ),
     )
@@ -38,17 +35,7 @@ internal class TokenListUMController @Inject constructor() {
     }
 
     /** Get search bar if it exists */
-    fun getSearchBar(): TokensListItemState.SearchBar? = _state.value.getSearchBar()
-
-    private fun createInitialSearchBar(): TokensListItemState.SearchBar {
-        return TokensListItemState.SearchBar(
-            searchBarUM = SearchBarUM(
-                placeholderText = resourceReference(id = R.string.common_search),
-                query = "",
-                onQueryChange = {},
-                isActive = false,
-                onActiveChange = {},
-            ),
-        )
+    fun getSearchBar(): TokensListItemState.SearchBar? {
+        return _state.value.getSearchBar()
     }
 }
