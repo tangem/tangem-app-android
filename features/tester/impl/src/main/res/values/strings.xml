@@ -3,10 +3,12 @@
     <string name="tester_menu" translatable="false">Tester menu</string>
     <string name="feature_toggles" translatable="false">Feature toggles</string>
     <string name="feature_toggles_custom_setup_warning_title" translatable="false">Custom setup</string>
-    <string name="feature_toggles_custom_setup_warning_description" translatable="false">Feature toggles differs from v%s config</string>
+    <string name="feature_toggles_custom_setup_warning_description" translatable="false">Toggles differs from v%s config</string>
     <string name="restart_app" translatable="false">Restart app</string>
     <string name="environment_toggles" translatable="false">Environment toggles</string>
     <string name="tester_actions" translatable="false">Tester actions</string>
     <string name="hide_all_currencies" translatable="false">Hide all currencies</string>
     <string name="toggle_app_theme" translatable="false">Toggle app theme - %s</string>
+    <string name="excluded_blockchains" translatable="false">Excluded blockchains</string>
+    <string name="excluded_blockchains_search_placeholder" translatable="false">Filter by name or symbol</string>
 </resources>
