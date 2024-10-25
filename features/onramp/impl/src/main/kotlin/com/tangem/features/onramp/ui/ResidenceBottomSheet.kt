@@ -27,13 +27,13 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.onramp.component.ResidenceComponent
-import com.tangem.features.onramp.component.preview.PreviewResidenceComponent
-import com.tangem.features.onramp.entity.ResidenceUM
+import com.tangem.features.onramp.component.ConfirmResidencyComponent
+import com.tangem.features.onramp.component.preview.PreviewConfirmResidencyComponent
+import com.tangem.features.onramp.entity.ConfirmResidencyUM
 import com.tangem.features.onramp.impl.R
 
 @Composable
-internal fun ResidenceBottomSheet(config: TangemBottomSheetConfig, content: @Composable (Modifier) -> Unit) {
+internal fun ConfirmResidencyBottomSheet(config: TangemBottomSheetConfig, content: @Composable (Modifier) -> Unit) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = config,
         addBottomInsets = true,
@@ -62,7 +62,7 @@ private fun Title(modifier: Modifier = Modifier) {
 }
 
 @Composable
-internal fun ResidenceBottomSheetContent(model: ResidenceUM, modifier: Modifier = Modifier) {
+internal fun ConfirmResidencyBottomSheetContent(model: ConfirmResidencyUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         CountryContent(
             modifier = Modifier
@@ -134,28 +134,28 @@ private fun CountryContent(name: String, flagUrl: String, isCountrySupported: Bo
 @Composable
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun Preview_ResidenceBottomSheet(
-    @PreviewParameter(ResidenceComponentPreviewProvider::class) component: ResidenceComponent,
+private fun Preview_ConfirmResidencyBottomSheet(
+    @PreviewParameter(ConfirmResidencyComponentPreviewProvider::class) component: ConfirmResidencyComponent,
 ) {
     TangemThemePreview {
         component.BottomSheet()
     }
 }
 
-private class ResidenceComponentPreviewProvider : PreviewParameterProvider<ResidenceComponent> {
-    override val values: Sequence<ResidenceComponent>
+private class ConfirmResidencyComponentPreviewProvider : PreviewParameterProvider<ConfirmResidencyComponent> {
+    override val values: Sequence<ConfirmResidencyComponent>
         get() = sequenceOf(
-            PreviewResidenceComponent(),
-            PreviewResidenceComponent(
-                initialState = ResidenceUM(
+            PreviewConfirmResidencyComponent(),
+            PreviewConfirmResidencyComponent(
+                initialState = ConfirmResidencyUM(
                     country = "Russia",
                     countryFlagUrl = "https://hatscripts.github.io/circle-flags/flags/ru.svg",
                     isCountrySupported = false,
-                    primaryButtonConfig = ResidenceUM.ActionButtonConfig(
+                    primaryButtonConfig = ConfirmResidencyUM.ActionButtonConfig(
                         onClick = {},
                         text = stringReference("Close"),
                     ),
-                    secondaryButtonConfig = ResidenceUM.ActionButtonConfig(
+                    secondaryButtonConfig = ConfirmResidencyUM.ActionButtonConfig(
                         onClick = {},
                         text = stringReference("Change"),
                     ),

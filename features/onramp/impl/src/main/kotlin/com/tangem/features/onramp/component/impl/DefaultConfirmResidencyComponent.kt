@@ -8,20 +8,20 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.features.onramp.component.ResidenceComponent
-import com.tangem.features.onramp.model.ResidenceModel
-import com.tangem.features.onramp.ui.ResidenceBottomSheet
-import com.tangem.features.onramp.ui.ResidenceBottomSheetContent
+import com.tangem.features.onramp.component.ConfirmResidencyComponent
+import com.tangem.features.onramp.model.ConfirmResidencyModel
+import com.tangem.features.onramp.ui.ConfirmResidencyBottomSheet
+import com.tangem.features.onramp.ui.ConfirmResidencyBottomSheetContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-internal class DefaultResidenceComponent @AssistedInject constructor(
+internal class DefaultConfirmResidencyComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted private val params: ResidenceComponent.Params,
-) : ResidenceComponent, AppComponentContext by context {
+    @Assisted private val params: ConfirmResidencyComponent.Params,
+) : ConfirmResidencyComponent, AppComponentContext by context {
 
-    private val model: ResidenceModel = getOrCreateModel(params)
+    private val model: ConfirmResidencyModel = getOrCreateModel(params)
 
     override fun dismiss() {
         params.onDismiss()
@@ -37,16 +37,19 @@ internal class DefaultResidenceComponent @AssistedInject constructor(
                 content = TangemBottomSheetConfigContent.Empty,
             )
         }
-        ResidenceBottomSheet(
+        ConfirmResidencyBottomSheet(
             config = bottomSheetConfig,
             content = { modifier ->
-                ResidenceBottomSheetContent(model = state, modifier = modifier)
+                ConfirmResidencyBottomSheetContent(model = state, modifier = modifier)
             },
         )
     }
 
     @AssistedFactory
-    interface Factory : ResidenceComponent.Factory {
-        override fun create(context: AppComponentContext, params: ResidenceComponent.Params): DefaultResidenceComponent
+    interface Factory : ConfirmResidencyComponent.Factory {
+        override fun create(
+            context: AppComponentContext,
+            params: ConfirmResidencyComponent.Params,
+        ): DefaultConfirmResidencyComponent
     }
 }

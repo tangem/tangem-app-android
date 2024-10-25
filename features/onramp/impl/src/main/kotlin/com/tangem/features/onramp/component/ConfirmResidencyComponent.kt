@@ -3,7 +3,7 @@ package com.tangem.features.onramp.component
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 
-internal interface ResidenceComponent : ComposableBottomSheetComponent {
+internal interface ConfirmResidencyComponent : ComposableBottomSheetComponent {
 
     data class Params(
         val countryName: String,
@@ -12,5 +12,5 @@ internal interface ResidenceComponent : ComposableBottomSheetComponent {
         val onDismiss: () -> Unit,
     )
 
-    interface Factory : ComponentFactory<Params, ResidenceComponent>
+    interface Factory : ComponentFactory<Params, ConfirmResidencyComponent>
 }

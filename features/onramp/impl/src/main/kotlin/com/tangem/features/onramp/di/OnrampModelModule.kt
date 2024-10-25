@@ -3,7 +3,7 @@ package com.tangem.features.onramp.di
 import com.tangem.core.decompose.di.DecomposeComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.onramp.model.OnrampModel
-import com.tangem.features.onramp.model.ResidenceModel
+import com.tangem.features.onramp.model.ConfirmResidencyModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -12,7 +12,7 @@ import dagger.multibindings.IntoMap
 
 @Module
 @InstallIn(DecomposeComponent::class)
-internal interface ModelModule {
+internal interface OnrampModelModule {
 
     @Binds
     @IntoMap
@@ -21,6 +21,6 @@ internal interface ModelModule {
 
     @Binds
     @IntoMap
-    @ClassKey(ResidenceModel::class)
-    fun provideResidenceModel(model: ResidenceModel): Model
+    @ClassKey(ConfirmResidencyModel::class)
+    fun provideConfirmResidencyModel(model: ConfirmResidencyModel): Model
 }

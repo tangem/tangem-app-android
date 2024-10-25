@@ -6,23 +6,23 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.features.onramp.component.ResidenceComponent
-import com.tangem.features.onramp.entity.ResidenceUM
-import com.tangem.features.onramp.ui.ResidenceBottomSheet
-import com.tangem.features.onramp.ui.ResidenceBottomSheetContent
+import com.tangem.features.onramp.component.ConfirmResidencyComponent
+import com.tangem.features.onramp.entity.ConfirmResidencyUM
+import com.tangem.features.onramp.ui.ConfirmResidencyBottomSheet
+import com.tangem.features.onramp.ui.ConfirmResidencyBottomSheetContent
 import kotlinx.coroutines.flow.MutableStateFlow
 
-internal class PreviewResidenceComponent(
-    initialState: ResidenceUM = ResidenceUM(
+internal class PreviewConfirmResidencyComponent(
+    initialState: ConfirmResidencyUM = ConfirmResidencyUM(
         country = "United States",
         countryFlagUrl = "https://hatscripts.github.io/circle-flags/flags/us.svg",
         isCountrySupported = true,
-        primaryButtonConfig = ResidenceUM.ActionButtonConfig(onClick = {}, text = stringReference("Confirm")),
-        secondaryButtonConfig = ResidenceUM.ActionButtonConfig(onClick = {}, text = stringReference("Change")),
+        primaryButtonConfig = ConfirmResidencyUM.ActionButtonConfig(onClick = {}, text = stringReference("Confirm")),
+        secondaryButtonConfig = ConfirmResidencyUM.ActionButtonConfig(onClick = {}, text = stringReference("Change")),
     ),
-) : ResidenceComponent {
+) : ConfirmResidencyComponent {
 
-    private val previewState: MutableStateFlow<ResidenceUM> = MutableStateFlow(initialState)
+    private val previewState: MutableStateFlow<ConfirmResidencyUM> = MutableStateFlow(initialState)
 
     override fun dismiss() {
         /* no-op */
@@ -36,10 +36,10 @@ internal class PreviewResidenceComponent(
             onDismissRequest = ::dismiss,
             content = TangemBottomSheetConfigContent.Empty,
         )
-        ResidenceBottomSheet(
+        ConfirmResidencyBottomSheet(
             config = bottomSheetConfig,
             content = { modifier ->
-                ResidenceBottomSheetContent(model = state, modifier = modifier)
+                ConfirmResidencyBottomSheetContent(model = state, modifier = modifier)
             },
         )
     }

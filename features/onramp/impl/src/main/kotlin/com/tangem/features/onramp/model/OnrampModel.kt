@@ -28,7 +28,7 @@ internal class OnrampModel @Inject constructor(
     init {
         modelScope.launch {
             delay(1500)
-            bottomSheetNavigation.activate(OnrampBottomSheetConfig.Residence)
+            bottomSheetNavigation.activate(OnrampBottomSheetConfig.ConfirmResidency)
         }
     }
 

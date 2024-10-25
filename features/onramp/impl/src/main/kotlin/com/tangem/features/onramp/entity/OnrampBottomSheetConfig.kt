@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 internal sealed class OnrampBottomSheetConfig {
 
     @Serializable
-    data object Residence : OnrampBottomSheetConfig()
+    data object ConfirmResidency : OnrampBottomSheetConfig()
 }

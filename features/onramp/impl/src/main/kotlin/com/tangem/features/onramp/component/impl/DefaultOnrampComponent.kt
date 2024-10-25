@@ -13,7 +13,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.onramp.component.OnrampComponent
-import com.tangem.features.onramp.component.ResidenceComponent
+import com.tangem.features.onramp.component.ConfirmResidencyComponent
 import com.tangem.features.onramp.entity.OnrampBottomSheetConfig
 import com.tangem.features.onramp.model.OnrampModel
 import dagger.assisted.Assisted
@@ -23,11 +23,11 @@ import dagger.assisted.AssistedInject
 internal class DefaultOnrampComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: OnrampComponent.Params,
-    private val residenceComponentFactory: ResidenceComponent.Factory,
+    private val confirmResidencyComponentFactory: ConfirmResidencyComponent.Factory,
 ) : OnrampComponent, AppComponentContext by context {
 
     private val model: OnrampModel = getOrCreateModel(params)
-    private val residenceBottomSheetSlot = childSlot(
+    private val confirmResidencyBottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
         serializer = null,
         handleBackButton = false,
@@ -36,7 +36,7 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val bottomSheet by residenceBottomSheetSlot.subscribeAsState()
+        val bottomSheet by confirmResidencyBottomSheetSlot.subscribeAsState()
         BackHandler(onBack = router::pop)
 
         bottomSheet.child?.instance?.BottomSheet()
@@ -46,9 +46,9 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
         config: OnrampBottomSheetConfig,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
-        OnrampBottomSheetConfig.Residence -> residenceComponentFactory.create(
+        OnrampBottomSheetConfig.ConfirmResidency -> confirmResidencyComponentFactory.create(
             context = childByContext(componentContext),
-            params = ResidenceComponent.Params(
+            params = ConfirmResidencyComponent.Params(
                 countryName = "United States",
                 isOnrampSupported = true,
                 countryFlagUrl = "https://hatscripts.github.io/circle-flags/flags/us.svg",

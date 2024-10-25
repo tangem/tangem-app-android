@@ -2,7 +2,7 @@ package com.tangem.features.onramp.entity
 
 import com.tangem.core.ui.extensions.TextReference
 
-data class ResidenceUM(
+data class ConfirmResidencyUM(
     val country: String,
     val countryFlagUrl: String,
     val isCountrySupported: Boolean,
