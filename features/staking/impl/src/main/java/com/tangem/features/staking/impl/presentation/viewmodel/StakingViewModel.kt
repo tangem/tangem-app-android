@@ -14,8 +14,8 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -108,6 +108,7 @@ internal class StakingViewModel @Inject constructor(
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val paramsInterceptorHolder: ParamsInterceptorHolder,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
@@ -203,7 +204,7 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        Analytics.removeParamsInterceptor(StakingParamsInterceptor.ID)
+        paramsInterceptorHolder.removeParamsInterceptor(StakingParamsInterceptor.ID)
         approvalJobHolder.cancel()
         feeJobHolder.cancel()
         sendTransactionJobHolder.cancel()
@@ -822,7 +823,9 @@ internal class StakingViewModel @Inject constructor(
                         if (!isInitialInfoAnalyticSent) {
                             isInitialInfoAnalyticSent = true
                             val balances = status.value.yieldBalance as? YieldBalance.Data
-                            Analytics.addParamsInterceptor(StakingParamsInterceptor(status.currency.symbol))
+                            paramsInterceptorHolder.addParamsInterceptor(
+                                interceptor = StakingParamsInterceptor(status.currency.symbol),
+                            )
                             analyticsEventHandler.send(
                                 StakingAnalyticsEvent.StakingInfoScreenOpened(
                                     validatorsCount = balances?.getValidatorsCount() ?: 0,
