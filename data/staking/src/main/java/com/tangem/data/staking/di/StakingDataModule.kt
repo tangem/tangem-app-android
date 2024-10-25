@@ -71,9 +71,13 @@ internal object StakingDataModule {
 
     @Provides
     @Singleton
-    fun provideStakingActionRepository(stakingActionsStore: StakingActionsStore): StakingActionRepository {
+    fun provideStakingActionRepository(
+        stakingActionsStore: StakingActionsStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): StakingActionRepository {
         return DefaultStakingActionRepository(
             stakingActionsStore = stakingActionsStore,
+            dispatchers = dispatchers,
         )
     }
 
