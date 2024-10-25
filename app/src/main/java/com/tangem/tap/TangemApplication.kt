@@ -33,14 +33,11 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.feedback.GetCardInfoUseCase
-import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -54,10 +51,8 @@ import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -101,9 +96,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val walletConnect2Repository: WalletConnect2Repository
         get() = entryPoint.getWalletConnect2Repository()
 
-    private val walletConnectSessionsRepository: WalletConnectSessionsRepository
-        get() = entryPoint.getWalletConnectSessionsRepository()
-
     private val scanCardProcessor: ScanCardProcessor
         get() = entryPoint.getScanCardProcessor()
 
@@ -112,12 +104,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val walletManagersFacade: WalletManagersFacade
         get() = entryPoint.getWalletManagersFacade()
-
-    private val networksRepository: NetworksRepository
-        get() = entryPoint.getNetworksRepository()
-
-    private val currenciesRepository: CurrenciesRepository
-        get() = entryPoint.getCurrenciesRepository()
 
     private val appThemeModeRepository: AppThemeModeRepository
         get() = entryPoint.getAppThemeModeRepository()
@@ -163,9 +149,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase
         get() = entryPoint.getSendFeedbackEmailUseCase()
-
-    private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase
-        get() = entryPoint.getSaveBlockchainErrorUseCase()
 
     private val getCardInfoUseCase: GetCardInfoUseCase
         get() = entryPoint.getGetCardInfoUseCase()
@@ -215,10 +198,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         runBlocking {
             featureTogglesManager.init()
 
-            val config = environmentConfigStorage.initialize()
-            store.dispatch(GlobalAction.SetConfigManager(environmentConfigStorage))
-
-            initWithConfigDependency(environmentConfig = config)
+            initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
         }
 
         loadNativeLibraries()
@@ -248,13 +228,10 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     networkConnectionManager = networkConnectionManager,
                     cardScanningFeatureToggles = cardScanningFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
-                    walletConnectSessionsRepository = walletConnectSessionsRepository,
                     scanCardProcessor = scanCardProcessor,
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
                     appStateHolder = appStateHolder,
-                    networksRepository = networksRepository,
-                    currenciesRepository = currenciesRepository,
                     appThemeModeRepository = appThemeModeRepository,
                     balanceHidingRepository = balanceHidingRepository,
                     walletsRepository = walletsRepository,
@@ -263,10 +240,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
                     generateWalletNameUseCase = generateWalletNameUseCase,
                     cardRepository = cardRepository,
-                    tangemSdkLogger = tangemSdkLogger,
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
-                    saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,
                     sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
                     getCardInfoUseCase = getCardInfoUseCase,
                     issuersConfigStorage = issuersConfigStorage,
@@ -277,6 +252,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     homeFeatureToggles = homeFeatureToggles,
                     getUserCountryUseCase = getUserCountryUseCase,
                     onrampFeatureToggles = onrampFeatureToggles,
+                    environmentConfigStorage = environmentConfigStorage,
                 ),
             ),
         )
