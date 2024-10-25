@@ -285,6 +285,18 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
                     onDerivationPathSelected = {},
                 ),
             ),
+            PreviewCustomTokenSelectorComponent(
+                params = CustomTokenSelectorComponent.Params.NetworkSelector(
+                    userWalletId = UserWalletId(stringValue = "321"),
+                    selectedNetwork = SelectedNetwork(
+                        id = Network.ID(value = "0"),
+                        name = "Ethereum",
+                        derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0"),
+                        canHandleTokens = true,
+                    ),
+                    onNetworkSelected = {},
+                ),
+            ),
         )
 }
 // endregion Preview
