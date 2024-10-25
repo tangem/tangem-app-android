@@ -13,17 +13,9 @@ object DaggerGraphReducer {
     private fun internalReduce(action: DaggerGraphAction, state: AppState): DaggerGraphState {
         return when (action) {
             is DaggerGraphAction.SetActivityDependencies -> state.daggerGraphState.copy(
-                testerRouter = action.testerRouter,
                 scanCardUseCase = action.scanCardUseCase,
-                walletRouter = action.walletRouter,
                 walletConnectInteractor = action.walletConnectInteractor,
-                tokenDetailsRouter = action.tokenDetailsRouter,
                 cardSdkConfigRepository = action.cardSdkConfigRepository,
-                sendRouter = action.sendRouter,
-                qrScanningRouter = action.qrScanningRouter,
-                emailSender = action.emailSender,
-                stakingRouter = action.stakingRouter,
-                pushNotificationsRouter = action.pushNotificationsRouter,
             )
         }
     }
