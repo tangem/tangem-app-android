@@ -6,10 +6,12 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
+import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
@@ -32,6 +34,13 @@ interface StakingRepository {
     suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield
 
     fun getStakingAvailability(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): StakingAvailability
+
+    suspend fun getActions(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+        networkType: NetworkType,
+        stakingActionStatus: StakingActionStatus,
+    ): List<StakingAction>
 
     suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
