@@ -68,6 +68,7 @@ internal class ManageTokensListManager @Inject constructor(
         dispatchers = dispatchers,
         actions = this,
         scopeProvider = Provider { scope },
+        sourceProvider = Provider { source },
         clipboardManager = clipboardManager,
     )
 
