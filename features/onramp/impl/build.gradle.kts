@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
     id("configuration")
@@ -23,11 +24,11 @@ dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
-    /* AndroidX */
+    /** AndroidX */
     implementation(deps.androidx.activity.compose)
     implementation(deps.lifecycle.compose)
 
-    /* Compose */
+    /** Compose */
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.accompanist.systemUiController)
@@ -35,4 +36,8 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.coil)
+    implementation(deps.compose.material)
+
+    /** Other */
+    implementation(deps.decompose.ext.compose)
 }
