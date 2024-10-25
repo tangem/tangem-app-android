@@ -56,8 +56,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             restoreAppCurrency()
         }
         is GlobalAction.ExchangeManager.Init -> {
-            val appStateSafe = appState() ?: return
-            val config = appStateSafe.globalState.environmentConfigStorage?.getConfigSync() ?: return
+            val config = store.inject(DaggerGraphState::environmentConfigStorage).getConfigSync()
 
             scope.launch {
                 val scanResponseProvider: () -> ScanResponse? = {
