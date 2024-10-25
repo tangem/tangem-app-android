@@ -7,11 +7,11 @@ import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 
 data class PendingActionRequestBody(
-    @Json(name = "type12")
+    @Json(name = "type")
     val type: StakingActionType,
-    @Json(name = "integrat12ionId")
+    @Json(name = "integrationId")
     val integrationId: String,
-    @Json(name = "passthro1ugh")
+    @Json(name = "passthrough")
     val passthrough: String,
     @Json(name = "args")
     val args: ActionRequestBodyArgs,
@@ -20,11 +20,11 @@ data class PendingActionRequestBody(
 )
 
 data class ActionRequestBody(
-    @Json(name = "integrat12ionId")
+    @Json(name = "integrationId")
     val integrationId: String,
-    @Json(name = "addres12ses")
+    @Json(name = "addresses")
     val addresses: Address,
-    @Json(name = "ar12gs")
+    @Json(name = "args")
     val args: ActionRequestBodyArgs,
     @Json(name = "referralCode")
     val referralCode: String? = null,
