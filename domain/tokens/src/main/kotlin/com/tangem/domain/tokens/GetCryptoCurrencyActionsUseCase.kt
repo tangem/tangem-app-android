@@ -12,7 +12,6 @@ import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.markets.MarketsFeatureToggles
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
@@ -34,7 +33,6 @@ class GetCryptoCurrencyActionsUseCase(
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
     private val stakingFeatureToggles: StakingFeatureToggles,
-    private val marketsFeatureToggles: MarketsFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -116,7 +114,7 @@ class GetCryptoCurrencyActionsUseCase(
 
         // markets
         // not a custom token
-        if (marketsFeatureToggles.isFeatureEnabled && cryptoCurrencyStatus.currency.id.rawCurrencyId != null) {
+        if (cryptoCurrencyStatus.currency.id.rawCurrencyId != null) {
             activeList.add(TokenActionsState.ActionState.Analytics(ScenarioUnavailabilityReason.None))
         }
 
