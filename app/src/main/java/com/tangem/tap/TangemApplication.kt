@@ -20,10 +20,10 @@ import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
-import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
@@ -86,8 +86,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val environmentConfigStorage: EnvironmentConfigStorage
         get() = entryPoint.getEnvironmentConfigStorage()
 
-    private val assetLoader: AssetLoader
-        get() = entryPoint.getAssetLoader()
+    private val issuersConfigStorage: IssuersConfigStorage
+        get() = entryPoint.getIssuersConfigStorage()
 
     private val featureTogglesManager: FeatureTogglesManager
         get() = entryPoint.getFeatureTogglesManager()
@@ -268,7 +268,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,
                     sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
                     getCardInfoUseCase = getCardInfoUseCase,
-                    assetLoader = assetLoader,
+                    issuersConfigStorage = issuersConfigStorage,
                     urlOpener = urlOpener,
                     shareManager = shareManager,
                     appRouter = appRouter,

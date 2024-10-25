@@ -7,8 +7,8 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
@@ -79,7 +79,7 @@ data class DaggerGraphState(
     val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase? = null,
     val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase? = null,
     val getCardInfoUseCase: GetCardInfoUseCase? = null,
-    val assetLoader: AssetLoader? = null,
+    val issuersConfigStorage: IssuersConfigStorage? = null,
     val stakingRouter: StakingRouter? = null,
     val urlOpener: UrlOpener? = null,
     val shareManager: ShareManager? = null,
