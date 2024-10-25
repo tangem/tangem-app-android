@@ -47,6 +47,5 @@ internal object ConfirmationStatePreviewData {
         isApprovalNeeded = false,
         reduceAmountBy = null,
         pendingActions = null,
-        possiblePendingTransaction = null,
     )
 }
