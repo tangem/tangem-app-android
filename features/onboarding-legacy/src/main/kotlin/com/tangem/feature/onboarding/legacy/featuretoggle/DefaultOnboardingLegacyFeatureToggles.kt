@@ -7,5 +7,5 @@ internal class DefaultOnboardingLegacyFeatureToggles @Inject constructor(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : OnboardingLegacyFeatureToggles {
     override val isRewrittenOnboardingCodeInUse: Boolean
-        get() = featureTogglesManager.isFeatureEnabled("REWRITTEN_ONBOARDING_CODE")
+        get() = featureTogglesManager.isFeatureEnabled("ONBOARDING_CODE_REFACTORING_ENABLED")
 }
