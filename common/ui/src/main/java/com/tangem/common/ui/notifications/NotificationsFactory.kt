@@ -66,7 +66,7 @@ object NotificationsFactory {
             add(
                 NotificationUM.Error.ReserveAmount(
                     BigDecimalFormatter.formatCryptoAmount(
-                        cryptoAmount = sendingAmount,
+                        cryptoAmount = reserveAmount,
                         cryptoCurrency = cryptoCurrency,
                     ),
                 ),
