@@ -117,6 +117,15 @@ class MockStakingRepository : StakingRepository {
         cryptoCurrency: CryptoCurrency,
     ): StakingAvailability = StakingAvailability.Unavailable
 
+    override suspend fun getActions(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+        networkType: NetworkType,
+        stakingActionStatus: StakingActionStatus,
+    ): List<StakingAction> {
+        return emptyList()
+    }
+
     override suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
