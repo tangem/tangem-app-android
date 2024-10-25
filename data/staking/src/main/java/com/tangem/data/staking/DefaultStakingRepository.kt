@@ -25,19 +25,19 @@ import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConv
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.*
+import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.tron.TronStakeKitTransaction
 import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.stakekit.NetworkType
-import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.YieldBalance
-import com.tangem.domain.staking.model.stakekit.YieldBalanceList
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
@@ -102,6 +102,8 @@ internal class DefaultStakingRepository(
     private val yieldBalanceListConverter = YieldBalanceListConverter(yieldBalanceConverter)
 
     private val tronStakeKitTransactionAdapter by lazy { moshi.adapter(TronStakeKitTransaction::class.java) }
+    private val networkTypeAdapter by lazy { moshi.adapter(NetworkTypeDTO::class.java) }
+    private val stakingActionStatusAdapter by lazy { moshi.adapter(StakingActionStatusDTO::class.java) }
 
     override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = with(cryptoCurrencyId) {
         rawNetworkId.plus(rawCurrencyId)
@@ -138,6 +140,40 @@ internal class DefaultStakingRepository(
 
             prefetchedYield ?: error("Staking is unavailable")
         }
+    }
+
+    override suspend fun getActions(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+        networkType: NetworkType,
+        stakingActionStatus: StakingActionStatus,
+    ): List<StakingAction> {
+        return withContext(dispatchers.io) {
+            val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network).orEmpty()
+
+            val networkTypeDto = networkTypeConverter.convertBack(networkType)
+            val networkTypeString = networkTypeDto.extractJsonName()
+
+            val actionStatusDTO = actionStatusConverter.convertBack(stakingActionStatus)
+            val actionStatusString = actionStatusDTO.extractJsonName()
+
+            enterActionResponseConverter.convertListIgnoreErrors(
+                input = stakeKitApi.getActions(
+                    walletAddress = address,
+                    network = networkTypeString,
+                    status = actionStatusString,
+                ).getOrThrow().data,
+                onError = { Timber.e("Error converting staking actions list: $it") },
+            )
+        }
+    }
+
+    private fun NetworkTypeDTO.extractJsonName(): String {
+        return networkTypeAdapter.toJson(this).replace("\"", "")
+    }
+
+    private fun StakingActionStatusDTO.extractJsonName(): String {
+        return stakingActionStatusAdapter.toJson(this).replace("\"", "")
     }
 
     override suspend fun getEntryInfo(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingEntryInfo {
