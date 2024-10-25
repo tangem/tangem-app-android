@@ -10,11 +10,11 @@ sealed class StakingError {
         val methodName: String?,
     ) : StakingError()
 
-    // endregion
-
     data class StakeKitUnknownError(
         val jsonString: String? = null,
     ) : StakingError()
 
-    data class UnknownError(val message: String?) : StakingError()
+    // endregion
+
+    data class DomainError(val message: String?) : StakingError()
 }

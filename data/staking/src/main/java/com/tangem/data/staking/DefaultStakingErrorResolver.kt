@@ -16,10 +16,20 @@ internal class DefaultStakingErrorResolver(
         val error = if (throwable is ApiResponseError.HttpException) {
             stakeKitErrorConverter.convert(throwable.errorBody.orEmpty())
         } else {
-            StakingError.UnknownError(throwable.message)
+            StakingError.DomainError(throwable.message)
         }
 
-        analyticsEventHandler.send(StakingAnalyticsEvent.StakeKitError(error))
+        when (error) {
+            is StakingError.StakeKitApiError -> {
+                analyticsEventHandler.send(StakingAnalyticsEvent.StakeKitApiError(error))
+            }
+            is StakingError.StakeKitUnknownError -> {
+                analyticsEventHandler.send(StakingAnalyticsEvent.StakeKitApiUnknownError(error))
+            }
+            else -> {
+                // intentionally do nothing
+            }
+        }
 
         return error
     }

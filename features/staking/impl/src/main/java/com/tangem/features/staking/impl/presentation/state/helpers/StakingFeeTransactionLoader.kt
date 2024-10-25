@@ -135,7 +135,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
             }
 
             if (result.isNullOrEmpty()) {
-                onStakingFeeError(StakingError.UnknownError("Error estimating fee"))
+                onStakingFeeError(StakingError.DomainError("Error estimating fee"))
                 return
             }
 

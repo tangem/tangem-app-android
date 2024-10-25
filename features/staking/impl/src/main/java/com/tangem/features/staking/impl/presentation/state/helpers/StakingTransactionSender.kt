@@ -81,7 +81,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         )
 
         if (fullTransactionsData.isNullOrEmpty()) {
-            onConstructError(StakingError.UnknownError("fullTransactionsData is null or empty"))
+            onConstructError(StakingError.DomainError("fullTransactionsData is null or empty"))
             return
         }
 

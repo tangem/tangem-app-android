@@ -116,28 +116,23 @@ sealed class StakingAnalyticsEvent(
 
     data object ButtonExplore : StakingAnalyticsEvent(event = "Button - Explore")
 
-    data class StakeKitError(
-        val stakingError: StakingError,
+    data class StakeKitApiError(
+        val stakingError: StakingError.StakeKitApiError,
     ) : StakingAnalyticsEvent(
         event = "Errors",
-        params = when (stakingError) {
-            is StakingError.StakeKitUnknownError -> {
-                buildMap {
-                    addIfValueIsNotNull(AnalyticsParam.ERROR_DESCRIPTION, stakingError.jsonString)
-                }
-            }
-            is StakingError.StakeKitApiError -> {
-                buildMap {
-                    addIfValueIsNotNull(AnalyticsParam.ERROR_MESSAGE, stakingError.message)
-                    addIfValueIsNotNull(AnalyticsParam.ERROR_CODE, stakingError.code)
-                    addIfValueIsNotNull(AnalyticsParam.METHOD_NAME, stakingError.methodName)
-                }
-            }
-            is StakingError.UnknownError -> {
-                buildMap {
-                    addIfValueIsNotNull(AnalyticsParam.ERROR_MESSAGE, stakingError.message)
-                }
-            }
+        params = buildMap {
+            addIfValueIsNotNull(AnalyticsParam.ERROR_MESSAGE, stakingError.message)
+            addIfValueIsNotNull(AnalyticsParam.ERROR_CODE, stakingError.code)
+            addIfValueIsNotNull(AnalyticsParam.METHOD_NAME, stakingError.methodName)
+        },
+    )
+
+    data class StakeKitApiUnknownError(
+        val stakeKitUnknownError: StakingError.StakeKitUnknownError,
+    ) : StakingAnalyticsEvent(
+        event = "Errors",
+        params = buildMap {
+            addIfValueIsNotNull(AnalyticsParam.ERROR_DESCRIPTION, stakeKitUnknownError.jsonString)
         },
     )
 
@@ -153,8 +148,5 @@ sealed class StakingAnalyticsEvent(
 }
 
 enum class StakeScreenSource {
-    Info,
-    Amount,
-    Confirmation,
-    Validators,
+    Info, Amount, Confirmation, Validators,
 }
