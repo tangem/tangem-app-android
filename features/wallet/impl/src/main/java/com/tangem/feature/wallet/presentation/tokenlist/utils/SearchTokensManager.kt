@@ -23,7 +23,11 @@ internal class SearchTokensManager @Inject constructor() {
 
     suspend fun update(value: String) {
         coroutineScope {
-            withDebounce(jobHolder) { _query.value = value }
+            if (value.isEmpty()) {
+                _query.value = value
+            } else {
+                withDebounce(jobHolder) { _query.value = value }
+            }
         }
     }
 }
