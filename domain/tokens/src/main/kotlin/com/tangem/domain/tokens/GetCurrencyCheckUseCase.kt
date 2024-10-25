@@ -15,11 +15,19 @@ class GetCurrencyCheckUseCase(
         currencyStatus: CryptoCurrencyStatus,
         amount: BigDecimal?,
         fee: BigDecimal?,
+        recipientAddress: String? = null,
     ): CryptoCurrencyCheck {
         val network = currencyStatus.currency.network
         val dustValue = currencyChecksRepository.getDustValue(userWalletId, network)
         val reserveAmount = currencyChecksRepository.getReserveAmount(userWalletId, network)
         val existentialDeposit = currencyChecksRepository.getExistentialDeposit(userWalletId, network)
+        val isAccountFunded = recipientAddress?.let {
+            currencyChecksRepository.checkIfAccountFunded(
+                userWalletId,
+                network,
+                recipientAddress,
+            )
+        } ?: false
         val utxoAmountLimit = if (amount != null && fee != null) {
             currencyChecksRepository.checkUtxoAmountLimit(
                 userWalletId = userWalletId,
@@ -36,6 +44,7 @@ class GetCurrencyCheckUseCase(
             reserveAmount = reserveAmount,
             existentialDeposit = existentialDeposit,
             utxoAmountLimit = utxoAmountLimit,
+            isAccountFunded = isAccountFunded,
         )
     }
 }
