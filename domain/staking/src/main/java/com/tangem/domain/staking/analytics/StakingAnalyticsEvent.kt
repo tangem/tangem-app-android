@@ -2,6 +2,7 @@ package com.tangem.domain.staking.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.staking.analytics.StakingAnalyticsEvent.ButtonRewards.addIfValueIsNotNull
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 
@@ -119,20 +120,32 @@ sealed class StakingAnalyticsEvent(
         val stakingError: StakingError,
     ) : StakingAnalyticsEvent(
         event = "Errors",
-        params = mapOf(
-            when (stakingError) {
-                is StakingError.StakeKitUnknownError -> {
-                    AnalyticsParam.ERROR_DESCRIPTION to (stakingError.jsonString ?: "Unknown")
+        params = when (stakingError) {
+            is StakingError.StakeKitUnknownError -> {
+                buildMap {
+                    addIfValueIsNotNull(AnalyticsParam.ERROR_DESCRIPTION, stakingError.jsonString)
                 }
-                is StakingError.StakeKitApiError -> {
-                    AnalyticsParam.ERROR_MESSAGE to (stakingError.message ?: "Unknown")
+            }
+            is StakingError.StakeKitApiError -> {
+                buildMap {
+                    addIfValueIsNotNull(AnalyticsParam.ERROR_MESSAGE, stakingError.message)
+                    addIfValueIsNotNull(AnalyticsParam.ERROR_CODE, stakingError.code)
+                    addIfValueIsNotNull(AnalyticsParam.METHOD_NAME, stakingError.methodName)
                 }
-                is StakingError.UnknownError -> {
-                    AnalyticsParam.ERROR_MESSAGE to (stakingError.message ?: "Unknown")
+            }
+            is StakingError.UnknownError -> {
+                buildMap {
+                    addIfValueIsNotNull(AnalyticsParam.ERROR_MESSAGE, stakingError.message)
                 }
-            },
-        ),
+            }
+        },
     )
+
+    fun MutableMap<String, String>.addIfValueIsNotNull(key: String, value: Any?) {
+        if (value != null) {
+            put(key, value.toString())
+        }
+    }
 
     data object TransactionError : StakingAnalyticsEvent(
         event = "Error - Transaction Rejected",

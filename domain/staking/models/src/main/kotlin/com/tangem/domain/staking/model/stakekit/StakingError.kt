@@ -7,6 +7,7 @@ sealed class StakingError {
     data class StakeKitApiError(
         val message: String?,
         val code: Int?,
+        val methodName: String?,
     ) : StakingError()
 
     // endregion

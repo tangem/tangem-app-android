@@ -7,6 +7,8 @@ class StakeKitErrorResponse(
     val message: String? = null,
     @Json(name = "code")
     val code: Int? = null,
+    @Json(name = "path")
+    val path: String? = null,
 
     @Json(name = "details")
     val details: StakeKitErrorDetailsDTO? = null,
