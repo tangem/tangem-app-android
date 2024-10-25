@@ -26,5 +26,9 @@
     {
         "name": "ONRAMP_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "MAIN_ACTION_BUTTONS_ENABLED",
+        "version": "undefined"
     }
 ]
