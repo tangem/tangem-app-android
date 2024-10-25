@@ -47,6 +47,9 @@ dependencies {
     /** Feature Apis */
     implementation(projects.features.tester.api)
 
+    /* SDK */
+    implementation(deps.tangem.blockchain)
+
     /** Other modules */
     implementation(projects.common.routing)
     implementation(projects.libs.crypto)
