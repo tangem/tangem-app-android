@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.ui)
     implementation(projects.core.res)
+    implementation(projects.core.decompose)
 
     /** Tangem libraries */
     implementation(deps.tangem.card.core)
