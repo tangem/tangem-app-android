@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.tokenlist
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -22,10 +23,10 @@ internal class DefaultTokenListComponent @AssistedInject constructor(
     private val model: TokenListModel = getOrCreateModel(params)
 
     @Composable
-    override fun Content(modifier: Modifier) {
+    override fun Content(contentPadding: PaddingValues, modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
 
-        TokenList(state = state, modifier = modifier)
+        TokenList(state = state, contentPadding = contentPadding, modifier = modifier)
     }
 
     @AssistedFactory
