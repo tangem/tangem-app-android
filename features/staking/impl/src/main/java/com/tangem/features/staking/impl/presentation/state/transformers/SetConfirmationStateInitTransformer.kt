@@ -63,7 +63,6 @@ internal class SetConfirmationStateInitTransformer(
                 reduceAmountBy = null,
                 pendingAction = pendingAction,
                 pendingActions = pendingActions.takeIf { isComposePendingActions },
-                possiblePendingTransaction = null,
             ),
         )
     }
