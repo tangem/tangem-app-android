@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.tokenlist.ui
+package com.tangem.features.onramp.tokenlist.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,8 +14,8 @@ import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.feature.wallet.presentation.tokenlist.entity.TokenListUM
-import com.tangem.feature.wallet.presentation.tokenlist.ui.preview.PreviewTokenListUMProvider
+import com.tangem.features.onramp.tokenlist.entity.TokenListUM
+import com.tangem.features.onramp.tokenlist.ui.preview.PreviewTokenListUMProvider
 
 /**
  * Token list

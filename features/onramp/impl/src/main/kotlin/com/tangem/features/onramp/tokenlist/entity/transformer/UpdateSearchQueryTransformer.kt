@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.tokenlist.entity.transformer
+package com.tangem.features.onramp.tokenlist.entity.transformer
 
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 
