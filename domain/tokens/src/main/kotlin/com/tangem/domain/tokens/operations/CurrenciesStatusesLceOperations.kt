@@ -75,10 +75,9 @@ internal class CurrenciesStatusesLceOperations(
                 ::createCurrenciesStatuses,
             )
                 .distinctUntilChanged()
-                .mapLatest { maybeCurrenciesStatuses ->
+                .collectLatest { maybeCurrenciesStatuses ->
                     send(maybeCurrenciesStatuses)
                 }
-                .launchIn(scope = this)
         }
     }
 
