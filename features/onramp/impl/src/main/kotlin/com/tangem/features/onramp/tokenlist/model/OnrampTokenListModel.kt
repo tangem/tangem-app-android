@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.tokenlist.model
+package com.tangem.features.onramp.tokenlist.model
 
 import arrow.core.getOrElse
 import com.tangem.common.ui.tokens.TokenItemStateConverter
@@ -11,20 +11,20 @@ import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.feature.wallet.presentation.tokenlist.TokenListComponent
-import com.tangem.feature.wallet.presentation.tokenlist.entity.TokenListUM
-import com.tangem.feature.wallet.presentation.tokenlist.entity.TokenListUMController
-import com.tangem.feature.wallet.presentation.tokenlist.entity.transformer.UpdateSearchBarActiveStateTransformer
-import com.tangem.feature.wallet.presentation.tokenlist.entity.transformer.UpdateSearchQueryTransformer
-import com.tangem.feature.wallet.presentation.tokenlist.entity.transformer.UpdateTokenItemsTransformer
-import com.tangem.feature.wallet.presentation.tokenlist.utils.SearchTokensManager
+import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
+import com.tangem.features.onramp.tokenlist.entity.TokenListUM
+import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
+import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateSearchBarActiveStateTransformer
+import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateSearchQueryTransformer
+import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
+import com.tangem.features.onramp.tokenlist.utils.SearchTokensManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-internal class TokenListModel @Inject constructor(
+internal class OnrampTokenListModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val tokenListUMController: TokenListUMController,
@@ -36,7 +36,7 @@ internal class TokenListModel @Inject constructor(
 
     val state: StateFlow<TokenListUM> = tokenListUMController.state
 
-    private val params: TokenListComponent.Params = paramsContainer.require()
+    private val params: OnrampTokenListComponent.Params = paramsContainer.require()
 
     init {
         subscribeOnUpdateState()

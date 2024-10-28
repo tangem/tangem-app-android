@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.selecttoken
+package com.tangem.features.onramp.selecttoken
 
 import androidx.annotation.StringRes
 import com.tangem.core.decompose.factory.ComponentFactory
@@ -11,9 +11,9 @@ import com.tangem.domain.wallets.models.UserWalletId
  *
  * @author Andrew Khokhlov on 22/10/2024
  */
-interface SelectTokenComponent : ComposableContentComponent {
+interface OnrampSelectTokenComponent : ComposableContentComponent {
 
-    interface Factory : ComponentFactory<Params, SelectTokenComponent>
+    interface Factory : ComponentFactory<Params, OnrampSelectTokenComponent>
 
     /**
      * Params

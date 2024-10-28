@@ -1,13 +1,13 @@
-package com.tangem.feature.wallet.presentation.tokenlist.entity.transformer
+package com.tangem.features.onramp.tokenlist.entity.transformer
 
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.tokenlist.entity.TokenListUM
-import com.tangem.feature.wallet.presentation.tokenlist.entity.TokenListUMTransformer
+import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.tokenlist.entity.TokenListUM
+import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import kotlinx.collections.immutable.toImmutableList
 
 internal class UpdateTokenItemsTransformer(
