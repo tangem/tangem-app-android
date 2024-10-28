@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.tokenlist.entity
+package com.tangem.features.onramp.tokenlist.entity
 
 import com.tangem.utils.transformer.Transformer
 

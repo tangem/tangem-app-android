@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.tokenlist
+package com.tangem.features.onramp.tokenlist
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -10,13 +10,13 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 /** Token list component that present list of token for multi-currency wallet */
 @Stable
-internal interface TokenListComponent {
+internal interface OnrampTokenListComponent {
 
     @Composable
     fun Content(contentPadding: PaddingValues, modifier: Modifier)
 
     /** Component factory */
-    interface Factory : ComponentFactory<Params, TokenListComponent>
+    interface Factory : ComponentFactory<Params, OnrampTokenListComponent>
 
     /**
      * Params
