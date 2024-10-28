@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.tokenlist.utils
+package com.tangem.features.onramp.tokenlist.utils
 
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.withDebounce
