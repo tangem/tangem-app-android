@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -65,7 +64,6 @@ import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags
-import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.core.ui.utils.lineTo
 import com.tangem.core.ui.utils.moveTo
 import com.tangem.core.ui.utils.toPx
@@ -93,7 +91,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-internal fun WalletScreen(state: WalletScreenState, marketsEntryComponent: MarketsEntryComponent?) {
+internal fun WalletScreen(state: WalletScreenState, marketsEntryComponent: MarketsEntryComponent) {
     BackHandler(onBack = state.onBackClick)
 
     // It means that screen is still initializing
@@ -137,7 +135,7 @@ private fun WalletContent(
     walletsListState: LazyListState,
     snackbarHostState: SnackbarHostState,
     isAutoScroll: State<Boolean>,
-    marketsEntryComponent: MarketsEntryComponent?,
+    marketsEntryComponent: MarketsEntryComponent,
     alertConfig: WalletAlertState?,
     onAutoScrollReset: () -> Unit,
 ) {
@@ -239,82 +237,26 @@ private fun WalletContent(
         )
     }
 
-    if (marketsEntryComponent != null) {
-        val bottomSheetState = remember { mutableStateOf(BottomSheetState.COLLAPSED) }
+    val bottomSheetState = remember { mutableStateOf(BottomSheetState.COLLAPSED) }
 
-        var headerSize by remember { mutableStateOf(0.dp) }
+    var headerSize by remember { mutableStateOf(0.dp) }
 
-        BaseScaffoldWithMarkets(
-            state = state,
-            listState = listState,
-            selectedWallet = selectedWallet,
-            snackbarHostState = snackbarHostState,
-            bottomSheetHeaderHeightProvider = { headerSize },
-            alertConfig = alertConfig,
-            onBottomSheetStateChange = { bottomSheetState.value = it },
-            bottomSheetContent = {
-                marketsEntryComponent.BottomSheetContent(
-                    bottomSheetState = bottomSheetState,
-                    onHeaderSizeChange = { headerSize = it },
-                    modifier = Modifier,
-                )
-            },
-            content = scaffoldContent,
-        )
-    } else {
-        BaseScaffold(
-            state = state,
-            selectedWallet = selectedWallet,
-            snackbarHostState = snackbarHostState,
-            content = { scaffoldContent(null) },
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-private fun BaseScaffold(
-    state: WalletScreenState,
-    selectedWallet: WalletState,
-    snackbarHostState: SnackbarHostState,
-    content: @Composable () -> Unit,
-) {
-    Scaffold(
-        topBar = { WalletTopBar(config = state.topBarConfig) },
-        contentWindowInsets = WindowInsetsZero,
-        snackbarHost = {
-            WalletSnackbarHost(
-                snackbarHostState = snackbarHostState,
-                event = state.event,
-                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing16),
+    BaseScaffoldWithMarkets(
+        state = state,
+        listState = listState,
+        selectedWallet = selectedWallet,
+        snackbarHostState = snackbarHostState,
+        bottomSheetHeaderHeightProvider = { headerSize },
+        alertConfig = alertConfig,
+        onBottomSheetStateChange = { bottomSheetState.value = it },
+        bottomSheetContent = {
+            marketsEntryComponent.BottomSheetContent(
+                bottomSheetState = bottomSheetState,
+                onHeaderSizeChange = { headerSize = it },
+                modifier = Modifier,
             )
         },
-        floatingActionButtonPosition = FabPosition.Center,
-        containerColor = TangemTheme.colors.background.secondary,
-        content = {
-            val pullRefreshState = rememberPullRefreshState(
-                refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                onRefresh = {
-                    selectedWallet.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
-                },
-            )
-
-            Box(
-                modifier = Modifier
-                    .pullRefresh(pullRefreshState)
-                    .padding(it),
-            ) {
-                content()
-
-                WalletPullToRefreshIndicator(
-                    isRefreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                    state = pullRefreshState,
-                    modifier = Modifier.align(Alignment.TopCenter),
-                )
-
-                BottomFade(Modifier.align(Alignment.BottomCenter))
-            }
-        },
+        content = scaffoldContent,
     )
 }
 
@@ -771,7 +713,16 @@ private fun WalletScreen_Preview(@PreviewParameter(WalletScreenPreviewProvider::
     TangemThemePreview {
         WalletScreen(
             state = data,
-            marketsEntryComponent = null,
+            marketsEntryComponent = object : MarketsEntryComponent {
+                @Composable
+                override fun BottomSheetContent(
+                    bottomSheetState: State<BottomSheetState>,
+                    onHeaderSizeChange: (Dp) -> Unit,
+                    modifier: Modifier,
+                ) {
+                    Text("Markets Content")
+                }
+            },
         )
     }
 }
