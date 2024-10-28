@@ -1,8 +1,8 @@
-package com.tangem.feature.wallet.presentation.tokenlist.entity.transformer
+package com.tangem.features.onramp.tokenlist.entity.transformer
 
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.feature.wallet.presentation.tokenlist.entity.TokenListUM
-import com.tangem.feature.wallet.presentation.tokenlist.entity.TokenListUMTransformer
+import com.tangem.features.onramp.tokenlist.entity.TokenListUM
+import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import kotlinx.collections.immutable.persistentListOf
 
 /**
