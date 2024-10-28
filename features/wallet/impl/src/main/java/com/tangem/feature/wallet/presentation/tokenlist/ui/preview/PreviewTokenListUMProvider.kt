@@ -5,10 +5,10 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.tokenlist.entity.TokenListUM
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.TokensListItemState
 import kotlinx.collections.immutable.toImmutableList
 
 internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM> {
@@ -18,11 +18,11 @@ internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM
         createTokensList(hasSearchBar = true, createDefaultTokenItem()),
     )
 
-    private fun createTokensList(hasSearchBar: Boolean, vararg items: TokensListItemState): TokenListUM {
+    private fun createTokensList(hasSearchBar: Boolean, vararg items: TokensListItemUM): TokenListUM {
         return TokenListUM(
             items = buildList {
                 if (hasSearchBar) {
-                    TokensListItemState.SearchBar(
+                    TokensListItemUM.SearchBar(
                         searchBarUM = SearchBarUM(
                             placeholderText = resourceReference(id = R.string.common_search),
                             query = "",
@@ -41,8 +41,8 @@ internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM
         )
     }
 
-    private fun createDefaultTokenItem(): TokensListItemState.Token {
-        return TokensListItemState.Token(
+    private fun createDefaultTokenItem(): TokensListItemUM.Token {
+        return TokensListItemUM.Token(
             state = TokenItemState.Content(
                 id = "1",
                 iconState = CurrencyIconState.Locked,
