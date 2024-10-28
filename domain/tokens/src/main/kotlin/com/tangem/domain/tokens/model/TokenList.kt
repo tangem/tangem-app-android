@@ -42,7 +42,7 @@ sealed class TokenList {
     ) : TokenList()
 
     /** Represents a state where the token list is empty. */
-    object Empty : TokenList() {
+    data object Empty : TokenList() {
 
         override val totalFiatBalance: TotalFiatBalance = TotalFiatBalance.Loaded(
             amount = BigDecimal.ZERO,
