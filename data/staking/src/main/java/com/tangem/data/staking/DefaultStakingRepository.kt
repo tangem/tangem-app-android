@@ -645,7 +645,7 @@ internal class DefaultStakingRepository(
             Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
             Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCointId() to ETHEREUM_POLYGON_INTEGRATION_ID,
             // Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
-            // Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
+            Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
             // Blockchain.Polkadot.run { id + toCoinId() } to POLKADOT_INTEGRATION_ID,
             // Blockchain.Avalanche.run { id + toCoinId() } to AVALANCHE_INTEGRATION_ID,
             // Blockchain.Cronos.run { id + toCoinId() } to CRONOS_INTEGRATION_ID,
