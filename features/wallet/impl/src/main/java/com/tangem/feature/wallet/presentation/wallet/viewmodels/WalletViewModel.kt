@@ -29,7 +29,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
-import com.tangem.features.markets.MarketsFeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.utils.Provider
@@ -68,7 +67,6 @@ internal class WalletViewModel @Inject constructor(
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
     private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
-    private val marketsFeatureToggles: MarketsFeatureToggles,
     private val walletImageResolver: WalletImageResolver,
     private val tokenListStore: MultiWalletTokenListStore,
     analyticsEventsHandler: AnalyticsEventHandler,
@@ -130,7 +128,7 @@ internal class WalletViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
 
-            if (marketsFeatureToggles.isFeatureEnabled && shouldShowMarketsTooltipUseCase()) {
+            if (shouldShowMarketsTooltipUseCase()) {
                 stateHolder.update {
                     it.copy(showMarketsOnboarding = true)
                 }
