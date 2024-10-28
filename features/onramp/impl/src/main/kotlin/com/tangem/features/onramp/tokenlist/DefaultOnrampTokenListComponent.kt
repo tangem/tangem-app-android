@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.tokenlist
+package com.tangem.features.onramp.tokenlist
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -8,19 +8,19 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.feature.wallet.presentation.tokenlist.model.TokenListModel
-import com.tangem.feature.wallet.presentation.tokenlist.ui.TokenList
+import com.tangem.features.onramp.tokenlist.model.OnrampTokenListModel
+import com.tangem.features.onramp.tokenlist.ui.TokenList
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 @Stable
-internal class DefaultTokenListComponent @AssistedInject constructor(
+internal class DefaultOnrampTokenListComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted params: TokenListComponent.Params,
-) : TokenListComponent, AppComponentContext by context {
+    @Assisted params: OnrampTokenListComponent.Params,
+) : OnrampTokenListComponent, AppComponentContext by context {
 
-    private val model: TokenListModel = getOrCreateModel(params)
+    private val model: OnrampTokenListModel = getOrCreateModel(params)
 
     @Composable
     override fun Content(contentPadding: PaddingValues, modifier: Modifier) {
@@ -30,7 +30,10 @@ internal class DefaultTokenListComponent @AssistedInject constructor(
     }
 
     @AssistedFactory
-    interface Factory : TokenListComponent.Factory {
-        override fun create(context: AppComponentContext, params: TokenListComponent.Params): DefaultTokenListComponent
+    interface Factory : OnrampTokenListComponent.Factory {
+        override fun create(
+            context: AppComponentContext,
+            params: OnrampTokenListComponent.Params,
+        ): DefaultOnrampTokenListComponent
     }
 }
