@@ -59,13 +59,17 @@ internal object StakingNotification {
         subtitle = subtitle,
         buttonsState = buttonsState,
         onCloseClick = onCloseClick,
-
     ) {
         data class EarnRewards(
             val subtitleText: TextReference,
         ) : StakingNotification.Info(
             title = resourceReference(R.string.staking_notification_earn_rewards_title),
             subtitle = subtitleText,
+        )
+
+        data object StakeEntireBalance : StakingNotification.Info(
+            title = resourceReference(R.string.common_network_fee_title),
+            subtitle = resourceReference(R.string.staking_notification_stake_entire_balance_text),
         )
 
         data class Unstake(
