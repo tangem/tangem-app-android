@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.tokenlist.ui.preview
+package com.tangem.features.onramp.tokenlist.ui.preview
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -7,8 +7,8 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.tokenlist.entity.TokenListUM
+import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import kotlinx.collections.immutable.toImmutableList
 
 internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM> {
