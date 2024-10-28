@@ -64,6 +64,7 @@ private fun LazyListScope.contentItems(
                 modifier = modifier.roundedShapeItemDecoration(
                     currentIndex = index,
                     lastIndex = items.lastIndex,
+                    backgroundColor = TangemTheme.colors.background.primary,
                 ),
             )
         },
