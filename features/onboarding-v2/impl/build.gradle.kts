@@ -27,6 +27,7 @@ dependencies {
     /** Domain */
     implementation(projects.domain.models)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.core)
 
     /** Tangem libraries */
     implementation(deps.tangem.card.core)
@@ -36,8 +37,6 @@ dependencies {
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
-    implementation(deps.androidx.appCompat)
-    implementation(deps.androidx.constraintLayout)
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
