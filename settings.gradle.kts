@@ -151,6 +151,7 @@ include(":libs:visa")
 
 // region Feature modules
 include(":features:onboarding")
+include(":features:onboarding-legacy")
 
 include(":features:referral:data")
 include(":features:referral:domain")
