@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.tokenlist.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -26,8 +26,8 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun TokenList(state: TokenListUM, modifier: Modifier = Modifier) {
-    LazyColumn(modifier = modifier) {
+internal fun TokenList(state: TokenListUM, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
+    LazyColumn(modifier = modifier, contentPadding = contentPadding) {
         itemsIndexed(
             items = state.items,
             key = { _, item -> item.id },
@@ -42,6 +42,7 @@ internal fun TokenList(state: TokenListUM, modifier: Modifier = Modifier) {
                             currentIndex = index,
                             lastIndex = state.items.lastIndex,
                             addDefaultPadding = false,
+                            backgroundColor = TangemTheme.colors.background.primary,
                         ),
                 )
             },
@@ -55,10 +56,10 @@ private fun Preview_TokenList(@PreviewParameter(PreviewTokenListUMProvider::clas
     TangemThemePreview {
         TokenList(
             state = state,
+            contentPadding = PaddingValues(all = 16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = TangemTheme.colors.background.secondary)
-                .padding(16.dp),
+                .background(color = TangemTheme.colors.background.secondary),
         )
     }
 }
