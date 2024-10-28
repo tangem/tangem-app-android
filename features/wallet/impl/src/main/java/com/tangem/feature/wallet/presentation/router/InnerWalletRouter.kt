@@ -24,7 +24,7 @@ internal interface InnerWalletRouter : WalletRouter {
      * @param onFinish finish activity callback
      */
     @Composable
-    fun Initialize(onFinish: () -> Unit, marketsEntryComponent: MarketsEntryComponent?)
+    fun Initialize(onFinish: () -> Unit, marketsEntryComponent: MarketsEntryComponent)
 
     /** Pop back stack */
     fun popBackStack()
