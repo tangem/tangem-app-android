@@ -1,9 +1,9 @@
-package com.tangem.feature.wallet.presentation.tokenlist.entity.transformer
+package com.tangem.features.onramp.tokenlist.entity.transformer
 
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.feature.wallet.impl.R
+import com.tangem.features.onramp.impl.R
 
 internal class UpdateSearchBarActiveStateTransformer(private val isActive: Boolean) : SearchBarUMTransformer() {
 
