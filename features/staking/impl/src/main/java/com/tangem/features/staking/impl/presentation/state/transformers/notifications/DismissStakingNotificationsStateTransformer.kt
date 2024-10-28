@@ -1,4 +1,4 @@
-package com.tangem.features.staking.impl.presentation.state.transformers
+package com.tangem.features.staking.impl.presentation.state.transformers.notifications
 
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.features.staking.impl.presentation.state.StakingStates
