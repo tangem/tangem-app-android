@@ -10,12 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.presentation.tokenlist.entity.TokenListUM
 import com.tangem.feature.wallet.presentation.tokenlist.ui.preview.PreviewTokenListUMProvider
-import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.MultiCurrencyContentItem
 
 /**
  * Token list
@@ -33,7 +33,7 @@ internal fun TokenList(state: TokenListUM, contentPadding: PaddingValues, modifi
             key = { _, item -> item.id },
             contentType = { _, item -> item::class.java },
             itemContent = { index, item ->
-                MultiCurrencyContentItem(
+                TokenListItem(
                     state = item,
                     isBalanceHidden = state.isBalanceHidden,
                     modifier = Modifier
