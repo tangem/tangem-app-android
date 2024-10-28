@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.features.details.api"
+    namespace = "com.tangem.features.onboarding.v2.api"
 }
 
 dependencies {
