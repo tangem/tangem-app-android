@@ -551,9 +551,11 @@
   <string name="onboarding_wallet_info_title_fourth">Access code restore</string>
   <string name="onboarding_wallet_info_title_second">Identical cards</string>
   <string name="onboarding_wallet_info_title_third">Access code</string>
+  <string name="onramp_pay_with">Pay with</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Our services are not available in this country</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Change or confirm it</string>
   <string name="onramp_residency_bottomsheet_title">Your residence has been identified as</string>
+  <string name="onramp_via">Via</string>
   <string name="organize_tokens_group">Group</string>
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
@@ -742,6 +744,7 @@
   <string name="staking_notification_new_validator_funds_transfer">Staking in the %1$s network with a new validator will automatically transfer all previously staked funds to this validator</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
   <string name="staking_notification_restake_text">Restake lets you move your funds from one validator to another without the need to unstake</string>
+  <string name="staking_notification_stake_entire_balance_text">You’re about to stake your entire balance. We recommend leaving a small amount to cover network fees for unstaking or claiming rewards.</string>
   <string name="staking_notification_unlock_text">Unlock your money to withdraw it from staking process. Unlocking takes %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Your funds will be available for use after the 21-day unbonding period. Reward will be withdrawn along with your unstaking funds.</string>
   <string name="staking_notification_unstake_text">Your funds will be available for use after the %s unbonding period.</string>
