@@ -61,6 +61,18 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF28"),
     ),
 
+    CryptoCasey(
+        cards2ResId = R.drawable.ill_crypto_casey_card2_120_106,
+        cards3ResId = R.drawable.ill_crypto_casey_card3_120_106,
+        batchIds = setOf("AF21", "AF22", "AF23"),
+    ),
+
+    CryptoOrg(
+        cards2ResId = R.drawable.ill_crypto_org_card2_120_106,
+        cards3ResId = R.drawable.ill_crypto_org_card3_120_106,
+        batchIds = setOf("AF57"),
+    ),
+
     CryptoSeth(
         cards2ResId = R.drawable.ill_crypto_seth_card2_120_106,
         cards3ResId = R.drawable.ill_crypto_seth_card3_120_106,
@@ -132,6 +144,12 @@ internal enum class Wallet2CobrandImage(
         cards2ResId = R.drawable.ill_satoshi_card2_120_106,
         cards3ResId = R.drawable.ill_satoshi_card3_120_106,
         batchIds = setOf("AF19"),
+    ),
+
+    StealthCard(
+        cards2ResId = R.drawable.ill_stealth_cards2_120_106,
+        cards3ResId = R.drawable.ill_stealth_cards3_120_106,
+        batchIds = setOf("AF60", "AF74", "AF88"),
     ),
 
     Trillant(
