@@ -1,8 +1,8 @@
-package com.tangem.feature.wallet.presentation.tokenlist.di
+package com.tangem.features.onramp.tokenlist.di
 
 import com.tangem.core.decompose.di.DecomposeComponent
 import com.tangem.core.decompose.model.Model
-import com.tangem.feature.wallet.presentation.tokenlist.model.TokenListModel
+import com.tangem.features.onramp.tokenlist.model.OnrampTokenListModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -11,10 +11,10 @@ import dagger.multibindings.IntoMap
 
 @Module
 @InstallIn(DecomposeComponent::class)
-internal interface TokenListModelModule {
+internal interface OnrampTokenListModelModule {
 
     @Binds
     @IntoMap
-    @ClassKey(TokenListModel::class)
-    fun provideTokenListModel(model: TokenListModel): Model
+    @ClassKey(OnrampTokenListModel::class)
+    fun bindOnrampTokenListModel(model: OnrampTokenListModel): Model
 }
