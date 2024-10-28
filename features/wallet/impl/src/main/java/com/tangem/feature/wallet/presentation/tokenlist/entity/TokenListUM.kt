@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.tokenlist.entity
 
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.TokensListItemState
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -13,17 +13,17 @@ import kotlinx.collections.immutable.persistentListOf
 [REDACTED_AUTHOR]
  */
 internal data class TokenListUM(
-    val items: ImmutableList<TokensListItemState>,
+    val items: ImmutableList<TokensListItemUM>,
     val isBalanceHidden: Boolean,
 ) {
 
     /** Get search bar if it exists */
-    fun getSearchBar(): TokensListItemState.SearchBar? {
-        return items.firstOrNull() as? TokensListItemState.SearchBar
+    fun getSearchBar(): TokensListItemUM.SearchBar? {
+        return items.firstOrNull() as? TokensListItemUM.SearchBar
     }
 
     /** Get tokens */
-    fun getTokens(): ImmutableList<TokensListItemState> {
+    fun getTokens(): ImmutableList<TokensListItemUM> {
         if (getSearchBar() == null) return items
 
         return if (items.size > 1) {
