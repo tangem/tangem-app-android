@@ -8,21 +8,20 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.feature.onboarding.legacy"
+    namespace = "com.tangem.features.onboarding.v2.impl"
 }
 
 dependencies {
+    /** Api */
+    implementation(projects.features.onboardingV2.api)
+
     /** Core modules */
-    implementation(project(":common"))
-    implementation(project(":domain:models"))
-    implementation(project(":core:featuretoggles"))
-    implementation(project(":core:datasource"))
-    implementation(project(":core:analytics"))
+    implementation(projects.core.featuretoggles)
+    implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(project(":core:utils"))
-    implementation(project(":core:ui"))
-    implementation(project(":core:res"))
-    implementation(project(":data:common"))
+    implementation(projects.core.utils)
+    implementation(projects.core.ui)
+    implementation(projects.core.res)
 
     /** Tangem libraries */
     implementation(deps.tangem.card.core)
@@ -33,27 +32,18 @@ dependencies {
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
     implementation(deps.androidx.appCompat)
-    implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.constraintLayout)
-    implementation(deps.androidx.activity.compose)
     implementation(deps.lifecycle.runtime.ktx)
-    implementation(deps.lifecycle.common.java8)
-    implementation(deps.lifecycle.viewModel.ktx)
 
     /** Compose libraries */
-    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
-    implementation(deps.compose.shimmer)
-
-    implementation(deps.tangem.card.core)
 
     /** Other libraries */
-    implementation(deps.compose.shimmer)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization)
     implementation(deps.timber)
