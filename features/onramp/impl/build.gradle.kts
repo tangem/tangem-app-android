@@ -20,8 +20,21 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.featuretoggles)
 
+    /** Project - Common */
+    implementation(projects.common.ui)
+
+    /** Project - Domain */
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
+
     /** DI */
     implementation(deps.hilt.android)
+    implementation(project(":common:ui"))
     kapt(deps.hilt.kapt)
 
     /** AndroidX */
@@ -40,4 +53,6 @@ dependencies {
 
     /** Other */
     implementation(deps.decompose.ext.compose)
+    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.timber)
 }
