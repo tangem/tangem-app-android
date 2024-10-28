@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.tokenlist.entity
 
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.TokensListItemState
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,7 +35,7 @@ internal class TokenListUMController @Inject constructor() {
     }
 
     /** Get search bar if it exists */
-    fun getSearchBar(): TokensListItemState.SearchBar? {
+    fun getSearchBar(): TokensListItemUM.SearchBar? {
         return _state.value.getSearchBar()
     }
 }
