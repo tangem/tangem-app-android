@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.common.component
+package com.tangem.core.ui.components.tokenlist.internal
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -17,21 +17,34 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.rows.NetworkTitle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.feature.wallet.impl.R
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 
+/**
+ * Network title item
+ *
+ * @param networkName network name
+ * @param modifier    modifier
+ */
 @Composable
 internal fun NetworkTitleItem(networkName: String, modifier: Modifier = Modifier) {
     BaseNetworkTitleItem(networkName = networkName, modifier = modifier)
 }
 
+/**
+ * Draggable network title item
+ *
+ * @param networkName               network name
+ * @param reorderableTokenListState reorderable token list state
+ * @param modifier                  modifier
+ */
 @Composable
-internal fun DraggableNetworkTitleItem(
+fun DraggableNetworkTitleItem(
     networkName: String,
     reorderableTokenListState: ReorderableLazyListState,
     modifier: Modifier = Modifier,
