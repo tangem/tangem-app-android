@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -14,11 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import com.tangem.core.ui.components.tokenlist.TokenListItem
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.TokensListItemState
 import kotlinx.collections.immutable.ImmutableList
 
 private const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"
@@ -49,7 +49,7 @@ internal fun LazyListScope.tokensListItems(
 }
 
 private fun LazyListScope.contentItems(
-    items: ImmutableList<TokensListItemState>,
+    items: ImmutableList<TokensListItemUM>,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
 ) {
@@ -58,7 +58,7 @@ private fun LazyListScope.contentItems(
         key = { _, item -> item.id },
         contentType = { _, item -> item::class.java },
         itemContent = { index, item ->
-            MultiCurrencyContentItem(
+            TokenListItem(
                 state = item,
                 isBalanceHidden = isBalanceHidden,
                 modifier = modifier.roundedShapeItemDecoration(
@@ -71,7 +71,6 @@ private fun LazyListScope.contentItems(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.nonContentItem(modifier: Modifier = Modifier) {
     item(
         key = NON_CONTENT_TOKENS_LIST_KEY,
@@ -79,7 +78,7 @@ private fun LazyListScope.nonContentItem(modifier: Modifier = Modifier) {
     ) {
         Column(
             modifier = modifier
-                .animateItemPlacement()
+                .animateItem()
                 .padding(top = TangemTheme.dimens.spacing96),
             verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing16),
             horizontalAlignment = Alignment.CenterHorizontally,
