@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.selecttoken.ui
+package com.tangem.features.onramp.selecttoken.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
@@ -13,14 +13,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.tokenlist.TokenListComponent
+import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 
 @Composable
-internal fun SelectToken(
+internal fun OnrampSelectToken(
     @StringRes titleResId: Int,
     onBackClick: () -> Unit,
-    tokenListComponent: TokenListComponent,
+    onrampTokenListComponent: OnrampTokenListComponent,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = onBackClick)
@@ -37,7 +37,7 @@ internal fun SelectToken(
             iconRes = R.drawable.ic_close_24,
         )
 
-        tokenListComponent.Content(
+        onrampTokenListComponent.Content(
             contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
             modifier = Modifier,
         )
