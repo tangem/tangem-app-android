@@ -20,7 +20,6 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsViewModel
-import com.tangem.features.markets.MarketsFeatureToggles
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -35,9 +34,6 @@ internal class TokenDetailsFragment : ComposeFragment() {
 
     @Inject
     lateinit var tokenDetailsRouter: TokenDetailsRouter
-
-    @Inject
-    internal lateinit var marketsFeatureToggles: MarketsFeatureToggles
 
     @Inject
     internal lateinit var coroutineDispatcherProvider: CoroutineDispatcherProvider
@@ -61,27 +57,25 @@ internal class TokenDetailsFragment : ComposeFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (marketsFeatureToggles.isFeatureEnabled) {
-            val cryptoCurrency: CryptoCurrency = arguments
-                ?.getBundle(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
-                ?.unbundle(CryptoCurrency.serializer())
-                ?: error("Token Details screen can't be opened without `CryptoCurrency`")
+        val cryptoCurrency: CryptoCurrency = arguments
+            ?.getBundle(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
+            ?.unbundle(CryptoCurrency.serializer())
+            ?: error("Token Details screen can't be opened without `CryptoCurrency`")
 
-            val param = cryptoCurrency.toParam() ?: return
+        val param = cryptoCurrency.toParam() ?: return
 
-            val appContext = DefaultAppComponentContext(
-                componentContext = defaultComponentContext(requireActivity().onBackPressedDispatcher),
-                messageHandler = uiDependencies.eventMessageHandler,
-                dispatchers = coroutineDispatcherProvider,
-                hiltComponentBuilder = componentBuilder,
-                replaceRouter = appRouter.asRouter(),
-            )
+        val appContext = DefaultAppComponentContext(
+            componentContext = defaultComponentContext(requireActivity().onBackPressedDispatcher),
+            messageHandler = uiDependencies.eventMessageHandler,
+            dispatchers = coroutineDispatcherProvider,
+            hiltComponentBuilder = componentBuilder,
+            replaceRouter = appRouter.asRouter(),
+        )
 
-            tokenMarketBlockComponent = tokenMarketBlockComponentFactory.create(
-                appComponentContext = appContext,
-                params = param,
-            )
-        }
+        tokenMarketBlockComponent = tokenMarketBlockComponentFactory.create(
+            appComponentContext = appContext,
+            params = param,
+        )
     }
 
     private fun CryptoCurrency.toParam(): TokenMarketBlockComponent.Params? {
