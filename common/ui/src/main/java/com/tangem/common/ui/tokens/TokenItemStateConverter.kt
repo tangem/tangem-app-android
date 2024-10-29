@@ -4,6 +4,9 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.YieldBalance
@@ -80,7 +83,7 @@ class TokenItemStateConverter(
     private fun CryptoCurrencyStatus.getFormattedAmount(): String {
         val amount = value.amount?.plus(getStakedBalance()) ?: return DASH_SIGN
 
-        return BigDecimalFormatter.formatCryptoAmount(amount, currency.symbol, currency.decimals)
+        return amount.format { crypto(currency) }
     }
 
     private fun CryptoCurrencyStatus.getFormattedFiatAmount(): String {
@@ -167,10 +170,7 @@ class TokenItemStateConverter(
             return if (fiatRate != null && priceChange != null) {
                 TokenItemState.SubtitleState.CryptoPriceContent(
                     price = fiatRate.getFormattedCryptoPrice(appCurrency),
-                    priceChangePercent = BigDecimalFormatter.formatPercent(
-                        percent = priceChange,
-                        useAbsoluteValue = true,
-                    ),
+                    priceChangePercent = priceChange.format { percent() },
                     type = priceChange.getPriceChangeType(),
                 )
             } else {
