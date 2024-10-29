@@ -3,14 +3,15 @@ package com.tangem.domain.staking.repositories
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
+import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
@@ -34,6 +35,13 @@ interface StakingRepository {
 
     fun getStakingAvailability(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): StakingAvailability
 
+    suspend fun getActions(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+        networkType: NetworkType,
+        stakingActionStatus: StakingActionStatus,
+    ): List<StakingAction>
+
     suspend fun fetchSingleYieldBalance(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
@@ -50,15 +58,10 @@ interface StakingRepository {
         refresh: Boolean = false,
     )
 
-    fun getMultiYieldBalanceFlow(
+    fun getMultiYieldBalanceUpdates(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList>
-
-    fun getMultiYieldBalanceLce(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): LceFlow<Throwable, YieldBalanceList>
 
     suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,
