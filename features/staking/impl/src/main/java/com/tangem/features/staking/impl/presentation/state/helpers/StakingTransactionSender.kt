@@ -4,7 +4,6 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.model.SubmitHashData
 import com.tangem.domain.staking.model.stakekit.*
@@ -19,11 +18,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvents
-import com.tangem.features.staking.impl.presentation.state.FeeState
-import com.tangem.features.staking.impl.presentation.state.StakingStateController
-import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isComposePendingActions
 import com.tangem.utils.extensions.orZero
@@ -46,7 +41,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val submitHashUseCase: SubmitHashUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
-    private val analyticsEventHandler: AnalyticsEventHandler,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val yield: Yield,
@@ -84,7 +78,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         )
 
         if (fullTransactionsData.isNullOrEmpty()) {
-            onConstructError(StakingError.UnknownError())
+            onConstructError(StakingError.DomainError("fullTransactionsData is null or empty"))
             return
         }
 
@@ -193,12 +187,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 type = action?.type,
             ),
         ).getOrElse {
-            analyticsEventHandler.send(
-                StakingAnalyticsEvents.StakekitError(
-                    token = state.cryptoCurrencySymbol,
-                    stakeKitError = it,
-                ),
-            )
             onConstructError(it)
             return emptyList()
         }
@@ -243,13 +231,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                         transactionHash = transactionHash,
                     ),
                 )
-                    .onLeft { error ->
-                        analyticsEventHandler.send(
-                            StakingAnalyticsEvents.StakekitError(
-                                token = stateController.value.cryptoCurrencySymbol,
-                                stakeKitError = error,
-                            ),
-                        )
+                    .onLeft {
                         saveUnsubmittedHashUseCase.invoke(
                             transactionId = transaction.id,
                             transactionHash = transactionHash,
