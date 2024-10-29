@@ -7,8 +7,8 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.features.staking.impl.analytics.StakeScreenSource
-import com.tangem.features.staking.impl.analytics.StakingAnalyticsEvents
+import com.tangem.domain.staking.analytics.StakeScreenSource
+import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.features.staking.impl.presentation.state.*
 
 internal class StakingAnalyticSender(
@@ -24,9 +24,8 @@ internal class StakingAnalyticSender(
             ?.size ?: 0
 
         analyticsEventHandler.send(
-            StakingAnalyticsEvents.StakingInfoScreenOpened(
+            StakingAnalyticsEvent.StakingInfoScreenOpened(
                 validatorsCount = validatorCount,
-                token = value.cryptoCurrencySymbol,
             ),
         )
     }
@@ -39,8 +38,7 @@ internal class StakingAnalyticSender(
         if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) return
 
         analyticsEventHandler.send(
-            StakingAnalyticsEvents.ConfirmationScreenOpened(
-                token = value.cryptoCurrencySymbol,
+            StakingAnalyticsEvent.ConfirmationScreenOpened(
                 validator = validatorName,
                 action = getStakingActionType(value),
             ),
@@ -49,7 +47,7 @@ internal class StakingAnalyticSender(
 
     fun screenCancel(value: StakingUiState) {
         analyticsEventHandler.send(
-            StakingAnalyticsEvents.ButtonCancel(
+            StakingAnalyticsEvent.ButtonCancel(
                 source = when (value.currentStep) {
                     StakingStep.InitialInfo -> StakeScreenSource.Info
                     StakingStep.Amount -> StakeScreenSource.Amount
@@ -58,7 +56,6 @@ internal class StakingAnalyticSender(
                     StakingStep.RewardsValidators,
                     -> StakeScreenSource.Validators
                 },
-                token = value.cryptoCurrencyName,
             ),
         )
     }
@@ -93,9 +90,8 @@ internal class StakingAnalyticSender(
             ),
         )
         analyticsEventHandler.send(
-            StakingAnalyticsEvents.StakeInProgressScreenOpened(
+            StakingAnalyticsEvent.StakeInProgressScreenOpened(
                 validator = validatorName,
-                token = value.cryptoCurrencySymbol,
                 action = getStakingActionType(value),
             ),
         )
@@ -107,9 +103,8 @@ internal class StakingAnalyticSender(
         val validatorName = validatorState?.chosenValidator?.name ?: return
 
         analyticsEventHandler.send(
-            StakingAnalyticsEvents.ButtonAction(
+            StakingAnalyticsEvent.ButtonAction(
                 action = getStakingActionType(value),
-                token = value.cryptoCurrencySymbol,
                 validator = validatorName,
             ),
         )
