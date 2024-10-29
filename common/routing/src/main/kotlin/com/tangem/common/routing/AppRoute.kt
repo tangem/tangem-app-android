@@ -7,6 +7,7 @@ import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -291,4 +292,7 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data object Onramp : AppRoute(path = "/onramp")
+
+    // Onboarding V2
+    data class Onboarding(val scanResponse: ScanResponse) : AppRoute(path = "/onboarding_v2")
 }

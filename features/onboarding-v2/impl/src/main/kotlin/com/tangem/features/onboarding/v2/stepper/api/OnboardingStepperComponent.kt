@@ -1,12 +1,14 @@
 package com.tangem.features.onboarding.v2.stepper.api
 
 import androidx.annotation.IntRange
+import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.scan.ScanResponse
 import kotlinx.coroutines.flow.StateFlow
 
+@Stable
 interface OnboardingStepperComponent : ComposableContentComponent {
 
     data class StepperState(
