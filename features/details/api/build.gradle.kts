@@ -16,4 +16,7 @@ dependencies {
     /* Project - Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+
+    /* Compose */
+    implementation(deps.compose.runtime)
 }
