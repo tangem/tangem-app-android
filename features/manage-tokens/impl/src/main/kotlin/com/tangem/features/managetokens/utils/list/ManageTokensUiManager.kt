@@ -10,6 +10,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.tokens.model.Network
+import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.ui.dialog.CurrencyUnsupportedDialog
@@ -29,17 +30,22 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+@Suppress("LongParameterList")
 internal class ManageTokensUiManager(
     private val state: MutableStateFlow<ManageTokensListState>,
     private val messageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
     private val scopeProvider: Provider<CoroutineScope>,
+    private val sourceProvider: Provider<ManageTokensSource>,
     private val actions: ManageTokensUiActions,
     private val clipboardManager: ClipboardManager,
 ) {
 
     private val scope: CoroutineScope
         get() = scopeProvider()
+
+    private val source: ManageTokensSource
+        get() = sourceProvider()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val items: Flow<ImmutableList<CurrencyItemUM>> = state
@@ -225,26 +231,39 @@ internal class ManageTokensUiManager(
         } else {
             actions.checkHasLinkedTokens(userWalletId, network)
         }
+        val canHideWithoutConfirming = source == ManageTokensSource.ONBOARDING
 
-        val message = ContentMessage { onDismiss ->
-            if (hasLinkedTokens) {
-                HasLinkedTokensWarning(
-                    currency = currency,
-                    network = network,
-                    onDismiss = onDismiss,
-                )
-            } else {
-                HideTokenWarning(
-                    currency = currency,
-                    onConfirm = {
-                        onConfirm()
-                        onDismiss()
-                    },
-                    onDismiss = onDismiss,
-                )
-            }
+        if (hasLinkedTokens) {
+            showLinkedTokensWarning(currency, network)
+        } else if (canHideWithoutConfirming) {
+            onConfirm()
+        } else {
+            showHideTokenWarning(currency, onConfirm)
         }
+    }
 
+    private fun showLinkedTokensWarning(currency: ManagedCryptoCurrency, network: Network) {
+        val message = ContentMessage { onDismiss ->
+            HasLinkedTokensWarning(
+                currency = currency,
+                network = network,
+                onDismiss = onDismiss,
+            )
+        }
+        messageSender.send(message)
+    }
+
+    private fun showHideTokenWarning(currency: ManagedCryptoCurrency, onConfirm: () -> Unit) {
+        val message = ContentMessage { onDismiss ->
+            HideTokenWarning(
+                currency = currency,
+                onConfirm = {
+                    onConfirm()
+                    onDismiss()
+                },
+                onDismiss = onDismiss,
+            )
+        }
         messageSender.send(message)
     }
 

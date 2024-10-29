@@ -117,10 +117,6 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/details/security"), RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val USER_WALLET_ID_KEY = "userWalletId"
-        }
     }
 
     @Serializable
@@ -288,4 +284,12 @@ sealed class AppRoute(val path: String) : Route {
             val source: String,
         )
     }
+
+    @Serializable
+    data object Onramp : AppRoute(path = "/onramp")
+
+    @Serializable
+    data class BuyCrypto(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/buy_crypto/${userWalletId.stringValue}")
 }

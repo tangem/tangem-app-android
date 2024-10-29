@@ -54,6 +54,15 @@ object TradeCryptoMiddleware {
     }
 
     private fun proceedBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
+        val isOnrampEnabled = store.inject(DaggerGraphState::onrampFeatureToggles).isFeatureEnabled
+        if (isOnrampEnabled) proceedWithOnramp() else proceedWithLegacyBuyAction(state, action)
+    }
+
+    private fun proceedWithOnramp() {
+        store.dispatchNavigationAction { push(AppRoute.Onramp) }
+    }
+
+    private fun proceedWithLegacyBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
         val networkAddress = action.cryptoCurrencyStatus.value.networkAddress
             ?.defaultAddress
             ?.let(NetworkAddress.Address::value)
