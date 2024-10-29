@@ -32,14 +32,8 @@ internal class AddStakingErrorTransformer(
     }
 
     private fun convertToNotification(error: StakingError): NotificationUM {
-        return when (error) {
-            is StakingError.StakedPositionNotFoundError -> StakingNotification.Error.StakedPositionNotFoundError(
-                message = error.toString(),
-            )
-// [REDACTED_TODO_COMMENT]
-            else -> StakingNotification.Error.Common(
-                subtitle = stringReference(error.toString()),
-            )
-        }
+        return StakingNotification.Error.Common(
+            subtitle = stringReference(error.toString()),
+        )
     }
 }
