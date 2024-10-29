@@ -357,7 +357,10 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetCurrencyCheckUseCase(currencyChecksRepository: CurrencyChecksRepository): GetCurrencyCheckUseCase {
-        return GetCurrencyCheckUseCase(currencyChecksRepository)
+    fun provideGetCurrencyCheckUseCase(
+        currencyChecksRepository: CurrencyChecksRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetCurrencyCheckUseCase {
+        return GetCurrencyCheckUseCase(currencyChecksRepository, dispatchers)
     }
 }
