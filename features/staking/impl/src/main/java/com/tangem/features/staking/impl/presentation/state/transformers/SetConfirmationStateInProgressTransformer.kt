@@ -19,7 +19,6 @@ internal class SetConfirmationStateInProgressTransformer : Transformer<StakingUi
             copy(
                 isPrimaryButtonEnabled = false,
                 innerState = InnerConfirmationStakingState.IN_PROGRESS,
-                validatorState = validatorState.copySealed(isClickable = false),
                 footerText = TextReference.EMPTY,
             )
         } else {

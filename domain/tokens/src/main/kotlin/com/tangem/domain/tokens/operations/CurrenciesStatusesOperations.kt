@@ -120,50 +120,6 @@ internal class CurrenciesStatusesOperations(
         return createCurrencyStatus(currency, quotes, networkStatus, yieldBalances)
     }
 
-    fun getCardCurrenciesStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
-        return flow {
-            val nonEmptyCurrencies = recover(
-                block = { getCurrenciesFromCard(userWalletId) },
-                recover = {
-                    emit(it.left())
-                    return@flow
-                },
-            ).toNonEmptyListOrNull()
-
-            if (nonEmptyCurrencies == null) {
-                val emptyCurrenciesStatuses = emptyList<CryptoCurrencyStatus>()
-
-                emit(emptyCurrenciesStatuses.right())
-                return@flow
-            }
-
-            val maybeLoadingCurrenciesStatuses = createCurrenciesStatuses(
-                currencies = nonEmptyCurrencies,
-                maybeNetworkStatuses = null,
-                maybeQuotes = null,
-                maybeYieldBalances = null,
-            )
-
-            emit(maybeLoadingCurrenciesStatuses)
-
-            val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
-
-            val currenciesFlow = combine(
-                getQuotes(currenciesIds),
-                getNetworksStatuses(networks),
-            ) { maybeQuotes, maybeNetworksStatuses ->
-                createCurrenciesStatuses(
-                    currencies = nonEmptyCurrencies,
-                    maybeQuotes = maybeQuotes,
-                    maybeNetworkStatuses = maybeNetworksStatuses,
-                    maybeYieldBalances = null,
-                )
-            }
-
-            emitAll(currenciesFlow)
-        }
-    }
-
     suspend fun getCurrencyStatusFlow(currencyId: CryptoCurrency.ID): Flow<Either<Error, CryptoCurrencyStatus>> {
         val currency = recover(
             block = { getMultiCurrencyWalletCurrency(currencyId) },
@@ -375,12 +331,6 @@ internal class CurrenciesStatusesOperations(
             block = { currenciesRepository.getSingleCurrencyWalletPrimaryCurrency(userWalletId) },
             catch = { raise(Error.DataError(it)) },
         )
-    }
-
-    private suspend fun Raise<Error>.getCurrenciesFromCard(userWalletId: UserWalletId): List<CryptoCurrency> {
-        return catch({ currenciesRepository.getSingleCurrencyWalletWithCardCurrencies(userWalletId) }) {
-            raise(Error.DataError(it))
-        }
     }
 
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<Error, Set<Quote>>> {

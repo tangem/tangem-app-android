@@ -151,6 +151,8 @@ include(":libs:visa")
 
 // region Feature modules
 include(":features:onboarding")
+include(":features:onboarding-v2:api")
+include(":features:onboarding-v2:impl")
 
 include(":features:referral:data")
 include(":features:referral:domain")
@@ -198,6 +200,9 @@ include(":features:wallet-settings:impl")
 
 include(":features:markets:api")
 include(":features:markets:impl")
+
+include(":features:onramp:api")
+include(":features:onramp:impl")
 // endregion Feature modules
 
 // region Domain modules

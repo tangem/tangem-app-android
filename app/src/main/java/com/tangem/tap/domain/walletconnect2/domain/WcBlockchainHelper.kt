@@ -1,13 +1,17 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
+import com.tangem.tap.domain.walletconnect2.domain.models.Account
+
 interface WcBlockchainHelper {
     fun chainIdToNetworkIdOrNull(chainId: String): String?
 
     fun chainIdToMissingNetworkNameOrNull(chainId: String): String?
 
-    fun networkIdToChainIdOrNull(networkId: String): String?
+    fun networkIdToChainIdOrNull(networkId: String): List<String>
 
     fun getNamespaceFromFullChainIdOrNull(chainId: String): String?
 
     fun chainIdToFullNameOrNull(chainId: String): String?
+
+    fun chainIdsToAccounts(walletAddress: String, chainIds: List<String>, derivationPath: String?): List<Account>
 }
