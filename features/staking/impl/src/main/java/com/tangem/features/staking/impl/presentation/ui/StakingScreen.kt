@@ -3,7 +3,6 @@ package com.tangem.features.staking.impl.presentation.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
@@ -89,15 +88,12 @@ private fun StakingAppBar(uiState: StakingUiState) {
     val (backIcon, click) = when (uiState.currentStep) {
         StakingStep.Amount,
         StakingStep.Confirmation,
-        -> {
-            R.drawable.ic_close_24 to uiState.clickIntents::onBackClick
-        }
+        -> R.drawable.ic_close_24 to uiState.clickIntents::onBackClick
         StakingStep.Validators,
         StakingStep.RewardsValidators,
+        StakingStep.RestakeValidator,
         StakingStep.InitialInfo,
-        -> {
-            R.drawable.ic_back_24 to uiState.clickIntents::onPrevClick
-        }
+        -> R.drawable.ic_back_24 to uiState.clickIntents::onPrevClick
     }
     AppBarWithBackButtonAndIcon(
         text = uiState.title.resolveReference(),
@@ -109,7 +105,6 @@ private fun StakingAppBar(uiState: StakingUiState) {
     )
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = Modifier) {
     val currentScreen = uiState.currentStep
@@ -172,17 +167,16 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                 StakingStep.Confirmation -> StakingConfirmationContent(
                     amountState = uiState.amountState,
                     state = uiState.confirmationState,
+                    validatorState = uiState.validatorState,
                     clickIntents = uiState.clickIntents,
                     type = uiState.actionType,
                 )
-                StakingStep.Validators -> {
-                    val confirmState = uiState.confirmationState
-                    if (confirmState !is StakingStates.ConfirmationState.Data) return@AnimatedContent
-                    StakingValidatorListContent(
-                        state = confirmState.validatorState,
-                        clickIntents = uiState.clickIntents,
-                    )
-                }
+                StakingStep.RestakeValidator,
+                StakingStep.Validators,
+                -> StakingValidatorListContent(
+                    state = uiState.validatorState,
+                    clickIntents = uiState.clickIntents,
+                )
             }
         }
     }
