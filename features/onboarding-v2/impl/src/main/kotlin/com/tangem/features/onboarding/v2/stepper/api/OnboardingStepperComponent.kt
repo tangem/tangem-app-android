@@ -13,6 +13,7 @@ internal interface OnboardingStepperComponent : ComposableContentComponent {
         @IntRange(from = 0) val currentStep: Int,
         @IntRange(from = 0) val steps: Int,
         val title: TextReference,
+        val showProgress: Boolean,
     )
 
     class Params(
