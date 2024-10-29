@@ -3,13 +3,14 @@ package com.tangem.common.ui.amountScreen.converters
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
-import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.utils.BigDecimalFormatter.formatCryptoAmount
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -49,7 +50,7 @@ class AmountStateConverter(
         val appCurrency = appCurrencyProvider()
         val status = cryptoCurrencyStatusProvider()
         val fiat = formatFiatAmount(status.value.fiatAmount, appCurrency.code, appCurrency.symbol)
-        val crypto = formatCryptoAmount(status.value.amount, status.currency.symbol, status.currency.decimals)
+        val crypto = status.value.amount.format { crypto(status.currency) }
         val noFeeRate = status.value.fiatRate.isNullOrZero()
 
         return AmountState.Data(
