@@ -12,7 +12,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.network.exchangeServices.BuyExchangeService
 import com.tangem.tap.network.exchangeServices.CardExchangeRules
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
@@ -148,15 +147,10 @@ private fun makeSellExchangeService(environmentConfig: EnvironmentConfig): Excha
 }
 
 private fun makeBuyExchangeService(environmentConfig: EnvironmentConfig): ExchangeService {
-    return BuyExchangeService(
-        mercuryoService = makeMercuryoExchangeService(environmentConfig),
+    return MercuryoService(
+        environment = MercuryoEnvironment.prod(
+            widgetId = environmentConfig.mercuryoWidgetId,
+            secret = environmentConfig.mercuryoSecret,
+        ),
     )
-}
-
-private fun makeMercuryoExchangeService(environmentConfig: EnvironmentConfig): MercuryoService {
-    val mercuryoEnvironment = MercuryoEnvironment.prod(
-        environmentConfig.mercuryoWidgetId,
-        environmentConfig.mercuryoSecret,
-    )
-    return MercuryoService(mercuryoEnvironment)
 }
