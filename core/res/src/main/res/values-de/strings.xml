@@ -339,7 +339,7 @@
   <string name="manage_tokens_list_header_title">\nCoinMarketCap</string>
   <string name="manage_tokens_network_selector_native_subtitle">Blockchain, auf der die Kryptowährung ursprünglich erstellt wurde</string>
   <string name="manage_tokens_network_selector_native_title">Natives Netzwerk</string>
-  <string name="manage_tokens_network_selector_non_native_info">Die Verwendung von nicht nativen Netzwerken für Token ermöglicht eine blockchainübergreifende Interoperabilität, sodass Vermögenswerte in verschiedenen dezentralen Anwendungen und Smart Contracts plattformübergreifend genutzt werden können. Dies erfordert jedoch häufig eine Verwahrstelle oder einen intelligenten Vertrag, um den ursprünglichen Vermögenswert sicher zu verwahren, was zu einer Zentralisierung und einem Kontrahentenrisiko führt.</string>
+  <string name="manage_tokens_network_selector_non_native_info">Die Verwendung nicht-nativer Netzwerke für Token ermöglicht Interoperabilität zwischen Blockchains, sodass Vermögenswerte plattformübergreifend in verschiedenen dezentralen Anwendungen und Smart Contracts genutzt werden können. Dies erfordert jedoch häufig einen Verwahrer oder Smart Contract, um den ursprünglichen Vermögenswert sicher aufzubewahren, was zu Zentralisierung und Kontrahentenrisiken führt.</string>
   <string name="manage_tokens_network_selector_non_native_subtitle">Nicht die ursprüngliche oder primäre Blockchain, in der der Token gehostet wird</string>
   <string name="manage_tokens_network_selector_non_native_title">Nicht-native Netzwerke</string>
   <string name="manage_tokens_network_selector_title">Netzwerke auswählen</string>
@@ -710,7 +710,7 @@
   <string name="staking_details_market_rating">Marktbewertung</string>
   <string name="staking_details_metrics_block_header">Metriken</string>
   <string name="staking_details_minimum_requirement">Mindestanforderungen</string>
-  <string name="staking_details_no_rewards_to_claim">Keine Belohnungen</string>
+  <string name="staking_details_no_rewards_to_claim">Keine Belohnungen verfügbar</string>
   <string name="staking_details_reward_claiming">Belohnungen beanspruchen</string>
   <string name="staking_details_reward_claiming_info">Eine Möglichkeit, Staking-Belohnungen zu erhalten. Es kann automatisch oder manuell beansprucht werden.</string>
   <string name="staking_details_reward_schedule">Belohnungszeitplan</string>
@@ -760,7 +760,7 @@
   <string name="staking_reward_schedule_day">Täglich</string>
   <string name="staking_reward_schedule_each">Alle %s</string>
   <string name="staking_reward_schedule_each_day">Täglich</string>
-  <string name="staking_reward_schedule_each_days">Alle %s</string>
+  <string name="staking_reward_schedule_each_days">Alle %s Tage</string>
   <string name="staking_reward_schedule_each_plural">Jeder</string>
   <string name="staking_reward_schedule_epoch">Pro Epoche</string>
   <string name="staking_reward_schedule_era">Pro Ära</string>
