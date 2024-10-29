@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.ContentMessage
 import com.tangem.domain.card.DerivePublicKeysUseCase
+import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -43,6 +44,7 @@ internal class CustomTokenFormModel @Inject constructor(
     private val customCurrencyValidator: CustomCurrencyValidator,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
+    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val messageSender: UiMessageSender,
     private val customTokenFormManager: CustomCurrencyFormBuilder,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -159,7 +161,12 @@ internal class CustomTokenFormModel @Inject constructor(
         fillForm: Boolean,
         isAlreadyAdded: Boolean,
         isCustom: Boolean,
-    ) {
+    ) = modelScope.launch {
+        val needToAddDerivation = hasMissedDerivationsUseCase(
+            userWalletId = params.userWalletId,
+            networksWithDerivationPath = mapOf(currency.network.backendId to getDerivationPath().value),
+        )
+
         state.update { state ->
             var updatedState = state
                 .updateWithProgress(
@@ -169,6 +176,7 @@ internal class CustomTokenFormModel @Inject constructor(
                     clearNotifications = true,
                     clearFieldErrors = true,
                     disableSecondaryFields = !isCustom,
+                    needToAddDerivation = needToAddDerivation,
                 )
 
             if (fillForm) {
