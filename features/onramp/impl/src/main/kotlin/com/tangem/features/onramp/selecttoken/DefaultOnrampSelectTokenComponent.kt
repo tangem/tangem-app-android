@@ -19,6 +19,7 @@ internal class DefaultOnrampSelectTokenComponent @AssistedInject constructor(
     private val onrampTokenListComponent: OnrampTokenListComponent = onrampTokenListComponentFactory.create(
         context = child(key = "token_list"),
         params = OnrampTokenListComponent.Params(
+            operation = params.operation,
             hasSearchBar = params.hasSearchBar,
             userWalletId = params.userWalletId,
             onTokenClick = params.onTokenClick,

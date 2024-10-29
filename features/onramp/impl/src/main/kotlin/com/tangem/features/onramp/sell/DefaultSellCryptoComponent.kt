@@ -11,6 +11,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.onramp.component.SellCryptoComponent
+import com.tangem.features.onramp.entity.OnrampOperation
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selecttoken.OnrampSelectTokenComponent
 import dagger.assisted.Assisted
@@ -30,6 +31,7 @@ internal class DefaultSellCryptoComponent @AssistedInject constructor(
     private val selectTokenComponent: OnrampSelectTokenComponent = onrampSelectTokenComponentFactory.create(
         context = appComponentContext,
         params = OnrampSelectTokenComponent.Params(
+            operation = OnrampOperation.SELL,
             hasSearchBar = true,
             userWalletId = params.userWalletId,
             titleResId = R.string.common_sell,
