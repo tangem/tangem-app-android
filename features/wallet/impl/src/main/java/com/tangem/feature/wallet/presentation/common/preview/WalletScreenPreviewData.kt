@@ -3,15 +3,16 @@ package com.tangem.feature.wallet.presentation.common.preview
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
 
 internal object WalletScreenPreviewData {
@@ -32,16 +33,16 @@ internal object WalletScreenPreviewData {
 
     private val textContentTokensState = WalletTokensListState.ContentState.Content(
         items = persistentListOf(
-            WalletTokensListState.TokensListItemState.NetworkGroupTitle(
+            TokensListItemUM.NetworkGroupTitle(
                 id = 1,
                 name = stringReference("Bitcoin"),
             ),
-            WalletTokensListState.TokensListItemState.Token(state = tokenItemState),
-            WalletTokensListState.TokensListItemState.NetworkGroupTitle(
+            TokensListItemUM.Token(state = tokenItemState),
+            TokensListItemUM.NetworkGroupTitle(
                 id = 2,
                 name = stringReference("Ethereum"),
             ),
-            WalletTokensListState.TokensListItemState.Token(
+            TokensListItemUM.Token(
                 state = tokenItemState.copy(
                     id = "2",
                     titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
@@ -54,7 +55,7 @@ internal object WalletScreenPreviewData {
                     ),
                 ),
             ),
-            WalletTokensListState.TokensListItemState.Token(
+            TokensListItemUM.Token(
                 state = TokenItemState.Unreachable(
                     id = "3",
                     iconState = CurrencyIconState.Locked,
@@ -63,7 +64,7 @@ internal object WalletScreenPreviewData {
                     onItemLongClick = {},
                 ),
             ),
-            WalletTokensListState.TokensListItemState.Token(
+            TokensListItemUM.Token(
                 state = tokenItemState.copy(
                     id = "4",
                     titleState = TokenItemState.TitleState.Content(text = "Shiba Inu"),
@@ -106,7 +107,7 @@ internal object WalletScreenPreviewData {
             ),
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
             cardCount = 3,
-            balance = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+            balance = DASH_SIGN,
             onRenameClick = { _ -> },
             onDeleteClick = {},
         )
