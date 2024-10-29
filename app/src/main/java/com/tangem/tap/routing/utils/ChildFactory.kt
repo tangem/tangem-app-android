@@ -11,6 +11,7 @@ import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
+import com.tangem.features.onramp.component.BuyCryptoComponent
 import com.tangem.features.onramp.component.OnrampComponent
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
@@ -48,6 +49,7 @@ internal class ChildFactory @Inject constructor(
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
     private val marketsTokenDetailsComponentFactory: MarketsTokenDetailsComponent.Factory,
     private val onrampComponentFactory: OnrampComponent.Factory,
+    private val buyCryptoComponentFactory: BuyCryptoComponent.Factory,
     private val sendRouter: SendRouter,
     private val tokenDetailsRouter: TokenDetailsRouter,
     private val walletRouter: WalletRouter,
@@ -193,6 +195,13 @@ internal class ChildFactory @Inject constructor(
                     contextProvider = contextProvider(route, contextFactory),
                     params = OnrampComponent.Params(),
                     componentFactory = onrampComponentFactory,
+                )
+            }
+            is AppRoute.BuyCrypto -> {
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = BuyCryptoComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = buyCryptoComponentFactory,
                 )
             }
         }
