@@ -10,6 +10,10 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.anyDecimals
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.uncapped
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -19,12 +23,12 @@ import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
-import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.models.states.events.SwapEvent
 import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.feature.swap.utils.getExpressErrorMessage
 import com.tangem.feature.swap.utils.getExpressErrorTitle
 import com.tangem.feature.swap.viewmodels.SwapProcessDataState
@@ -469,10 +473,8 @@ internal class StateBuilder(
         domainWarning: Warning.ExistentialDepositWarning,
     ): SwapWarning {
         val fromCurrency = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency
-        val deposit = BigDecimalFormatter.formatCryptoAmountUncapped(
-            cryptoAmount = domainWarning.existentialDeposit,
-            cryptoCurrency = fromCurrency,
-        )
+        val deposit = domainWarning.existentialDeposit.format { crypto(fromCurrency).uncapped() }
+
         return SwapWarning.GeneralError(
             NotificationConfig(
                 title = resourceReference(R.string.send_notification_existential_deposit_title),
@@ -1547,8 +1549,12 @@ internal class StateBuilder(
             toTokenInfo.cryptoCurrencyStatus.currency.decimals,
         )
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
-        val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
-        val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
+        val rateString = buildString {
+            append(BigDecimal.ONE.format { crypto(symbol = fromCurrencySymbol, decimals = 0).anyDecimals() })
+            append(" ≈ ")
+            append(rate.format { crypto(toTokenInfo.cryptoCurrencyStatus.currency) })
+        }
+        // val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
         val badge = if (isRecommended) {
             ProviderState.AdditionalBadge.Recommended
         } else if (isNeedBestRateBadge && isBestRate) {
@@ -1629,7 +1635,7 @@ internal class StateBuilder(
     private fun CryptoCurrencyStatus.getFormattedAmount(isNeedSymbol: Boolean): String {
         val amount = value.amount ?: return DASH_SIGN
         val symbol = if (isNeedSymbol) currency.symbol else ""
-        return BigDecimalFormatter.formatCryptoAmount(amount, symbol, currency.decimals)
+        return amount.format { crypto(symbol, currency.decimals) }
     }
 
     @Suppress("UnusedPrivateMember")
@@ -1647,7 +1653,7 @@ internal class StateBuilder(
     }
 
     private fun SwapAmount.getFormattedCryptoAmount(token: CryptoCurrency): String {
-        return BigDecimalFormatter.formatCryptoAmount(value, token.symbol, token.decimals)
+        return value.format { crypto(token) }
     }
 
     private fun BigDecimal.calculateRate(to: BigDecimal, decimals: Int): BigDecimal {

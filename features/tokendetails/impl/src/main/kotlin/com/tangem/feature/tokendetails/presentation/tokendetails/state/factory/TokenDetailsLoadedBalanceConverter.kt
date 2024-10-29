@@ -10,6 +10,9 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.StakingAvailability
@@ -215,10 +218,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         stakingEntryInfo: StakingEntryInfo,
         iconState: IconState,
     ): StakingBlockUM.StakeAvailable {
-        val apr = BigDecimalFormatter.formatPercent(
-            percent = stakingEntryInfo.apr,
-            useAbsoluteValue = true,
-        )
+        val apr = stakingEntryInfo.apr.format { percent() }
         return StakingBlockUM.StakeAvailable(
             titleText = resourceReference(
                 id = R.string.token_details_staking_block_title,
@@ -243,7 +243,7 @@ internal class TokenDetailsLoadedBalanceConverter(
             cryptoAmount = stakingCryptoAmount,
             fiatAmount = stakingFiatAmount,
             cryptoValue = stringReference(
-                BigDecimalFormatter.formatCryptoAmount(stakingCryptoAmount, symbol, decimals),
+                stakingCryptoAmount.format { crypto(symbol = symbol, decimals = decimals) },
             ),
             fiatValue = stringReference(
                 BigDecimalFormatter.formatFiatAmount(
@@ -275,10 +275,7 @@ internal class TokenDetailsLoadedBalanceConverter(
     private fun formatPriceChange(status: CryptoCurrencyStatus.Value): String {
         val priceChange = status.priceChange ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
-        return BigDecimalFormatter.formatPercent(
-            percent = priceChange,
-            useAbsoluteValue = true,
-        )
+        return priceChange.format { percent() }
     }
 
     private fun formatPrice(status: CryptoCurrencyStatus.Value, appCurrency: AppCurrency): String {
@@ -315,7 +312,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         val amount = status.value.amount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
         val totalAmount = amount.getBalance(selectedBalanceType, stakingCryptoAmount)
 
-        return BigDecimalFormatter.formatCryptoAmount(totalAmount, status.currency.symbol, status.currency.decimals)
+        return totalAmount.format { crypto(status.currency) }
     }
 
     private fun getRewardText(status: CryptoCurrencyStatus, stakingRewardAmount: BigDecimal?): TextReference {
