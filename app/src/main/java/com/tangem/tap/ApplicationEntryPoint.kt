@@ -28,6 +28,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
@@ -110,4 +111,6 @@ interface ApplicationEntryPoint {
     fun getGetUserCountryCodeUseCase(): GetUserCountryUseCase
 
     fun getOnrampFeatureToggles(): OnrampFeatureToggles
+
+    fun getOnboardingV2FeatureToggles(): OnboardingV2FeatureToggles
 }
