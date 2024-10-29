@@ -9,7 +9,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import kotlinx.coroutines.flow.StateFlow
 
 @Stable
-interface OnboardingStepperComponent : ComposableContentComponent {
+internal interface OnboardingStepperComponent : ComposableContentComponent {
 
     data class StepperState(
         @IntRange(from = 0) val currentStep: Int,
