@@ -3,7 +3,8 @@ package com.tangem.datasource.api.stakekit
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.stakekit.models.request.*
 import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
-import com.tangem.datasource.api.stakekit.models.response.EnterActionResponse
+import com.tangem.datasource.api.stakekit.models.response.ActionDTO
+import com.tangem.datasource.api.stakekit.models.response.GetActionsResponse
 import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingGasEstimateDTO
@@ -35,14 +36,23 @@ interface StakeKitApi {
         @Body body: YieldBalanceRequestBody,
     ): ApiResponse<List<BalanceDTO>>
 
+    @GET("actions")
+    suspend fun getActions(
+        @Query("walletAddress") walletAddress: String,
+        @Query("network") network: String,
+        @Query("status") status: String,
+        @Query("sort") sort: String = "createdAtDesc",
+        @Query("limit") limit: Int = 50,
+    ): ApiResponse<GetActionsResponse>
+
     @POST("actions/enter")
-    suspend fun createEnterAction(@Body body: ActionRequestBody): ApiResponse<EnterActionResponse>
+    suspend fun createEnterAction(@Body body: ActionRequestBody): ApiResponse<ActionDTO>
 
     @POST("actions/exit")
-    suspend fun createExitAction(@Body body: ActionRequestBody): ApiResponse<EnterActionResponse>
+    suspend fun createExitAction(@Body body: ActionRequestBody): ApiResponse<ActionDTO>
 
     @POST("actions/pending")
-    suspend fun createPendingAction(@Body body: PendingActionRequestBody): ApiResponse<EnterActionResponse>
+    suspend fun createPendingAction(@Body body: PendingActionRequestBody): ApiResponse<ActionDTO>
 
     @POST("actions/enter/estimate-gas")
     suspend fun estimateGasOnEnter(@Body body: ActionRequestBody): ApiResponse<StakingGasEstimateDTO>
