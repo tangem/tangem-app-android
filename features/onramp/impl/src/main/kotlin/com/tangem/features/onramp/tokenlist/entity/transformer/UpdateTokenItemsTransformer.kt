@@ -1,0 +1,48 @@
+package com.tangem.features.onramp.tokenlist.entity.transformer
+
+import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.tokenlist.entity.TokenListUM
+import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
+import kotlinx.collections.immutable.toImmutableList
+
+internal class UpdateTokenItemsTransformer(
+    private val tokenItemStateConverter: TokenItemStateConverter,
+    private val statuses: List<CryptoCurrencyStatus>,
+    private val isBalanceHidden: Boolean,
+    private val hasSearchBar: Boolean,
+    private val onQueryChange: (String) -> Unit,
+    private val onActiveChange: (Boolean) -> Unit,
+) : TokenListUMTransformer {
+
+    override fun transform(prevState: TokenListUM): TokenListUM {
+        val items = tokenItemStateConverter.convertList(input = statuses).map(TokensListItemUM::Token)
+
+        val searchBarItem = if (hasSearchBar) {
+            prevState.getSearchBar() ?: createSearchBarItem()
+        } else {
+            null
+        }
+
+        return prevState.copy(
+            items = (listOfNotNull(searchBarItem) + items).toImmutableList(),
+            isBalanceHidden = isBalanceHidden,
+        )
+    }
+
+    private fun createSearchBarItem(): TokensListItemUM.SearchBar {
+        return TokensListItemUM.SearchBar(
+            searchBarUM = SearchBarUM(
+                placeholderText = resourceReference(id = R.string.common_search),
+                query = "",
+                onQueryChange = onQueryChange,
+                isActive = false,
+                onActiveChange = onActiveChange,
+            ),
+        )
+    }
+}
