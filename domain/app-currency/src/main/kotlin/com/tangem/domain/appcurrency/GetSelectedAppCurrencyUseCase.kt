@@ -6,10 +6,7 @@ import arrow.core.right
 import com.tangem.domain.appcurrency.error.SelectedAppCurrencyError
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEmpty
+import kotlinx.coroutines.flow.*
 
 class GetSelectedAppCurrencyUseCase(
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -20,5 +17,9 @@ class GetSelectedAppCurrencyUseCase(
             .map<AppCurrency, Either<SelectedAppCurrencyError, AppCurrency>> { it.right() }
             .catch { emit(SelectedAppCurrencyError.DataError(it).left()) }
             .onEmpty { emit(SelectedAppCurrencyError.NoAppCurrencySelected.left()) }
+    }
+
+    suspend fun invokeSync(): Either<SelectedAppCurrencyError, AppCurrency> {
+        return invoke().firstOrNull() ?: SelectedAppCurrencyError.NoAppCurrencySelected.left()
     }
 }
