@@ -17,6 +17,7 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.SaveManagedTokensUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
@@ -47,6 +48,7 @@ internal class ManageTokensModel @Inject constructor(
     private val router: Router,
     private val manageTokensListManager: ManageTokensListManager,
     private val messageSender: UiMessageSender,
+    private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
@@ -140,6 +142,7 @@ internal class ManageTokensModel @Inject constructor(
             hasChanges = false,
             saveChanges = ::saveChanges,
             loadMore = ::loadMoreItems,
+            needToAddDerivations = false,
             isSavingInProgress = false,
         )
     }
@@ -255,10 +258,22 @@ internal class ManageTokensModel @Inject constructor(
     }
 
     private fun updateChangedItems(currenciesToAdd: ChangedCurrencies, currenciesToRemove: ChangedCurrencies) {
-        state.update { state ->
-            state.copySealed(
-                hasChanges = currenciesToAdd.isNotEmpty() || currenciesToRemove.isNotEmpty(),
-            )
+        modelScope.launch {
+            val hasMissedDerivations = params.userWalletId?.let { walletId ->
+                val networks = currenciesToAdd.values
+                    .flatten()
+                    .toSet()
+                    .associate { it.backendId to null }
+
+                hasMissedDerivationsUseCase(walletId, networks)
+            }
+
+            state.update { state ->
+                state.copySealed(
+                    hasChanges = currenciesToAdd.isNotEmpty() || currenciesToRemove.isNotEmpty(),
+                    needToAddDerivations = hasMissedDerivations ?: false,
+                )
+            }
         }
     }
 
