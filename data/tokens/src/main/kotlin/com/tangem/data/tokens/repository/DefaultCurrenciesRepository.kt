@@ -38,7 +38,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -207,8 +206,9 @@ internal class DefaultCurrenciesRepository(
             if (userWallet.isMultiCurrency) {
                 getMultiCurrencyWalletCurrenciesUpdates(userWalletId).collect(::send)
             } else {
-                val currency = getSingleCurrencyWalletPrimaryCurrency(userWalletId)
-                send(listOf(currency))
+                val currencies = getSingleCurrencyWalletWithCardCurrencies(userWalletId)
+
+                send(currencies)
             }
         }
     }
@@ -349,26 +349,34 @@ internal class DefaultCurrenciesRepository(
 
     override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean> {
         return channelFlow {
-            ensureIsCorrectUserWallet(userWalletId, isMultiCurrencyWalletExpected = true)
+            val userWallet = getUserWallet(userWalletId)
 
-            launch(dispatchers.io) {
+            if (userWallet.isMultiCurrency) {
                 getSavedUserTokensResponse(userWalletId)
-                    .map { it.group == UserTokensResponse.GroupType.NETWORK }
-                    .collect(::send)
+                    .map { response -> response.group == UserTokensResponse.GroupType.NETWORK }
+                    .distinctUntilChanged()
+                    .onEach { isGrouped -> send(isGrouped) }
+                    .launchIn(scope = this + dispatchers.io)
+            } else {
+                send(element = false)
             }
-        }.cancellable()
+        }
     }
 
     override fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean> {
         return channelFlow {
-            ensureIsCorrectUserWallet(userWalletId, isMultiCurrencyWalletExpected = true)
+            val userWallet = getUserWallet(userWalletId)
 
-            launch(dispatchers.io) {
+            if (userWallet.isMultiCurrency) {
                 getSavedUserTokensResponse(userWalletId)
-                    .map { it.sort == UserTokensResponse.SortType.BALANCE }
-                    .collect(::send)
+                    .map { response -> response.sort == UserTokensResponse.SortType.BALANCE }
+                    .distinctUntilChanged()
+                    .onEach { isSorted -> send(isSorted) }
+                    .launchIn(scope = this + dispatchers.io)
+            } else {
+                send(element = false)
             }
-        }.cancellable()
+        }
     }
 
     override fun isSendBlockedByPendingTransactions(

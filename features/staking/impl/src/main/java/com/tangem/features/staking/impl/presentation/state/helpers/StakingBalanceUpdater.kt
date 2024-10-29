@@ -29,7 +29,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val yield: Yield,
 ) {
-    fun scheduleUpdates() {
+    fun fullUpdate() {
         coroutineScope.launch {
             listOf(
                 // we should update network to find pending tx after 1 sec
@@ -56,7 +56,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         }
     }
 
-    suspend fun instantUpdate() {
+    suspend fun partialUpdate() {
         coroutineScope {
             listOf(
                 async {
@@ -67,6 +67,16 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                 },
                 async {
                     updateProcessingActions()
+                },
+            ).awaitAll()
+        }
+    }
+
+    suspend fun initialUpdate() {
+        coroutineScope {
+            listOf(
+                async {
+                    updateStakeBalance()
                 },
             ).awaitAll()
         }
