@@ -292,4 +292,9 @@ sealed class AppRoute(val path: String) : Route {
     data class BuyCrypto(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/buy_crypto/${userWalletId.stringValue}")
+
+    @Serializable
+    data class SellCrypto(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/sell_crypto/${userWalletId.stringValue}")
 }
