@@ -12,7 +12,6 @@ import com.tangem.core.decompose.di.DecomposeComponent
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
-import com.tangem.features.markets.MarketsFeatureToggles
 import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -44,12 +43,9 @@ internal class WalletFragment : ComposeFragment() {
     internal lateinit var componentBuilder: DecomposeComponent.Builder
 
     @Inject
-    internal lateinit var marketsFeatureToggles: MarketsFeatureToggles
-
-    @Inject
     internal lateinit var appRouter: AppRouter
 
-    private var marketsEntryComponent: MarketsEntryComponent? = null
+    private lateinit var marketsEntryComponent: MarketsEntryComponent
 
     private val _walletRouter: InnerWalletRouter
         get() = requireNotNull(walletRouter as? InnerWalletRouter) {
@@ -59,17 +55,15 @@ internal class WalletFragment : ComposeFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (marketsFeatureToggles.isFeatureEnabled) {
-            val appContext = DefaultAppComponentContext(
-                componentContext = defaultComponentContext(requireActivity().onBackPressedDispatcher),
-                messageHandler = uiDependencies.eventMessageHandler,
-                dispatchers = coroutineDispatcherProvider,
-                hiltComponentBuilder = componentBuilder,
-                replaceRouter = appRouter.asRouter(),
-            )
+        val appContext = DefaultAppComponentContext(
+            componentContext = defaultComponentContext(requireActivity().onBackPressedDispatcher),
+            messageHandler = uiDependencies.eventMessageHandler,
+            dispatchers = coroutineDispatcherProvider,
+            hiltComponentBuilder = componentBuilder,
+            replaceRouter = appRouter.asRouter(),
+        )
 
-            marketsEntryComponent = marketsEntryComponentFactory.create(appContext)
-        }
+        marketsEntryComponent = marketsEntryComponentFactory.create(appContext)
     }
 
     @Composable
