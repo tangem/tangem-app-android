@@ -1,6 +1,7 @@
 package com.tangem.data.staking.di
 
 import com.squareup.moshi.Moshi
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.staking.*
 import com.tangem.data.staking.DefaultStakingErrorResolver
@@ -83,10 +84,14 @@ internal object StakingDataModule {
 
     @Provides
     @Singleton
-    internal fun provideStakingErrorResolver(@NetworkMoshi moshi: Moshi): StakingErrorResolver {
+    internal fun provideStakingErrorResolver(
+        @NetworkMoshi moshi: Moshi,
+        analyticsEventHandler: AnalyticsEventHandler,
+    ): StakingErrorResolver {
         val jsonAdapter = moshi.adapter(StakeKitErrorResponse::class.java)
         return DefaultStakingErrorResolver(
             stakeKitErrorConverter = StakeKitErrorConverter(jsonAdapter),
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
 }
