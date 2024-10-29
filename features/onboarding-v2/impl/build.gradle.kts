@@ -23,7 +23,6 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.res)
     implementation(projects.core.decompose)
-    implementation(projects.common.ui)
 
     /** Domain */
     implementation(projects.domain.models)
@@ -41,7 +40,6 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
-    implementation(deps.compose.material) // For androidx.compose.material.ButtonColors. TextButton legacy
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.foundation)
