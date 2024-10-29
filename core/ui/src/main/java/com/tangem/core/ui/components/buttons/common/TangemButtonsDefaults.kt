@@ -37,7 +37,7 @@ object TangemButtonsDefaults {
             disabledContentColor = TangemTheme.colors.text.disabled,
         )
 
-    val defaultTextButtonColors: ButtonColors
+    val defaultTextButtonColors: TangemButtonColors
         @Composable
         @ReadOnlyComposable
         get() = TangemButtonColors(

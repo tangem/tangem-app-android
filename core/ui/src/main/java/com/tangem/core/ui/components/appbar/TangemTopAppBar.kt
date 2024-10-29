@@ -153,6 +153,7 @@ fun TangemTopAppBar(
     titleAlignment: Alignment.Horizontal = Alignment.Start,
     containerColor: Color = Color.Transparent,
     height: TangemTopAppBarHeight = TangemTopAppBarHeight.DEFAULT,
+    endContentFixedHeight: Boolean = true,
     endContent: @Composable RowScope.() -> Unit,
 ) {
     Row(
@@ -188,7 +189,7 @@ fun TangemTopAppBar(
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing12)
                 .widthIn(min = TangemTheme.dimens.size32)
-                .height(TangemTheme.dimens.size32),
+                .run { if (endContentFixedHeight) height(TangemTheme.dimens.size32) else this },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12, Alignment.End),
             content = endContent,
