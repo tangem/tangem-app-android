@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.tap.domain.walletconnect2.domain.WcBlockchainHelper
+import com.tangem.tap.domain.walletconnect2.domain.models.Account
 import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 
 internal class TangemWcBlockchainHelper(
@@ -35,11 +36,12 @@ internal class TangemWcBlockchainHelper(
             }
     }
 
-    override fun networkIdToChainIdOrNull(networkId: String): String? {
+    override fun networkIdToChainIdOrNull(networkId: String): List<String> {
         val blockchain = Blockchain.fromNetworkId(networkId)
-        val namespace = blockchain?.getCaip2Namespace() ?: return null
-        val chainId = blockchain.getCaip2ChainId() ?: return null
-        return "$namespace$CHAIN_SEPARATOR$chainId"
+        val namespace = blockchain?.getCaip2Namespace() ?: return emptyList()
+        return blockchain.getCaip2ChainIds().map {
+            "$namespace$CHAIN_SEPARATOR$it"
+        }
     }
 
     override fun getNamespaceFromFullChainIdOrNull(chainId: String): String? {
@@ -52,8 +54,18 @@ internal class TangemWcBlockchainHelper(
         return Blockchain.fromNetworkId(networkId)?.fullName
     }
 
-    private fun Blockchain.getCaip2ChainId(): String? {
-        if (this.isEvm()) return this.getChainId()?.toString()
+    override fun chainIdsToAccounts(
+        walletAddress: String,
+        chainIds: List<String>,
+        derivationPath: String?,
+    ): List<Account> {
+        return chainIds.map { chainId ->
+            Account(chainId, walletAddress, derivationPath)
+        }
+    }
+
+    private fun Blockchain.getCaip2ChainIds(): List<String> {
+        if (this.isEvm()) return listOfNotNull(this.getChainId()?.toString())
 
         return when (this) {
             /*
@@ -61,13 +73,12 @@ internal class TangemWcBlockchainHelper(
              * uncommented is used.
              * Docs: https://docs.walletconnect.com/advanced/multichain/chain-list
              *
-             * Blockchain.Solana -> "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
              * */
-            Blockchain.Solana -> "4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ"
-            Blockchain.SolanaTestnet -> "z4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z"
-            Blockchain.Polkadot -> "91b171bb158e2d3848fa23a9f1c25182"
-            Blockchain.Tron -> "0x2b6653dc"
-            else -> null
+            Blockchain.Solana -> listOf("5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", "4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ")
+            Blockchain.SolanaTestnet -> listOf("z4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z")
+            Blockchain.Polkadot -> listOf("91b171bb158e2d3848fa23a9f1c25182")
+            Blockchain.Tron -> listOf("0x2b6653dc")
+            else -> emptyList()
         }
     }
 
