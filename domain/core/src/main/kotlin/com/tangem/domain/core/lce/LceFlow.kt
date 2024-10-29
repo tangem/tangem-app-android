@@ -6,7 +6,6 @@ import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
@@ -38,13 +37,9 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
     val isLoading: AtomicBoolean = AtomicBoolean(value = true)
 
     /**
-     * Sends a error of type [E] within the [ProducerScope] and then closes it for send.
-     * All subsequent sends will be ignored.
+     * Sends an error of type [E] within the [ProducerScope] without closing.
      *
-     * This method blocks the coroutine until a error is handled by the receiver.
-     *
-     * If the [ProducerScope] is already closed for send (e.g. after rising another error), it just raises [r]
-     * without closing.
+     * This method blocks the coroutine until an error is handled by the receiver.
      *
      * @param r Error to raise.
      */
@@ -52,7 +47,6 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
         isLoading.set(false)
 
         producerScope.trySendBlocking(r.lceError())
-        producerScope.close()
 
         raise.raise(r.lceError())
     }
@@ -88,14 +82,9 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
      *
      * This method suspends until the [Lce] instance is handled by the receiver.
      *
-     * If the [ProducerScope] is closed for send (e.g. after rising a error), it does nothing.
-     *
      * @param value The [Lce] instance to send.
      */
-    @OptIn(DelicateCoroutinesApi::class)
     suspend fun send(value: Lce<E, C>) {
-        if (producerScope.isClosedForSend) return
-
         isLoading.set(value.isLoading())
 
         producerScope.send(value)
