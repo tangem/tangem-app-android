@@ -127,7 +127,7 @@ class YieldConverter(
             stakedBalance = validatorDTO.stakedBalance,
             votingPower = validatorDTO.votingPower,
             preferred = validatorDTO.preferred,
-            isStrategicPartner = isStrategicPartner(address),
+            isStrategicPartner = isStrategicPartner(validatorDTO.address, validatorDTO.name),
         )
     }
 
@@ -180,11 +180,17 @@ class YieldConverter(
         }
     }
 
-    private fun isStrategicPartner(validatorAddress: String): Boolean = PARTNERS.any { it == validatorAddress }
+    private fun isStrategicPartner(validatorAddress: String?, validatorName: String): Boolean {
+        return PARTNERS.any { it == validatorAddress } || PARTNERS_NAMES.any { it.equals(validatorName, true) }
+    }
 
     private companion object {
         val PARTNERS = listOf(
             "cosmosvaloper1wrx0x9m9ykdhw9sg04v7uljme53wuj03aa5d4f",
+            "H2tJNyMHnRF6ahCQLQ1sSycM4FGchymuzyYzUqKEuydk",
+        )
+        val PARTNERS_NAMES = listOf(
+            "Meria",
         )
     }
 }

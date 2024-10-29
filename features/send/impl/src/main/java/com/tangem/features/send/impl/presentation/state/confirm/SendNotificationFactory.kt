@@ -45,7 +45,7 @@ import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
 
 @Suppress("LongParameterList", "LargeClass")
-internal class SendNotificationFactory constructor(
+internal class SendNotificationFactory(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
@@ -90,11 +90,14 @@ internal class SendNotificationFactory constructor(
                 reduceAmountBy = reduceAmountBy,
             )
             val feeError = (feeState.feeSelectorState as? FeeSelectorState.Error)?.error
+
+            val recipientAddress = state.recipientState?.addressTextField?.value
             val currencyCheck = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
                 amount = sendingAmount,
                 fee = feeValue,
+                recipientAddress = recipientAddress,
             )
             buildList {
                 addErrorNotifications(
@@ -187,7 +190,7 @@ internal class SendNotificationFactory constructor(
             reserveAmount = currencyCheck.reserveAmount,
             sendingAmount = sendingAmount,
             cryptoCurrency = currency,
-            isAccountFunded = false,
+            isAccountFunded = currencyCheck.isAccountFunded,
         )
     }
 
