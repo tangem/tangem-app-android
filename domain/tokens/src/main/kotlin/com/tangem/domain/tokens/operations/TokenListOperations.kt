@@ -29,16 +29,6 @@ internal class TokenListOperations(
         }
     }
 
-    fun getTokenListForSingleCurrencyFlow(): Flow<Either<Error, TokenList>> {
-        return flow {
-            emit(
-                either {
-                    createTokenList()
-                },
-            )
-        }
-    }
-
     private fun Raise<Error>.createTokenList(isGrouped: Boolean, isSortedByBalance: Boolean): TokenList {
         val nonEmptyCurrencies = tokens.toNonEmptyListOrNull() ?: return TokenList.Empty
 
@@ -51,22 +41,6 @@ internal class TokenListOperations(
             isAnyTokenLoading = isAnyTokenLoading,
             isGrouped = isGrouped,
             isSortedByBalance = isSortedByBalance,
-        )
-    }
-
-    private fun Raise<Error>.createTokenList(): TokenList {
-        val nonEmptyCurrencies = tokens.toNonEmptyListOrNull()
-            ?: return TokenList.Empty
-
-        val isAnyTokenLoading = nonEmptyCurrencies.any { it.value is CryptoCurrencyStatus.Loading }
-        val fiatBalanceOperations = TokenListFiatBalanceOperations(nonEmptyCurrencies, isAnyTokenLoading)
-
-        return createTokenList(
-            currencies = nonEmptyCurrencies,
-            fiatBalance = fiatBalanceOperations.calculateFiatBalance(),
-            isAnyTokenLoading = isAnyTokenLoading,
-            isGrouped = false,
-            isSortedByBalance = false,
         )
     }
 
