@@ -67,7 +67,7 @@ object NotificationsFactory {
         if (!isAccountFunded && reserveAmount != null && reserveAmount > sendingAmount) {
             add(
                 NotificationUM.Error.ReserveAmount(
-                    sendingAmount.format {
+                    reserveAmount.format {
                         crypto(cryptoCurrency)
                     },
                 ),
