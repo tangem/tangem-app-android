@@ -8,4 +8,5 @@ data class CryptoCurrencyCheck(
     val reserveAmount: BigDecimal?,
     val existentialDeposit: BigDecimal?,
     val utxoAmountLimit: UtxoAmountLimit?,
+    val isAccountFunded: Boolean,
 )
