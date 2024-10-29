@@ -23,8 +23,6 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
 
     private val availableMercuryoCurrencies = CopyOnWriteArrayList<MercuryoCurrenciesResponse.MercuryoCryptoCurrency>()
 
-    override fun featureIsSwitchedOn(): Boolean = true
-
     override fun isBuyAllowed(): Boolean = true
 
     override fun isSellAllowed(): Boolean = false

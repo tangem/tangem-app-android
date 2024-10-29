@@ -32,8 +32,6 @@ class MoonPayService(
 
     private var status: MoonPayStatus? = null
 
-    override fun featureIsSwitchedOn(): Boolean = true
-
     override suspend fun update() {
         withIOContext {
             performRequest {
