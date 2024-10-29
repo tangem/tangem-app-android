@@ -16,11 +16,10 @@ internal class SetConfirmationStateCompletedTransformer(
     }
 
     private fun StakingStates.ConfirmationState.copyWrapped(): StakingStates.ConfirmationState {
-        if (this is StakingStates.ConfirmationState.Data) {
-            return copy(
+        return if (this is StakingStates.ConfirmationState.Data) {
+            copy(
                 isPrimaryButtonEnabled = true,
                 innerState = InnerConfirmationStakingState.COMPLETED,
-                validatorState = validatorState.copySealed(isClickable = false),
                 footerText = TextReference.EMPTY,
                 notifications = persistentListOf(),
                 transactionDoneState = TransactionDoneState.Content(
@@ -29,7 +28,7 @@ internal class SetConfirmationStateCompletedTransformer(
                 ),
             )
         } else {
-            return this
+            this
         }
     }
 }
