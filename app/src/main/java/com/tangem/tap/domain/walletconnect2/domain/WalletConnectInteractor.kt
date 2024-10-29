@@ -102,7 +102,7 @@ class WalletConnectInteractor(
     private suspend fun setupUserChains(userWallet: UserWallet, currencies: List<CryptoCurrency>) {
         val accounts = getAccountsForWc(
             userWallet = userWallet,
-            networks = currencies.map { it.network },
+            networks = currencies.map { it.network }.distinct(),
         )
         setUserChains(accounts)
         handleDeeplinkStack(accounts)
@@ -403,18 +403,14 @@ class WalletConnectInteractor(
                 derivationPath = it.derivationPath.value,
             )
         }
-        return walletManagers.mapNotNull {
+        return walletManagers.flatMap {
             val wallet = it.wallet
-            val chainId = blockchainHelper.networkIdToChainIdOrNull(
-                wallet.blockchain.toNetworkId(),
+            val chainIds = blockchainHelper.networkIdToChainIdOrNull(wallet.blockchain.toNetworkId())
+            blockchainHelper.chainIdsToAccounts(
+                walletAddress = wallet.address,
+                chainIds = chainIds,
+                derivationPath = wallet.publicKey.derivationPath?.rawPath,
             )
-            chainId?.let {
-                Account(
-                    chainId,
-                    wallet.address,
-                    wallet.publicKey.derivationPath?.rawPath,
-                )
-            }
         }
     }
 
