@@ -69,17 +69,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetCardTokensListUseCase(
-        currenciesRepository: CurrenciesRepository,
-        quotesRepository: QuotesRepository,
-        networksRepository: NetworksRepository,
-        stakingRepository: StakingRepository,
-    ): GetNodlTokenListUseCase {
-        return GetNodlTokenListUseCase(currenciesRepository, quotesRepository, networksRepository, stakingRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideRemoveCurrencyUseCase(
         currenciesRepository: CurrenciesRepository,
         walletManagersFacade: WalletManagersFacade,
