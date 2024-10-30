@@ -33,7 +33,7 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
         context = child(key = "token_list"),
         params = OnrampTokenListComponent.Params(
             filterOperation = params.operation,
-            hasSearchBar = params.hasSearchBar,
+            hasSearchBar = true,
             userWalletId = params.userWalletId,
             onTokenClick = ::onTokenClick,
         ),
