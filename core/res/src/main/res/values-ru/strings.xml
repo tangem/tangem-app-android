@@ -566,6 +566,8 @@
   <string name="onboarding_wallet_info_title_fourth">Восстановление кода доступа</string>
   <string name="onboarding_wallet_info_title_second">Идентичные карты</string>
   <string name="onboarding_wallet_info_title_third">Код доступа</string>
+  <string name="onramp_pay_with">Оплата с</string>
+  <string name="onramp_via">Через</string>
   <string name="organize_tokens_group">Группы</string>
   <string name="organize_tokens_sort_by_balance">По балансу</string>
   <string name="organize_tokens_title">Упорядочить токены</string>
@@ -758,6 +760,7 @@
   <string name="staking_notification_new_validator_funds_transfer">Стейкинг в сети %1$s с новым валидатором автоматически переведет ваши текущие застейканные средства на него.</string>
   <string name="staking_notification_restake_rewards_text">Реинвестируйте свои заработанные награды в вашу застейканную сумму, увеличивая потенциальный доход</string>
   <string name="staking_notification_restake_text">Рестейк позволяет вам переместить средства из одного валидатора в другого без необходимости выхода из стейкинга.</string>
+  <string name="staking_notification_stake_entire_balance_text">Вы собираетесь застейкать весь баланс, рекомендуем оставить небольшую сумму для оплаты комиссии сети при выходе из стейкинга или получении награды.</string>
   <string name="staking_notification_unlock_text">Разблокируйте свои средства, чтобы вывести их из стейкинга. Разблокировка займёт %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Ваши средства будут доступны для использования после 21-дневного периода отзыва. Награда будет выведена вместе с вашими выводими средствами.</string>
   <string name="staking_notification_unstake_text">Ваши средства будут доступны после %s периода отзыва.</string>
