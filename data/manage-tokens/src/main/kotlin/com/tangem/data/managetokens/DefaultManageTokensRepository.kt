@@ -109,7 +109,7 @@ internal class DefaultManageTokensRepository(
                 ),
                 active = true,
                 searchText = query,
-                offset = request.offset * request.limit,
+                offset = request.offset + request.limit,
                 limit = request.limit,
             ).getOrThrow()
         }
