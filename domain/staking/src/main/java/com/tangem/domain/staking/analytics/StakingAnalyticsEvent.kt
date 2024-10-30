@@ -136,6 +136,15 @@ sealed class StakingAnalyticsEvent(
         },
     )
 
+    data class DomainError(
+        val stakeKitDomainError: StakingError.DomainError,
+    ) : StakingAnalyticsEvent(
+        event = "App Errors",
+        params = buildMap {
+            addIfValueIsNotNull(AnalyticsParam.ERROR_DESCRIPTION, stakeKitDomainError.message)
+        },
+    )
+
     fun MutableMap<String, String>.addIfValueIsNotNull(key: String, value: Any?) {
         if (value != null) {
             put(key, value.toString())
