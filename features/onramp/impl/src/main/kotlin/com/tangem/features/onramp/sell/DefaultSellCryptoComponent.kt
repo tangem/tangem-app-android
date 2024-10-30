@@ -20,11 +20,7 @@ internal class DefaultSellCryptoComponent @AssistedInject constructor(
 
     private val selectTokenComponent: OnrampOperationComponent = onrampOperationComponentFactory.create(
         context = appComponentContext,
-        params = OnrampOperationComponent.Params(
-            operation = OnrampOperation.SELL,
-            hasSearchBar = true,
-            userWalletId = params.userWalletId,
-        ),
+        params = OnrampOperationComponent.Params(operation = OnrampOperation.SELL, userWalletId = params.userWalletId),
     )
 
     @Composable
