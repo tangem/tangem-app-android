@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.core.navigation.url.UrlOpener
@@ -9,6 +10,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.getPendingActionTitle
+import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -116,13 +118,16 @@ internal class SetButtonsStateTransformer(
     }
 
     private fun StakingUiState.getConfirmationButtonText(): TextReference {
-        return if (confirmationState is StakingStates.ConfirmationState.Data) {
+        val confirmationState = confirmationState as? StakingStates.ConfirmationState.Data
+        val amountState = amountState as? AmountState.Data
+        return if (confirmationState != null && amountState != null) {
             if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
                 resourceReference(R.string.common_close)
             } else {
                 when (actionType) {
                     StakingActionCommonType.Enter -> {
-                        if (confirmationState.isApprovalNeeded) {
+                        val amount = amountState.amountTextField.cryptoAmount.value.orZero()
+                        if (confirmationState.isApprovalNeeded && confirmationState.allowance < amount) {
                             resourceReference(R.string.give_permission_title)
                         } else {
                             resourceReference(R.string.common_stake)
