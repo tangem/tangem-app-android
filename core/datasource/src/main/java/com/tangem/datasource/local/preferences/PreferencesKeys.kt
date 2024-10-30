@@ -55,7 +55,7 @@ object PreferencesKeys {
 
     val FEATURE_TOGGLES_KEY by lazy { stringPreferencesKey(name = "featureToggles") }
 
-    val EXCLUDED_BLOCKCHAINS_KEY by lazy { stringPreferencesKey(name = "excludedBlockchains") }
+    val EXCLUDED_BLOCKCHAINS_KEY by lazy { stringSetPreferencesKey(name = "excludedBlockchains") }
 
     val WAS_TWINS_ONBOARDING_SHOWN by lazy { booleanPreferencesKey(name = "twinsOnboardingShown") }
 
