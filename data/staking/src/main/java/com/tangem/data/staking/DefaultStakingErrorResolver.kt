@@ -26,8 +26,8 @@ internal class DefaultStakingErrorResolver(
             is StakingError.StakeKitUnknownError -> {
                 analyticsEventHandler.send(StakingAnalyticsEvent.StakeKitApiUnknownError(error))
             }
-            else -> {
-                // intentionally do nothing
+            is StakingError.DomainError -> {
+                analyticsEventHandler.send(StakingAnalyticsEvent.DomainError(error))
             }
         }
 
