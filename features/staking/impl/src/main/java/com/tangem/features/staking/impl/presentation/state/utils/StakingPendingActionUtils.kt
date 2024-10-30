@@ -35,7 +35,7 @@ internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (t
 
 internal fun isSingleAction(networkId: String, activeStake: BalanceState): Boolean {
     val isSingleAction = activeStake.pendingActions.size <= 1 // Either single or none pending actions
-    val isComposePendingActions = isComposePendingActions(networkId, activeStake.pendingActions)
+    val isComposePendingActions = isCompositePendingActions(networkId, activeStake.pendingActions)
     val isBscRestake = isBSC(networkId) && activeStake.pendingActions.any {
         it.type == StakingActionType.RESTAKE
     }
@@ -59,7 +59,7 @@ internal fun isTronStakedBalance(networkId: String, pendingAction: PendingAction
     return isTron(networkId) && pendingAction?.type == StakingActionType.REVOTE
 }
 
-internal fun isComposePendingActions(networkId: String, pendingActions: ImmutableList<PendingAction>?): Boolean {
+internal fun isCompositePendingActions(networkId: String, pendingActions: ImmutableList<PendingAction>?): Boolean {
     return when {
         isSolana(networkId) -> pendingActions?.any { it.type == StakingActionType.WITHDRAW } == true
         else -> false

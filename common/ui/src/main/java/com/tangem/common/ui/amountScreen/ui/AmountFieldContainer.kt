@@ -41,7 +41,7 @@ internal fun LazyListScope.amountField(
                     .padding(top = TangemTheme.dimens.spacing14),
             )
 
-            val balance = amountState.walletBalance.orMaskWithStars(isBalanceHidden).resolveReference()
+            val balance = amountState.availableBalance.orMaskWithStars(isBalanceHidden).resolveReference()
             AnimatedContent(
                 targetState = balance,
                 label = "Hide Balance Animation",

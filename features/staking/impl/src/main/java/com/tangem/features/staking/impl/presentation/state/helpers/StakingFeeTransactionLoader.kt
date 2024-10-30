@@ -22,7 +22,7 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.utils.isComposePendingActions
+import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.utils.extensions.orZero
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -114,7 +114,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         val sourceAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
             ?: error("No available address")
 
-        val gasEstimate = if (isComposePendingActions(cryptoCurrencyStatus.currency.network.id.value, pendingActions)) {
+        val gasEstimate = if (isCompositePendingActions(cryptoCurrencyStatus.currency.network.id.value, pendingActions)) {
             val result = coroutineScope {
                 pendingActions?.map { action ->
                     async {
