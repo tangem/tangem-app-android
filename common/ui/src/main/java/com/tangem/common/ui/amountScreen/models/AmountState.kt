@@ -14,7 +14,7 @@ sealed class AmountState {
     /**
      * @param isPrimaryButtonEnabled indicates if next state button enabled
      * @param walletName user wallet name
-     * @param walletBalance user crypto currency balance in wallet
+     * @param availableBalance user crypto currency balance
      * @param tokenIconState crypto currency icon state
      * @param segmentedButtonConfig currency switcher config
      * @param selectedButton selected currency index
@@ -25,7 +25,7 @@ sealed class AmountState {
     data class Data(
         override val isPrimaryButtonEnabled: Boolean,
         val walletName: String,
-        val walletBalance: TextReference,
+        val availableBalance: TextReference,
         val tokenIconState: CurrencyIconState,
         val segmentedButtonConfig: PersistentList<AmountSegmentedButtonsConfig>,
         val selectedButton: Int,
