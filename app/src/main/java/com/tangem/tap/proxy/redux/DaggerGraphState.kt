@@ -25,6 +25,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
@@ -69,4 +70,5 @@ data class DaggerGraphState(
     val getUserCountryUseCase: GetUserCountryUseCase? = null,
     val onrampFeatureToggles: OnrampFeatureToggles? = null,
     val environmentConfigStorage: EnvironmentConfigStorage? = null,
+    val onboardingV2FeatureToggles: OnboardingV2FeatureToggles? = null,
 ) : StateType
