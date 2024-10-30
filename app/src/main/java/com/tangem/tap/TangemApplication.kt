@@ -42,6 +42,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -176,6 +177,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val onrampFeatureToggles: OnrampFeatureToggles
         get() = entryPoint.getOnrampFeatureToggles()
+
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles
+        get() = entryPoint.getOnboardingV2FeatureToggles()
     // endregion
 
     override fun onCreate() {
@@ -253,6 +257,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     getUserCountryUseCase = getUserCountryUseCase,
                     onrampFeatureToggles = onrampFeatureToggles,
                     environmentConfigStorage = environmentConfigStorage,
+                    onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                 ),
             ),
         )
