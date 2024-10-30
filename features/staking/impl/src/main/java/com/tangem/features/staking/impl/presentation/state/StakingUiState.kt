@@ -118,6 +118,7 @@ internal sealed class StakingStates {
             val footerText: TextReference,
             val transactionDoneState: TransactionDoneState,
             val isApprovalNeeded: Boolean,
+            val allowance: BigDecimal,
             val reduceAmountBy: BigDecimal?,
         ) : ConfirmationState()
 
