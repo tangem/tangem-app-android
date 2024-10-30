@@ -46,7 +46,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Core modules */
-    implementation(projects.core.toggles)
+    implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
