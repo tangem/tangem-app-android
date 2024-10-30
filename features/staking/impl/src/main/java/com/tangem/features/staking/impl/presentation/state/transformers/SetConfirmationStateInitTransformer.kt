@@ -12,9 +12,11 @@ import com.tangem.features.staking.impl.presentation.state.utils.isTronStakedBal
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import timber.log.Timber
 
 internal class SetConfirmationStateInitTransformer(
     private val isEnter: Boolean,
+    private val isExplicitExit: Boolean,
     private val stakingApproval: StakingApproval,
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val pendingActions: ImmutableList<PendingAction>? = null,
@@ -30,13 +32,15 @@ internal class SetConfirmationStateInitTransformer(
     private val isTronStakedBalance
         get() = isTronStakedBalance(networkId, pendingAction)
 
-    private val isExit: Boolean
+    private val isImplicitExit: Boolean
         get() = pendingAction == null && pendingActions?.isEmpty() == true || isTronStakedBalance
 
     override fun transform(prevState: StakingUiState): StakingUiState {
+        Timber.e("SetConfirmationStateInitTransformer isEnter = $isEnter")
+        Timber.e("SetConfirmationStateInitTransformer isExit = $isExplicitExit")
         val actionType = when {
             isEnter -> StakingActionCommonType.Enter
-            isExit -> StakingActionCommonType.Exit
+            isImplicitExit || isExplicitExit -> StakingActionCommonType.Exit
             else -> when (pendingAction?.type) {
                 StakingActionType.STAKE -> StakingActionCommonType.Enter
                 StakingActionType.UNSTAKE -> StakingActionCommonType.Exit

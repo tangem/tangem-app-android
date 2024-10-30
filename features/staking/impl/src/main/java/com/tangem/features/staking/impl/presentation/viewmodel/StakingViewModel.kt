@@ -28,10 +28,6 @@ import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.model.StakingApproval
-import com.tangem.domain.staking.model.stakekit.BalanceItem
-import com.tangem.domain.staking.model.stakekit.PendingAction
-import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
@@ -49,6 +45,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
@@ -221,6 +218,18 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onNextClick(balanceState: BalanceState?) {
+        if (value.currentStep == StakingStep.InitialInfo && balanceState == null) {
+            // val isEnter = balanceState == null
+            // val isExit = balanceState?.type == BalanceType.STAKED
+            stateController.update(
+                SetConfirmationStateInitTransformer(
+                    isEnter = true,
+                    isExplicitExit = false,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    stakingApproval = stakingApproval,
+                ),
+            )
+        }
         stakingStateRouter.onNextClick()
     }
 
@@ -351,11 +360,6 @@ internal class StakingViewModel @Inject constructor(
             )
         } else {
             stateController.updateAll(
-                SetConfirmationStateInitTransformer(
-                    isEnter = true,
-                    cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    stakingApproval = stakingApproval,
-                ),
                 ValidatorSelectChangeTransformer(
                     selectedValidator = null,
                     yield = yield,
@@ -432,23 +436,25 @@ internal class StakingViewModel @Inject constructor(
         val networkId = cryptoCurrencyStatus.currency.network.id.value
         if (isSingleAction(networkId, activeStake)) {
             prepareForConfirmation(
+                balanceType = activeStake.type,
                 pendingActions = activeStake.pendingActions,
                 validator = activeStake.validator,
                 amountValue = activeStake.cryptoValue,
             )
-            onNextClick(balanceState = activeStake)
+            onNextClick(activeStake)
         } else {
             stateController.update(
                 ShowActionSelectorBottomSheetTransformer(
                     pendingActions = withStubUnstakeAction(networkId, activeStake),
                     onActionSelect = { action ->
                         prepareForConfirmation(
+                            balanceType = activeStake.type,
                             pendingAction = action,
                             validator = activeStake.validator,
                             amountValue = activeStake.cryptoValue,
                         )
                         stateController.update(DismissBottomSheetStateTransformer)
-                        onNextClick(balanceState = activeStake)
+                        onNextClick(activeStake)
                     },
                     onDismiss = { stateController.update(DismissBottomSheetStateTransformer) },
                 ),
@@ -872,6 +878,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private fun prepareForConfirmation(
+        balanceType: BalanceType,
         pendingActions: ImmutableList<PendingAction> = persistentListOf(),
         pendingAction: PendingAction? = pendingActions.firstOrNull(),
         validator: Yield.Validator?,
@@ -880,6 +887,7 @@ internal class StakingViewModel @Inject constructor(
         stateController.updateAll(
             SetConfirmationStateInitTransformer(
                 isEnter = false,
+                isExplicitExit = balanceType == BalanceType.STAKED,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 stakingApproval = stakingApproval,
                 pendingActions = pendingActions,
