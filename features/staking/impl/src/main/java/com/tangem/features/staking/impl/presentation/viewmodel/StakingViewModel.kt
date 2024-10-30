@@ -26,7 +26,10 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.staking.*
+import com.tangem.domain.staking.GetActionsUseCase
+import com.tangem.domain.staking.InvalidatePendingTransactionsUseCase
+import com.tangem.domain.staking.IsAnyTokenStakedUseCase
+import com.tangem.domain.staking.IsApproveNeededUseCase
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.PendingAction
@@ -63,6 +66,7 @@ import com.tangem.features.staking.impl.presentation.state.helpers.StakingTransa
 import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.*
 import com.tangem.features.staking.impl.presentation.state.transformers.approval.*
+import com.tangem.features.staking.impl.presentation.state.transformers.confirmation.SetUpdatedAllowanceTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.AddStakingNotificationsTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.DismissStakingNotificationsStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
@@ -167,7 +171,6 @@ internal class StakingViewModel @Inject constructor(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             userWallet = userWallet,
             yield = yield,
-            stakingApproval = stakingApproval,
         )
     }
 
@@ -192,6 +195,7 @@ internal class StakingViewModel @Inject constructor(
     )
 
     private var stakingApproval: StakingApproval = StakingApproval.Empty
+    private var stakingAllowance: BigDecimal = BigDecimal.ZERO
     private var isAmountSubtractAvailable: Boolean = false
     private var isAnyTokenStaked: Boolean = false
     private val allowanceTaskScheduler = SingleTaskScheduler<BigDecimal>()
@@ -357,6 +361,7 @@ internal class StakingViewModel @Inject constructor(
                     isEnter = true,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     stakingApproval = stakingApproval,
+                    stakingAllowance = stakingAllowance,
                 ),
                 ValidatorSelectChangeTransformer(
                     selectedValidator = null,
@@ -651,9 +656,11 @@ internal class StakingViewModel @Inject constructor(
                     }
                 },
                 onSuccess = { allowance ->
+                    stakingAllowance = allowance
                     val amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
                         ?: error("No amount provided")
                     if (allowance >= amount) {
+                        stateController.update(SetUpdatedAllowanceTransformer(allowance))
                         getFee()
                         allowanceTaskScheduler.cancelTask()
                     }
@@ -730,8 +737,22 @@ internal class StakingViewModel @Inject constructor(
         this.stakingStateRouter = stateRouter
     }
 
-    private fun setupApprovalNeeded() {
-        stakingApproval = isApproveNeededUseCase(cryptoCurrencyStatus.currency).getOrElse { StakingApproval.Empty }
+    private suspend fun setupApprovalNeeded() {
+        stakingApproval = isApproveNeededUseCase(cryptoCurrencyStatus.currency).fold(
+            ifRight = { approval ->
+                if (approval is StakingApproval.Needed) {
+                    stakingAllowance = getAllowanceUseCase(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = cryptoCurrencyStatus.currency,
+                        spenderAddress = approval.spenderAddress,
+                    ).getOrElse { BigDecimal.ZERO }
+                }
+                approval
+            },
+            ifLeft = {
+                StakingApproval.Empty
+            },
+        )
     }
 
     private suspend fun setupIsAnyTokenStaked() {
@@ -886,6 +907,7 @@ internal class StakingViewModel @Inject constructor(
                 stakingApproval = stakingApproval,
                 pendingActions = pendingActions,
                 pendingAction = pendingAction,
+                stakingAllowance = stakingAllowance,
             ),
             ValidatorSelectChangeTransformer(
                 selectedValidator = validator,
