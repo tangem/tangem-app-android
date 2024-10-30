@@ -1,6 +1,6 @@
 package com.tangem.tap.domain.scanCard
 
-import com.tangem.core.toggle.feature.FeatureTogglesManager
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 
 /**
  * Add custom token feature toggles
