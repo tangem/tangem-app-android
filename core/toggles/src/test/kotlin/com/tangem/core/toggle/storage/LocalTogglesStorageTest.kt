@@ -5,6 +5,7 @@ import com.google.common.truth.Truth
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import com.tangem.core.toggle.feature.impl.FeatureTogglesConstants
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.asset.reader.AssetReader
 import io.mockk.*
@@ -33,7 +34,7 @@ internal class LocalTogglesStorageTest {
         everyCreatingMoshiAdapter() returns jsonAdapter
         everyMappingJson() returns featureToggles
 
-        storage.populate()
+        storage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
 
         coVerifyOrder {
             assetReader.read(CONFIG_FILE_NAME)
@@ -49,7 +50,7 @@ internal class LocalTogglesStorageTest {
         everyCreatingMoshiAdapter() returns jsonAdapter
         everyMappingJson() throws IOException()
 
-        storage.populate()
+        storage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
 
         coVerifyOrder {
             assetReader.read(CONFIG_FILE_NAME)
@@ -63,7 +64,7 @@ internal class LocalTogglesStorageTest {
     fun `failure initialize storage if jsonAdapter throws exception`() = runTest {
         everyReadingJson() throws IOException()
 
-        storage.populate()
+        storage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
 
         coVerifyOrder { assetReader.read(CONFIG_FILE_NAME) }
         verifyAll(inverse = true) { jsonAdapter.fromJson(any<String>()) }

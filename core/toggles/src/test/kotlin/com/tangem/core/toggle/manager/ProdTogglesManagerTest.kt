@@ -2,6 +2,7 @@ package com.tangem.core.toggle.manager
 
 import android.content.pm.PackageManager
 import com.google.common.truth.Truth
+import com.tangem.core.toggle.feature.impl.FeatureTogglesConstants
 import com.tangem.core.toggle.feature.impl.ProdFeatureTogglesManager
 import com.tangem.core.toggle.storage.Toggle
 import com.tangem.core.toggle.storage.TogglesStorage
@@ -24,14 +25,14 @@ internal class ProdTogglesManagerTest {
     fun `successfully initialize storage`() = runTest {
         val currentVersion = "1.0.0"
 
-        coEvery { localTogglesStorage.populate() } just Runs
+        coEvery { localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH) } just Runs
         every { localTogglesStorage.toggles } returns localFeatureToggles
         every { versionProvider.get() } returns currentVersion
 
         manager.init()
 
         coVerifyOrder {
-            localTogglesStorage.populate()
+            localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
             versionProvider.get()
         }
 
@@ -41,14 +42,14 @@ internal class ProdTogglesManagerTest {
 
     @Test
     fun `successfully initialize storage if versionProvider returns null`() = runTest {
-        coEvery { localTogglesStorage.populate() } just Runs
+        coEvery { localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH) } just Runs
         every { localTogglesStorage.toggles } returns localFeatureToggles
         every { versionProvider.get() } returns null
 
         manager.init()
 
         coVerifyOrder {
-            localTogglesStorage.populate()
+            localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
             versionProvider.get()
         }
 
@@ -57,7 +58,7 @@ internal class ProdTogglesManagerTest {
 
     @Test
     fun `failure initialize storage if localFeatureTogglesStorage throws exception`() = runTest {
-        coEvery { localTogglesStorage.populate() } just Runs
+        coEvery { localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH) } just Runs
         every { localTogglesStorage.toggles } throws IllegalStateException(
             "Property featureToggles should be initialized before get.",
         )
@@ -73,13 +74,13 @@ internal class ProdTogglesManagerTest {
                 Truth.assertThat(it).isInstanceOf(IllegalStateException::class.java)
             }
 
-        coVerifyOrder { localTogglesStorage.populate() }
+        coVerifyOrder { localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH) }
         verifyAll(inverse = true) { versionProvider.get() }
     }
 
     @Test
     fun `failure initialize storage if versionProvider throws exception`() = runTest {
-        coEvery { localTogglesStorage.populate() } just Runs
+        coEvery { localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH) } just Runs
         every { localTogglesStorage.toggles } returns localFeatureToggles
         every { versionProvider.get() } throws PackageManager.NameNotFoundException()
 
@@ -90,7 +91,7 @@ internal class ProdTogglesManagerTest {
             }
 
         coVerifyOrder {
-            localTogglesStorage.populate()
+            localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
             versionProvider.get()
         }
     }

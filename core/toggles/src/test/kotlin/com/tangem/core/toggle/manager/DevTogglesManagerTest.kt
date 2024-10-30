@@ -3,6 +3,7 @@ package com.tangem.core.toggle.manager
 import android.annotation.SuppressLint
 import com.google.common.truth.Truth
 import com.tangem.core.toggle.feature.impl.DevFeatureTogglesManager
+import com.tangem.core.toggle.feature.impl.FeatureTogglesConstants
 import com.tangem.core.toggle.storage.Toggle
 import com.tangem.core.toggle.storage.TogglesStorage
 import com.tangem.core.toggle.utils.associateToggles
@@ -35,7 +36,7 @@ internal class DevTogglesManagerTest {
     fun `successfully initialize storage if shared prefs kept feature toggles`() = runTest {
         val currentVersion = "0.1.0"
 
-        coEvery { localTogglesStorage.populate() } just Runs
+        coEvery { localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH) } just Runs
         coEvery {
             appPreferenceStore.getObjectSyncOrNull<Map<String, Boolean>>(PreferencesKeys.FEATURE_TOGGLES_KEY)
         } returns savedFeatureTogglesMap
@@ -45,7 +46,7 @@ internal class DevTogglesManagerTest {
         manager.init()
 
         coVerifyOrder {
-            localTogglesStorage.populate()
+            localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
             versionProvider.get()
         }
 
@@ -62,7 +63,7 @@ internal class DevTogglesManagerTest {
     fun `successfully initialize storage if shared prefs kept empty list`() = runTest {
         val currentVersion = "0.1.0"
 
-        coEvery { localTogglesStorage.populate() } just Runs
+        coEvery { localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH) } just Runs
         coEvery {
             appPreferenceStore.getObjectSyncOrNull<Map<String, Boolean>>(PreferencesKeys.FEATURE_TOGGLES_KEY)
         } returns emptyMap()
@@ -72,7 +73,7 @@ internal class DevTogglesManagerTest {
         manager.init()
 
         coVerifyOrder {
-            localTogglesStorage.populate()
+            localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
             versionProvider.get()
         }
 
@@ -89,7 +90,7 @@ internal class DevTogglesManagerTest {
     fun `successfully initialize storage if shared prefs didn't keep feature toggles`() = runTest {
         val currentVersion = "0.1.0"
 
-        coEvery { localTogglesStorage.populate() } just Runs
+        coEvery { localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH) } just Runs
         coEvery {
             appPreferenceStore.getObjectSyncOrNull<Map<String, Boolean>>(PreferencesKeys.FEATURE_TOGGLES_KEY)
         } returns null
@@ -99,7 +100,7 @@ internal class DevTogglesManagerTest {
         manager.init()
 
         coVerifyOrder {
-            localTogglesStorage.populate()
+            localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
             versionProvider.get()
         }
 
@@ -112,7 +113,7 @@ internal class DevTogglesManagerTest {
 
     @Test
     fun `successfully initialize storage if versionProvider returns null`() = runTest {
-        coEvery { localTogglesStorage.populate() } just Runs
+        coEvery { localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH) } just Runs
         coEvery { appPreferenceStore.getSyncOrNull(PreferencesKeys.FEATURE_TOGGLES_KEY) } returns savedFeatureToggles
         coEvery { localTogglesStorage.toggles } returns localFeatureToggles
         coEvery { versionProvider.get() } returns null
@@ -120,7 +121,7 @@ internal class DevTogglesManagerTest {
         manager.init()
 
         coVerifyOrder {
-            localTogglesStorage.populate()
+            localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
             versionProvider.get()
         }
 
