@@ -1,15 +1,19 @@
 package com.tangem.core.ui.components.currency.icon
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
@@ -33,6 +37,7 @@ fun CurrencyIcon(state: CurrencyIconState, modifier: Modifier = Modifier, should
         when (state) {
             is CurrencyIconState.Loading -> LoadingIcon(modifier = iconModifier)
             is CurrencyIconState.Locked -> LockedIcon(modifier = iconModifier)
+            is CurrencyIconState.Empty -> EmptyIcon(resId = state.resId, modifier = iconModifier)
             is CurrencyIconState.CoinIcon,
             is CurrencyIconState.CustomTokenIcon,
             is CurrencyIconState.TokenIcon,
@@ -62,6 +67,24 @@ private fun LockedIcon(modifier: Modifier = Modifier) {
                     color = TangemTheme.colors.field.primary,
                     shape = CircleShape,
                 ),
+        )
+    }
+}
+
+@Composable
+private fun EmptyIcon(@DrawableRes resId: Int, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.button.secondary,
+            shape = CircleShape,
+        ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(resId),
+            contentDescription = null,
+            modifier = Modifier.size(size = 24.dp),
+            tint = TangemTheme.colors.icon.informative,
         )
     }
 }
