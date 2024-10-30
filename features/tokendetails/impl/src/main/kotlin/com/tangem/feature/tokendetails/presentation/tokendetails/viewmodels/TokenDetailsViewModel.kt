@@ -720,8 +720,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onRefreshSwipe(isRefreshing: Boolean) {
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Refreshed(cryptoCurrency.symbol))
-
         internalUiState.value = stateFactory.getRefreshingState()
 
         viewModelScope.launch(dispatchers.main) {
