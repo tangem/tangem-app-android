@@ -18,12 +18,7 @@ internal interface OnrampOperationComponent : ComposableContentComponent {
      * Params
      *
      * @property operation    operation
-     * @property hasSearchBar flag that indicates if search bar should be shown
      * @property userWalletId id of multi-currency wallet
      */
-    data class Params(
-        val operation: OnrampOperation,
-        val hasSearchBar: Boolean,
-        val userWalletId: UserWalletId,
-    )
+    data class Params(val operation: OnrampOperation, val userWalletId: UserWalletId)
 }
