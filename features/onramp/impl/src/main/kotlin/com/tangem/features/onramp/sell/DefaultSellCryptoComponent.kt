@@ -3,55 +3,33 @@ package com.tangem.features.onramp.sell
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
-import arrow.core.getOrElse
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.onramp.component.SellCryptoComponent
-import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.selecttoken.OnrampSelectTokenComponent
+import com.tangem.features.onramp.entity.OnrampOperation
+import com.tangem.features.onramp.selecttoken.OnrampOperationComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.launch
 
 @Stable
 internal class DefaultSellCryptoComponent @AssistedInject constructor(
-    onrampSelectTokenComponentFactory: OnrampSelectTokenComponent.Factory,
+    onrampOperationComponentFactory: OnrampOperationComponent.Factory,
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: SellCryptoComponent.Params,
-    private val reduxStateHolder: ReduxStateHolder,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) : SellCryptoComponent {
 
-    private val selectTokenComponent: OnrampSelectTokenComponent = onrampSelectTokenComponentFactory.create(
+    private val selectTokenComponent: OnrampOperationComponent = onrampOperationComponentFactory.create(
         context = appComponentContext,
-        params = OnrampSelectTokenComponent.Params(
+        params = OnrampOperationComponent.Params(
+            operation = OnrampOperation.SELL,
             hasSearchBar = true,
             userWalletId = params.userWalletId,
-            titleResId = R.string.common_sell,
-            onTokenClick = ::onTokenClick,
         ),
     )
 
     @Composable
     override fun Content(modifier: Modifier) {
         selectTokenComponent.Content(modifier = modifier)
-    }
-
-    private fun onTokenClick(status: CryptoCurrencyStatus) {
-        appComponentContext.componentScope.launch {
-            reduxStateHolder.dispatch(
-                TradeCryptoAction.Sell(
-                    cryptoCurrencyStatus = status,
-                    appCurrencyCode = getSelectedAppCurrencyUseCase.invokeSync()
-                        .getOrElse { AppCurrency.Default }.code,
-                ),
-            )
-        }
     }
 
     @AssistedFactory
