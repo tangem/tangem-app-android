@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.currency.icon
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import com.tangem.core.ui.R
 
 /**
  * Represents the various states an icon can be in.
@@ -82,6 +83,14 @@ sealed class CurrencyIconState {
         override val topBadgeIconResId: Int? = null
     }
 
+    data class Empty(
+        @DrawableRes val resId: Int = R.drawable.ic_empty_64,
+    ) : CurrencyIconState() {
+        override val isGrayscale: Boolean = true
+        override val showCustomBadge: Boolean = false
+        override val topBadgeIconResId: Int? = null
+    }
+
     fun copySealed(
         isGrayscale: Boolean = this.isGrayscale,
         showCustomBadge: Boolean = this.showCustomBadge,
@@ -103,6 +112,7 @@ sealed class CurrencyIconState {
         )
         is Loading,
         is Locked,
+        is Empty,
         -> this
     }
 }
