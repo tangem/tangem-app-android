@@ -7,7 +7,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.*
-import com.tangem.features.staking.impl.presentation.state.utils.isComposePendingActions
+import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.features.staking.impl.presentation.state.utils.isTronStakedBalance
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
@@ -25,7 +25,7 @@ internal class SetConfirmationStateInitTransformer(
         get() = cryptoCurrencyStatus.currency.network.id.value
 
     private val isComposePendingActions
-        get() = isComposePendingActions(networkId, pendingActions)
+        get() = isCompositePendingActions(networkId, pendingActions)
 
     private val isTronStakedBalance
         get() = isTronStakedBalance(networkId, pendingAction)
