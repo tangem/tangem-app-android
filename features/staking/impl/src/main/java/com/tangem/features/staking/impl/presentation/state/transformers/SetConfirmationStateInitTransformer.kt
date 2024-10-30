@@ -12,10 +12,12 @@ import com.tangem.features.staking.impl.presentation.state.utils.isTronStakedBal
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
 internal class SetConfirmationStateInitTransformer(
     private val isEnter: Boolean,
     private val stakingApproval: StakingApproval,
+    private val stakingAllowance: BigDecimal,
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val pendingActions: ImmutableList<PendingAction>? = null,
     private val pendingAction: PendingAction? = pendingActions?.firstOrNull(),
@@ -60,6 +62,7 @@ internal class SetConfirmationStateInitTransformer(
                 footerText = TextReference.EMPTY,
                 transactionDoneState = TransactionDoneState.Empty,
                 isApprovalNeeded = stakingApproval is StakingApproval.Needed,
+                allowance = stakingAllowance,
                 reduceAmountBy = null,
                 pendingAction = pendingAction,
                 pendingActions = pendingActions.takeIf { isComposePendingActions },
