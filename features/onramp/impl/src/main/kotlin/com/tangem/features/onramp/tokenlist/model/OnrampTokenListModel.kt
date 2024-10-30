@@ -8,9 +8,12 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.utils.getOrElse
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.onramp.entity.OnrampOperation
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
@@ -32,11 +35,16 @@ internal class OnrampTokenListModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getTokenListUseCase: GetTokenListUseCase,
+    private val getWalletsUseCase: GetWalletsUseCase,
+    private val rampStateManager: RampStateManager,
 ) : Model() {
 
     val state: StateFlow<TokenListUM> = tokenListUMController.state
 
     private val params: OnrampTokenListComponent.Params = paramsContainer.require()
+    private val scanResponse by lazy {
+        getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }.scanResponse
+    }
 
     init {
         subscribeOnUpdateState()
@@ -98,8 +106,14 @@ internal class OnrampTokenListModel @Inject constructor(
         }
     }
 
-    // TODO: [REDACTED_JIRA]
     private fun List<CryptoCurrencyStatus>.filterByAvailability(): List<CryptoCurrencyStatus> {
-        return this
+        return filter {
+            when (params.filterOperation) {
+                OnrampOperation.BUY -> {
+                    rampStateManager.availableForBuy(scanResponse = scanResponse, cryptoCurrency = it.currency)
+                }
+                OnrampOperation.SELL -> rampStateManager.availableForSell(cryptoCurrency = it.currency)
+            }
+        }
     }
 }
