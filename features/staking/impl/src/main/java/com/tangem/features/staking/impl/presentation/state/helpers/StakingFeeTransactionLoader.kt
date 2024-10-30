@@ -114,7 +114,11 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         val sourceAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
             ?: error("No available address")
 
-        val gasEstimate = if (isCompositePendingActions(cryptoCurrencyStatus.currency.network.id.value, pendingActions)) {
+        val gasEstimate = if (isCompositePendingActions(
+                networkId = cryptoCurrencyStatus.currency.network.id.value,
+                pendingActions = pendingActions,
+            )
+        ) {
             val result = coroutineScope {
                 pendingActions?.map { action ->
                     async {

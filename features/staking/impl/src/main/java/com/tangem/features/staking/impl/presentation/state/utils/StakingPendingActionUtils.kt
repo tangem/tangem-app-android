@@ -35,12 +35,12 @@ internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (t
 
 internal fun isSingleAction(networkId: String, activeStake: BalanceState): Boolean {
     val isSingleAction = activeStake.pendingActions.size <= 1 // Either single or none pending actions
-    val isComposePendingActions = isCompositePendingActions(networkId, activeStake.pendingActions)
+    val isCompositePendingActions = isCompositePendingActions(networkId, activeStake.pendingActions)
     val isBscRestake = isBSC(networkId) && activeStake.pendingActions.any {
         it.type == StakingActionType.RESTAKE
     }
 
-    return isSingleAction && !isBscRestake || isComposePendingActions
+    return isSingleAction && !isBscRestake || isCompositePendingActions
 }
 
 internal fun withStubUnstakeAction(networkId: String, activeStake: BalanceState) = if (isBSC(networkId)) {
