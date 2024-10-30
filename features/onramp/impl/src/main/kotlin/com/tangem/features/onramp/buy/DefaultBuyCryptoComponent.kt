@@ -20,11 +20,7 @@ internal class DefaultBuyCryptoComponent @AssistedInject constructor(
 
     private val selectTokenComponent: OnrampOperationComponent = onrampOperationComponentFactory.create(
         context = appComponentContext,
-        params = OnrampOperationComponent.Params(
-            operation = OnrampOperation.BUY,
-            hasSearchBar = true,
-            userWalletId = params.userWalletId,
-        ),
+        params = OnrampOperationComponent.Params(operation = OnrampOperation.BUY, userWalletId = params.userWalletId),
     )
 
     @Composable
