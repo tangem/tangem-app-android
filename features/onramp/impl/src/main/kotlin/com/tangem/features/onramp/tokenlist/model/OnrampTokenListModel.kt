@@ -108,7 +108,7 @@ internal class OnrampTokenListModel @Inject constructor(
 
     private fun List<CryptoCurrencyStatus>.filterByAvailability(): List<CryptoCurrencyStatus> {
         return filter {
-            when (params.operation) {
+            when (params.filterOperation) {
                 OnrampOperation.BUY -> {
                     rampStateManager.availableForBuy(scanResponse = scanResponse, cryptoCurrency = it.currency)
                 }
