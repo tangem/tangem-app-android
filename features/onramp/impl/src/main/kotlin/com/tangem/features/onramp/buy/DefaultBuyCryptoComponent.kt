@@ -6,21 +6,21 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.features.onramp.component.BuyCryptoComponent
 import com.tangem.features.onramp.entity.OnrampOperation
-import com.tangem.features.onramp.selecttoken.OnrampSelectTokenComponent
+import com.tangem.features.onramp.selecttoken.OnrampOperationComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 @Stable
 internal class DefaultBuyCryptoComponent @AssistedInject constructor(
-    onrampSelectTokenComponentFactory: OnrampSelectTokenComponent.Factory,
+    onrampOperationComponentFactory: OnrampOperationComponent.Factory,
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: BuyCryptoComponent.Params,
 ) : BuyCryptoComponent {
 
-    private val selectTokenComponent: OnrampSelectTokenComponent = onrampSelectTokenComponentFactory.create(
+    private val selectTokenComponent: OnrampOperationComponent = onrampOperationComponentFactory.create(
         context = appComponentContext,
-        params = OnrampSelectTokenComponent.Params(
+        params = OnrampOperationComponent.Params(
             operation = OnrampOperation.BUY,
             hasSearchBar = true,
             userWalletId = params.userWalletId,

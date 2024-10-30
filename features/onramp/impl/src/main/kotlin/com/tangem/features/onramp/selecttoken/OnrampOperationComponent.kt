@@ -6,13 +6,13 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.onramp.entity.OnrampOperation
 
 /**
- * Select token component
+ * Base operation component
  *
  * @author Andrew Khokhlov on 22/10/2024
  */
-internal interface OnrampSelectTokenComponent : ComposableContentComponent {
+internal interface OnrampOperationComponent : ComposableContentComponent {
 
-    interface Factory : ComponentFactory<Params, OnrampSelectTokenComponent>
+    interface Factory : ComponentFactory<Params, OnrampOperationComponent>
 
     /**
      * Params

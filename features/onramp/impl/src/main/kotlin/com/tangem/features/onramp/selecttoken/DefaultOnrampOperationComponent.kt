@@ -20,14 +20,14 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
 
-internal class DefaultOnrampSelectTokenComponent @AssistedInject constructor(
+internal class DefaultOnrampOperationComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     onrampTokenListComponentFactory: OnrampTokenListComponent.Factory,
-    @Assisted private val params: OnrampSelectTokenComponent.Params,
+    @Assisted private val params: OnrampOperationComponent.Params,
     private val reduxStateHolder: ReduxStateHolder,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-) : AppComponentContext by appComponentContext, OnrampSelectTokenComponent {
+) : AppComponentContext by appComponentContext, OnrampOperationComponent {
 
     private val onrampTokenListComponent: OnrampTokenListComponent = onrampTokenListComponentFactory.create(
         context = child(key = "token_list"),
@@ -74,11 +74,11 @@ internal class DefaultOnrampSelectTokenComponent @AssistedInject constructor(
     }
 
     @AssistedFactory
-    interface Factory : OnrampSelectTokenComponent.Factory {
+    interface Factory : OnrampOperationComponent.Factory {
 
         override fun create(
             context: AppComponentContext,
-            params: OnrampSelectTokenComponent.Params,
-        ): DefaultOnrampSelectTokenComponent
+            params: OnrampOperationComponent.Params,
+        ): DefaultOnrampOperationComponent
     }
 }
