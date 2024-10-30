@@ -344,7 +344,7 @@ internal class StakingViewModel @Inject constructor(
         )
     }
 
-    override fun onEnterClick() {
+    override fun onAmountEnterClick() {
         if (yield.preferredValidators.isEmpty()) {
             stateController.updateEvent(
                 StakingEvent.ShowAlert(StakingAlertUM.NoAvailableValidators),

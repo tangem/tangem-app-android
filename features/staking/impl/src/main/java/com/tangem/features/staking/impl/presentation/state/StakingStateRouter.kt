@@ -23,9 +23,9 @@ internal class StakingStateRouter(
     fun onNextClick() {
         when (stateController.value.currentStep) {
             StakingStep.InitialInfo -> when (stateController.value.actionType) {
-                StakingActionCommonType.Enter -> showAmount()
+                StakingActionCommonType.Enter,
+                StakingActionCommonType.Exit -> showAmount()
                 StakingActionCommonType.Pending.Other,
-                StakingActionCommonType.Exit,
                 StakingActionCommonType.Pending.Rewards,
                 -> showConfirmation()
                 StakingActionCommonType.Pending.Restake -> showRestakeValidators()
