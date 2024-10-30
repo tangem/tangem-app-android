@@ -1,6 +1,6 @@
 package com.tangem.features.onboarding.v2
 
-import com.tangem.core.toggle.feature.FeatureTogglesManager
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import javax.inject.Inject
 
 internal class DefaultOnboardingV2FeatureToggles @Inject constructor(
