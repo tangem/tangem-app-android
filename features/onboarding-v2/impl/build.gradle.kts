@@ -16,7 +16,7 @@ dependencies {
     implementation(projects.features.onboardingV2.api)
 
     /** Core modules */
-    implementation(projects.core.toggles)
+    implementation(projects.core.configToggles)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.utils)

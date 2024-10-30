@@ -5,10 +5,10 @@ import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.signer.TransactionSignerFactory
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
+import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.toggle.blockchain.ExcludedBlockchainsManager
-import com.tangem.core.toggle.feature.FeatureTogglesManager
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
