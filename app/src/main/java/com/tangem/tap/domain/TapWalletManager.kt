@@ -3,7 +3,6 @@ package com.tangem.tap.domain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.operations.attestation.Attestation
@@ -28,19 +27,16 @@ class TapWalletManager(
             field = value
         }
 
-    suspend fun onWalletSelected(userWallet: UserWallet, sendAnalyticsEvent: Boolean) {
+    suspend fun onWalletSelected(userWallet: UserWallet) {
         // If a previous job was running, it gets cancelled before the new one starts,
         // ensuring that only one job is active at any given time.
         loadUserWalletDataJob = CoroutineScope(dispatchers.io)
-            .launch { loadUserWalletData(userWallet, sendAnalyticsEvent) }
+            .launch { loadUserWalletData(userWallet) }
             .also { it.join() }
     }
 
-    private suspend fun loadUserWalletData(userWallet: UserWallet, sendAnalyticsEvent: Boolean) {
+    private suspend fun loadUserWalletData(userWallet: UserWallet) {
         Analytics.setContext(userWallet.scanResponse)
-        if (sendAnalyticsEvent) {
-            Analytics.send(Basic.WalletOpened())
-        }
         val scanResponse = userWallet.scanResponse
         val card = scanResponse.card
         val attestationFailed = card.attestation.status == Attestation.Status.Failed

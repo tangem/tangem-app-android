@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import arrow.core.getOrElse
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
@@ -12,7 +11,6 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
@@ -56,7 +54,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
-    private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val reduxStateHolder: ReduxStateHolder,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
@@ -92,13 +89,11 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onManageTokensClick() {
-        analyticsEventHandler.send(PortfolioEvent.ButtonManageTokens)
         reduxStateHolder.dispatch(action = TokensAction.SetArgs.ManageAccess)
         router.openManageTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
     }
 
     override fun onOrganizeTokensClick() {
-        analyticsEventHandler.send(PortfolioEvent.OrganizeTokens)
         router.openOrganizeTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
     }
 
@@ -110,7 +105,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus) {
-        analyticsEventHandler.send(PortfolioEvent.TokenTapped)
         router.openTokenDetails(stateHolder.getSelectedWalletId(), currencyStatus)
     }
 
