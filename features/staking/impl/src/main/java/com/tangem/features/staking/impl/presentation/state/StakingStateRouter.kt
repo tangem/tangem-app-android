@@ -24,7 +24,8 @@ internal class StakingStateRouter(
         when (stateController.value.currentStep) {
             StakingStep.InitialInfo -> when (stateController.value.actionType) {
                 StakingActionCommonType.Enter,
-                StakingActionCommonType.Exit -> showAmount()
+                StakingActionCommonType.Exit,
+                -> showAmount()
                 StakingActionCommonType.Pending.Other,
                 StakingActionCommonType.Pending.Rewards,
                 -> showConfirmation()
