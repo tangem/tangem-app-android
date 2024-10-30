@@ -23,8 +23,6 @@ sealed class WalletScreenAnalyticsEvent {
             override val oneTimeEventId: String = id + userWalletId.stringValue
         }
 
-        data object WalletOpened : Basic(event = "Wallet Opened")
-
         class CardWasScanned(source: AnalyticsParam.ScreensSources) : Basic(
             event = "Card Was Scanned",
             params = mapOf(
@@ -74,7 +72,6 @@ sealed class WalletScreenAnalyticsEvent {
     ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
 
         data object ScreenOpened : MainScreen(event = "Screen opened")
-        data object WalletSwipe : MainScreen(event = "Wallet Swipe")
 
         class EnableBiometrics(state: AnalyticsParam.OnOffState) : MainScreen(
             event = "Enable Biometric",
@@ -88,7 +85,6 @@ sealed class WalletScreenAnalyticsEvent {
 
         data object NoticeBackupYourWalletTapped : MainScreen(event = "Notice - Backup Your Wallet Tapped")
         data object NoticeScanYourCardTapped : MainScreen(event = "Notice - Scan Your Card Tapped")
-        data object NoticeWalletLocked : MainScreen(event = "Notice - Wallet Locked")
         data object WalletUnlockTapped : MainScreen(event = "Notice - Wallet Unlock Tapped")
 
         data object NetworksUnreachable : MainScreen(event = "Notice - Networks Unreachable")
