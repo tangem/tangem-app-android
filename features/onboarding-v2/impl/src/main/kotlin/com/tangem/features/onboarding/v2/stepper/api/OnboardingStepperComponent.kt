@@ -7,7 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.scan.ScanResponse
 import kotlinx.coroutines.flow.StateFlow
 
-interface OnboardingStepperComponent : ComposableContentComponent {
+internal interface OnboardingStepperComponent : ComposableContentComponent {
 
     data class StepperState(
         @IntRange(from = 0) val currentStep: Int,
