@@ -80,6 +80,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "energy-web-x", "energy-web-x/test" -> R.drawable.img_energy_web_22
         "core", "core/test" -> R.drawable.img_core_22
         "casper-network", "casper-network/test" -> R.drawable.img_casper_22
+        "xodex" -> R.drawable.img_xodex_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -161,6 +162,7 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "energy-web-x", "energy-web-x/test" -> R.drawable.img_energy_web_22
         "core", "core/test" -> R.drawable.img_core_22
         "casper-network", "casper-network/test" -> R.drawable.img_casper_22
+        "xodex" -> R.drawable.img_xodex_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -239,6 +241,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "energy-web-x", "energy-web-x/test" -> R.drawable.img_energy_web_22
         "core", "core/test" -> R.drawable.img_core_22
         "casper-network" -> R.drawable.img_casper_22
+        "xodex" -> R.drawable.img_xodex_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -320,6 +323,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "energy-web-x", "energy-web-x/test" -> R.drawable.ic_energy_web_22
         "core", "core/test" -> R.drawable.ic_core_22
         "casper-network", "casper-network/test" -> R.drawable.ic_casper_22
+        "xodex" -> R.drawable.ic_xodex_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -401,6 +405,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "energy-web-x", "energy-web-x/test" -> R.drawable.ic_energy_web_22
         "core", "core/test" -> R.drawable.ic_core_22
         "casper-network", "casper-network/test" -> R.drawable.ic_casper_22
+        "xodex" -> R.drawable.ic_xodex_22
         else -> R.drawable.ic_alert_24
     }
 }
