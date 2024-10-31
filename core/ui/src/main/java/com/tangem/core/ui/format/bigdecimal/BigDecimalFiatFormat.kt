@@ -12,7 +12,7 @@ open class BigDecimalFiatFormat(
     val fiatCurrencySymbol: String,
     val locale: Locale = Locale.getDefault(),
 ) : BigDecimalFormat {
-    override fun invoke(p1: BigDecimal): String = error("")
+    override fun invoke(value: BigDecimal): String = defaultAmount()(value)
 }
 
 // == Initializers ==
