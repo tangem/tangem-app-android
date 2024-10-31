@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers.amount
 
+import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldChangeTransformer
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -12,11 +13,13 @@ internal class AmountChangeStateTransformer(
     private val yield: Yield,
 ) : Transformer<StakingUiState> {
 
+    private val maxEnterAmountConverter = MaxEnterAmountConverter()
+
     override fun transform(prevState: StakingUiState): StakingUiState {
-        val updatedAmountState = AmountFieldChangeTransformer(
+        val maxEnterAmount = maxEnterAmountConverter.convert(
             cryptoCurrencyStatus,
-            value,
-        ).transform(prevState.amountState)
+        )
+        val updatedAmountState = AmountFieldChangeTransformer(maxEnterAmount, value).transform(prevState.amountState)
 
         return prevState.copy(
             amountState = AmountRequirementStateTransformer(

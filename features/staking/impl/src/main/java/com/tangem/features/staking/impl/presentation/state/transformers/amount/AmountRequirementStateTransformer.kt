@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalContracts::class)
-
 package com.tangem.features.staking.impl.presentation.state.transformers.amount
 
 import androidx.compose.ui.text.input.ImeAction
@@ -21,8 +19,6 @@ import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
 import java.math.RoundingMode
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 
 internal class AmountRequirementStateTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
