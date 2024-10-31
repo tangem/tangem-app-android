@@ -24,6 +24,12 @@ internal class TangemWcBlockchainHelper(
         return blockchain?.toNetworkId()
     }
 
+    override fun chainIdsToBlockchains(chainIds: List<String>): List<Blockchain> {
+        return chainIds.mapNotNull {
+            it.parseId()?.chainIdToBlockchain()
+        }.distinct()
+    }
+
     override fun chainIdToMissingNetworkNameOrNull(chainId: String): String? {
         val parsedId = chainId.parseId() ?: return null
         val blockchain = parsedId.chainIdToBlockchain()
@@ -103,6 +109,7 @@ internal class TangemWcBlockchainHelper(
                 second.toIntOrNull()
                     ?.let(Blockchain::fromChainId)
             }
+            SOLANA_NAMESPACE -> Blockchain.Solana
             else -> {
                 Blockchain.fromNetworkId(networkId = first)
                     .takeIf(supportedNonEvmBlockchains::contains)
@@ -112,6 +119,7 @@ internal class TangemWcBlockchainHelper(
 
     private companion object {
         const val EVM_NAMESPACE = "eip155"
+        const val SOLANA_NAMESPACE = "solana"
         const val CHAIN_SEPARATOR = ":"
         const val TESTNET_SEPARATOR = "/"
     }

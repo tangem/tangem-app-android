@@ -85,7 +85,11 @@ class WalletConnectMiddleware {
             }
             is WalletConnectAction.ApproveProposal -> {
                 scope.launch {
+                    val proposalChainIds = action.proposal.requiredChainIds + action.proposal.optionalChainIds
+                    val proposalBlockchains =
+                        walletConnectInteractor.blockchainHelper.chainIdsToBlockchains(proposalChainIds)
                     val accounts = getWalletManagers()
+                        .filter { walletManager -> proposalBlockchains.contains(walletManager.wallet.blockchain) }
                         .flatMap {
                             val wallet = it.wallet
                             val chainIds = walletConnectInteractor.blockchainHelper.networkIdToChainIdOrNull(
