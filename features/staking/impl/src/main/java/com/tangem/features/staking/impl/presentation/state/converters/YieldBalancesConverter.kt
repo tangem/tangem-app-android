@@ -69,7 +69,7 @@ internal class YieldBalancesConverter(
 
     private fun getRewardBlockType(): Pair<RewardBlockType, Boolean> {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val networkId = cryptoCurrencyStatus.currency.network.id.value
+        val blockchainId = cryptoCurrencyStatus.currency.network.id.value
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
         val rewards = yieldBalance?.balance?.items
             ?.filter { it.type == BalanceType.REWARDS && !it.amount.isZero() }
@@ -78,7 +78,7 @@ internal class YieldBalancesConverter(
         val isRewardsClaimable = rewards?.isNotEmpty() == true
 
         return when {
-            isSolana(networkId) || isBSC(networkId) -> RewardBlockType.RewardUnavailable to false
+            isSolana(blockchainId) || isBSC(blockchainId) -> RewardBlockType.RewardUnavailable to false
             isRewardsClaimable -> RewardBlockType.Rewards to isActionable
             else -> RewardBlockType.NoRewards to false
         }
