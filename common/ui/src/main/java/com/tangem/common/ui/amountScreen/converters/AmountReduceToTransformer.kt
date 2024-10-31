@@ -24,6 +24,8 @@ class AmountReduceToTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val value: BigDecimal,
 ) : Transformer<AmountState> {
+    private val maxEnterAmountConverter = MaxEnterAmountConverter()
+
     override fun transform(prevState: AmountState): AmountState {
         if (prevState !is AmountState.Data) return prevState
 
@@ -38,8 +40,10 @@ class AmountReduceToTransformer(
             decimals = fiatDecimals,
         )
 
+        val maxEnterAmount = maxEnterAmountConverter.convert(cryptoCurrencyStatus)
+
         val checkValue = if (amountTextField.isFiatValue) fiatValue else cryptoValue
-        val isExceedBalance = checkValue.checkExceedBalance(cryptoCurrencyStatus, amountTextField)
+        val isExceedBalance = checkValue.checkExceedBalance(maxEnterAmount, amountTextField)
         val isZero = if (amountTextField.isFiatValue) decimalFiatValue.isNullOrZero() else value.isNullOrZero()
         return prevState.copy(
             isPrimaryButtonEnabled = !isExceedBalance && !isZero,
