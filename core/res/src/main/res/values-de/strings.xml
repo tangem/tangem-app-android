@@ -551,9 +551,11 @@
   <string name="onboarding_wallet_info_title_fourth">Zugangscode wiederherstellen</string>
   <string name="onboarding_wallet_info_title_second">Identische Karten oder Ring</string>
   <string name="onboarding_wallet_info_title_third">Zugangscode</string>
+  <string name="onramp_pay_with">Bezahlen mit</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Unsere Dienstleistungen sind in diesem Land nicht verfügbar</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Änder oder bestätige bitte</string>
   <string name="onramp_residency_bottomsheet_title">Dein Wohnsitz wurde identifiziert als</string>
+  <string name="onramp_via">Über</string>
   <string name="organize_tokens_group">Gruppe erstellen</string>
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
@@ -742,6 +744,7 @@
   <string name="staking_notification_new_validator_funds_transfer">Beim Staking im %1$s -Netzwerk mit einem neuen Validator werden alle zuvor eingesetzten Kryptos automatisch an diesen Validator übertragen</string>
   <string name="staking_notification_restake_rewards_text">Reinvestiert Deine verdienten Prämien in Deinen Einsatzbetrag und erhöht so den potenziellen Gewinn.</string>
   <string name="staking_notification_restake_text">Mit Restake kannst Du Dein Guthaben von einem Validator zu einem anderen verschieben, ohne dass Du den Stake aufheben musst.</string>
+  <string name="staking_notification_stake_entire_balance_text">Du bist dabei, Dein gesamtes Guthaben zu staken. Wir empfehlen, einen kleinen Betrag übrig zu lassen, um die Netzwerkgebühren für die Aufhebung des Stakes oder das Einfordern von Prämien abzudecken.</string>
   <string name="staking_notification_unlock_text">Entsperre dein Geld, um es aus dem Staking-Prozess abzuheben. Das Freischalten nimmt %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Nach Ablauf der 21-tägigen Bindungsfrist kannst Du über Dein Guthaben verfügen. Die Prämie wird zusammen mit dem ungestaketen Guthaben abgehoben.</string>
   <string name="staking_notification_unstake_text">Deine Assets steht Dir nach Ablauf der Frist für die Aufhebung der Bindung %s zur Verfügung.</string>
