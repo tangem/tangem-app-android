@@ -34,6 +34,7 @@ import com.tangem.feature.swap.utils.getExpressErrorTitle
 import com.tangem.feature.swap.viewmodels.SwapProcessDataState
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import com.tangem.utils.StringsSigns.PERCENT
 import com.tangem.utils.StringsSigns.TILDE_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -1089,28 +1090,39 @@ internal class StateBuilder(
         uiState: SwapStateHolder,
         isPriceImpact: Boolean,
         token: String,
-        providerType: ExchangeProviderType,
+        provider: SwapProvider,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
-        val message = when (providerType) {
-            ExchangeProviderType.CEX -> resourceReference(R.string.swapping_alert_cex_description, wrappedList(token))
-            ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
-                val refs = buildList {
+        val combinedMessage = buildList {
+            when (provider.type) {
+                ExchangeProviderType.CEX -> {
+                    add(resourceReference(R.string.swapping_alert_cex_description, wrappedList(token)))
+                }
+                ExchangeProviderType.DEX,
+                ExchangeProviderType.DEX_BRIDGE,
+                -> {
                     if (isPriceImpact) {
                         add(resourceReference(R.string.swapping_high_price_impact_description))
                         add(stringReference("\n\n"))
                     }
                     add(resourceReference(R.string.swapping_alert_dex_description))
                 }
-
-                combinedReference(refs.toWrappedList())
+            }
+            provider.slippage?.let { slippage ->
+                add(stringReference("\n\n"))
+                add(
+                    resourceReference(
+                        R.string.swapping_alert_slippage_description,
+                        wrappedList("$slippage$PERCENT"),
+                    ),
+                )
             }
         }
         return uiState.copy(
             event = triggeredEvent(
                 SwapEvent.ShowAlert(
-                    SwapAlertUM.FeesAlert(
-                        message = message,
+                    SwapAlertUM.InformationAlert(
+                        message = combinedReference(combinedMessage.toWrappedList()),
                         onConfirmClick = onDismiss,
                     ),
                 ),
