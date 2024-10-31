@@ -10,10 +10,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
@@ -29,8 +26,10 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.get
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.lib.crypto.BlockchainUtils.isBSC
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.Provider
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.persistentListOf
@@ -246,11 +245,12 @@ internal class TokenDetailsLoadedBalanceConverter(
                 stakingCryptoAmount.format { crypto(symbol = symbol, decimals = decimals) },
             ),
             fiatValue = stringReference(
-                BigDecimalFormatter.formatFiatAmount(
-                    stakingFiatAmount,
-                    appCurrencyProvider().code,
-                    appCurrencyProvider().symbol,
-                ),
+                stakingFiatAmount.format {
+                    fiat(
+                        appCurrencyProvider().code,
+                        appCurrencyProvider().symbol,
+                    )
+                },
             ),
             rewardValue = getRewardText(status, stakingRewardAmount),
             onStakeClicked = clickIntents::onStakeBannerClick,
@@ -273,19 +273,20 @@ internal class TokenDetailsLoadedBalanceConverter(
     }
 
     private fun formatPriceChange(status: CryptoCurrencyStatus.Value): String {
-        val priceChange = status.priceChange ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+        val priceChange = status.priceChange ?: return DASH_SIGN
 
         return priceChange.format { percent() }
     }
 
     private fun formatPrice(status: CryptoCurrencyStatus.Value, appCurrency: AppCurrency): String {
-        val fiatRate = status.fiatRate ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+        val fiatRate = status.fiatRate ?: return DASH_SIGN
 
-        return BigDecimalFormatter.formatFiatAmountUncapped(
-            fiatAmount = fiatRate,
-            fiatCurrencyCode = appCurrency.code,
-            fiatCurrencySymbol = appCurrency.symbol,
-        )
+        return fiatRate.format {
+            fiat(
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
+            ).uncapped()
+        }
     }
 
     private fun formatFiatAmount(
@@ -294,14 +295,15 @@ internal class TokenDetailsLoadedBalanceConverter(
         selectedBalanceType: BalanceType,
         appCurrency: AppCurrency,
     ): String {
-        val fiatAmount = status.fiatAmount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+        val fiatAmount = status.fiatAmount ?: return DASH_SIGN
         val totalAmount = fiatAmount.getBalance(selectedBalanceType, stakingFiatAmount)
 
-        return BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = totalAmount,
-            fiatCurrencyCode = appCurrency.code,
-            fiatCurrencySymbol = appCurrency.symbol,
-        )
+        return totalAmount.format {
+            fiat(
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
+            )
+        }
     }
 
     private fun formatCryptoAmount(
@@ -309,16 +311,16 @@ internal class TokenDetailsLoadedBalanceConverter(
         stakingCryptoAmount: BigDecimal?,
         selectedBalanceType: BalanceType,
     ): String {
-        val amount = status.value.amount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+        val amount = status.value.amount ?: return DASH_SIGN
         val totalAmount = amount.getBalance(selectedBalanceType, stakingCryptoAmount)
 
         return totalAmount.format { crypto(status.currency) }
     }
 
     private fun getRewardText(status: CryptoCurrencyStatus, stakingRewardAmount: BigDecimal?): TextReference {
-        val isSolana = isSolana(status.currency.network.id.value)
+        val networkId = status.currency.network.id.value
         val rewardBlockType = when {
-            isSolana -> RewardBlockType.RewardUnavailable
+            isSolana(networkId) || isBSC(networkId) -> RewardBlockType.RewardUnavailable
             stakingRewardAmount.isNullOrZero() -> RewardBlockType.NoRewards
             else -> RewardBlockType.Rewards
         }
@@ -327,11 +329,12 @@ internal class TokenDetailsLoadedBalanceConverter(
             RewardBlockType.Rewards -> resourceReference(
                 R.string.staking_details_rewards_to_claim,
                 wrappedList(
-                    BigDecimalFormatter.formatFiatAmount(
-                        stakingRewardAmount,
-                        appCurrencyProvider().code,
-                        appCurrencyProvider().symbol,
-                    ),
+                    stakingRewardAmount.format {
+                        fiat(
+                            appCurrencyProvider().code,
+                            appCurrencyProvider().symbol,
+                        )
+                    },
                 ),
             )
             RewardBlockType.NoRewards -> resourceReference(R.string.staking_details_no_rewards_to_claim)
