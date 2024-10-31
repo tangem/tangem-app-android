@@ -219,12 +219,11 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onNextClick(balanceState: BalanceState?) {
         if (value.currentStep == StakingStep.InitialInfo && balanceState == null) {
-            // val isEnter = balanceState == null
-            // val isExit = balanceState?.type == BalanceType.STAKED
             stateController.update(
                 SetConfirmationStateInitTransformer(
                     isEnter = true,
                     isExplicitExit = false,
+                    balanceState = null,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     stakingApproval = stakingApproval,
                 ),
@@ -379,7 +378,13 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onMaxValueClick() {
         analyticsEventHandler.send(StakingAnalyticsEvent.ButtonMax)
-        stateController.update(AmountMaxValueStateTransformer(cryptoCurrencyStatus, yield))
+        stateController.update(
+            AmountMaxValueStateTransformer(
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                actionType = uiState.value.actionType,
+                yield = yield,
+            ),
+        )
     }
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {
@@ -438,6 +443,7 @@ internal class StakingViewModel @Inject constructor(
             prepareForConfirmation(
                 balanceType = activeStake.type,
                 pendingActions = activeStake.pendingActions,
+                balanceState = activeStake,
                 validator = activeStake.validator,
                 amountValue = activeStake.cryptoValue,
             )
@@ -450,6 +456,7 @@ internal class StakingViewModel @Inject constructor(
                         prepareForConfirmation(
                             balanceType = activeStake.type,
                             pendingAction = action,
+                            balanceState = activeStake,
                             validator = activeStake.validator,
                             amountValue = activeStake.cryptoValue,
                         )
@@ -879,6 +886,7 @@ internal class StakingViewModel @Inject constructor(
 
     private fun prepareForConfirmation(
         balanceType: BalanceType,
+        balanceState: BalanceState,
         pendingActions: ImmutableList<PendingAction> = persistentListOf(),
         pendingAction: PendingAction? = pendingActions.firstOrNull(),
         validator: Yield.Validator?,
@@ -888,6 +896,7 @@ internal class StakingViewModel @Inject constructor(
             SetConfirmationStateInitTransformer(
                 isEnter = false,
                 isExplicitExit = balanceType == BalanceType.STAKED,
+                balanceState = balanceState,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 stakingApproval = stakingApproval,
                 pendingActions = pendingActions,

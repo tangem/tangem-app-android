@@ -87,6 +87,7 @@ internal class StakingStateController @Inject constructor(
             bottomSheetConfig = null,
             actionType = StakingActionCommonType.Enter,
             buttonsState = NavigationButtonsState.Empty,
+            balanceState = null,
         )
     }
 }
