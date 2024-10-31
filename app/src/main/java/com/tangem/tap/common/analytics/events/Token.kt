@@ -1,6 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 /**
 [REDACTED_AUTHOR]
@@ -17,7 +18,12 @@ sealed class Token(
         params: Map<String, String> = mapOf(),
     ) : Token("Token / Receive", event, params) {
 
-        class ScreenOpened : Receive("Receive Screen Opened")
+        class ScreenOpened(
+            val token: String,
+        ) : Receive(
+            event = "Receive Screen Opened",
+            params = mapOf(TOKEN_PARAM to token),
+        )
         class ButtonCopyAddress : Receive("Button - Copy Address")
         class ButtonShareAddress : Receive("Button - Share Address")
     }
