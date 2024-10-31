@@ -12,10 +12,6 @@
         "version": "5.15.0"
     },
     {
-        "name": "MARKETS_ENABLED",
-        "version": "5.15.0"
-    },
-    {
         "name": "IS_ETHEREUM_EIP_1559_ENABLED",
         "version": "5.17.0"
     },
