@@ -39,7 +39,6 @@ private fun AppExtension.configureDefaultConfig(project: Project) {
 
         testInstrumentationRunner = "com.tangem.common.HiltTestRunner"
     }
-
 }
 // [REDACTED_TODO_COMMENT]
 private fun AppExtension.configureBuildFeatures() {
@@ -104,6 +103,8 @@ private fun AppExtension.configurePackagingOptions() {
             excludes += "lib/x86_64/freebsd/libscrypt.so"
             excludes += "lib/x86_64/linux/libscrypt.so"
             excludes += "META-INF/gradle/incremental.annotation.processors"
+
+            merges += "paymentrequest.proto"
         }
     }
 }
