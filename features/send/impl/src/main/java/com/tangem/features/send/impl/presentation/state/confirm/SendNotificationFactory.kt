@@ -172,7 +172,7 @@ internal class SendNotificationFactory(
                 )
             },
         )
-        if (!BlockchainUtils.isCardano(currency.id.value)) {
+        if (!BlockchainUtils.isCardano(currency.network.id.value)) {
             addDustWarningNotification(
                 dustValue = currencyCheck.dustValue,
                 feeValue = feeValue,
