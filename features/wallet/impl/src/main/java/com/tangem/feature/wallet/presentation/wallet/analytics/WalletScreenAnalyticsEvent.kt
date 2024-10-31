@@ -87,7 +87,12 @@ sealed class WalletScreenAnalyticsEvent {
         data object NoticeScanYourCardTapped : MainScreen(event = "Notice - Scan Your Card Tapped")
         data object WalletUnlockTapped : MainScreen(event = "Notice - Wallet Unlock Tapped")
 
-        data object NetworksUnreachable : MainScreen(event = "Notice - Networks Unreachable")
+        class NetworksUnreachable(
+            tokens: List<String>,
+        ) : MainScreen(
+            event = "Notice - Networks Unreachable",
+            params = mapOf("Tokens" to tokens.joinToString()),
+        )
 
         data object MissingAddresses : MainScreen(event = "Notice - Missing Addresses")
 
