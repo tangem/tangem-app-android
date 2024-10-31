@@ -25,12 +25,12 @@ sealed class SwapAlertUM : AlertUM {
             resourceReference(id = R.string.common_support)
     }
 
-    data class FeesAlert(
+    data class InformationAlert(
         override val message: TextReference,
         override val onConfirmClick: (() -> Unit),
     ) : SwapAlertUM() {
         override val title: TextReference = resourceReference(
-            com.tangem.feature.swap.presentation.R.string.swapping_alert_title,
+            R.string.swapping_alert_title,
         )
         override val confirmButtonText: TextReference =
             resourceReference(id = R.string.common_ok)
