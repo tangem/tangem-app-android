@@ -26,6 +26,9 @@ data class ExchangeProvider(
 
     @Json(name = "recommended")
     val isRecommended: Boolean = false,
+
+    @Json(name = "slippage")
+    val slippage: Int?,
 )
 
 enum class ExchangeProviderType {
