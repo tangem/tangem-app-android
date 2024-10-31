@@ -155,14 +155,15 @@ internal class SetButtonsStateTransformer(
     }
 
     private fun StakingUiState.onConfirmationClick() {
-        if (confirmationState is StakingStates.ConfirmationState.Data) {
+        val confirmationState = confirmationState as? StakingStates.ConfirmationState.Data
+        val amountState = amountState as? AmountState.Data
+        if (confirmationState != null && amountState != null) {
             if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
                 clickIntents.onNextClick()
             } else {
+                val amount = amountState.amountTextField.cryptoAmount.value.orZero()
                 val isEnterAction = actionType == StakingActionCommonType.Enter
-                val isApproveNeeded = confirmationState.isApprovalNeeded
-
-                if (isEnterAction && isApproveNeeded) {
+                if (isEnterAction && confirmationState.isApprovalNeeded && confirmationState.allowance < amount) {
                     clickIntents.showApprovalBottomSheet()
                 } else {
                     clickIntents.onActionClick()
