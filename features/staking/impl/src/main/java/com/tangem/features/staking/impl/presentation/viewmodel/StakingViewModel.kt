@@ -358,12 +358,14 @@ internal class StakingViewModel @Inject constructor(
                 StakingEvent.ShowAlert(StakingAlertUM.NoAvailableValidators),
             )
         } else {
-            stateController.updateAll(
-                ValidatorSelectChangeTransformer(
-                    selectedValidator = null,
-                    yield = yield,
-                ),
-            )
+            if (uiState.value.actionType == StakingActionCommonType.Enter) {
+                stateController.updateAll(
+                    ValidatorSelectChangeTransformer(
+                        selectedValidator = null,
+                        yield = yield,
+                    ),
+                )
+            }
             onNextClick()
         }
     }
