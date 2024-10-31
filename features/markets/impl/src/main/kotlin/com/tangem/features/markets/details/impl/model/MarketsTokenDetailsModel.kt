@@ -527,6 +527,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private fun onListedOnClick(exchangesCount: Int) {
         modelScope.launch {
+            analyticsEventHandler.send(analyticsEventBuilder.exchangesScreenOpened())
+
             showBottomSheet(content = ExchangesBottomSheetContent.Loading(exchangesCount))
 
             // Delay to show the bottom sheet
