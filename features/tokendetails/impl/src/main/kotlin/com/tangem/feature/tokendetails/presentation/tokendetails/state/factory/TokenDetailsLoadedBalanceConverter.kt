@@ -318,9 +318,9 @@ internal class TokenDetailsLoadedBalanceConverter(
     }
 
     private fun getRewardText(status: CryptoCurrencyStatus, stakingRewardAmount: BigDecimal?): TextReference {
-        val networkId = status.currency.network.id.value
+        val blockchainId = status.currency.network.id.value
         val rewardBlockType = when {
-            isSolana(networkId) || isBSC(networkId) -> RewardBlockType.RewardUnavailable
+            isSolana(blockchainId) || isBSC(blockchainId) -> RewardBlockType.RewardUnavailable
             stakingRewardAmount.isNullOrZero() -> RewardBlockType.NoRewards
             else -> RewardBlockType.Rewards
         }
