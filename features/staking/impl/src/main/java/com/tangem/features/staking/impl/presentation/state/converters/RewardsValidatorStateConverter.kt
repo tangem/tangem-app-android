@@ -71,7 +71,7 @@ internal class RewardsValidatorStateConverter(
                 crypto(cryptoCurrency)
             },
         )
-        val fiatAmount = stringReference(
+        val formattedFiatAmount = stringReference(
             BigDecimalFormatter.formatFiatAmount(
                 fiatAmount = fiatValue,
                 fiatCurrencyCode = appCurrency.code,
@@ -85,9 +85,10 @@ internal class RewardsValidatorStateConverter(
             title = stringReference(this.name),
             subtitle = null,
             cryptoValue = cryptoValue.parseBigDecimal(cryptoCurrency.decimals),
-            cryptoDecimal = cryptoValue,
-            cryptoAmount = cryptoAmount,
-            fiatAmount = fiatAmount,
+            cryptoAmount = cryptoValue,
+            formattedCryptoAmount = cryptoAmount,
+            fiatAmount = fiatValue,
+            formattedFiatAmount = formattedFiatAmount,
             rawCurrencyId = cryptoCurrency.id.rawCurrencyId,
             pendingActions = balance.pendingActions.toPersistentList(),
             isClickable = true,

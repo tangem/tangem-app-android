@@ -17,10 +17,12 @@ import timber.log.Timber
 internal class SetConfirmationStateInitTransformer(
     private val isEnter: Boolean,
     private val isExplicitExit: Boolean,
+    private val balanceState: BalanceState?,
     private val stakingApproval: StakingApproval,
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val pendingActions: ImmutableList<PendingAction>? = null,
     private val pendingAction: PendingAction? = pendingActions?.firstOrNull(),
+
 ) : Transformer<StakingUiState> {
 
     private val networkId
@@ -56,6 +58,7 @@ internal class SetConfirmationStateInitTransformer(
 
         return prevState.copy(
             actionType = actionType,
+            balanceState = balanceState,
             confirmationState = StakingStates.ConfirmationState.Data(
                 isPrimaryButtonEnabled = false,
                 innerState = InnerConfirmationStakingState.ASSENT,
