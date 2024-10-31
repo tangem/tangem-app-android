@@ -1046,6 +1046,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 Blockchain.Core,
                 Blockchain.CoreTestnet,
                 Blockchain.Xodex,
+                Blockchain.Canxium,
                 -> Fee.Common(feeAmount)
                 // endregion
             }
