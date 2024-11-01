@@ -61,10 +61,17 @@ internal class AmountRequirementStateTransformer(
                     },
                 ),
             )
-            isIntegerOnlyError -> resourceReference(
-                R.string.staking_amount_tron_integer_error,
-                wrappedList(value),
-            )
+            isIntegerOnlyError -> when (actionType) {
+                StakingActionCommonType.Enter -> resourceReference(
+                    R.string.staking_amount_tron_integer_error,
+                    wrappedList(value),
+                )
+                StakingActionCommonType.Exit -> resourceReference(
+                    R.string.staking_amount_tron_integer_error_unstaking,
+                    wrappedList(value),
+                )
+                else -> TODO()
+            }
             else -> TextReference.EMPTY
         }
         val isError = amountState.amountTextField.isError || isRequirementError
@@ -101,12 +108,12 @@ internal class AmountRequirementStateTransformer(
     private fun isIntegerOnlyError(amountState: AmountState.Data, actionType: StakingActionCommonType): Boolean {
         val cryptoAmountValue = amountState.amountTextField.cryptoAmount.value ?: return false
 
-        val isEnter = actionType == StakingActionCommonType.Enter
+        val isEnterOrExit = actionType == StakingActionCommonType.Enter || actionType == StakingActionCommonType.Exit
         val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
 
         val isIntegerOnly = cryptoAmountValue.isZero() || cryptoAmountValue.remainder(BigDecimal.ONE).isZero()
 
-        return isEnter && isTron && !isIntegerOnly
+        return isEnterOrExit && isTron && !isIntegerOnly
     }
 
     data class Data(
