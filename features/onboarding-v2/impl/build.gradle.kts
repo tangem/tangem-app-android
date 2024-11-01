@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.domain.core)
 
     /** Tangem libraries */
+    implementation(projects.libs.tangemSdkApi)
     implementation(deps.tangem.card.core)
     implementation(deps.tangem.card.android) {
         exclude(module = "joda-time")
@@ -40,12 +41,14 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
+    implementation(deps.compose.material) // to use buttons
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
+    implementation(deps.decompose.ext.compose)
 
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
