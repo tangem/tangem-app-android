@@ -15,6 +15,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.uncapped
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -1113,7 +1114,7 @@ internal class StateBuilder(
                 add(
                     resourceReference(
                         R.string.swapping_alert_slippage_description,
-                        wrappedList("$slippage$PERCENT"),
+                        wrappedList("${slippage.parseBigDecimal(1)}$PERCENT"),
                     ),
                 )
             }
