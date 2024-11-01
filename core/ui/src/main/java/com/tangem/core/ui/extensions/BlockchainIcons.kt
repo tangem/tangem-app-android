@@ -99,7 +99,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "ethereum-classic" -> R.drawable.img_eth_classic_22
         "stellar" -> R.drawable.img_stellar_22
         "cardano" -> R.drawable.img_cardano_22
-        "matic-network" -> R.drawable.img_polygon_22
+        "matic-network", "polygon-ecosystem-token" -> R.drawable.img_polygon_22
         "avalanche-2" -> R.drawable.img_avalanche_22
         "solana" -> R.drawable.img_solana_22
         "fantom" -> R.drawable.img_fantom_22
