@@ -21,7 +21,7 @@ internal abstract class SearchBarUMTransformer : TokenListUMTransformer {
             val updatedSearchBar = searchBarItem.copy(searchBarUM = transform(searchBarItem.searchBarUM))
 
             prevState.copy(
-                items = persistentListOf(
+                availableItems = persistentListOf(
                     updatedSearchBar,
                     *prevState.getTokens().toTypedArray(),
                 ),
