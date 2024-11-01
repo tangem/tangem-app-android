@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
+import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldChangeTransformer
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendUiState
@@ -13,15 +14,19 @@ internal class SendAmountFieldChangeConverter(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
 ) : Converter<String, SendUiState> {
 
+    private val maxEnterAmountConverter = MaxEnterAmountConverter()
+
     override fun convert(value: String): SendUiState {
         val state = currentStateProvider()
         val isEditState = stateRouterProvider().isEditState
-        val amountState = state.getAmountState(isEditState) ?: return state
+        val amountState = state.getAmountState(isEditState)
+
+        val maxEnterAmount = maxEnterAmountConverter.convert(cryptoCurrencyStatusProvider())
 
         return state.copyWrapped(
             isEditState = isEditState,
             sendState = state.sendState?.copy(reduceAmountBy = null),
-            amountState = AmountFieldChangeTransformer(cryptoCurrencyStatusProvider(), value).transform(amountState),
+            amountState = AmountFieldChangeTransformer(maxEnterAmount, value).transform(amountState),
         )
     }
 }
