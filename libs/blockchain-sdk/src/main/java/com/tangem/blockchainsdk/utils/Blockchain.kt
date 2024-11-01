@@ -295,7 +295,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet -> "ethereum-classic"
         Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
         Blockchain.Cardano -> "cardano"
-        Blockchain.Polygon, Blockchain.PolygonTestnet -> "matic-network"
+        Blockchain.Polygon, Blockchain.PolygonTestnet -> "polygon-ecosystem-token"
         Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "arbitrum-one"
         Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
         Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
