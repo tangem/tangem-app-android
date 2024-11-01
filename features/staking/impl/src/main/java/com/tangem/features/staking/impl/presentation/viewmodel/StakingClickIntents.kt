@@ -26,7 +26,7 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onInfoClick(infoType: InfoType)
 
-    fun onEnterClick()
+    fun onAmountEnterClick()
 
     fun getFee()
 
