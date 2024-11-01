@@ -11,6 +11,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.common.ui.notifications.NotificationUM
@@ -31,10 +32,6 @@ import com.tangem.domain.staking.InvalidatePendingTransactionsUseCase
 import com.tangem.domain.staking.IsAnyTokenStakedUseCase
 import com.tangem.domain.staking.IsApproveNeededUseCase
 import com.tangem.domain.staking.model.StakingApproval
-import com.tangem.domain.staking.model.stakekit.BalanceItem
-import com.tangem.domain.staking.model.stakekit.PendingAction
-import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
@@ -52,6 +49,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
@@ -156,6 +154,14 @@ internal class StakingViewModel @Inject constructor(
             ).getOrElse { emptyList() }
         }
 
+    private val maxEnterAmount: MaxEnterAmount
+        get() =
+            MaxEnterAmount(
+                amount = uiState.value.balanceState?.cryptoAmount,
+                fiatAmount = uiState.value.balanceState?.fiatAmount,
+                fiatRate = cryptoCurrencyStatus.value.fiatRate,
+            )
+
     private var isInitialInfoAnalyticSent: Boolean = false
 
     private val balanceUpdater by lazy(LazyThreadSafetyMode.NONE) {
@@ -227,6 +233,18 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onNextClick(balanceState: BalanceState?) {
+        if (value.currentStep == StakingStep.InitialInfo && balanceState == null) {
+            stateController.update(
+                SetConfirmationStateInitTransformer(
+                    isEnter = true,
+                    isExplicitExit = false,
+                    balanceState = null,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    stakingApproval = stakingApproval,
+                    stakingAllowance = stakingAllowance,
+                ),
+            )
+        }
         stakingStateRouter.onNextClick()
     }
 
@@ -350,24 +368,20 @@ internal class StakingViewModel @Inject constructor(
         )
     }
 
-    override fun onEnterClick() {
+    override fun onAmountEnterClick() {
         if (yield.preferredValidators.isEmpty()) {
             stateController.updateEvent(
                 StakingEvent.ShowAlert(StakingAlertUM.NoAvailableValidators),
             )
         } else {
-            stateController.updateAll(
-                SetConfirmationStateInitTransformer(
-                    isEnter = true,
-                    cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    stakingApproval = stakingApproval,
-                    stakingAllowance = stakingAllowance,
-                ),
-                ValidatorSelectChangeTransformer(
-                    selectedValidator = null,
-                    yield = yield,
-                ),
-            )
+            if (uiState.value.actionType == StakingActionCommonType.Enter) {
+                stateController.updateAll(
+                    ValidatorSelectChangeTransformer(
+                        selectedValidator = null,
+                        yield = yield,
+                    ),
+                )
+            }
             onNextClick()
         }
     }
@@ -382,7 +396,13 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onMaxValueClick() {
         analyticsEventHandler.send(StakingAnalyticsEvent.ButtonMax)
-        stateController.update(AmountMaxValueStateTransformer(cryptoCurrencyStatus, yield))
+        stateController.update(
+            AmountMaxValueStateTransformer(
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                actionType = uiState.value.actionType,
+                yield = yield,
+            ),
+        )
     }
 
     override fun onCurrencyChangeClick(isFiat: Boolean) {
@@ -439,23 +459,27 @@ internal class StakingViewModel @Inject constructor(
         val networkId = cryptoCurrencyStatus.currency.network.id.value
         if (isSingleAction(networkId, activeStake)) {
             prepareForConfirmation(
+                balanceType = activeStake.type,
                 pendingActions = activeStake.pendingActions,
+                balanceState = activeStake,
                 validator = activeStake.validator,
                 amountValue = activeStake.cryptoValue,
             )
-            onNextClick(balanceState = activeStake)
+            onNextClick(activeStake)
         } else {
             stateController.update(
                 ShowActionSelectorBottomSheetTransformer(
                     pendingActions = withStubUnstakeAction(networkId, activeStake),
                     onActionSelect = { action ->
                         prepareForConfirmation(
+                            balanceType = activeStake.type,
                             pendingAction = action,
+                            balanceState = activeStake,
                             validator = activeStake.validator,
                             amountValue = activeStake.cryptoValue,
                         )
                         stateController.update(DismissBottomSheetStateTransformer)
-                        onNextClick(balanceState = activeStake)
+                        onNextClick(activeStake)
                     },
                     onDismiss = { stateController.update(DismissBottomSheetStateTransformer) },
                 ),
@@ -889,12 +913,15 @@ internal class StakingViewModel @Inject constructor(
                 userWalletProvider = Provider { userWallet },
                 appCurrencyProvider = Provider { appCurrency },
                 balancesToShowProvider = Provider { balancesToShow },
+                maxEnterAmountProvider = Provider { maxEnterAmount },
             ),
             SetConfirmationStateEmptyTransformer,
         )
     }
 
     private fun prepareForConfirmation(
+        balanceType: BalanceType,
+        balanceState: BalanceState,
         pendingActions: ImmutableList<PendingAction> = persistentListOf(),
         pendingAction: PendingAction? = pendingActions.firstOrNull(),
         validator: Yield.Validator?,
@@ -903,6 +930,8 @@ internal class StakingViewModel @Inject constructor(
         stateController.updateAll(
             SetConfirmationStateInitTransformer(
                 isEnter = false,
+                isExplicitExit = balanceType == BalanceType.STAKED,
+                balanceState = balanceState,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 stakingApproval = stakingApproval,
                 pendingActions = pendingActions,
@@ -912,6 +941,13 @@ internal class StakingViewModel @Inject constructor(
             ValidatorSelectChangeTransformer(
                 selectedValidator = validator,
                 yield = yield,
+            ),
+            SetAmountDataTransformer(
+                clickIntents = this,
+                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                userWalletProvider = Provider { userWallet },
+                appCurrencyProvider = Provider { appCurrency },
+                maxEnterAmountProvider = Provider { maxEnterAmount },
             ),
             AmountChangeStateTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
