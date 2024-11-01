@@ -47,11 +47,12 @@ internal class BalanceItemConverter(
                 subtitle = getSubtitle(value),
                 type = value.type,
                 cryptoValue = cryptoAmount.parseBigDecimal(cryptoCurrency.decimals),
-                cryptoDecimal = cryptoAmount,
-                cryptoAmount = stringReference(
+                cryptoAmount = cryptoAmount,
+                formattedCryptoAmount = stringReference(
                     cryptoAmount.format { crypto(cryptoCurrency) },
                 ),
-                fiatAmount = stringReference(
+                fiatAmount = fiatAmount,
+                formattedFiatAmount = stringReference(
                     BigDecimalFormatter.formatFiatAmount(
                         fiatAmount = fiatAmount,
                         fiatCurrencyCode = appCurrency.code,

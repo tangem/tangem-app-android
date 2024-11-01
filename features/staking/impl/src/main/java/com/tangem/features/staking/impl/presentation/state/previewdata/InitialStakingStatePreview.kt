@@ -73,9 +73,10 @@ internal object InitialStakingStatePreview {
                     groupId = "groupId",
                     title = stringReference("Binance"),
                     cryptoValue = "100",
-                    cryptoAmount = stringReference("100 SOL"),
-                    cryptoDecimal = "100".toBigDecimal(),
-                    fiatAmount = stringReference("100 $"),
+                    formattedCryptoAmount = stringReference("100 SOL"),
+                    cryptoAmount = "100".toBigDecimal(),
+                    fiatAmount = null,
+                    formattedFiatAmount = stringReference("100 $"),
                     rawCurrencyId = null,
                     validator = Yield.Validator(
                         address = "address",

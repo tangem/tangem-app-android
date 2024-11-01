@@ -781,6 +781,7 @@
   <string name="staking_unbonding">Dissociation</string>
   <string name="staking_unlocked_locked">Débloquer</string>
   <string name="staking_unlocking">Déverrouillage</string>
+  <string name="staking_unstake_amount_requirement_error">Le montant à staker doit être au moins %s</string>
   <string name="staking_unstake_amount_validation_error">Le montant dépasse le solde misé</string>
   <string name="staking_unstaked">Non-staké</string>
   <string name="staking_unstaking">Unstaking</string>
