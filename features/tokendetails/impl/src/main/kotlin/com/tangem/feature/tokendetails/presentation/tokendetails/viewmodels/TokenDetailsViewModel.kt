@@ -559,7 +559,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
         viewModelScope.launch(dispatchers.main) {
             analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrency.symbol))
-            analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
+            analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrency.symbol))
 
             internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
                 currency = cryptoCurrency,
@@ -720,8 +720,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onRefreshSwipe(isRefreshing: Boolean) {
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Refreshed(cryptoCurrency.symbol))
-
         internalUiState.value = stateFactory.getRefreshingState()
 
         viewModelScope.launch(dispatchers.main) {

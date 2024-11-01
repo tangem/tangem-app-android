@@ -1067,7 +1067,7 @@ internal class SwapViewModel @Inject constructor(
                     uiState = uiState,
                     isPriceImpact = isPriceImpact,
                     token = currencySymbol,
-                    providerType = selectedProvider.type,
+                    provider = selectedProvider,
                 ) {
                     uiState = stateBuilder.clearAlert(uiState)
                 }

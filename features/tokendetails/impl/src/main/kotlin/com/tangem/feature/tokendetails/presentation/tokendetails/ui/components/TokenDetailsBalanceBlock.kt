@@ -11,6 +11,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
@@ -25,6 +26,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.toImmutableList
 
+@Suppress("DestructuringDeclarationWithTooManyEntries")
 @Composable
 internal fun TokenDetailsBalanceBlock(
     state: TokenDetailsBalanceBlockState,
@@ -36,43 +38,61 @@ internal fun TokenDetailsBalanceBlock(
         shape = TangemTheme.shapes.roundedCornersXMedium,
         color = TangemTheme.colors.background.primary,
     ) {
-        Column {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing12)
-                    .fillMaxWidth()
-                    .heightIn(min = TangemTheme.dimens.spacing24),
-            ) {
-                Text(
-                    text = stringResource(id = R.string.common_balance_title),
-                    color = TangemTheme.colors.text.tertiary,
-                    style = TangemTheme.typography.subtitle2,
-                    maxLines = 1,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(top = TangemTheme.dimens.spacing12),
-                )
-                BalanceButtons(state)
-            }
+        val spacing4 = TangemTheme.dimens.spacing4
+        val spacing10 = TangemTheme.dimens.spacing10
+        val spacing12 = TangemTheme.dimens.spacing12
+
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxWidth(),
+        ) {
+            val (balanceTitle, toggleButtons, fiatBalance, cryptoBalance, actionChips) = createRefs()
+
+            Text(
+                text = stringResource(id = R.string.common_balance_title),
+                color = TangemTheme.colors.text.tertiary,
+                style = TangemTheme.typography.subtitle2,
+                modifier = Modifier.constrainAs(balanceTitle) {
+                    top.linkTo(anchor = parent.top, margin = spacing12)
+                    start.linkTo(anchor = parent.start, margin = spacing12)
+                },
+            )
+
+            BalanceButtons(
+                state = state,
+                modifier = Modifier.constrainAs(toggleButtons) {
+                    top.linkTo(anchor = parent.top)
+                    end.linkTo(anchor = parent.end, margin = spacing10)
+                },
+            )
+
             FiatBalance(
                 state = state,
                 isBalanceHidden = isBalanceHidden,
-                modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing4)
-                    .padding(horizontal = TangemTheme.dimens.spacing12),
+                modifier = Modifier.constrainAs(fiatBalance) {
+                    top.linkTo(anchor = balanceTitle.bottom, margin = spacing4)
+                    start.linkTo(anchor = parent.start, margin = spacing12)
+                },
             )
+
             CryptoBalance(
                 state = state,
                 isBalanceHidden = isBalanceHidden,
-                modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing4)
-                    .padding(horizontal = TangemTheme.dimens.spacing12),
+                modifier = Modifier.constrainAs(cryptoBalance) {
+                    top.linkTo(anchor = fiatBalance.bottom, margin = spacing4)
+                    start.linkTo(anchor = parent.start, margin = spacing12)
+                },
             )
 
             HorizontalActionChips(
                 buttons = state.actionButtons.map(TokenDetailsActionButton::config).toImmutableList(),
-                modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
+                modifier = Modifier
+                    .constrainAs(actionChips) {
+                        top.linkTo(anchor = cryptoBalance.bottom, margin = spacing12)
+                        start.linkTo(anchor = parent.start)
+                        end.linkTo(anchor = parent.end)
+                        bottom.linkTo(anchor = parent.bottom, margin = spacing12)
+                    },
                 contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
             )
         }
@@ -89,7 +109,7 @@ private fun FiatBalance(
         is TokenDetailsBalanceBlockState.Loading -> RectangleShimmer(
             modifier = modifier.size(
                 width = TangemTheme.dimens.size102,
-                height = TangemTheme.dimens.size24,
+                height = TangemTheme.dimens.size32,
             ),
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
@@ -136,14 +156,14 @@ private fun CryptoBalance(
 }
 
 @Composable
-private fun BalanceButtons(state: TokenDetailsBalanceBlockState) {
+private fun BalanceButtons(state: TokenDetailsBalanceBlockState, modifier: Modifier = Modifier) {
     if (state !is TokenDetailsBalanceBlockState.Content || !state.isBalanceSelectorEnabled) return
 
     SegmentedButtons(
         config = state.balanceSegmentedButtonConfig,
         onClick = state.onBalanceSelect,
         showIndication = false,
-        modifier = Modifier
+        modifier = modifier
             .padding(top = TangemTheme.dimens.spacing11)
             .width(IntrinsicSize.Min),
     ) { config ->
@@ -159,8 +179,8 @@ private fun BalanceButtons(state: TokenDetailsBalanceBlockState) {
             maxLines = 1,
             modifier = Modifier
                 .padding(
-                    horizontal = TangemTheme.dimens.spacing4,
-                    vertical = TangemTheme.dimens.spacing6,
+                    horizontal = TangemTheme.dimens.spacing6,
+                    vertical = TangemTheme.dimens.spacing4,
                 )
                 .align(Alignment.Center),
         )

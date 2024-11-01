@@ -39,6 +39,7 @@ data class SwapProvider(
     val termsOfUse: String?,
     val privacyPolicy: String?,
     val isRecommended: Boolean = false,
+    val slippage: Int?,
 )
 
 enum class ExchangeProviderType(val providerName: String) {

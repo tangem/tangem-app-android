@@ -19,7 +19,7 @@ internal class WalletConnectEventsHandlerImpl : WalletConnectEventsHandler {
                 WalletConnectDialog.SessionProposalDialog(
                     sessionProposal = proposal,
                     networks = networksFormatted,
-                    onApprove = { store.dispatchOnMain(WalletConnectAction.ApproveProposal) },
+                    onApprove = { store.dispatchOnMain(WalletConnectAction.ApproveProposal(proposal)) },
                     onReject = { store.dispatchOnMain(WalletConnectAction.RejectProposal) },
                 ),
             ),

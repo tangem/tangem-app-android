@@ -18,11 +18,6 @@ sealed class TokenScreenAnalyticsEvent(
         params = mapOf("Token" to token),
     )
 
-    class Refreshed(token: String) : TokenScreenAnalyticsEvent(
-        event = "Refreshed",
-        params = mapOf("Token" to token),
-    )
-
     class ButtonRemoveToken(token: String) : TokenScreenAnalyticsEvent(
         "Button - Remove Token",
         params = mapOf("Token" to token),
