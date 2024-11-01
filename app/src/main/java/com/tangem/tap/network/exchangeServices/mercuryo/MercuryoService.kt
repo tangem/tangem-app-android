@@ -30,7 +30,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
     override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean {
         if (!isBuyAllowed()) return false
 
-        val mercuryoNetwork = currency.blockchain.mercuryoNetwork()
+        val mercuryoNetwork = currency.blockchain.mercuryoNetwork
         val contractAddress = (currency as? Currency.Token)?.token?.contractAddress ?: ""
         val availableCurrency = availableMercuryoCurrencies.firstOrNull {
             it.currencySymbol == currency.currencySymbol &&
@@ -77,7 +77,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
             .appendQueryParameter("redirect_url", ExchangeUrlBuilder.SUCCESS_URL)
         if (isDarkTheme) builder.appendQueryParameter("theme", "1inch")
 
-        blockchain.mercuryoNetwork()?.let {
+        blockchain.mercuryoNetwork?.let {
             builder.appendQueryParameter("network", it)
         }
 
@@ -89,37 +89,6 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
     private fun handleSuccessfullyUpdatedData(data: MercuryoCurrenciesResponse.Data) {
         availableMercuryoCurrencies.clear()
         availableMercuryoCurrencies.addAll(data.config.cryptoCurrencies)
-    }
-
-    @Suppress("CyclomaticComplexMethod")
-    private fun Blockchain.mercuryoNetwork(): String? {
-        return when (this) {
-            // Blockchain.Algorand -> "ALGORAND"  //TODO: Uncomment with algo support
-            Blockchain.Arbitrum -> "ARBITRUM"
-            Blockchain.Avalanche -> "AVALANCHE"
-            Blockchain.BSC -> "BINANCESMARTCHAIN"
-            Blockchain.Bitcoin -> "BITCOIN"
-            Blockchain.BitcoinCash -> "BITCOINCASH"
-            Blockchain.Cardano -> "CARDANO"
-            Blockchain.Cosmos -> "COSMOS"
-            Blockchain.Dash -> "DASH"
-            Blockchain.Dogecoin -> "DOGECOIN"
-            Blockchain.Ethereum -> "ETHEREUM"
-            Blockchain.Fantom -> "FANTOM"
-            Blockchain.Kusama -> "KUSAMA"
-            Blockchain.Litecoin -> "LITECOIN"
-            Blockchain.Near -> "NEAR_PROTOCOL"
-            Blockchain.TON -> "NEWTON"
-            Blockchain.Optimism -> "OPTIMISM"
-            Blockchain.Polkadot -> "POLKADOT"
-            Blockchain.Polygon -> "POLYGON"
-            Blockchain.XRP -> "RIPPLE"
-            Blockchain.Solana -> "SOLANA"
-            Blockchain.Stellar -> "STELLAR"
-            Blockchain.Tezos -> "TEZOS"
-            Blockchain.Tron -> "TRON"
-            else -> null
-        }
     }
 
     private fun signature(address: String) = (address + environment.secret).calculateSha512().toHexString().lowercase()
