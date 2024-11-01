@@ -270,8 +270,8 @@ private fun ActiveStakingBlock(
     InputRowImageInfo(
         subtitle = balance.title,
         caption = balance.subtitle ?: balance.getAprText(),
-        infoTitle = balance.fiatAmount.orMaskWithStars(isBalanceHidden),
-        infoSubtitle = balance.cryptoAmount.orMaskWithStars(isBalanceHidden),
+        infoTitle = balance.formattedFiatAmount.orMaskWithStars(isBalanceHidden),
+        infoSubtitle = balance.formattedCryptoAmount.orMaskWithStars(isBalanceHidden),
         imageUrl = balance.getImage(),
         iconRes = icon,
         iconTint = iconTint,
