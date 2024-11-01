@@ -2,6 +2,7 @@ package com.tangem.features.send.impl.presentation.state
 
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
+import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -33,6 +34,7 @@ internal class SendStateFactory(
     private val isTapHelpPreviewEnabledProvider: Provider<Boolean>,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
+    private val maxEnterAmountConverter = MaxEnterAmountConverter()
 
     private val amountStateConverter by lazy(LazyThreadSafetyMode.NONE) {
         AmountStateConverter(
@@ -41,6 +43,7 @@ internal class SendStateFactory(
             iconStateConverter = iconStateConverter,
             userWalletProvider = userWalletProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            maxEnterAmountProvider = Provider { maxEnterAmountConverter.convert(cryptoCurrencyStatusProvider()) },
         )
     }
     private val recipientStateConverter by lazy(LazyThreadSafetyMode.NONE) {

@@ -5,6 +5,7 @@ import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -34,6 +35,7 @@ class AmountStateConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val userWalletProvider: Provider<UserWallet>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val maxEnterAmountProvider: Provider<MaxEnterAmount>,
     private val iconStateConverter: CryptoCurrencyToIconStateConverter,
 ) : Converter<String, AmountState> {
 
@@ -47,10 +49,11 @@ class AmountStateConverter(
 
     override fun convert(value: String): AmountState {
         val userWallet = userWalletProvider()
+        val maxEnterAmount = maxEnterAmountProvider()
         val appCurrency = appCurrencyProvider()
         val status = cryptoCurrencyStatusProvider()
-        val fiat = formatFiatAmount(status.value.fiatAmount, appCurrency.code, appCurrency.symbol)
-        val crypto = status.value.amount.format { crypto(status.currency) }
+        val fiat = formatFiatAmount(maxEnterAmount.fiatAmount, appCurrency.code, appCurrency.symbol)
+        val crypto = maxEnterAmount.amount.format { crypto(status.currency) }
         val noFeeRate = status.value.fiatRate.isNullOrZero()
 
         return AmountState.Data(
