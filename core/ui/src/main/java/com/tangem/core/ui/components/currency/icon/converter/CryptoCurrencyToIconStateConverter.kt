@@ -10,8 +10,12 @@ import com.tangem.utils.converter.Converter
 
 /**
  * Converts [CryptoCurrencyStatus] to [CurrencyIconState]
+ *
+ * @property isAvailable flag that indicates if the currency is available (affects on icon's grayscale)
  */
-class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, CurrencyIconState> {
+class CryptoCurrencyToIconStateConverter(
+    private val isAvailable: Boolean = true,
+) : Converter<CryptoCurrencyStatus, CurrencyIconState> {
 
     override fun convert(value: CryptoCurrencyStatus): CurrencyIconState {
         return when (val currency = value.currency) {
@@ -57,7 +61,7 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Curre
         return CurrencyIconState.CoinIcon(
             url = coin.iconUrl,
             fallbackResId = coin.networkIconResId,
-            isGrayscale = forceGrayscale || coin.network.isTestnet || isUnreachable,
+            isGrayscale = forceGrayscale || coin.network.isTestnet || isUnreachable || !isAvailable,
             showCustomBadge = coin.isCustom && showCustomBadge,
         )
     }
@@ -68,7 +72,7 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Curre
         showCustomBadge: Boolean = true,
         forceGrayscale: Boolean = false,
     ): CurrencyIconState {
-        val grayScale = forceGrayscale || token.network.isTestnet || isErrorStatus
+        val grayScale = forceGrayscale || token.network.isTestnet || isErrorStatus || !isAvailable
         val background = token.tryGetBackgroundForTokenIcon(grayScale)
         val tint = getTintForTokenIcon(background)
 
