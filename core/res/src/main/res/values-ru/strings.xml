@@ -798,6 +798,7 @@
   <string name="staking_unbonding">Отзыв</string>
   <string name="staking_unlocked_locked">Разблокировать</string>
   <string name="staking_unlocking">Разблокировка</string>
+  <string name="staking_unstake_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_unstake_amount_validation_error">Сумма превышает застейканный баланс</string>
   <string name="staking_unstaked">Вывод из стейкинга</string>
   <string name="staking_unstaking">Завершение стейкинга</string>
