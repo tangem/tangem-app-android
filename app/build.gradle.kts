@@ -90,6 +90,7 @@ dependencies {
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.libs.tangemSdkApi)
 
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
