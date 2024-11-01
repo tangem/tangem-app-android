@@ -3,10 +3,12 @@ package com.tangem.features.send.impl.presentation.state
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
+import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
@@ -41,7 +43,6 @@ internal class SendStateFactory(
             clickIntents = clickIntents,
             appCurrencyProvider = appCurrencyProvider,
             iconStateConverter = iconStateConverter,
-            userWalletProvider = userWalletProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
             maxEnterAmountProvider = Provider { maxEnterAmountConverter.convert(cryptoCurrencyStatusProvider()) },
         )
@@ -82,7 +83,12 @@ internal class SendStateFactory(
     fun getReadyState(): SendUiState {
         val state = currentStateProvider()
         val amountState = if (state.amountState is AmountState.Empty) {
-            amountStateConverter.convert("")
+            amountStateConverter.convert(
+                AmountParameters(
+                    title = stringReference(userWalletProvider().name),
+                    value = "",
+                ),
+            )
         } else {
             state.amountState
         }
@@ -99,7 +105,12 @@ internal class SendStateFactory(
     fun getReadyState(amount: String, destinationAddress: String, memo: String?): SendUiState {
         val state = currentStateProvider()
         val amountState = if (state.amountState is AmountState.Empty) {
-            amountStateConverter.convert(amount)
+            amountStateConverter.convert(
+                AmountParameters(
+                    title = stringReference(userWalletProvider().name),
+                    value = amount,
+                ),
+            )
         } else {
             state.amountState
         }

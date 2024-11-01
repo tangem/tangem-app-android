@@ -800,6 +800,7 @@
   <string name="staking_unbonding">Розблокування</string>
   <string name="staking_unlocked_locked">Розблокувати</string>
   <string name="staking_unlocking">Розблокування</string>
+  <string name="staking_unstake_amount_requirement_error">Сума для стейкінгу має бути не менше %s</string>
   <string name="staking_unstake_amount_validation_error">Сума перевищує баланс стейкінгу</string>
   <string name="staking_unstaked">Вивід зі стейкінгу</string>
   <string name="staking_unstaking">Зняти зі стейкінгу</string>

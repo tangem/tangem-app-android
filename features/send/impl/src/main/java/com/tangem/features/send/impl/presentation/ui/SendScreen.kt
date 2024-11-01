@@ -88,7 +88,7 @@ private fun SendAppBar(uiState: SendUiState, currentState: SendUiCurrentScreen) 
         -> resourceReference(R.string.common_fee_selector_title) to null
         SendUiStateType.Send -> if (uiState.sendState?.isSuccess == false) {
             resourceReference(R.string.send_summary_title, wrappedList(uiState.cryptoCurrencyName)) to
-                (uiState.amountState as? AmountState.Data)?.walletName
+                (uiState.amountState as? AmountState.Data)?.title
         } else {
             null to null
         }
@@ -108,7 +108,7 @@ private fun SendAppBar(uiState: SendUiState, currentState: SendUiCurrentScreen) 
     }
     AppBarWithBackButtonAndIcon(
         text = titleRes?.resolveReference(),
-        subtitle = subtitleRes,
+        subtitle = subtitleRes?.resolveReference(),
         onBackClick = uiState.clickIntents::onCloseClick,
         onIconClick = uiState.clickIntents::onQrCodeScanClick,
         backIconRes = backIcon,
