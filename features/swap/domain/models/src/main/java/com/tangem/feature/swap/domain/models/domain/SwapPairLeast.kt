@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain.models.domain
 
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import java.math.BigDecimal
 
 /**
  * Domain layer representation of SwapPair data network model.
@@ -39,7 +40,7 @@ data class SwapProvider(
     val termsOfUse: String?,
     val privacyPolicy: String?,
     val isRecommended: Boolean = false,
-    val slippage: Int?,
+    val slippage: BigDecimal?,
 )
 
 enum class ExchangeProviderType(val providerName: String) {
