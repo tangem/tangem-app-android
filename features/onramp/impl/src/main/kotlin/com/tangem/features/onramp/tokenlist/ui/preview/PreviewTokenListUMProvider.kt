@@ -20,7 +20,7 @@ internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM
 
     private fun createTokensList(hasSearchBar: Boolean, vararg items: TokensListItemUM): TokenListUM {
         return TokenListUM(
-            items = buildList {
+            availableItems = buildList {
                 if (hasSearchBar) {
                     TokensListItemUM.SearchBar(
                         searchBarUM = SearchBarUM(
@@ -37,6 +37,7 @@ internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM
                 addAll(items)
             }
                 .toImmutableList(),
+            unavailableItems = items.toList().toImmutableList(),
             isBalanceHidden = false,
         )
     }
