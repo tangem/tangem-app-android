@@ -4,8 +4,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
 import com.tangem.core.ui.utils.parseBigDecimal
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.RoundingMode
@@ -13,10 +13,10 @@ import java.math.RoundingMode
 /**
  * Selects maximum amount value
  *
- * @property cryptoCurrencyStatus current cryptocurrency status
+ * @property maxAmount maximum enter amount
  */
-class AmountFieldMaxAmountTransformer(
-    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+class AmountFieldSetMaxAmountTransformer(
+    private val maxAmount: MaxEnterAmount,
 ) : Transformer<AmountState> {
 
     override fun transform(prevState: AmountState): AmountState {
@@ -26,8 +26,8 @@ class AmountFieldMaxAmountTransformer(
 
         val cryptoDecimals = amountTextField.cryptoAmount.decimals
         val fiatDecimals = amountTextField.fiatAmount.decimals
-        val decimalCryptoValue = cryptoCurrencyStatus.value.amount
-        val decimalFiatValue = cryptoCurrencyStatus.value.fiatAmount
+        val decimalCryptoValue = maxAmount.amount
+        val decimalFiatValue = maxAmount.fiatAmount
 
         if (decimalCryptoValue.isNullOrZero()) return prevState
 
