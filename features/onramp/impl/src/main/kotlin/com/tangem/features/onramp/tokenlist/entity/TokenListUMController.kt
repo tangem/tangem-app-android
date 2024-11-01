@@ -19,7 +19,8 @@ internal class TokenListUMController @Inject constructor() {
 
     private val _state: MutableStateFlow<TokenListUM> = MutableStateFlow(
         value = TokenListUM(
-            items = persistentListOf(),
+            availableItems = persistentListOf(),
+            unavailableItems = persistentListOf(),
             isBalanceHidden = false,
         ),
     )
