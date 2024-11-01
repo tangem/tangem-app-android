@@ -47,8 +47,8 @@ internal fun StakingClaimRewardsValidatorContent(
                             )
                         },
                     ),
-                    infoTitle = item.fiatAmount,
-                    infoSubtitle = item.cryptoAmount,
+                    infoTitle = item.formattedFiatAmount,
+                    infoSubtitle = item.formattedCryptoAmount,
                     imageUrl = item.validator?.image.orEmpty(),
                     onImageError = { ValidatorImagePlaceholder() },
                     modifier = modifier
