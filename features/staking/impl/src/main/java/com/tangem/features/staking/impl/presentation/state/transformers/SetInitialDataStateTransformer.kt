@@ -3,6 +3,7 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 import com.tangem.common.extensions.remove
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
@@ -39,6 +40,7 @@ internal class SetInitialDataStateTransformer(
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val balancesToShowProvider: Provider<List<BalanceItem>>,
+    private val maxEnterAmountProvider: Provider<MaxEnterAmount>,
 ) : Transformer<StakingUiState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -50,6 +52,7 @@ internal class SetInitialDataStateTransformer(
             appCurrencyProvider = appCurrencyProvider,
             userWalletProvider = userWalletProvider,
             iconStateConverter = iconStateConverter,
+            maxEnterAmountProvider = maxEnterAmountProvider,
         )
     }
 

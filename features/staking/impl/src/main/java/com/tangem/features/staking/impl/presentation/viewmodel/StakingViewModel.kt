@@ -11,6 +11,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.common.ui.notifications.NotificationUM
@@ -146,6 +147,14 @@ internal class StakingViewModel @Inject constructor(
                 processingActions = processingActions,
             ).getOrElse { emptyList() }
         }
+
+    private val maxEnterAmount: MaxEnterAmount
+        get() =
+            MaxEnterAmount(
+                amount = uiState.value.balanceState?.cryptoAmount,
+                fiatAmount = uiState.value.balanceState?.fiatAmount,
+                fiatRate = cryptoCurrencyStatus.value.fiatRate,
+            )
 
     private var isInitialInfoAnalyticSent: Boolean = false
 
@@ -881,6 +890,7 @@ internal class StakingViewModel @Inject constructor(
                 userWalletProvider = Provider { userWallet },
                 appCurrencyProvider = Provider { appCurrency },
                 balancesToShowProvider = Provider { balancesToShow },
+                maxEnterAmountProvider = Provider { maxEnterAmount },
             ),
             SetConfirmationStateEmptyTransformer,
         )
@@ -907,6 +917,13 @@ internal class StakingViewModel @Inject constructor(
             ValidatorSelectChangeTransformer(
                 selectedValidator = validator,
                 yield = yield,
+            ),
+            SetAmountDataTransformer(
+                clickIntents = this,
+                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                userWalletProvider = Provider { userWallet },
+                appCurrencyProvider = Provider { appCurrency },
+                maxEnterAmountProvider = Provider { maxEnterAmount },
             ),
             AmountChangeStateTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
