@@ -16,6 +16,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState as TokenFiatAmountState
@@ -24,10 +25,17 @@ import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState 
 internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     when (state) {
         is TokenFiatAmountState.Content -> {
-            FiatAmountText(
+            ContentFiatAmount(
                 text = state.text.orMaskWithStars(isBalanceHidden),
                 hasStaked = state.hasStaked,
                 modifier = modifier,
+            )
+        }
+        is TokenItemState.FiatAmountState.TextContent -> {
+            FiatAmountText(
+                text = state.text.orMaskWithStars(isBalanceHidden),
+                modifier = modifier,
+                isAvailable = state.isAvailable,
             )
         }
         is TokenFiatAmountState.Loading -> {
@@ -41,7 +49,7 @@ internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Bool
 }
 
 @Composable
-private fun FiatAmountText(text: String, hasStaked: Boolean, modifier: Modifier = Modifier) {
+private fun ContentFiatAmount(text: String, hasStaked: Boolean, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -58,14 +66,21 @@ private fun FiatAmountText(text: String, hasStaked: Boolean, modifier: Modifier 
                     .size(TangemTheme.dimens.size12),
             )
         }
-        Text(
-            text = text,
-            color = TangemTheme.colors.text.primary1,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = TangemTheme.typography.body2,
-        )
+
+        FiatAmountText(text = text)
     }
+}
+
+@Composable
+private fun FiatAmountText(text: String, modifier: Modifier = Modifier, isAvailable: Boolean = true) {
+    Text(
+        text = text,
+        modifier = modifier,
+        color = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        style = TangemTheme.typography.body2,
+    )
 }
 
 private fun Modifier.placeholderSize(): Modifier = composed {
