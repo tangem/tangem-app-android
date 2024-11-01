@@ -1,5 +1,6 @@
 package com.tangem.common.ui.tokens
 
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
@@ -28,15 +29,19 @@ import java.math.BigDecimal
  */
 class TokenItemStateConverter(
     private val appCurrency: AppCurrency,
+    private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
+        CryptoCurrencyToIconStateConverter().convert(it)
+    },
     private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = Companion::createTitleState,
     private val subtitleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.SubtitleState? = {
         createSubtitleState(it, appCurrency)
     },
+    private val fiatAmountStateProvider: (CryptoCurrencyStatus) -> TokenItemState.FiatAmountState? = {
+        createFiatAmountState(it, appCurrency)
+    },
     private val onItemClick: (CryptoCurrencyStatus) -> Unit,
     private val onItemLongClick: ((CryptoCurrencyStatus) -> Unit)? = null,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
-
-    private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
         return when (value.value) {
@@ -56,7 +61,7 @@ class TokenItemStateConverter(
     private fun CryptoCurrencyStatus.mapToLoadingState(): TokenItemState.Loading {
         return TokenItemState.Loading(
             id = currency.id.value,
-            iconState = iconStateConverter.convert(value = this),
+            iconState = iconStateProvider(this),
             titleState = titleStateProvider(this) as TokenItemState.TitleState.Content,
             subtitleState = requireNotNull(subtitleStateProvider(this)),
         )
@@ -65,13 +70,10 @@ class TokenItemStateConverter(
     private fun CryptoCurrencyStatus.mapToTokenItemState(): TokenItemState.Content {
         return TokenItemState.Content(
             id = currency.id.value,
-            iconState = iconStateConverter.convert(value = this),
+            iconState = iconStateProvider(this),
             titleState = titleStateProvider(this),
             subtitleState = requireNotNull(subtitleStateProvider(this)),
-            fiatAmountState = TokenItemState.FiatAmountState.Content(
-                text = getFormattedFiatAmount(),
-                hasStaked = !getStakedBalance().isZero(),
-            ),
+            fiatAmountState = requireNotNull(fiatAmountStateProvider(this)),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = getFormattedAmount()),
             onItemClick = { onItemClick(this) },
             onItemLongClick = onItemLongClick?.let {
@@ -86,20 +88,10 @@ class TokenItemStateConverter(
         return amount.format { crypto(currency) }
     }
 
-    private fun CryptoCurrencyStatus.getFormattedFiatAmount(): String {
-        val fiatYieldBalance = value.fiatRate?.times(getStakedBalance()).orZero()
-        val fiatAmount = value.fiatAmount?.plus(fiatYieldBalance) ?: return DASH_SIGN
-
-        return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
-    }
-
-    private fun CryptoCurrencyStatus.getStakedBalance() =
-        (value.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance().orZero()
-
     private fun CryptoCurrencyStatus.mapToUnreachableTokenItemState(): TokenItemState.Unreachable {
         return TokenItemState.Unreachable(
             id = currency.id.value,
-            iconState = iconStateConverter.convert(value = this),
+            iconState = iconStateProvider(this),
             titleState = titleStateProvider(this),
             subtitleState = subtitleStateProvider(this),
             onItemClick = { onItemClick(this) },
@@ -112,7 +104,7 @@ class TokenItemStateConverter(
     private fun CryptoCurrencyStatus.mapToNoAddressTokenItemState(): TokenItemState.NoAddress {
         return TokenItemState.NoAddress(
             id = currency.id.value,
-            iconState = iconStateConverter.convert(this),
+            iconState = iconStateProvider(this),
             titleState = titleStateProvider(this),
             subtitleState = subtitleStateProvider(this),
             onItemLongClick = onItemLongClick?.let {
@@ -121,9 +113,9 @@ class TokenItemStateConverter(
         )
     }
 
-    private companion object {
+    companion object {
 
-        fun createTitleState(currencyStatus: CryptoCurrencyStatus): TokenItemState.TitleState {
+        private fun createTitleState(currencyStatus: CryptoCurrencyStatus): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
                 is CryptoCurrencyStatus.Loading,
                 is CryptoCurrencyStatus.MissedDerivation,
@@ -145,7 +137,7 @@ class TokenItemStateConverter(
             }
         }
 
-        fun createSubtitleState(
+        private fun createSubtitleState(
             currencyStatus: CryptoCurrencyStatus,
             appCurrency: AppCurrency,
         ): TokenItemState.SubtitleState? {
@@ -159,6 +151,29 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.MissedDerivation,
                 is CryptoCurrencyStatus.Unreachable,
                 is CryptoCurrencyStatus.NoAmount,
+                -> null
+            }
+        }
+
+        private fun createFiatAmountState(
+            status: CryptoCurrencyStatus,
+            appCurrency: AppCurrency,
+        ): TokenItemState.FiatAmountState? {
+            return when (status.value) {
+                is CryptoCurrencyStatus.Loaded,
+                is CryptoCurrencyStatus.Custom,
+                is CryptoCurrencyStatus.NoQuote,
+                is CryptoCurrencyStatus.NoAccount,
+                -> {
+                    TokenItemState.FiatAmountState.Content(
+                        text = status.getFormattedFiatAmount(appCurrency),
+                        hasStaked = !status.getStakedBalance().isZero(),
+                    )
+                }
+                is CryptoCurrencyStatus.Unreachable,
+                is CryptoCurrencyStatus.NoAmount,
+                is CryptoCurrencyStatus.MissedDerivation,
+                is CryptoCurrencyStatus.Loading,
                 -> null
             }
         }
@@ -189,5 +204,15 @@ class TokenItemStateConverter(
         private fun BigDecimal.getPriceChangeType(): PriceChangeType {
             return PriceChangeConverter.fromBigDecimal(value = this)
         }
+
+        fun CryptoCurrencyStatus.getFormattedFiatAmount(appCurrency: AppCurrency): String {
+            val fiatYieldBalance = value.fiatRate?.times(getStakedBalance()).orZero()
+            val fiatAmount = value.fiatAmount?.plus(fiatYieldBalance) ?: return DASH_SIGN
+
+            return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
+        }
+
+        private fun CryptoCurrencyStatus.getStakedBalance() =
+            (value.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance().orZero()
     }
 }
