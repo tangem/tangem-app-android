@@ -7,7 +7,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.*
-import com.tangem.features.staking.impl.presentation.state.utils.isComposePendingActions
+import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.features.staking.impl.presentation.state.utils.isTronStakedBalance
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
@@ -16,29 +16,32 @@ import java.math.BigDecimal
 
 internal class SetConfirmationStateInitTransformer(
     private val isEnter: Boolean,
+    private val isExplicitExit: Boolean,
+    private val balanceState: BalanceState?,
     private val stakingApproval: StakingApproval,
     private val stakingAllowance: BigDecimal,
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val pendingActions: ImmutableList<PendingAction>? = null,
     private val pendingAction: PendingAction? = pendingActions?.firstOrNull(),
+
 ) : Transformer<StakingUiState> {
 
     private val networkId
         get() = cryptoCurrencyStatus.currency.network.id.value
 
     private val isComposePendingActions
-        get() = isComposePendingActions(networkId, pendingActions)
+        get() = isCompositePendingActions(networkId, pendingActions)
 
     private val isTronStakedBalance
         get() = isTronStakedBalance(networkId, pendingAction)
 
-    private val isExit: Boolean
+    private val isImplicitExit: Boolean
         get() = pendingAction == null && pendingActions?.isEmpty() == true || isTronStakedBalance
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         val actionType = when {
             isEnter -> StakingActionCommonType.Enter
-            isExit -> StakingActionCommonType.Exit
+            isImplicitExit || isExplicitExit -> StakingActionCommonType.Exit
             else -> when (pendingAction?.type) {
                 StakingActionType.STAKE -> StakingActionCommonType.Enter
                 StakingActionType.UNSTAKE -> StakingActionCommonType.Exit
@@ -54,6 +57,7 @@ internal class SetConfirmationStateInitTransformer(
 
         return prevState.copy(
             actionType = actionType,
+            balanceState = balanceState,
             confirmationState = StakingStates.ConfirmationState.Data(
                 isPrimaryButtonEnabled = false,
                 innerState = InnerConfirmationStakingState.ASSENT,

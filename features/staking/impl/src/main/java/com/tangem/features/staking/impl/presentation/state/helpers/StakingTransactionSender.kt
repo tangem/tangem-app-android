@@ -20,7 +20,7 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
-import com.tangem.features.staking.impl.presentation.state.utils.isComposePendingActions
+import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.utils.extensions.orZero
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -96,7 +96,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         confirmationState: StakingStates.ConfirmationState.Data,
         onConstructError: (StakingError) -> Unit,
     ) = coroutineScope {
-        val isComposePendingActions = isComposePendingActions(
+        val isComposePendingActions = isCompositePendingActions(
             cryptoCurrencyStatus.currency.network.id.value,
             confirmationState.pendingActions,
         )

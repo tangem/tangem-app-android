@@ -2,7 +2,9 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.common.extensions.remove
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
+import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
@@ -39,6 +41,7 @@ internal class SetInitialDataStateTransformer(
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val balancesToShowProvider: Provider<List<BalanceItem>>,
+    private val maxEnterAmountProvider: Provider<MaxEnterAmount>,
 ) : Transformer<StakingUiState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -48,8 +51,8 @@ internal class SetInitialDataStateTransformer(
             clickIntents = clickIntents,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
             appCurrencyProvider = appCurrencyProvider,
-            userWalletProvider = userWalletProvider,
             iconStateConverter = iconStateConverter,
+            maxEnterAmountProvider = maxEnterAmountProvider,
         )
     }
 
@@ -72,6 +75,7 @@ internal class SetInitialDataStateTransformer(
             title = TextReference.EMPTY,
             cryptoCurrencyName = cryptoCurrency.name,
             cryptoCurrencySymbol = cryptoCurrency.symbol,
+            cryptoCurrencyNetworkId = cryptoCurrency.network.id.value,
             clickIntents = clickIntents,
             currentStep = StakingStep.InitialInfo,
             initialInfoState = createInitialInfoState(),
@@ -207,7 +211,12 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createInitialAmountState(): AmountState {
-        return amountStateConverter.convert("")
+        return amountStateConverter.convert(
+            AmountParameters(
+                title = stringReference(userWalletProvider().name),
+                value = "",
+            ),
+        )
     }
 
     private fun getAprRange(validators: List<Yield.Validator>): TextReference {
