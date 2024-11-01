@@ -1,18 +1,26 @@
 package com.tangem.features.onramp.tokenlist.entity.transformer
 
 import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedFiatAmount
+import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import kotlinx.collections.immutable.toImmutableList
 
+@Suppress("LongParameterList")
 internal class UpdateTokenItemsTransformer(
-    private val tokenItemStateConverter: TokenItemStateConverter,
-    private val statuses: List<CryptoCurrencyStatus>,
+    private val appCurrency: AppCurrency,
+    private val onItemClick: (CryptoCurrencyStatus) -> Unit,
+    private val statuses: Map<Boolean, List<CryptoCurrencyStatus>>,
     private val isBalanceHidden: Boolean,
     private val hasSearchBar: Boolean,
     private val onQueryChange: (String) -> Unit,
@@ -20,7 +28,15 @@ internal class UpdateTokenItemsTransformer(
 ) : TokenListUMTransformer {
 
     override fun transform(prevState: TokenListUM): TokenListUM {
-        val items = tokenItemStateConverter.convertList(input = statuses).map(TokensListItemUM::Token)
+        val availableItems = convertStatuses(
+            converter = createDefaultTokenItemStateConverter(),
+            statuses = statuses[true].orEmpty(),
+        )
+
+        val unavailableItems = convertStatuses(
+            converter = createUnavailableTokenItemStateConverter(),
+            statuses = statuses[false].orEmpty(),
+        )
 
         val searchBarItem = if (hasSearchBar) {
             prevState.getSearchBar() ?: createSearchBarItem()
@@ -29,8 +45,77 @@ internal class UpdateTokenItemsTransformer(
         }
 
         return prevState.copy(
-            items = (listOfNotNull(searchBarItem) + items).toImmutableList(),
+            availableItems = buildList {
+                if (searchBarItem != null) {
+                    add(searchBarItem)
+                }
+
+                createGroupTitle(
+                    textReference = resourceReference(id = R.string.exchange_tokens_available_tokens_header),
+                )
+                    .let(::add)
+
+                addAll(availableItems)
+            }
+                .toImmutableList(),
+            unavailableItems = buildList {
+                if (unavailableItems.isNotEmpty()) {
+                    // TODO: [REDACTED_JIRA]
+                    createGroupTitle(
+                        textReference = stringReference(value = "Unavailable tokens"),
+                    )
+                        .let(::add)
+                }
+
+                addAll(unavailableItems)
+            }.toImmutableList(),
             isBalanceHidden = isBalanceHidden,
+        )
+    }
+
+    private fun convertStatuses(
+        converter: TokenItemStateConverter,
+        statuses: List<CryptoCurrencyStatus>,
+    ): List<TokensListItemUM.Token> {
+        return converter.convertList(statuses)
+            .map(TokensListItemUM::Token)
+    }
+
+    private fun createDefaultTokenItemStateConverter(): TokenItemStateConverter {
+        return TokenItemStateConverter(appCurrency = appCurrency, onItemClick = onItemClick)
+    }
+
+    private fun createUnavailableTokenItemStateConverter(): TokenItemStateConverter {
+        return TokenItemStateConverter(
+            appCurrency = appCurrency,
+            iconStateProvider = { CryptoCurrencyToIconStateConverter(isAvailable = false).convert(it) },
+            titleStateProvider = { TokenItemState.TitleState.Content(text = it.currency.name, isAvailable = false) },
+            subtitleStateProvider = {
+                when (it.value) {
+                    CryptoCurrencyStatus.Loading -> TokenItemState.SubtitleState.Loading
+                    else -> TokenItemState.SubtitleState.TextContent(value = it.currency.symbol, isAvailable = false)
+                }
+            },
+            fiatAmountStateProvider = {
+                when (it.value) {
+                    is CryptoCurrencyStatus.Loaded,
+                    is CryptoCurrencyStatus.Custom,
+                    is CryptoCurrencyStatus.NoQuote,
+                    is CryptoCurrencyStatus.NoAccount,
+                    -> {
+                        TokenItemState.FiatAmountState.TextContent(
+                            text = it.getFormattedFiatAmount(appCurrency),
+                            isAvailable = false,
+                        )
+                    }
+                    is CryptoCurrencyStatus.Unreachable,
+                    is CryptoCurrencyStatus.NoAmount,
+                    is CryptoCurrencyStatus.MissedDerivation,
+                    is CryptoCurrencyStatus.Loading,
+                    -> null
+                }
+            },
+            onItemClick = onItemClick,
         )
     }
 
@@ -43,6 +128,13 @@ internal class UpdateTokenItemsTransformer(
                 isActive = false,
                 onActiveChange = onActiveChange,
             ),
+        )
+    }
+
+    private fun createGroupTitle(textReference: TextReference): TokensListItemUM.NetworkGroupTitle {
+        return TokensListItemUM.NetworkGroupTitle(
+            id = textReference.hashCode(),
+            name = textReference,
         )
     }
 }
