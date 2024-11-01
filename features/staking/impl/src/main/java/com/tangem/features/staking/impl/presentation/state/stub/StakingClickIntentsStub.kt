@@ -26,7 +26,7 @@ internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onInfoClick(infoType: InfoType) {}
 
-    override fun onEnterClick() {}
+    override fun onAmountEnterClick() {}
 
     override fun onAmountValueChange(value: String) {}
 

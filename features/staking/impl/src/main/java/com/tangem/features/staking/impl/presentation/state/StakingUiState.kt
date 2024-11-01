@@ -29,6 +29,7 @@ internal data class StakingUiState(
     val walletName: String,
     val cryptoCurrencyName: String,
     val cryptoCurrencySymbol: String,
+    val cryptoCurrencyNetworkId: String,
     val currentStep: StakingStep,
     val initialInfoState: StakingStates.InitialInfoState,
     val amountState: AmountState,
@@ -40,6 +41,7 @@ internal data class StakingUiState(
     val actionType: StakingActionCommonType,
     val buttonsState: NavigationButtonsState,
     val event: StateEvent<StakingEvent>,
+    val balanceState: BalanceState?,
 ) {
 
     fun copyWrapped(
