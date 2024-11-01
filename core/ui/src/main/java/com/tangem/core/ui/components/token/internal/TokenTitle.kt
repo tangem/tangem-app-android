@@ -22,7 +22,7 @@ import com.tangem.core.ui.components.token.state.TokenItemState.TitleState as To
 internal fun TokenTitle(state: TokenTitleState?, modifier: Modifier = Modifier) {
     when (state) {
         is TokenTitleState.Content -> {
-            ContentTitle(name = state.text, hasPending = state.hasPending, modifier = modifier)
+            ContentTitle(state = state, modifier = modifier)
         }
         is TokenTitleState.Loading -> {
             RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
@@ -35,7 +35,7 @@ internal fun TokenTitle(state: TokenTitleState?, modifier: Modifier = Modifier) 
 }
 
 @Composable
-private fun ContentTitle(name: String, hasPending: Boolean, modifier: Modifier = Modifier) {
+private fun ContentTitle(state: TokenTitleState.Content, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing6),
@@ -45,21 +45,25 @@ private fun ContentTitle(name: String, hasPending: Boolean, modifier: Modifier =
          * If currency name has a long width, then it will completely displace the image.
          * So we need to use [weight] to avoid displacement.
          */
-        CurrencyNameText(name = name, modifier = Modifier.weight(weight = 1f, fill = false))
+        CurrencyNameText(
+            name = state.text,
+            isAvailable = state.isAvailable,
+            modifier = Modifier.weight(weight = 1f, fill = false),
+        )
 
         PendingTransactionImage(
-            hasPending = hasPending,
+            hasPending = state.hasPending,
             modifier = Modifier.align(alignment = Alignment.CenterVertically),
         )
     }
 }
 
 @Composable
-private fun CurrencyNameText(name: String, modifier: Modifier = Modifier) {
+private fun CurrencyNameText(name: String, isAvailable: Boolean, modifier: Modifier = Modifier) {
     Text(
         text = name,
         modifier = modifier,
-        color = TangemTheme.colors.text.primary1,
+        color = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
         style = TangemTheme.typography.subtitle2,
