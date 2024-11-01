@@ -63,7 +63,7 @@ internal class YieldBalancesConverter(
     private fun List<BalanceItem>.mapBalances() = asSequence()
         .filterNot { it.amount.isZero() || it.type == BalanceType.REWARDS }
         .mapNotNull(balanceItemConverter::convert)
-        .sortedByDescending { it.cryptoDecimal }
+        .sortedByDescending { it.cryptoAmount }
         .sortedBy { it.type.order }
         .toPersistentList()
 
