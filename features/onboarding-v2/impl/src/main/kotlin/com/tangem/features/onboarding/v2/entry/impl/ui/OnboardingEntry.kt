@@ -4,19 +4,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.appbar.TangemTopAppBar
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
+import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.slide
+import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackAnimation
+import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.onboarding.v2.impl.R
+import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
+import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 
 @Composable
 internal inline fun OnboardingEntry(
     modifier: Modifier = Modifier,
+    childStack: ChildStack<OnboardingRoute, Any>,
     stepperContent: @Composable (Modifier) -> Unit,
-    content: @Composable (Modifier) -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -25,28 +25,19 @@ internal inline fun OnboardingEntry(
             .background(TangemTheme.colors.background.primary),
     ) {
         stepperContent(Modifier.fillMaxWidth())
-        content(Modifier.fillMaxSize())
-    }
-}
 
-@Preview
-@Composable
-private fun Preview() {
-    TangemThemePreview {
-        OnboardingEntry(
-            stepperContent = {
-                TangemTopAppBar(
-                    title = "Onboarding",
-                    startButton = TopAppBarButtonUM(
-                        iconRes = R.drawable.ic_back_24,
-                        enabled = true,
-                        onIconClicked = {},
-                    ),
-                )
-            },
-            content = { modifier ->
-                Box(modifier.background(Color.Cyan.copy(alpha = 0.3f)))
-            },
-        )
+        Children(
+            stack = childStack,
+            animation = stackAnimation(slide()),
+        ) {
+            when (it.configuration) {
+                is OnboardingRoute.Wallet12 -> {
+                    (it.instance as OnboardingMultiWalletComponent).Content(
+                        modifier = modifier,
+                    )
+                }
+                OnboardingRoute.None -> {}
+            }
+        }
     }
 }
