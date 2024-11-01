@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.sdk
+package com.tangem.sdk.api
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -19,7 +19,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
-import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 
 @Suppress("TooManyFunctions")
 interface TangemSdkManager {
@@ -96,8 +95,8 @@ interface TangemSdkManager {
     ): CompletionResult<CardDTO>
 
     @Deprecated(
-        "TangemSdkManager shouldn't run custom tasks. " +
-            "All of them should be specified in TangemSdkManager certain methods.",
+        "com.tangem.sdk.api.TangemSdkManager shouldn't run custom tasks. " +
+            "All of them should be specified in com.tangem.sdk.api.TangemSdkManager certain methods.",
     )
     suspend fun <T> runTaskAsync(
         runnable: CardSessionRunnable<T>,
@@ -111,7 +110,7 @@ interface TangemSdkManager {
     @Suppress("MagicNumber")
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?)
 
-    @Deprecated("TangemSdkManager shouldn't returns a string from resources")
+    @Deprecated("com.tangem.sdk.api.TangemSdkManager shouldn't returns a string from resources")
     fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String
 
     fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy)
