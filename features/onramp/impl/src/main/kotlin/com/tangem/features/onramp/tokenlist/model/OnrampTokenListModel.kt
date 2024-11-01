@@ -1,7 +1,6 @@
 package com.tangem.features.onramp.tokenlist.model
 
 import arrow.core.getOrElse
-import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -68,10 +67,8 @@ internal class OnrampTokenListModel @Inject constructor(
                 .filterByAvailability()
 
             UpdateTokenItemsTransformer(
-                tokenItemStateConverter = TokenItemStateConverter(
-                    appCurrency = appCurrency,
-                    onItemClick = params.onTokenClick,
-                ),
+                appCurrency = appCurrency,
+                onItemClick = params.onTokenClick,
                 statuses = filterTokenList,
                 isBalanceHidden = isBalanceHidden,
                 hasSearchBar = params.hasSearchBar && currencies.isNotEmpty(),
@@ -106,14 +103,18 @@ internal class OnrampTokenListModel @Inject constructor(
         }
     }
 
-    private fun List<CryptoCurrencyStatus>.filterByAvailability(): List<CryptoCurrencyStatus> {
-        return filter {
-            when (params.filterOperation) {
+    private fun List<CryptoCurrencyStatus>.filterByAvailability(): Map<Boolean, List<CryptoCurrencyStatus>> {
+        return groupBy { status ->
+            val isAvailable = when (params.filterOperation) {
                 OnrampOperation.BUY -> {
-                    rampStateManager.availableForBuy(scanResponse = scanResponse, cryptoCurrency = it.currency)
+                    rampStateManager.availableForBuy(scanResponse = scanResponse, cryptoCurrency = status.currency)
                 }
-                OnrampOperation.SELL -> rampStateManager.availableForSell(cryptoCurrency = it.currency)
+                OnrampOperation.SELL -> rampStateManager.availableForSell(cryptoCurrency = status.currency)
             }
+
+            isAvailable &&
+                status.value !is CryptoCurrencyStatus.MissedDerivation &&
+                status.value !is CryptoCurrencyStatus.Unreachable
         }
     }
 }
