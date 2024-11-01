@@ -34,7 +34,7 @@ internal fun LazyListScope.amountField(
                 .background(TangemTheme.colors.background.action),
         ) {
             Text(
-                text = amountState.walletName,
+                text = amountState.title.resolveReference(),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier

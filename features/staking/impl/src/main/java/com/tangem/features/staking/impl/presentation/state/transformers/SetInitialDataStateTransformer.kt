@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.common.extensions.remove
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
+import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -50,7 +51,6 @@ internal class SetInitialDataStateTransformer(
             clickIntents = clickIntents,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
             appCurrencyProvider = appCurrencyProvider,
-            userWalletProvider = userWalletProvider,
             iconStateConverter = iconStateConverter,
             maxEnterAmountProvider = maxEnterAmountProvider,
         )
@@ -211,7 +211,12 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createInitialAmountState(): AmountState {
-        return amountStateConverter.convert("")
+        return amountStateConverter.convert(
+            AmountParameters(
+                title = stringReference(userWalletProvider().name),
+                value = "",
+            ),
+        )
     }
 
     private fun getAprRange(validators: List<Yield.Validator>): TextReference {
