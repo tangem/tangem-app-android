@@ -781,6 +781,7 @@
   <string name="staking_unbonding">Desunión</string>
   <string name="staking_unlocked_locked">Desbloquear</string>
   <string name="staking_unlocking">Desbloqueando</string>
+  <string name="staking_unstake_amount_requirement_error">El monto del staking debe ser al menos %s</string>
   <string name="staking_unstake_amount_validation_error">El monto excede el saldo apostado</string>
   <string name="staking_unstaked">Sin staking</string>
   <string name="staking_unstaking">Unstaking</string>
