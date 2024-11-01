@@ -11,6 +11,7 @@ internal object SetConfirmationStateEmptyTransformer : Transformer<StakingUiStat
             actionType = StakingActionCommonType.Enter,
             validatorState = StakingStates.ValidatorState.Empty(),
             confirmationState = StakingStates.ConfirmationState.Empty(),
+            balanceState = null,
         )
     }
 }
