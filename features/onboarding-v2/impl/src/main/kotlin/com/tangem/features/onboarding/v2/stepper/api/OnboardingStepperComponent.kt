@@ -5,7 +5,7 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.scan.ScanResponse
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 internal interface OnboardingStepperComponent : ComposableContentComponent {
 
@@ -22,11 +22,7 @@ internal interface OnboardingStepperComponent : ComposableContentComponent {
         val scanResponse: ScanResponse,
     )
 
-    val state: StateFlow<StepperState>
-
-    fun changeStep(step: Int)
-    fun nextStep()
-    fun changeTitle(title: TextReference)
+    val state: MutableStateFlow<StepperState>
 
     interface Factory : ComponentFactory<Params, OnboardingStepperComponent>
 }
