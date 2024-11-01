@@ -5,6 +5,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
 import com.tangem.common.ui.amountScreen.utils.checkExceedBalance
 import com.tangem.common.ui.amountScreen.utils.getCryptoValue
 import com.tangem.common.ui.amountScreen.utils.getFiatValue
@@ -12,7 +13,6 @@ import com.tangem.common.ui.amountScreen.utils.getKeyboardAction
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.parseToBigDecimal
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
@@ -20,11 +20,11 @@ import java.math.BigDecimal
 /**
  * Amount value change
  *
- * @property cryptoCurrencyStatus current cryptocurrency status
+ * @property maxEnterAmount max amount to enter
  * @property value amount value
  */
 class AmountFieldChangeTransformer(
-    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val maxEnterAmount: MaxEnterAmount,
     private val value: String,
 ) : Transformer<AmountState> {
 
@@ -39,19 +39,19 @@ class AmountFieldChangeTransformer(
 
         val trimmedValue = value.trim()
         val cryptoValue = trimmedValue.getCryptoValue(
-            fiatRate = cryptoCurrencyStatus.value.fiatRate,
+            fiatRate = maxEnterAmount.fiatRate,
             isFiatValue = amountTextField.isFiatValue,
             decimals = cryptoDecimals,
         )
         val decimalCryptoValue = cryptoValue.parseToBigDecimal(cryptoDecimals)
         val (fiatValue, decimalFiatValue) = trimmedValue.getFiatValue(
-            fiatRate = cryptoCurrencyStatus.value.fiatRate,
+            fiatRate = maxEnterAmount.fiatRate,
             isFiatValue = amountTextField.isFiatValue,
             decimals = fiatDecimals,
         )
 
         val checkValue = if (amountTextField.isFiatValue) fiatValue else cryptoValue
-        val isExceedBalance = checkValue.checkExceedBalance(cryptoCurrencyStatus, amountTextField)
+        val isExceedBalance = checkValue.checkExceedBalance(maxEnterAmount, amountTextField)
         val isZero = if (amountTextField.isFiatValue) {
             decimalFiatValue.isNullOrZero()
         } else {
