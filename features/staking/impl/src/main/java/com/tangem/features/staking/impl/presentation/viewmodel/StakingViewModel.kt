@@ -241,6 +241,7 @@ internal class StakingViewModel @Inject constructor(
                     balanceState = null,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     stakingApproval = stakingApproval,
+                    stakingAllowance = stakingAllowance,
                 ),
             )
         }
