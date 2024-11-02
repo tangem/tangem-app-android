@@ -5,6 +5,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
+import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
@@ -39,8 +40,14 @@ internal object ActivityModule {
 
     @Provides
     @Singleton
-    fun provideDefaultRampManager(appStateHolder: AppStateHolder): RampStateManager {
-        return DefaultRampManager(appStateHolder.exchangeService)
+    fun provideDefaultRampManager(
+        appStateHolder: AppStateHolder,
+        marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
+    ): RampStateManager {
+        return DefaultRampManager(
+            exchangeService = appStateHolder.exchangeService,
+            marketsCryptoCurrencyRepository = marketCryptoCurrencyRepository,
+        )
     }
 
     @Provides
