@@ -27,8 +27,8 @@ internal class TokenListStateConverter(
 
     private val tokenStatusConverter = TokenItemStateConverter(
         appCurrency = appCurrency,
-        onItemClick = clickIntents::onTokenItemClick,
-        onItemLongClick = clickIntents::onTokenItemLongClick,
+        onItemClick = { _, status -> clickIntents.onTokenItemClick(status) },
+        onItemLongClick = { _, status -> clickIntents.onTokenItemLongClick(status) },
     )
 
     override fun convert(value: WalletTokensListState): WalletTokensListState {
