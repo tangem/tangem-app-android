@@ -35,7 +35,7 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
             filterOperation = params.operation,
             hasSearchBar = true,
             userWalletId = params.userWalletId,
-            onTokenClick = ::onTokenClick,
+            onTokenClick = { _, status -> onTokenClick(status) },
         ),
     )
 
