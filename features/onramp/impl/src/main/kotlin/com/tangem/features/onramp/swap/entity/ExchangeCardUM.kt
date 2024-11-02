@@ -25,11 +25,9 @@ internal sealed interface ExchangeCardUM {
      * Empty state
      *
      * @property titleReference title reference
-     * @property onItemClick    callback which will be called when an item is clicked
      */
     data class Empty(
         override val titleReference: TextReference,
-        val onItemClick: () -> Unit,
     ) : ExchangeCardUM {
 
         override val hasRemoveButton: Boolean = false
@@ -42,7 +40,7 @@ internal sealed interface ExchangeCardUM {
             subtitleState = TokenItemState.SubtitleState.TextContent(value = "You want to Swap"),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = ""),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = ""),
-            onItemClick = onItemClick,
+            onItemClick = null,
             onItemLongClick = null,
         )
     }
