@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.factory.ComponentFactory
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.onramp.entity.OnrampOperation
@@ -31,6 +32,6 @@ internal interface OnrampTokenListComponent {
         val filterOperation: OnrampOperation,
         val hasSearchBar: Boolean,
         val userWalletId: UserWalletId,
-        val onTokenClick: (CryptoCurrencyStatus) -> Unit,
+        val onTokenClick: (TokenItemState, CryptoCurrencyStatus) -> Unit,
     )
 }

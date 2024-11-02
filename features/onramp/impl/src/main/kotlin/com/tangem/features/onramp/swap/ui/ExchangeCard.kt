@@ -101,7 +101,6 @@ private class ExchangeCardUMProvider : PreviewParameterProvider<ExchangeCardUM> 
     override val values: Sequence<ExchangeCardUM> = sequenceOf(
         ExchangeCardUM.Empty(
             titleReference = resourceReference(id = R.string.swapping_from_title),
-            onItemClick = {},
         ),
         ExchangeCardUM.Filled(
             titleReference = resourceReference(id = R.string.swapping_from_title),
