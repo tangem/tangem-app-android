@@ -50,10 +50,12 @@ internal class UpdateTokenItemsTransformer(
                     add(searchBarItem)
                 }
 
-                createGroupTitle(
-                    textReference = resourceReference(id = R.string.exchange_tokens_available_tokens_header),
-                )
-                    .let(::add)
+                if (availableItems.isNotEmpty()) {
+                    createGroupTitle(
+                        textReference = resourceReference(id = R.string.exchange_tokens_available_tokens_header),
+                    )
+                        .let(::add)
+                }
 
                 addAll(availableItems)
             }

@@ -103,13 +103,17 @@ internal class OnrampTokenListModel @Inject constructor(
         }
     }
 
-    private fun List<CryptoCurrencyStatus>.filterByAvailability(): Map<Boolean, List<CryptoCurrencyStatus>> {
+    private suspend fun List<CryptoCurrencyStatus>.filterByAvailability(): Map<Boolean, List<CryptoCurrencyStatus>> {
         return groupBy { status ->
             val isAvailable = when (params.filterOperation) {
                 OnrampOperation.BUY -> {
                     rampStateManager.availableForBuy(scanResponse = scanResponse, cryptoCurrency = status.currency)
                 }
                 OnrampOperation.SELL -> rampStateManager.availableForSell(cryptoCurrency = status.currency)
+                OnrampOperation.SWAP -> rampStateManager.availableForSwap(
+                    userWalletId = params.userWalletId,
+                    cryptoCurrency = status.currency,
+                )
             }
 
             isAvailable &&
