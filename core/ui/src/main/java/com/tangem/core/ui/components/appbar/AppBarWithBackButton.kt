@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
@@ -26,6 +27,7 @@ fun AppBarWithBackButton(
     modifier: Modifier = Modifier,
     text: String? = null,
     @DrawableRes iconRes: Int? = null,
+    containerColor: Color = Color.Transparent,
 ) {
     TangemTopAppBar(
         modifier = modifier,
@@ -34,6 +36,7 @@ fun AppBarWithBackButton(
             iconRes = iconRes ?: R.drawable.ic_back_24,
             onIconClicked = onBackClick,
         ),
+        containerColor = containerColor,
     )
 }
 
