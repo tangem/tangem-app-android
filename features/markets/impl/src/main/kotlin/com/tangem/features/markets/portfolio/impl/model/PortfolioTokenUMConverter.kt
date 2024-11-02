@@ -33,7 +33,7 @@ internal class PortfolioTokenUMConverter(
             subtitleStateProvider = {
                 TokenItemState.SubtitleState.TextContent(value = value.status.currency.name)
             },
-            onItemClick = onTokenItemClick,
+            onItemClick = { _, status -> onTokenItemClick(status) },
         )
 
         return PortfolioTokenUM(
