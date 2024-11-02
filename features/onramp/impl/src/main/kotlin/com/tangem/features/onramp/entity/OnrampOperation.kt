@@ -8,5 +8,6 @@ package com.tangem.features.onramp.entity
 internal enum class OnrampOperation {
     BUY,
     SELL,
+    SWAP,
     ;
 }
