@@ -32,7 +32,10 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
     private val onrampTokenListComponent: OnrampTokenListComponent = onrampTokenListComponentFactory.create(
         context = child(key = "token_list"),
         params = OnrampTokenListComponent.Params(
-            filterOperation = params.operation,
+            filterOperation = when (params) {
+                is OnrampOperationComponent.Params.Buy -> OnrampOperation.BUY
+                is OnrampOperationComponent.Params.Sell -> OnrampOperation.SWAP
+            },
             hasSearchBar = true,
             userWalletId = params.userWalletId,
             onTokenClick = { _, status -> onTokenClick(status) },
@@ -42,9 +45,9 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         OnrampSelectToken(
-            titleResId = when (params.operation) {
-                OnrampOperation.BUY -> R.string.common_buy
-                OnrampOperation.SELL -> R.string.common_sell
+            titleResId = when (params) {
+                is OnrampOperationComponent.Params.Buy -> R.string.common_buy
+                is OnrampOperationComponent.Params.Sell -> R.string.common_sell
             },
             onBackClick = router::pop,
             onrampTokenListComponent = onrampTokenListComponent,
@@ -57,9 +60,9 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
             val appCurrencyCode = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }.code
 
             reduxStateHolder.dispatch(
-                when (params.operation) {
-                    OnrampOperation.BUY -> getBuyAction(status, appCurrencyCode)
-                    OnrampOperation.SELL -> TradeCryptoAction.Sell(status, appCurrencyCode)
+                action = when (params) {
+                    is OnrampOperationComponent.Params.Buy -> getBuyAction(status, appCurrencyCode)
+                    is OnrampOperationComponent.Params.Sell -> TradeCryptoAction.Sell(status, appCurrencyCode)
                 },
             )
         }
