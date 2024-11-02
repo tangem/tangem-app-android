@@ -145,14 +145,16 @@ private fun Modifier.tokenClickable(state: TokenItemState): Modifier = composed 
         is TokenItemState.Unreachable,
         -> {
             val onClick = state.onItemClick
-            val onLongClick = state.onItemLongClick?.let { rememberHapticFeedback(state = state, onAction = it) }
+            val onLongClick = state.onItemLongClick?.let {
+                rememberHapticFeedback(state = state, onAction = { it(state) })
+            }
 
             when {
                 onClick == null && onLongClick == null -> this
                 onClick == null && onLongClick != null -> combinedClickable(onClick = {}, onLongClick = onLongClick)
-                onClick != null && onLongClick == null -> combinedClickable(onClick = onClick)
+                onClick != null && onLongClick == null -> combinedClickable(onClick = { onClick(state) })
                 onClick != null && onLongClick != null -> {
-                    combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                    combinedClickable(onClick = { onClick(state) }, onLongClick = onLongClick)
                 }
                 else -> this
             }
