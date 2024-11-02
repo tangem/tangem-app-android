@@ -19,7 +19,7 @@ import kotlinx.collections.immutable.toImmutableList
 @Suppress("LongParameterList")
 internal class UpdateTokenItemsTransformer(
     private val appCurrency: AppCurrency,
-    private val onItemClick: (CryptoCurrencyStatus) -> Unit,
+    private val onItemClick: (TokenItemState, CryptoCurrencyStatus) -> Unit,
     private val statuses: Map<Boolean, List<CryptoCurrencyStatus>>,
     private val isBalanceHidden: Boolean,
     private val hasSearchBar: Boolean,
