@@ -15,8 +15,8 @@ internal sealed interface ExchangeCardUM {
     /** Title reference */
     val titleReference: TextReference
 
-    /** Flag that indicates if remove button should be shown  */
-    val hasRemoveButton: Boolean
+    /** Remove button UI model */
+    val removeButtonUM: RemoveButtonUM?
 
     /** Token item state */
     val tokenItemState: TokenItemState
@@ -26,11 +26,9 @@ internal sealed interface ExchangeCardUM {
      *
      * @property titleReference title reference
      */
-    data class Empty(
-        override val titleReference: TextReference,
-    ) : ExchangeCardUM {
+    data class Empty(override val titleReference: TextReference) : ExchangeCardUM {
 
-        override val hasRemoveButton: Boolean = false
+        override val removeButtonUM: RemoveButtonUM? = null
 
         // TODO: https://tangem.atlassian.net/browse/AND-8936
         override val tokenItemState: TokenItemState = TokenItemState.Content(
@@ -49,13 +47,14 @@ internal sealed interface ExchangeCardUM {
      * Filled
      *
      * @property titleReference title reference
+     * @property removeButtonUM remove button UI model
      * @property tokenItemState token item state
      */
     data class Filled(
         override val titleReference: TextReference,
+        override val removeButtonUM: RemoveButtonUM?,
         override val tokenItemState: TokenItemState,
-    ) : ExchangeCardUM {
+    ) : ExchangeCardUM
 
-        override val hasRemoveButton: Boolean = true
-    }
+    data class RemoveButtonUM(val onClick: () -> Unit)
 }

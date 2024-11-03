@@ -1,16 +1,17 @@
 package com.tangem.features.onramp.tokenlist.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
@@ -24,34 +25,30 @@ import kotlinx.collections.immutable.ImmutableList
 /**
  * Token list
  *
- * @param state          state
- * @param contentPadding content padding
- * @param modifier       modifier
+ * @param state    state
+ * @param modifier modifier
  *
  * @author Andrew Khokhlov on 18/10/2024
  */
 @Composable
-internal fun TokenList(state: TokenListUM, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
-    LazyColumn(modifier = modifier, contentPadding = contentPadding) {
-        itemsBlock(items = state.availableItems, isBalanceHidden = state.isBalanceHidden)
+internal fun TokenList(state: TokenListUM, modifier: Modifier = Modifier) {
+    Column(modifier) {
+        ItemsBlock(items = state.availableItems, isBalanceHidden = state.isBalanceHidden)
 
-        item { SpacerH12() }
+        SpacerH12()
 
-        itemsBlock(items = state.unavailableItems, isBalanceHidden = state.isBalanceHidden)
+        ItemsBlock(items = state.unavailableItems, isBalanceHidden = state.isBalanceHidden)
     }
 }
 
-private fun LazyListScope.itemsBlock(items: ImmutableList<TokensListItemUM>, isBalanceHidden: Boolean) {
-    return itemsIndexed(
-        items = items,
-        key = { _, item -> item.id },
-        contentType = { _, item -> item::class.java },
-        itemContent = { index, item ->
+@Composable
+private fun ItemsBlock(items: ImmutableList<TokensListItemUM>, isBalanceHidden: Boolean) {
+    items.fastForEachIndexed { index, item ->
+        key(item.id) {
             TokenListItem(
                 state = item,
                 isBalanceHidden = isBalanceHidden,
                 modifier = Modifier
-                    .animateItem()
                     .roundedShapeItemDecoration(
                         currentIndex = index,
                         lastIndex = items.lastIndex,
@@ -59,20 +56,21 @@ private fun LazyListScope.itemsBlock(items: ImmutableList<TokensListItemUM>, isB
                         backgroundColor = TangemTheme.colors.background.primary,
                     ),
             )
-        },
-    )
+        }
+    }
 }
 
-@Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview_TokenList(@PreviewParameter(PreviewTokenListUMProvider::class) state: TokenListUM) {
     TangemThemePreview {
         TokenList(
             state = state,
-            contentPadding = PaddingValues(all = 16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = TangemTheme.colors.background.secondary),
+                .background(color = TangemTheme.colors.background.secondary)
+                .padding(16.dp),
         )
     }
 }

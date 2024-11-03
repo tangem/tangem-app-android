@@ -29,7 +29,16 @@ sealed interface TokensListItemUM {
      * @property id   id
      * @property name network group name
      */
+    @Deprecated("Use GroupTitle instead") // TODO: https://tangem.atlassian.net/browse/AND-8987
     data class NetworkGroupTitle(override val id: Int, val name: TextReference) : TokensListItemUM
+
+    /**
+     * Group title
+     *
+     * @property id   id
+     * @property text title value
+     */
+    data class GroupTitle(override val id: Any, val text: TextReference) : TokensListItemUM
 
     /**
      * Token item

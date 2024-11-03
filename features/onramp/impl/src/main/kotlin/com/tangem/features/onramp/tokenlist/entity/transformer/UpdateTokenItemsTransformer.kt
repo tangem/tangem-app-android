@@ -133,10 +133,7 @@ internal class UpdateTokenItemsTransformer(
         )
     }
 
-    private fun createGroupTitle(textReference: TextReference): TokensListItemUM.NetworkGroupTitle {
-        return TokensListItemUM.NetworkGroupTitle(
-            id = textReference.hashCode(),
-            name = textReference,
-        )
+    private fun createGroupTitle(textReference: TextReference): TokensListItemUM.GroupTitle {
+        return TokensListItemUM.GroupTitle(id = textReference.hashCode(), text = textReference)
     }
 }
