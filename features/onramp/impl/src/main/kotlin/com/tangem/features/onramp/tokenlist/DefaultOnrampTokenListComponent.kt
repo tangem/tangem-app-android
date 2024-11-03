@@ -1,6 +1,5 @@
 package com.tangem.features.onramp.tokenlist
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -23,10 +22,10 @@ internal class DefaultOnrampTokenListComponent @AssistedInject constructor(
     private val model: OnrampTokenListModel = getOrCreateModel(params)
 
     @Composable
-    override fun Content(contentPadding: PaddingValues, modifier: Modifier) {
+    override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
 
-        TokenList(state = state, contentPadding = contentPadding, modifier = modifier)
+        TokenList(state = state, modifier = modifier)
     }
 
     @AssistedFactory
