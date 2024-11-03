@@ -2,11 +2,12 @@ package com.tangem.features.onramp.selecttoken.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -16,6 +17,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun OnrampSelectToken(
     @StringRes titleResId: Int,
@@ -25,21 +27,25 @@ internal fun OnrampSelectToken(
 ) {
     BackHandler(onBack = onBackClick)
 
-    Column(
+    LazyColumn(
         modifier = modifier
             .background(TangemTheme.colors.background.secondary)
             .imePadding()
             .systemBarsPadding(),
     ) {
-        AppBarWithBackButton(
-            onBackClick = onBackClick,
-            text = stringResource(id = titleResId),
-            iconRes = R.drawable.ic_close_24,
-        )
+        stickyHeader(key = "header") {
+            AppBarWithBackButton(
+                onBackClick = onBackClick,
+                text = stringResource(id = titleResId),
+                iconRes = R.drawable.ic_close_24,
+                containerColor = TangemTheme.colors.background.secondary,
+            )
+        }
 
-        onrampTokenListComponent.Content(
-            contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
-            modifier = Modifier,
-        )
+        item(key = "token_list", contentType = "token_list") {
+            onrampTokenListComponent.Content(
+                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+            )
+        }
     }
 }
