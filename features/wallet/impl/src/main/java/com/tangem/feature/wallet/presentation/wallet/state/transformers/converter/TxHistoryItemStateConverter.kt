@@ -49,14 +49,14 @@ internal class TxHistoryItemStateConverter(
     } else {
         when (type) {
             is TransactionType.Approve -> R.drawable.ic_doc_24
-            is TransactionType.StakingTransactionType.Stake,
-            is TransactionType.StakingTransactionType.Vote,
-            is TransactionType.StakingTransactionType.Restake,
+            is TransactionType.Staking.Stake,
+            is TransactionType.Staking.Vote,
+            is TransactionType.Staking.Restake,
             -> R.drawable.ic_transaction_history_staking_24
-            is TransactionType.StakingTransactionType.ClaimRewards,
+            is TransactionType.Staking.ClaimRewards,
             -> R.drawable.ic_transaction_history_claim_rewards_24
-            is TransactionType.StakingTransactionType.Unstake,
-            is TransactionType.StakingTransactionType.Withdraw,
+            is TransactionType.Staking.Unstake,
+            is TransactionType.Staking.Withdraw,
             -> R.drawable.ic_transaction_history_unstaking_24
             is TransactionType.Operation,
             is TransactionType.Swap,
@@ -71,12 +71,12 @@ internal class TxHistoryItemStateConverter(
         is TransactionType.Operation -> stringReference(type.name)
         is TransactionType.Swap -> resourceReference(R.string.common_swap)
         is TransactionType.Transfer -> resourceReference(R.string.common_transfer)
-        is TransactionType.StakingTransactionType.Stake -> resourceReference(R.string.common_stake)
-        is TransactionType.StakingTransactionType.Unstake -> resourceReference(R.string.common_unstake)
-        is TransactionType.StakingTransactionType.Vote -> resourceReference(R.string.staking_vote)
-        is TransactionType.StakingTransactionType.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
-        is TransactionType.StakingTransactionType.Withdraw -> resourceReference(R.string.staking_withdraw)
-        is TransactionType.StakingTransactionType.Restake -> resourceReference(R.string.staking_restake)
+        is TransactionType.Staking.Stake -> resourceReference(R.string.common_stake)
+        is TransactionType.Staking.Unstake -> resourceReference(R.string.common_unstake)
+        is TransactionType.Staking.Vote -> resourceReference(R.string.staking_vote)
+        is TransactionType.Staking.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
+        is TransactionType.Staking.Withdraw -> resourceReference(R.string.staking_withdraw)
+        is TransactionType.Staking.Restake -> resourceReference(R.string.staking_restake)
         is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
     }
 
@@ -121,9 +121,9 @@ internal class TxHistoryItemStateConverter(
     }
 
     private fun TxHistoryItem.getAmount(): String {
-        if (type is TransactionType.StakingTransactionType.Vote ||
-            type == TransactionType.StakingTransactionType.ClaimRewards ||
-            type == TransactionType.StakingTransactionType.Withdraw
+        if (type is TransactionType.Staking.Vote ||
+            type == TransactionType.Staking.ClaimRewards ||
+            type == TransactionType.Staking.Withdraw
         ) {
             return ""
         }
