@@ -11,6 +11,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalance
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addMinimumAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
@@ -191,6 +192,11 @@ internal class SendNotificationFactory(
             sendingAmount = sendingAmount,
             cryptoCurrency = currency,
             isAccountFunded = currencyCheck.isAccountFunded,
+        )
+        addMinimumAmountErrorNotification(
+            minimumSendAmount = currencyCheck.minimumSendAmount,
+            sendingAmount = sendingAmount,
+            cryptoCurrency = currency,
         )
     }
 
