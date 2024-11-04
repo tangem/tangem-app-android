@@ -7,6 +7,8 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.repositories.StakingErrorResolver
+import com.tangem.utils.extensions.isEqualTo
+import java.math.BigDecimal
 import java.util.UUID
 
 class InvalidatePendingTransactionsUseCase(
@@ -75,7 +77,7 @@ class InvalidatePendingTransactionsUseCase(
 
     private fun modifyBalancesByStatus(balances: MutableList<BalanceItem>, action: StakingAction, type: BalanceType) {
         val index = balances.indexOfFirst {
-            !it.isPending && it.amount == action.amount && it.type == type
+            !it.isPending && it.amount isEqualTo action.amount && it.type == type
         }
 
         if (index != -1) {
