@@ -181,5 +181,25 @@
         "info": "stakePOL",
         "source": "https://etherscan.io/tx/0x96ee64ad31a045982a4776336d852af3c25dc39b6d01bea987aefd460b816773",
         "name": "withdrawRewardsPOL"
+    },
+    "0x982ef0a7": {
+        "info": "stakeBSC",
+        "source": "https://bscscan.com/tx/0xd5ab62ee525f3dc2821de44c31e278f2b49a0202f4e0279e6d0fced05a034595",
+        "name": "delegate"
+    },
+    "0x4d99dd16": {
+        "info": "stakeBSC",
+        "source": "https://bscscan.com/tx/0x866ba857e96051d7cea271723fccde4113c9909dccb534202a2a87ad4c56cb67",
+        "name": "undelegate"
+    },
+    "0x59491871": {
+        "info": "stakeBSC",
+        "source": "https://bscscan.com/tx/0x69615650be1e8a6d94258483f4e880fc6b4d4d9ae53d967c82d847691d91dd71",
+        "name": "redelegate"
+    },
+    "0xaad3ec96": {
+        "info": "stakeBSC",
+        "source": "https://bscscan.com/tx/0xfcbeac6e0a4ba5768d97d14b5115d08dda92defa8a8deee8bba34e2f0655c52b",
+        "name": "claim"
     }
 }
