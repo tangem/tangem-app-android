@@ -4,7 +4,7 @@ import com.tangem.common.extensions.remove
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
+import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
@@ -201,7 +201,7 @@ internal class SetInitialDataStateTransformer(
 
     private fun createInitialAmountState(): AmountState {
         val cryptoBalanceValue = cryptoCurrencyStatusProvider().value
-        val maxEnterAmount = MaxEnterAmount(
+        val maxEnterAmount = EnterAmountBoundary(
             amount = cryptoBalanceValue.amount,
             fiatAmount = cryptoBalanceValue.fiatAmount,
             fiatRate = cryptoBalanceValue.fiatRate,
