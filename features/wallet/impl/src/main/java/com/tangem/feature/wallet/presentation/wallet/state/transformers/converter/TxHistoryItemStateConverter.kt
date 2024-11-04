@@ -51,6 +51,7 @@ internal class TxHistoryItemStateConverter(
             is TransactionType.Approve -> R.drawable.ic_doc_24
             is TransactionType.StakingTransactionType.Stake,
             is TransactionType.StakingTransactionType.Vote,
+            is TransactionType.StakingTransactionType.Restake,
             -> R.drawable.ic_transaction_history_staking_24
             is TransactionType.StakingTransactionType.ClaimRewards,
             -> R.drawable.ic_transaction_history_claim_rewards_24
@@ -74,7 +75,8 @@ internal class TxHistoryItemStateConverter(
         is TransactionType.StakingTransactionType.Unstake -> resourceReference(R.string.common_unstake)
         is TransactionType.StakingTransactionType.Vote -> resourceReference(R.string.staking_vote)
         is TransactionType.StakingTransactionType.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
-        is TransactionType.StakingTransactionType.Withdraw -> { resourceReference(R.string.staking_withdraw) }
+        is TransactionType.StakingTransactionType.Withdraw -> resourceReference(R.string.staking_withdraw)
+        is TransactionType.StakingTransactionType.Restake -> resourceReference(R.string.staking_restake)
         is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
     }
 
