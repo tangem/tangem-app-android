@@ -20,6 +20,9 @@ interface CurrencyChecksRepository {
     /** Returns reserve amount which is required to create an account */
     suspend fun getReserveAmount(userWalletId: UserWalletId, network: Network): BigDecimal?
 
+    /** Returns minimum send transaction amount */
+    suspend fun getMinimumSendAmount(userWalletId: UserWalletId, network: Network): BigDecimal?
+
     /** Returns a fee resource amount available and max for paying fees in several blockchains */
     suspend fun getFeeResourceAmount(userWalletId: UserWalletId, network: Network): CurrencyAmount?
 
