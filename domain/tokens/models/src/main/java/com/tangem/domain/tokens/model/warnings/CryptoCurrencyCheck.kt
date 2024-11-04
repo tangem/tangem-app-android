@@ -6,6 +6,7 @@ import java.math.BigDecimal
 data class CryptoCurrencyCheck(
     val dustValue: BigDecimal?,
     val reserveAmount: BigDecimal?,
+    val minimumSendAmount: BigDecimal?,
     val existentialDeposit: BigDecimal?,
     val utxoAmountLimit: UtxoAmountLimit?,
     val isAccountFunded: Boolean,
