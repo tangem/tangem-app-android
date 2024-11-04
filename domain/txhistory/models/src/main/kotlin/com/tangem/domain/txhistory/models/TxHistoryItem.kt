@@ -46,6 +46,7 @@ data class TxHistoryItem(
             data object Stake : StakingTransactionType
             data object Unstake : StakingTransactionType
             data object Withdraw : StakingTransactionType
+            data object Restake : StakingTransactionType
         }
     }
 
