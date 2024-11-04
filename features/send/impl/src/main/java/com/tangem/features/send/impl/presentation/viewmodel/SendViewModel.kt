@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.parseBigDecimal
@@ -59,6 +60,7 @@ import com.tangem.features.send.impl.presentation.state.recipient.RecipientSendF
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -78,6 +80,7 @@ internal class SendViewModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
+    private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
@@ -153,6 +156,7 @@ internal class SendViewModel @Inject constructor(
         stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState.value },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        minimumTransactionAmountProvider = Provider { minimumTransactionAmount },
     )
 
     private val feeStateFactory = FeeStateFactory(
@@ -212,6 +216,7 @@ internal class SendViewModel @Inject constructor(
     private var isTapHelpPreviewEnabled: Boolean = false
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
+    private var minimumTransactionAmount: EnterAmountBoundary? = null
 
     private var balanceJobHolder = JobHolder()
     private var balanceHidingJobHolder = JobHolder()
@@ -295,6 +300,7 @@ internal class SendViewModel @Inject constructor(
                 onDataLoaded(
                     currencyStatus = cryptoCurrencyStatus,
                     feeCurrencyStatus = getFeeCurrencyStatusSync(cryptoCurrencyStatus, isMultiCurrency),
+                    minTransactionAmount = getMinimumTransactionAmount(cryptoCurrencyStatus),
                 )
             },
             ifLeft = { showErrorAlert() },
@@ -336,6 +342,18 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
+    private suspend fun getMinimumTransactionAmount(cryptoCurrencyStatus: CryptoCurrencyStatus): EnterAmountBoundary? {
+        return getMinimumTransactionAmountSyncUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        ).getOrNull()?.let {
+            EnterAmountBoundary(
+                amount = it,
+                fiatRate = cryptoCurrencyStatus.value.fiatRate.orZero(),
+            )
+        }
+    }
+
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
         return getSelectedAppCurrencyUseCase()
             .map { maybeAppCurrency ->
@@ -348,9 +366,14 @@ internal class SendViewModel @Inject constructor(
             )
     }
 
-    private fun onDataLoaded(currencyStatus: CryptoCurrencyStatus, feeCurrencyStatus: CryptoCurrencyStatus?) {
+    private fun onDataLoaded(
+        currencyStatus: CryptoCurrencyStatus,
+        feeCurrencyStatus: CryptoCurrencyStatus?,
+        minTransactionAmount: EnterAmountBoundary?,
+    ) {
         cryptoCurrencyStatus = currencyStatus
         feeCryptoCurrencyStatus = feeCurrencyStatus
+        minimumTransactionAmount = minTransactionAmount
         subscribeOnQRScannerResult()
         when {
             uiState.value.sendState?.isSuccess == true -> return
